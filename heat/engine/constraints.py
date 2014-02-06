@@ -141,9 +141,9 @@ class Schema(collections.Mapping):
         except ValueError:
             return float(value)
 
-    def validate_constraints(self, value):
+    def validate_constraints(self, value, context=None):
         for constraint in self.constraints:
-            constraint.validate(value)
+            constraint.validate(value, context)
 
     def __getitem__(self, key):
         if key == self.TYPE:
@@ -227,8 +227,8 @@ class Constraint(collections.Mapping):
 
         return '\n'.join(desc())
 
-    def validate(self, value):
-        if not self._is_valid(value):
+    def validate(self, value, context=None):
+        if not self._is_valid(value, context):
             if self.description:
                 err_msg = self.description
             else:
@@ -303,7 +303,7 @@ class Range(Constraint):
                                                           self.min,
                                                           self.max)
 
-    def _is_valid(self, value):
+    def _is_valid(self, value, context):
         value = Schema.str_to_num(value)
 
         if self.min is not None:
@@ -362,8 +362,8 @@ class Length(Range):
                                                                    self.min,
                                                                    self.max)
 
-    def _is_valid(self, value):
-        return super(Length, self)._is_valid(len(value))
+    def _is_valid(self, value, context):
+        return super(Length, self)._is_valid(len(value), context)
 
 
 class AllowedValues(Constraint):
@@ -396,7 +396,7 @@ class AllowedValues(Constraint):
         allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
         return '"%s" is not an allowed value %s' % (value, allowed)
 
-    def _is_valid(self, value):
+    def _is_valid(self, value, context):
         # For list values, check if all elements of the list are contained
         # in allowed list.
         if isinstance(value, list):
@@ -433,7 +433,7 @@ class AllowedPattern(Constraint):
     def _err_msg(self, value):
         return '"%s" does not match pattern "%s"' % (value, self.pattern)
 
-    def _is_valid(self, value):
+    def _is_valid(self, value, context):
         match = self.match(value)
         return match is not None and match.end() == len(value)
 

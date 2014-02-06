@@ -152,7 +152,8 @@ class CloudWatchAlarm(resource.Resource):
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
-                                         self.name)
+                                         self.name,
+                                         self.context)
             loader = watchrule.WatchRule.load
             wr = loader(self.context,
                         watch_name=self.physical_resource_name())

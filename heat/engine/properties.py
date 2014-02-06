@@ -162,9 +162,10 @@ def schemata(schema_dicts):
 
 class Property(object):
 
-    def __init__(self, schema, name=None):
+    def __init__(self, schema, name=None, context=None):
         self.schema = Schema.from_legacy(schema)
         self.name = name
+        self.context = context
 
     def required(self):
         return self.schema.required
@@ -212,7 +213,8 @@ class Property(object):
                 keys = list(self.schema.schema)
             schemata = dict((k, self.schema.schema[k]) for k in keys)
             properties = Properties(schemata, dict(child_values),
-                                    parent_name=self.name)
+                                    parent_name=self.name,
+                                    context=self.context)
             return ((k, properties[k]) for k in keys)
         else:
             return child_values
@@ -263,20 +265,23 @@ class Property(object):
 
     def validate_data(self, value):
         value = self._validate_data_type(value)
-        self.schema.validate_constraints(value)
+        self.schema.validate_constraints(value, self.context)
         return value
 
 
 class Properties(collections.Mapping):
 
-    def __init__(self, schema, data, resolver=lambda d: d, parent_name=None):
-        self.props = dict((k, Property(s, k)) for k, s in schema.items())
+    def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
+                 context=None):
+        self.props = dict((k, Property(s, k, context))
+                          for k, s in schema.items())
         self.resolve = resolver
         self.data = data
         if parent_name is None:
             self.error_prefix = ''
         else:
             self.error_prefix = '%s: ' % parent_name
+        self.context = context
 
     @staticmethod
     def schema_from_params(params_snippet):

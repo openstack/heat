@@ -155,7 +155,8 @@ class InstanceGroup(stack_resource.StackResource):
         super(InstanceGroup, self).__init__(name, json_snippet, stack)
         self.update_policy = Properties(self.update_policy_schema,
                                         self.t.get('UpdatePolicy', {}),
-                                        parent_name=self.name)
+                                        parent_name=self.name,
+                                        context=self.context)
 
     def validate(self):
         """
@@ -226,13 +227,15 @@ class InstanceGroup(stack_resource.StackResource):
                 self.update_policy = Properties(
                     self.update_policy_schema,
                     json_snippet.get('UpdatePolicy', {}),
-                    parent_name=self.name)
+                    parent_name=self.name,
+                    context=self.context)
 
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
-                                         self.name)
+                                         self.name,
+                                         self.context)
 
             # Replace instances first if launch configuration has changed
             if (self.update_policy['RollingUpdate'] and
@@ -550,13 +553,15 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                 self.update_policy = Properties(
                     self.update_policy_schema,
                     json_snippet.get('UpdatePolicy', {}),
-                    parent_name=self.name)
+                    parent_name=self.name,
+                    context=self.context)
 
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
-                                         self.name)
+                                         self.name,
+                                         self.context)
 
             # Replace instances first if launch configuration has changed
             if (self.update_policy['AutoScalingRollingUpdate'] and
@@ -848,7 +853,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
-                                         self.name)
+                                         self.name,
+                                         self.context)
 
     def handle_signal(self, details=None):
         # ceilometer sends details like this:

@@ -175,7 +175,8 @@ class Resource(object):
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
                                      self._resolve_runtime_data,
-                                     self.name)
+                                     self.name,
+                                     self.context)
         self.attributes = Attributes(self.name,
                                      self.attributes_schema,
                                      self._resolve_attribute)
@@ -470,7 +471,8 @@ class Resource(object):
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
                                      self._resolve_runtime_data,
-                                     self.name)
+                                     self.name,
+                                     self.context)
         return self._do_action(action, self.properties.validate)
 
     def set_deletion_policy(self, policy):
@@ -555,7 +557,8 @@ class Resource(object):
             properties = Properties(self.properties_schema,
                                     after.get('Properties', {}),
                                     self._resolve_runtime_data,
-                                    self.name)
+                                    self.name,
+                                    self.context)
             properties.validate()
             tmpl_diff = self.update_template_diff(after, before)
             prop_diff = self.update_template_diff_properties(after, before)
