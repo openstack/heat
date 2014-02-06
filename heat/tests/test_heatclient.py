@@ -804,6 +804,71 @@ class KeystoneClientTest(HeatTestCase):
         self.assertRaises(ValueError, heat_ks_client.disable_stack_domain_user,
                           user_id='duser123', project_id='aproject')
 
+    def test_delete_stack_domain_user_keypair(self):
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain_admin_client()
+        self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
+        self.mock_admin_client.credentials = self.m.CreateMockAnything()
+        self.mock_admin_client.credentials.delete(
+            'acredentialid').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user_keypair(
+            user_id='duser123', project_id='aproject',
+            credential_id='acredentialid')
+
+    def test_delete_stack_domain_user_keypair_legacy_fallback(self):
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stubs_v3()
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.credentials.delete(
+            'acredentialid').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user_keypair(
+            user_id='user123', project_id='aproject',
+            credential_id='acredentialid')
+
+    def test_delete_stack_domain_user_keypair_error_project(self):
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain_admin_client()
+        self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError,
+                          heat_ks_client.delete_stack_domain_user_keypair,
+                          user_id='duser123', project_id='aproject',
+                          credential_id='acredentialid')
+
+    def test_delete_stack_domain_user_keypair_error_domain(self):
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain_admin_client()
+        self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError,
+                          heat_ks_client.delete_stack_domain_user_keypair,
+                          user_id='duser123', project_id='aproject',
+                          credential_id='acredentialid')
+
     def _stub_uuid(self, values=[]):
         # stub UUID.hex to return the values specified
         self.m.StubOutWithMock(uuid, 'uuid4')
