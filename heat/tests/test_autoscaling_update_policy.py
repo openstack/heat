@@ -11,26 +11,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
-import json
 import copy
+import json
 
+import mox
 from oslo.config import cfg
+from testtools.matchers import MatchesRegex
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.notification import stack as notification
 from heat.engine import clients
+from heat.engine.notification import stack as notification
 from heat.engine import parser
-from heat.engine import stack_user
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
+from heat.engine import stack_user
 from heat.tests.common import HeatTestCase
-from heat.tests import utils
 from heat.tests import fakes
+from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes11
-from testtools.matchers import MatchesRegex
 
 
 asg_tmpl_without_updt_policy = '''

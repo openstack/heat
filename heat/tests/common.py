@@ -12,22 +12,21 @@
 #    under the License.
 
 
-import fixtures
 import logging
-import mox
 import os
 import sys
 import time
+
+import fixtures
+import mox
+from oslo.config import cfg
 import testscenarios
 import testtools
-
-from oslo.config import cfg
-
-from heat.openstack.common.fixture import mockpatch
 
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.openstack.common.fixture import mockpatch
 
 
 class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):

@@ -15,10 +15,10 @@ from mock import patch
 
 from heat.common import exception
 from heat.common import template_format
-from heat.tests import common
-from heat.tests import utils
 from heat.engine import scheduler
 from heat.engine import watchrule
+from heat.tests import common
+from heat.tests import utils
 
 
 AWS_CloudWatch_Alarm = '''

@@ -17,18 +17,14 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
-
 from heat.openstack.common import timeutils
-
-from heat.tests import fakes
-from heat.tests import utils
-from heat.tests import generic_resource
-
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes
+from heat.tests import generic_resource
+from heat.tests import utils
 
 
 class AutoScalingGroupTest(HeatTestCase):

@@ -12,19 +12,19 @@
 #    under the License.
 
 import json
-import mock
 import os
 
+import mock
 from oslo.config import cfg
 
+from heat.api.aws import exception
+import heat.api.cfn.v1.stacks as stacks
 from heat.common import exception as heat_exception
 from heat.common import identifier
 from heat.common import policy
-from heat.openstack.common import rpc
 from heat.common.wsgi import Request
+from heat.openstack.common import rpc
 from heat.rpc import api as rpc_api
-from heat.api.aws import exception
-import heat.api.cfn.v1.stacks as stacks
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

@@ -13,19 +13,17 @@
 
 from oslo.config import cfg
 
-cfg.CONF.import_opt('event_purge_batch_size', 'heat.common.config')
-cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
-
-import heat.db.api as db_api
+from heat.db import api as db_api
+from heat.engine import event
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import template
-from heat.engine import event
-
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
+cfg.CONF.import_opt('event_purge_batch_size', 'heat.common.config')
+cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 tmpl = {
     'Resources': {

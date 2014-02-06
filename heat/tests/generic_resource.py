@@ -14,9 +14,8 @@
 from heat.engine import resource
 from heat.engine import signal_responder
 from heat.engine import stack_user
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

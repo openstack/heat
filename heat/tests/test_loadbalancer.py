@@ -11,25 +11,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
 
 import mock
 import mox
-import re
-
 from oslo.config import cfg
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import scheduler
-from heat.engine import stack_user
+from heat.engine.resource import Metadata
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
-from heat.engine.resource import Metadata
+from heat.engine import scheduler
+from heat.engine import stack_user
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes as test_fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
-from heat.tests import fakes as test_fakes
 
 
 lb_template = '''

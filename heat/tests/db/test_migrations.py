@@ -20,21 +20,21 @@ properly both upgrading and downgrading, and that no data loss occurs
 if possible.
 """
 
+import datetime
 import os
 import shutil
-import sqlalchemy
 import subprocess
 import tempfile
 import uuid
-import datetime
 
 from migrate.versioning import repository
+import sqlalchemy
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
+from heat.openstack.common.db.sqlalchemy import test_migrations
 from heat.openstack.common import log as logging
 from heat.openstack.common.py3kcompat import urlutils
-from heat.openstack.common.db.sqlalchemy import test_migrations
 
 
 LOG = logging.getLogger(__name__)

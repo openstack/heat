@@ -11,22 +11,21 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import fixtures
-import mock
+
 import os.path
 import sys
 
+import fixtures
+import mock
 from oslo.config import cfg
 
-cfg.CONF.import_opt('environment_dir', 'heat.common.config')
-
 from heat.common import environment_format
-
 from heat.engine import environment
 from heat.engine import resources
-
-from heat.tests import generic_resource
 from heat.tests import common
+from heat.tests import generic_resource
+
+cfg.CONF.import_opt('environment_dir', 'heat.common.config')
 
 
 class EnvironmentTest(common.HeatTestCase):

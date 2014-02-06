@@ -11,31 +11,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import copy
 import json
+
 import mox
-import testtools
-
 from oslo.config import cfg
-
-from heat.tests import fakes
-from heat.tests import generic_resource
-from heat.tests.common import HeatTestCase
-from heat.tests import utils
+import testtools
 
 from heat.common import exception
 from heat.common import template_format
-
-from heat.openstack.common.importutils import try_import
-
 from heat.engine import clients
 from heat.engine import parser
+from heat.engine.properties import schemata
 from heat.engine import resource
+from heat.engine.resources.ceilometer import alarm
 from heat.engine import scheduler
 from heat.engine import stack_user
-from heat.engine.properties import schemata
-from heat.engine.resources.ceilometer import alarm
+from heat.openstack.common.importutils import try_import
+from heat.tests.common import HeatTestCase
+from heat.tests import fakes
+from heat.tests import generic_resource
+from heat.tests import utils
 
 ceilometerclient = try_import('ceilometerclient.v2')
 

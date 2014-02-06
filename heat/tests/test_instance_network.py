@@ -13,17 +13,17 @@
 
 import uuid
 
+from heat.common import template_format
+from heat.engine import clients
 from heat.engine import environment
-from heat.tests.v1_1 import fakes
+from heat.engine import parser
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine.resources import nova_utils
-from heat.common import template_format
-from heat.engine import clients
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 
 wp_template = '''
