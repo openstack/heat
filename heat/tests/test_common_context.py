@@ -34,6 +34,7 @@ class TestRequestContext(HeatTestCase):
                     'show_deleted': False,
                     'roles': ['arole', 'notadmin'],
                     'tenant_id': '456tenant',
+                    'user_id': 'fooUser',
                     'tenant': 'atenant',
                     'auth_url': 'http://xyz',
                     'aws_creds': 'blah'}
@@ -47,6 +48,7 @@ class TestRequestContext(HeatTestCase):
                                      aws_creds=self.ctx.get('aws_creds'),
                                      tenant=self.ctx.get('tenant'),
                                      tenant_id=self.ctx.get('tenant_id'),
+                                     user_id=self.ctx.get('user_id'),
                                      auth_url=self.ctx.get('auth_url'),
                                      roles=self.ctx.get('roles'),
                                      show_deleted=self.ctx.get('show_deleted'),
