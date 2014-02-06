@@ -235,7 +235,7 @@ echo "Verified connectivity to MySQL."
 
 echo "Creating 'heat' database."
 cat << EOF | mysql -u root ${MYSQL_ROOT_PW_ARG}
-CREATE DATABASE IF NOT EXISTS heat;
+CREATE DATABASE IF NOT EXISTS heat DEFAULT CHARACTER SET utf8;
 GRANT ALL ON heat.* TO 'heat'@'localhost' IDENTIFIED BY '${MYSQL_HEAT_PW}';
 GRANT ALL ON heat.* TO 'heat'@'%' IDENTIFIED BY '${MYSQL_HEAT_PW}';
 flush privileges;
