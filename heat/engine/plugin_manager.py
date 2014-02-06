@@ -18,9 +18,8 @@ import sys
 
 from oslo.config import cfg
 
-from heat.openstack.common import log
 from heat.common import plugin_loader
-
+from heat.openstack.common import log
 
 logger = log.getLogger(__name__)
 

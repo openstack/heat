@@ -16,30 +16,28 @@ import collections
 import copy
 from datetime import datetime
 import re
-import six
 
 from oslo.config import cfg
+import six
 
-from heat.engine import environment
 from heat.common import exception
-from heat.engine import dependencies
+from heat.common.exception import StackValidationFailed
 from heat.common import identifier
+from heat.db import api as db_api
+from heat.engine.clients import Clients
+from heat.engine import dependencies
+from heat.engine import environment
 from heat.engine import function
+from heat.engine.notification import stack as notification
+from heat.engine.parameter_groups import ParameterGroups
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
-from heat.engine import update
-from heat.engine.notification import stack as notification
-from heat.engine.parameter_groups import ParameterGroups
 from heat.engine.template import Template
-from heat.engine.clients import Clients
-from heat.db import api as db_api
-
-from heat.openstack.common import log as logging
+from heat.engine import update
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 from heat.openstack.common import strutils
-
-from heat.common.exception import StackValidationFailed
 
 logger = logging.getLogger(__name__)
 

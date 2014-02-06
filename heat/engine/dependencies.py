@@ -18,7 +18,6 @@ import itertools
 from six.moves import xrange
 
 from heat.common import exception
-
 from heat.openstack.common.gettextutils import _
 
 

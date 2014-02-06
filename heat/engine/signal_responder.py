@@ -12,18 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneclient.contrib.ec2 import utils as ec2_utils
+from oslo.config import cfg
 from six.moves.urllib import parse as urlparse
 
-from oslo.config import cfg
-
-from keystoneclient.contrib.ec2 import utils as ec2_utils
-
-from heat.db import api as db_api
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import stack_user
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 
 logger = logging.getLogger(__name__)

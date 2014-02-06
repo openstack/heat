@@ -15,13 +15,11 @@
 import copy
 
 from heat.db import api as db_api
-
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

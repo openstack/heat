@@ -14,12 +14,11 @@
 
 import keystoneclient.exceptions as kc_exception
 
-from heat.db import api as db_api
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import resource
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 
 logger = logging.getLogger(__name__)

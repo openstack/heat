@@ -16,8 +16,8 @@ import abc
 import collections
 import functools
 
-from heat.db import api as db_api
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import plugin_manager
 
 

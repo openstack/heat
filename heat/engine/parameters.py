@@ -15,9 +15,9 @@
 import collections
 import itertools
 import json
-from heat.engine import constraints as constr
 
 from heat.common import exception
+from heat.engine import constraints as constr
 
 
 PARAMETER_KEYS = (

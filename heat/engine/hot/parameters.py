@@ -14,9 +14,7 @@
 
 from heat.engine import constraints as constr
 from heat.engine import parameters
-
 from heat.openstack.common import log as logging
-
 
 logger = logging.getLogger(__name__)
 

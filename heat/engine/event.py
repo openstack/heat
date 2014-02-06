@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.db import api as db_api
 from heat.common import exception
 from heat.common import identifier
-from heat.openstack.common import log as logging
+from heat.db import api as db_api
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

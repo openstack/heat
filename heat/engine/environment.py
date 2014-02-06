@@ -18,10 +18,10 @@ import os.path
 
 from oslo.config import cfg
 
-from heat.openstack.common import log
-from heat.openstack.common.gettextutils import _
 from heat.common import environment_format
 from heat.common import exception
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log
 
 
 LOG = log.getLogger(__name__)
