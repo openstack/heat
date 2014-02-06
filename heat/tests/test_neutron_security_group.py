@@ -11,6 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.v2_0 import client as neutronclient
+from novaclient.v1_1 import security_group_rules as nova_sgr
+from novaclient.v1_1 import security_groups as nova_sg
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
@@ -18,13 +23,8 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.fakes import FakeKeystoneClient
-from heat.tests.v1_1 import fakes
 from heat.tests import utils
-
-from novaclient.v1_1 import security_groups as nova_sg
-from novaclient.v1_1 import security_group_rules as nova_sgr
-from neutronclient.common.exceptions import NeutronClientException
-from neutronclient.v2_0 import client as neutronclient
+from heat.tests.v1_1 import fakes
 
 
 class SecurityGroupTest(HeatTestCase):

@@ -17,17 +17,15 @@ import string
 import sys
 import uuid
 
-import sqlalchemy
-
 from oslo.config import cfg
+import sqlalchemy
 
 from heat.common import context
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-
-from heat.db import api as db_api
 from heat.openstack.common.db.sqlalchemy import session
 
 get_engine = session.get_engine

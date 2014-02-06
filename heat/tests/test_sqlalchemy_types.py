@@ -11,13 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import testtools
-
-from heat.db.sqlalchemy.types import LongText
-from heat.db.sqlalchemy.types import Json
-from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
 from sqlalchemy.dialects.sqlite.base import SQLiteDialect
+from sqlalchemy import types
+import testtools
+
+from heat.db.sqlalchemy.types import Json
+from heat.db.sqlalchemy.types import LongText
 
 
 class LongTextTest(testtools.TestCase):

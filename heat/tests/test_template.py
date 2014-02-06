@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.tests.common import HeatTestCase
-
 from heat.common import exception
-
+from heat.engine.cfn.template import CfnTemplate
 from heat.engine import plugin_manager
 from heat.engine import template
-from heat.engine.cfn.template import CfnTemplate
+from heat.tests.common import HeatTestCase
 
 
 class TestTemplatePluginManager(HeatTestCase):

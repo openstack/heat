@@ -14,10 +14,11 @@
 
 import pkgutil
 import sys
+
 import testtools
 
-import heat.engine
 from heat.common import plugin_loader
+import heat.engine
 
 
 class PluginLoaderTest(testtools.TestCase):

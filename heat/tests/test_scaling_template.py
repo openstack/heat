@@ -12,9 +12,8 @@
 
 import itertools
 
-from heat.scaling import template
 from heat.common import short_id
-
+from heat.scaling import template
 from heat.tests.common import HeatTestCase
 
 

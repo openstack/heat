@@ -10,15 +10,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient.v1_1 import client as novaclient
+
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine.resources.nova_floatingip import NovaFloatingIp
 from heat.engine.resources.nova_floatingip import NovaFloatingIpAssociation
-from heat.engine import clients
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-
-from novaclient.v1_1 import client as novaclient
 
 
 floating_ip_template = '''

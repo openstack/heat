@@ -11,14 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heatclient.exc import HTTPNotFound
 import mock
 
 from heat.common import exception
 from heat.engine import parser
-from heat.engine import template
 from heat.engine.resources.software_config import software_deployment as sd
-from heatclient.exc import HTTPNotFound
-
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

@@ -12,25 +12,24 @@
 #    under the License.
 
 import datetime
-import uuid
 import json
-import mox
 import time
+import uuid
 
+import mox
 from oslo.config import cfg
 
-from heat.tests.common import HeatTestCase
-from heat.tests import fakes
-from heat.tests import utils
-
-import heat.db.api as db_api
-from heat.common import template_format
 from heat.common import identifier
+from heat.common import template_format
+import heat.db.api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resources import wait_condition as wc
+from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
+from heat.tests import fakes
+from heat.tests import utils
 
 test_template_waitcondition = '''
 {

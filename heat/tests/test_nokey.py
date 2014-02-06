@@ -11,14 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.tests.v1_1 import fakes
-from heat.engine.resources import instance as instances
-from heat.engine.resources import nova_utils
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.resources import instance as instances
+from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 
 nokey_template = '''

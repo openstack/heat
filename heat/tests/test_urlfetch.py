@@ -12,16 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import requests
 from requests import exceptions
-
-from oslo.config import cfg
 from six.moves import cStringIO
 
 from heat.common import urlfetch
-from heat.tests.common import HeatTestCase
-
 from heat.openstack.common.py3kcompat import urlutils
+from heat.tests.common import HeatTestCase
 
 
 class Response:

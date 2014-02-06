@@ -14,25 +14,23 @@
 
 import json
 
+from cinderclient.v1 import client as cinderclient
 import mox
-
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import scheduler
+from heat.engine import clients
+from heat.engine import resource
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.engine.resources import volume as vol
-from heat.engine import clients
-from heat.engine import resource
+from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests.v1_1 import fakes
 from heat.tests import utils
-
-from cinderclient.v1 import client as cinderclient
+from heat.tests.v1_1 import fakes
 
 
 volume_backups = try_import('cinderclient.v1.volume_backups')
