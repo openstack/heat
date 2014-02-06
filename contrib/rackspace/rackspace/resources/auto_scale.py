@@ -17,11 +17,11 @@ Resources for Rackspace Auto Scale.
 
 import copy
 
+from heat.common import exception
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.db.sqlalchemy import api as db_api
-from heat.common import exception
 
 try:
     from pyrax.exceptions import Forbidden

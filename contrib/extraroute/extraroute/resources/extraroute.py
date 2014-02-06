@@ -14,8 +14,8 @@
 
 from heat.common import exception
 from heat.engine import clients
-from heat.engine.resources.neutron import neutron
 from heat.engine import properties
+from heat.engine.resources.neutron import neutron
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException

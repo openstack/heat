@@ -10,6 +10,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import netaddr
+
+from heat.common import exception
+from heat.engine import constraints
+from heat.engine import properties
+from heat.engine import resource
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+
 try:
     from pyrax.exceptions import NotFound  # noqa
 except ImportError:
@@ -23,15 +32,6 @@ else:
 
     def resource_mapping():
         return {'Rackspace::Cloud::Network': CloudNetwork}
-
-import netaddr
-
-from heat.common import exception
-from heat.engine import constraints
-from heat.engine import properties
-from heat.engine import resource
-from heat.openstack.common.gettextutils import _
-from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

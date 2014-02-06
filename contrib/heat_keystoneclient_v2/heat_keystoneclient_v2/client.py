@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
-
 from keystoneclient.v2_0 import client as kc
 from oslo.config import cfg
 
+from heat.common import exception
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger('heat.common.keystoneclient')
 logger.info(_("Keystone V2 loaded"))

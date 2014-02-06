@@ -19,11 +19,10 @@ from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
-
-from ..resources import auto_scale  # noqa
-
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+from ..resources import auto_scale  # noqa
 
 
 class FakeScalingGroup(object):

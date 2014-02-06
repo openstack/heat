@@ -21,8 +21,8 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from .fake_docker_client import FakeDockerClient  # noqa
 from ..resources import docker_container  # noqa
+from .fake_docker_client import FakeDockerClient  # noqa
 
 
 template = '''

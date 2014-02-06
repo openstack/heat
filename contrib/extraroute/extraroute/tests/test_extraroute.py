@@ -13,11 +13,11 @@
 
 from testtools import skipIf
 
-from heat.engine import clients
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resources.neutron import router
+from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes

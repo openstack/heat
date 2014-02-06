@@ -17,11 +17,12 @@ import mock
 import mox
 from oslo.config import cfg
 
-from .. import client as heat_keystoneclient  # noqa
 from heat.common import exception
 from heat.openstack.common import importutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+from .. import client as heat_keystoneclient  # noqa
 
 
 class KeystoneClientTest(HeatTestCase):

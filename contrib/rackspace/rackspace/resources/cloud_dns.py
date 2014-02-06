@@ -10,6 +10,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
+from heat.engine import constraints
+from heat.engine import properties
+from heat.engine import resource
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+
 try:
     from pyrax.exceptions import NotFound
     PYRAX_INSTALLED = True
@@ -19,13 +26,6 @@ except ImportError:
         pass
 
     PYRAX_INSTALLED = False
-
-from heat.common import exception
-from heat.engine import constraints
-from heat.engine import properties
-from heat.engine import resource
-from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
