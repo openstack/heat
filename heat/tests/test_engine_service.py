@@ -1119,7 +1119,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
         parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
 
         thread = self.m.CreateMockAnything()
-        thread.link(mox.IgnoreArg()).AndReturn(None)
+        thread.link(mox.IgnoreArg(), stack.id).AndReturn(None)
         self.m.StubOutWithMock(service.ThreadGroupManager, 'start')
         service.ThreadGroupManager.start(sid, mox.IgnoreArg(),
                                          stack).AndReturn(thread)
@@ -1137,7 +1137,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
 
         thread = self.m.CreateMockAnything()
-        thread.link(mox.IgnoreArg()).AndReturn(None)
+        thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
         self.m.StubOutWithMock(service.ThreadGroupManager, 'start')
         service.ThreadGroupManager.start(self.stack.id, mox.IgnoreArg(),
                                          self.stack).AndReturn(thread)
@@ -1360,7 +1360,7 @@ class StackServiceTest(HeatTestCase):
                              generic_rsrc.GenericResource)
 
         thread = self.m.CreateMockAnything()
-        thread.link(mox.IgnoreArg()).AndReturn(None)
+        thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
 
         def run(stack_id, func, *args):
             func(*args)

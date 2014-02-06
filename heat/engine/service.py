@@ -128,14 +128,14 @@ class ThreadGroupManager(object):
             """
             Callback function that will be passed to GreenThread.link().
             """
-            lock.release()
+            lock.release(*args)
 
         try:
             th = self.start(stack.id, func, *args)
-            th.link(release)
+            th.link(release, stack.id)
         except:
             with excutils.save_and_reraise_exception():
-                lock.release()
+                lock.release(stack.id)
 
     def add_timer(self, stack_id, func, *args, **kwargs):
         """
