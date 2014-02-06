@@ -13,8 +13,9 @@
 
 from json import dumps
 from json import loads
-from sqlalchemy import types
+
 from sqlalchemy.dialects import mysql
+from sqlalchemy import types
 
 
 class LongText(types.TypeDecorator):

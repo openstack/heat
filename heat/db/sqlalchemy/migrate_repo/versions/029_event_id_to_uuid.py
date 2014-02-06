@@ -13,9 +13,9 @@
 
 import uuid
 
+from migrate.versioning import util as migrate_util
 import sqlalchemy
 
-from migrate.versioning import util as migrate_util
 from heat.openstack.common.gettextutils import _
 
 

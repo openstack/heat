@@ -17,13 +17,13 @@ from __future__ import print_function
 
 import sys
 
+from oslo.config import cfg
+
+from heat.db import migration
 from heat.openstack.common import gettextutils
+from heat.openstack.common import log as logging
 
 gettextutils.install('heat')
-
-from oslo.config import cfg
-from heat.openstack.common import log as logging
-from heat.db import migration
 
 LOG = logging.getLogger(__name__)
 
