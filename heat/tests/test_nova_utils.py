@@ -14,6 +14,7 @@
 #    under the License.
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
+import mock
 import uuid
 
 from heat.common import exception
@@ -117,6 +118,12 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
         self.assertIsNone(nova_utils.refresh_server(server))
         self.m.VerifyAll()
+
+    def test_overlimit_error(self):
+        server = mock.Mock()
+        server.get.side_effect = clients.novaclient.exceptions.OverLimit(
+            413, "limit reached")
+        self.assertIsNone(nova_utils.refresh_server(server))
 
     def test_500_error(self):
         server = self.m.CreateMockAnything()
