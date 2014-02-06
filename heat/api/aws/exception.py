@@ -18,9 +18,10 @@
 """Heat API exception subclasses - maps API response errors to AWS Errors"""
 
 import webob.exc
+
 from heat.common import wsgi
 from heat.openstack.common.gettextutils import _
-import heat.openstack.common.rpc.common as rpc_common
+from heat.openstack.common.rpc import common as rpc_common
 
 
 class HeatAPIException(webob.exc.HTTPError):

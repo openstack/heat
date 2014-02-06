@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from webob import exc
 from functools import wraps
+
+from webob import exc
 
 from heat.common import identifier
 

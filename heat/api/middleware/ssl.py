@@ -13,6 +13,7 @@
 # under the License.
 
 from oslo.config import cfg
+
 from heat.common import wsgi
 
 ssl_middleware_opts = [
