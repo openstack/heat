@@ -17,16 +17,15 @@ from collections import namedtuple
 import json
 import uuid
 
-from heat.common import context
-from heat.common import exception
-
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
 from oslo.config import cfg
 
+from heat.common import context
+from heat.common import exception
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger('heat.common.keystoneclient')
 

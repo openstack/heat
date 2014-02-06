@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import re
 import collections
+import re
 
-from heat.openstack.common import strutils
 from heat.openstack.common.py3kcompat import urlutils
+from heat.openstack.common import strutils
 
 
 class HeatIdentifier(collections.Mapping):
