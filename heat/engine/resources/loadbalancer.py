@@ -19,11 +19,10 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import stack_resource
 from heat.engine.resources import nova_utils
-
-from heat.openstack.common import log as logging
+from heat.engine import stack_resource
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

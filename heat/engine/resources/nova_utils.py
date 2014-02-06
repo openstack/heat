@@ -16,22 +16,20 @@
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 import json
 import os
 import pkgutil
-import six
 
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common import uuidutils
+from heat.openstack.common import log as logging
 from heat.openstack.common.py3kcompat import urlutils
-
+from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 

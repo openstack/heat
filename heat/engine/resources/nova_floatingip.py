@@ -13,10 +13,9 @@
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
-
 from heat.openstack.common import excutils
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

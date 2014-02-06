@@ -12,19 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import signal_responder
+from heat.common import exception
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import scheduler
+from heat.engine.resources.network_interface import NetworkInterface
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources import nova_utils
 from heat.engine.resources import volume
-
-from heat.common import exception
-from heat.engine.resources.network_interface import NetworkInterface
-
+from heat.engine import scheduler
+from heat.engine import signal_responder
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 

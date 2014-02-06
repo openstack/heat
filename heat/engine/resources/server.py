@@ -15,22 +15,22 @@
 from oslo.config import cfg
 import uuid
 
-cfg.CONF.import_opt('instance_user', 'heat.common.config')
-
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import clients
-from heat.engine import scheduler
-from heat.engine import stack_user
-from heat.engine.resources import nova_utils
-from heat.engine.resources.software_config import software_config as sc
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources import nova_utils
+from heat.engine.resources.software_config import software_config as sc
+from heat.engine import scheduler
+from heat.engine import stack_user
 from heat.engine import support
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
+
+cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
 logger = logging.getLogger(__name__)
 

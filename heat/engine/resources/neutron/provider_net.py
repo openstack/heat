@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import clients
-from heat.engine import properties
-from heat.engine import constraints
 from heat.common import exception
+from heat.engine import clients
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine.resources.neutron import net
 
 

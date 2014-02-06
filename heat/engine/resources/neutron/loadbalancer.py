@@ -18,9 +18,9 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import scheduler
-from heat.engine.resources import nova_utils
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources import nova_utils
+from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException

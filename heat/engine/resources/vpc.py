@@ -14,11 +14,11 @@
 
 from heat.common import exception
 from heat.engine import clients
-from heat.openstack.common import log as logging
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

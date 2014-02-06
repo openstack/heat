@@ -18,7 +18,6 @@ from heat.common import exception
 from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import scheduler
-
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 

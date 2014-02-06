@@ -18,9 +18,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import stack_user
-
 from heat.openstack.common import log as logging
-
 
 logger = logging.getLogger(__name__)
 
