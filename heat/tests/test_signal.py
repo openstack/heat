@@ -114,6 +114,7 @@ class SignalTest(HeatTestCase):
         rsrc = self.stack['signal_handler']
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIn('Forbidden', rsrc.status_reason)
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_handle_create_fail_keypair_raise(self):
@@ -137,6 +138,7 @@ class SignalTest(HeatTestCase):
         self.assertIn('Forbidden', rsrc.status_reason)
         self.assertEqual('123xyz', rs_data.get('user_id'))
         self.assertIsNone(rsrc.resource_id)
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_handle_create_fail_keypair_none(self):
@@ -160,6 +162,7 @@ class SignalTest(HeatTestCase):
         self.assertIn('Error creating ec2 keypair', rsrc.status_reason)
         self.assertEqual('123xyz', rs_data.get('user_id'))
         self.assertIsNone(rsrc.resource_id)
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_resource_data(self):
@@ -193,6 +196,7 @@ class SignalTest(HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual(1, len(rs_data.keys()))
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_get_user_id(self):
@@ -222,6 +226,7 @@ class SignalTest(HeatTestCase):
         self.assertRaises(
             exception.NotFound, db_api.resource_data_get, rsrc, 'user_id')
         self.assertEqual('1234', rsrc._get_user_id())
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_FnGetAtt_Alarm_Url(self):
