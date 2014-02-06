@@ -205,6 +205,57 @@ class HOTemplateTest(HeatTestCase):
 
         self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
 
+    def test_get_file(self):
+        """Test get_file function."""
+
+        snippet = {'get_file': 'file:///tmp/foo.yaml'}
+        snippet_resolved = 'foo contents'
+
+        tmpl = parser.Template(hot_tpl_empty, files={
+            'file:///tmp/foo.yaml': 'foo contents'
+        })
+
+        self.assertEqual(snippet_resolved, tmpl.resolve_get_file(snippet))
+
+    def test_get_file_not_string(self):
+        """Test get_file function with non-string argument."""
+
+        snippet = {'get_file': ['file:///tmp/foo.yaml']}
+        tmpl = parser.Template(hot_tpl_empty)
+        notStrErr = self.assertRaises(
+            TypeError, tmpl.resolve_get_file, snippet)
+        self.assertEqual(
+            'Argument to "get_file" must be a string',
+            str(notStrErr))
+
+    def test_get_file_missing_files(self):
+        """Test get_file function with no matching key in files section."""
+
+        snippet = {'get_file': 'file:///tmp/foo.yaml'}
+
+        tmpl = parser.Template(hot_tpl_empty, files={
+            'file:///tmp/bar.yaml': 'bar contents'
+        })
+
+        missingErr = self.assertRaises(
+            ValueError, tmpl.resolve_get_file, snippet)
+        self.assertEqual(
+            ('No content found in the "files" section for '
+             'get_file path: file:///tmp/foo.yaml'),
+            str(missingErr))
+
+    def test_get_file_nested_does_not_resolve(self):
+        """Test get_file function does not resolve nested calls."""
+        snippet = {'get_file': 'file:///tmp/foo.yaml'}
+        snippet_resolved = '{get_file: file:///tmp/bar.yaml}'
+
+        tmpl = parser.Template(hot_tpl_empty, files={
+            'file:///tmp/foo.yaml': snippet_resolved,
+            'file:///tmp/bar.yaml': 'bar content',
+        })
+
+        self.assertEqual(snippet_resolved, tmpl.resolve_get_file(snippet))
+
     def test_prevent_parameters_access(self):
         """
         Test that the parameters section can't be accesed using the template

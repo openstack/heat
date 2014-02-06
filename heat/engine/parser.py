@@ -752,7 +752,8 @@ def resolve_static_data(template, stack, parameters, snippet):
                       functools.partial(template.resolve_resource_facade,
                                         stack=stack),
                       template.resolve_find_in_map,
-                      template.reduce_joins])
+                      template.reduce_joins,
+                      template.resolve_get_file])
 
 
 def resolve_runtime_data(template, resources, snippet):
