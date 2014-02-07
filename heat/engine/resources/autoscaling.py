@@ -282,30 +282,41 @@ class InstanceGroup(stack_resource.StackResource):
 
     def _create_template(self, num_instances, num_replace=0):
         """
+        Create a template to represent autoscaled instances.
+
+        Also see _resource_templates.
+        """
+        instance_definition = self._get_instance_definition()
+        old_resources = [(instance.name, instance.t)
+                         for instance in self.get_instances()]
+        templates = self._resource_templates(
+            old_resources, instance_definition, num_instances, num_replace)
+        return {"Resources": dict(templates)}
+
+    @staticmethod
+    def _resource_templates(old_resources, resource_definition,
+                            num_resources, num_replace):
+        """
         Create the template for the nested stack of existing and new instances
 
         For rolling update, if launch configuration is different, the
         instance definition should come from the existing instance instead
         of using the new launch configuration.
         """
-        instances = self.get_instances()[-num_instances:]
-        instance_definition = self._get_instance_definition()
-        num_create = num_instances - len(instances)
+        old_resources = old_resources[-num_resources:]
+        num_create = num_resources - len(old_resources)
         num_replace -= num_create
 
-        def instance_templates(num_replace):
-            for i in range(num_instances):
-                if i < len(instances):
-                    inst = instances[i]
-                    if inst.t != instance_definition and num_replace > 0:
-                        num_replace -= 1
-                        yield inst.name, instance_definition
-                    else:
-                        yield inst.name, inst.t
+        for i in range(num_resources):
+            if i < len(old_resources):
+                old_name, old_template = old_resources[i]
+                if old_template != resource_definition and num_replace > 0:
+                    num_replace -= 1
+                    yield old_name, resource_definition
                 else:
-                    yield short_id.generate_id(), instance_definition
-
-        return {"Resources": dict(instance_templates(num_replace))}
+                    yield old_name, old_template
+            else:
+                yield short_id.generate_id(), resource_definition
 
     def _replace(self, min_in_service, batch_size, pause_time):
         """
