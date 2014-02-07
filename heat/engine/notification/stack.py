@@ -22,7 +22,7 @@ def send(stack):
 
     # The current notifications have a start/end:
     # see: https://wiki.openstack.org/wiki/SystemUsageData
-    # so to be consistant we translate our status into a known start/end/error
+    # so to be consistent we translate our status into a known start/end/error
     # suffix.
     level = notification.get_default_level()
     if stack.status == stack.IN_PROGRESS:

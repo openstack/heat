@@ -78,7 +78,7 @@ class Clients(clients.OpenStackClients):
 
     def nova(self, service_type="compute"):
         '''Rackspace cloudservers client. Specifying the service type is to
-        maintain compatability with clients.OpenStackClients. It is not
+        maintain compatibility with clients.OpenStackClients. It is not
         actually a valid option to change within pyrax.
         '''
         if service_type is not "compute":

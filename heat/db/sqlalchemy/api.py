@@ -674,7 +674,7 @@ def software_deployment_update(context, deployment_id, values):
 
     if not deployment:
         raise exception.NotFound(
-            _('Attempt to update sofware deployment with '
+            _('Attempt to update software deployment with '
               'id: %(id)s %(msg)s') % {'id': deployment_id,
                                        'msg': 'that does not exist'})
 

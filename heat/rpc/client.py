@@ -74,7 +74,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         """
         Return the number of stacks that match the given filters
         :param ctxt: RPC context.
-        :param filters: a dict of ATTR:VALUE to match agains stacks
+        :param filters: a dict of ATTR:VALUE to match against stacks
         :returns: a integer representing the number of matched stacks
         """
         return self.call(ctxt, self.make_msg('count_stacks',

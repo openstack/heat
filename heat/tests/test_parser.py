@@ -1806,7 +1806,7 @@ class StackTest(HeatTestCase):
         '''
         assertion:
         changes in dynamic attributes, due to other resources been updated
-        are not ignored and can cause dependant resources to be updated.
+        are not ignored and can cause dependent resources to be updated.
         '''
         tmpl = {'Resources': {
                 'AResource': {'Type': 'ResourceWithPropsType',
@@ -1991,7 +1991,7 @@ class StackTest(HeatTestCase):
         '''
         assertion:
         changes in static environment parameters
-        are not ignored and can cause dependant resources to be updated.
+        are not ignored and can cause dependent resources to be updated.
         '''
         tmpl = {'Parameters': {'AParam': {'Type': 'String'}},
                 'Resources': {

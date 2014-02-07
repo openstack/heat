@@ -881,7 +881,7 @@ class FakeVolumeWithStateTransition(FakeVolume):
     def get(self):
         # Allow get to be called once without changing the status
         # This is to allow the check_create_complete method to
-        # check the inital status.
+        # check the initial status.
         if self.get_call_count < 1:
             self.get_call_count += 1
         else:

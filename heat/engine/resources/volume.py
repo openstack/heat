@@ -152,7 +152,7 @@ class Volume(resource.Resource):
                     vol.get()
 
                 if vol.status == 'in-use':
-                    logger.warn(_('cant delete volume when in-use'))
+                    logger.warn(_('can not delete volume when in-use'))
                     raise exception.Error(_('Volume in use'))
 
                 vol.delete()

@@ -375,7 +375,7 @@ class AccessKeyTest(UserPolicyTestCase):
 
         t = template_format.parse(user_accesskey_template)
         # Set the resource properties UserName to an unknown user
-        t['Resources']['HostKeys']['Properties']['UserName'] = 'NonExistant'
+        t['Resources']['HostKeys']['Properties']['UserName'] = 'NonExistent'
         stack = utils.parse_stack(t)
         stack['CfnUser'].resource_id = self.fc.user_id
 

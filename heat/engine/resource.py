@@ -404,7 +404,7 @@ class Resource(object):
         '''
         Perform a transition to a new state via a specified action
         action should be e.g self.CREATE, self.UPDATE etc, we set
-        status based on this, the transistion is handled by calling the
+        status based on this, the transition is handled by calling the
         corresponding handle_* and check_*_complete functions
         Note pre_func is an optional function reference which will
         be called before the handle_<action> function

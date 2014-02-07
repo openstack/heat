@@ -706,7 +706,7 @@ Resources:
     Properties:
       VpcId: {Ref: the_vpc}
   the_association:
-    Type: AWS::EC2::SubnetRouteTableAssocation
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: {Ref: the_route_table}
       SubnetId: {Ref: the_subnet}
@@ -788,7 +788,7 @@ Resources:
     Properties:
       VpcId: {Ref: the_vpc}
   the_association:
-    Type: AWS::EC2::SubnetRouteTableAssocation
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: {Ref: the_route_table}
       SubnetId: {Ref: the_subnet}

@@ -319,7 +319,7 @@ class EngineService(service.Service):
         """
         Return the number of stacks that match the given filters
         :param ctxt: RPC context.
-        :param filters: a dict of ATTR:VALUE to match agains stacks
+        :param filters: a dict of ATTR:VALUE to match against stacks
         :returns: a integer representing the number of matched stacks
         """
         return db_api.stack_count_all_by_tenant(cnxt, filters=filters)

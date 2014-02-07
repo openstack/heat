@@ -53,7 +53,7 @@ class Timeout(BaseException):
 
     This allows the task to perform any necessary cleanup, as well as use a
     different exception to notify the controlling task if appropriate. If the
-    task supresses the exception altogether, it will be cancelled but the
+    task suppresses the exception altogether, it will be cancelled but the
     controlling task will not be notified of the timeout.
     """
 

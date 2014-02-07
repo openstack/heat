@@ -71,16 +71,16 @@ class MyStackResource(stack_resource.StackResource,
     def physical_resource_name(self):
         return "cb2f2b28-a663-4683-802c-4b40c916e1ff"
 
-    def set_template(self, nested_tempalte, params):
-        self.nested_tempalte = nested_tempalte
+    def set_template(self, nested_template, params):
+        self.nested_template = nested_template
         self.nested_params = params
 
     def handle_create(self):
-        return self.create_with_template(self.nested_tempalte,
+        return self.create_with_template(self.nested_template,
                                          self.nested_params)
 
     def handle_adopt(self, resource_data):
-        return self.create_with_template(self.nested_tempalte,
+        return self.create_with_template(self.nested_template,
                                          self.nested_params,
                                          adopt_data=resource_data)
 
