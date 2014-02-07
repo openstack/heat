@@ -17,6 +17,7 @@
 import uuid
 
 from heat.common import exception
+from heat.engine import clients
 from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
 
@@ -104,6 +105,40 @@ class NovaUtilsTests(HeatTestCase):
                                                         my_key_name))
         self.assertRaises(exception.UserKeyPairMissing, nova_utils.get_keypair,
                           self.nova_client, 'notakey')
+        self.m.VerifyAll()
+
+
+class NovaUtilsRefreshServerTests(HeatTestCase):
+
+    def test_successful_refresh(self):
+        server = self.m.CreateMockAnything()
+        server.get().AndReturn(None)
+        self.m.ReplayAll()
+
+        self.assertIsNone(nova_utils.refresh_server(server))
+        self.m.VerifyAll()
+
+    def test_500_error(self):
+        server = self.m.CreateMockAnything()
+        msg = ("ClientException: The server has either erred or is "
+               "incapable of performing the requested operation.")
+        server.get().AndRaise(
+            clients.novaclient.exceptions.ClientException(500, msg))
+        self.m.ReplayAll()
+
+        self.assertIsNone(nova_utils.refresh_server(server))
+        self.m.VerifyAll()
+
+    def test_unhandled_exception(self):
+        server = self.m.CreateMockAnything()
+        msg = ("ClientException: The server has either erred or is "
+               "incapable of performing the requested operation.")
+        server.get().AndRaise(
+            clients.novaclient.exceptions.ClientException(501, msg))
+        self.m.ReplayAll()
+
+        self.assertRaises(clients.novaclient.exceptions.ClientException,
+                          nova_utils.refresh_server, server)
         self.m.VerifyAll()
 
 

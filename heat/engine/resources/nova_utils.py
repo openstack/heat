@@ -48,6 +48,23 @@ deferred_server_statuses = ['BUILD',
                             'VERIFY_RESIZE']
 
 
+def refresh_server(server):
+    '''
+    Refresh server's attributes and log warnings for non-critical API errors.
+    '''
+    try:
+        server.get()
+    except clients.novaclient.exceptions.ClientException as exc:
+        if exc.code == 500:
+            msg = _('Server "%(name)s" (%(id)s) received the following '
+                    'exception during server.get(): %(exception)s')
+            logger.warning(msg % {'name': server.name,
+                                  'id': server.id,
+                                  'exception': str(exc)})
+        else:
+            raise
+
+
 def get_image_id(nova_client, image_identifier):
     '''
     Return an id for the specified image name or identifier.
