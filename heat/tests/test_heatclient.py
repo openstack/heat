@@ -162,6 +162,31 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.create_stack_user(long_user_name, password='password')
 
+    def test_create_stack_user_error_norole(self):
+        """Test error path when no role is found."""
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        self.mock_config.heat_stack_user_role = 'heat_stack_user'
+        mock_roles_list = []
+        for r_id, r_name in (('1234', 'blah'), ('4546', 'notheat_stack_user')):
+            mock_role = self.m.CreateMockAnything()
+            mock_role.id = r_id
+            mock_role.name = r_name
+            mock_roles_list.append(mock_role)
+
+        self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.roles.list().AndReturn(mock_roles_list)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        err = self.assertRaises(exception.Error,
+                                heat_ks_client.create_stack_user,
+                                'auser', password='password')
+        self.assertIn('Can\'t find role heat_stack_user', err)
+
     def test_delete_stack_user(self):
 
         """Test deleting a stack user."""

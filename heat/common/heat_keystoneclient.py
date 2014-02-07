@@ -236,9 +236,6 @@ class KeystoneClient(object):
                            "characters.") % username)
             #get the last 64 characters of the username
             username = username[-64:]
-        user = self.client_v3.users.create(
-            name=username, password=password,
-            default_project=self.context.tenant_id)
 
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
@@ -251,6 +248,12 @@ class KeystoneClient(object):
         stack_user_role = [r for r in roles_list
                            if r.name == self.conf.heat_stack_user_role]
         if len(stack_user_role) == 1:
+            # Create the user
+            user = self.client_v3.users.create(
+                name=username, password=password,
+                default_project=self.context.tenant_id)
+
+            # Add user to heat_stack_user_role
             role_id = stack_user_role[0].id
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
@@ -261,6 +264,8 @@ class KeystoneClient(object):
                          "check role exists!") % {
                              'user': username,
                              'role': self.conf.heat_stack_user_role})
+            raise exception.Error(_("Can't find role %s")
+                                  % self.conf.heat_stack_user_role)
 
         return user.id
 
