@@ -481,7 +481,6 @@ class KeystoneClientTest(HeatTestCase):
         mock_credential.type = 'ec2'
 
         # mock keystone client create function
-        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         self.mock_ks_v3_client.credentials.create(
             user='atestuser', type='ec2', data=ex_data_json,
             project=ctx.tenant_id).AndReturn(mock_credential)
