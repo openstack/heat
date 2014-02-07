@@ -332,10 +332,23 @@ class Server(resource.Resource):
     def check_create_complete(self, server):
         return self._check_active(server)
 
+    def _refresh_server(self, server):
+        try:
+            server.get()
+        except clients.novaclient.exceptions.ClientException as exc:
+            if exc.code == 500:
+                msg = _("Stack %(name)s (%(id)s) received the following "
+                        "exception during server.get(): %(exception)s")
+                logger.warning(msg % {'name': self.stack.name,
+                                      'id': self.stack.id,
+                                      'exception': str(exc)})
+            else:
+                raise
+
     def _check_active(self, server):
 
         if server.status != 'ACTIVE':
-            server.get()
+            self._refresh_server(server)
 
         # Some clouds append extra (STATUS) strings to the status
         short_server_status = server.status.split('(')[0]
@@ -618,7 +631,7 @@ class Server(resource.Resource):
             if server.status == 'SUSPENDED':
                 return True
 
-            server.get()
+            self._refresh_server(server)
             logger.debug(_('%(name)s check_suspend_complete status '
                          '= %(status)s') % {
                          'name': self.name, 'status': server.status})
