@@ -621,3 +621,81 @@ class KeystoneClientTest(HeatTestCase):
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(ValueError, heat_ks_client.delete_ec2_keypair)
+
+    def _stub_domain(self, cfg_name='adomain', ret_id=None):
+        self._stub_config()
+        self._stub_admin_client()
+        self.mock_config.stack_user_domain = cfg_name
+        self.mock_admin_client.domains = self.m.CreateMockAnything()
+        if ret_id:
+            dummy = self.m.CreateMockAnything()
+            dummy.id = ret_id
+            self.mock_admin_client.domains.list(
+                name=cfg_name).AndReturn([dummy])
+        else:
+            self.mock_admin_client.domains.list(name=cfg_name).AndReturn([])
+
+    def test_stack_domain_id_new(self):
+
+        """Test the stack_domain_id property when the domain doesn't exist."""
+
+        self._stub_domain(cfg_name='testname')
+        dummy = self.m.CreateMockAnything()
+        dummy.id = 'adomain123'
+        self.mock_admin_client.domains.create(name='testname').AndReturn(dummy)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual('adomain123', heat_ks_client.stack_domain_id)
+
+    def test_stack_domain_id_existing(self):
+
+        """Test the stack_domain_id property when the domain exists."""
+
+        self._stub_domain(ret_id='adomain123')
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual('adomain123', heat_ks_client.stack_domain_id)
+
+    def test_create_stack_domain_project(self):
+
+        """Test the create_stack_domain_project function."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        expected_name = '%s-astack' % ctx.tenant_id
+
+        self._stub_domain(ret_id='adomain123')
+        self.mock_admin_client.projects = self.m.CreateMockAnything()
+        dummy = self.m.CreateMockAnything()
+        dummy.id = 'aproject123'
+        self.mock_admin_client.projects.create(
+            name=expected_name,
+            domain='adomain123',
+            description='Heat stack user project').AndReturn(dummy)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual('aproject123',
+                         heat_ks_client.create_stack_domain_project(
+                             stack_name='astack'))
+
+    def test_delete_stack_domain_project(self):
+
+        """Test the delete_stack_domain_project function."""
+
+        self._stub_config()
+        self._stub_admin_client()
+        self.mock_admin_client.projects = self.m.CreateMockAnything()
+        self.mock_admin_client.projects.delete(project='aprojectid')
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_project(project_id='aprojectid')

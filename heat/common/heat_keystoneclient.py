@@ -59,6 +59,7 @@ class KeystoneClient(object):
         self.context = context
         self._client_v3 = None
         self._admin_client = None
+        self._stack_domain = None
 
         if self.context.auth_url:
             self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
@@ -93,6 +94,24 @@ class KeystoneClient(object):
                 logger.error("Admin client authentication failed")
                 raise exception.AuthorizationFailure()
         return self._admin_client
+
+    @property
+    def stack_domain_id(self):
+        if not self._stack_domain:
+            # Check the required domain exists, if not create it
+            # Note this is all done via the admin_client, and the domain
+            # filtering by name requires the keystoneclient functionality
+            # added via the extensible-crud-manager-operations blueprint.
+            try:
+                heat_domain = self.admin_client.domains.list(
+                    name=self.conf.stack_user_domain)[0]
+            except IndexError:
+                heat_domain = self.admin_client.domains.create(
+                    name=self.conf.stack_user_domain)
+            logger.debug(_("Using stack domain %s")
+                         % self.conf.stack_user_domain)
+            self._stack_domain_id = heat_domain.id
+        return self._stack_domain_id
 
     def _v3_client_init(self):
         kwargs = {
@@ -246,6 +265,21 @@ class KeystoneClient(object):
 
     def delete_stack_user(self, user_id):
         self.client_v3.users.delete(user=user_id)
+
+    def create_stack_domain_project(self, stack_name):
+        '''Creates a project in the heat stack-user domain.'''
+        # Note we use the tenant ID not name to ensure uniqueness in a multi-
+        # domain environment (where the tenant name may not be globally unique)
+        project_name = '%s-%s' % (self.context.tenant_id, stack_name)
+        desc = "Heat stack user project"
+        domain_project = self.admin_client.projects.create(
+            name=project_name,
+            domain=self.stack_domain_id,
+            description=desc)
+        return domain_project.id
+
+    def delete_stack_domain_project(self, project_id):
+        self.admin_client.projects.delete(project=project_id)
 
     def _find_ec2_keypair(self, access, user_id=None):
         '''Lookup an ec2 keypair by access ID.'''
