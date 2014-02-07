@@ -154,13 +154,15 @@ class Event(BASE, HeatBase):
 
     __tablename__ = 'event'
 
-    id = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('events'))
 
+    uuid = sqlalchemy.Column(sqlalchemy.String(36),
+                             default=lambda: str(uuid.uuid4()),
+                             unique=True)
     resource_action = sqlalchemy.Column(sqlalchemy.String(255))
     resource_status = sqlalchemy.Column(sqlalchemy.String(255))
     resource_name = sqlalchemy.Column(sqlalchemy.String(255))

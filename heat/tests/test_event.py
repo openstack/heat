@@ -124,18 +124,28 @@ class EventTest(HeatTestCase):
         self.assertEqual('arizona', events[0].physical_resource_id)
 
     def test_identifier(self):
+        event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', self.resource.properties,
-                        self.resource.name, self.resource.type())
+                        self.resource.name, self.resource.type(),
+                        uuid=event_uuid)
 
-        eid = e.store()
+        e.store()
         expected_identifier = {
             'stack_name': self.stack.name,
             'stack_id': self.stack.id,
             'tenant': self.ctx.tenant_id,
-            'path': '/resources/EventTestResource/events/%s' % str(eid)
+            'path': '/resources/EventTestResource/events/%s' % str(event_uuid)
         }
         self.assertEqual(expected_identifier, e.identifier())
+
+    def test_identifier_is_none(self):
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type())
+
+        e.store()
+        self.assertIsNone(e.identifier())
 
     def test_badprop(self):
         tmpl = {'Type': 'ResourceWithRequiredProps',
