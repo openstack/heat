@@ -21,12 +21,12 @@ from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..engine.plugins import clouddatabase  # noqa
+from ..resources import clouddatabase  # noqa
 
 try:
     from pyrax.exceptions import ClientException
 except ImportError:
-    from ..engine.plugins.clouddatabase import ClientException  # noqa
+    from ..resources.clouddatabase import ClientException  # noqa
 
 wp_template = '''
 {

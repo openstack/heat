@@ -21,7 +21,7 @@ from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
 
-from ..engine.plugins import auto_scale  # noqa
+from ..resources import auto_scale  # noqa
 
 from heat.tests.common import HeatTestCase
 from heat.tests import utils

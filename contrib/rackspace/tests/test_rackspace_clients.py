@@ -17,14 +17,14 @@ from oslo.config import cfg
 from heat.engine import clients
 from heat.tests.common import HeatTestCase
 
-from ..engine.plugins import clients as rackspace_clients  # noqa
+from .. import clients as rackspace_clients  # noqa
 
 
 class ClientsTest(HeatTestCase):
     def setUp(self):
         super(ClientsTest, self).setUp()
         cfg.CONF.cloud_backend = (
-            'rackspace.heat.engine.plugins.clients.Clients')
+            'rackspace.clients.Clients')
         self.backend = clients.ClientBackend('fake_context')
 
     def test_client_plugin_loads(self):
