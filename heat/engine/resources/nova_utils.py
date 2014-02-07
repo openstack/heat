@@ -240,7 +240,7 @@ def delete_server(server):
         yield
 
         try:
-            server.get()
+            refresh_server(server)
         except clients.novaclient.exceptions.NotFound:
             break
 
@@ -257,10 +257,10 @@ def check_resize(server, flavor, flavor_id):
     Verify that a resizing server is properly resized.
     If that's the case, confirm the resize, if not raise an error.
     """
-    server.get()
+    refresh_server(server)
     while server.status == 'RESIZE':
         yield
-        server.get()
+        refresh_server(server)
     if server.status == 'VERIFY_RESIZE':
         server.confirm_resize()
     else:
@@ -281,10 +281,10 @@ def check_rebuild(server, image_id):
     Verify that a rebuilding server is rebuilt.
     Raise error if it ends up in an ERROR state.
     """
-    server.get()
+    refresh_server(server)
     while server.status == 'REBUILD':
         yield
-        server.get()
+        refresh_server(server)
     if server.status == 'ERROR':
         raise exception.Error(
             _("Rebuilding server failed, status '%s'") % server.status)
