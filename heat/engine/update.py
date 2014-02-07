@@ -135,8 +135,8 @@ class StackUpdate(object):
             else:
                 logger.info(_("Resource %(res_name)s for stack %(stack_name)s"
                             " updated") % {
-                            'res_name': res_name,
-                            'stack_name': self.existing_stack.name})
+                                'res_name': res_name,
+                                'stack_name': self.existing_stack.name})
                 return
 
         yield self._create_resource(new_res)

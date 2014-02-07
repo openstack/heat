@@ -583,8 +583,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if self._cooldown_inprogress():
             logger.info(_("%(name)s NOT performing scaling adjustment, "
                         "cooldown %(cooldown)s") % {
-                        'name': self.name,
-                        'cooldown': self.properties[self.COOLDOWN]})
+                            'name': self.name,
+                            'cooldown': self.properties[self.COOLDOWN]})
             return
 
         capacity = len(self.get_instances())
@@ -865,8 +865,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         if self._cooldown_inprogress():
             logger.info(_("%(name)s NOT performing scaling action, "
                         "cooldown %(cooldown)s") % {
-                        'name': self.name,
-                        'cooldown': self.properties[self.COOLDOWN]})
+                            'name': self.name,
+                            'cooldown': self.properties[self.COOLDOWN]})
             return
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
@@ -879,8 +879,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
 
         logger.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
                     '%(asgn_id)s by %(filter)s') % {
-                    'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
-                    'filter': self.properties[self.SCALING_ADJUSTMENT]})
+                        'name': self.name, 'group': group.name,
+                        'asgn_id': asgn_id,
+                        'filter': self.properties[self.SCALING_ADJUSTMENT]})
         group.adjust(int(self.properties[self.SCALING_ADJUSTMENT]),
                      self.properties[self.ADJUSTMENT_TYPE])
 

@@ -81,8 +81,9 @@ class Restarter(signal_responder.SignalResponder):
         victim = self._find_resource(self.properties[self.INSTANCE_ID])
         if victim is None:
             logger.info(_('%(name)s Alarm, can not find instance '
-                        '%(instance)s') % {'name': self.name,
-                        'instance': self.properties[self.INSTANCE_ID]})
+                        '%(instance)s') % {
+                            'name': self.name,
+                            'instance': self.properties[self.INSTANCE_ID]})
             return
 
         logger.info(_('%(name)s Alarm, restarting resource: %(victim)s') % {

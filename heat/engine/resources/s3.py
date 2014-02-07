@@ -113,7 +113,7 @@ class S3Bucket(resource.Resource):
         headers = self.tags_to_headers()
         logger.debug(_('S3Bucket create container %(container)s with headers '
                      '%(headers)s') % {
-                     'container': container, 'headers': headers})
+                         'container': container, 'headers': headers})
         if self.properties[self.WEBSITE_CONFIGURATION] is not None:
             sc = self.properties[self.WEBSITE_CONFIGURATION]
             index_doc = sc[self.WEBSITE_CONFIGURATION_INDEX_DOCUMENT]
