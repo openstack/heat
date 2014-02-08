@@ -33,7 +33,7 @@ from heat.openstack.common.db import api as db_api
 db_opts = [
     cfg.StrOpt('db_backend',
                default='sqlalchemy',
-               help='The backend to use for db')]
+               help='The backend to use for db.')]
 
 CONF = cfg.CONF
 CONF.register_opts(db_opts)

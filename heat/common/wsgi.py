@@ -60,18 +60,18 @@ api_opts = [
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "
-                      "to configure the socket with"),
+                      "to configure the socket with."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('cert_file', default=None,
                help=_("Location of the SSL Certificate File "
-                      "to use for SSL mode"),
+                      "to use for SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('key_file', default=None,
                help=_("Location of the SSL Key File to use "
-                      "for enabling SSL mode"),
+                      "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('workers', default=0,
-               help=_("Number of workers for Heat service"),
+               help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
 ]
 api_group = cfg.OptGroup('heat_api')
@@ -89,18 +89,18 @@ api_cfn_opts = [
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "
-                      "to configure the socket with"),
+                      "to configure the socket with."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('cert_file', default=None,
                help=_("Location of the SSL Certificate File "
-                      "to use for SSL mode"),
+                      "to use for SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('key_file', default=None,
                help=_("Location of the SSL Key File to use "
-                      "for enabling SSL mode"),
+                      "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('workers', default=0,
-               help=_("Number of workers for Heat service"),
+               help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
 ]
 api_cfn_group = cfg.OptGroup('heat_api_cfn')
@@ -118,18 +118,18 @@ api_cw_opts = [
                deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "
-                      "to configure the socket with"),
+                      "to configure the socket with."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('cert_file', default=None,
                help=_("Location of the SSL Certificate File "
-                      "to use for SSL mode"),
+                      "to use for SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.StrOpt('key_file', default=None,
                help=_("Location of the SSL Key File to use "
-                      "for enabling SSL mode"),
+                      "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
     cfg.IntOpt('workers', default=0,
-               help=_("Number of workers for Heat service"),
+               help=_("Number of workers for Heat service."),
                deprecated_group='DEFAULT'),
 ]
 api_cw_group = cfg.OptGroup('heat_api_cloudwatch')

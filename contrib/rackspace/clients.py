@@ -42,7 +42,7 @@ except ImportError:
 cloud_opts = [
     cfg.StrOpt('region_name',
                default=None,
-               help=_('Region for connecting to services'))
+               help=_('Region for connecting to services.'))
 ]
 cfg.CONF.register_opts(cloud_opts)
 

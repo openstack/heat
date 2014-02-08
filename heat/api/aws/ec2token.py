@@ -38,10 +38,10 @@ logger = logging.getLogger(__name__)
 opts = [
     cfg.StrOpt('auth_uri',
                default=None,
-               help=_("Authentication Endpoint URI")),
+               help=_("Authentication Endpoint URI.")),
     cfg.BoolOpt('multi_cloud',
                 default=False,
-                help=_('Allow orchestration of multiple clouds')),
+                help=_('Allow orchestration of multiple clouds.')),
     cfg.ListOpt('allowed_auth_uris',
                 default=[],
                 help=_('Allowed keystone endpoints for auth_uri when '

@@ -201,7 +201,7 @@ loadbalancer_opts = [
     cfg.StrOpt('loadbalancer_template',
                default=None,
                help='Custom template for the built-in '
-                    'loadbalancer nested stack')]
+                    'loadbalancer nested stack.')]
 cfg.CONF.register_opts(loadbalancer_opts)
 
 
