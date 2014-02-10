@@ -124,6 +124,18 @@ class KeyPair(resource.Resource):
     def FnGetRefId(self):
         return self.resource_id
 
+    def validate(self):
+        super(KeyPair, self).validate()
+        name = self.properties[self.NAME]
+        try:
+            nova_utils.get_keypair(self.nova(), name)
+        except exception.UserKeyPairMissing:
+            pass
+        else:
+            msg = _('Cannot create KeyPair resource with a name of "%s" (a '
+                    'keypair with that name already exists)') % name
+            raise exception.StackValidationFailed(message=msg)
+
 
 class KeypairConstraint(object):
 
