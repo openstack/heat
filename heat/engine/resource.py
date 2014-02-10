@@ -486,8 +486,7 @@ class Resource(object):
             'action': self.action,
             'status': self.status,
             'metadata': self.metadata,
-            'resource_data': dict((r.key, r.value)
-                                  for r in db_api.resource_data_get_all(self))
+            'resource_data': db_api.resource_data_get_all(self)
         }
 
     def adopt(self, resource_data):
