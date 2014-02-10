@@ -2122,6 +2122,34 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', str(resp))
 
+    def test_signal(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'signal', True)
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+
+        req = self._get(stack_identity._tenant_path())
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'resource_signal',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name,
+                           'details': 'Signal content'},
+                  'version': self.api_version},
+                 None)
+        self.m.ReplayAll()
+
+        result = self.controller.signal(req, tenant_id=self.tenant,
+                                        stack_name=stack_identity.stack_name,
+                                        stack_id=stack_identity.stack_id,
+                                        resource_name=res_name,
+                                        body="Signal content")
+
+        self.assertIsNone(result)
+        self.m.VerifyAll()
+
 
 @mock.patch.object(policy.Enforcer, 'enforce')
 class EventControllerTest(ControllerTest, HeatTestCase):
@@ -2872,6 +2900,18 @@ class RoutesTest(HeatTestCase):
             '/aaaa/stacks/teststack/bbbb/resources/cccc/metadata',
             'GET',
             'metadata',
+            'ResourceController',
+            {
+                'tenant_id': 'aaaa',
+                'stack_name': 'teststack',
+                'stack_id': 'bbbb',
+                'resource_name': 'cccc'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/teststack/bbbb/resources/cccc/signal',
+            'POST',
+            'signal',
             'ResourceController',
             {
                 'tenant_id': 'aaaa',

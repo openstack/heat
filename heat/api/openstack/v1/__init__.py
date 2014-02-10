@@ -138,6 +138,10 @@ class API(wsgi.Router):
                                "/resources/{resource_name}/metadata",
                                action="metadata",
                                conditions={'method': 'GET'})
+            res_mapper.connect("resource_signal",
+                               "/resources/{resource_name}/signal",
+                               action="signal",
+                               conditions={'method': 'POST'})
 
         # Events
         events_resource = events.create_resource(conf)

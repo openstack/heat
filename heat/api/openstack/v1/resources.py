@@ -102,6 +102,14 @@ class ResourceController(object):
 
         return {engine_api.RES_METADATA: res[engine_api.RES_METADATA]}
 
+    @util.identified_stack
+    def signal(self, req, identity, resource_name, body=None):
+        self.engine.resource_signal(
+            req.context,
+            stack_identity=identity,
+            resource_name=resource_name,
+            details=body)
+
 
 def create_resource(options):
     """
