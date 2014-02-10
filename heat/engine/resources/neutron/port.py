@@ -162,6 +162,9 @@ class Port(neutron.NeutronResource):
 
         self._prepare_list_properties(props)
 
+        if not props['fixed_ips']:
+            del(props['fixed_ips'])
+
         port = self.neutron().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
