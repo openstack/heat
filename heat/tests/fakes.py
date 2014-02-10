@@ -86,7 +86,13 @@ class FakeKeystoneClient(object):
         self.access = access
         self.secret = secret
         self.credential_id = credential_id
-        self.creds = None
+
+        class FakeCred(object):
+            id = self.credential_id
+            access = self.access
+            secret = self.secret
+        self.creds = FakeCred()
+
         self.auth_token = 'abcd1234'
 
     def create_stack_user(self, username, password=''):
@@ -107,12 +113,6 @@ class FakeKeystoneClient(object):
 
     def create_ec2_keypair(self, user_id):
         if user_id == self.user_id:
-            if not self.creds:
-                class FakeCred(object):
-                    id = self.credential_id
-                    access = self.access
-                    secret = self.secret
-                self.creds = FakeCred()
             return self.creds
 
     def delete_ec2_keypair(self, user_id, access):
@@ -142,3 +142,15 @@ class FakeKeystoneClient(object):
 
     def delete_stack_domain_project(self, project_id):
         pass
+
+    def create_stack_domain_project(self, stack_name):
+        return 'aprojectid'
+
+    def create_stack_domain_user(self, username, project_id, password=None):
+        return self.user_id
+
+    def delete_stack_domain_user(self, user_id, project_id):
+        pass
+
+    def create_stack_domain_user_keypair(self, user_id, project_id):
+        return self.creds

@@ -30,7 +30,7 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.engine import signal_responder as sr
+from heat.engine import stack_user
 
 from keystoneclient import exceptions as kc_exceptions
 
@@ -84,8 +84,8 @@ class SignalTest(HeatTestCase):
             stack.store()
 
         if stub:
-            self.m.StubOutWithMock(sr.SignalResponder, 'keystone')
-            sr.SignalResponder.keystone().MultipleTimes().AndReturn(
+            self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
+            stack_user.StackUser.keystone().MultipleTimes().AndReturn(
                 self.fc)
 
         self.m.ReplayAll()
@@ -93,38 +93,11 @@ class SignalTest(HeatTestCase):
         return stack
 
     @utils.stack_delete_after
-    def test_handle_create_fail_user(self):
-        self.stack = self.create_stack(stack_name='create_fail_user',
-                                       stub=False)
-
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
-            def create_stack_user(self, name):
-                raise kc_exceptions.Forbidden("Denied!")
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            FakeKeystoneClientFail())
-        self.m.ReplayAll()
-
-        self.stack.create()
-
-        rsrc = self.stack['signal_handler']
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.assertIn('Forbidden', rsrc.status_reason)
-        self.m.VerifyAll()
-
-    @utils.stack_delete_after
     def test_handle_create_fail_keypair_raise(self):
-        self.stack = self.create_stack(stack_name='create_fail_keypair',
-                                       stub=False)
+        self.stack = self.create_stack(stack_name='create_fail_keypair')
 
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
-            def create_ec2_keypair(self, name):
-                raise kc_exceptions.Forbidden("Denied!")
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            FakeKeystoneClientFail(user_id='123xyz'))
+        self.m.StubOutWithMock(stack_user.StackUser, '_create_keypair')
+        stack_user.StackUser._create_keypair().AndRaise(Exception('Failed'))
         self.m.ReplayAll()
 
         self.stack.create()
@@ -132,32 +105,8 @@ class SignalTest(HeatTestCase):
         rsrc = self.stack['signal_handler']
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.assertIn('Forbidden', rsrc.status_reason)
-        self.assertEqual('123xyz', rs_data.get('user_id'))
-        self.assertIsNone(rsrc.resource_id)
-        self.m.VerifyAll()
-
-    @utils.stack_delete_after
-    def test_handle_create_fail_keypair_none(self):
-        self.stack = self.create_stack(stack_name='create_fail_keypair',
-                                       stub=False)
-
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
-            def create_ec2_keypair(self, name):
-                return None
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            FakeKeystoneClientFail(user_id='123xyz'))
-        self.m.ReplayAll()
-
-        self.stack.create()
-
-        rsrc = self.stack['signal_handler']
-        rs_data = db_api.resource_data_get_all(rsrc)
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.assertIn('Error creating ec2 keypair', rsrc.status_reason)
-        self.assertEqual('123xyz', rs_data.get('user_id'))
+        self.assertIn('Failed', rsrc.status_reason)
+        self.assertEqual('1234', rs_data.get('user_id'))
         self.assertIsNone(rsrc.resource_id)
         self.m.VerifyAll()
 
@@ -187,12 +136,6 @@ class SignalTest(HeatTestCase):
         self.assertEqual('1234', rs_data.get('user_id'))
         self.assertEqual(rsrc.resource_id, rs_data.get('user_id'))
         self.assertEqual(4, len(rs_data.keys()))
-
-        # And that we remove it on delete
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        rs_data = db_api.resource_data_get_all(rsrc)
-        self.assertEqual(1, len(rs_data.keys()))
         self.m.VerifyAll()
 
     @utils.stack_delete_after
