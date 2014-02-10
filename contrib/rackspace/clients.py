@@ -34,7 +34,7 @@ except ImportError:
     swiftclient = None
     logger.info(_('swiftclient not available'))
 try:
-    from ceilometerclient.v2 import client as ceilometerclient
+    from ceilometerclient import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
     logger.info(_('ceilometerclient not available'))

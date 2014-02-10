@@ -50,7 +50,7 @@ except ImportError:
     logger.info(_('troveclient not available'))
 
 try:
-    from ceilometerclient.v2 import client as ceilometerclient
+    from ceilometerclient import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
     logger.info(_('ceilometerclient not available'))
@@ -260,13 +260,13 @@ class OpenStackClients(object):
         con = self.context
 
         endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
+        endpoint = self.url_for(service_type='metering',
+                                endpoint_type=endpoint_type)
         args = {
             'auth_url': con.auth_url,
             'service_type': 'metering',
             'project_id': con.tenant,
             'token': lambda: self.auth_token,
-            'endpoint': self.url_for(service_type='metering',
-                                     endpoint_type=endpoint_type),
             'endpoint_type': endpoint_type,
             'ca_file': self._get_client_option('ceilometer', 'ca_file'),
             'cert_file': self._get_client_option('ceilometer', 'cert_file'),
@@ -274,7 +274,7 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('ceilometer', 'insecure')
         }
 
-        client = ceilometerclient.Client(**args)
+        client = ceilometerclient.Client('2', endpoint, **args)
 
         self._ceilometer = client
         return self._ceilometer
