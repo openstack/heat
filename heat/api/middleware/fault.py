@@ -72,6 +72,7 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidTemplateReference': webob.exc.HTTPBadRequest,
         'UnknownUserParameter': webob.exc.HTTPBadRequest,
         'RevertFailed': webob.exc.HTTPInternalServerError,
+        'StopActionFailed': webob.exc.HTTPInternalServerError,
         'ServerBuildFailed': webob.exc.HTTPInternalServerError,
         'NotSupported': webob.exc.HTTPBadRequest,
         'MissingCredentialError': webob.exc.HTTPBadRequest,

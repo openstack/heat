@@ -48,6 +48,13 @@ class StackLock(object):
     def generate_engine_id():
         return str(uuid.uuid4())
 
+    def try_acquire(self):
+        """
+        Try to acquire a stack lock, but don't raise an ActionInProgress
+        exception or try to steal lock.
+        """
+        return db_api.stack_lock_create(self.stack.id, self.engine_id)
+
     @rpc_common.client_exceptions(exception.ActionInProgress)
     def acquire(self, retry=True):
         """

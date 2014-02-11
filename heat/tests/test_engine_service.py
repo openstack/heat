@@ -24,6 +24,8 @@ import mox
 
 from oslo.config import cfg
 
+cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
+
 from heat.engine import environment
 from heat.common import exception
 from heat.common import urlfetch
@@ -42,9 +44,11 @@ from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import resource as rsrs
+from heat.engine import stack_lock
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.openstack.common.rpc import common as rpc_common
+from heat.openstack.common.rpc import proxy
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -668,6 +672,101 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertRaises(exception.StackNotFound,
                           self.man.delete_stack,
                           self.ctx, stack.identifier())
+        self.m.VerifyAll()
+
+    def test_stack_delete_acquired_lock(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
+        self.man.tg = DummyThreadGroup()
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
+        self.m.ReplayAll()
+
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.m.VerifyAll()
+
+    def test_stack_delete_current_engine_active_lock(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        # Insert a fake lock into the db
+        db_api.stack_lock_create(stack.id, self.man.engine_id)
+
+        # Create a fake ThreadGroup too
+        self.man.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
+        self.m.ReplayAll()
+
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.m.VerifyAll()
+
+    def test_stack_delete_other_engine_active_lock_failed(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        # Insert a fake lock into the db
+        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
+
+        rpc = proxy.RpcProxy("other-engine-fake-uuid", "1.0")
+        msg = rpc.make_msg("stop_stack", stack_identity=mox.IgnoreArg())
+        self.m.StubOutWithMock(proxy.RpcProxy, 'call')
+        proxy.RpcProxy.call(self.ctx, msg, topic='other-engine-fake-uuid',
+                            timeout=cfg.CONF.engine_life_check_timeout)\
+            .AndRaise(rpc_common.Timeout)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.StopActionFailed,
+                          self.man.delete_stack, self.ctx, stack.identifier())
+        self.m.VerifyAll()
+
+    def test_stack_delete_other_engine_active_lock_succeeded(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        # Insert a fake lock into the db
+        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
+
+        rpc = proxy.RpcProxy("other-engine-fake-uuid", "1.0")
+        msg = rpc.make_msg("stop_stack", stack_identity=mox.IgnoreArg())
+        self.m.StubOutWithMock(proxy.RpcProxy, 'call')
+        proxy.RpcProxy.call(self.ctx, msg, topic='other-engine-fake-uuid',
+                            timeout=cfg.CONF.engine_life_check_timeout)\
+            .AndReturn(None)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
+        stack_lock.StackLock.acquire().AndReturn(None)
+        self.m.ReplayAll()
+
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
         self.m.VerifyAll()
 
     def test_stack_update(self):
