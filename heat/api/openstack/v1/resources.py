@@ -115,7 +115,6 @@ def create_resource(options):
     """
     Resources resource factory method.
     """
-    # TODO(zaneb) handle XML based on Content-type/Accepts
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(ResourceController(options), deserializer, serializer)
