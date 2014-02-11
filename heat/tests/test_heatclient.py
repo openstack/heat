@@ -139,18 +139,9 @@ class KeystoneClientTest(HeatTestCase):
                                             password='password',
                                             default_project=ctx.tenant_id
                                             ).AndReturn(mock_user)
-        # mock out the call to roles; will send an error log message but does
-        # not raise an exception
-        self.mock_config.heat_stack_user_role = 'heat_stack_user'
-        mock_roles_list = []
-        for r_id, r_name in (('1234', 'blah'), ('4546', 'heat_stack_user')):
-            mock_role = self.m.CreateMockAnything()
-            mock_role.id = r_id
-            mock_role.name = r_name
-            mock_roles_list.append(mock_role)
 
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.roles.list().AndReturn(mock_roles_list)
+        self.mock_ks_v3_client.roles.list().AndReturn(self._mock_roles_list())
         self.mock_ks_v3_client.roles.grant(project=ctx.tenant_id,
                                            role='4546',
                                            user='auser123').AndReturn(None)
@@ -170,21 +161,72 @@ class KeystoneClientTest(HeatTestCase):
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
-        self.mock_config.heat_stack_user_role = 'heat_stack_user'
-        mock_roles_list = []
-        for r_id, r_name in (('1234', 'blah'), ('4546', 'notheat_stack_user')):
-            mock_role = self.m.CreateMockAnything()
-            mock_role.id = r_id
-            mock_role.name = r_name
-            mock_roles_list.append(mock_role)
-
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
+        mock_roles_list = self._mock_roles_list(heat_stack_user='badrole')
         self.mock_ks_v3_client.roles.list().AndReturn(mock_roles_list)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_user,
                                 'auser', password='password')
+        self.assertIn('Can\'t find role heat_stack_user', err)
+
+    def _mock_roles_list(self, heat_stack_user='heat_stack_user'):
+        self.mock_config.heat_stack_user_role = 'heat_stack_user'
+        mock_roles_list = []
+        for r_id, r_name in (('1234', 'blah'), ('4546', heat_stack_user)):
+            mock_role = self.m.CreateMockAnything()
+            mock_role.id = r_id
+            mock_role.name = r_name
+            mock_roles_list.append(mock_role)
+        return mock_roles_list
+
+    def test_create_stack_domain_user(self):
+        """Test creating a stack domain user."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self.mock_admin_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'duser123'
+        self.mock_admin_client.users.create(name='duser',
+                                            password=None,
+                                            default_project='aproject',
+                                            domain='adomain123'
+                                            ).AndReturn(mock_user)
+        self.mock_admin_client.roles = self.m.CreateMockAnything()
+        self.mock_admin_client.roles.list().AndReturn(self._mock_roles_list())
+        self.mock_admin_client.roles.grant(project='aproject',
+                                           role='4546',
+                                           user='duser123').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.create_stack_domain_user(username='duser',
+                                                project_id='aproject')
+
+    def test_create_stack_domain_user_error_norole(self):
+        """Test creating a stack domain user, no role error path."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        self._stub_config()
+        self._stub_admin_client()
+
+        # mock keystone client functions
+        self.mock_admin_client.roles = self.m.CreateMockAnything()
+        mock_roles_list = self._mock_roles_list(heat_stack_user='badrole')
+        self.mock_admin_client.roles.list().AndReturn(mock_roles_list)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        err = self.assertRaises(exception.Error,
+                                heat_ks_client.create_stack_domain_user,
+                                username='duser', project_id='aproject')
         self.assertIn('Can\'t find role heat_stack_user', err)
 
     def test_delete_stack_user(self):
