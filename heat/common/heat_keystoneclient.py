@@ -308,6 +308,15 @@ class KeystoneClient(object):
 
         return user.id
 
+    def delete_stack_domain_user(self, user_id, project_id):
+        # Sanity check that domain/project is correct
+        user = self.admin_client.users.get(user_id)
+        if user.domain_id != self.stack_domain_id:
+            raise ValueError(_('User delete in invalid domain'))
+        if user.default_project_id != project_id:
+            raise ValueError(_('User delete in invalid project'))
+        self.admin_client.users.delete(user_id)
+
     def delete_stack_user(self, user_id):
         self.client_v3.users.delete(user=user_id)
 
