@@ -80,6 +80,10 @@
 # (string value)
 #instance_connection_https_validate_certificates=1
 
+# Default region name used to get services endpoints (string
+# value)
+#region_name_for_services=<None>
+
 # Keystone role for heat template-defined users (string value)
 #heat_stack_user_role=heat_stack_user
 

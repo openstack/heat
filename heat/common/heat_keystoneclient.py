@@ -410,6 +410,8 @@ class KeystoneClient(object):
         self.client_v3.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
+        default_region_name = cfg.CONF.region_name_for_services
+        kwargs.setdefault('region_name', default_region_name)
         return self.client_v3.service_catalog.url_for(**kwargs)
 
     @property

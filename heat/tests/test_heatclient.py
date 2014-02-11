@@ -15,6 +15,10 @@
 import json
 import uuid
 
+from oslo.config import cfg
+
+cfg.CONF.import_opt('region_name_for_services', 'heat.common.config')
+
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
 
@@ -868,3 +872,57 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
+
+    def _test_url_for(self, service_url, expected_kwargs, **kwargs):
+        """
+        Helper function for testing url_for depending on different ways to
+        pass region name.
+        """
+        self._stubs_v3()
+        self.mock_ks_v3_client.service_catalog = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.service_catalog.url_for(**expected_kwargs)\
+            .AndReturn(service_url)
+
+        self.m.ReplayAll()
+        ctx = utils.dummy_context()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual(heat_ks_client.url_for(**kwargs), service_url)
+        self.m.VerifyAll()
+
+    def test_url_for(self):
+        """
+        Test that None value is passed as region name if region name is not
+        specified in the config file or as one of the arguments.
+        """
+        cfg.CONF.set_override('region_name_for_services', None)
+        service_url = 'http://example.com:1234/v1'
+        kwargs = {
+            'region_name': None
+        }
+        self._test_url_for(service_url, kwargs)
+
+    def test_url_for_with_region(self):
+        """
+        Test that region name passed as argument is not override by region name
+        specified in the config file.
+        """
+        cfg.CONF.set_override('region_name_for_services', 'RegionOne')
+        service_url = 'http://regiontwo.example.com:1234/v1'
+        kwargs = {
+            'region_name': 'RegionTwo'
+        }
+        self._test_url_for(service_url, kwargs, **kwargs)
+
+    def test_url_for_with_region_name_from_config(self):
+        """
+        Test that default region name for services from config file is passed
+        if region name is not specified in arguments.
+        """
+        region_name_for_services = 'RegionOne'
+        cfg.CONF.set_override('region_name_for_services',
+                              region_name_for_services)
+        kwargs = {
+            'region_name': region_name_for_services
+        }
+        service_url = 'http://regionone.example.com:1234/v1'
+        self._test_url_for(service_url, kwargs)
