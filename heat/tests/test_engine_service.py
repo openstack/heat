@@ -2486,9 +2486,11 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_delete_software_deployment(self):
         deployment_id = str(uuid.uuid4())
-        self.assertRaises(exception.NotFound,
-                          self.engine.delete_software_deployment,
-                          self.ctx, deployment_id)
+        e = self.assertRaises(rpc_common.ClientException,
+                              self.engine.delete_software_deployment,
+                              self.ctx, deployment_id)
+        self.assertIs(e._exc_info[0], exception.NotFound)
+
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
         deployment_id = deployment['id']

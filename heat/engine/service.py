@@ -969,6 +969,7 @@ class EngineService(service.Service):
         result[rpc_api.WATCH_STATE_VALUE] = state
         return result
 
+    @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def show_software_config(self, cnxt, config_id):
         sc = db_api.software_config_get(cnxt, config_id)
@@ -989,6 +990,7 @@ class EngineService(service.Service):
             'tenant': cnxt.tenant_id})
         return api.format_software_config(sc)
 
+    @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def delete_software_config(self, cnxt, config_id):
         db_api.software_config_delete(cnxt, config_id)
@@ -999,6 +1001,7 @@ class EngineService(service.Service):
         result = [api.format_software_deployment(sd) for sd in all_sd]
         return result
 
+    @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def show_software_deployment(self, cnxt, deployment_id):
         sd = db_api.software_deployment_get(cnxt, deployment_id)
@@ -1019,6 +1022,7 @@ class EngineService(service.Service):
             'status_reason': status_reason})
         return api.format_software_deployment(sd)
 
+    @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def update_software_deployment(self, cnxt, deployment_id, config_id,
                                    input_values, output_values, action,
@@ -1040,6 +1044,7 @@ class EngineService(service.Service):
                                                deployment_id, update_data)
         return api.format_software_deployment(sd)
 
+    @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def delete_software_deployment(self, cnxt, deployment_id):
         db_api.software_deployment_delete(cnxt, deployment_id)
