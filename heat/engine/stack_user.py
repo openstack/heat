@@ -130,3 +130,22 @@ class StackUser(resource.Resource):
             db_api.resource_data_set(self, 'secret_key', kp.secret,
                                      redact=True)
         return kp
+
+    def _delete_keypair(self):
+        # Subclasses may optionally call this to delete a keypair created
+        # via _create_keypair
+        user_id = self._get_user_id()
+        credential_id = db_api.resource_data_get(self, 'credential_id')
+        try:
+            self.keystone().delete_stack_domain_user_keypair(
+                user_id=user_id, project_id=self.stack.stack_user_project_id,
+                credential_id=credential_id)
+        except ValueError:
+            self.keystone().delete_ec2_keypair(
+                user_id=user_id, credential_id=credential_id)
+
+        for data_key in ('access_key', 'secret_key', 'credential_id'):
+            try:
+                db_api.resource_data_delete(self, data_key)
+            except exception.NotFound:
+                pass
