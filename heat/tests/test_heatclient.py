@@ -581,6 +581,14 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.enable_stack_user('atestuser')
 
+    def _stub_uuid(self, values=[]):
+        # stub UUID.hex to return the values specified
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        for v in values:
+            mock_uuid = self.m.CreateMockAnything()
+            mock_uuid.hex = v
+            uuid.uuid4().AndReturn(mock_uuid)
+
     def test_create_ec2_keypair(self):
 
         """Test creating ec2 credentials."""
@@ -595,13 +603,7 @@ class KeystoneClientTest(HeatTestCase):
         ex_data_json = json.dumps(ex_data)
 
         # stub UUID.hex to match ex_data
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        mock_uuid_access = self.m.CreateMockAnything()
-        mock_uuid_access.hex = 'dummy_access'
-        uuid.uuid4().AndReturn(mock_uuid_access)
-        mock_uuid_secret = self.m.CreateMockAnything()
-        mock_uuid_secret.hex = 'dummy_secret'
-        uuid.uuid4().AndReturn(mock_uuid_secret)
+        self._stub_uuid(['dummy_access', 'dummy_secret'])
 
         # mock keystone client credentials functions
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
@@ -621,6 +623,43 @@ class KeystoneClientTest(HeatTestCase):
         self.assertEqual('123456', ec2_cred.id)
         self.assertEqual('dummy_access', ec2_cred.access)
         self.assertEqual('dummy_secret', ec2_cred.secret)
+
+    def test_create_stack_domain_user_keypair(self):
+
+        """Test creating ec2 credentials for domain user."""
+
+        self._stub_config()
+        self._stub_admin_client()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        ex_data = {'access': 'dummy_access2',
+                   'secret': 'dummy_secret2'}
+        ex_data_json = json.dumps(ex_data)
+
+        # stub UUID.hex to match ex_data
+        self._stub_uuid(['dummy_access2', 'dummy_secret2'])
+
+        # mock keystone client credentials functions
+        self.mock_admin_client.credentials = self.m.CreateMockAnything()
+        mock_credential = self.m.CreateMockAnything()
+        mock_credential.id = '1234567'
+        mock_credential.user_id = 'atestuser2'
+        mock_credential.blob = ex_data_json
+        mock_credential.type = 'ec2'
+
+        # mock keystone client create function
+        self.mock_admin_client.credentials.create(
+            user='atestuser2', type='ec2', data=ex_data_json,
+            project='aproject').AndReturn(mock_credential)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        ec2_cred = heat_ks_client.create_stack_domain_user_keypair(
+            user_id='atestuser2', project_id='aproject')
+        self.assertEqual('1234567', ec2_cred.id)
+        self.assertEqual('dummy_access2', ec2_cred.access)
+        self.assertEqual('dummy_secret2', ec2_cred.secret)
 
     def test_get_ec2_keypair_id(self):
 
