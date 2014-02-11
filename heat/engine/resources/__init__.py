@@ -14,6 +14,7 @@
 #    under the License.
 
 import glob
+import itertools
 import os
 import os.path
 
@@ -29,9 +30,13 @@ LOG = log.getLogger(__name__)
 
 
 def _register_resources(env, type_pairs):
-
     for res_name, res_class in type_pairs:
         env.register_class(res_name, res_class)
+
+
+def _register_constraints(env, type_pairs):
+    for constraint_name, constraint in type_pairs:
+        env.register_constraint(constraint_name, constraint)
 
 
 def _get_module_resources(module):
@@ -44,11 +49,22 @@ def _get_module_resources(module):
         return []
 
 
-def _register_modules(env, modules):
-    import itertools
+def _get_module_constraints(module):
+    if callable(getattr(module, 'constraint_mapping', None)):
+        return module.constraint_mapping().iteritems()
+    else:
+        return []
 
-    resource_lists = (_get_module_resources(m) for m in modules)
-    _register_resources(env, itertools.chain.from_iterable(resource_lists))
+
+def _register_modules(env, modules):
+    data_lists = [(_get_module_resources(m), _get_module_constraints(m))
+                  for m in modules]
+
+    if data_lists:
+        resource_lists, constraint_lists = zip(*data_lists)
+        _register_resources(env, itertools.chain.from_iterable(resource_lists))
+        _register_constraints(
+            env, itertools.chain.from_iterable(constraint_lists))
 
 
 _environment = None

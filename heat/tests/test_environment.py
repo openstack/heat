@@ -15,6 +15,7 @@
 import fixtures
 import mock
 import os.path
+import sys
 
 from oslo.config import cfg
 
@@ -104,6 +105,55 @@ class EnvironmentTest(common.HeatTestCase):
         self.assertEqual('ip.yaml',
                          env.get_resource_info('OS::Networking::FloatingIP',
                                                'my_fip').value)
+
+    def test_constraints(self):
+        env = environment.Environment({})
+
+        first_constraint = object()
+        second_constraint = object()
+        env.register_constraint("constraint1", first_constraint)
+        env.register_constraint("constraint2", second_constraint)
+        self.assertIs(first_constraint, env.get_constraint("constraint1"))
+        self.assertIs(second_constraint, env.get_constraint("constraint2"))
+        self.assertIs(None, env.get_constraint("no_constraint"))
+
+    def test_constraints_registry(self):
+        constraint_content = '''
+class MyConstraint(object):
+    pass
+
+def constraint_mapping():
+    return {"constraint1": MyConstraint}
+        '''
+        plugin_dir = self.useFixture(fixtures.TempDir())
+        plugin_file = os.path.join(plugin_dir.path, 'test.py')
+        with open(plugin_file, 'w+') as ef:
+            ef.write(constraint_content)
+        self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
+        cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
+
+        env = environment.Environment({})
+        resources._load_all(env)
+
+        self.assertEqual("MyConstraint",
+                         env.get_constraint("constraint1").__name__)
+        self.assertIs(None, env.get_constraint("no_constraint"))
+
+    def test_constraints_registry_error(self):
+        constraint_content = '''
+def constraint_mapping():
+    raise ValueError("oops")
+        '''
+        plugin_dir = self.useFixture(fixtures.TempDir())
+        plugin_file = os.path.join(plugin_dir.path, 'test.py')
+        with open(plugin_file, 'w+') as ef:
+            ef.write(constraint_content)
+        self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
+        cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
+
+        env = environment.Environment({})
+        error = self.assertRaises(ValueError, resources._load_all, env)
+        self.assertEqual("oops", str(error))
 
 
 class EnvironmentDuplicateTest(common.HeatTestCase):

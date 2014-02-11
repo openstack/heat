@@ -347,6 +347,7 @@ class Environment(object):
         else:
             self.params = dict((k, v) for (k, v) in env.iteritems()
                                if k != RESOURCE_REGISTRY)
+        self.constraints = {}
 
     def load(self, env_snippet):
         self.registry.load(env_snippet.get(RESOURCE_REGISTRY, {}))
@@ -360,6 +361,9 @@ class Environment(object):
     def register_class(self, resource_type, resource_class):
         self.registry.register_class(resource_type, resource_class)
 
+    def register_constraint(self, constraint_name, constraint):
+        self.constraints[constraint_name] = constraint
+
     def get_class(self, resource_type, resource_name=None):
         return self.registry.get_class(resource_type, resource_name)
 
@@ -370,3 +374,6 @@ class Environment(object):
                           registry_type=None):
         return self.registry.get_resource_info(resource_type, resource_name,
                                                registry_type)
+
+    def get_constraint(self, name):
+        return self.constraints.get(name)
