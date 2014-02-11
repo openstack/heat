@@ -728,6 +728,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
         stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
 
+        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
+        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
+            .AndReturn(True)
+
         rpc = proxy.RpcProxy("other-engine-fake-uuid", "1.0")
         msg = rpc.make_msg("stop_stack", stack_identity=mox.IgnoreArg())
         self.m.StubOutWithMock(proxy.RpcProxy, 'call')
@@ -755,12 +759,42 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
         stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
 
+        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
+        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
+            .AndReturn(True)
+
         rpc = proxy.RpcProxy("other-engine-fake-uuid", "1.0")
         msg = rpc.make_msg("stop_stack", stack_identity=mox.IgnoreArg())
         self.m.StubOutWithMock(proxy.RpcProxy, 'call')
         proxy.RpcProxy.call(self.ctx, msg, topic='other-engine-fake-uuid',
                             timeout=cfg.CONF.engine_life_check_timeout)\
             .AndReturn(None)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
+        stack_lock.StackLock.acquire().AndReturn(None)
+        self.m.ReplayAll()
+
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.m.VerifyAll()
+
+    def test_stack_delete_other_dead_engine_active_lock(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        # Insert a fake lock into the db
+        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
+        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
+            .AndReturn(False)
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
         stack_lock.StackLock.acquire().AndReturn(None)
