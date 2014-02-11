@@ -33,6 +33,7 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import stack_user
 from heat.engine.properties import schemata
 from heat.engine.resources.ceilometer import alarm
 
@@ -158,8 +159,8 @@ class CeilometerAlarmTest(HeatTestCase):
                              disable_rollback=True)
         stack.store()
 
-        self.m.StubOutWithMock(resource.Resource, 'keystone')
-        resource.Resource.keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
+        stack_user.StackUser.keystone().MultipleTimes().AndReturn(
             self.fc)
 
         self.m.StubOutWithMock(alarm.CeilometerAlarm, 'ceilometer')

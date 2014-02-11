@@ -17,10 +17,10 @@ from heat.db import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import stack_user
 
 from heat.openstack.common import log as logging
 
-import keystoneclient.exceptions as kc_exception
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 #
 
 
-class User(resource.Resource):
+class User(stack_user.StackUser):
     PROPERTIES = (
         PATH, GROUPS, LOGIN_PROFILE, POLICIES,
     ) = (
@@ -100,43 +100,17 @@ class User(resource.Resource):
         return True
 
     def handle_create(self):
-        passwd = ''
         profile = self.properties[self.LOGIN_PROFILE]
         if profile and self.LOGIN_PROFILE_PASSWORD in profile:
-            passwd = profile[self.LOGIN_PROFILE_PASSWORD]
+            self.password = profile[self.LOGIN_PROFILE_PASSWORD]
 
         if self.properties[self.POLICIES]:
             if not self._validate_policies(self.properties[self.POLICIES]):
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=self.POLICIES)
 
-        uid = self.keystone().create_stack_user(self.physical_resource_name(),
-                                                passwd)
-        self.resource_id_set(uid)
-
-    def handle_delete(self):
-        if self.resource_id is None:
-            logger.error(_("Cannot delete User resource before user "
-                         "created!"))
-            return
-        try:
-            self.keystone().delete_stack_user(self.resource_id)
-        except kc_exception.NotFound:
-            pass
-
-    def handle_suspend(self):
-        if self.resource_id is None:
-            logger.error(_("Cannot suspend User resource before user "
-                         "created!"))
-            return
-        self.keystone().disable_stack_user(self.resource_id)
-
-    def handle_resume(self):
-        if self.resource_id is None:
-            logger.error(_("Cannot resume User resource before user "
-                         "created!"))
-            return
-        self.keystone().enable_stack_user(self.resource_id)
+        super(User, self).handle_create()
+        self.resource_id_set(self._get_user_id())
 
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
@@ -212,25 +186,16 @@ class AccessKey(resource.Resource):
         if user is None:
             raise exception.NotFound(_('could not find user %s') %
                                      self.properties[self.USER_NAME])
-
-        kp = self.keystone().create_ec2_keypair(user.resource_id)
-        if not kp:
-            raise exception.Error(_("Error creating ec2 keypair for user %s") %
-                                  user)
-
+        # The keypair is actually created and owned by the User resource
+        kp = user._create_keypair()
         self.resource_id_set(kp.access)
         self._secret = kp.secret
         self._register_access_key()
 
-        # Store the secret key, encrypted, in the DB so we don't have to
-        # re-request it from keystone every time someone requests the
-        # SecretAccessKey attribute
-        db_api.resource_data_set(self, 'secret_key', kp.secret,
-                                 redact=True)
-        # Also store the credential ID as this should be used to manage
-        # the credential rather than the access key via v3/credentials
-        db_api.resource_data_set(self, 'credential_id', kp.id,
-                                 redact=True)
+        # Store the secret key, encrypted, in the DB so we don't have lookup
+        # the user every time someone requests the SecretAccessKey attribute
+        db_api.resource_data_set(self, 'secret_key', kp.secret, redact=True)
+        db_api.resource_data_set(self, 'credential_id', kp.id, redact=True)
 
     def handle_delete(self):
         self._secret = None
@@ -241,14 +206,7 @@ class AccessKey(resource.Resource):
         if user is None:
             logger.warning(_('Error deleting %s - user not found') % str(self))
             return
-        user_id = user.resource_id
-        if user_id:
-            try:
-                self.keystone().delete_ec2_keypair(user_id, self.resource_id)
-            except kc_exception.NotFound:
-                pass
-
-        self.resource_id_set(None)
+        user._delete_keypair()
 
     def _secret_accesskey(self):
         '''

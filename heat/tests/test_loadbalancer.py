@@ -21,8 +21,8 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import scheduler
+from heat.engine import stack_user
 from heat.engine.resources import instance
-from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
@@ -124,13 +124,8 @@ class LoadBalancerTest(HeatTestCase):
 
     def _create_stubs(self, key_name='test', stub_meta=True):
 
-        self.m.StubOutWithMock(user.User, 'keystone')
-        user.User.keystone().AndReturn(self.fkc)
-        self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        user.AccessKey.keystone().AndReturn(self.fkc)
-
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
+        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
+        stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fkc)
 
         server_name = utils.PhysName(
             utils.PhysName('test_stack', 'LoadBalancer'),

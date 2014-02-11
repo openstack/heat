@@ -22,7 +22,7 @@ from heat.common import template_format
 from heat.engine.notification import stack as notification
 from heat.engine import clients
 from heat.engine import parser
-from heat.engine.resources import user
+from heat.engine import stack_user
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
@@ -216,12 +216,8 @@ class AutoScalingGroupTest(HeatTestCase):
         parser.Stack.validate().MultipleTimes()
 
     def _stub_lb_create(self):
-        self.m.StubOutWithMock(user.User, 'keystone')
-        user.User.keystone().AndReturn(self.fkc)
-        self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        user.AccessKey.keystone().AndReturn(self.fkc)
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
+        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
+        stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fkc)
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 

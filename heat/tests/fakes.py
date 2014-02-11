@@ -114,8 +114,8 @@ class FakeKeystoneClient(object):
         if user_id == self.user_id:
             return self.creds
 
-    def delete_ec2_keypair(self, user_id=None, access=None,
-                           credential_id=None):
+    def delete_ec2_keypair(self, credential_id=None, user_id=None,
+                           access=None):
         if user_id == self.user_id and access == self.creds.access:
             self.creds = None
         else:
