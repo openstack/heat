@@ -116,6 +116,8 @@ class Stack(BASE, HeatBase, SoftDelete):
     owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
+    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
+                                              nullable=True)
 
 
 class StackLock(BASE, HeatBase):
