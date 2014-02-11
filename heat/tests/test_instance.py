@@ -21,6 +21,7 @@ from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -87,6 +88,8 @@ class InstancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
@@ -284,6 +287,8 @@ class InstancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').AndReturn(True)
@@ -402,7 +407,7 @@ class InstancesTest(HeatTestCase):
                                               'in_update2')
 
         update_template = copy.deepcopy(instance.t)
-        update_template['Properties']['KeyName'] = 'mustreplace'
+        update_template['Properties']['ImageId'] = 'mustreplace'
         updater = scheduler.TaskRunner(instance.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 

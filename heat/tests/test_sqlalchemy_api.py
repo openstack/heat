@@ -28,6 +28,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance as instances
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import timeutils
@@ -110,6 +111,8 @@ class SqlAlchemyTest(HeatTestCase):
         fc = fakes.FakeClient()
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         mocks.StubOutWithMock(fc.servers, 'create')
         fc.servers.create(image=744, flavor=3, key_name='test',
@@ -125,6 +128,8 @@ class SqlAlchemyTest(HeatTestCase):
         fc = fakes.FakeClient()
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         mocks.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999

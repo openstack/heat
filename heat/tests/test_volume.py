@@ -174,6 +174,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
 
         # create script
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')

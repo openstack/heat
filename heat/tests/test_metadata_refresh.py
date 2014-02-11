@@ -27,6 +27,7 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine.resources import instance
+from heat.engine.resources import nova_keypair
 from heat.engine.resources import wait_condition as wc
 
 
@@ -147,6 +148,10 @@ class MetadataRefreshTest(HeatTestCase):
 
         self.stack_id = stack.store()
 
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         for cookie in (object(), object()):
@@ -210,6 +215,10 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         stack = parser.Stack(ctx, stack_name, template, disable_rollback=True)
 
         self.stack_id = stack.store()
+
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')

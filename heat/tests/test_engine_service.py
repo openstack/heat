@@ -26,7 +26,6 @@ from oslo.config import cfg
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
-from heat.engine import environment
 from heat.common import exception
 from heat.common import urlfetch
 from heat.tests import fakes as test_fakes
@@ -35,7 +34,9 @@ import heat.rpc.api as engine_api
 import heat.db.api as db_api
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import dependencies
+from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resource import _register_class
 from heat.engine import service
@@ -217,6 +218,8 @@ def setup_mocks(mocks, stack):
     fc = fakes.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
+    mocks.StubOutWithMock(clients.OpenStackClients, 'nova')
+    clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
     setup_keystone_mocks(mocks, stack)
 
     instance = stack['WebServer']
@@ -1824,6 +1827,8 @@ class StackServiceTest(HeatTestCase):
         fc = fakes.FakeClient()
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
 
         patcher = mock.patch.object(
             nova_utils, 'build_userdata', return_value=None)

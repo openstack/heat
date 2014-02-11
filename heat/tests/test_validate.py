@@ -743,11 +743,12 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
-        self.assertRaises(exception.UserKeyPairMissing, resource.validate)
+        self.assertRaises(exception.StackValidationFailed, resource.validate)
 
     def test_unregistered_image(self):
         t = template_format.parse(test_template_image)
@@ -758,7 +759,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -789,7 +791,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -804,8 +807,8 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -818,8 +821,8 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
