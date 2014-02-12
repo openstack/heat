@@ -10,6 +10,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+"""Resources for Rackspace Cloud Loadbalancers."""
+
 try:
     from pyrax.exceptions import NotFound
     PYRAX_INSTALLED = True
@@ -40,6 +43,8 @@ class LoadbalancerBuildError(exception.HeatException):
 
 
 class CloudLoadBalancer(resource.Resource):
+
+    """Represents a Rackspace Cloud Loadbalancer."""
 
     PROPERTIES = (
         NAME, NODES, PROTOCOL, ACCESS_LIST, HALF_CLOSED, ALGORITHM,
@@ -378,7 +383,9 @@ class CloudLoadBalancer(resource.Resource):
             return [function()]
 
     def _alter_properties_for_api(self):
-        """The following properties have usless key/value pairs which must
+        """Set up required, but useless, key/value pairs.
+
+        The following properties have useless key/value pairs which must
         be passed into the api. Set them up to make template definition easier.
         """
         session_persistence = None
@@ -405,8 +412,9 @@ class CloudLoadBalancer(resource.Resource):
             return False
 
     def _configure_post_creation(self, loadbalancer):
-        """Configure all load balancer properties that must be done post
-        creation.
+        """Configure all load balancer properties post creation.
+
+        These properties can only be set after the load balancer is created.
         """
         if self.properties[self.ACCESS_LIST]:
             while not self._check_status(loadbalancer, ['ACTIVE']):
@@ -492,9 +500,7 @@ class CloudLoadBalancer(resource.Resource):
         return self._check_status(loadbalancer, ['ACTIVE'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
-        Add and remove nodes specified in the prop_diff.
-        """
+        """Add and remove nodes specified in the prop_diff."""
         loadbalancer = self.clb.get(self.resource_id)
         if self.NODES in prop_diff:
             current_nodes = loadbalancer.nodes
@@ -556,18 +562,16 @@ class CloudLoadBalancer(resource.Resource):
                 self.resource_id_set(None)
 
     def _remove_none(self, property_dict):
-        '''
-        Remove values that may be initialized to None and would cause problems
-        during schema validation.
-        '''
+        """Remove None values that would cause schema validation problems.
+
+        These are values that may be initialized to None.
+        """
         return dict((key, value)
                     for (key, value) in property_dict.iteritems()
                     if value)
 
     def validate(self):
-        """
-        Validate any of the provided params
-        """
+        """Validate any of the provided params."""
         res = super(CloudLoadBalancer, self).validate()
         if res:
             return res

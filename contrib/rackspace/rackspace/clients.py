@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Client Libraries for Rackspace Resources."""
+
 from oslo.config import cfg
 
 from heat.common import exception
@@ -46,9 +48,9 @@ cfg.CONF.register_opts(cloud_opts)
 
 
 class Clients(clients.OpenStackClients):
-    '''
-    Convenience class to create and cache client instances.
-    '''
+
+    """Convenience class to create and cache client instances."""
+
     def __init__(self, context):
         super(Clients, self).__init__(context)
         self.pyrax = None
@@ -63,32 +65,34 @@ class Clients(clients.OpenStackClients):
         return self._get_client("autoscale")
 
     def cloud_db(self):
-        '''Rackspace cloud database client.'''
+        """Rackspace cloud database client."""
         return self._get_client("database")
 
     def cloud_lb(self):
-        '''Rackspace cloud loadbalancer client.'''
+        """Rackspace cloud loadbalancer client."""
         return self._get_client("load_balancer")
 
     def cloud_dns(self):
-        '''Rackspace cloud dns client.'''
+        """Rackspace cloud dns client."""
         return self._get_client("dns")
 
     def nova(self, service_type="compute"):
-        '''Rackspace cloudservers client. Specifying the service type is to
+        """Rackspace cloudservers client.
+
+        Specifying the service type is to
         maintain compatibility with clients.OpenStackClients. It is not
         actually a valid option to change within pyrax.
-        '''
+        """
         if service_type is not "compute":
             raise ValueError(_("service_type should be compute."))
         return self._get_client(service_type)
 
     def cloud_networks(self):
-        '''Rackspace cloud networks client.'''
+        """Rackspace cloud networks client."""
         return self._get_client("network")
 
     def trove(self):
-        '''Rackspace trove client.'''
+        """Rackspace trove client."""
         if not self._trove:
             super(Clients, self).trove(service_type='rax:database')
             management_url = self.url_for(service_type='rax:database',

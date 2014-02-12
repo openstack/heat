@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Client Library for Keystone Resources."""
+
 from keystoneclient.v2_0 import client as kc
 from oslo.config import cfg
 
@@ -26,13 +28,14 @@ logger.info(_("Keystone V2 loaded"))
 
 
 class KeystoneClientV2(object):
-    """
-    Wrap keystone client so we can encapsulate logic used in resources
+
+    """Wrap keystone client so we can encapsulate logic used in resources.
+
     Note this is intended to be initialized from a resource on a per-session
     basis, so the session context is passed in on initialization
     Also note that a copy of this is created every resource as self.keystone()
     via the code in engine/client.py, so there should not be any need to
-    directly instantiate instances of this class inside resources themselves
+    directly instantiate instances of this class inside resources themselves.
     """
     def __init__(self, context):
         # If a trust_id is specified in the context, we immediately

@@ -70,9 +70,7 @@ class MarconiQueue(resource.Resource):
         return self.properties[self.NAME]
 
     def handle_create(self):
-        '''
-        Create a marconi message queue.
-        '''
+        """Create a marconi message queue."""
         queue_name = self.physical_resource_name()
         queue = self.marconi().queue(queue_name, auto_create=False)
         # Marconi client doesn't report an error if an queue with the same
@@ -85,7 +83,7 @@ class MarconiQueue(resource.Resource):
         return queue
 
     def check_create_complete(self, queue):
-        # set metadata of the newly created queue
+        """Set metadata of the newly created queue."""
         if queue.exists():
             metadata = self.properties.get('metadata')
             if metadata:
@@ -97,18 +95,14 @@ class MarconiQueue(resource.Resource):
                               % queue_name)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        '''
-        Update queue metadata.
-        '''
+        """Update queue metadata."""
         if 'metadata' in prop_diff:
             queue = self.marconi().queue(self.resource_id, auto_create=False)
             metadata = prop_diff['metadata']
             queue.metadata(new_meta=metadata)
 
     def handle_delete(self):
-        '''
-        Delete a marconi message queue.
-        '''
+        """Delete a marconi message queue."""
         if not self.resource_id:
             return
 

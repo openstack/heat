@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Resources for Rackspace Auto Scale.
-"""
+"""Resources for Rackspace Auto Scale."""
 
 import copy
 
@@ -38,6 +36,7 @@ except ImportError:
 
 
 class Group(resource.Resource):
+
     """Represents a scaling group."""
 
     # pyrax differs drastically from the actual Auto Scale API. We'll prefer
@@ -302,18 +301,16 @@ class Group(resource.Resource):
         return args
 
     def handle_create(self):
-        """
-        Create the autoscaling group and set the resulting group's ID as the
-        resource_id.
+        """Create the autoscaling group and set resource_id.
+
+        The resource_id is set to the resulting group's ID.
         """
         asclient = self.stack.clients.auto_scale()
         group = asclient.create(**self._get_create_args())
         self.resource_id_set(str(group.id))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
-        Update the group configuration and the launch configuration.
-        """
+        """Update the group configuration and the launch configuration."""
         asclient = self.stack.clients.auto_scale()
         if self.GROUP_CONFIGURATION in prop_diff:
             args = self._get_group_config_args(
@@ -325,8 +322,7 @@ class Group(resource.Resource):
             asclient.replace_launch_config(self.resource_id, **args)
 
     def handle_delete(self):
-        """
-        Delete the scaling group.
+        """Delete the scaling group.
 
         Since Auto Scale doesn't allow deleting a group until all its servers
         are gone, we must set the minEntities and maxEntities of the group to 0
@@ -360,6 +356,7 @@ class Group(resource.Resource):
 
 
 class ScalingPolicy(resource.Resource):
+
     """Represents a Rackspace Auto Scale scaling policy."""
 
     PROPERTIES = (
@@ -444,9 +441,9 @@ class ScalingPolicy(resource.Resource):
         return args
 
     def handle_create(self):
-        """
-        Create the scaling policy, and initialize the resource ID to
-        {group_id}:{policy_id}.
+        """Create the scaling policy and initialize the resource ID.
+
+        The resource ID is initialized to {group_id}:{policy_id}.
         """
         asclient = self.stack.clients.auto_scale()
         args = self._get_args(self.properties)
@@ -476,11 +473,12 @@ class ScalingPolicy(resource.Resource):
 
 
 class WebHook(resource.Resource):
-    """
-    Represents a Rackspace AutoScale webhook.
+
+    """Represents a Rackspace AutoScale webhook.
 
     Exposes the URLs of the webhook as attributes.
     """
+
     PROPERTIES = (
         POLICY, NAME, METADATA,
     ) = (
