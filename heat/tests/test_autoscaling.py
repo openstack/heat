@@ -1465,7 +1465,7 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
-        #stub for the metadata accesses while creating the addtional instance
+        #stub for the metadata accesses while creating the additional instance
         Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
 
         self._stub_lb_reload(3, unset=False)

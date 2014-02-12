@@ -201,8 +201,8 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
     def test_happy_path(self):
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml']
-            env_dir = '/etc_etc/heat/enviroment.d'
+            m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml']
+            env_dir = '/etc_etc/heat/environment.d'
             env_content = '{"resource_registry": {}}'
 
             with mock.patch('heat.engine.resources.open',
@@ -218,7 +218,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
             m_ldir.return_value = []
-            env_dir = '/etc_etc/heat/enviroment.d'
+            env_dir = '/etc_etc/heat/environment.d'
             resources._load_global_environment(resources.global_env(),
                                                env_dir)
 
@@ -230,9 +230,9 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         """
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml',
-                                   '/etc_etc/heat/enviroment.d/b.yaml']
-            env_dir = '/etc_etc/heat/enviroment.d'
+            m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',
+                                   '/etc_etc/heat/environment.d/b.yaml']
+            env_dir = '/etc_etc/heat/environment.d'
             env_content = '{}'
 
             with mock.patch('heat.engine.resources.open',
@@ -253,9 +253,9 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         """
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml',
-                                   '/etc_etc/heat/enviroment.d/b.yaml']
-            env_dir = '/etc_etc/heat/enviroment.d'
+            m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',
+                                   '/etc_etc/heat/environment.d/b.yaml']
+            env_dir = '/etc_etc/heat/environment.d'
             env_content = '{@$%#$%'
 
             with mock.patch('heat.engine.resources.open',

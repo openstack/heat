@@ -324,7 +324,7 @@ SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
 class Environment(object):
 
     def __init__(self, env=None, user_env=True):
-        """Create an Environment from a dict of varing format.
+        """Create an Environment from a dict of varying format.
         1) old-school flat parameters
         2) or newer {resource_registry: bla, parameters: foo}
 

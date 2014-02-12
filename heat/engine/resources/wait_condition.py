@@ -32,7 +32,7 @@ class WaitConditionHandle(signal_responder.SignalResponder):
     '''
     the main point of this class is to :
     have no dependancies (so the instance can reference it)
-    generate a unique url (to be returned in the refernce)
+    generate a unique url (to be returned in the reference)
     then the cfn-signal will use this url to post to and
     WaitCondition will poll it to see if has been written to.
     '''

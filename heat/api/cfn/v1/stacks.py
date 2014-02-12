@@ -133,7 +133,7 @@ class StackController(object):
             status = s[engine_api.STACK_STATUS]
             result['StackStatus'] = '_'.join((action, status))
 
-            # AWS docs indicate DeletionTime is ommitted for current stacks
+            # AWS docs indicate DeletionTime is omitted for current stacks
             # This is still TODO(unknown) in the engine, we don't keep data for
             # stacks after they are deleted
             if engine_api.STACK_DELETION_TIME in s:

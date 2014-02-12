@@ -324,7 +324,7 @@ class InstanceGroup(stack_resource.StackResource):
             raise ValueError('The current UpdatePolicy will result '
                              'in stack update timeout.')
 
-        # effective capacity includes temporary capacity added to accomodate
+        # effective capacity includes temporary capacity added to accommodate
         # the minimum number of instances in service during update
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
 
