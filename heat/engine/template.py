@@ -19,6 +19,7 @@ import functools
 from heat.db import api as db_api
 from heat.engine import parameters
 from heat.engine.cfn import functions
+from heat.openstack.common.gettextutils import _
 
 
 class Template(collections.Mapping):
@@ -36,10 +37,21 @@ class Template(collections.Mapping):
 
         if cls == Template:
             if 'heat_template_version' in template:
-                # deferred import of HOT module to avoid circular dependency
+
+                # defer import of HOT module to avoid circular dependency
                 # at load time
                 from heat.engine import hot
-                return hot.HOTemplate(template, *args, **kwargs)
+
+                version = template['heat_template_version']
+                valid_versions = hot.HOTemplate.VERSIONS
+                if version in valid_versions:
+                    return hot.HOTemplate(template, *args, **kwargs)
+                else:
+                    msg = _('"%(version)s" is not a valid '
+                            'heat_template_version. Should be one of: '
+                            '%(valid)s')
+                    raise ValueError(msg % {'version': version,
+                                            'valid': str(valid_versions)})
 
         return super(Template, cls).__new__(cls)
 

@@ -69,11 +69,6 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual({}, tmpl[tmpl.RESOURCES])
         self.assertEqual({}, tmpl[tmpl.OUTPUTS])
 
-    def test_version(self):
-        tmpl = parser.Template(hot_tpl_empty)
-        self.assertEqual(('heat_template_version', '2013-05-23'),
-                         tmpl.version())
-
     def test_translate_resources(self):
         """Test translation of resources into internal engine format."""
 
@@ -290,6 +285,35 @@ class HOTemplateTest(HeatTestCase):
                                 {'foo': {'Type': 'String', 'Required': True}}})
         self.assertEqual(expected_description, tmpl['description'])
         self.assertNotIn('parameters', tmpl.keys())
+
+    def test_invalid_hot_version(self):
+        """
+        Test HOT version check.
+
+        Pass an invalid HOT version to template.Template.__new__() and
+        validate that we get a ValueError.
+        """
+
+        tmpl_str = "heat_template_version: this-ain't-valid"
+        hot_tmpl = template_format.parse(tmpl_str)
+        exc = self.assertRaises(ValueError, template.Template, hot_tmpl)
+        self.assertIn('"this-ain\'t-valid" is not a valid '
+                      'heat_template_version', str(exc))
+
+    def test_valid_hot_version(self):
+        """
+        Test HOT version check.
+
+        Pass a valid HOT version to template.Template.__new__() and
+        validate that we get back a parsed template.
+        """
+
+        tmpl_str = "heat_template_version: 2013-05-23"
+        hot_tmpl = template_format.parse(tmpl_str)
+        parsed_tmpl = template.Template(hot_tmpl)
+        expected = '2013-05-23'
+        observed = parsed_tmpl.version()[1]
+        self.assertEqual(expected, observed)
 
 
 class StackTest(test_parser.StackTest):
