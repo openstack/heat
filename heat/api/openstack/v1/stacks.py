@@ -366,7 +366,6 @@ def create_resource(options):
     """
     Stacks resource factory method.
     """
-    # TODO(zaneb) handle XML based on Content-type/Accepts
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = StackSerializer()
     return wsgi.Resource(StackController(options), deserializer, serializer)

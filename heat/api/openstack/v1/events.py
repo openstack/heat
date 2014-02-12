@@ -128,7 +128,6 @@ def create_resource(options):
     """
     Events resource factory method.
     """
-    # TODO(zaneb) handle XML based on Content-type/Accepts
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(EventController(options), deserializer, serializer)
