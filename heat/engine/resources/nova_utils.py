@@ -252,6 +252,11 @@ def resize(server, flavor, flavor_id):
     yield check_resize(server, flavor, flavor_id)
 
 
+def rename(server, name):
+    """Update the name for a server."""
+    server.update(name)
+
+
 def check_resize(server, flavor, flavor_id):
     """
     Verify that a resizing server is properly resized.
