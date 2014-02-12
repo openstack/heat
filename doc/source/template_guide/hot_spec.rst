@@ -350,6 +350,35 @@ For example:
           description: User name must start with an uppercase character
 
 
+custom_constraint
+~~~~~~~~~~~~~~~~~
+The *custom_constraint* constraint adds an extra step of validation, generally
+to check that the specified resource exists in the backend. Custom constraints
+get implemented by plug-ins and can provide any kind of advanced constraint
+validation logic.
+
+The syntax of the custom_constraint constraint is:
+
+::
+
+  custom_constraint: <name>
+
+The *name* specifies the concrete type of custom constraint. It corresponds to
+the name under which the respective validation plugin has been registered with
+the Heat engine.
+
+For example:
+
+::
+
+  parameters:
+    key_name
+      type: string
+      description: SSH key pair
+      constraints:
+        - custom_constraint: nova.keypair
+
+
 .. _hot_spec_resources:
 
 -----------------

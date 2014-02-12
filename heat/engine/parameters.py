@@ -51,7 +51,7 @@ class Schema(constr.Schema):
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
-                 constraints=[], hidden=False):
+                 constraints=[], hidden=False, context=None):
         super(Schema, self).__init__(data_type=data_type,
                                      description=description,
                                      default=default,
@@ -59,6 +59,7 @@ class Schema(constr.Schema):
                                      required=default is None,
                                      constraints=constraints)
         self.hidden = hidden
+        self.context = context
 
     # Schema class validates default value for lists assuming list type. For
     # comma delimited list string supported in paramaters Schema class, the
@@ -125,7 +126,7 @@ class Schema(constr.Schema):
                                               'false')).lower() == 'true')
 
     def validate(self, name, value):
-        super(Schema, self).validate_constraints(value)
+        super(Schema, self).validate_constraints(value, self.context)
 
     def __getitem__(self, key):
         if key == self.TYPE:
@@ -333,13 +334,14 @@ class Parameters(collections.Mapping):
     )
 
     def __init__(self, stack_identifier, tmpl, user_params={},
-                 validate_value=True):
+                 validate_value=True, context=None):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
         def user_parameter(schema_item):
             name, schema = schema_item
+            schema.context = context
             return Parameter(name, schema,
                              user_params.get(name),
                              validate_value)

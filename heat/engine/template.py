@@ -493,10 +493,12 @@ class Template(collections.Mapping):
         return dict((name, parameters.Schema.from_dict(schema))
                     for name, schema in params)
 
-    def parameters(self, stack_identifier, user_params, validate_value=True):
+    def parameters(self, stack_identifier, user_params, validate_value=True,
+                   context=None):
         return parameters.Parameters(stack_identifier, self,
                                      user_params=user_params,
-                                     validate_value=validate_value)
+                                     validate_value=validate_value,
+                                     context=context)
 
 
 def _resolve(match, handle, snippet, transform=None):

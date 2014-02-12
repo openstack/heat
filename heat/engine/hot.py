@@ -22,10 +22,13 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
-PARAM_CONSTRAINTS = (CONSTRAINTS, DESCRIPTION, LENGTH, RANGE,
-                     MIN, MAX, ALLOWED_VALUES, ALLOWED_PATTERN) = \
-                    ('constraints', 'description', 'length', 'range',
-                     'min', 'max', 'allowed_values', 'allowed_pattern')
+PARAM_CONSTRAINTS = (
+    CONSTRAINTS, DESCRIPTION, LENGTH, RANGE, MIN, MAX,
+    ALLOWED_VALUES, ALLOWED_PATTERN, CUSTOM_CONSTRAINT,
+) = (
+    'constraints', 'description', 'length', 'range', 'min', 'max',
+    'allowed_values', 'allowed_pattern', 'custom_constraint',
+)
 
 
 def snake_to_camel(name):
@@ -319,9 +322,10 @@ class HOTemplate(template.Template):
         return dict((name, HOTParamSchema.from_dict(schema))
                     for name, schema in params)
 
-    def parameters(self, stack_identifier, user_params, validate_value=True):
+    def parameters(self, stack_identifier, user_params, validate_value=True,
+                   context=None):
         return HOTParameters(stack_identifier, self, user_params=user_params,
-                             validate_value=validate_value)
+                             validate_value=validate_value, context=context)
 
 
 class HOTParamSchema(parameters.Schema):
@@ -372,6 +376,9 @@ class HOTParamSchema(parameters.Schema):
                 if ALLOWED_PATTERN in constraint:
                     cdef = constraint.get(ALLOWED_PATTERN)
                     yield constr.AllowedPattern(cdef, desc)
+                if CUSTOM_CONSTRAINT in constraint:
+                    cdef = constraint.get(CUSTOM_CONSTRAINT)
+                    yield constr.CustomConstraint(cdef, desc)
 
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
