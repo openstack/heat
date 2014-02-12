@@ -36,6 +36,9 @@ def parse(env_str):
         if env is None:
             env = {}
 
+    if not isinstance(env, dict):
+        raise ValueError(_('The environment is not a valid '
+                           'YAML mapping data type.'))
     for param in env:
         if param not in SECTIONS:
             raise ValueError(_('environment has wrong section "%s"') % param)
