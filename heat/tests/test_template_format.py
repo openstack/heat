@@ -94,7 +94,8 @@ class YamlMinimalTest(HeatTestCase):
         self.assertTrue(len(long_yaml) > limit)
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                template_format.parse, long_yaml)
-        msg = 'Request limit exceeded: Template exceeds maximum allowed size.'
+        msg = ('Request limit exceeded: Template exceeds maximum allowed size '
+               '(1024 bytes)')
         self.assertEqual(msg, str(ex))
 
     def test_parse_no_version_format(self):
