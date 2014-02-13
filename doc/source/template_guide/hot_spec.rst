@@ -637,3 +637,45 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the str_replace function.
+
+get_file
+------------
+The *get_file* function allows string content to be substituted into the
+template. It is generally used as a file inclusion mechanism for files
+containing non-heat scripts or configuration files.
+The syntax of the get_file function is as follows:
+
+::
+
+  get_file: <content key>
+
+The *content key* will be used to look up the files dictionary that is
+provided in the REST API call. The *heat* client command from
+python-heatclient is *get_file* aware and will populate the *files* with
+the actual content of fetched paths and URLs. The *heat* client command
+supports relative paths and will transform these to absolute URLs which
+will be used as the *content key* in the files dictionary.
+
+The example below demonstrates *get_file* usage with both relative and
+absolute URLs.
+
+::
+
+  resources:
+    my_instance:
+      type: OS::Nova::Server
+      properties:
+        # general properties ...
+        user_data:
+          get_file: my_instance_user_data.sh
+    my_other_instance:
+      type: OS::Nova::Server
+      properties:
+        # general properties ...
+        user_data:
+          get_file: http://example.com/my_other_instance_user_data.sh
+
+If this template was launched from a local file this would result in
+a *files* dictionary containing entries with keys
+*file:///path/to/my_instance_user_data.sh* and
+*http://example.com/my_other_instance_user_data.sh*.

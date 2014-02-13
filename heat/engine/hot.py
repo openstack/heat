@@ -288,6 +288,32 @@ class HOTemplate(template.Template):
         return template._resolve(match_str_replace,
                                  handle_str_replace, s, transform)
 
+    def resolve_get_file(self, s, transform=None):
+        """
+        Resolve file inclusion via function get_file. For any key provided
+        the contents of the value in the template files dictionary
+        will be substituted.
+
+        Resolves the get_file function of the form::
+
+          get_file:
+            <string key>
+        """
+
+        def handle_get_file(args):
+            if not (isinstance(args, basestring)):
+                raise TypeError(
+                    _('Argument to "get_file" must be a string'))
+            f = self.files.get(args)
+            if f is None:
+                raise ValueError(_('No content found in the "files" section '
+                                   'for get_file path: %s') % args)
+            return f
+
+        match_get_file = lambda k, v: k == 'get_file'
+        return template._resolve(match_get_file,
+                                 handle_get_file, s, transform)
+
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, HOTParamSchema.from_dict(schema))

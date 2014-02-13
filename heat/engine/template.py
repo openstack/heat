@@ -481,6 +481,13 @@ class Template(collections.Mapping):
                         handle_resource_facade,
                         s, transform)
 
+    @staticmethod
+    def resolve_get_file(s, transform=None):
+        # cfn templates do not have any analog to get_file so this function
+        # should remain not implemented. Attempts to use get_file in a cfn
+        # template will be passed through with no modification.
+        return s
+
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, parameters.Schema.from_dict(schema))
