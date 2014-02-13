@@ -311,7 +311,7 @@ For example:
       type: string
       description: Instance type for compute instances
       constraints:
-        allowed_values:
+        - allowed_values:
           - m1.small
           - m1.medium
           - m1.large
@@ -320,7 +320,7 @@ allowed_pattern
 ~~~~~~~~~~~~~~~
 The *allowed_pattern* constraint applies to parameters of type string and allows
 for specifying a regular expression against which a user provided parameter
-value must evaluate at deployment
+value must evaluate at deployment.
 The syntax of the allowed_pattern constraint is:
 
 ::
