@@ -91,7 +91,12 @@ class Clients(clients.OpenStackClients):
 
     def trove(self):
         '''Rackspace trove client.'''
-        return super(Clients, self).trove(service_type="rax:database")
+        if not self._trove:
+            super(Clients, self).trove(service_type='rax:database')
+            management_url = self.url_for(service_type='rax:database',
+                                          region_name=cfg.CONF.region_name)
+            self._trove.client.management_url = management_url
+        return self._trove
 
     def cinder(self):
         """Override the region for the cinder client."""
