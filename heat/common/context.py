@@ -35,7 +35,7 @@ class RequestContext(context.RequestContext):
     """
 
     def __init__(self, auth_token=None, username=None, password=None,
-                 aws_creds=None, tenant=None,
+                 aws_creds=None, tenant=None, user_id=None,
                  tenant_id=None, auth_url=None, roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
@@ -55,6 +55,7 @@ class RequestContext(context.RequestContext):
                                              request_id=request_id)
 
         self.username = username
+        self.user_id = user_id
         self.password = password
         self.aws_creds = aws_creds
         self.tenant_id = tenant_id
@@ -84,6 +85,7 @@ class RequestContext(context.RequestContext):
     def to_dict(self):
         return {'auth_token': self.auth_token,
                 'username': self.username,
+                'user_id': self.user_id,
                 'password': self.password,
                 'aws_creds': self.aws_creds,
                 'tenant': self.tenant,
@@ -131,11 +133,13 @@ class ContextMiddleware(wsgi.Middleware):
 
         try:
             username = None
+            user_id = None
             password = None
             aws_creds = None
 
             if headers.get('X-Auth-User') is not None:
                 username = headers.get('X-Auth-User')
+                user_id = headers.get('X-User-Id')
                 password = headers.get('X-Auth-Key')
             elif headers.get('X-Auth-EC2-Creds') is not None:
                 aws_creds = headers.get('X-Auth-EC2-Creds')
@@ -155,6 +159,7 @@ class ContextMiddleware(wsgi.Middleware):
                                         tenant=tenant, tenant_id=tenant_id,
                                         aws_creds=aws_creds,
                                         username=username,
+                                        user_id=user_id,
                                         password=password,
                                         auth_url=auth_url, roles=roles)
 
