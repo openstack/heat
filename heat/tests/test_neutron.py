@@ -1895,3 +1895,25 @@ class NeutronPortTest(HeatTestCase):
         scheduler.TaskRunner(port.create)()
 
         self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NetworkConstraintTest(HeatTestCase):
+
+    def test_validate(self):
+        self.m.StubOutWithMock(clients.OpenStackClients, 'neutron')
+        clients.OpenStackClients.neutron().MultipleTimes().AndReturn(None)
+        self.m.StubOutWithMock(net.neutronV20, 'find_resourceid_by_name_or_id')
+        net.neutronV20.find_resourceid_by_name_or_id(
+            None, 'network', 'foo'
+        ).AndReturn('foo')
+        net.neutronV20.find_resourceid_by_name_or_id(
+            None, 'network', 'bar'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.m.ReplayAll()
+
+        constraint = net.NetworkConstraint()
+        self.assertTrue(constraint.validate("foo", None))
+        self.assertFalse(constraint.validate("bar", None))
+
+        self.m.VerifyAll()
