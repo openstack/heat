@@ -101,9 +101,9 @@
      A :term:`resource` implemented by a :term:`provider
      template`. The parent resource's properties become the
      :term:`nested stack's <nested stack>` parameters. See `What are
-     "Providers"? (Openstack Wiki)`_.
+     "Providers"? (OpenStack Wiki)`_.
 
-     .. _`What are "Providers"? (Openstack Wiki)`: https://wiki.openstack.org/wiki/Heat/Providers#What_are_.22Providers.22.3F
+     .. _`What are "Providers"? (OpenStack Wiki)`: https://wiki.openstack.org/wiki/Heat/Providers#What_are_.22Providers.22.3F
 
    Provider template
      Allows user-definable :term:`resource providers <resource

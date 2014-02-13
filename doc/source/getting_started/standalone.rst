@@ -11,20 +11,20 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-How to get Heat to work with a remote Openstack.
+How to get Heat to work with a remote OpenStack.
 ================================================
 
-Say you have a remote/public install of Openstack and you want to use
+Say you have a remote/public install of OpenStack and you want to use
 a local install of Heat to talk to it. This can be handy when
-developing, as the remote Openstack can be kept stable and is not
+developing, as the remote OpenStack can be kept stable and is not
 effected by changes made to the development machine.
 
 So lets say you have 2 machines:
 
- * “rock” ip == 192.168.1.88 (used for base Openstack services)
+ * “rock” ip == 192.168.1.88 (used for base OpenStack services)
  * “hack” ip == 192.168.1.77 (used for Heat development)
 
-Install your Openstack as normal on “rock”.
+Install your OpenStack as normal on “rock”.
 
 In this example "hack" is used as the devstack to install Heat on.
 The localrc looked like this::

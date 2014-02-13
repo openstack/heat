@@ -12,7 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""Utilities for Resources that use the Openstack Nova API."""
+"""Utilities for Resources that use the OpenStack Nova API."""
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

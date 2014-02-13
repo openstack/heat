@@ -29,7 +29,7 @@ respectively.
 Assumptions
 ===========
 
-This guide, using a devstack installation of Openstack, assumes that:
+This guide, using a devstack installation of OpenStack, assumes that:
 
     1. You have configured devstack from `Single Machine Installation Guide
        <http://devstack.org/guides/single-machine.html>`_;

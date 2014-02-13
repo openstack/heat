@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class OSDBInstance(resource.Resource):
     '''
-    Openstack cloud database instance resource.
+    OpenStack cloud database instance resource.
     '''
 
     PROPERTIES = (
