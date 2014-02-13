@@ -661,6 +661,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_delete_nonexist(self):
@@ -689,6 +690,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_delete_current_engine_active_lock(self):
@@ -711,6 +713,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_delete_other_engine_active_lock_failed(self):
@@ -767,6 +770,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_update(self):
@@ -906,6 +910,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                          old_stack['A'].properties['Foo'])
 
         self.assertEqual(create_stack['A'].id, old_stack['A'].id)
+        self.man.thread_group_mgr.groups[sid].wait()
 
         self.m.VerifyAll()
 
