@@ -70,14 +70,17 @@ Resources:
         self.assertThat(random_string, MatchesRegex('[a-zA-Z0-9]{32}'))
         self.assertRaises(exception.InvalidTemplateAttribute,
                           secret1.FnGetAtt, 'foo')
+        self.assertEqual(random_string, secret1.FnGetRefId())
 
         secret2 = stack['secret2']
         random_string = secret2.FnGetAtt('value')
         self.assertThat(random_string, MatchesRegex('[a-zA-Z0-9]{10}'))
+        self.assertEqual(random_string, secret2.FnGetRefId())
 
         secret3 = stack['secret3']
         random_string = secret3.FnGetAtt('value')
         self.assertThat(random_string, MatchesRegex('[0-7]{100}'))
+        self.assertEqual(random_string, secret3.FnGetRefId())
 
 
 class TestGenerateRandomString(HeatTestCase):
