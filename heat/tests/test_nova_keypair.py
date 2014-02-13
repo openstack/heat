@@ -12,13 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 
 from novaclient import exceptions as nova_exceptions
 
+from heat.engine import clients
 from heat.engine import scheduler
 from heat.engine.resources import nova_keypair
 from heat.tests.common import HeatTestCase
+from heat.tests.v1_1 import fakes
 from heat.tests import utils
 
 
@@ -144,4 +147,25 @@ class NovaKeyPairTest(HeatTestCase):
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
+        self.m.VerifyAll()
+
+
+class KeypairConstraintTest(HeatTestCase):
+
+    def test_validation(self):
+        client = fakes.FakeClient()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(client)
+        client.keypairs = self.m.CreateMockAnything()
+
+        key = collections.namedtuple("Key", ["name"])
+        key.name = "foo"
+        client.keypairs.list().MultipleTimes().AndReturn([key])
+        self.m.ReplayAll()
+
+        constraint = nova_keypair.KeypairConstraint()
+        self.assertFalse(constraint.validate("bar", None))
+        self.assertTrue(constraint.validate("foo", None))
+        self.assertTrue(constraint.validate("", None))
+
         self.m.VerifyAll()

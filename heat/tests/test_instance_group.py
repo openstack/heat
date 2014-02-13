@@ -13,10 +13,12 @@
 #    under the License.
 
 import copy
+import mox
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance
+from heat.engine.resources import nova_keypair
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
@@ -69,6 +71,9 @@ class InstanceGroupTest(HeatTestCase):
         """
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.StubOutWithMock(instance_class, 'handle_create')
         self.m.StubOutWithMock(instance_class, 'check_create_complete')
@@ -153,6 +158,9 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.handle_create().AndRaise(not_found)
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
 
@@ -209,6 +217,9 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
@@ -250,6 +261,9 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 

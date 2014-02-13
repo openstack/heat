@@ -151,7 +151,10 @@ class Instance(resource.Resource):
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Optional Nova keypair name.')
+            _('Optional Nova keypair name.'),
+            constraints=[
+                constraints.CustomConstraint("nova.keypair")
+            ]
         ),
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
@@ -402,11 +405,6 @@ class Instance(resource.Resource):
         flavor = self.properties[self.INSTANCE_TYPE]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
 
-        key_name = self.properties[self.KEY_NAME]
-        if key_name:
-            # confirm keypair exists
-            nova_utils.get_keypair(self.nova(), key_name)
-
         image_name = self.properties[self.IMAGE_ID]
 
         image_id = nova_utils.get_image_id(self.nova(), image_name)
@@ -430,7 +428,7 @@ class Instance(resource.Resource):
                 name=self.physical_resource_name(),
                 image=image_id,
                 flavor=flavor_id,
-                key_name=key_name,
+                key_name=self.properties[self.KEY_NAME],
                 security_groups=security_groups,
                 userdata=nova_utils.build_userdata(self, userdata),
                 meta=self._get_nova_metadata(self.properties),
@@ -543,11 +541,6 @@ class Instance(resource.Resource):
         res = super(Instance, self).validate()
         if res:
             return res
-
-        # check validity of key
-        key_name = self.properties.get(self.KEY_NAME)
-        if key_name:
-            nova_utils.get_keypair(self.nova(), key_name)
 
         # check validity of security groups vs. network interfaces
         security_groups = self._get_security_groups()

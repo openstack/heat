@@ -21,6 +21,7 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.notification import stack as notification
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine.resources import user
 from heat.engine.resources import instance
@@ -240,6 +241,7 @@ class AutoScalingGroupTest(HeatTestCase):
         """
         self._stub_validate()
 
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
 
@@ -248,6 +250,7 @@ class AutoScalingGroupTest(HeatTestCase):
 
         cookie = object()
 
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         # for load balancer setup
         if setup_lb:
             self._stub_lb_create()
@@ -274,9 +277,13 @@ class AutoScalingGroupTest(HeatTestCase):
         notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
 
         # for instances in the group
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(instance.Instance, 'destroy')
+
+        if num_reloads_expected_on_updt > 1:
+            clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         cookie = object()
         for i in range(num_creates_expected_on_updt):

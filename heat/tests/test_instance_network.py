@@ -20,6 +20,7 @@ from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine.resources import nova_utils
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -167,6 +168,8 @@ class instancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(instance, 'neutron')
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
@@ -221,6 +224,8 @@ class instancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         nic.t = nic.stack.resolve_runtime_data(nic.t)
         instance.t = instance.stack.resolve_runtime_data(instance.t)

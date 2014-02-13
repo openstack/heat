@@ -12,6 +12,7 @@
 
 from heat.common import exception
 from heat.db import api as db_api
+from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import nova_utils
@@ -122,6 +123,26 @@ class KeyPair(resource.Resource):
 
     def FnGetRefId(self):
         return self.resource_id
+
+
+class KeypairConstraint(object):
+
+    def validate(self, value, context):
+        if not value:
+            # Don't validate empty key, which can happen when you use a KeyPair
+            # resource
+            return True
+        nova_client = clients.OpenStackClients(context).nova()
+        try:
+            nova_utils.get_keypair(nova_client, value)
+        except exception.UserKeyPairMissing:
+            return False
+        else:
+            return True
+
+
+def constraint_mapping():
+    return {'nova.keypair': KeypairConstraint}
 
 
 def resource_mapping():

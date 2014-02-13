@@ -142,7 +142,10 @@ class Server(resource.Resource):
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Name of keypair to inject into the server.')
+            _('Name of keypair to inject into the server.'),
+            constraints=[
+                constraints.CustomConstraint('nova.keypair')
+            ]
         ),
         ADMIN_USER: properties.Schema(
             properties.Schema.STRING,
@@ -291,11 +294,6 @@ class Server(resource.Resource):
         flavor = self.properties[self.FLAVOR]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
 
-        key_name = self.properties[self.KEY_NAME]
-        if key_name:
-            # confirm keypair exists
-            nova_utils.get_keypair(self.nova(), key_name)
-
         image = self.properties.get(self.IMAGE)
         if image:
             image = nova_utils.get_image_id(self.nova(), image)
@@ -320,7 +318,7 @@ class Server(resource.Resource):
                 name=self.physical_resource_name(),
                 image=image,
                 flavor=flavor_id,
-                key_name=key_name,
+                key_name=self.properties[self.KEY_NAME],
                 security_groups=security_groups,
                 userdata=userdata,
                 meta=instance_meta,
@@ -523,11 +521,6 @@ class Server(resource.Resource):
         Validate any of the provided params
         '''
         super(Server, self).validate()
-
-        # check validity of key
-        key_name = self.properties.get(self.KEY_NAME)
-        if key_name:
-            nova_utils.get_keypair(self.nova(), key_name)
 
         # either volume_id or snapshot_id needs to be specified, but not both
         # for block device mapping.
