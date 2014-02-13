@@ -18,6 +18,8 @@ import uuid
 from oslo.config import cfg
 
 cfg.CONF.import_opt('region_name_for_services', 'heat.common.config')
+cfg.CONF.import_group('keystone_authtoken',
+                      'keystoneclient.middleware.auth_token')
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
@@ -33,33 +35,21 @@ class KeystoneClientTest(HeatTestCase):
 
     def setUp(self):
         super(KeystoneClientTest, self).setUp()
+
         self.mock_admin_client = self.m.CreateMock(kc_v3.Client)
         self.mock_ks_v3_client = self.m.CreateMock(kc_v3.Client)
         self.m.StubOutWithMock(kc_v3, "Client")
-        self.addCleanup(self.m.VerifyAll)
 
-    def _stub_config(self, multiple=1):
-        # Stub out cfg.CONF with dummy config
-        mock_config = self.m.CreateMockAnything()
-        mock_config.keystone_authtoken = self.m.CreateMockAnything()
         dummy_url = 'http://server.test:5000/v2.0'
-        mock_config.keystone_authtoken.auth_uri = dummy_url
-        mock_config.keystone_authtoken.admin_user = 'heat'
-        mock_config.keystone_authtoken.admin_password = 'verybadpass'
-        mock_config.keystone_authtoken.admin_tenant_name = 'service'
-
-        mock_config.import_opt = self.m.CreateMockAnything()
-        mock_config.clients_keystone = self.m.CreateMockAnything()
-        for i in range(0, multiple):
-            for cfg, ret in (('ca_file', None), ('insecure', False),
-                             ('cert_file', None), ('key_file', None)):
-                mock_config.import_opt(cfg,
-                                       'heat.common.config',
-                                       group='clients_keystone'
-                                       ).AndReturn(None)
-                setattr(mock_config.clients_keystone, cfg, ret)
-        self.mock_config = mock_config
-        heat_keystoneclient.KeystoneClient.conf = mock_config
+        cfg.CONF.set_override('auth_uri', dummy_url,
+                              group='keystone_authtoken')
+        cfg.CONF.set_override('admin_user', 'heat',
+                              group='keystone_authtoken')
+        cfg.CONF.set_override('admin_password', 'verybadpass',
+                              group='keystone_authtoken')
+        cfg.CONF.set_override('admin_tenant_name', 'service',
+                              group='keystone_authtoken')
+        self.addCleanup(self.m.VerifyAll)
 
     def _stub_admin_client(self, auth_ok=True):
         kc_v3.Client(
@@ -78,8 +68,7 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_admin_client.auth_ref.user_id = '1234'
 
     def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id', config_multiple=1):
-        self._stub_config(multiple=config_multiple)
+                  user_id='trustor_user_id'):
 
         if method == 'token':
             kc_v3.Client(
@@ -175,7 +164,6 @@ class KeystoneClientTest(HeatTestCase):
         self.assertIn('Can\'t find role heat_stack_user', err)
 
     def _mock_roles_list(self, heat_stack_user='heat_stack_user'):
-        self.mock_config.heat_stack_user_role = 'heat_stack_user'
         mock_roles_list = []
         for r_id, r_name in (('1234', 'blah'), ('4546', heat_stack_user)):
             mock_role = self.m.CreateMockAnything()
@@ -216,7 +204,6 @@ class KeystoneClientTest(HeatTestCase):
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
-        self._stub_config()
         self._stub_admin_client()
 
         # mock keystone client functions
@@ -359,7 +346,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test create_trust_context with existing trust_id."""
 
         self._stubs_v3(method='trust')
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -379,9 +366,9 @@ class KeystoneClientTest(HeatTestCase):
 
         self._stub_admin_client()
 
-        self._stubs_v3(config_multiple=2)
-        self.mock_config.deferred_auth_method = 'trusts'
-        self.mock_config.trusts_delegated_roles = ['heat_stack_owner']
+        self._stubs_v3()
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
 
         self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
         self.mock_ks_v3_client.auth_ref.user_id = '5678'
@@ -407,7 +394,6 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test the admin_client property."""
 
-        self._stub_config()
         self._stub_admin_client()
         self.m.ReplayAll()
 
@@ -423,7 +409,6 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test the admin_client property, auth failure path."""
 
-        self._stub_config()
         self._stub_admin_client(auth_ok=False)
         self.m.ReplayAll()
 
@@ -446,7 +431,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test consuming a trust when initializing."""
 
         self._stubs_v3(method='trust')
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -463,7 +448,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test consuming a trust when initializing, error scoping."""
 
         self._stubs_v3(method='trust', trust_scoped=False)
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -480,7 +465,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test consuming a trust when initializing, impersonation error."""
 
         self._stubs_v3(method='trust', user_id='wrong_user_id')
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -526,7 +511,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test delete_trust when deleting trust."""
 
         self._stubs_v3()
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
 
@@ -540,7 +525,7 @@ class KeystoneClientTest(HeatTestCase):
         """Test delete_trust when trust already deleted."""
 
         self._stubs_v3()
-        self.mock_config.deferred_auth_method = 'trusts'
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
             kc_exception.NotFound)
@@ -733,7 +718,6 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test creating ec2 credentials for domain user."""
 
-        self._stub_config()
         self._stub_admin_client()
 
         ctx = utils.dummy_context()
@@ -897,9 +881,8 @@ class KeystoneClientTest(HeatTestCase):
         self.assertRaises(ValueError, heat_ks_client.delete_ec2_keypair)
 
     def _stub_domain(self, cfg_name='adomain', ret_id=None):
-        self._stub_config()
         self._stub_admin_client()
-        self.mock_config.stack_user_domain = cfg_name
+        cfg.CONF.set_override('stack_user_domain', cfg_name)
         self.mock_admin_client.domains = self.m.CreateMockAnything()
         if ret_id:
             dummy = self.m.CreateMockAnything()
@@ -963,7 +946,6 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test the delete_stack_domain_project function."""
 
-        self._stub_config()
         self._stub_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         self.mock_admin_client.projects.delete(project='aprojectid')
