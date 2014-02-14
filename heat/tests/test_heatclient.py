@@ -16,6 +16,9 @@ import mox
 
 from oslo.config import cfg
 
+from keystoneclient.v2_0 import client as kc
+from keystoneclient.v3 import client as kc_v3
+
 from heat.common import exception
 from heat.common import heat_keystoneclient
 from heat.tests.common import HeatTestCase
@@ -29,6 +32,11 @@ class KeystoneClientTest(HeatTestCase):
 
     def setUp(self):
         super(KeystoneClientTest, self).setUp()
+        self.mock_admin_client = self.m.CreateMock(kc.Client)
+        self.mock_ks_client = self.m.CreateMock(kc.Client)
+        self.mock_ks_v3_client = self.m.CreateMock(kc_v3.Client)
+        self.m.StubOutWithMock(kc, "Client")
+        self.m.StubOutWithMock(kc_v3, "Client")
 
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystoneclient.middleware.auth_token')
@@ -44,29 +52,37 @@ class KeystoneClientTest(HeatTestCase):
                               group='keystone_authtoken')
         self.addCleanup(self.m.VerifyAll)
 
+    def _stub_admin_client(self):
+        kc.Client(
+            auth_url='http://server.test:5000/v2.0',
+            password='verybadpass',
+            tenant_name='service',
+            username='heat').AndReturn(self.mock_admin_client)
+        self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
+        self.mock_admin_client.auth_ref.user_id = '1234'
+
     def _stubs_v2(self, method='token', auth_ok=True,
                   trust_scoped=True):
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
         if method == 'token':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
+            kc.Client(
                 auth_url=mox.IgnoreArg(),
                 tenant_name='test_tenant',
-                token='abcd1234')
+                token='abcd1234').AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         elif method == 'password':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
+            kc.Client(
                 auth_url=mox.IgnoreArg(),
                 tenant_name='test_tenant',
                 tenant_id='test_tenant_id',
                 username='test_username',
-                password='password')
+                password='password').AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         if method == 'trust':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
+            kc.Client(
                 auth_url='http://server.test:5000/v2.0',
                 password='verybadpass',
                 tenant_name='service',
-                username='heat')
+                username='heat').AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate(trust_id='atrust123',
                                              tenant_id='test_tenant_id'
                                              ).AndReturn(auth_ok)
@@ -75,27 +91,28 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_client.auth_ref.auth_token = 'atrusttoken'
 
     def _stubs_v3(self, method='token', auth_ok=True):
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc_v3, "Client")
-
         if method == 'token':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            kc_v3.Client(
                 token='abcd1234', project_name='test_tenant',
                 auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3')
+                endpoint='http://server.test:5000/v3').AndReturn(
+                    self.mock_ks_v3_client)
         elif method == 'password':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            kc_v3.Client(
                 username='test_username',
                 password='password',
                 project_name='test_tenant',
                 project_id='test_tenant_id',
                 auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3')
+                endpoint='http://server.test:5000/v3').AndReturn(
+                    self.mock_ks_v3_client)
         elif method == 'trust':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            kc_v3.Client(
                 username='heat',
                 password='verybadpass',
                 project_name='service',
-                auth_url='http://server.test:5000/v3')
+                auth_url='http://server.test:5000/v3').AndReturn(
+                    self.mock_ks_v3_client)
         self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
 
     def test_username_length(self):
@@ -225,15 +242,10 @@ class KeystoneClientTest(HeatTestCase):
         class MockTrust(object):
             id = 'atrust123'
 
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
-        mock_admin_client = heat_keystoneclient.kc.Client(
-            auth_url=mox.IgnoreArg(),
-            username='heat',
-            password='verybadpass',
-            tenant_name='service')
-        mock_admin_client.auth_ref = self.m.CreateMockAnything()
-        mock_admin_client.auth_ref.user_id = '1234'
+        self._stub_admin_client()
+
         self._stubs_v3()
+
         self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
         self.mock_ks_v3_client.auth_ref.user_id = '5678'
         self.mock_ks_v3_client.auth_ref.project_id = '42'
