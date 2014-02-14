@@ -20,9 +20,7 @@ SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
 
 
 def parse(env_str):
-    '''
-    Takes a string and returns a dict containing the parsed structure.
-    '''
+    """Takes a string and returns a dict containing the parsed structure."""
     if env_str is None:
         return {}
 
@@ -45,9 +43,7 @@ def parse(env_str):
 
 
 def default_for_missing(env):
-    '''
-    Checks a parsed environment for missing sections.
-    '''
+    """Checks a parsed environment for missing sections."""
     for param in SECTIONS:
         if param not in env:
             env[param] = {}
