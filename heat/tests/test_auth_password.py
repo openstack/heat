@@ -87,10 +87,12 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
         self.response_headers = dict(headers)
 
     def test_valid_request(self):
-        self.m.StubOutClassWithMocks(keystone_client, 'Client')
-        mock_client = keystone_client.Client(
+        mock_client = self.m.CreateMock(keystone_client.Client)
+        self.m.StubOutWithMock(keystone_client, 'Client')
+        keystone_client.Client(
             username='user_name1', password='goodpassword',
-            tenant_id='tenant_id1', auth_url=self.config['auth_uri'])
+            tenant_id='tenant_id1',
+            auth_url=self.config['auth_uri']).AndReturn(mock_client)
         mock_client.auth_ref = TOKEN_RESPONSE
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
@@ -130,10 +132,11 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
             expected_env={'HTTP_X_AUTH_URL': auth_url})
         self.middleware = KeystonePasswordAuthProtocol(self.app, self.config)
 
-        self.m.StubOutClassWithMocks(keystone_client, 'Client')
-        mock_client = keystone_client.Client(
+        mock_client = self.m.CreateMock(keystone_client.Client)
+        self.m.StubOutWithMock(keystone_client, 'Client')
+        keystone_client.Client(
             username='user_name1', password='goodpassword',
-            tenant_id='tenant_id1', auth_url=auth_url)
+            tenant_id='tenant_id1', auth_url=auth_url).AndReturn(mock_client)
         mock_client.auth_ref = TOKEN_RESPONSE
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
