@@ -1,3 +1,7 @@
+# Set the SSH key provided by Nova to this user.
+# On cloud-init 0.7.x (anything except Ubuntu 12.04 LTS which ships 0.6.3) this
+# also creates the user and sets up passwordless sudo if the user isn't present
+# already.
 user: @INSTANCE_USER@
 
 # Capture all subprocess output into a logfile
