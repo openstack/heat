@@ -49,6 +49,7 @@ class KeystoneClientTest(HeatTestCase):
                               group='keystone_authtoken')
         cfg.CONF.set_override('admin_tenant_name', 'service',
                               group='keystone_authtoken')
+        cfg.CONF.set_override('stack_user_domain', 'adomain123')
         self.addCleanup(self.m.VerifyAll)
 
     def _stub_admin_client(self, auth_ok=True):
@@ -179,7 +180,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -225,7 +226,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -246,7 +247,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -268,7 +269,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -389,6 +390,20 @@ class KeystoneClientTest(HeatTestCase):
         trust_context = heat_ks_client.create_trust_context()
         self.assertEqual('atrust123', trust_context.trust_id)
         self.assertEqual('5678', trust_context.trustor_user_id)
+
+    def test_init_domain_cfg_not_set(self):
+
+        """Test error path when config lacks stack domain ID."""
+
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        err = self.assertRaises(exception.Error,
+                                heat_keystoneclient.KeystoneClient, ctx)
+        self.assertIn('stack_user_domain ID not set in heat.conf', err)
 
     def test_init_admin_client(self):
 
@@ -584,7 +599,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
         self.mock_admin_client.users.update(user='duser123', enabled=True
                                             ).AndReturn(None)
@@ -601,7 +616,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
         self.m.ReplayAll()
 
@@ -616,7 +631,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
         self.m.ReplayAll()
 
@@ -631,7 +646,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
         self.mock_admin_client.users.update(user='duser123', enabled=False
                                             ).AndReturn(None)
@@ -648,7 +663,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
         self.m.ReplayAll()
 
@@ -663,7 +678,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
         self.m.ReplayAll()
 
@@ -880,45 +895,6 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(ValueError, heat_ks_client.delete_ec2_keypair)
 
-    def _stub_domain(self, cfg_name='adomain', ret_id=None):
-        self._stub_admin_client()
-        cfg.CONF.set_override('stack_user_domain', cfg_name)
-        self.mock_admin_client.domains = self.m.CreateMockAnything()
-        if ret_id:
-            dummy = self.m.CreateMockAnything()
-            dummy.id = ret_id
-            self.mock_admin_client.domains.list(
-                name=cfg_name).AndReturn([dummy])
-        else:
-            self.mock_admin_client.domains.list(name=cfg_name).AndReturn([])
-
-    def test_stack_domain_id_new(self):
-
-        """Test the stack_domain_id property when the domain doesn't exist."""
-
-        self._stub_domain(cfg_name='testname')
-        dummy = self.m.CreateMockAnything()
-        dummy.id = 'adomain123'
-        self.mock_admin_client.domains.create(name='testname').AndReturn(dummy)
-        self.m.ReplayAll()
-
-        ctx = utils.dummy_context()
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertEqual('adomain123', heat_ks_client.stack_domain_id)
-
-    def test_stack_domain_id_existing(self):
-
-        """Test the stack_domain_id property when the domain exists."""
-
-        self._stub_domain(ret_id='adomain123')
-        self.m.ReplayAll()
-
-        ctx = utils.dummy_context()
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertEqual('adomain123', heat_ks_client.stack_domain_id)
-
     def test_create_stack_domain_project(self):
 
         """Test the create_stack_domain_project function."""
@@ -927,7 +903,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         expected_name = '%s-astack' % ctx.tenant_id
 
-        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         dummy = self.m.CreateMockAnything()
         dummy.id = 'aproject123'

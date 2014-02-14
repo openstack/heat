@@ -66,8 +66,7 @@ service_opts = [
                default="heat_stack_user",
                help='Keystone role for heat template-defined users.'),
     cfg.StrOpt('stack_user_domain',
-               default='heat',
-               help='Keystone domain which contains heat template-defined '
+               help='Keystone domain ID which contains heat template-defined '
                     'users.'),
     cfg.IntOpt('max_template_size',
                default=524288,

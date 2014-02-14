@@ -58,7 +58,6 @@ class KeystoneClient(object):
         self.context = context
         self._client_v3 = None
         self._admin_client = None
-        self._stack_domain = None
 
         if self.context.auth_url:
             self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
@@ -72,6 +71,15 @@ class KeystoneClient(object):
             # Create a client with the specified trust_id, this
             # populates self.context.auth_token with a trust-scoped token
             self._client_v3 = self._v3_client_init()
+
+        # The stack domain user ID must be set in heat.conf
+        # It can be created via python-openstackclient
+        # openstack --os-identity-api-version=3 domain create heat
+        stack_domain = cfg.CONF.stack_user_domain
+        if not stack_domain:
+            raise exception.Error("stack_user_domain ID not set in heat.conf")
+        logger.debug(_("Using stack domain %s") % stack_domain)
+        self.stack_domain_id = stack_domain
 
     @property
     def client_v3(self):
@@ -93,24 +101,6 @@ class KeystoneClient(object):
                 logger.error("Admin client authentication failed")
                 raise exception.AuthorizationFailure()
         return self._admin_client
-
-    @property
-    def stack_domain_id(self):
-        if not self._stack_domain:
-            # Check the required domain exists, if not create it
-            # Note this is all done via the admin_client, and the domain
-            # filtering by name requires the keystoneclient functionality
-            # added via the extensible-crud-manager-operations blueprint.
-            try:
-                heat_domain = self.admin_client.domains.list(
-                    name=cfg.CONF.stack_user_domain)[0]
-            except IndexError:
-                heat_domain = self.admin_client.domains.create(
-                    name=cfg.CONF.stack_user_domain)
-            logger.debug(_("Using stack domain %s")
-                         % cfg.CONF.stack_user_domain)
-            self._stack_domain_id = heat_domain.id
-        return self._stack_domain_id
 
     def _v3_client_init(self):
         kwargs = {

@@ -98,9 +98,9 @@
 # value)
 #heat_stack_user_role=heat_stack_user
 
-# Keystone domain which contains heat template-defined users.
-# (string value)
-#stack_user_domain=heat
+# Keystone domain ID which contains heat template-defined
+# users. (string value)
+#stack_user_domain=<None>
 
 # Maximum raw byte size of any template. (integer value)
 #max_template_size=524288
