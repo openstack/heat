@@ -11,9 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-endpoint for heat AWS-compatible CloudWatch API
-"""
+"""Endpoint for heat AWS-compatible CloudWatch API."""
+
 from oslo import messaging
 import six
 
@@ -34,9 +33,9 @@ LOG = logging.getLogger(__name__)
 
 class WatchController(object):
 
-    """
-    WSGI controller for CloudWatch resource in heat API
-    Implements the API actions
+    """WSGI controller for CloudWatch resource in heat API.
+
+    Implements the API actions.
     """
 
     def __init__(self, options):
@@ -61,10 +60,10 @@ class WatchController(object):
 
     @staticmethod
     def _reformat_dimensions(dims):
-        '''
-        Reformat dimensions list into AWS API format
-        Parameter dims is a list of dicts
-        '''
+        """Reformat dimensions list into AWS API format.
+
+        :param dims: a list of dicts.
+        """
         newdims = []
         for count, d in enumerate(dims, 1):
             for key in d.keys():
@@ -72,29 +71,21 @@ class WatchController(object):
         return newdims
 
     def delete_alarms(self, req):
-        """
-        Implements DeleteAlarms API action
-        """
+        """Implements DeleteAlarms API action."""
         self._enforce(req, 'DeleteAlarms')
         return exception.HeatAPINotImplementedError()
 
     def describe_alarm_history(self, req):
-        """
-        Implements DescribeAlarmHistory API action
-        """
+        """Implements DescribeAlarmHistory API action."""
         self._enforce(req, 'DescribeAlarmHistory')
         return exception.HeatAPINotImplementedError()
 
     def describe_alarms(self, req):
-        """
-        Implements DescribeAlarms API action
-        """
+        """Implements DescribeAlarms API action."""
         self._enforce(req, 'DescribeAlarms')
 
         def format_metric_alarm(a):
-            """
-            Reformat engine output into the AWS "MetricAlarm" format
-            """
+            """Reformat engine output into the AWS "MetricAlarm" format."""
             keymap = {
                 engine_api.WATCH_ACTIONS_ENABLED: 'ActionsEnabled',
                 engine_api.WATCH_ALARM_ACTIONS: 'AlarmActions',
@@ -118,7 +109,8 @@ class WatchController(object):
                 engine_api.WATCH_STATE_VALUE: 'StateValue',
                 engine_api.WATCH_STATISTIC: 'Statistic',
                 engine_api.WATCH_THRESHOLD: 'Threshold',
-                engine_api.WATCH_UNIT: 'Unit'}
+                engine_api.WATCH_UNIT: 'Unit',
+            }
 
             # AWS doesn't return StackId in the main MetricAlarm
             # structure, so we add StackId as a dimension to all responses
@@ -151,47 +143,39 @@ class WatchController(object):
         return result
 
     def describe_alarms_for_metric(self, req):
-        """
-        Implements DescribeAlarmsForMetric API action
-        """
+        """Implements DescribeAlarmsForMetric API action."""
         self._enforce(req, 'DescribeAlarmsForMetric')
         return exception.HeatAPINotImplementedError()
 
     def disable_alarm_actions(self, req):
-        """
-        Implements DisableAlarmActions API action
-        """
+        """Implements DisableAlarmActions API action."""
         self._enforce(req, 'DisableAlarmActions')
         return exception.HeatAPINotImplementedError()
 
     def enable_alarm_actions(self, req):
-        """
-        Implements EnableAlarmActions API action
-        """
+        """Implements EnableAlarmActions API action."""
         self._enforce(req, 'EnableAlarmActions')
         return exception.HeatAPINotImplementedError()
 
     def get_metric_statistics(self, req):
-        """
-        Implements GetMetricStatistics API action
-        """
+        """Implements GetMetricStatistics API action."""
         self._enforce(req, 'GetMetricStatistics')
         return exception.HeatAPINotImplementedError()
 
     def list_metrics(self, req):
-        """
-        Implements ListMetrics API action
+        """Implements ListMetrics API action.
+
         Lists metric datapoints associated with a particular alarm,
-        or all alarms if none specified
+        or all alarms if none specified.
         """
         self._enforce(req, 'ListMetrics')
 
         def format_metric_data(d, fil=None):
-            """
-            Reformat engine output into the AWS "Metric" format
+            """Reformat engine output into the AWS "Metric" format.
+
             Takes an optional filter dict, which is traversed
             so a metric dict is only returned if all keys match
-            the filter dict
+            the filter dict.
             """
             fil = fil or {}
             dimensions = [
@@ -247,16 +231,12 @@ class WatchController(object):
         return result
 
     def put_metric_alarm(self, req):
-        """
-        Implements PutMetricAlarm API action
-        """
+        """Implements PutMetricAlarm API action."""
         self._enforce(req, 'PutMetricAlarm')
         return exception.HeatAPINotImplementedError()
 
     def put_metric_data(self, req):
-        """
-        Implements PutMetricData API action
-        """
+        """Implements PutMetricData API action."""
         self._enforce(req, 'PutMetricData')
 
         con = req.context
@@ -304,9 +284,7 @@ class WatchController(object):
         return api_utils.format_response("PutMetricData", result)
 
     def set_alarm_state(self, req):
-        """
-        Implements SetAlarmState API action
-        """
+        """Implements SetAlarmState API action."""
         self._enforce(req, 'SetAlarmState')
 
         # Map from AWS state names to those used in the engine
@@ -341,8 +319,6 @@ class WatchController(object):
 
 
 def create_resource(options):
-    """
-    Watch resource factory method.
-    """
+    """Watch resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     return wsgi.Resource(WatchController(options), deserializer)
