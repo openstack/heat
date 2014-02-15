@@ -908,7 +908,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertEqual((old_stack.UPDATE, old_stack.COMPLETE),
                          old_stack.state)
         self.assertEqual(create_stack.identifier(), result)
-        self.assertNotEqual(None, create_stack.identifier().stack_id)
+        self.assertIsNotNone(create_stack.identifier().stack_id)
         self.assertEqual(create_stack.identifier().arn(),
                          old_stack['A'].properties['Foo'])
 
@@ -989,7 +989,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertEqual((old_nested.UPDATE, old_nested.COMPLETE),
                          old_nested.state)
         self.assertEqual(create_stack.identifier(), result)
-        self.assertNotEqual(None, create_stack.identifier().stack_id)
+        self.assertIsNotNone(create_stack.identifier().stack_id)
         self.assertEqual(create_nested.identifier().arn(),
                          old_nested['A'].properties['Foo'])
 
