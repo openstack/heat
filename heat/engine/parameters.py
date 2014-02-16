@@ -24,11 +24,11 @@ from heat.common import exception
 PARAMETER_KEYS = (
     TYPE, DEFAULT, NO_ECHO, ALLOWED_VALUES, ALLOWED_PATTERN,
     MAX_LENGTH, MIN_LENGTH, MAX_VALUE, MIN_VALUE,
-    DESCRIPTION, CONSTRAINT_DESCRIPTION
+    DESCRIPTION, CONSTRAINT_DESCRIPTION, LABEL
 ) = (
     'Type', 'Default', 'NoEcho', 'AllowedValues', 'AllowedPattern',
     'MaxLength', 'MinLength', 'MaxValue', 'MinValue',
-    'Description', 'ConstraintDescription'
+    'Description', 'ConstraintDescription', 'Label'
 )
 
 
@@ -36,9 +36,10 @@ class Schema(constr.Schema):
     '''Parameter schema.'''
 
     KEYS = (
-        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN
+        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN, LABEL
     ) = (
-        'Type', 'Description', 'Default', 'Schema', 'Constraints', 'NoEcho'
+        'Type', 'Description', 'Default', 'Schema', 'Constraints', 'NoEcho',
+        'Label'
     )
 
     # For Parameters the type name for Schema.LIST is CommaDelimitedList

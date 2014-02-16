@@ -146,6 +146,7 @@ default value defined as nested elements.
   parameters:
     <param name>:
       type: <string | number | json | comma_delimited_list>
+      label: <human-readable name of the parameter>
       description: <description of the parameter>
       default: <default value for parameter>
       hidden: <true | false>
@@ -158,6 +159,10 @@ param name
 type
     This attribute specifies the type of parameter. Currently supported types
     are *string*, *number*, *comma_delimited_list* or *json*.
+
+label
+    This *optional* attribute allows for giving a human readable name of the
+    parameter.
 
 description
     This *optional* attribute allows for giving a human readable description of
@@ -179,17 +184,19 @@ constraints
     parameter, such as minimum or maximum values for numeric parameters.
 
 The following example shows a minimalistic definition of two parameters. Note
-that the description is actually optional, but is good practice to provide a
-useful description for each parameter.
+that the description and label are actually optional, but is good practice to
+provide a useful description and label for each parameter.
 
 ::
 
   parameters:
     user_name:
       type: string
+      label: User Name
       description: User name to be configured for the application
     port_number:
       type: number
+      label: Port Number
       description: Port number to be configured for the web server
 
 
@@ -238,6 +245,7 @@ presented to the user at deployment time.
   parameters:
     user_name:
       type: string
+      label: User Name
       description: User name to be configured for the application
       constraints:
         - length: { min: 6, max: 8 }
@@ -309,6 +317,7 @@ For example:
   parameters:
     instance_type:
       type: string
+      label: Instance Type
       description: Instance type for compute instances
       constraints:
         - allowed_values:
@@ -334,6 +343,7 @@ For example:
   parameters:
     user_name:
       type: string
+      label: User Name
       description: User name to be configured for the application
       constraints:
         - allowed_pattern: "[A-Z]+[a-zA-Z0-9]*"
@@ -470,6 +480,7 @@ is shown below.
   parameters:
     instance_type:
       type: string
+      label: Instance Type
       description: Instance type to be used.
     server_data:
       type: json
@@ -614,6 +625,7 @@ like scripts for initializing compute instances as shown in the example below:
   parameters:
     DBRootPassword:
       type: string
+      label: Database Password
       description: Root password for MySQL
       hidden: true
 
