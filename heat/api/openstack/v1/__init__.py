@@ -20,6 +20,7 @@ from heat.api.openstack.v1 import resources
 from heat.api.openstack.v1 import events
 from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
+from heat.api.openstack.v1 import software_configs
 from heat.common import wsgi
 
 from heat.openstack.common import log as logging
@@ -184,5 +185,27 @@ class API(wsgi.Router):
                                 '/build_info',
                                 action='build_info',
                                 conditions={'method': 'GET'})
+
+        # Software configs
+        software_config_resource = software_configs.create_resource(conf)
+        with mapper.submapper(
+            controller=software_config_resource,
+            path_prefix="/{tenant_id}/software_configs"
+        ) as sc_mapper:
+
+            sc_mapper.connect("software_config_create",
+                              "",
+                              action="create",
+                              conditions={'method': 'POST'})
+
+            sc_mapper.connect("software_config_show",
+                              "/{config_id}",
+                              action="show",
+                              conditions={'method': 'GET'})
+
+            sc_mapper.connect("software_config_delete",
+                              "/{config_id}",
+                              action="delete",
+                              conditions={'method': 'DELETE'})
 
         super(API, self).__init__(mapper)
