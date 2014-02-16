@@ -41,6 +41,10 @@ logger = logging.getLogger(__name__)
 (SCALED_RESOURCE_TYPE,) = ('OS::Heat::ScaledResource',)
 
 
+(EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY) = (
+    'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
+
+
 class CooldownMixin(object):
     '''
     Utility class to encapsulate Cooldown related logic which is shared
@@ -548,7 +552,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         done = super(AutoScalingGroup, self).check_create_complete(task)
         if done:
             self._cooldown_timestamp(
-                "%s : %s" % ('ExactCapacity', len(self.get_instances())))
+                "%s : %s" % (EXACT_CAPACITY, len(self.get_instances())))
         return done
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -597,9 +601,9 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                     new_capacity = self.properties[self.DESIRED_CAPACITY]
 
             if new_capacity is not None:
-                self.adjust(new_capacity, adjustment_type='ExactCapacity')
+                self.adjust(new_capacity, adjustment_type=EXACT_CAPACITY)
 
-    def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
+    def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY):
         """
         Adjust the size of the scaling group if the cooldown permits.
         """
@@ -611,9 +615,9 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             return
 
         capacity = len(self.get_instances())
-        if adjustment_type == 'ChangeInCapacity':
+        if adjustment_type == CHANGE_IN_CAPACITY:
             new_capacity = capacity + adjustment
-        elif adjustment_type == 'ExactCapacity':
+        elif adjustment_type == EXACT_CAPACITY:
             new_capacity = adjustment
         else:
             # PercentChangeInCapacity
@@ -829,9 +833,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             _('Type of adjustment (absolute or percentage).'),
             required=True,
             constraints=[
-                constraints.AllowedValues(['ChangeInCapacity',
-                                           'ExactCapacity',
-                                           'PercentChangeInCapacity']),
+                constraints.AllowedValues([CHANGE_IN_CAPACITY,
+                                           EXACT_CAPACITY,
+                                           PERCENT_CHANGE_IN_CAPACITY]),
             ],
             update_allowed=True
         ),
