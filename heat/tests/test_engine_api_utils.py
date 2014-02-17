@@ -619,6 +619,51 @@ class FormatValidateParameterTest(HeatTestCase):
                   'NoEcho': 'false'
               })
          ),
+        ('constraint_description_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "min": 4},
+                              "description": "Big enough" }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'ConstraintDescription': 'Big enough',
+                  'NoEcho': 'false'
+              })
+         ),
+        ('constraint_multiple_descriptions_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "min": 4},
+                              "description": "Big enough." },
+                            { "allowed_pattern": "[a-zA-Z0-9]+",
+                              "description": "Only letters." }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'AllowedPattern': "[a-zA-Z0-9]+",
+                  'ConstraintDescription': 'Big enough. Only letters.',
+                  'NoEcho': 'false'
+              })
+         ),
     ]
 
     def test_format_validate_parameter(self):

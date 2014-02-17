@@ -257,6 +257,8 @@ def format_validate_parameter(param):
     if param.has_default():
         res[api.PARAM_DEFAULT] = param.default()
 
+    constraint_description = []
+
     # build constraints
     for c in param.schema.constraints:
         if isinstance(c, constr.Length):
@@ -278,6 +280,13 @@ def format_validate_parameter(param):
 
         elif isinstance(c, constr.AllowedPattern):
             res[api.PARAM_ALLOWED_PATTERN] = c.pattern
+
+        if c.description:
+            constraint_description.append(c.description)
+
+    if constraint_description:
+        res[api.PARAM_CONSTRAINT_DESCRIPTION] = " ".join(
+            constraint_description)
 
     return res
 
