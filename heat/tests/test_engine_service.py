@@ -808,6 +808,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_update(self):
