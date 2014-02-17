@@ -42,7 +42,6 @@ class KeystoneClient(object):
     via the code in engine/client.py, so there should not be any need to
     directly instantiate instances of this class inside resources themselves
     """
-    conf = cfg.CONF
 
     def __init__(self, context):
         # If a trust_id is specified in the context, we immediately
@@ -66,7 +65,7 @@ class KeystoneClient(object):
         else:
             # Import auth_token to have keystone_authtoken settings setup.
             importutils.import_module('keystoneclient.middleware.auth_token')
-            self.v3_endpoint = self.conf.keystone_authtoken.auth_uri.replace(
+            self.v3_endpoint = cfg.CONF.keystone_authtoken.auth_uri.replace(
                 'v2.0', 'v3')
 
         if self.context.trust_id:
@@ -104,12 +103,12 @@ class KeystoneClient(object):
             # added via the extensible-crud-manager-operations blueprint.
             try:
                 heat_domain = self.admin_client.domains.list(
-                    name=self.conf.stack_user_domain)[0]
+                    name=cfg.CONF.stack_user_domain)[0]
             except IndexError:
                 heat_domain = self.admin_client.domains.create(
-                    name=self.conf.stack_user_domain)
+                    name=cfg.CONF.stack_user_domain)
             logger.debug(_("Using stack domain %s")
-                         % self.conf.stack_user_domain)
+                         % cfg.CONF.stack_user_domain)
             self._stack_domain_id = heat_domain.id
         return self._stack_domain_id
 
@@ -161,11 +160,11 @@ class KeystoneClient(object):
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystoneclient.middleware.auth_token')
         creds = {
-            'username': self.conf.keystone_authtoken.admin_user,
-            'password': self.conf.keystone_authtoken.admin_password,
+            'username': cfg.CONF.keystone_authtoken.admin_user,
+            'password': cfg.CONF.keystone_authtoken.admin_password,
             'auth_url': self.v3_endpoint,
             'endpoint': self.v3_endpoint,
-            'project_name': self.conf.keystone_authtoken.admin_tenant_name}
+            'project_name': cfg.CONF.keystone_authtoken.admin_tenant_name}
         return creds
 
     def _ssl_options(self):
@@ -177,12 +176,12 @@ class KeystoneClient(object):
 
     def _get_client_option(self, option):
         try:
-            self.conf.import_opt(option, 'heat.common.config',
-                                 group='clients_keystone')
-            return getattr(self.conf.clients_keystone, option)
+            cfg.CONF.import_opt(option, 'heat.common.config',
+                                group='clients_keystone')
+            return getattr(cfg.CONF.clients_keystone, option)
         except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
-            self.conf.import_opt(option, 'heat.common.config', group='clients')
-            return getattr(self.conf.clients, option)
+            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+            return getattr(cfg.CONF.clients, option)
 
     def create_trust_context(self):
         """
@@ -202,7 +201,7 @@ class KeystoneClient(object):
         trustee_user_id = self.admin_client.auth_ref.user_id
         trustor_user_id = self.client_v3.auth_ref.user_id
         trustor_project_id = self.client_v3.auth_ref.project_id
-        roles = self.conf.trusts_delegated_roles
+        roles = cfg.CONF.trusts_delegated_roles
         trust = self.client_v3.trusts.create(trustor_user=trustor_user_id,
                                              trustee_user=trustee_user_id,
                                              project=trustor_project_id,
@@ -237,7 +236,7 @@ class KeystoneClient(object):
         # update when a new keystoneclient release happens containing
         # the extensible-crud-manager-operations patch
         stack_user_role = [r for r in roles_list
-                           if r.name == self.conf.heat_stack_user_role]
+                           if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
             return stack_user_role[0].id
 
@@ -268,9 +267,9 @@ class KeystoneClient(object):
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {
                              'user': username,
-                             'role': self.conf.heat_stack_user_role})
+                             'role': cfg.CONF.heat_stack_user_role})
             raise exception.Error(_("Can't find role %s")
-                                  % self.conf.heat_stack_user_role)
+                                  % cfg.CONF.heat_stack_user_role)
 
         return user.id
 
@@ -302,9 +301,9 @@ class KeystoneClient(object):
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {'user': username,
-                         'role': self.conf.heat_stack_user_role})
+                         'role': cfg.CONF.heat_stack_user_role})
             raise exception.Error(_("Can't find role %s")
-                                  % self.conf.heat_stack_user_role)
+                                  % cfg.CONF.heat_stack_user_role)
 
         return user.id
 
