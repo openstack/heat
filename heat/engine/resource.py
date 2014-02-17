@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import base64
 from datetime import datetime
 
@@ -171,12 +172,7 @@ class Resource(object):
         self.context = stack.context
         self.name = name
         self.json_snippet = json_snippet
-        self.t = stack.resolve_static_data(json_snippet)
-        self.properties = Properties(self.properties_schema,
-                                     self.t.get('Properties', {}),
-                                     self._resolve_runtime_data,
-                                     self.name,
-                                     self.context)
+        self.reparse()
         self.attributes = Attributes(self.name,
                                      self.attributes_schema,
                                      self._resolve_attribute)
@@ -205,6 +201,14 @@ class Resource(object):
             self.status_reason = ''
             self.id = None
             self.data = []
+
+    def reparse(self):
+        self.t = self.stack.resolve_static_data(self.json_snippet)
+        self.properties = Properties(self.properties_schema,
+                                     self.t.get('Properties', {}),
+                                     self._resolve_runtime_data,
+                                     self.name,
+                                     self.context)
 
     def __eq__(self, other):
         '''Allow == comparison of two resources.'''
@@ -467,12 +471,7 @@ class Resource(object):
         # the StackId pseudo parameter, it will change after
         # the parser.Stack is stored (which is after the resources
         # are __init__'d, but before they are create()'d)
-        self.t = self.stack.resolve_static_data(self.json_snippet)
-        self.properties = Properties(self.properties_schema,
-                                     self.t.get('Properties', {}),
-                                     self._resolve_runtime_data,
-                                     self.name,
-                                     self.context)
+        self.reparse()
         return self._do_action(action, self.properties.validate)
 
     def set_deletion_policy(self, policy):
@@ -578,7 +577,8 @@ class Resource(object):
             self.state_set(action, self.FAILED, str(failure))
             raise failure
         else:
-            self.t = self.stack.resolve_static_data(after)
+            self.json_snippet = copy.deepcopy(after)
+            self.reparse()
             self.state_set(action, self.COMPLETE)
 
     def suspend(self):
