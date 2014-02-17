@@ -31,6 +31,7 @@ from heat.engine import scheduler
 from heat.engine import timestamp
 from heat.engine import update
 from heat.engine.notification import stack as notification
+from heat.engine.parameter_groups import ParameterGroups
 from heat.engine.template import Template
 from heat.engine.clients import Clients
 from heat.db import api as db_api
@@ -322,6 +323,10 @@ class Stack(collections.Mapping):
         Validates the template.
         '''
         # TODO(sdake) Should return line number of invalid reference
+
+        # Validate Parameter Groups
+        parameter_groups = ParameterGroups(self.t)
+        parameter_groups.validate()
 
         # Check duplicate names between parameters and resources
         dup_names = set(self.parameters.keys()) & set(self.keys())

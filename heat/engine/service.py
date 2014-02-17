@@ -35,6 +35,7 @@ from heat.engine import environment
 from heat.common import exception
 from heat.common import identifier
 from heat.common import heat_keystoneclient as hkc
+from heat.engine import parameter_groups
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
@@ -525,11 +526,16 @@ class EngineService(service.Service):
         tmpl_params = tmpl.parameters(None, {}, validate_value=False)
         is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
         params = tmpl_params.map(api.format_validate_parameter, is_real_param)
+        param_groups = parameter_groups.ParameterGroups(tmpl)
 
         result = {
             'Description': tmpl.get('Description', ''),
             'Parameters': params,
         }
+
+        if param_groups.parameter_groups:
+            result['ParameterGroups'] = param_groups.parameter_groups
+
         return result
 
     @request_context
