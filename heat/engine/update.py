@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from heat.db import api as db_api
 
 from heat.engine import dependencies
@@ -142,11 +144,14 @@ class StackUpdate(object):
         yield self._create_resource(new_res)
 
     def _update_in_place(self, existing_res, new_res):
+        existing_snippet = self.existing_snippets[existing_res.name]
+        prev_res = self.previous_stack.get(new_res.name)
+
         # Note the new resource snippet is resolved in the context
         # of the existing stack (which is the stack being updated)
-        existing_snippet = self.existing_snippets[existing_res.name]
-        new_snippet = self.existing_stack.resolve_runtime_data(new_res.t)
-        prev_res = self.previous_stack.get(new_res.name)
+        raw_snippet = copy.deepcopy(new_res.t)
+        parsed_snippet = self.existing_stack.resolve_static_data(raw_snippet)
+        new_snippet = self.existing_stack.resolve_runtime_data(parsed_snippet)
 
         return existing_res.update(new_snippet, existing_snippet,
                                    prev_resource=prev_res)
