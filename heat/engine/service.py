@@ -577,31 +577,33 @@ class EngineService(service.Service):
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
         acquire_result = lock.try_acquire()
 
+        # Successfully acquired lock
         if acquire_result is None:
             self.thread_group_mgr.start_with_acquired_lock(stack, lock,
                                                            stack.delete)
             return
 
-        elif acquire_result == self.engine_id:  # Current engine has the lock
+        # Current engine has the lock
+        elif acquire_result == self.engine_id:
             self.thread_group_mgr.stop(stack.id)
 
-            # If the lock isn't released here, then the call to
-            # start_with_lock below will raise an ActionInProgress
-            # exception.  Ideally, we wouldn't be calling another
-            # release() here, since it should be called as soon as the
-            # ThreadGroup is stopped.  But apparently there's a race
-            # between release() the next call to lock.acquire().
-            db_api.stack_lock_release(stack.id, self.engine_id)
-
-        else:  # Another engine has the lock
-            other_engine_id = acquire_result
-            stop_result = remote_stop(other_engine_id)
+        # Another active engine has the lock
+        elif stack_lock.StackLock.engine_alive(cnxt, acquire_result):
+            stop_result = remote_stop(acquire_result)
             if stop_result is None:
                 logger.debug(_("Successfully stopped remote task on engine %s")
-                             % other_engine_id)
+                             % acquire_result)
             else:
                 raise exception.StopActionFailed(stack_name=stack.name,
-                                                 engine_id=other_engine_id)
+                                                 engine_id=acquire_result)
+
+        # If the lock isn't released here, then the call to
+        # start_with_lock below will raise an ActionInProgress
+        # exception.  Ideally, we wouldn't be calling another
+        # release() here, since it should be called as soon as the
+        # ThreadGroup is stopped.  But apparently there's a race
+        # between release() the next call to lock.acquire().
+        db_api.stack_lock_release(stack.id, acquire_result)
 
         # There may be additional resources that we don't know about
         # if an update was in-progress when the stack was stopped, so

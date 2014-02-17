@@ -34,12 +34,13 @@ class StackLock(object):
         self.engine_id = engine_id
         self.listener = None
 
-    def _engine_alive(self, engine_id):
+    @staticmethod
+    def engine_alive(context, engine_id):
         topic = engine_id
         rpc = proxy.RpcProxy(topic, "1.0")
         msg = rpc.make_msg("listening")
         try:
-            return rpc.call(self.context, msg, topic=topic,
+            return rpc.call(context, msg, topic=topic,
                             timeout=cfg.CONF.engine_life_check_timeout)
         except rpc_common.Timeout:
             return False
@@ -72,7 +73,7 @@ class StackLock(object):
             return
 
         if lock_engine_id == self.engine_id or \
-           self._engine_alive(lock_engine_id):
+           self.engine_alive(self.context, lock_engine_id):
             logger.debug(_("Lock on stack %(stack)s is owned by engine "
                            "%(engine)s") % {'stack': self.stack.id,
                                             'engine': lock_engine_id})
