@@ -17,6 +17,7 @@ import mox
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_keypair
 from heat.engine import resource
@@ -73,6 +74,9 @@ class InstanceGroupTest(HeatTestCase):
         parser.Stack.validate()
         self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
         nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, 'validate')
+        image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.StubOutWithMock(instance_class, 'handle_create')
@@ -161,6 +165,9 @@ class InstanceGroupTest(HeatTestCase):
         self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
         nova_keypair.KeypairConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, 'validate')
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
 
@@ -220,6 +227,9 @@ class InstanceGroupTest(HeatTestCase):
         self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
         nova_keypair.KeypairConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, 'validate')
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
@@ -263,6 +273,9 @@ class InstanceGroupTest(HeatTestCase):
         parser.Stack.validate()
         self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
         nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, 'validate')
+        image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)

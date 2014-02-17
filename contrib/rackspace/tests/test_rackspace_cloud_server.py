@@ -22,6 +22,7 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import image
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -215,6 +216,8 @@ class CloudServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_metadata_os_distro()
         self.m.ReplayAll()
 
@@ -233,6 +236,8 @@ class CloudServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_metadata_os_distro()
         self.m.ReplayAll()
 
@@ -288,6 +293,8 @@ class CloudServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -350,6 +357,10 @@ class CloudServersTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['image'] = '1'
         server = cloud_server.CloudServer('server_create_image_err',
                                           t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.StubOutWithMock(server.__class__, 'script')
         server.script = None
@@ -627,6 +638,8 @@ class CloudServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         exc = self.assertRaises(exception.StackValidationFailed,

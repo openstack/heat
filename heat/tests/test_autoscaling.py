@@ -33,6 +33,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
+from heat.engine.resources import image
 from heat.openstack.common import timeutils
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -163,6 +164,9 @@ class AutoScalingTest(HeatTestCase):
         self._stub_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         cookie = object()
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
@@ -533,6 +537,9 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         instance.Instance.handle_create().AndRaise(Exception)
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
 
@@ -855,6 +862,9 @@ class AutoScalingTest(HeatTestCase):
         # Scale up one 1 instance with resource failure
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(exception.Error('Bang'))
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self._stub_lb_reload(1, unset=False, nochange=True)
         self._stub_validate()
         self._stub_scale_notification(adjust=1,

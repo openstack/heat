@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 
 from testtools import skipIf
 
@@ -915,14 +916,12 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
-        self.assertRaises(exception.ImageNotFound, resource.validate)
+        self.assertRaises(exception.StackValidationFailed, resource.validate)
 
         self.m.VerifyAll()
 
@@ -933,11 +932,7 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        class image_type(object):
-
-            def __init__(self, id, name):
-                self.id = id
-                self.name = name
+        image_type = collections.namedtuple("Image", ("id", "name"))
 
         image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
                                  name='image_name'),
@@ -947,14 +942,12 @@ class validateTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.images, 'list')
         self.fc.images.list().AndReturn(image_list)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
-        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+        self.assertRaises(exception.StackValidationFailed,
                           resource.validate)
 
         self.m.VerifyAll()
@@ -965,8 +958,16 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
+        image_type = collections.namedtuple("Image", ("id", "name"))
+
+        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
+                                 name='image_name')]
+
+        self.m.StubOutWithMock(self.fc.images, 'list')
+        self.fc.images.list().AndReturn(image_list)
+
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -979,8 +980,16 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
+        image_type = collections.namedtuple("Image", ("id", "name"))
+
+        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
+                                 name='image_name')]
+
+        self.m.StubOutWithMock(self.fc.images, 'list')
+        self.fc.images.list().AndReturn(image_list)
+
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -993,13 +1002,13 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list()\
-            .AndRaise(clients.novaclient.exceptions.ClientException(500))
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
+        self.fc.images.list().AndRaise(
+            clients.novaclient.exceptions.ClientException(500))
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.Error, stack.validate)
+        self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.m.VerifyAll()
 
     def test_validate_unique_logical_name(self):

@@ -139,6 +139,9 @@ class Instance(resource.Resource):
         IMAGE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Glance image ID or name.'),
+            constraints=[
+                constraints.CustomConstraint('glance.image')
+            ],
             required=True
         ),
         # AWS does not require InstanceType but Heat does because the nova
@@ -548,9 +551,6 @@ class Instance(resource.Resource):
             raise exception.ResourcePropertyConflict(
                 '/'.join([self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS]),
                 self.NETWORK_INTERFACES)
-
-        # make sure the image exists.
-        nova_utils.get_image_id(self.nova(), self.properties[self.IMAGE_ID])
 
     @scheduler.wrappertask
     def _delete_server(self, server):

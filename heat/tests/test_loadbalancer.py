@@ -138,8 +138,7 @@ class LoadBalancerTest(HeatTestCase):
             limit=instance.Instance.physical_resource_name_limit)
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
-        if key_name:
-            clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,

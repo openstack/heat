@@ -16,6 +16,7 @@ from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -60,6 +61,8 @@ class nokeyTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 

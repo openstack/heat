@@ -64,7 +64,7 @@ asg_tmpl_without_updt_policy = '''
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId"           : "foo",
+        "ImageId"           : "F20-x86_64-cfntools",
         "InstanceType"      : "m1.medium",
         "KeyName"           : "test",
         "SecurityGroups"    : [ "sg-1" ],
@@ -97,7 +97,7 @@ asg_tmpl_with_bad_updt_policy = '''
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId"           : "foo",
+        "ImageId"           : "F20-x86_64-cfntools",
         "InstanceType"      : "m1.medium",
         "KeyName"           : "test",
         "SecurityGroups"    : [ "sg-1" ],
@@ -142,7 +142,7 @@ asg_tmpl_with_default_updt_policy = '''
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId"           : "foo",
+        "ImageId"           : "F20-x86_64-cfntools",
         "InstanceType"      : "m1.medium",
         "KeyName"           : "test",
         "SecurityGroups"    : [ "sg-1" ],
@@ -190,7 +190,7 @@ asg_tmpl_with_updt_policy = '''
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId"           : "foo",
+        "ImageId"           : "F20-x86_64-cfntools",
         "InstanceType"      : "m1.medium",
         "KeyName"           : "test",
         "SecurityGroups"    : [ "sg-1" ],
@@ -560,7 +560,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '1'
         policy['MaxBatchSize'] = '3'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'bar'
+        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -581,7 +581,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '8'
         policy['MaxBatchSize'] = '4'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'bar'
+        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -601,7 +601,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '0'
         policy['MaxBatchSize'] = '20'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'bar'
+        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -622,7 +622,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MaxBatchSize'] = '1'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'bar'
+        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -770,7 +770,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
         policy['PauseTime'] = new_pause_time
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'bar'
+        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
         updated_tmpl = template_format.parse(json.dumps(updt_template))
         updated_stack = utils.parse_stack(updated_tmpl)
         self._stub_grp_replace(num_creates_expected_on_updt=0,

@@ -407,7 +407,10 @@ class CinderVolume(Volume):
         IMAGE: properties.Schema(
             properties.Schema.STRING,
             _('If specified, the name or ID of the image to create the '
-              'volume from.')
+              'volume from.'),
+            constraints=[
+                constraints.CustomConstraint('glance.image')
+            ]
         ),
         SOURCE_VOLID: properties.Schema(
             properties.Schema.STRING,

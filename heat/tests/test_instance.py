@@ -25,6 +25,7 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import image
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface
 from heat.engine.resources import nova_utils
@@ -146,7 +147,7 @@ class InstancesTest(HeatTestCase):
                                              'in_create_imgid',
                                              image_id='1')
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
+        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
@@ -171,11 +172,11 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ImageNotFound, instance.handle_create)
+        self.assertRaises(ValueError, instance.handle_create)
 
         self.m.VerifyAll()
 
@@ -188,16 +189,15 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc.client, "get_images_detail")
         self.fc.client.get_images_detail().AndReturn((
             200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
                              {'id': 4, 'name': 'CentOS 5.2'}]}))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
-                          instance.handle_create)
+        self.assertRaises(ValueError, instance.handle_create)
 
         self.m.VerifyAll()
 
@@ -210,8 +210,8 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').AndReturn(True)
         self.m.StubOutWithMock(self.fc.client, "get_images_1")
@@ -219,7 +219,7 @@ class InstancesTest(HeatTestCase):
             instances.clients.novaclient.exceptions.NotFound(404))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ImageNotFound, instance.handle_create)
+        self.assertRaises(ValueError, instance.handle_create)
 
         self.m.VerifyAll()
 
@@ -285,13 +285,11 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
+        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 
         self.assertIsNone(instance.validate())
@@ -405,6 +403,11 @@ class InstancesTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_update2')
+
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.ReplayAll()
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['ImageId'] = 'mustreplace'

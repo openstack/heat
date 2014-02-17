@@ -23,6 +23,7 @@ from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.engine import template
@@ -134,16 +135,7 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-
-    def _stub_create(self, num):
-        parser.Stack.validate()
-        cookie = object()
-        for x in range(num):
-            instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(mox.IgnoreArg())\
-                .AndReturn(False)
-            instance.Instance.check_create_complete(mox.IgnoreArg())\
-                .AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
 
     @skipIf(neutroncli is None, 'neutronclient unavailable')
     def test_lb(self):
@@ -301,6 +293,9 @@ class AutoScalingTest(HeatTestCase):
             .AndReturn(False)
         instance.Instance.check_create_complete(mox.IgnoreArg())\
             .AndReturn(True)
+
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         nova_utils.server_to_ipaddress(
             mox.IgnoreArg(),

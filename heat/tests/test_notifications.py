@@ -26,6 +26,7 @@ from heat.engine import resource
 from heat.engine import signal_responder as signal
 from heat.engine import stack_resource
 from heat.engine.resources import autoscaling
+from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import nova_keypair
@@ -195,6 +196,7 @@ class ScaleNotificationTest(common.HeatTestCase):
     def mock_stack_except_for_group(self):
         self.m_validate = self.patchobject(parser.Stack, 'validate')
         self.patchobject(nova_keypair.KeypairConstraint, 'validate')
+        self.patchobject(image.ImageConstraint, 'validate')
         self.patchobject(instance.Instance, 'handle_create')\
             .return_value = True
         self.patchobject(instance.Instance, 'check_create_complete')\

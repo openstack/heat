@@ -24,6 +24,7 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import image
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
 from heat.openstack.common import uuidutils
@@ -261,7 +262,7 @@ class ServersTest(HeatTestCase):
                                          image_id='1',
                                          override_name=True)
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
+        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
@@ -294,11 +295,15 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ImageNotFound, server.handle_create)
+        error = self.assertRaises(ValueError, server.handle_create)
+        self.assertEqual(
+            'server_create_image_err: image "Slackware" does not '
+            'validate glance.image',
+            str(error))
 
         self.m.VerifyAll()
 
@@ -311,16 +316,19 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc.client, "get_images_detail")
         self.fc.client.get_images_detail().AndReturn((
             200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
                              {'id': 4, 'name': 'CentOS 5.2'}]}))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
-                          server.handle_create)
+        error = self.assertRaises(ValueError, server.handle_create)
+        self.assertEqual(
+            'server_create_image_err: image "CentOS 5.2" does not '
+            'validate glance.image',
+            str(error))
 
         self.m.VerifyAll()
 
@@ -333,8 +341,8 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').AndReturn(True)
         self.m.StubOutWithMock(self.fc.client, "get_images_1")
@@ -342,7 +350,11 @@ class ServersTest(HeatTestCase):
             servers.clients.novaclient.exceptions.NotFound(404))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ImageNotFound, server.handle_create)
+        error = self.assertRaises(ValueError, server.handle_create)
+        self.assertEqual(
+            'server_create_image_err: image "1" does not '
+            'validate glance.image',
+            str(error))
 
         self.m.VerifyAll()
 
@@ -422,9 +434,10 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -502,6 +515,10 @@ class ServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.ReplayAll()
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -562,8 +579,6 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_validate_with_networks',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
@@ -833,12 +848,16 @@ class ServersTest(HeatTestCase):
             'image_update_policy'] = 'REPLACE'
         server = servers.Server('server_update_image_replace',
                                 t['Resources']['WebServer'], stack)
+        image_id = self.getUniqueString()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)
-        update_template['Properties']['image'] = self.getUniqueString()
+        update_template['Properties']['image'] = image_id
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -945,6 +964,11 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'update_prop')
+
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'mustreplace'
