@@ -1,7 +1,7 @@
 # Heat resources for working with the Rackspace Cloud
 The resources and configuration in this module are for using Heat with the Rackspace Cloud. These resources either
-allow using Rackspace services that don't have equivalent services in Openstack or account for differences between
-a generic Openstack deployment and Rackspace Cloud.
+allow using Rackspace services that don't have equivalent services in OpenStack or account for differences between
+a generic OpenStack deployment and Rackspace Cloud.
 ## Resources
 The following resources are provided for compatibility:
 
