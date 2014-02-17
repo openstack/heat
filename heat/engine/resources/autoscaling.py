@@ -50,7 +50,7 @@ class CooldownMixin(object):
         inprogress = False
         try:
             # Negative values don't make sense, so they are clamped to zero
-            cooldown = max(0, int(self.properties['Cooldown']))
+            cooldown = max(0, self.properties['Cooldown'])
         except TypeError:
             # If not specified, it will be None, same as cooldown == 0
             cooldown = 0
@@ -100,7 +100,7 @@ class InstanceGroup(stack_resource.StackResource):
             update_allowed=True
         ),
         SIZE: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Desired number of instances.'),
             required=True,
             update_allowed=True
@@ -201,7 +201,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
-        num_instances = int(self.properties[self.SIZE])
+        num_instances = self.properties[self.SIZE]
         initial_template = self._create_template(num_instances)
         return self.create_with_template(initial_template, self._environment())
 
@@ -241,16 +241,16 @@ class InstanceGroup(stack_resource.StackResource):
             if (self.update_policy['RollingUpdate'] and
                     self.LAUNCH_CONFIGURATION_NAME in prop_diff):
                 policy = self.update_policy['RollingUpdate']
-                self._replace(int(policy['MinInstancesInService']),
-                              int(policy['MaxBatchSize']),
+                self._replace(policy['MinInstancesInService'],
+                              policy['MaxBatchSize'],
                               policy['PauseTime'])
 
             # Get the current capacity, we may need to adjust if
             # Size has changed
             if self.SIZE in prop_diff:
                 inst_list = self.get_instances()
-                if len(inst_list) != int(self.properties[self.SIZE]):
-                    self.resize(int(self.properties[self.SIZE]))
+                if len(inst_list) != self.properties[self.SIZE]:
+                    self.resize(self.properties[self.SIZE])
 
     def _tags(self):
         """
@@ -435,24 +435,24 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             update_allowed=True
         ),
         MAX_SIZE: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.INTEGER,
             _('Maximum number of instances in the group.'),
             required=True,
             update_allowed=True
         ),
         MIN_SIZE: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.INTEGER,
             _('Minimum number of instances in the group.'),
             required=True,
             update_allowed=True
         ),
         COOLDOWN: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.NUMBER,
             _('Cooldown period, in seconds.'),
             update_allowed=True
         ),
         DESIRED_CAPACITY: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Desired initial number of instances.'),
             update_allowed=True
         ),
@@ -497,9 +497,10 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
     }
 
     rolling_update_schema = {
-        'MinInstancesInService': properties.Schema(properties.Schema.NUMBER,
+        'MinInstancesInService': properties.Schema(properties.Schema.INTEGER,
                                                    default=0),
-        'MaxBatchSize': properties.Schema(properties.Schema.NUMBER, default=1),
+        'MaxBatchSize': properties.Schema(properties.Schema.INTEGER,
+                                          default=1),
         'PauseTime': properties.Schema(properties.Schema.STRING,
                                        default='PT0S')
     }
@@ -513,9 +514,9 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
     def handle_create(self):
         if self.properties[self.DESIRED_CAPACITY]:
-            num_to_create = int(self.properties[self.DESIRED_CAPACITY])
+            num_to_create = self.properties[self.DESIRED_CAPACITY]
         else:
-            num_to_create = int(self.properties[self.MIN_SIZE])
+            num_to_create = self.properties[self.MIN_SIZE]
         initial_template = self._create_template(num_to_create)
         return self.create_with_template(initial_template,
                                          self._environment())
@@ -553,8 +554,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             if (self.update_policy['AutoScalingRollingUpdate'] and
                     'LaunchConfigurationName' in prop_diff):
                 policy = self.update_policy['AutoScalingRollingUpdate']
-                self._replace(int(policy['MinInstancesInService']),
-                              int(policy['MaxBatchSize']),
+                self._replace(policy['MinInstancesInService'],
+                              policy['MaxBatchSize'],
                               policy['PauseTime'])
 
             # Get the current capacity, we may need to adjust if
@@ -564,14 +565,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             # Figure out if an adjustment is required
             new_capacity = None
             if self.MIN_SIZE in prop_diff:
-                if capacity < int(self.properties[self.MIN_SIZE]):
-                    new_capacity = int(self.properties[self.MIN_SIZE])
+                if capacity < self.properties[self.MIN_SIZE]:
+                    new_capacity = self.properties[self.MIN_SIZE]
             if self.MAX_SIZE in prop_diff:
-                if capacity > int(self.properties[self.MAX_SIZE]):
-                    new_capacity = int(self.properties[self.MAX_SIZE])
+                if capacity > self.properties[self.MAX_SIZE]:
+                    new_capacity = self.properties[self.MAX_SIZE]
             if self.DESIRED_CAPACITY in prop_diff:
                 if self.properties[self.DESIRED_CAPACITY]:
-                    new_capacity = int(self.properties[self.DESIRED_CAPACITY])
+                    new_capacity = self.properties[self.DESIRED_CAPACITY]
 
             if new_capacity is not None:
                 self.adjust(new_capacity, adjustment_type='ExactCapacity')
@@ -603,8 +604,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                               else math.ceil(delta))
             new_capacity = capacity + rounded
 
-        upper = int(self.properties[self.MAX_SIZE])
-        lower = int(self.properties[self.MIN_SIZE])
+        upper = self.properties[self.MAX_SIZE]
+        lower = self.properties[self.MIN_SIZE]
 
         if new_capacity > upper:
             if upper > capacity:
@@ -676,8 +677,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             return res
 
         # check validity of group size
-        min_size = int(self.properties[self.MIN_SIZE])
-        max_size = int(self.properties[self.MAX_SIZE])
+        min_size = self.properties[self.MIN_SIZE]
+        max_size = self.properties[self.MAX_SIZE]
 
         if max_size < min_size:
             msg = _("MinSize can not be greater than MaxSize")
@@ -688,7 +689,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             raise exception.StackValidationFailed(message=msg)
 
         if self.properties[self.DESIRED_CAPACITY]:
-            desired_capacity = int(self.properties[self.DESIRED_CAPACITY])
+            desired_capacity = self.properties[self.DESIRED_CAPACITY]
             if desired_capacity < min_size or desired_capacity > max_size:
                 msg = _("DesiredCapacity must be between MinSize and MaxSize")
                 raise exception.StackValidationFailed(message=msg)
@@ -882,7 +883,7 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                         'name': self.name, 'group': group.name,
                         'asgn_id': asgn_id,
                         'filter': self.properties[self.SCALING_ADJUSTMENT]})
-        group.adjust(int(self.properties[self.SCALING_ADJUSTMENT]),
+        group.adjust(self.properties[self.SCALING_ADJUSTMENT],
                      self.properties[self.ADJUSTMENT_TYPE])
 
         self._cooldown_timestamp("%s : %s" %

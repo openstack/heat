@@ -572,7 +572,7 @@ class AutoScalingTest(HeatTestCase):
         update_snippet['Properties']['MaxSize'] = '2'
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(instance_names, rsrc.get_instance_names())
-        self.assertEqual('2', rsrc.properties['MaxSize'])
+        self.assertEqual(2, rsrc.properties['MaxSize'])
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -602,7 +602,7 @@ class AutoScalingTest(HeatTestCase):
         update_snippet['Properties']['MinSize'] = '2'
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instance_names()))
-        self.assertEqual('2', rsrc.properties['MinSize'])
+        self.assertEqual(2, rsrc.properties['MinSize'])
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -682,7 +682,7 @@ class AutoScalingTest(HeatTestCase):
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Cooldown'] = '61'
         scheduler.TaskRunner(rsrc.update, update_snippet)()
-        self.assertEqual('61', rsrc.properties['Cooldown'])
+        self.assertEqual(61, rsrc.properties['Cooldown'])
 
         rsrc.delete()
         self.m.VerifyAll()
