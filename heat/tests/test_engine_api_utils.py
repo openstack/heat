@@ -703,6 +703,9 @@ class FormatValidateParameterTest(HeatTestCase):
         param_formated = api.format_validate_parameter(param)
         self.assertEqual(self.expected, param_formated)
 
+
+class FormatSoftwareConfigDeploymentTest(HeatTestCase):
+
     def _dummy_software_config(self):
         config = mock.Mock()
         config.name = 'config_mysql'
@@ -726,8 +729,8 @@ class FormatValidateParameterTest(HeatTestCase):
         deployment.output_values = {'result': '0'}
         deployment.action = 'INIT'
         deployment.status = 'COMPLETE'
-        deployment.status_reason = None
-        deployment.signal_id = None
+        deployment.status_reason = 'Because'
+        deployment.signal_id = 'http://192.0.2.2/signal'
         return deployment
 
     def test_format_software_config(self):
@@ -738,14 +741,22 @@ class FormatValidateParameterTest(HeatTestCase):
         self.assertEqual([{'name': 'result'}], result['outputs'])
         self.assertEqual({}, result['options'])
 
+    def test_format_software_config_none(self):
+        self.assertIsNone(api.format_software_config(None))
+
     def test_format_software_deployment(self):
         deployment = self._dummy_software_deployment()
         result = api.format_software_deployment(deployment)
         self.assertIsNotNone(result)
+        self.assertEqual(deployment.id, result['id'])
         self.assertEqual(deployment.config.id, result['config_id'])
-        self.assertEqual(
-            deployment.config.io['inputs'], result['inputs'])
-        self.assertEqual(
-            deployment.config.io['outputs'], result['outputs'])
-        self.assertEqual(
-            deployment.config.io['options'], result['options'])
+        self.assertEqual(deployment.server_id, result['server_id'])
+        self.assertEqual(deployment.input_values, result['input_values'])
+        self.assertEqual(deployment.output_values, result['output_values'])
+        self.assertEqual(deployment.signal_id, result['signal_id'])
+        self.assertEqual(deployment.action, result['action'])
+        self.assertEqual(deployment.status, result['status'])
+        self.assertEqual(deployment.status_reason, result['status_reason'])
+
+    def test_format_software_deployment_none(self):
+        self.assertIsNone(api.format_software_deployment(None))

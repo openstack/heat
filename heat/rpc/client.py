@@ -392,6 +392,10 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(cnxt, self.make_msg('list_software_deployments',
                                              server_id=server_id))
 
+    def metadata_software_deployments(self, cnxt, server_id):
+        return self.call(cnxt, self.make_msg('metadata_software_deployments',
+                                             server_id=server_id))
+
     def show_software_deployment(self, cnxt, deployment_id):
         return self.call(cnxt, self.make_msg('show_software_deployment',
                                              deployment_id=deployment_id))

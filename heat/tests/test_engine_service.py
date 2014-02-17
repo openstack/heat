@@ -2614,12 +2614,16 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def _create_software_deployment(self, config_id=None, input_values={},
                                     signal_id=None, action='INIT',
-                                    status='COMPLETE', status_reason=''):
+                                    status='COMPLETE', status_reason='',
+                                    config_group=None,
+                                    server_id=str(uuid.uuid4()),
+                                    config_name=None):
         if config_id is None:
-            config = self._create_software_config()
+            config = self._create_software_config(group=config_group,
+                                                  name=config_name)
             config_id = config['id']
         return self.engine.create_software_deployment(
-            self.ctx, str(uuid.uuid4()), config_id, input_values, signal_id,
+            self.ctx, server_id, config_id, input_values, signal_id,
             action, status, status_reason)
 
     def test_list_software_deployments(self):
@@ -2633,6 +2637,34 @@ class SoftwareConfigServiceTest(HeatTestCase):
         self.assertIn(deployment_id, deployment_ids)
         self.assertIn(deployment, deployments)
         deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=str(uuid.uuid4()))
+        self.assertEqual([], deployments)
+
+    def test_metadata_software_deployments(self):
+        server_id = str(uuid.uuid4())
+        d1 = self._create_software_deployment(config_group='mygroup',
+                                              server_id=server_id,
+                                              config_name='02_second')
+        d2 = self._create_software_deployment(config_group='mygroup',
+                                              server_id=server_id,
+                                              config_name='01_first')
+        d3 = self._create_software_deployment(config_group='myothergroup',
+                                              server_id=server_id,
+                                              config_name='03_third')
+        metadata = self.engine.metadata_software_deployments(
+            self.ctx, server_id=server_id)
+        self.assertEqual(3, len(metadata))
+        self.assertEqual('mygroup', metadata[1]['group'])
+        self.assertEqual('mygroup', metadata[0]['group'])
+        self.assertEqual('myothergroup', metadata[2]['group'])
+        self.assertEqual(d1['config_id'], metadata[1]['id'])
+        self.assertEqual(d2['config_id'], metadata[0]['id'])
+        self.assertEqual(d3['config_id'], metadata[2]['id'])
+        self.assertEqual('01_first', metadata[0]['name'])
+        self.assertEqual('02_second', metadata[1]['name'])
+        self.assertEqual('03_third', metadata[2]['name'])
+
+        deployments = self.engine.metadata_software_deployments(
             self.ctx, server_id=str(uuid.uuid4()))
         self.assertEqual([], deployments)
 
@@ -2674,7 +2706,6 @@ class SoftwareConfigServiceTest(HeatTestCase):
         deployment = self.engine.show_software_deployment(
             self.ctx, deployment_id)
         self.assertEqual(deployment_id, deployment['id'])
-        self.assertEqual(config['inputs'], deployment['inputs'])
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
 
     def test_update_software_deployment(self):
