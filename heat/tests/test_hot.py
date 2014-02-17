@@ -17,6 +17,7 @@ from heat.common import identifier
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import hot
+from heat.engine import resources
 from heat.engine import template
 from heat.engine import constraints
 
@@ -762,6 +763,41 @@ class HOTParamValidatorTest(HeatTestCase):
         self.assertTrue(v(value))
 
         value = 50000
+        self.assertTrue(v(value))
+
+    def test_custom_constraint(self):
+        class ZeroConstraint(object):
+            def validate(self, value, context):
+                return value == "0"
+
+        env = resources.global_env()
+        env.register_constraint("zero", ZeroConstraint)
+        self.addCleanup(env.constraints.pop, "zero")
+
+        desc = 'Value must be zero'
+        param = {
+            'param1': {
+                'type': 'string',
+                'constraints': [
+                    {'custom_constraint': 'zero',
+                     'description': desc}]}}
+
+        name = 'param1'
+        schema = param['param1']
+
+        def v(value):
+            hot.HOTParamSchema.from_dict(schema).validate(name, value)
+            return True
+
+        value = "1"
+        err = self.assertRaises(ValueError, v, value)
+        self.assertEqual(desc, str(err))
+
+        value = "2"
+        err = self.assertRaises(ValueError, v, value)
+        self.assertEqual(desc, str(err))
+
+        value = "0"
         self.assertTrue(v(value))
 
     def test_range_constraint_invalid_default(self):

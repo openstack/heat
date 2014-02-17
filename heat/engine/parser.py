@@ -103,7 +103,8 @@ class Stack(collections.Mapping):
 
         self.env = env or environment.Environment({})
         self.parameters = self.t.parameters(self.identifier(),
-                                            user_params=self.env.params)
+                                            user_params=self.env.params,
+                                            context=context)
 
         self._set_param_stackid()
 
