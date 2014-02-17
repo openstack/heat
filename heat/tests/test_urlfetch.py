@@ -15,9 +15,9 @@
 
 import requests
 from requests import exceptions
-import cStringIO
 
 from oslo.config import cfg
+from six.moves import cStringIO
 
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
@@ -53,7 +53,7 @@ class UrlFetchTest(HeatTestCase):
         url = 'file:///etc/profile'
 
         self.m.StubOutWithMock(urlutils, 'urlopen')
-        urlutils.urlopen(url).AndReturn(cStringIO.StringIO(data))
+        urlutils.urlopen(url).AndReturn(cStringIO(data))
         self.m.ReplayAll()
 
         self.assertEqual(data, urlfetch.get(url, allowed_schemes=['file']))
