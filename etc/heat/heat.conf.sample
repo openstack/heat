@@ -120,6 +120,15 @@
 
 
 #
+# Options defined in heat.common.heat_keystoneclient
+#
+
+# Fully qualified class name to use as a keystone backend.
+# (string value)
+#keystone_backend=heat.common.heat_keystoneclient.KeystoneClientV3
+
+
+#
 # Options defined in heat.common.wsgi
 #
 
