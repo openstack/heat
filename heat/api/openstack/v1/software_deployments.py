@@ -48,6 +48,16 @@ class SoftwareDeploymentController(object):
         return {'software_deployments': sds}
 
     @util.policy_enforce
+    def metadata(self, req, server_id):
+        """
+        List software deployments grouped by the group name for the requested
+        server.
+        """
+        sds = self.rpc_client.metadata_software_deployments(
+            req.context, server_id=server_id)
+        return {'metadata': sds}
+
+    @util.policy_enforce
     def show(self, req, deployment_id):
         """
         Gets detailed information for a software deployment
