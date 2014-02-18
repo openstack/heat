@@ -40,6 +40,7 @@ from oslo.config import cfg
 
 from heat.common import config
 from heat.common import wsgi
+from heat.common import notify
 
 from heat.openstack.common import log as logging
 
@@ -62,6 +63,7 @@ if __name__ == '__main__':
         LOG.info('Starting Heat ReST API on %s:%s' % (host, port))
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api, default_port=port)
+        notify.startup_notify(cfg.CONF.onready)
         server.wait()
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
