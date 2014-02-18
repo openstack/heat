@@ -260,6 +260,7 @@ class Stack(collections.Mapping):
     def __setitem__(self, key, resource):
         '''Set the resource with the specified name to a specific value.'''
         resource.stack = self
+        resource.reparse()
         self.resources[key] = resource
 
     def __delitem__(self, key):
