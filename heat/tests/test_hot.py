@@ -477,34 +477,6 @@ class StackAttributesTest(HeatTestCase):
                   'Value':
                   generic_rsrc.ResourceWithComplexAttributes.
                   nested_dict['dict']['a']})),
-        ('get_simple_object',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'simple_object',
-                                              'first']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  simple_object.first})),
-        ('get_complex_object',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'complex_object',
-                                              'second',
-                                              'key1']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  complex_object.second['key1']})),
-        ('get_complex_object_invalid_argument',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'complex_object',
-                                              'not_there']}},
-              resource_name='resource1',
-              expected={'Value': ''})),
         ('get_attr_none',
          dict(hot_tpl=hot_tpl_complex_attrs,
               snippet={'Value': {'get_attr': ['resource1',
@@ -544,16 +516,6 @@ class StackParametersTest(HeatTestCase):
     """
     Test stack get_param function when stack was created from HOT template.
     """
-    class AnObject(object):
-        def __init__(self, first, second, third):
-            self.first = first
-            self.second = second
-            self.third = third
-
-    simple_object = AnObject('a', 'b', 'c')
-    complex_object = AnObject('a',
-                              {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'},
-                              simple_object)
 
     scenarios = [
         ('Ref_string',
@@ -598,25 +560,6 @@ class StackParametersTest(HeatTestCase):
                                                  'dict',
                                                  'a']}}},
               expected={'properties': {'prop1': 1}})),
-        ('get_simple_object',
-         dict(params={'simple_object': simple_object},
-              snippet={'properties': {'prop1': {'get_param':
-                                                ['simple_object',
-                                                 'first']}}},
-              expected={'properties': {'prop1': 'a'}})),
-        ('get_complex_object',
-         dict(params={'complex_object': complex_object},
-              snippet={'properties': {'prop1': {'get_param':
-                                                ['complex_object',
-                                                 'second',
-                                                 'key1']}}},
-              expected={'properties': {'prop1': 'val1'}})),
-        ('get_complex_object_invalid_argument',
-         dict(params={'complex_object': complex_object},
-              snippet={'properties': {'prop1': {'get_param':
-                                                ['complex_object',
-                                                 'not_there']}}},
-              expected={'properties': {'prop1': ''}})),
         ('get_attr_none',
          dict(params={'none': None},
               snippet={'properties': {'prop1': {'get_param':

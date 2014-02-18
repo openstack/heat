@@ -171,10 +171,7 @@ class HOTemplate(template.Template):
                 parameter = params[args[0]]
                 try:
                     for inner_param in args[1:]:
-                        if hasattr(parameter, str(inner_param)):
-                            parameter = getattr(parameter, inner_param)
-                        else:
-                            parameter = parameter[inner_param]
+                        parameter = parameter[inner_param]
                     return parameter
                 except (KeyError, IndexError, TypeError):
                     return ''
@@ -230,10 +227,7 @@ class HOTemplate(template.Template):
                     attr = r.FnGetAtt(rsrc_attr)
                     try:
                         for inner_attr in args[2:]:
-                            if hasattr(attr, str(inner_attr)):
-                                attr = getattr(attr, inner_attr)
-                            else:
-                                attr = attr[inner_attr]
+                            attr = attr[inner_attr]
                         return attr
                     except (KeyError, IndexError, TypeError):
                         return ''
