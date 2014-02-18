@@ -90,6 +90,25 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('show_stack',
                                              stack_identity=stack_identity))
 
+    def preview_stack(self, ctxt, stack_name, template, params, files, args):
+        """
+        Simulates a new stack using the provided template.
+
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+
+        :param ctxt: RPC context.
+        :param stack_name: Name of the stack you want to create.
+        :param template: Template of stack you want to create.
+        :param params: Stack Input Params/Environment
+        :param files: files referenced from the environment.
+        :param args: Request parameters/args passed from API
+        """
+        return self.call(ctxt,
+                         self.make_msg('preview_stack', stack_name=stack_name,
+                                       template=template,
+                                       params=params, files=files, args=args))
+
     def create_stack(self, ctxt, stack_name, template, params, files, args):
         """
         The create_stack method creates a new stack using the template

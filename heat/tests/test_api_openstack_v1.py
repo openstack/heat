@@ -844,6 +844,19 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
         self.assertIsNotNone(resp.json['error']['traceback'])
 
+    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(stacks.stacks_view, 'format_stack')
+    def test_preview_stack(self, mock_format, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'preview', True)
+        body = {'stack_name': 'foo', 'template': {}}
+        req = self._get('/stacks/preview', params={})
+        mock_call.return_value = {}
+        mock_format.return_value = 'formatted_stack'
+
+        result = self.controller.preview(req, tenant_id=self.tenant, body=body)
+
+        self.assertEqual({'stack': 'formatted_stack'}, result)
+
     def test_lookup(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'lookup', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
@@ -2725,6 +2738,15 @@ class RoutesTest(HeatTestCase):
             '/aaaa/stacks',
             'POST',
             'create',
+            'StackController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/preview',
+            'POST',
+            'preview',
             'StackController',
             {
                 'tenant_id': 'aaaa'

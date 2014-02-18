@@ -99,6 +99,13 @@ class EngineRpcAPITestCase(testtools.TestCase):
     def test_show_stack(self):
         self._test_engine_api('show_stack', 'call', stack_identity='wordpress')
 
+    def test_preview_stack(self):
+        self._test_engine_api('preview_stack', 'call', stack_name='wordpress',
+                              template={u'Foo': u'bar'},
+                              params={u'InstanceType': u'm1.xlarge'},
+                              files={u'a_file': u'the contents'},
+                              args={'timeout_mins': u'30'})
+
     def test_create_stack(self):
         self._test_engine_api('create_stack', 'call', stack_name='wordpress',
                               template={u'Foo': u'bar'},
