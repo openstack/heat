@@ -357,11 +357,14 @@ class Resource(object):
                         try:
                             target = self.stack[res]
                         except KeyError:
-                            raise exception.InvalidTemplateReference(
-                                resource=res,
-                                key=path)
-                        if key == 'DependsOn' or target.strict_dependency:
-                            deps += (self, target)
+                            if (key != 'Ref' or
+                                    res not in self.stack.parameters):
+                                raise exception.InvalidTemplateReference(
+                                    resource=res,
+                                    key=path)
+                        else:
+                            if key == 'DependsOn' or target.strict_dependency:
+                                deps += (self, target)
                 else:
                     self._add_dependencies(deps, '%s.%s' % (path, key), value)
         elif isinstance(fragment, list):
@@ -369,7 +372,7 @@ class Resource(object):
                 self._add_dependencies(deps, '%s[%d]' % (path, index), item)
 
     def add_dependencies(self, deps):
-        self._add_dependencies(deps, self.name, self.t)
+        self._add_dependencies(deps, self.name, self.json_snippet)
         deps += (self, None)
 
     def required_by(self):
