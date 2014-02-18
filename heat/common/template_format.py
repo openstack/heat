@@ -20,6 +20,7 @@ import json
 from oslo.config import cfg
 
 from heat.common import exception
+from heat.openstack.common.gettextutils import _
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
@@ -57,7 +58,8 @@ def parse(tmpl_str):
     JSON or YAML format.
     '''
     if len(tmpl_str) > cfg.CONF.max_template_size:
-        msg = _('Template exceeds maximum allowed size.')
+        msg = (_('Template exceeds maximum allowed size (%s bytes)') %
+               cfg.CONF.max_template_size)
         raise exception.RequestLimitExceeded(message=msg)
     try:
         tpl = json.loads(tmpl_str)
