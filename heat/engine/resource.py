@@ -450,6 +450,14 @@ class Resource(object):
         else:
             self.state_set(action, self.COMPLETE)
 
+    def preview(self):
+        '''
+        Default implementation of Resource.preview.
+
+        This method should be overriden by child classes for specific behavior.
+        '''
+        return self
+
     def create(self):
         '''
         Create the resource. Subclasses should provide a handle_create() method

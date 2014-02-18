@@ -12,9 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import mock
+import uuid
 
 import heat.engine.api as api
 
@@ -181,6 +180,23 @@ class FormatTest(HeatTestCase):
                                            event_id_formatted['stack_id'],
                                            event_id_formatted['path'])
         self.assertEqual(event_id, event_identifier.event_id)
+
+    @mock.patch.object(parser.Stack, 'updated_time', new=None)
+    @mock.patch.object(parser.Stack, 'created_time', new=None)
+    @mock.patch.object(api, 'format_stack_resource')
+    def test_format_stack_preview(self, mock_fmt_resource):
+        def mock_format_resources(res):
+            return 'fmt%s' % res
+
+        mock_fmt_resource.side_effect = mock_format_resources
+        resources = [1, [2, [3]]]
+        self.stack.preview_resources = mock.Mock(return_value=resources)
+
+        stack = api.format_stack_preview(self.stack)
+        self.assertIsInstance(stack, dict)
+        self.assertEqual('test_stack', stack['stack_name'])
+        self.assertIn('resources', stack)
+        self.assertEqual(['fmt1', ['fmt2', ['fmt3']]], stack['resources'])
 
 
 class FormatValidateParameterTest(HeatTestCase):

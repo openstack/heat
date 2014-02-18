@@ -2467,6 +2467,85 @@ class StackServiceTest(HeatTestCase):
         self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
         self.assertEqual(2, len(stack_dependencies.graph()))
 
+    def _preview_stack(self):
+        res._register_class('GenericResource1', generic_rsrc.GenericResource)
+        res._register_class('GenericResource2', generic_rsrc.GenericResource)
+
+        args = {}
+        params = {}
+        files = None
+        stack_name = 'SampleStack'
+        tpl = {
+            'Description': 'Lorem ipsum.',
+            'Resources': {
+                'SampleResource1': {'Type': 'GenericResource1'},
+                'SampleResource2': {'Type': 'GenericResource2'},
+            }
+        }
+
+        return self.eng.preview_stack(self.ctx, stack_name, tpl,
+                                      params, files, args)
+
+    def test_preview_stack_returns_a_stack(self):
+        stack = self._preview_stack()
+        expected_identity = {'path': '',
+                             'stack_id': 'None',
+                             'stack_name': 'SampleStack',
+                             'tenant': 'stack_service_test_tenant'}
+        self.assertEqual(expected_identity, stack['stack_identity'])
+        self.assertEqual('SampleStack', stack['stack_name'])
+        self.assertEqual('Lorem ipsum.', stack['description'])
+
+    def test_preview_stack_returns_list_of_resources_in_stack(self):
+        stack = self._preview_stack()
+        self.assertIsInstance(stack['resources'], list)
+        self.assertEqual(2, len(stack['resources']))
+
+        resource_types = (r['resource_type'] for r in stack['resources'])
+        self.assertIn('GenericResource1', resource_types)
+        self.assertIn('GenericResource2', resource_types)
+
+        resource_names = (r['resource_name'] for r in stack['resources'])
+        self.assertIn('SampleResource1', resource_names)
+        self.assertIn('SampleResource2', resource_names)
+
+    def test_preview_stack_validates_new_stack(self):
+        exc = exception.StackExists(stack_name='Validation Failed')
+        self.eng._validate_new_stack = mock.Mock(side_effect=exc)
+        self.assertRaises(exception.StackExists, self._preview_stack)
+
+    @mock.patch.object(service.api, 'format_stack_preview', new=mock.Mock())
+    @mock.patch.object(service.parser, 'Stack')
+    def test_preview_stack_checks_stack_validity(self, mock_parser):
+        exc = exception.StackValidationFailed(message='Validation Failed')
+        mock_parsed_stack = mock.Mock()
+        mock_parsed_stack.validate.side_effect = exc
+        mock_parser.return_value = mock_parsed_stack
+        self.assertRaises(exception.StackValidationFailed, self._preview_stack)
+
+    @mock.patch.object(service.db_api, 'stack_get_by_name')
+    def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):
+        mock_stack_get.return_value = 'existing_db_stack'
+        self.assertRaises(exception.StackExists, self.eng._validate_new_stack,
+                          self.ctx, 'test_existing_stack', 'parsed_template')
+
+    @mock.patch.object(service.db_api, 'stack_count_all_by_tenant')
+    def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
+        cfg.CONF.set_override('max_stacks_per_tenant', 99)
+        mock_db_count.return_value = 99
+        template = service.parser.Template({})
+        self.assertRaises(exception.RequestLimitExceeded,
+                          self.eng._validate_new_stack,
+                          self.ctx, 'test_existing_stack', template)
+
+    def test_validate_new_stack_checks_resource_limit(self):
+        cfg.CONF.set_override('max_resources_per_stack', 5)
+        template = {service.parser.Template.RESOURCES: [1, 2, 3, 4, 5, 6]}
+        parsed_template = service.parser.Template(template)
+        self.assertRaises(exception.RequestLimitExceeded,
+                          self.eng._validate_new_stack,
+                          self.ctx, 'test_existing_stack', parsed_template)
+
 
 class SoftwareConfigServiceTest(HeatTestCase):
 

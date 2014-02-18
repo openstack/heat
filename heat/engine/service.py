@@ -356,6 +356,50 @@ class EngineService(service.Service):
         if cnxt.password is None:
             raise exception.MissingCredentialError(required='X-Auth-Key')
 
+    def _validate_new_stack(self, cnxt, stack_name, parsed_template):
+        if db_api.stack_get_by_name(cnxt, stack_name):
+            raise exception.StackExists(stack_name=stack_name)
+
+        tenant_limit = cfg.CONF.max_stacks_per_tenant
+        if db_api.stack_count_all_by_tenant(cnxt) >= tenant_limit:
+            message = _("You have reached the maximum stacks per tenant, %d."
+                        " Please delete some stacks.") % tenant_limit
+            raise exception.RequestLimitExceeded(message=message)
+
+        num_resources = len(parsed_template[parsed_template.RESOURCES])
+        if num_resources > cfg.CONF.max_resources_per_stack:
+            message = exception.StackResourceLimitExceeded.msg_fmt
+            raise exception.RequestLimitExceeded(message=message)
+
+    @request_context
+    def preview_stack(self, cnxt, stack_name, template, params, files, args):
+        """
+        Simulates a new stack using the provided template.
+
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+
+        :param cnxt: RPC context.
+        :param stack_name: Name of the stack you want to create.
+        :param template: Template of stack you want to create.
+        :param params: Stack Input Params
+        :param files: Files referenced from the template
+        :param args: Request parameters/args passed from API
+        """
+
+        logger.info(_('previewing stack %s') % stack_name)
+        tmpl = parser.Template(template, files=files)
+        self._validate_new_stack(cnxt, stack_name, tmpl)
+
+        common_params = api.extract_args(args)
+        env = environment.Environment(params)
+        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
+
+        self._validate_deferred_auth_context(cnxt, stack)
+        stack.validate()
+
+        return api.format_stack_preview(stack)
+
     @request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args):
         """
@@ -388,19 +432,8 @@ class EngineService(service.Service):
                 logger.warning(_("Stack create failed, status %s") %
                                stack.status)
 
-        if db_api.stack_get_by_name(cnxt, stack_name):
-            raise exception.StackExists(stack_name=stack_name)
-        tenant_limit = cfg.CONF.max_stacks_per_tenant
-        if db_api.stack_count_all_by_tenant(cnxt) >= tenant_limit:
-            message = _("You have reached the maximum stacks per tenant, %d."
-                        " Please delete some stacks.") % tenant_limit
-            raise exception.RequestLimitExceeded(message=message)
-
         tmpl = parser.Template(template, files=files)
-
-        if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
-            raise exception.RequestLimitExceeded(
-                message=exception.StackResourceLimitExceeded.msg_fmt)
+        self._validate_new_stack(cnxt, stack_name, tmpl)
 
         # Extract the common query parameters
         common_params = api.extract_args(args)
