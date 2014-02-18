@@ -50,7 +50,7 @@ class CooldownMixin(object):
         inprogress = False
         try:
             # Negative values don't make sense, so they are clamped to zero
-            cooldown = max(0, self.properties['Cooldown'])
+            cooldown = max(0, self.properties[self.COOLDOWN])
         except TypeError:
             # If not specified, it will be None, same as cooldown == 0
             cooldown = 0
@@ -86,6 +86,14 @@ class InstanceGroup(stack_resource.StackResource):
     ) = (
         'Key', 'Value',
     )
+
+    _ROLLING_UPDATE_SCHEMA_KEYS = (
+        MIN_INSTANCES_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME
+    ) = (
+        'MinInstancesInService', 'MaxBatchSize', 'PauseTime'
+    )
+
+    _UPDATE_POLICY_SCHEMA_KEYS = (ROLLING_UPDATE,) = ('RollingUpdate',)
 
     properties_schema = {
         AVAILABILITY_ZONES: properties.Schema(
@@ -135,15 +143,16 @@ class InstanceGroup(stack_resource.StackResource):
                           "(Heat extension).")
     }
     rolling_update_schema = {
-        'MinInstancesInService': properties.Schema(properties.Schema.NUMBER,
-                                                   default=0),
-        'MaxBatchSize': properties.Schema(properties.Schema.NUMBER, default=1),
-        'PauseTime': properties.Schema(properties.Schema.STRING,
-                                       default='PT0S')
+        MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.NUMBER,
+                                                    default=0),
+        MAX_BATCH_SIZE: properties.Schema(properties.Schema.NUMBER,
+                                          default=1),
+        PAUSE_TIME: properties.Schema(properties.Schema.STRING,
+                                      default='PT0S')
     }
     update_policy_schema = {
-        'RollingUpdate': properties.Schema(properties.Schema.MAP,
-                                           schema=rolling_update_schema)
+        ROLLING_UPDATE: properties.Schema(properties.Schema.MAP,
+                                          schema=rolling_update_schema)
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -168,7 +177,7 @@ class InstanceGroup(stack_resource.StackResource):
             self.update_policy.validate()
             policy_name = self.update_policy_schema.keys()[0]
             if self.update_policy[policy_name]:
-                pause_time = self.update_policy[policy_name]['PauseTime']
+                pause_time = self.update_policy[policy_name][self.PAUSE_TIME]
                 if iso8601utils.parse_isoduration(pause_time) > 3600:
                     raise ValueError('Maximum PauseTime is 1 hour.')
 
@@ -238,12 +247,12 @@ class InstanceGroup(stack_resource.StackResource):
                                          self.context)
 
             # Replace instances first if launch configuration has changed
-            if (self.update_policy['RollingUpdate'] and
+            if (self.update_policy[self.ROLLING_UPDATE] and
                     self.LAUNCH_CONFIGURATION_NAME in prop_diff):
-                policy = self.update_policy['RollingUpdate']
-                self._replace(policy['MinInstancesInService'],
-                              policy['MaxBatchSize'],
-                              policy['PauseTime'])
+                policy = self.update_policy[self.ROLLING_UPDATE]
+                self._replace(policy[self.MIN_INSTANCES_IN_SERVICE],
+                              policy[self.MAX_BATCH_SIZE],
+                              policy[self.PAUSE_TIME])
 
             # Get the current capacity, we may need to adjust if
             # Size has changed
@@ -422,6 +431,18 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         'Key', 'Value',
     )
 
+    _UPDATE_POLICY_SCHEMA_KEYS = (
+        ROLLING_UPDATE
+    ) = (
+        'AutoScalingRollingUpdate'
+    )
+
+    _ROLLING_UPDATE_SCHEMA_KEYS = (
+        MIN_INSTANCES_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME
+    ) = (
+        'MinInstancesInService', 'MaxBatchSize', 'PauseTime'
+    )
+
     properties_schema = {
         AVAILABILITY_ZONES: properties.Schema(
             properties.Schema.LIST,
@@ -497,17 +518,18 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
     }
 
     rolling_update_schema = {
-        'MinInstancesInService': properties.Schema(properties.Schema.INTEGER,
-                                                   default=0),
-        'MaxBatchSize': properties.Schema(properties.Schema.INTEGER,
+        MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.INTEGER,
+                                                    default=0),
+        MAX_BATCH_SIZE: properties.Schema(properties.Schema.INTEGER,
                                           default=1),
-        'PauseTime': properties.Schema(properties.Schema.STRING,
-                                       default='PT0S')
+        PAUSE_TIME: properties.Schema(properties.Schema.STRING,
+                                      default='PT0S')
     }
+
     update_policy_schema = {
-        'AutoScalingRollingUpdate': properties.Schema(properties.Schema.MAP,
-                                                      schema=
-                                                      rolling_update_schema)
+        ROLLING_UPDATE: properties.Schema(
+            properties.Schema.MAP,
+            schema=rolling_update_schema)
     }
 
     update_allowed_keys = ('Properties', 'UpdatePolicy')
@@ -551,12 +573,12 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                          self.context)
 
             # Replace instances first if launch configuration has changed
-            if (self.update_policy['AutoScalingRollingUpdate'] and
-                    'LaunchConfigurationName' in prop_diff):
-                policy = self.update_policy['AutoScalingRollingUpdate']
-                self._replace(policy['MinInstancesInService'],
-                              policy['MaxBatchSize'],
-                              policy['PauseTime'])
+            if (self.update_policy[self.ROLLING_UPDATE] and
+                    self.LAUNCH_CONFIGURATION_NAME in prop_diff):
+                policy = self.update_policy[self.ROLLING_UPDATE]
+                self._replace(policy[self.MIN_INSTANCES_IN_SERVICE],
+                              policy[self.MAX_BATCH_SIZE],
+                              policy[self.PAUSE_TIME])
 
             # Get the current capacity, we may need to adjust if
             # MinSize or MaxSize has changed
