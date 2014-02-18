@@ -61,15 +61,10 @@ class SoftwareDeploymentController(object):
         """
         Create a new software deployment
         """
-        create_data = {
-            'config_id': body.get('config_id'),
-            'server_id': body.get('server_id'),
-            'input_values': body.get('input_values'),
-            'signal_id': body.get('signal_id'),
-            'action': body.get('action'),
-            'status': body.get('status'),
-            'status_reason': body.get('status_reason'),
-        }
+        create_data = dict((k, body.get(k)) for k in (
+            'config_id', 'server_id', 'input_values', 'signal_id',
+            'action', 'status', 'status_reason'))
+
         sd = self.engine.create_software_deployment(
             req.context, **create_data)
         return {'software_deployment': sd}
@@ -79,14 +74,9 @@ class SoftwareDeploymentController(object):
         """
         Update an existing software deployment
         """
-        update_data = {
-            'config_id': body.get('config_id'),
-            'input_values': body.get('input_values'),
-            'output_values': body.get('output_values'),
-            'action': body.get('action'),
-            'status': body.get('status'),
-            'status_reason': body.get('status_reason'),
-        }
+        update_data = dict((k, body.get(k)) for k in (
+            'config_id', 'input_values', 'output_values', 'action',
+            'status', 'status_reason'))
         sd = self.engine.update_software_deployment(
             req.context, deployment_id, **update_data)
         return {'software_deployment': sd}
