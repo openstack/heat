@@ -11,97 +11,36 @@
 #    under the License.
 
 import socket
+import copy
 import tempfile
 
-import json
 import paramiko
 from Crypto.PublicKey import RSA
-import novaclient.exceptions as novaexception
 
 from heat.common import exception
+from heat.engine.resources import nova_utils
+from heat.engine.resources import server
+from heat.db.sqlalchemy import api as db_api
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
-from heat.engine import properties
-from heat.engine import scheduler
-from heat.engine.resources import instance
-from heat.engine.resources import nova_utils
-from heat.db.sqlalchemy import api as db_api
 
 try:
     import pyrax  # noqa
 except ImportError:
-
     def resource_mapping():
         return {}
 else:
-
     def resource_mapping():
         return {'Rackspace::Cloud::Server': CloudServer}
 
 logger = logging.getLogger(__name__)
 
 
-class CloudServer(instance.Instance):
+class CloudServer(server.Server):
     """Resource for Rackspace Cloud Servers."""
 
-    PROPERTIES = (
-        FLAVOR, IMAGE, USER_DATA, KEY_NAME, VOLUMES, NAME,
-    ) = (
-        'flavor', 'image', 'user_data', 'key_name', 'Volumes', 'name',
-    )
-
-    properties_schema = {
-        FLAVOR: properties.Schema(
-            properties.Schema.STRING,
-            required=True,
-            update_allowed=True
-        ),
-        IMAGE: properties.Schema(
-            properties.Schema.STRING,
-            required=True
-        ),
-        USER_DATA: properties.Schema(
-            properties.Schema.STRING
-        ),
-        KEY_NAME: properties.Schema(
-            properties.Schema.STRING
-        ),
-        VOLUMES: properties.Schema(
-            properties.Schema.LIST,
-            default=[]
-        ),
-        NAME: properties.Schema(
-            properties.Schema.STRING
-        ),
-    }
-
-    attributes_schema = {'PrivateDnsName': ('Private DNS name of the specified'
-                                            ' instance.'),
-                         'PublicDnsName': ('Public DNS name of the specified '
-                                           'instance.'),
-                         'PrivateIp': ('Private IP address of the specified '
-                                       'instance.'),
-                         'PublicIp': ('Public IP address of the specified '
-                                      'instance.')}
-
-    base_script = """#!/bin/bash
-
-# Install cloud-init and heat-cfntools
-%s
-# Create data source for cloud-init
-mkdir -p /var/lib/cloud/seed/nocloud-net
-mv /tmp/userdata /var/lib/cloud/seed/nocloud-net/user-data
-touch /var/lib/cloud/seed/nocloud-net/meta-data
-chmod 600 /var/lib/cloud/seed/nocloud-net/*
-
-# Run cloud-init & cfn-init
-cloud-init start || cloud-init init
-bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
-exit 42
-"""
-
-    # - Ubuntu 12.04: Verified working
-    ubuntu_script = base_script % """\
+    SCRIPT_INSTALL_REQUIREMENTS = {
+        'ubuntu': """
 apt-get update
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y -o Dpkg::Options::="--force-confdef" -o \
@@ -109,22 +48,13 @@ apt-get install -y -o Dpkg::Options::="--force-confdef" -o \
   python-dev
 pip install heat-cfntools
 cfn-create-aws-symlinks --source /usr/local/bin
-"""
-
-    # - Fedora 17: Verified working
-    # - Fedora 18: Not working.  selinux needs to be in "Permissive"
-    #   mode for cloud-init to work.  It's disabled by default in the
-    #   Rackspace Cloud Servers image.  To enable selinux, a reboot is
-    #   required.
-    # - Fedora 19: Verified working
-    fedora_script = base_script % """\
+""",
+        'fedora': """
 yum install -y cloud-init python-boto python-pip gcc python-devel
 pip-python install heat-cfntools
 cfn-create-aws-symlinks
-"""
-
-    # - Centos 6.4: Verified working
-    centos_script = base_script % """\
+""",
+        'centos': """
 if ! (yum repolist 2> /dev/null | egrep -q "^[\!\*]?epel ");
 then
  rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
@@ -132,10 +62,8 @@ fi
 yum install -y cloud-init python-boto python-pip gcc python-devel \
   python-argparse
 pip-python install heat-cfntools
-"""
-
-    # - RHEL 6.4: Verified working
-    rhel_script = base_script % """\
+""",
+        'rhel': """
 if ! (yum repolist 2> /dev/null | egrep -q "^[\!\*]?epel ");
 then
  rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
@@ -146,9 +74,8 @@ yum install -y cloud-init python-boto python-pip gcc python-devel \
   python-argparse
 pip-python install heat-cfntools
 cfn-create-aws-symlinks
-"""
-
-    debian_script = base_script % """\
+""",
+        'debian': """
 echo "deb http://mirror.rackspace.com/debian wheezy-backports main" >> \
   /etc/apt/sources.list
 apt-get update
@@ -157,44 +84,46 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get install -y -o Dpkg::Options::="--force-confdef" -o \
   Dpkg::Options::="--force-confold" python-pip gcc python-dev
 pip install heat-cfntools
+"""}
+
+    SCRIPT_CREATE_DATA_SOURCE = """
+mkdir -p /var/lib/cloud/seed/nocloud-net
+mv /tmp/userdata /var/lib/cloud/seed/nocloud-net/user-data
+touch /var/lib/cloud/seed/nocloud-net/meta-data
+chmod 600 /var/lib/cloud/seed/nocloud-net/*
 """
 
-    # - Arch 2013.6: Not working (deps not in default package repos)
-    # TODO(jason): Install cloud-init & other deps from third-party repos
-    arch_script = base_script % """\
-pacman -S --noconfirm python-pip gcc
+    SCRIPT_RUN_CLOUD_INIT = """
+cloud-init start || cloud-init init
 """
 
-    # - Gentoo 13.2: Not working (deps not in default package repos)
-    # TODO(jason): Install cloud-init & other deps from third-party repos
-    gentoo_script = base_script % """\
-emerge cloud-init python-boto python-pip gcc python-devel
+    SCRIPT_RUN_CFN_USERDATA = """
+bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
+  exit 42
 """
 
-    # - OpenSUSE 12.3: Not working (deps not in default package repos)
-    # TODO(jason): Install cloud-init & other deps from third-party repos
-    opensuse_script = base_script % """\
-zypper --non-interactive rm patterns-openSUSE-minimal_base-conflicts
-zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
-"""
+    SCRIPT_ERROR_MSG = _("The %(path)s script exited with a non-zero exit "
+                         "status.  To see the error message, log into the "
+                         "server and view %(log)s")
 
-    # List of supported Linux distros and their corresponding config scripts
-    image_scripts = {'arch': None,
-                     'centos': centos_script,
-                     'debian': None,
-                     'fedora': fedora_script,
-                     'gentoo': None,
-                     'opensuse': None,
-                     'rhel': rhel_script,
-                     'ubuntu': ubuntu_script}
+    # Managed Cloud automation statuses
+    MC_STATUS_IN_PROGRESS = 'In Progress'
+    MC_STATUS_COMPLETE = 'Complete'
+    MC_STATUS_BUILD_ERROR = 'Build Error'
 
-    script_error_msg = (_("The %(path)s script exited with a non-zero exit "
-                        "status.  To see the error message, log into the "
-                        "server and view %(log)s"))
+    # RackConnect automation statuses
+    RC_STATUS_DEPLOYING = 'DEPLOYING'
+    RC_STATUS_DEPLOYED = 'DEPLOYED'
+    RC_STATUS_FAILED = 'FAILED'
+    RC_STATUS_UNPROCESSABLE = 'UNPROCESSABLE'
 
-    # Template keys supported for handle_update.  Properties not
-    # listed here trigger an UpdateReplace
-    update_allowed_keys = ('Metadata', 'Properties')
+    attributes_schema = copy.deepcopy(server.Server.attributes_schema)
+    attributes_schema.update(
+        {
+            'distro': _('The Linux distribution on the server.'),
+            'privateIPv4': _('The private IPv4 address of the server.'),
+        }
+    )
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
@@ -202,59 +131,60 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         self._private_key = None
         self._server = None
         self._distro = None
-        self._public_ip = None
-        self._private_ip = None
-        self._flavor = None
         self._image = None
 
     @property
     def server(self):
-        """Get the Cloud Server object."""
-        if not self._server:
-            logger.debug(_("Calling nova().servers.get()"))
+        """Return the Cloud Server object."""
+        if self._server is None:
             self._server = self.nova().servers.get(self.resource_id)
         return self._server
 
     @property
     def distro(self):
-        """Get the Linux distribution for this server."""
-        if not self._distro:
-            logger.debug(_("Calling nova().images.get()"))
+        """Return the Linux distribution for this server."""
+        image = self.properties.get(self.IMAGE)
+        if self._distro is None and image:
             image_data = self.nova().images.get(self.image)
             self._distro = image_data.metadata['os_distro']
         return self._distro
 
     @property
     def script(self):
-        """Get the config script for the Cloud Server image."""
-        return self.image_scripts[self.distro]
+        """
+        Return the config script for the Cloud Server image.
 
-    @property
-    def flavor(self):
-        """Get the flavors from the API."""
-        if not self._flavor:
-            flavor = self.properties[self.FLAVOR]
-            self._flavor = nova_utils.get_flavor_id(self.nova(), flavor)
-        return self._flavor
+        The config script performs the following steps:
+        1) Install cloud-init
+        2) Create cloud-init data source
+        3) Run cloud-init
+        4) If user_data_format is 'HEAT_CFNTOOLS', run cfn-userdata script
+        """
+        base_script = (self.SCRIPT_INSTALL_REQUIREMENTS[self.distro] +
+                       self.SCRIPT_CREATE_DATA_SOURCE +
+                       self.SCRIPT_RUN_CLOUD_INIT)
+        userdata_format = self.properties.get(self.USER_DATA_FORMAT)
+        if userdata_format == 'HEAT_CFNTOOLS':
+            return base_script + self.SCRIPT_RUN_CFN_USERDATA
+        elif userdata_format == 'RAW':
+            return base_script
 
     @property
     def image(self):
-        if not self._image:
-            self._image = nova_utils.get_image_id(self.nova(),
-                                                  self.properties[self.IMAGE])
+        """Return the server's image ID."""
+        image = self.properties.get(self.IMAGE)
+        if image and self._image is None:
+            self._image = nova_utils.get_image_id(self.nova(), image)
         return self._image
 
     @property
     def private_key(self):
         """Return the private SSH key for the resource."""
-        if self._private_key:
+        if self._private_key is not None:
             return self._private_key
         if self.id is not None:
-            private_key = db_api.resource_data_get(self, 'private_key')
-            if not private_key:
-                return None
-            self._private_key = private_key
-            return private_key
+            self._private_key = db_api.resource_data_get(self, 'private_key')
+            return self._private_key
 
     @private_key.setter
     def private_key(self, private_key):
@@ -263,49 +193,54 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         if self.id is not None:
             db_api.resource_data_set(self, 'private_key', private_key, True)
 
-    def _get_ip(self, ip_type):
-        """Return the IP of the Cloud Server."""
-        if ip_type in self.server.addresses:
-            for ip in self.server.addresses[ip_type]:
-                if ip['version'] == 4:
-                    return ip['addr']
-
-        raise exception.Error(_("Could not determine the %(ip)s IP of "
-                                "%(image)s.") %
-                              {'ip': ip_type,
-                               'image': self.properties[self.IMAGE]})
-
-    @property
-    def public_ip(self):
-        """Return the public IP of the Cloud Server."""
-        if not self._public_ip:
-            self._public_ip = self._get_ip('public')
-        return self._public_ip
-
-    @property
-    def private_ip(self):
-        """Return the private IP of the Cloud Server."""
-        if not self._private_ip:
-            self._private_ip = self._get_ip('private')
-        return self._private_ip
-
     @property
     def has_userdata(self):
-        if self.properties[self.USER_DATA] or self.metadata != {}:
+        """Return True if the server has user_data, False otherwise."""
+        user_data = self.properties.get(self.USER_DATA)
+        if user_data or self.metadata != {}:
             return True
         else:
             return False
 
     def validate(self):
         """Validate user parameters."""
-        self.flavor
-        self.image
+        image = self.properties.get(self.IMAGE)
 
         # It's okay if there's no script, as long as user_data and
-        # metadata are empty
-        if not self.script and self.has_userdata:
-            return {'Error': "user_data/metadata are not supported for image"
-                    " %s." % self.properties[self.IMAGE]}
+        # metadata are both empty
+        if image and self.script is None and self.has_userdata:
+            msg = _("user_data is not supported for image %s.") % image
+            raise exception.StackValidationFailed(message=msg)
+
+        # Validate that the personality does not contain a reserved
+        # key and that the number of personalities does not exceed the
+        # Rackspace limit.
+        personality = self.properties.get(self.PERSONALITY)
+        if personality:
+            limits = nova_utils.absolute_limits(self.nova())
+
+            # One personality will be used for an SSH key
+            personality_limit = limits['maxPersonality'] - 1
+
+            if "/root/.ssh/authorized_keys" in personality:
+                msg = _('The personality property may not contain a key '
+                        'of "/root/.ssh/authorized_keys"')
+                raise exception.StackValidationFailed(message=msg)
+
+            elif len(personality) > personality_limit:
+                msg = _("The personality property may not contain greater "
+                        "than %s entries.") % personality_limit
+                raise exception.StackValidationFailed(message=msg)
+
+        super(CloudServer, self).validate()
+
+        # Validate that user_data is passed for servers with bootable
+        # volumes AFTER validating that the server has either an image
+        # or a bootable volume in Server.validate()
+        if not image and self.has_userdata:
+            msg = _("user_data scripts are not supported with bootable "
+                    "volumes.")
+            raise exception.StackValidationFailed(message=msg)
 
     def _run_ssh_command(self, command):
         """Run a shell command on the Cloud Server via SSH."""
@@ -314,7 +249,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             private_key_file.seek(0)
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.MissingHostKeyPolicy())
-            ssh.connect(self.public_ip,
+            ssh.connect(self.server.accessIPv4,
                         username="root",
                         key_filename=private_key_file.name)
             chan = ssh.get_transport().open_session()
@@ -324,8 +259,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 # The channel timeout only works for read/write operations
                 chan.recv(1024)
             except socket.timeout:
-                raise exception.Error("SSH command timed out after %s minutes"
-                                      % self.stack.timeout_mins)
+                raise exception.Error(_("SSH command timed out after %s "
+                                        "minutes") % self.stack.timeout_mins)
             else:
                 return chan.recv_exit_status()
             finally:
@@ -338,7 +273,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             private_key_file.write(self.private_key)
             private_key_file.seek(0)
             pkey = paramiko.RSAKey.from_private_key_file(private_key_file.name)
-            transport = paramiko.Transport((self.public_ip, 22))
+            transport = paramiko.Transport((self.server.accessIPv4, 22))
             transport.connect(hostkey=None, username="root", pkey=pkey)
             sftp = paramiko.SFTPClient.from_transport(transport)
             try:
@@ -352,221 +287,133 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 sftp.close()
                 transport.close()
 
-    def handle_create(self):
-        """Create a Rackspace Cloud Servers container.
-
-        Rackspace Cloud Servers does not have the metadata service
-        running, so we have to transfer the user-data file to the
-        server and then trigger cloud-init.
-        """
-        # Generate SSH public/private keypair
+    def _personality(self):
+        # Generate SSH public/private keypair for the engine to use
         if self._private_key is not None:
             rsa = RSA.importKey(self._private_key)
         else:
             rsa = RSA.generate(1024)
         self.private_key = rsa.exportKey()
         public_keys = [rsa.publickey().exportKey('OpenSSH')]
-        if self.properties.get(self.KEY_NAME):
-            key_name = self.properties[self.KEY_NAME]
-            public_keys.append(nova_utils.get_keypair(self.nova(),
-                                                      key_name).public_key)
-        personality_files = {
-            "/root/.ssh/authorized_keys": '\n'.join(public_keys)}
 
-        # Create server
-        client = self.nova().servers
-        logger.debug(_("Calling nova().servers.create()"))
-        server = client.create(self.physical_resource_name(),
-                               self.image,
-                               self.flavor,
-                               files=personality_files)
+        # Add the user-provided key_name to the authorized_keys file
+        key_name = self.properties.get(self.KEY_NAME)
+        if key_name:
+            user_keypair = nova_utils.get_keypair(self.nova(), key_name)
+            public_keys.append(user_keypair.public_key)
+        personality = {"/root/.ssh/authorized_keys": '\n'.join(public_keys)}
 
-        # Save resource ID to db
-        self.resource_id_set(server.id)
+        # Add any user-provided personality files
+        user_personality = self.properties.get(self.PERSONALITY)
+        if user_personality:
+            personality.update(user_personality)
 
-        return server, scheduler.TaskRunner(self._attach_volumes_task())
+        return personality
 
-    def _attach_volumes_task(self):
-        tasks = (scheduler.TaskRunner(self._attach_volume, volume_id, device)
-                 for volume_id, device in self.volumes())
-        return scheduler.PollingTaskGroup(tasks)
+    def _key_name(self):
+        return None
 
-    def _attach_volume(self, volume_id, device):
-        logger.debug(_("Calling nova().volumes.create_server_volume()"))
-        self.nova().volumes.create_server_volume(self.server.id,
-                                                 volume_id,
-                                                 device or None)
-        yield
-        volume = self.cinder().get(volume_id)
-        while volume.status in ('available', 'attaching'):
-            yield
-            volume.get()
-
-        if volume.status != 'in-use':
-            raise exception.Error(volume.status)
-
-    def _detach_volumes_task(self):
-        tasks = (scheduler.TaskRunner(self._detach_volume, volume_id)
-                 for volume_id, device in self.volumes())
-        return scheduler.PollingTaskGroup(tasks)
-
-    def _detach_volume(self, volume_id):
-        volume = self.cinder().get(volume_id)
-        volume.detach()
-        yield
-        while volume.status in ('in-use', 'detaching'):
-            yield
-            volume.get()
-
-        if volume.status != 'available':
-            raise exception.Error(volume.status)
-
-    def check_create_complete(self, cookie):
-        """Check if server creation is complete and handle server configs."""
-        if not super(CloudServer, self).check_create_complete(cookie):
+    def _check_managed_cloud_complete(self, server):
+        if 'rax_service_level_automation' not in server.metadata:
+            logger.debug(_("Managed Cloud server does not have the "
+                           "rax_service_level_automation metadata tag yet"))
             return False
 
-        server = cookie[0]
+        mc_status = server.metadata['rax_service_level_automation']
+        logger.debug(_("Managed Cloud automation status: ") + mc_status)
+
+        if mc_status == self.MC_STATUS_IN_PROGRESS:
+            return False
+
+        elif mc_status == self.MC_STATUS_COMPLETE:
+            return True
+
+        elif mc_status == self.MC_STATUS_BUILD_ERROR:
+            raise exception.Error(_("Managed Cloud automation failed"))
+
+        else:
+            raise exception.Error(_("Unknown Managed Cloud automation "
+                                    "status: ") + mc_status)
+
+    def _check_rack_connect_complete(self, server):
+        if 'rackconnect_automation_status' not in server.metadata:
+            logger.debug(_("RackConnect server does not have the "
+                           "rackconnect_automation_status metadata tag yet"))
+            return False
+
+        rc_status = server.metadata['rackconnect_automation_status']
+        logger.debug(_("RackConnect automation status: ") + rc_status)
+
+        if rc_status == self.RC_STATUS_DEPLOYING:
+            return False
+
+        elif rc_status == self.RC_STATUS_DEPLOYED:
+            self._server = None  # The public IP changed, forget old one
+            return True
+
+        elif rc_status == self.RC_STATUS_UNPROCESSABLE:
+            # UNPROCESSABLE means the RackConnect automation was not
+            # attempted (eg. Cloud Server in a different DC than
+            # dedicated gear, so RackConnect does not apply).  It is
+            # okay if we do not raise an exception.
+            reason = server.metadata.get('rackconnect_unprocessable_reason',
+                                         None)
+            if reason is not None:
+                logger.warning(_("RackConnect unprocessable reason: ") +
+                               reason)
+            return True
+
+        elif rc_status == self.RC_STATUS_FAILED:
+            raise exception.Error(_("RackConnect automation FAILED"))
+
+        else:
+            raise exception.Error(_("Unknown RackConnect automation status: ")
+                                  + rc_status)
+
+    def _run_userdata(self):
+        # Create heat-script and userdata files on server
+        raw_userdata = self.properties[self.USER_DATA]
+        userdata = nova_utils.build_userdata(self, raw_userdata)
+
+        files = [{'path': "/tmp/userdata", 'data': userdata},
+                 {'path': "/root/heat-script.sh", 'data': self.script}]
+        self._sftp_files(files)
+
+        # Connect via SSH and run script
+        cmd = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
+        exit_code = self._run_ssh_command(cmd)
+        if exit_code == 42:
+            raise exception.Error(self.SCRIPT_ERROR_MSG %
+                                  {'path': "cfn-userdata",
+                                   'log': "/root/cfn-userdata.log"})
+        elif exit_code != 0:
+            raise exception.Error(self.SCRIPT_ERROR_MSG %
+                                  {'path': "heat-script.sh",
+                                   'log': "/root/heat-script.log"})
+
+    def check_create_complete(self, server):
+        """Check if server creation is complete and handle server configs."""
+        if not self._check_active(server):
+            return False
+
         server.get()
-        if 'rack_connect' in self.context.roles:  # Account has RackConnect
-            if 'rackconnect_automation_status' not in server.metadata:
-                logger.debug(_("RackConnect server does not have the "
-                               "rackconnect_automation_status metadata tag "
-                               "yet"))
-                return False
 
-            rc_status = server.metadata['rackconnect_automation_status']
-            logger.debug(_("RackConnect automation status: ") + rc_status)
+        if 'rack_connect' in self.context.roles and not \
+           self._check_rack_connect_complete(server):
+            return False
 
-            if rc_status == 'DEPLOYING':
-                return False
-
-            elif rc_status == 'DEPLOYED':
-                self._public_ip = None  # The public IP changed, forget old one
-
-            elif rc_status == 'FAILED':
-                raise exception.Error(_("RackConnect automation FAILED"))
-
-            elif rc_status == 'UNPROCESSABLE':
-                reason = server.metadata.get(
-                    "rackconnect_unprocessable_reason", None)
-                if reason is not None:
-                    logger.warning(_("RackConnect unprocessable reason: ")
-                                   + reason)
-                # UNPROCESSABLE means the RackConnect automation was
-                # not attempted (eg. Cloud Server in a different DC
-                # than dedicated gear, so RackConnect does not apply).
-                # It is okay if we do not raise an exception.
-
-            else:
-                raise exception.Error(_("Unknown RackConnect automation "
-                                        "status: ") + rc_status)
-
-        if 'rax_managed' in self.context.roles:  # Managed Cloud account
-            if 'rax_service_level_automation' not in server.metadata:
-                logger.debug(_("Managed Cloud server does not have the "
-                             "rax_service_level_automation metadata tag yet"))
-                return False
-
-            mc_status = server.metadata['rax_service_level_automation']
-            logger.debug(_("Managed Cloud automation status: ") + mc_status)
-
-            if mc_status == 'In Progress':
-                return False
-
-            elif mc_status == 'Complete':
-                pass
-
-            elif mc_status == 'Build Error':
-                raise exception.Error(_("Managed Cloud automation failed"))
-
-            else:
-                raise exception.Error(_("Unknown Managed Cloud automation "
-                                      "status: ") + mc_status)
+        if 'rax_managed' in self.context.roles and not \
+           self._check_managed_cloud_complete(server):
+            return False
 
         if self.has_userdata:
-            # Create heat-script and userdata files on server
-            raw_userdata = self.properties[self.USER_DATA] or ''
-            userdata = nova_utils.build_userdata(self, raw_userdata)
-
-            files = [{'path': "/tmp/userdata", 'data': userdata},
-                     {'path': "/root/heat-script.sh", 'data': self.script}]
-            self._sftp_files(files)
-
-            # Connect via SSH and run script
-            cmd = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
-            exit_code = self._run_ssh_command(cmd)
-            if exit_code == 42:
-                raise exception.Error(self.script_error_msg %
-                                      {'path': "cfn-userdata",
-                                       'log': "/root/cfn-userdata.log"})
-            elif exit_code != 0:
-                raise exception.Error(self.script_error_msg %
-                                      {'path': "heat-script.sh",
-                                       'log': "/root/heat-script.log"})
+            self._run_userdata()
 
         return True
 
-    # TODO(jason): Make this consistent with Instance and inherit
-    def _delete_server(self, server):
-        """Return a coroutine that deletes the Cloud Server."""
-        server.delete()
-        while True:
-            yield
-            try:
-                server.get()
-                if server.status == "DELETED":
-                    break
-                elif server.status == "ERROR":
-                    raise exception.Error(_("Deletion of server %s failed.") %
-                                          server.name)
-            except novaexception.NotFound:
-                break
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """Try to update a Cloud Server's parameters.
-
-        If the Cloud Server's Metadata or flavor changed, update the
-        Cloud Server.  If any other parameters changed, re-create the
-        Cloud Server with the new parameters.
-        """
-
-        if 'Metadata' in tmpl_diff:
-            self.metadata = json_snippet['Metadata']
-            metadata_string = json.dumps(self.metadata)
-
-            files = [{'path': "/var/cache/heat-cfntools/last_metadata",
-                      'data': metadata_string}]
-            self._sftp_files(files)
-
-            command = "bash -x /var/lib/cloud/data/cfn-userdata > " + \
-                      "/root/cfn-userdata.log 2>&1"
-            exit_code = self._run_ssh_command(command)
-            if exit_code != 0:
-                raise exception.Error(self.script_error_msg %
-                                      {'path': "cfn-userdata",
-                                       'log': "/root/cfn-userdata.log"})
-
-        if self.FLAVOR in prop_diff:
-            flav = json_snippet['Properties'][self.FLAVOR]
-            new_flavor = nova_utils.get_flavor_id(self.nova(), flav)
-            self.server.resize(new_flavor)
-            resize = scheduler.TaskRunner(nova_utils.check_resize,
-                                          self.server,
-                                          flav)
-            resize.start()
-            return resize
-
-    def _resolve_attribute(self, key):
-        """Return the method that provides a given template attribute."""
-        attribute_function = {'PublicIp': self.public_ip,
-                              'PrivateIp': self.private_ip,
-                              'PublicDnsName': self.public_ip,
-                              'PrivateDnsName': self.public_ip}
-        if key not in attribute_function:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
-        function = attribute_function[key]
-        logger.info('%s._resolve_attribute(%s) == %s'
-                    % (self.name, key, function))
-        return unicode(function)
+    def _resolve_attribute(self, name):
+        if name == 'distro':
+            return self.distro
+        if name == 'privateIPv4':
+            return nova_utils.get_ip(self.server, 'private', 4)
+        return super(CloudServer, self)._resolve_attribute(name)

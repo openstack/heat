@@ -281,6 +281,10 @@ class Server(resource.Resource):
         # This method is overridden by the derived CloudServer resource
         return self.properties.get(self.PERSONALITY)
 
+    def _key_name(self):
+        # This method is overridden by the derived CloudServer resource
+        return self.properties.get(self.KEY_NAME)
+
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
@@ -318,7 +322,7 @@ class Server(resource.Resource):
                 name=self.physical_resource_name(),
                 image=image,
                 flavor=flavor_id,
-                key_name=self.properties[self.KEY_NAME],
+                key_name=self._key_name(),
                 security_groups=security_groups,
                 userdata=userdata,
                 meta=instance_meta,

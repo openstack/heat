@@ -50,6 +50,28 @@ class NovaUtilsTests(HeatTestCase):
                           self.nova_client, 'noimage')
         self.m.VerifyAll()
 
+    def test_get_ip(self):
+        my_image = self.m.CreateMockAnything()
+        my_image.addresses = {
+            'public': [{'version': 4,
+                        'addr': '4.5.6.7'},
+                       {'version': 6,
+                        'addr': '2401:1801:7800:0101:c058:dd33:ff18:04e6'}],
+            'private': [{'version': 4,
+                         'addr': '10.13.12.13'}]}
+
+        expected = '4.5.6.7'
+        observed = nova_utils.get_ip(my_image, 'public', 4)
+        self.assertEqual(expected, observed)
+
+        expected = '10.13.12.13'
+        observed = nova_utils.get_ip(my_image, 'private', 4)
+        self.assertEqual(expected, observed)
+
+        expected = '2401:1801:7800:0101:c058:dd33:ff18:04e6'
+        observed = nova_utils.get_ip(my_image, 'public', 6)
+        self.assertEqual(expected, observed)
+
     def test_get_flavor_id(self):
         """Tests the get_flavor_id function."""
         flav_id = str(uuid.uuid4())
