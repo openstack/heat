@@ -21,6 +21,7 @@ from heat.api.openstack.v1 import events
 from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
 from heat.api.openstack.v1 import software_configs
+from heat.api.openstack.v1 import software_deployments
 from heat.common import wsgi
 
 from heat.openstack.common import log as logging
@@ -209,6 +210,38 @@ class API(wsgi.Router):
 
             sc_mapper.connect("software_config_delete",
                               "/{config_id}",
+                              action="delete",
+                              conditions={'method': 'DELETE'})
+
+        # Software deployments
+        sd_resource = software_deployments.create_resource(conf)
+        with mapper.submapper(
+            controller=sd_resource,
+            path_prefix='/{tenant_id}/software_deployments'
+        ) as sa_mapper:
+
+            sa_mapper.connect("software_deployment_index",
+                              "",
+                              action="index",
+                              conditions={'method': 'GET'})
+
+            sa_mapper.connect("software_deployment_create",
+                              "",
+                              action="create",
+                              conditions={'method': 'POST'})
+
+            sa_mapper.connect("software_deployment_show",
+                              "/{deployment_id}",
+                              action="show",
+                              conditions={'method': 'GET'})
+
+            sa_mapper.connect("software_deployment_update",
+                              "/{deployment_id}",
+                              action="update",
+                              conditions={'method': 'PUT'})
+
+            sa_mapper.connect("software_deployment_delete",
+                              "/{deployment_id}",
                               action="delete",
                               conditions={'method': 'DELETE'})
 
