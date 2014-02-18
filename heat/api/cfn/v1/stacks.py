@@ -191,7 +191,6 @@ class StackController(object):
                 engine_api.STACK_CREATION_TIME: 'CreationTime',
                 engine_api.STACK_DESCRIPTION: 'Description',
                 engine_api.STACK_DISABLE_ROLLBACK: 'DisableRollback',
-                engine_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
                 engine_api.STACK_NOTIFICATION_TOPICS: 'NotificationARNs',
                 engine_api.STACK_PARAMETERS: 'Parameters',
                 engine_api.STACK_ID: 'StackId',
@@ -199,6 +198,9 @@ class StackController(object):
                 engine_api.STACK_STATUS_DATA: 'StackStatusReason',
                 engine_api.STACK_TIMEOUT: 'TimeoutInMinutes',
             }
+
+            if s[engine_api.STACK_UPDATED_TIME] is not None:
+                keymap[engine_api.STACK_UPDATED_TIME] = 'LastUpdatedTime'
 
             result = api_utils.reformat_dict_keys(keymap, s)
 

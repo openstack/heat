@@ -15,6 +15,7 @@
 import json
 import mock
 import uuid
+from datetime import datetime
 
 import heat.engine.api as api
 
@@ -189,8 +190,6 @@ class FormatTest(HeatTestCase):
                                            event_id_formatted['path'])
         self.assertEqual(event_id, event_identifier.event_id)
 
-    @mock.patch.object(parser.Stack, 'updated_time', new=None)
-    @mock.patch.object(parser.Stack, 'created_time', new=None)
     @mock.patch.object(api, 'format_stack_resource')
     def test_format_stack_preview(self, mock_fmt_resource):
         def mock_format_resources(res):
@@ -205,6 +204,58 @@ class FormatTest(HeatTestCase):
         self.assertEqual('test_stack', stack['stack_name'])
         self.assertIn('resources', stack)
         self.assertEqual(['fmt1', ['fmt2', ['fmt3']]], stack['resources'])
+
+    def test_format_stack(self):
+        self.stack.created_time = datetime(1970, 1, 1)
+        info = api.format_stack(self.stack)
+
+        aws_id = ('arn:openstack:heat::test_tenant_id:'
+                  'stacks/test_stack/' + self.stack.id)
+        expected_stack_info = {
+            'capabilities': [],
+            'creation_time': '1970-01-01T00:00:00Z',
+            'description': 'No description',
+            'disable_rollback': True,
+            'notification_topics': [],
+            'stack_action': '',
+            'stack_name': 'test_stack',
+            'stack_status': '',
+            'stack_status_reason': '',
+            'template_description': 'No description',
+            'timeout_mins': 60,
+            'parameters': {
+                'AWS::Region': 'ap-southeast-1',
+                'AWS::StackId': aws_id,
+                'AWS::StackName': 'test_stack'},
+            'stack_identity': {
+                'path': '',
+                'stack_id': self.stack.id,
+                'stack_name': 'test_stack',
+                'tenant': 'test_tenant_id'},
+            'updated_time': None}
+        self.assertEqual(expected_stack_info, info)
+
+    def test_format_stack_created_time(self):
+        self.stack.created_time = None
+        info = api.format_stack(self.stack)
+        self.assertIsNotNone(info['creation_time'])
+
+    def test_format_stack_updated_time(self):
+        self.stack.updated_time = None
+        info = api.format_stack(self.stack)
+        self.assertIsNone(info['updated_time'])
+
+        self.stack.updated_time = datetime(1970, 1, 1)
+        info = api.format_stack(self.stack)
+        self.assertEqual('1970-01-01T00:00:00Z', info['updated_time'])
+
+    @mock.patch.object(api, 'format_stack_outputs')
+    def test_format_stack_adds_outputs(self, mock_fmt_outputs):
+        mock_fmt_outputs.return_value = 'foobar'
+        self.stack.action = 'CREATE'
+        self.stack.status = 'COMPLETE'
+        info = api.format_stack(self.stack)
+        self.assertEqual('foobar', info[rpc_api.STACK_OUTPUTS])
 
 
 class FormatValidateParameterTest(HeatTestCase):

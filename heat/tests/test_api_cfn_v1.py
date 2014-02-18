@@ -207,6 +207,54 @@ class CfnStackControllerTest(HeatTestCase):
                                            'version': self.api_version},
                                           None)
 
+    def test_describe_last_updated_time(self):
+        params = {'Action': 'DescribeStacks'}
+        dummy_req = self._dummy_GET_request(params)
+        self._stub_enforce(dummy_req, 'DescribeStacks')
+
+        engine_resp = [{u'updated_time': '1970-01-01',
+                        u'parameters': {},
+                        u'stack_action': u'CREATE',
+                        u'stack_status': u'COMPLETE'}]
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'show_stack',
+                  'args': {'stack_identity': None},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.describe(dummy_req)
+        result = response['DescribeStacksResponse']['DescribeStacksResult']
+        stack = result['Stacks'][0]
+        self.assertEqual('1970-01-01', stack['LastUpdatedTime'])
+
+    def test_describe_no_last_updated_time(self):
+        params = {'Action': 'DescribeStacks'}
+        dummy_req = self._dummy_GET_request(params)
+        self._stub_enforce(dummy_req, 'DescribeStacks')
+
+        engine_resp = [{u'updated_time': None,
+                        u'parameters': {},
+                        u'stack_action': u'CREATE',
+                        u'stack_status': u'COMPLETE'}]
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'show_stack',
+                  'args': {'stack_identity': None},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.describe(dummy_req)
+        result = response['DescribeStacksResponse']['DescribeStacksResult']
+        stack = result['Stacks'][0]
+        self.assertNotIn('LastUpdatedTime', stack)
+
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
         stack_name = u"wordpress"
