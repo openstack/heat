@@ -119,13 +119,10 @@ class HeatException(Exception):
                 raise exc_info[0], exc_info[1], exc_info[2]
 
     def __str__(self):
-        return unicode(self.message).encode('UTF-8')
+        return str(self.message)
 
     def __unicode__(self):
         return unicode(self.message)
-
-    def __deepcopy__(self, memo):
-        return self.__class__(**self.kwargs)
 
 
 class MissingCredentialError(HeatException):

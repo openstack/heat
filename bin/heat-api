@@ -33,8 +33,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 from heat.openstack.common import gettextutils
 
-gettextutils.enable_lazy()
-gettextutils.install('heat', lazy=True)
+gettextutils.install('heat', lazy=False)
 
 from oslo.config import cfg
 
