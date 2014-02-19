@@ -15,6 +15,7 @@
 import datetime
 import copy
 
+import mock
 import mox
 
 from testtools import skipIf
@@ -1625,3 +1626,27 @@ class AutoScalingTest(HeatTestCase):
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
         self.assertEqual(expected_msg, str(e))
+
+
+class TestInstanceGroup(HeatTestCase):
+    params = {'KeyName': 'test', 'ImageId': 'foo'}
+
+    def setUp(self):
+        super(TestInstanceGroup, self).setUp()
+        utils.setup_dummy_db()
+
+        json_snippet = {'Properties':
+                        {'Size': 2, 'LaunchConfigurationName': 'foo'}}
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=self.params)
+        self.instance_group = asc.InstanceGroup('ig', json_snippet, stack)
+
+    def test_child_template(self):
+        self.instance_group._create_template = mock.Mock(return_value='tpl')
+
+        self.assertEqual('tpl', self.instance_group.child_template())
+        self.instance_group._create_template.assert_called_once_with(2)
+
+    def test_child_params(self):
+        self.instance_group._environment = mock.Mock(return_value='env')
+        self.assertEqual('env', self.instance_group.child_params())

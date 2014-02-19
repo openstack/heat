@@ -412,6 +412,13 @@ class InstanceGroup(stack_resource.StackResource):
             return u','.join(inst.FnGetAtt('PublicIp')
                              for inst in self.get_instances()) or None
 
+    def child_template(self):
+        num_instances = int(self.properties[self.SIZE])
+        return self._create_template(num_instances)
+
+    def child_params(self):
+        return self._environment()
+
 
 class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
