@@ -32,6 +32,8 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import template
 
+import heat.engine.cfn.functions
+
 from heat.tests.fakes import FakeKeystoneClient
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -260,7 +262,7 @@ Mappings:
 
         p_snippet = {"Ref": "baz"}
         parsed = tmpl.parse(stack, p_snippet)
-        self.assertTrue(isinstance(parsed, template.ParamRef))
+        self.assertTrue(isinstance(parsed, heat.engine.cfn.functions.ParamRef))
 
     def test_select_from_list(self):
         tmpl = parser.Template(empty_template)
