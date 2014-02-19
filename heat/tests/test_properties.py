@@ -19,6 +19,7 @@ from heat.engine import hot
 from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
+from heat.engine import support
 import testtools
 
 
@@ -1523,3 +1524,25 @@ class PropertiesValidationTest(testtools.TestCase):
             properties.Properties.schema_to_parameters_and_properties(schema)
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
+
+    def test_schema_support_status(self):
+        schema = {
+            'foo_sup': properties.Schema(
+                properties.Schema.STRING,
+                default='foo'
+            ),
+            'bar_dep': properties.Schema(
+                properties.Schema.STRING,
+                default='bar',
+                support_status=support.SupportStatus(
+                    support.DEPRECATED,
+                    'Do not use this ever')
+            )
+        }
+        props = properties.Properties(schema, {})
+        self.assertEqual(props.props['foo_sup'].support_status().status,
+                         support.SUPPORTED)
+        self.assertEqual(props.props['bar_dep'].support_status().status,
+                         support.DEPRECATED)
+        self.assertEqual(props.props['bar_dep'].support_status().message,
+                         'Do not use this ever')

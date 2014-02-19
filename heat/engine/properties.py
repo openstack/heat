@@ -17,6 +17,7 @@ import collections
 
 from heat.common import exception
 from heat.engine import parameters
+from heat.engine import support
 from heat.engine import constraints as constr
 
 SCHEMA_KEYS = (
@@ -51,11 +52,13 @@ class Schema(constr.Schema):
                  default=None, schema=None,
                  required=False, constraints=[],
                  implemented=True,
-                 update_allowed=False):
+                 update_allowed=False,
+                 support_status=support.SupportStatus()):
         super(Schema, self).__init__(data_type, description, default,
                                      schema, required, constraints)
         self.implemented = implemented
         self.update_allowed = update_allowed
+        self.support_status = support_status
 
     @classmethod
     def from_legacy(cls, schema_dict):
@@ -184,6 +187,9 @@ class Property(object):
 
     def type(self):
         return self.schema.type
+
+    def support_status(self):
+        return self.schema.support_status
 
     def _validate_integer(self, value):
         if value is None:
