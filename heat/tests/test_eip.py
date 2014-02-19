@@ -169,6 +169,7 @@ class EIPTest(HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stack._resources[resource_name] = rsrc
         return rsrc
 
     def create_association(self, t, stack, resource_name):
@@ -178,6 +179,7 @@ class EIPTest(HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stack._resources[resource_name] = rsrc
         return rsrc
 
     def test_eip(self):
@@ -211,8 +213,10 @@ class EIPTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_eip(self):
-        eip.ElasticIp.nova().AndReturn(self.fc)
-        eip.ElasticIp.nova().AndReturn(self.fc)
+        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        eip.ElasticIpAssociation.nova().MultipleTimes().AndReturn(self.fc)
+        self.fc.servers.get('WebServer').MultipleTimes() \
+            .AndReturn(self.fc.servers.list()[0])
 
         self.m.ReplayAll()
 
@@ -222,11 +226,21 @@ class EIPTest(HeatTestCase):
         rsrc = self.create_eip(t, stack, 'IPAddress')
         association = self.create_association(t, stack, 'IPAssoc')
 
-        # TODO(sbaker), figure out why this is an empty string
-        #self.assertEqual('', association.FnGetRefId())
+        try:
+            self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+            self.assertEqual((association.CREATE, association.COMPLETE),
+                             association.state)
 
-        scheduler.TaskRunner(association.delete)()
-        scheduler.TaskRunner(rsrc.delete)()
+            self.assertEqual(utils.PhysName(stack.name, association.name),
+                             association.FnGetRefId())
+            self.assertEqual('11.0.0.1', association.properties['EIP'])
+        finally:
+            scheduler.TaskRunner(association.delete)()
+            scheduler.TaskRunner(rsrc.delete)()
+
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual((association.DELETE, association.COMPLETE),
+                         association.state)
 
         self.m.VerifyAll()
 
