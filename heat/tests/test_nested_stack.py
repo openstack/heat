@@ -15,6 +15,8 @@
 
 import copy
 import json
+import mock
+from requests import exceptions
 
 from oslo.config import cfg
 
@@ -597,6 +599,42 @@ Resources:
         self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
 
         self.m.VerifyAll()
+
+    def test_child_params(self):
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        nested_stack = stack['the_nested']
+        nested_stack.properties.data[nested_stack.PARAMETERS] = {'foo': 'bar'}
+
+        self.assertEqual({'foo': 'bar'}, nested_stack.child_params())
+
+    @mock.patch.object(urlfetch, 'get')
+    def test_child_template_when_file_is_fetched(self, mock_get):
+        mock_get.return_value = 'template_file'
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        nested_stack = stack['the_nested']
+
+        with mock.patch('heat.common.template_format.parse') as mock_parse:
+            mock_parse.return_value = 'child_template'
+            self.assertEqual('child_template', nested_stack.child_template())
+            mock_parse.assert_called_once_with('template_file')
+
+    @mock.patch.object(urlfetch, 'get')
+    def test_child_template_when_fetching_file_fails(self, mock_get):
+        mock_get.side_effect = exceptions.RequestException()
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        nested_stack = stack['the_nested']
+        self.assertRaises(ValueError, nested_stack.child_template)
+
+    @mock.patch.object(urlfetch, 'get')
+    def test_child_template_when_io_error(self, mock_get):
+        mock_get.side_effect = IOError()
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        nested_stack = stack['the_nested']
+        self.assertRaises(ValueError, nested_stack.child_template)
 
 
 class ResDataResource(generic_rsrc.GenericResource):
