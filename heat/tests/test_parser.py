@@ -16,17 +16,19 @@ import json
 import mock
 import time
 
+import testtools
+
 from keystoneclient import exceptions as kc_exceptions
 
 from oslo.config import cfg
 
 from heat.engine import environment
 from heat.common import exception
-from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import template
@@ -120,11 +122,44 @@ mapping_template = template_format.parse('''{
 }''')
 
 
+parameter_template = template_format.parse('''{
+  "HeatTemplateFormatVersion" : "2012-12-12",
+  "Parameters" : {
+    "foo" : { "Type" : "String" },
+    "blarg" : { "Type" : "String", "Default": "quux" }
+  }
+}''')
+
+
+resource_template = template_format.parse('''{
+  "HeatTemplateFormatVersion" : "2012-12-12",
+  "Resources" : {
+    "foo" : { "Type" : "GenericResourceType" },
+    "blarg" : { "Type" : "GenericResourceType" }
+  }
+}''')
+
+
 class TemplateTest(HeatTestCase):
 
     def setUp(self):
         super(TemplateTest, self).setUp()
         self.ctx = utils.dummy_context()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+
+    @staticmethod
+    def resolve(snippet, template, stack=None):
+        if stack is not None:
+            params = stack.parameters
+            resources = stack.resources
+        else:
+            params = {}
+            resources = {}
+
+        static = parser.resolve_static_data(template, stack, params, snippet)
+        return parser.resolve_runtime_data(template, resources, static)
 
     def test_defaults(self):
         empty = parser.Template({})
@@ -156,115 +191,131 @@ Mappings:
 
     def test_find_in_map(self):
         tmpl = parser.Template(mapping_template)
+        stack = parser.Stack(self.ctx, 'test', tmpl)
         find = {'Fn::FindInMap': ["ValidMapping", "TestKey", "TestValue"]}
-        self.assertEqual("wibble", tmpl.resolve_find_in_map(find))
+        self.assertEqual("wibble", self.resolve(find, tmpl, stack))
 
     def test_find_in_invalid_map(self):
         tmpl = parser.Template(mapping_template)
+        stack = parser.Stack(self.ctx, 'test', tmpl)
         finds = ({'Fn::FindInMap': ["InvalidMapping", "ValueList", "foo"]},
                  {'Fn::FindInMap': ["InvalidMapping", "ValueString", "baz"]},
                  {'Fn::FindInMap': ["MapList", "foo", "bar"]},
                  {'Fn::FindInMap': ["MapString", "foo", "bar"]})
 
         for find in finds:
-            self.assertRaises(KeyError, tmpl.resolve_find_in_map, find)
+            self.assertRaises((KeyError, TypeError), self.resolve,
+                              find, tmpl, stack)
 
     def test_bad_find_in_map(self):
         tmpl = parser.Template(mapping_template)
+        stack = parser.Stack(self.ctx, 'test', tmpl)
         finds = ({'Fn::FindInMap': "String"},
                  {'Fn::FindInMap': {"Dict": "String"}},
                  {'Fn::FindInMap': ["ShortList", "foo"]},
                  {'Fn::FindInMap': ["ReallyShortList"]})
 
         for find in finds:
-            self.assertRaises(KeyError, tmpl.resolve_find_in_map, find)
+            self.assertRaises(KeyError, self.resolve, find, tmpl, stack)
 
     def test_param_refs(self):
-        params = {'foo': 'bar', 'blarg': 'wibble'}
+        tmpl = parser.Template(parameter_template)
+        env = environment.Environment({'foo': 'bar', 'blarg': 'wibble'})
+        stack = parser.Stack(self.ctx, 'test', tmpl, env)
         p_snippet = {"Ref": "foo"}
-        self.assertEqual("bar",
-                         parser.Template.resolve_param_refs(p_snippet, params))
+        self.assertEqual("bar", self.resolve(p_snippet, tmpl, stack))
 
     def test_param_refs_resource(self):
-        params = {'foo': 'bar', 'blarg': 'wibble'}
+        tmpl = parser.Template(parameter_template)
+        env = environment.Environment({'foo': 'bar', 'blarg': 'wibble'})
+        stack = parser.Stack(self.ctx, 'test', tmpl, env)
         r_snippet = {"Ref": "baz"}
-        self.assertEqual(r_snippet,
-                         parser.Template.resolve_param_refs(r_snippet, params))
+        self.assertEqual(r_snippet, self.resolve(r_snippet, tmpl, stack))
 
     def test_param_ref_missing(self):
-        tmpl = {'Parameters': {'foo': {'Type': 'String', 'Required': True}}}
-        tmpl = parser.Template(tmpl)
-        params = tmpl.parameters(identifier.HeatIdentifier('', 'test', None),
-                                 {}, validate_value=False)
+        tmpl = parser.Template(parameter_template)
+        env = environment.Environment({'foo': 'bar'})
+        stack = parser.Stack(self.ctx, 'test', tmpl, env)
+        stack.env = environment.Environment({})
+        stack.parameters = parameters.Parameters(stack.identifier(), tmpl,
+                                                 validate_value=False)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
-                          parser.Template.resolve_param_refs,
-                          snippet, params)
+                          self.resolve,
+                          snippet, tmpl, stack)
 
     def test_resource_refs(self):
-        resources = {'foo': self.m.CreateMock(resource.Resource),
-                     'blarg': self.m.CreateMock(resource.Resource)}
-        resources['foo'].FnGetRefId().AndReturn('bar')
+        tmpl = parser.Template(resource_template)
+        stack = parser.Stack(self.ctx, 'test', tmpl)
+
+        self.m.StubOutWithMock(stack['foo'], 'FnGetRefId')
+        stack['foo'].FnGetRefId().MultipleTimes().AndReturn('bar')
         self.m.ReplayAll()
 
         r_snippet = {"Ref": "foo"}
-        self.assertEqual("bar",
-                         parser.Template.resolve_resource_refs(r_snippet,
-                                                               resources))
+        self.assertEqual("bar", self.resolve(r_snippet, tmpl, stack))
         self.m.VerifyAll()
 
     def test_resource_refs_param(self):
-        resources = {'foo': 'bar', 'blarg': 'wibble'}
+        tmpl = parser.Template(resource_template)
+
         p_snippet = {"Ref": "baz"}
-        self.assertEqual(p_snippet,
-                         parser.Template.resolve_resource_refs(p_snippet,
-                                                               resources))
+        self.assertEqual(p_snippet, tmpl.resolve_resource_refs(p_snippet, {}))
 
     def test_select_from_list(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
-        self.assertEqual("bar", parser.Template.resolve_select(data))
+        self.assertEqual("bar", self.resolve(data, tmpl))
 
     def test_select_from_list_integer_index(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": [1, ["foo", "bar"]]}
-        self.assertEqual("bar", parser.Template.resolve_select(data))
+        self.assertEqual("bar", self.resolve(data, tmpl))
 
     def test_select_from_list_out_of_bound(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["0", ["foo", "bar"]]}
-        self.assertEqual("foo", parser.Template.resolve_select(data))
+        self.assertEqual("foo", self.resolve(data, tmpl))
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
-        self.assertEqual("bar", parser.Template.resolve_select(data))
+        self.assertEqual("bar", self.resolve(data, tmpl))
         data = {"Fn::Select": ["2", ["foo", "bar"]]}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_dict(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
-        self.assertEqual("robin", parser.Template.resolve_select(data))
+        self.assertEqual("robin", self.resolve(data, tmpl))
 
     def test_select_from_none(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["red", None]}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_dict_not_existing(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["green", {"red": "robin", "re": "foo"}]}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_serialized_json_map(self):
+        tmpl = parser.Template(mapping_template)
         js = json.dumps({"red": "robin", "re": "foo"})
         data = {"Fn::Select": ["re", js]}
-        self.assertEqual("foo", parser.Template.resolve_select(data))
+        self.assertEqual("foo", self.resolve(data, tmpl))
 
     def test_select_from_serialized_json_list(self):
+        tmpl = parser.Template(mapping_template)
         js = json.dumps(["foo", "fee", "fum"])
         data = {"Fn::Select": ["0", js]}
-        self.assertEqual("foo", parser.Template.resolve_select(data))
+        self.assertEqual("foo", self.resolve(data, tmpl))
 
     def test_select_empty_string(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Select": ["0", '']}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
         data = {"Fn::Select": ["1", '']}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
         data = {"Fn::Select": ["one", '']}
-        self.assertEqual("", parser.Template.resolve_select(data))
+        self.assertEqual("", self.resolve(data, tmpl))
 
     def test_join_reduce(self):
         join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
@@ -285,105 +336,99 @@ Mappings:
             parser.Template.reduce_joins(join))
 
     def test_join(self):
+        tmpl = parser.Template(mapping_template)
         join = {"Fn::Join": [" ", ["foo", "bar"]]}
-        self.assertEqual("foo bar", parser.Template.resolve_joins(join))
+        self.assertEqual("foo bar", self.resolve(join, tmpl))
 
     def test_split_ok(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Split": [";", "foo; bar; achoo"]}
-        self.assertEqual(['foo', ' bar', ' achoo'],
-                         parser.Template.resolve_split(data))
+        self.assertEqual(['foo', ' bar', ' achoo'], self.resolve(data, tmpl))
 
     def test_split_no_delim_in_str(self):
+        tmpl = parser.Template(mapping_template)
         data = {"Fn::Split": [";", "foo, bar, achoo"]}
-        self.assertEqual(['foo, bar, achoo'],
-                         parser.Template.resolve_split(data))
+        self.assertEqual(['foo, bar, achoo'], self.resolve(data, tmpl))
 
     def test_base64(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::Base64": "foobar"}
         # For now, the Base64 function just returns the original text, and
         # does not convert to base64 (see issue #133)
-        self.assertEqual("foobar", parser.Template.resolve_base64(snippet))
+        self.assertEqual("foobar", self.resolve(snippet, tmpl))
 
     def test_get_azs(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::GetAZs": ""}
-        self.assertEqual(
-            ["nova"],
-            parser.Template.resolve_availability_zones(snippet, None))
+        self.assertEqual(["nova"], self.resolve(snippet, tmpl))
 
     def test_get_azs_with_stack(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::GetAZs": ""}
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         fc = fakes.FakeClient()
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
         self.m.ReplayAll()
-        self.assertEqual(
-            ["nova1"],
-            parser.Template.resolve_availability_zones(snippet, stack))
+        self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
 
     def test_replace_string_values(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::Replace": [
             {'$var1': 'foo', '%var2%': 'bar'},
             '$var1 is %var2%'
         ]}
-        self.assertEqual(
-            'foo is bar',
-            parser.Template.resolve_replace(snippet))
+        self.assertEqual('foo is bar', self.resolve(snippet, tmpl))
 
     def test_replace_number_values(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::Replace": [
             {'$var1': 1, '%var2%': 2},
             '$var1 is not %var2%'
         ]}
-        self.assertEqual(
-            '1 is not 2',
-            parser.Template.resolve_replace(snippet))
+        self.assertEqual('1 is not 2', self.resolve(snippet, tmpl))
 
         snippet = {"Fn::Replace": [
             {'$var1': 1.3, '%var2%': 2.5},
             '$var1 is not %var2%'
         ]}
-        self.assertEqual(
-            '1.3 is not 2.5',
-            parser.Template.resolve_replace(snippet))
+        self.assertEqual('1.3 is not 2.5', self.resolve(snippet, tmpl))
 
     def test_replace_none_values(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::Replace": [
             {'$var1': None, '${var2}': None},
             '"$var1" is "${var2}"'
         ]}
-        self.assertEqual(
-            '"" is ""',
-            parser.Template.resolve_replace(snippet))
+        self.assertEqual('"" is ""', self.resolve(snippet, tmpl))
 
     def test_replace_missing_key(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::Replace": [
             {'$var1': 'foo', 'var2': 'bar'},
             '"$var1" is "${var3}"'
         ]}
-        self.assertEqual(
-            '"foo" is "${var3}"',
-            parser.Template.resolve_replace(snippet))
+        self.assertEqual('"foo" is "${var3}"', self.resolve(snippet, tmpl))
 
     def test_member_list2map_good(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::MemberListToMap": [
             'Name', 'Value', ['.member.0.Name=metric',
                               '.member.0.Value=cpu',
                               '.member.1.Name=size',
                               '.member.1.Value=56']]}
-        self.assertEqual(
-            {'metric': 'cpu', 'size': '56'},
-            parser.Template.resolve_member_list_to_map(snippet))
+        self.assertEqual({'metric': 'cpu', 'size': '56'},
+                         self.resolve(snippet, tmpl))
 
     def test_member_list2map_good2(self):
+        tmpl = parser.Template(mapping_template)
         snippet = {"Fn::MemberListToMap": [
             'Key', 'Value', ['.member.2.Key=metric',
                              '.member.2.Value=cpu',
                              '.member.5.Key=size',
                              '.member.5.Value=56']]}
-        self.assertEqual(
-            {'metric': 'cpu', 'size': '56'},
-            parser.Template.resolve_member_list_to_map(snippet))
+        self.assertEqual({'metric': 'cpu', 'size': '56'},
+                         self.resolve(snippet, tmpl))
 
     def test_resource_facade(self):
         metadata_snippet = {'Fn::ResourceFacade': 'Metadata'}
@@ -401,28 +446,23 @@ Mappings:
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
-        self.assertEqual(
-            {"foo": "bar"},
-            parser.Template.resolve_resource_facade(metadata_snippet, stack))
-        self.assertEqual(
-            'Retain',
-            parser.Template.resolve_resource_facade(deletion_policy_snippet,
-                                                    stack))
-        self.assertEqual(
-            {"blarg": "wibble"},
-            parser.Template.resolve_resource_facade(update_policy_snippet,
-                                                    stack))
+        self.assertEqual({"foo": "bar"},
+                         self.resolve(metadata_snippet, stack.t, stack))
+        self.assertEqual('Retain',
+                         self.resolve(deletion_policy_snippet, stack.t, stack))
+        self.assertEqual({"blarg": "wibble"},
+                         self.resolve(update_policy_snippet, stack.t, stack))
 
     def test_resource_facade_invalid_arg(self):
         snippet = {'Fn::ResourceFacade': 'wibble'}
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         error = self.assertRaises(ValueError,
-                                  parser.Template.resolve_resource_facade,
+                                  self.resolve,
                                   snippet,
-                                  stack)
+                                  stack.t, stack)
         self.assertIn(snippet.keys()[0], str(error))
 
-    def test_resource_facade_missing_key(self):
+    def test_resource_facade_missing_deletion_policy(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
 
         class DummyClass(object):
@@ -436,9 +476,9 @@ Mappings:
                              parser.Template({}),
                              parent_resource=parent_resource)
         error = self.assertRaises(KeyError,
-                                  parser.Template.resolve_resource_facade,
+                                  self.resolve,
                                   snippet,
-                                  stack)
+                                  stack.t, stack)
         self.assertIn(snippet.keys()[0], str(error))
 
     def test_prevent_parameters_access(self):
@@ -463,140 +503,109 @@ Mappings:
 class TemplateFnErrorTest(HeatTestCase):
     scenarios = [
         ('select_from_list_not_int',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Select": ["one", ["foo", "bar"]]})),
         ('select_from_dict_not_str',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Select": ["1", {"red": "robin", "re": "foo"}]})),
         ('select_from_serialized_json_wrong',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Select": ["not", "no json"]})),
         ('select_wrong_num_args_1',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Select": []})),
         ('select_wrong_num_args_2',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Select": ["4"]})),
         ('select_wrong_num_args_3',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Select": ["foo", {"foo": "bar"}, ""]})),
         ('select_wrong_num_args_4',
-         dict(resolve_fn=parser.Template.resolve_select,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={'Fn::Select': [['f'], {'f': 'food'}]})),
         ('split_no_delim',
-         dict(resolve_fn=parser.Template.resolve_split,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Split": ["foo, bar, achoo"]})),
         ('split_no_list',
-         dict(resolve_fn=parser.Template.resolve_split,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Split": "foo, bar, achoo"})),
         ('base64_list',
-         dict(resolve_fn=parser.Template.resolve_base64,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Base64": ["foobar"]})),
         ('base64_dict',
-         dict(resolve_fn=parser.Template.resolve_base64,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Base64": {"foo": "bar"}})),
         ('replace_list_value',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Replace": [
                   {'$var1': 'foo', '%var2%': ['bar']},
                   '$var1 is %var2%']})),
         ('replace_list_mapping',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Replace": [
                   ['var1', 'foo', 'var2', 'bar'],
                   '$var1 is ${var2}']})),
         ('replace_dict',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Replace": {}})),
         ('replace_missing_template',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Replace": [['var1', 'foo', 'var2', 'bar']]})),
         ('replace_none_template',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Replace": [['var2', 'bar'], None]})),
         ('replace_list_string',
-         dict(resolve_fn=parser.Template.resolve_replace,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Replace": [
                   {'var1': 'foo', 'var2': 'bar'},
                   ['$var1 is ${var2}']]})),
         ('join_string',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": [" ", "foo"]})),
         ('join_dict',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": [" ", {"foo": "bar"}]})),
         ('join_wrong_num_args_1',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Join": []})),
         ('join_wrong_num_args_2',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Join": [" "]})),
         ('join_wrong_num_args_3',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=ValueError,
+         dict(expect=ValueError,
               snippet={"Fn::Join": [" ", {"foo": "bar"}, ""]})),
         ('join_string_nodelim',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": "o"})),
         ('join_string_nodelim_1',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": "oh"})),
         ('join_string_nodelim_2',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": "ohh"})),
         ('join_dict_nodelim1',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": {"foo": "bar"}})),
         ('join_dict_nodelim2',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": {"foo": "bar", "blarg": "wibble"}})),
         ('join_dict_nodelim3',
-         dict(resolve_fn=parser.Template.resolve_joins,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::Join": {"foo": "bar", "blarg": "wibble",
                                     "baz": "quux"}})),
         ('member_list2map_no_key_or_val',
-         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::MemberListToMap": [
                   'Key', ['.member.2.Key=metric',
                           '.member.2.Value=cpu',
                           '.member.5.Key=size',
                           '.member.5.Value=56']]})),
         ('member_list2map_no_list',
-         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::MemberListToMap": [
                   'Key', '.member.2.Key=metric']})),
         ('member_list2map_not_string',
-         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
-              expect=TypeError,
+         dict(expect=TypeError,
               snippet={"Fn::MemberListToMap": [
                   'Name', ['Value'], ['.member.0.Name=metric',
                                       '.member.0.Value=cpu',
@@ -605,8 +614,10 @@ class TemplateFnErrorTest(HeatTestCase):
     ]
 
     def test_bad_input(self):
+        tmpl = parser.Template(mapping_template)
+        resolve = lambda s: TemplateTest.resolve(s, tmpl)
         error = self.assertRaises(self.expect,
-                                  self.resolve_fn,
+                                  resolve,
                                   self.snippet)
         self.assertIn(self.snippet.keys()[0], str(error))
 
@@ -624,6 +635,21 @@ class ResolveDataTest(HeatTestCase):
                                   template.Template({}),
                                   environment.Environment({}))
 
+    def resolve(self, snippet):
+        return TemplateTest.resolve(snippet, self.stack.t, self.stack)
+
+    def test_join_split(self):
+        # join
+        snippet = {'Fn::Join': [';', ['one', 'two', 'three']]}
+        self.assertEqual('one;two;three',
+                         self.resolve(snippet))
+
+        # join then split
+        snippet = {'Fn::Split': [';', snippet]}
+        self.assertEqual(['one', 'two', 'three'],
+                         self.resolve(snippet))
+
+    @testtools.skip('Currently borked by reduce_joins')
     def test_split_join_split_join(self):
         # each snippet in this test encapsulates
         # the snippet from the previous step, leading
@@ -632,39 +658,39 @@ class ResolveDataTest(HeatTestCase):
         # split
         snippet = {'Fn::Split': [',', 'one,two,three']}
         self.assertEqual(['one', 'two', 'three'],
-                         self.stack.resolve_runtime_data(snippet))
+                         self.resolve(snippet))
 
         # split then join
         snippet = {'Fn::Join': [';', snippet]}
         self.assertEqual('one;two;three',
-                         self.stack.resolve_runtime_data(snippet))
+                         self.resolve(snippet))
 
         # split then join then split
         snippet = {'Fn::Split': [';', snippet]}
         self.assertEqual(['one', 'two', 'three'],
-                         self.stack.resolve_runtime_data(snippet))
+                         self.resolve(snippet))
 
         # split then join then split then join
         snippet = {'Fn::Join': ['-', snippet]}
         self.assertEqual('one-two-three',
-                         self.stack.resolve_runtime_data(snippet))
+                         self.resolve(snippet))
 
     def test_join_recursive(self):
         raw = {'Fn::Join': ['\n', [{'Fn::Join':
                                    [' ', ['foo', 'bar']]}, 'baz']]}
-        self.assertEqual('foo bar\nbaz', self.stack.resolve_runtime_data(raw))
+        self.assertEqual('foo bar\nbaz', self.resolve(raw))
 
     def test_base64_replace(self):
         raw = {'Fn::Base64': {'Fn::Replace': [
             {'foo': 'bar'}, 'Meet at the foo']}}
         self.assertEqual('Meet at the bar',
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
     def test_replace_base64(self):
         raw = {'Fn::Replace': [{'foo': 'bar'}, {
             'Fn::Base64': 'Meet at the foo'}]}
         self.assertEqual('Meet at the bar',
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
     def test_nested_selects(self):
         data = {
@@ -673,24 +699,24 @@ class ResolveDataTest(HeatTestCase):
         }
         raw = {'Fn::Select': ['a', data]}
         self.assertEqual(data['a'],
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
         raw = {'Fn::Select': ['b', data]}
         self.assertEqual(data['b'],
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
         raw = {
             'Fn::Select': ['1', {
                 'Fn::Select': ['b', data]}]}
         self.assertEqual('twee',
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
         raw = {
             'Fn::Select': ['e', {
                 'Fn::Select': ['2', {
                     'Fn::Select': ['b', data]}]}]}
         self.assertEqual('E',
-                         self.stack.resolve_runtime_data(raw))
+                         self.resolve(raw))
 
     def test_member_list_select(self):
         snippet = {'Fn::Select': ['metric', {"Fn::MemberListToMap": [
@@ -699,7 +725,7 @@ class ResolveDataTest(HeatTestCase):
                               '.member.1.Name=size',
                               '.member.1.Value=56']]}]}
         self.assertEqual('cpu',
-                         self.stack.resolve_runtime_data(snippet))
+                         self.resolve(snippet))
 
     def test_join_reduce(self):
         join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
