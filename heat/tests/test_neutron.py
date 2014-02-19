@@ -719,7 +719,7 @@ class NeutronSubnetTest(HeatTestCase):
                 "dns_nameservers": ["8.8.8.8", "192.168.1.254"]
             }
         }
-        rsrc.handle_update(update_snippet, {}, {})
+        rsrc.handle_update(stack.resolve_static_data(update_snippet), {}, {})
 
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
