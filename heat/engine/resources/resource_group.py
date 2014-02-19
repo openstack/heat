@@ -156,6 +156,13 @@ class ResourceGroup(stack_resource.StackResource):
         child_template['resources'] = resources
         return child_template
 
+    def child_template(self):
+        count = self.properties[self.COUNT]
+        return self._assemble_nested(count)
+
+    def child_params(self):
+        return {}
+
 
 def resource_mapping():
     return {

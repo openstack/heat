@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import mock
 
 from heat.common import exception
 from heat.engine import resource
@@ -211,3 +212,19 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(2, len(resg.nested()))
         self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
         return resg
+
+    def test_child_template(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t['Resources']['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp._assemble_nested = mock.Mock(return_value='tmpl')
+        resgrp.properties.data[resgrp.COUNT] = 2
+
+        self.assertEqual('tmpl', resgrp.child_template())
+        resgrp._assemble_nested.assert_called_once_with(2)
+
+    def test_child_params(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t['Resources']['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        self.assertEqual({}, resgrp.child_params())
