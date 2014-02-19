@@ -16,8 +16,6 @@ import json
 import mock
 import time
 
-import testtools
-
 from keystoneclient import exceptions as kc_exceptions
 
 from oslo.config import cfg
@@ -27,6 +25,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import clients
+from heat.engine import function
 from heat.engine import resource
 from heat.engine import parameters
 from heat.engine import parser
@@ -43,7 +42,8 @@ import heat.db.api as db_api
 
 
 def join(raw):
-    return parser.Template.resolve_joins(raw)
+    tmpl = parser.Template(mapping_template)
+    return function.resolve(tmpl.parse(None, raw))
 
 
 class ParserTest(HeatTestCase):
@@ -151,15 +151,7 @@ class TemplateTest(HeatTestCase):
 
     @staticmethod
     def resolve(snippet, template, stack=None):
-        if stack is not None:
-            params = stack.parameters
-            resources = stack.resources
-        else:
-            params = {}
-            resources = {}
-
-        static = parser.resolve_static_data(template, stack, params, snippet)
-        return parser.resolve_runtime_data(template, resources, static)
+        return function.resolve(template.parse(stack, snippet))
 
     def test_defaults(self):
         empty = parser.Template({})
@@ -225,13 +217,6 @@ Mappings:
         p_snippet = {"Ref": "foo"}
         self.assertEqual("bar", self.resolve(p_snippet, tmpl, stack))
 
-    def test_param_refs_resource(self):
-        tmpl = parser.Template(parameter_template)
-        env = environment.Environment({'foo': 'bar', 'blarg': 'wibble'})
-        stack = parser.Stack(self.ctx, 'test', tmpl, env)
-        r_snippet = {"Ref": "baz"}
-        self.assertEqual(r_snippet, self.resolve(r_snippet, tmpl, stack))
-
     def test_param_ref_missing(self):
         tmpl = parser.Template(parameter_template)
         env = environment.Environment({'foo': 'bar'})
@@ -258,9 +243,11 @@ Mappings:
 
     def test_resource_refs_param(self):
         tmpl = parser.Template(resource_template)
+        stack = parser.Stack(self.ctx, 'test', tmpl)
 
         p_snippet = {"Ref": "baz"}
-        self.assertEqual(p_snippet, tmpl.resolve_resource_refs(p_snippet, {}))
+        parsed = tmpl.parse(stack, p_snippet)
+        self.assertTrue(isinstance(parsed, template.ParamRef))
 
     def test_select_from_list(self):
         tmpl = parser.Template(mapping_template)
@@ -316,24 +303,6 @@ Mappings:
         self.assertEqual("", self.resolve(data, tmpl))
         data = {"Fn::Select": ["one", '']}
         self.assertEqual("", self.resolve(data, tmpl))
-
-    def test_join_reduce(self):
-        join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
-                "bink", "bonk"]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'}, "bink bonk"]]},
-            parser.Template.reduce_joins(join))
-
-        join = {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
-                                   "bink"]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'}, "bink"]]},
-            parser.Template.reduce_joins(join))
-
-        join = {"Fn::Join": [" ", [{'Ref': 'baz'}]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", [{'Ref': 'baz'}]]},
-            parser.Template.reduce_joins(join))
 
     def test_join(self):
         tmpl = parser.Template(mapping_template)
@@ -409,6 +378,16 @@ Mappings:
             '"$var1" is "${var3}"'
         ]}
         self.assertEqual('"foo" is "${var3}"', self.resolve(snippet, tmpl))
+
+    def test_replace_param_values(self):
+        tmpl = parser.Template(parameter_template)
+        env = environment.Environment({'foo': 'wibble'})
+        stack = parser.Stack(self.ctx, 'test_stack', tmpl, env)
+        snippet = {"Fn::Replace": [
+            {'$var1': {'Ref': 'foo'}, '%var2%': {'Ref': 'blarg'}},
+            '$var1 is %var2%'
+        ]}
+        self.assertEqual('wibble is quux', self.resolve(snippet, tmpl, stack))
 
     def test_member_list2map_good(self):
         tmpl = parser.Template(mapping_template)
@@ -636,7 +615,7 @@ class ResolveDataTest(HeatTestCase):
                                   environment.Environment({}))
 
     def resolve(self, snippet):
-        return TemplateTest.resolve(snippet, self.stack.t, self.stack)
+        return function.resolve(self.stack.t.parse(self.stack, snippet))
 
     def test_join_split(self):
         # join
@@ -649,7 +628,6 @@ class ResolveDataTest(HeatTestCase):
         self.assertEqual(['one', 'two', 'three'],
                          self.resolve(snippet))
 
-    @testtools.skip('Currently borked by reduce_joins')
     def test_split_join_split_join(self):
         # each snippet in this test encapsulates
         # the snippet from the previous step, leading
@@ -726,24 +704,6 @@ class ResolveDataTest(HeatTestCase):
                               '.member.1.Value=56']]}]}
         self.assertEqual('cpu',
                          self.resolve(snippet))
-
-    def test_join_reduce(self):
-        join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
-                "bink", "bonk"]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'}, "bink bonk"]]},
-            self.stack.resolve_static_data(join))
-
-        join = {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
-                                   "bink"]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'}, "bink"]]},
-            self.stack.resolve_static_data(join))
-
-        join = {"Fn::Join": [" ", [{'Ref': 'baz'}]]}
-        self.assertEqual(
-            {"Fn::Join": [" ", [{'Ref': 'baz'}]]},
-            self.stack.resolve_static_data(join))
 
 
 class StackTest(HeatTestCase):

@@ -15,6 +15,7 @@ from heat.common import template_format
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import environment
+from heat.engine import function
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import hot
@@ -52,15 +53,7 @@ class HOTemplateTest(HeatTestCase):
 
     @staticmethod
     def resolve(snippet, template, stack=None):
-        if stack is not None:
-            params = stack.parameters
-            rsrcs = stack.resources
-        else:
-            params = {}
-            rsrcs = {}
-
-        static = parser.resolve_static_data(template, stack, params, snippet)
-        return parser.resolve_runtime_data(template, rsrcs, static)
+        return function.resolve(template.parse(stack, snippet))
 
     def test_defaults(self):
         """Test default content behavior of HOT template."""
@@ -299,7 +292,7 @@ class StackTest(test_parser.StackTest):
     """Test stack function when stack was created from HOT template."""
 
     def resolve(self, snippet):
-        return HOTemplateTest.resolve(snippet, self.stack.t, self.stack)
+        return function.resolve(self.stack.t.parse(self.stack, snippet))
 
     @utils.stack_delete_after
     def test_get_attr_multiple_rsrc_status(self):
@@ -357,7 +350,8 @@ class StackTest(test_parser.StackTest):
                          self.stack.state)
 
         snippet = {'Value': {'get_attr': ['resource2', 'who_cares']}}
-        self.assertEqual(snippet, self.resolve(snippet))
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          self.resolve, snippet)
 
     @utils.stack_delete_after
     def test_get_resource(self):
@@ -521,8 +515,8 @@ class StackAttributesTest(HeatTestCase):
                 (rsrc.UPDATE, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
 
-            resolved = hot.HOTemplate.resolve_attributes(self.snippet,
-                                                         self.stack)
+            resolved = function.resolve(self.stack.t.parse(self.stack,
+                                                           self.snippet))
             self.assertEqual(self.expected, resolved)
 
 
@@ -611,11 +605,7 @@ class StackParametersTest(HeatTestCase):
         env = environment.Environment(self.params)
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env)
         self.assertEqual(self.expected,
-                         parser.resolve_runtime_data(
-                             tmpl, stack.resources,
-                             parser.resolve_static_data(tmpl, stack,
-                                                        stack.parameters,
-                                                        self.snippet)))
+                         function.resolve(tmpl.parse(stack, self.snippet)))
 
 
 class HOTParamValidatorTest(HeatTestCase):
