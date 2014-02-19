@@ -118,6 +118,19 @@ class Template(collections.Mapping):
                                      context=context)
 
     def functions(self):
+        version_key, version = self.version()
+
+        if version_key == self.VERSION:
+            return {
+                'Fn::FindInMap': FindInMap,
+                'Fn::GetAZs': GetAZs,
+                'Ref': Ref,
+                'Fn::GetAtt': GetAtt,
+                'Fn::Select': Select,
+                'Fn::Join': Join,
+                'Fn::Base64': Base64,
+            }
+
         return {
             'Fn::FindInMap': FindInMap,
             'Fn::GetAZs': GetAZs,
