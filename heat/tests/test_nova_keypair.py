@@ -14,12 +14,15 @@
 
 import collections
 import copy
+import mox
 
 from novaclient import exceptions as nova_exceptions
 
 from heat.engine import clients
+from heat.common import exception
 from heat.engine import scheduler
 from heat.engine.resources import nova_keypair
+from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
 from heat.tests import utils
@@ -148,6 +151,24 @@ class NovaKeyPairTest(HeatTestCase):
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()
+
+    def test_validate_okay(self):
+        test_res = self._get_test_resource(self.kp_template)
+        self.m.StubOutWithMock(nova_utils, 'get_keypair')
+        nova_utils.get_keypair(mox.IgnoreArg(), 'key_pair').AndRaise(
+            exception.UserKeyPairMissing(key_name='foo'))
+        self.m.ReplayAll()
+        self.assertIsNone(test_res.validate())
+
+    def test_validate_failure_key_exists(self):
+        test_res = self._get_test_resource(self.kp_template)
+        self.m.StubOutWithMock(nova_utils, 'get_keypair')
+        nova_utils.get_keypair(mox.IgnoreArg(), 'key_pair').AndReturn('foo')
+        self.m.ReplayAll()
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                test_res.validate)
+        self.assertIn('Cannot create KeyPair resource with a name of '
+                      '"key_pair"', str(exc))
 
 
 class KeypairConstraintTest(HeatTestCase):
