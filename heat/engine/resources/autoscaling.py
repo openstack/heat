@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import functools
 import json
 import math
 
 from heat.engine import environment
+from heat.engine import function
 from heat.engine import resource
 from heat.engine import signal_responder
 
@@ -280,7 +280,7 @@ class InstanceGroup(stack_resource.StackResource):
     def _get_instance_definition(self):
         conf_name = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_name)
-        instance_definition = copy.deepcopy(conf.t)
+        instance_definition = function.resolve(conf.t)
         instance_definition['Type'] = SCALED_RESOURCE_TYPE
         instance_definition['Properties']['Tags'] = self._tags()
         if self.properties.get('VPCZoneIdentifier'):
