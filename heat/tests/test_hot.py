@@ -65,10 +65,14 @@ class HOTemplateTest(HeatTestCase):
         self.assertNotIn('foobar', tmpl)
 
         # test defaults for valid sections
-        self.assertEqual('2013-05-23', tmpl[tmpl.VERSION])
         self.assertEqual('No description', tmpl[tmpl.DESCRIPTION])
         self.assertEqual({}, tmpl[tmpl.RESOURCES])
         self.assertEqual({}, tmpl[tmpl.OUTPUTS])
+
+    def test_version(self):
+        tmpl = parser.Template(hot_tpl_empty)
+        self.assertEqual(('heat_template_version', '2013-05-23'),
+                         tmpl.version())
 
     def test_translate_resources(self):
         """Test translation of resources into internal engine format."""

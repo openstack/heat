@@ -48,7 +48,7 @@ class HOTemplate(template.Template):
                ('heat_template_version', 'description', 'parameter_groups',
                 'parameters', 'resources', 'outputs', '__undefined__')
 
-    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS])
+    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 
     _CFN_TO_HOT_SECTIONS = {template.Template.VERSION: VERSION,
                             template.Template.DESCRIPTION: DESCRIPTION,
@@ -68,9 +68,6 @@ class HOTemplate(template.Template):
         if section in self.SECTIONS_NO_DIRECT_ACCESS:
             raise KeyError(
                 _('Section %s can not be accessed directly.') % section)
-
-        if section == self.VERSION:
-            return self.t[section]
 
         if section == self.UNDEFINED:
             return {}
@@ -137,6 +134,14 @@ class HOTemplate(template.Template):
             cfn_outputs[output_name] = cfn_output
 
         return cfn_outputs
+
+    def version(self):
+        if self.VERSION in self.t:
+            return self.VERSION, self.t[self.VERSION]
+
+        # All user templates are forced to include a version string. This is
+        # just a convenient default for unit tests.
+        return self.VERSION, '2013-05-23'
 
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
