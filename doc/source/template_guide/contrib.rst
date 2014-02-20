@@ -18,7 +18,7 @@ Rackspace Cloud Resource Types
 
 The resources in this module are for using Heat with the Rackspace
 Cloud. These resources either allow using Rackspace services that don't
-have equivalent services in Openstack or account for differences between
+have equivalent services in OpenStack or account for differences between
 a generic Openstack deployment and the Rackspace Cloud.
 
 Rackspace resources depend on the dev branch of
