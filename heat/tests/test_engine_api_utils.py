@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import mock
 import uuid
 
@@ -55,9 +56,16 @@ class EngineApiTest(HeatTestCase):
         self.assertNotIn('timeout_mins', args)
 
     def test_adopt_stack_data_extract_present(self):
-        p = {'adopt_stack_data': {'Resources': {}}}
+        p = {'adopt_stack_data': json.dumps({'Resources': {}})}
         args = api.extract_args(p)
         self.assertTrue(args.get('adopt_stack_data'))
+
+    def test_invalid_adopt_stack_data(self):
+        p = {'adopt_stack_data': json.dumps("foo")}
+        error = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertEqual(
+            'Unexpected adopt data "foo". Adopt data must be a dict.',
+            str(error))
 
     def test_adopt_stack_data_extract_not_present(self):
         args = api.extract_args({})
