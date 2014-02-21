@@ -15,7 +15,7 @@
 
 from heat.common import exception
 from heat.engine import clients
-from heat.engine.resource import SupportStatus
+from heat.engine import support
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import properties
@@ -208,8 +208,8 @@ class RouterInterface(neutron.NeutronResource):
 
 class RouterGateway(neutron.NeutronResource):
 
-    support_status = SupportStatus(
-        SupportStatus.DEPRECATED,
+    support_status = support.SupportStatus(
+        support.DEPRECATED,
         _('RouterGateway resource is deprecated and should not be used. '
           'Instead use the `external_gateway_info` property in the router '
           'resource to set up the gateway.')

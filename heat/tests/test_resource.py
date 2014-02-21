@@ -1298,26 +1298,3 @@ class ReducePhysicalResourceNameTest(HeatTestCase):
             else:
                 # check that nothing has changed
                 self.assertEqual(self.original, reduced)
-
-
-class SupportStatusTest(HeatTestCase):
-    def test_valid_status(self):
-        status = resource.SupportStatus(
-            status='DEPRECATED',
-            message='test_message',
-            version='test_version'
-        )
-        self.assertEqual('DEPRECATED', status.status)
-        self.assertEqual('test_message', status.message)
-        self.assertEqual('test_version', status.version)
-
-    def test_invalid_status(self):
-        status = resource.SupportStatus(
-            status='RANDOM',
-            message='test_message',
-            version='test_version'
-        )
-        self.assertEqual('UNKNOWN', status.status)
-        self.assertEqual('Specified status is invalid, defaulting to UNKNOWN',
-                         status.message)
-        self.assertIsNone(status.version)
