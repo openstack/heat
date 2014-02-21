@@ -24,14 +24,24 @@ implementation and the parameters passed to Heat.
 ------
 Format
 ------
-It is a yaml text file with two main sections "resource_registry" and "parameters".
+
+It is a yaml text file with two main sections "resource_registry" and
+"parameters".
 
 ------------------
 Command line usage
 ------------------
 ::
 
-  heat stack-create -e my_env.yaml -P "some_parm=bla" -f my_tmpl.yaml
+   heat stack-create my_stack -e my_env.yaml -P "some_parm=bla" -f my_tmpl.yaml
+
+If you do not like the option "-e my_env.yaml", you can put file
+my_env.yaml in "/etc/heat/environment.d/" and restart heat engine.
+Then, you can use the heat client as in the example below:
+
+::
+
+   heat stack-create my_stack -P "some_parm=bla" -f my_tmpl.yaml
 
 --------------
 Usage examples
@@ -47,21 +57,26 @@ Usage examples
     ImageId: F18-x86_64-cfntools
 
 
-2) Deal with the renaming of Quantum to Neutron
+2) Deal with the mapping of Quantum to Neutron
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
   resource_registry:
     "OS::Quantum*": "OS::Neutron*"
 
+So all existing resources which can be matched with "OS::Neutron*"
+will be mapped to "OS::Quantum*" accordingly.
 
-3) Override a resource type with a custom TemplateResource
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3) Override a resource type with a custom template resource
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
   resource_registry:
     "AWS::EC2::Instance": file:///home/mine/my_instance_with_better_defaults.yaml
 
+Please note that the template resource URL here must end with ".yaml"
+or ".template", or it will not be treated as a custom template
+resource.
 
 4) Always map resource type X to Y
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
