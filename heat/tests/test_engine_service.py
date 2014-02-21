@@ -1403,6 +1403,29 @@ class StackServiceTest(HeatTestCase):
 
         utils.setup_dummy_db()
 
+    @mock.patch.object(service.db_api, 'stack_get_all')
+    @mock.patch.object(service.service.Service, 'start')
+    def test_start_gets_all_stacks(self, mock_super_start, mock_stack_get_all):
+        mock_stack_get_all.return_value = []
+
+        self.eng.start()
+        mock_stack_get_all.assert_called_once_with(mock.ANY, tenant_safe=False)
+
+    @mock.patch.object(service.db_api, 'stack_get_all')
+    @mock.patch.object(service.service.Service, 'start')
+    def test_start_watches_all_stacks(self, mock_super_start, mock_get_all):
+        s1 = mock.Mock(id=1)
+        s2 = mock.Mock(id=2)
+        mock_get_all.return_value = [s1, s2]
+        mock_watch = mock.Mock()
+        self.eng._start_watch_task = mock_watch
+
+        self.eng.start()
+        calls = mock_watch.call_args_list
+        self.assertEqual(2, mock_watch.call_count)
+        self.assertIn(mock.call(1, mock.ANY), calls)
+        self.assertIn(mock.call(2, mock.ANY), calls)
+
     @stack_context('service_identify_test_stack', False)
     def test_stack_identify(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
