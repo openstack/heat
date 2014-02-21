@@ -393,23 +393,23 @@ Mappings:
         class DummyClass(object):
             pass
         parent_resource = DummyClass()
-        parent_resource.metadata = '{"foo": "bar"}'
+        parent_resource.metadata = {"foo": "bar"}
         parent_resource.t = {'DeletionPolicy': 'Retain',
-                             'UpdatePolicy': '{"foo": "bar"}'}
+                             'UpdatePolicy': {"blarg": "wibble"}}
         parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
                                              parser.Template({}))
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
         self.assertEqual(
-            '{"foo": "bar"}',
+            {"foo": "bar"},
             parser.Template.resolve_resource_facade(metadata_snippet, stack))
         self.assertEqual(
             'Retain',
             parser.Template.resolve_resource_facade(deletion_policy_snippet,
                                                     stack))
         self.assertEqual(
-            '{"foo": "bar"}',
+            {"blarg": "wibble"},
             parser.Template.resolve_resource_facade(update_policy_snippet,
                                                     stack))
 
@@ -428,7 +428,7 @@ Mappings:
         class DummyClass(object):
             pass
         parent_resource = DummyClass()
-        parent_resource.metadata = '{"foo": "bar"}'
+        parent_resource.metadata = {"foo": "bar"}
         parent_resource.t = {}
         parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
                                              parser.Template({}))
