@@ -13,17 +13,13 @@
 #    under the License.
 try:
     from pyrax.exceptions import NotFound
+    PYRAX_INSTALLED = True
 except ImportError:
     #Setup fake exception for testing without pyrax
     class NotFound(Exception):
         pass
 
-    def resource_mapping():
-        return {}
-else:
-
-    def resource_mapping():
-        return {'Rackspace::Cloud::LoadBalancer': CloudLoadBalancer}
+    PYRAX_INSTALLED = False
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -612,3 +608,13 @@ class CloudLoadBalancer(resource.Resource):
         function = attribute_function[key]
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, function))
         return unicode(function)
+
+
+def resource_mapping():
+    return {'Rackspace::Cloud::LoadBalancer': CloudLoadBalancer}
+
+
+def available_resource_mapping():
+    if PYRAX_INSTALLED:
+        return resource_mapping()
+    return {}

@@ -12,17 +12,13 @@
 
 try:
     from pyrax.exceptions import NotFound
+    PYRAX_INSTALLED = True
 except ImportError:
     #Setup fake exception for testing without pyrax
     class NotFound(Exception):
         pass
 
-    def resource_mapping():
-        return {}
-else:
-
-    def resource_mapping():
-        return {'Rackspace::Cloud::DNS': CloudDns}
+    PYRAX_INSTALLED = False
 
 from heat.common import exception
 from heat.engine import constraints
@@ -203,3 +199,13 @@ class CloudDns(resource.Resource):
             except NotFound:
                 pass
         self.resource_id_set(None)
+
+
+def resource_mapping():
+    return {'Rackspace::Cloud::DNS': CloudDns}
+
+
+def available_resource_mapping():
+    if PYRAX_INSTALLED:
+        return resource_mapping()
+    return {}

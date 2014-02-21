@@ -27,17 +27,15 @@ from heat.common import exception
 try:
     from pyrax.exceptions import Forbidden
     from pyrax.exceptions import NotFound
+    PYRAX_INSTALLED = True
 except ImportError:
     class Forbidden(Exception):
         """Dummy pyrax exception - only used for testing."""
 
     class NotFound(Exception):
         """Dummy pyrax exception - only used for testing."""
-    def resource_mapping():
-        return {}
-else:
-    def resource_mapping():
-        return unprotected_resources()
+
+    PYRAX_INSTALLED = False
 
 
 class Group(resource.Resource):
@@ -565,9 +563,15 @@ class WebHook(resource.Resource):
             pass
 
 
-def unprotected_resources():
+def resource_mapping():
     return {
         'Rackspace::AutoScale::Group': Group,
         'Rackspace::AutoScale::ScalingPolicy': ScalingPolicy,
         'Rackspace::AutoScale::WebHook': WebHook
     }
+
+
+def available_resource_mapping():
+    if PYRAX_INSTALLED:
+        return resource_mapping()
+    return {}
