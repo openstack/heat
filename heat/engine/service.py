@@ -290,7 +290,7 @@ class EngineService(service.Service):
         if stack_identity is not None:
             stacks = [self._get_stack(cnxt, stack_identity, show_deleted=True)]
         else:
-            stacks = db_api.stack_get_all_by_tenant(cnxt) or []
+            stacks = db_api.stack_get_all(cnxt) or []
 
         def format_stack_detail(s):
             stack = parser.Stack.load(cnxt, stack=s)
@@ -330,8 +330,8 @@ class EngineService(service.Service):
                 else:
                     yield api.format_stack(stack)
 
-        stacks = db_api.stack_get_all_by_tenant(cnxt, limit, sort_keys, marker,
-                                                sort_dir, filters) or []
+        stacks = db_api.stack_get_all(cnxt, limit, sort_keys, marker,
+                                      sort_dir, filters) or []
         return list(format_stack_details(stacks))
 
     @request_context

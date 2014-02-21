@@ -321,30 +321,19 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _query_stack_get_all_by_tenant(context):
-    query = _query_stack_get_all(context).\
-        filter_by(tenant=context.tenant_id)
-
-    return query
-
-
-def _query_stack_get_all(context):
+def _query_stack_get_all(context, tenant_safe=True):
     query = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=None)
+
+    if tenant_safe:
+        query = query.filter_by(tenant=context.tenant_id)
 
     return query
 
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
-                  sort_dir=None, filters=None):
-    query = _query_stack_get_all(context)
-    return _filter_and_page_query(context, query, limit, sort_keys,
-                                  marker, sort_dir, filters).all()
-
-
-def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
-                            sort_dir=None, filters=None):
-    query = _query_stack_get_all_by_tenant(context)
+                  sort_dir=None, filters=None, tenant_safe=True):
+    query = _query_stack_get_all(context, tenant_safe)
     return _filter_and_page_query(context, query, limit, sort_keys,
                                   marker, sort_dir, filters).all()
 
@@ -366,7 +355,7 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
 
 
 def stack_count_all_by_tenant(context, filters=None):
-    query = _query_stack_get_all_by_tenant(context)
+    query = _query_stack_get_all(context)
     query = db_filters.exact_filter(query, models.Stack, filters)
     return query.count()
 

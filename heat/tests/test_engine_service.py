@@ -1625,18 +1625,17 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @mock.patch.object(db_api, 'stack_get_all_by_tenant')
-    def test_stack_list_passes_filtering_info(self, mock_stack_get_all_by_t):
-
+    @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_passes_filtering_info(self, mock_stack_get_all):
         filters = {'foo': 'bar'}
         self.eng.list_stacks(self.ctx, filters=filters)
-        mock_stack_get_all_by_t.assert_called_once_with(mock.ANY,
-                                                        mock.ANY,
-                                                        mock.ANY,
-                                                        mock.ANY,
-                                                        mock.ANY,
-                                                        filters
-                                                        )
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   filters
+                                                   )
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):
