@@ -371,7 +371,6 @@ class LoadBalancerTest(HeatTestCase):
 
     def test_validate_ssl_termination(self):
         ssl_termination = {
-            'enabled': True,
             'privatekey': 'ewfawe',
             'intermediateCertificate': 'fwaefawe',
             'secureTrafficOnly': True
@@ -385,6 +384,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
+
         exc = self.assertRaises(StackValidationFailed, rsrc.validate)
         self.assertIn("Property certificate not assigned", str(exc))
 
@@ -449,7 +449,6 @@ class LoadBalancerTest(HeatTestCase):
             'privatekey': 'afwefawe',
             'certificate': 'fawefwea',
             'intermediateCertificate': "intermediate_certificate",
-            'enabled': True,
             'secureTrafficOnly': False
         }
 
@@ -464,7 +463,7 @@ class LoadBalancerTest(HeatTestCase):
             ssl_termination['privatekey'],
             ssl_termination['certificate'],
             intermediateCertificate=ssl_termination['intermediateCertificate'],
-            enabled=ssl_termination['enabled'],
+            enabled=True,
             secureTrafficOnly=ssl_termination['secureTrafficOnly'])
 
         self.m.ReplayAll()
