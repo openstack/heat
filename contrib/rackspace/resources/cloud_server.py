@@ -317,7 +317,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             return False
 
         mc_status = server.metadata['rax_service_level_automation']
-        logger.debug(_("Managed Cloud automation status: ") + mc_status)
+        logger.debug(_("Managed Cloud automation status: %s") % mc_status)
 
         if mc_status == self.MC_STATUS_IN_PROGRESS:
             return False
@@ -330,7 +330,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
         else:
             raise exception.Error(_("Unknown Managed Cloud automation "
-                                    "status: ") + mc_status)
+                                    "status: %s") % mc_status)
 
     def _check_rack_connect_complete(self, server):
         if 'rackconnect_automation_status' not in server.metadata:
@@ -339,7 +339,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             return False
 
         rc_status = server.metadata['rackconnect_automation_status']
-        logger.debug(_("RackConnect automation status: ") + rc_status)
+        logger.debug(_("RackConnect automation status: %s") % rc_status)
 
         if rc_status == self.RC_STATUS_DEPLOYING:
             return False
@@ -356,7 +356,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             reason = server.metadata.get('rackconnect_unprocessable_reason',
                                          None)
             if reason is not None:
-                logger.warning(_("RackConnect unprocessable reason: ") +
+                logger.warning(_("RackConnect unprocessable reason: %s") %
                                reason)
             return True
 
@@ -364,8 +364,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             raise exception.Error(_("RackConnect automation FAILED"))
 
         else:
-            raise exception.Error(_("Unknown RackConnect automation status: ")
-                                  + rc_status)
+            msg = _("Unknown RackConnect automation status: %s") % rc_status
+            raise exception.Error(msg)
 
     def _run_userdata(self):
         # Create heat-script and userdata files on server

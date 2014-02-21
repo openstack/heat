@@ -139,12 +139,13 @@ class WaitConditionFailure(Exception):
 class WaitConditionTimeout(Exception):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_SUCCESS)
-        message = (_('%(len)d of %(count)d received') % {
-                   'len': len(reasons), 'count':
-                   wait_condition.properties[wait_condition.COUNT]})
+        vals = {'len': len(reasons),
+                'count': wait_condition.properties[wait_condition.COUNT]}
         if reasons:
-            message += ' - %s' % reasons
-
+            vals['reasons'] = reasons
+            message = (_('%(len)d of %(count)d received - %(reasons)s') % vals)
+        else:
+            message = (_('%(len)d of %(count)d received') % vals)
         super(WaitConditionTimeout, self).__init__(message)
 
 

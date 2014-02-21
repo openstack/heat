@@ -324,7 +324,8 @@ class Properties(collections.Mapping):
 
     def __getitem__(self, key):
         if key not in self:
-            raise KeyError(self.error_prefix + _('Invalid Property %s') % key)
+            raise KeyError(_('%(prefix)sInvalid Property %(key)s') %
+                           {'prefix': self.error_prefix, 'key': key})
 
         prop = self.props[key]
 
@@ -335,12 +336,12 @@ class Properties(collections.Mapping):
             # the resolver function could raise any number of exceptions,
             # so handle this generically
             except Exception as e:
-                raise ValueError(self.error_prefix + '%s %s' % (key, str(e)))
+                raise ValueError('%s%s %s' % (self.error_prefix, key, str(e)))
         elif prop.has_default():
             return prop.default()
         elif prop.required():
-            raise ValueError(self.error_prefix +
-                             _('Property %s not assigned') % key)
+            raise ValueError(_('%(prefix)sProperty %(key)s not assigned') %
+                             {'prefix': self.error_prefix, 'key': key})
 
     def __len__(self):
         return len(self.props)
