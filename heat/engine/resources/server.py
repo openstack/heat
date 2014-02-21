@@ -685,6 +685,22 @@ class Server(resource.Resource):
         return self._check_active(server)
 
 
+class FlavorConstraint(object):
+
+    def validate(self, value, context):
+        nova_client = clients.Clients(context).nova()
+        try:
+            nova_utils.get_flavor_id(nova_client, value)
+        except exception.FlavorMissing:
+            return False
+        else:
+            return True
+
+
+def constraint_mapping():
+    return {'nova.flavor': FlavorConstraint}
+
+
 def resource_mapping():
     return {
         'OS::Nova::Server': Server,

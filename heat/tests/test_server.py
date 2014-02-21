@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 import uuid
 import mox
@@ -1485,4 +1486,26 @@ class ServersTest(HeatTestCase):
         self.assertEqual("The contents of personality file \"/fake/path1\" "
                          "is larger than the maximum allowed personality "
                          "file size (10240 bytes).", str(exc))
+        self.m.VerifyAll()
+
+
+class FlavorConstraintTest(HeatTestCase):
+
+    def test_validate(self):
+        client = fakes.FakeClient()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(client)
+        client.flavors = self.m.CreateMockAnything()
+
+        flavor = collections.namedtuple("Flavor", ["id", "name"])
+        flavor.id = "1234"
+        flavor.name = "foo"
+        client.flavors.list().MultipleTimes().AndReturn([flavor])
+        self.m.ReplayAll()
+
+        constraint = servers.FlavorConstraint()
+        self.assertFalse(constraint.validate("bar", None))
+        self.assertTrue(constraint.validate("foo", None))
+        self.assertTrue(constraint.validate("1234", None))
+
         self.m.VerifyAll()
