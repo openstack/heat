@@ -127,7 +127,7 @@ class SwiftContainer(resource.Resource):
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Delete container failed: %s") % str(ex))
+                logger.warn(_("Delete container failed: %s") % ex)
 
     def FnGetRefId(self):
         return unicode(self.resource_id)
@@ -146,7 +146,7 @@ class SwiftContainer(resource.Resource):
             try:
                 headers = self.swift().head_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Head container failed: %s") % str(ex))
+                logger.warn(_("Head container failed: %s") % ex)
                 return None
             else:
                 if key == 'ObjectCount':

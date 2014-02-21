@@ -238,7 +238,7 @@ class AccessKey(resource.Resource):
                             _('could not get secret for %(username)s '
                               'Error:%(msg)s') % {
                                   'username': self.properties[self.USER_NAME],
-                                  'msg': str(ex)})
+                                  'msg': ex})
 
         return self._secret or '000-000-000'
 

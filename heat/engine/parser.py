@@ -366,7 +366,7 @@ class Stack(collections.Mapping):
                 try:
                     function.validate(snippet)
                 except Exception as ex:
-                    reason = 'Output validation error: %s' % str(ex)
+                    reason = 'Output validation error: %s' % six.text_type(ex)
                     raise StackValidationFailed(message=reason)
 
     def requires_deferred_auth(self):
@@ -473,7 +473,7 @@ class Stack(collections.Mapping):
             yield action_task()
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action, str(ex))
+            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
@@ -590,7 +590,7 @@ class Stack(collections.Mapping):
             stack_status = self.FAILED
             reason = 'Timed out'
         except exception.ResourceFailure as e:
-            reason = str(e)
+            reason = six.text_type(e)
 
             stack_status = self.FAILED
             if action == self.UPDATE:
@@ -650,7 +650,7 @@ class Stack(collections.Mapping):
             scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action, str(ex))
+            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
@@ -668,7 +668,7 @@ class Stack(collections.Mapping):
                     except Exception as ex:
                         logger.exception(ex)
                         stack_status = self.FAILED
-                        reason = "Error deleting trust: %s" % str(ex)
+                        reason = "Error deleting trust: %s" % six.text_type(ex)
 
                 # Delete the stored credentials
                 db_api.user_creds_delete(self.context, self.user_creds_id)
@@ -683,7 +683,7 @@ class Stack(collections.Mapping):
                 except Exception as ex:
                     logger.exception(ex)
                     stack_status = self.FAILED
-                    reason = "Error deleting project: %s" % str(ex)
+                    reason = "Error deleting project: %s" % six.text_type(ex)
 
         self.state_set(action, stack_status, reason)
 
@@ -753,7 +753,7 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                logger.error(_('delete: %s') % str(ex))
+                logger.error(_('delete: %s') % ex)
 
         for res in deps:
             if not failed:

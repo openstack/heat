@@ -24,6 +24,7 @@ import datetime
 import json
 
 from lxml import etree
+import six
 
 from heat.openstack.common import log as logging
 
@@ -73,7 +74,7 @@ class XMLResponseSerializer(object):
                 else:
                     self.object_to_element(value, subelement)
         else:
-            element.text = str(obj)
+            element.text = six.text_type(obj)
 
     def to_xml(self, data):
         # Assumption : root node is dict with single key

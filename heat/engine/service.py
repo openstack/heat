@@ -14,6 +14,7 @@
 import functools
 import json
 
+import six
 from oslo.config import cfg
 import webob
 
@@ -210,8 +211,8 @@ class StackWatch(object):
         try:
             wrs = db_api.watch_rule_get_all_by_stack(stack_context, sid)
         except Exception as ex:
-            logger.warn(_('periodic_task db error (%(msg)s) %(ex)s') % {
-                        'msg': 'watch rule removed?', 'ex': str(ex)})
+            logger.warn(_('periodic_task db error watch rule removed? %(ex)s')
+                        % ex)
             return
 
         def run_alarm_action(actions, details):
@@ -599,7 +600,7 @@ class EngineService(service.Service):
         try:
             tmpl_resources = tmpl['Resources']
         except KeyError as ex:
-            return {'Error': str(ex)}
+            return {'Error': six.text_type(ex)}
 
         # validate overall template (top-level structure)
         tmpl.validate()
@@ -637,7 +638,7 @@ class EngineService(service.Service):
                 ResourceClass.validate_deletion_policy(res)
                 props.validate(with_value=False)
             except Exception as ex:
-                return {'Error': str(ex)}
+                return {'Error': six.text_type(ex)}
 
         tmpl_params = tmpl.parameters(None, {}, validate_value=False)
         is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
@@ -1042,7 +1043,7 @@ class EngineService(service.Service):
             try:
                 wrn = [w.name for w in db_api.watch_rule_get_all(cnxt)]
             except Exception as ex:
-                logger.warn(_('show_watch (all) db error %s') % str(ex))
+                logger.warn(_('show_watch (all) db error %s') % ex)
                 return
 
         wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
@@ -1071,7 +1072,7 @@ class EngineService(service.Service):
         try:
             wds = db_api.watch_data_get_all(cnxt)
         except Exception as ex:
-            logger.warn(_('show_metric (all) db error %s') % str(ex))
+            logger.warn(_('show_metric (all) db error %s') % ex)
             return
 
         result = [api.format_watch_data(w) for w in wds]

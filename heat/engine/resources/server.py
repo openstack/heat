@@ -637,7 +637,7 @@ class Server(stack_user.StackUser):
             server = self.nova().servers.get(self.resource_id)
         except clients.novaclient.exceptions.NotFound as ex:
             logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
-                        'server': self.resource_id, 'ex': str(ex)})
+                        'server': self.resource_id, 'ex': ex})
             return ''
         if name == 'addresses':
             return self._add_port_for_address(server)

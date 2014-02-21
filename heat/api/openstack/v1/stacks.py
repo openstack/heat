@@ -97,7 +97,7 @@ class InstantiationData(object):
             try:
                 template_data = urlfetch.get(url)
             except IOError as ex:
-                err_reason = _('Could not retrieve template: %s') % str(ex)
+                err_reason = _('Could not retrieve template: %s') % ex
                 raise exc.HTTPBadRequest(err_reason)
         else:
             raise exc.HTTPBadRequest(_("No template specified"))
@@ -181,7 +181,7 @@ class StackController(object):
                                                      filters=filter_params,
                                                      tenant_safe=tenant_safe)
             except AttributeError as exc:
-                logger.warning("Old Engine Version: %s" % str(exc))
+                logger.warning(_("Old Engine Version: %s") % exc)
 
         return stacks_view.collection(req, stacks=stacks, count=count,
                                       tenant_safe=tenant_safe)

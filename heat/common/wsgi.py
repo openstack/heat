@@ -37,6 +37,7 @@ from oslo.config import cfg
 from paste import deploy
 import routes
 import routes.middleware
+import six
 import webob.dec
 import webob.exc
 
@@ -556,7 +557,7 @@ class JSONRequestDeserializer(object):
                 raise exception.RequestLimitExceeded(message=msg)
             return json.loads(datastring)
         except ValueError as ex:
-            raise webob.exc.HTTPBadRequest(str(ex))
+            raise webob.exc.HTTPBadRequest(six.text_type(ex))
 
     def default(self, request):
         if self.has_body(request):
@@ -616,7 +617,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            logging.error(_('Exception handling resource: %s') % str(err))
+            logging.error(_('Exception handling resource: %s') % err)
             msg = _('The server could not comply with the request since\r\n'
                     'it is either malformed or otherwise incorrect.\r\n')
             err = webob.exc.HTTPBadRequest(msg)
@@ -647,7 +648,6 @@ class Resource(object):
         except Exception as err:
             log_exception(err, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
-
         # Here we support either passing in a serializer or detecting it
         # based on the content type.
         try:
@@ -719,7 +719,7 @@ def log_exception(err, exc_info):
 
 def translate_exception(exc, locale):
     """Translates all translatable elements of the given exception."""
-    exc.message = gettextutils.translate(str(exc), locale)
+    exc.message = gettextutils.translate(six.text_type(exc), locale)
     if isinstance(exc, webob.exc.HTTPError):
         # If the explanation is not a Message, that means that the
         # explanation is the default, generic and not translatable explanation
@@ -728,7 +728,7 @@ def translate_exception(exc, locale):
         # message, since message is what gets passed in at construction time
         # in the API
         if not isinstance(exc.explanation, gettextutils.Message):
-            exc.explanation = str(exc)
+            exc.explanation = six.text_type(exc)
             exc.detail = ''
         else:
             exc.explanation = \

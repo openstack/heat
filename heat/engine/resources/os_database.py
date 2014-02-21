@@ -226,7 +226,7 @@ class OSDBInstance(resource.Resource):
                     "response during instance.get(): %(exception)s")
             logger.warning(msg % {'name': self.stack.name,
                                   'id': self.stack.id,
-                                  'exception': str(exc)})
+                                  'exception': exc})
 
     def check_create_complete(self, instance):
         '''

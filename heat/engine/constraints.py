@@ -15,6 +15,8 @@ import collections
 import numbers
 import re
 
+import six
+
 from heat.engine import resources
 
 from heat.common import exception
@@ -149,7 +151,7 @@ class Schema(collections.Mapping):
             for constraint in self.constraints:
                 constraint.validate(value, context)
         except ValueError as ex:
-            raise exception.StackValidationFailed(message=str(ex))
+            raise exception.StackValidationFailed(message=six.text_type(ex))
 
     def __getitem__(self, key):
         if key == self.TYPE:

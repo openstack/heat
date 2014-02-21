@@ -15,6 +15,8 @@ import collections
 import itertools
 import json
 
+import six
+
 from heat.common import exception
 from heat.engine import constraints as constr
 
@@ -75,7 +77,7 @@ class Schema(constr.Schema):
                 except (KeyError, AttributeError) as err:
                     raise constr.InvalidSchemaError(_('Default must be a '
                                                       'comma-delimited list '
-                                                      'string: %s') % str(err))
+                                                      'string: %s') % err)
             try:
                 self.validate_constraints(default_value)
             except (ValueError, TypeError,
@@ -298,7 +300,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
                 return value.split(',')
         except (KeyError, AttributeError) as err:
             message = _('Value must be a comma-delimited list string: %s')
-            raise ValueError(message % str(err))
+            raise ValueError(message % six.text_type(err))
         return value
 
     def value(self):
@@ -333,7 +335,7 @@ class JsonParam(Parameter, collections.Mapping):
             if val:
                 return json.loads(val)
         except (ValueError, TypeError) as err:
-            message = _('Value must be valid JSON: %s') % str(err)
+            message = _('Value must be valid JSON: %s') % err
             raise ValueError(message)
         return value
 

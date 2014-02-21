@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common import identifier
 from heat.db import api as db_api
@@ -42,7 +44,7 @@ class Event(object):
         try:
             self.resource_properties = dict(resource_properties)
         except ValueError as ex:
-            self.resource_properties = {'Error': str(ex)}
+            self.resource_properties = {'Error': six.text_type(ex)}
         self.uuid = uuid
         self.timestamp = timestamp
         self.id = id

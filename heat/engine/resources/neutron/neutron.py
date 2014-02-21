@@ -120,8 +120,7 @@ class NeutronResource(resource.Resource):
         try:
             attributes = self._show_resource()
         except NeutronClientException as ex:
-            logger.warn(_("failed to fetch resource attributes: %s") %
-                        str(ex))
+            logger.warn(_("failed to fetch resource attributes: %s") % ex)
             return None
         return self.handle_get_attributes(self.name, name, attributes)
 

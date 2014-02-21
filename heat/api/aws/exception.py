@@ -16,6 +16,7 @@
 
 """Heat API exception subclasses - maps API response errors to AWS Errors"""
 
+import six
 import webob.exc
 
 from heat.common import serializers
@@ -293,13 +294,13 @@ def map_remote_error(ex):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
         if ex_type in inval_param_errors:
-            return HeatInvalidParameterValueError(detail=str(ex))
+            return HeatInvalidParameterValueError(detail=six.text_type(ex))
         elif ex_type in denied_errors:
-            return HeatAccessDeniedError(detail=str(ex))
+            return HeatAccessDeniedError(detail=six.text_type(ex))
         elif ex_type in already_exists_errors:
-            return AlreadyExistsError(detail=str(ex))
+            return AlreadyExistsError(detail=six.text_type(ex))
         elif ex_type in invalid_action_errors:
-            return HeatActionInProgressError(detail=str(ex))
+            return HeatActionInProgressError(detail=six.text_type(ex))
         else:
             # Map everything else to internal server error for now
-            return HeatInternalFailureError(detail=str(ex))
+            return HeatInternalFailureError(detail=six.text_type(ex))
