@@ -16,6 +16,7 @@ import json
 import uuid
 
 import mock
+import six
 
 from heat.common import exception
 import heat.db.api as db_api
@@ -522,7 +523,7 @@ class ResourceTest(HeatTestCase):
         updater = scheduler.TaskRunner(res.update, utmpl)
         ex = self.assertRaises(resource.UpdateReplace, updater)
         self.assertEqual('The Resource test_resource requires replacement.',
-                         str(ex))
+                         six.text_type(ex))
         self.m.VerifyAll()
 
     def test_update_replace_without_resource_name(self):
@@ -544,7 +545,7 @@ class ResourceTest(HeatTestCase):
         updater = scheduler.TaskRunner(res.update, utmpl)
         ex = self.assertRaises(resource.UpdateReplace, updater)
         self.assertEqual('The Resource Unknown requires replacement.',
-                         str(ex))
+                         six.text_type(ex))
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):
