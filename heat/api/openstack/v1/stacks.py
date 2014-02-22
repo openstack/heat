@@ -343,7 +343,7 @@ class StackController(object):
         """
         Returns a list of valid resource types that may be used in a template.
         """
-        support_status = req.params.get('support_status', None)
+        support_status = req.params.get('support_status')
         return {
             'resource_types':
             self.engine.list_resource_types(req.context, support_status)}

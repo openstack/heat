@@ -501,7 +501,7 @@ class StackController(object):
             return self._id_format(result)
 
         con = req.context
-        stack_name = req.params.get('StackName', None)
+        stack_name = req.params.get('StackName')
         try:
             identity = stack_name and self._get_identity(con, stack_name)
             events = self.engine_rpcapi.list_events(con, identity)
