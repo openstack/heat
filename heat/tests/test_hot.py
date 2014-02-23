@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
@@ -412,7 +414,7 @@ class HOTemplateTest(HeatTestCase):
                                       snippet, tmpl, stack)
         self.assertEqual(
             'Argument to "get_file" must be a string',
-            str(notStrErr))
+            six.text_type(notStrErr))
 
     def test_get_file_missing_files(self):
         """Test get_file function with no matching key in files section."""
@@ -429,7 +431,7 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual(
             ('No content found in the "files" section for '
              'get_file path: file:///tmp/foo.yaml'),
-            str(missingErr))
+            six.text_type(missingErr))
 
     def test_get_file_nested_does_not_resolve(self):
         """Test get_file function does not resolve nested calls."""
@@ -465,11 +467,11 @@ class HOTemplateTest(HeatTestCase):
 
         #Hot template test
         keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'parameters')
-        self.assertIn(err_str, str(keyError))
+        self.assertIn(err_str, six.text_type(keyError))
 
         #CFN template test
         keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'Parameters')
-        self.assertIn(err_str, str(keyError))
+        self.assertIn(err_str, six.text_type(keyError))
 
     def test_parameters_section_not_iterable(self):
         """

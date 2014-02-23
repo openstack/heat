@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception as heat_exc
 from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
@@ -80,7 +82,8 @@ class FaultMiddlewareTest(HeatTestCase):
                                                                serialized)
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = str(remote_error).split('\n', 1)
+        expected_message, expected_traceback = six.text_type(remote_error).\
+            split('\n', 1)
         expected = {'code': 404,
                     'error': {'message': expected_message,
                               'traceback': expected_traceback,
@@ -132,7 +135,8 @@ class FaultMiddlewareTest(HeatTestCase):
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = str(remote_error).split('\n', 1)
+        expected_message, expected_traceback = six.text_type(remote_error).\
+            split('\n', 1)
         expected = {'code': 404,
                     'error': {'message': expected_message,
                               'traceback': expected_traceback,
