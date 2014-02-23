@@ -13,6 +13,7 @@
 
 import json
 
+from heat.common import exception
 from heat.common import identifier
 from heat.engine import constraints
 from heat.engine import properties
@@ -126,13 +127,13 @@ class UpdateWaitConditionHandle(WaitConditionHandle):
         raise resource.UpdateReplace(self.name)
 
 
-class WaitConditionFailure(Exception):
+class WaitConditionFailure(exception.Error):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_FAILURE)
         super(WaitConditionFailure, self).__init__(reasons)
 
 
-class WaitConditionTimeout(Exception):
+class WaitConditionTimeout(exception.Error):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_SUCCESS)
         vals = {'len': len(reasons),

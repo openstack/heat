@@ -91,10 +91,11 @@ class ExceptionGroup(Exception):
         self.exceptions = list(exceptions)
 
     def __str__(self):
-        return str(map(str, self.exceptions))
+        return unicode([unicode(ex).encode('utf-8')
+                        for ex in self.exceptions]).encode('utf-8')
 
     def __unicode__(self):
-        return unicode(map(str, self.exceptions))
+        return unicode(map(unicode, self.exceptions))
 
 
 class TaskRunner(object):
