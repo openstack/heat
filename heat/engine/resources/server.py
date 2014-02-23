@@ -24,6 +24,7 @@ from heat.engine.resources import nova_utils
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
@@ -170,7 +171,10 @@ class Server(resource.Resource):
                 schema={
                     NETWORK_UUID: properties.Schema(
                         properties.Schema.STRING,
-                        _('DEPRECATED! ID of network to create a port on.'),
+                        _('ID of network to create a port on.'),
+                        support_status=support.SupportStatus(
+                            support.DEPRECATED,
+                            _('Use property %s.') % NETWORK_ID)
                     ),
                     NETWORK_ID: properties.Schema(
                         properties.Schema.STRING,

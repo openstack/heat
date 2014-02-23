@@ -23,6 +23,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 
@@ -402,7 +403,10 @@ class CinderVolume(Volume):
         ),
         IMAGE_REF: properties.Schema(
             properties.Schema.STRING,
-            _('DEPRECATED: use "image" instead.')
+            _('The ID of the image to create the volume from.'),
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % IMAGE)
         ),
         IMAGE: properties.Schema(
             properties.Schema.STRING,
