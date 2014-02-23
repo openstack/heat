@@ -12,7 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from heat.common import exception
+from heat.engine import function
 from heat.engine import template
 from heat.engine import parameters
 from heat.engine import constraints as constr
@@ -135,182 +138,6 @@ class HOTemplate(template.Template):
 
         return cfn_outputs
 
-    @staticmethod
-    def _resolve_ref(s, params, transform=None):
-        """
-        Resolve constructs of the form { Ref: my_param }
-        """
-        def match_param_ref(key, value):
-            return (key == 'Ref' and
-                    value is not None and
-                    value in params)
-
-        def handle_param_ref(ref):
-            try:
-                return params[ref]
-            except (KeyError, ValueError):
-                raise exception.UserParameterMissing(key=ref)
-
-        return template._resolve(match_param_ref, handle_param_ref, s,
-                                 transform)
-
-    @staticmethod
-    def _resolve_get_param(s, params, transform=None):
-        """
-        Resolve constructs of the form { get_param: my_param }
-        """
-        def match_param_ref(key, value):
-            return (key == 'get_param' and
-                    value is not None)
-
-        def handle_param_ref(args):
-            try:
-                if not isinstance(args, list):
-                    args = [args]
-
-                parameter = params[args[0]]
-                try:
-                    for inner_param in args[1:]:
-                        parameter = parameter[inner_param]
-                    return parameter
-                except (KeyError, IndexError, TypeError):
-                    return ''
-            except (KeyError, ValueError):
-                raise exception.UserParameterMissing(key=args[0])
-
-        return template._resolve(match_param_ref, handle_param_ref, s,
-                                 transform)
-
-    @staticmethod
-    def resolve_param_refs(s, params, transform=None):
-        resolved = HOTemplate._resolve_ref(s, params, transform)
-        return HOTemplate._resolve_get_param(resolved, params, transform)
-
-    @staticmethod
-    def resolve_resource_refs(s, resources, transform=None):
-        '''
-        Resolve constructs of the form { "get_resource" : "resource" }
-        '''
-        def match_resource_ref(key, value):
-            return key in ['get_resource', 'Ref'] and value in resources
-
-        def handle_resource_ref(arg):
-            return resources[arg].FnGetRefId()
-
-        return template._resolve(match_resource_ref, handle_resource_ref, s,
-                                 transform)
-
-    @staticmethod
-    def resolve_attributes(s, resources, transform=None):
-        """
-        Resolve constructs of the form { get_attr: [my_resource, my_attr] }
-        """
-        def match_get_attr(key, value):
-            return (key in ['get_attr'] and
-                    isinstance(value, list) and
-                    len(value) >= 2 and
-                    None not in value and
-                    value[0] in resources)
-
-        def handle_get_attr(args):
-            resource = args[0]
-            try:
-                r = resources[resource]
-                if r.state in (
-                        (r.CREATE, r.IN_PROGRESS),
-                        (r.CREATE, r.COMPLETE),
-                        (r.RESUME, r.IN_PROGRESS),
-                        (r.RESUME, r.COMPLETE),
-                        (r.UPDATE, r.IN_PROGRESS),
-                        (r.UPDATE, r.COMPLETE)):
-                    rsrc_attr = args[1]
-                    attr = r.FnGetAtt(rsrc_attr)
-                    try:
-                        for inner_attr in args[2:]:
-                            attr = attr[inner_attr]
-                        return attr
-                    except (KeyError, IndexError, TypeError):
-                        return ''
-            except (KeyError, IndexError):
-                raise exception.InvalidTemplateAttribute(resource=resource,
-                                                         key=rsrc_attr)
-
-        return template._resolve(match_get_attr, handle_get_attr, s,
-                                 transform)
-
-    @staticmethod
-    def resolve_replace(s, transform=None):
-        """
-        Resolve template string substitution via function str_replace
-
-        Resolves the str_replace function of the form::
-
-          str_replace:
-            template: <string template>
-            params:
-              <param dictionary>
-        """
-        def handle_str_replace(args):
-            if not (isinstance(args, dict) or isinstance(args, list)):
-                raise TypeError(_('Arguments to "str_replace" must be a'
-                                'dictionary or a list'))
-
-            try:
-                if isinstance(args, dict):
-                    text = args.get('template')
-                    params = args.get('params', {})
-                elif isinstance(args, list):
-                    params, text = args
-                if text is None:
-                    raise KeyError()
-            except KeyError:
-                example = ('''str_replace:
-                  template: This is var1 template var2
-                  params:
-                    var1: a
-                    var2: string''')
-                raise KeyError(_('"str_replace" syntax should be %s') %
-                               example)
-            if not hasattr(text, 'replace'):
-                raise TypeError(_('"template" parameter must be a string'))
-            if not isinstance(params, dict):
-                raise TypeError(
-                    _('"params" parameter must be a dictionary'))
-            for key in params.iterkeys():
-                value = params.get(key, '') or ""
-                text = text.replace(key, str(value))
-            return text
-
-        match_str_replace = lambda k, v: k in ['str_replace', 'Fn::Replace']
-        return template._resolve(match_str_replace,
-                                 handle_str_replace, s, transform)
-
-    def resolve_get_file(self, s, transform=None):
-        """
-        Resolve file inclusion via function get_file. For any key provided
-        the contents of the value in the template files dictionary
-        will be substituted.
-
-        Resolves the get_file function of the form::
-
-          get_file:
-            <string key>
-        """
-
-        def handle_get_file(args):
-            if not (isinstance(args, basestring)):
-                raise TypeError(
-                    _('Argument to "get_file" must be a string'))
-            f = self.files.get(args)
-            if f is None:
-                raise ValueError(_('No content found in the "files" section '
-                                   'for get_file path: %s') % args)
-            return f
-
-        match_get_file = lambda k, v: k == 'get_file'
-        return template._resolve(match_get_file,
-                                 handle_get_file, s, transform)
-
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, HOTParamSchema.from_dict(schema))
@@ -320,6 +147,204 @@ class HOTemplate(template.Template):
                    context=None):
         return HOTParameters(stack_identifier, self, user_params=user_params,
                              validate_value=validate_value, context=context)
+
+    def functions(self):
+        return {
+            'Fn::FindInMap': template.FindInMap,
+            'Fn::GetAZs': template.GetAZs,
+            'get_param': GetParam,
+            'get_resource': template.ResourceRef,
+            'Ref': template.Ref,
+            'get_attr': GetAtt,
+            'Fn::Select': template.Select,
+            'Fn::Join': template.Join,
+            'Fn::Split': template.Split,
+            'str_replace': Replace,
+            'Fn::Replace': template.Replace,
+            'Fn::Base64': template.Base64,
+            'Fn::MemberListToMap': template.MemberListToMap,
+            'Fn::ResourceFacade': template.ResourceFacade,
+            'get_file': GetFile,
+        }
+
+
+class GetParam(function.Function):
+    '''
+    A function for resolving parameter references.
+
+    Takes the form::
+
+        get_param: <param_name>
+
+    or::
+
+        get_param:
+          - <param_name>
+          - <path1>
+          - ...
+    '''
+
+    def result(self):
+        args = function.resolve(self.args)
+
+        if not args:
+            raise ValueError(_('Function "%s" must have arguments') %
+                             self.fn_name)
+
+        if isinstance(args, basestring):
+            param_name = args
+            path_components = []
+        elif isinstance(args, collections.Sequence):
+            param_name = args[0]
+            path_components = args[1:]
+        else:
+            raise TypeError(_('Argument to "%s" must be string or list') %
+                            self.fn_name)
+
+        if not isinstance(param_name, basestring):
+            raise TypeError(_('Parameter name in "%s" must be string') %
+                            self.fn_name)
+
+        try:
+            parameter = self.stack.parameters[param_name]
+        except KeyError:
+            raise exception.UserParameterMissing(key=param_name)
+
+        def get_path_component(collection, key):
+            if not isinstance(collection, (collections.Mapping,
+                                           collections.Sequence)):
+                raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
+
+            if not isinstance(key, (basestring, int)):
+                raise TypeError(_('Path components in "%s" '
+                                  'must be strings') % self.fn_name)
+
+            return collection[key]
+
+        try:
+            return reduce(get_path_component, path_components, parameter)
+        except (KeyError, IndexError, TypeError):
+            return ''
+
+
+class GetAtt(template.GetAtt):
+    '''
+    A function for resolving resource attributes.
+
+    Takes the form::
+
+        get_attr:
+          - <resource_name>
+          - <attribute_name>
+          - <path1>
+          - ...
+    '''
+
+    def _parse_args(self):
+        if (not isinstance(self.args, collections.Sequence) or
+                isinstance(self.args, basestring)):
+            raise TypeError(_('Argument to "%s" must be a list') %
+                            self.fn_name)
+
+        if len(self.args) < 2:
+            raise ValueError(_('Arguments to "%s" must be of the form '
+                               '[resource_name, attribute, (path), ...]') %
+                             self.fn_name)
+
+        self._path_components = self.args[2:]
+
+        return tuple(self.args[:2])
+
+    def result(self):
+        attribute = super(GetAtt, self).result()
+        if attribute is None:
+            return ''
+
+        path_components = function.resolve(self._path_components)
+
+        def get_path_component(collection, key):
+            if not isinstance(collection, (collections.Mapping,
+                                           collections.Sequence)):
+                raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
+
+            if not isinstance(key, (basestring, int)):
+                raise TypeError(_('Path components in "%s" '
+                                  'must be strings') % self.fn_name)
+
+            return collection[key]
+
+        try:
+            return reduce(get_path_component, path_components, attribute)
+        except (KeyError, IndexError, TypeError):
+            return ''
+
+
+class Replace(template.Replace):
+    '''
+    A function for performing string substitutions.
+
+    Takes the form::
+
+        str_replace:
+          template: <key_1> <key_2>
+          params:
+            <key_1>: <value_1>
+            <key_2>: <value_2>
+            ...
+
+    And resolves to::
+
+        "<value_1> <value_2>"
+
+    This is implemented using Python's str.replace on each key. The order in
+    which replacements are performed is undefined.
+    '''
+
+    def _parse_args(self):
+        if not isinstance(self.args, collections.Mapping):
+            raise TypeError(_('Arguments to "%s" must be a map') %
+                            self.fn_name)
+
+        try:
+            mapping = self.args['params']
+            string = self.args['template']
+        except (KeyError, TypeError):
+            example = ('''str_replace:
+              template: This is var1 template var2
+              params:
+                var1: a
+                var2: string''')
+            raise KeyError(_('"str_replace" syntax should be %s') %
+                           example)
+        else:
+            return mapping, string
+
+
+class GetFile(function.Function):
+    """
+    A function for including a file inline.
+
+    Takes the form::
+
+        get_file: <file_key>
+
+    And resolves to the content stored in the files dictionary under the given
+    key.
+    """
+
+    def result(self):
+        args = function.resolve(self.args)
+        if not (isinstance(args, basestring)):
+            raise TypeError(_('Argument to "%s" must be a string') %
+                            self.fn_name)
+
+        f = self.stack.t.files.get(args)
+        if f is None:
+            fmt_data = {'fn_name': self.fn_name,
+                        'file_key': args}
+            raise ValueError(_('No content found in the "files" section for '
+                               '%(fn_name)s path: %(file_key)s') % fmt_data)
+        return f
 
 
 class HOTParamSchema(parameters.Schema):

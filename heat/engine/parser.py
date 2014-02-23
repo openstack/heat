@@ -25,6 +25,7 @@ from heat.engine import environment
 from heat.common import exception
 from heat.engine import dependencies
 from heat.common import identifier
+from heat.engine import function
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
@@ -755,62 +756,7 @@ class Stack(collections.Mapping):
         }
 
     def resolve_static_data(self, snippet):
-        return resolve_static_data(self.t, self, self.parameters, snippet)
+        return self.t.parse(self, snippet)
 
     def resolve_runtime_data(self, snippet):
-        return resolve_runtime_data(self.t, self.resources, snippet)
-
-
-def resolve_static_data(template, stack, parameters, snippet):
-    '''
-    Resolve static parameters, map lookups, etc. in a template.
-
-    Example:
-
-    >>> from heat.common import template_format
-    >>> from heat.common import identifier
-    >>> template_str = '# JSON or YAML encoded template'
-    >>> template = Template(template_format.parse(template_str))
-    >>> parameters = template.parameters(
-    ...     identifier.HeatIdentifier('tenant_id', 'stack', 'stack_id'),
-    ...     {}, {'KeyName': 'my_key'})
-    >>> resolve_static_data(template, None, parameters, {'Ref': 'KeyName'})
-    'my_key'
-    '''
-    return transform(snippet,
-                     [functools.partial(template.resolve_param_refs,
-                                        params=parameters),
-                      functools.partial(template.resolve_availability_zones,
-                                        stack=stack),
-                      functools.partial(template.resolve_resource_facade,
-                                        stack=stack),
-                      template.resolve_find_in_map,
-                      template.reduce_joins,
-                      template.resolve_get_file])
-
-
-def resolve_runtime_data(template, resources, snippet):
-    return transform(snippet,
-                     [functools.partial(template.resolve_resource_refs,
-                                        resources=resources),
-                      functools.partial(template.resolve_attributes,
-                                        resources=resources),
-                      template.resolve_split,
-                      template.resolve_member_list_to_map,
-                      template.resolve_select,
-                      template.resolve_joins,
-                      template.resolve_replace,
-                      template.resolve_base64])
-
-
-def transform(data, transformations):
-    '''
-    Apply each of the transformation functions in the supplied list to the data
-    in turn.
-    '''
-    def sub_transform(d):
-        return transform(d, transformations)
-
-    for t in transformations:
-        data = t(data, transform=sub_transform)
-    return data
+        return function.resolve(snippet)
