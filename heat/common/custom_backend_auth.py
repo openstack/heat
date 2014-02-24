@@ -34,6 +34,7 @@ class AuthProtocol(object):
     def __init__(self, app, conf):
         self.conf = conf
         self.app = app
+        self.rpc_client = rpc_client.EngineClient()
 
     def __call__(self, env, start_response):
         """
@@ -44,8 +45,7 @@ class AuthProtocol(object):
         """
         LOG.debug(_('Authenticating user token'))
         context = local.store.context
-        engine = rpc_client.EngineClient()
-        authenticated = engine.authenticated_to_backend(context)
+        authenticated = self.rpc_client.authenticated_to_backend(context)
         if authenticated:
             return self.app(env, start_response)
         else:

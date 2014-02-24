@@ -30,7 +30,7 @@ class SoftwareDeploymentController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
@@ -44,7 +44,7 @@ class SoftwareDeploymentController(object):
             'server_id': 'single',
         }
         params = util.get_allowed_params(req.params, whitelist)
-        sds = self.engine.list_software_deployments(req.context, **params)
+        sds = self.rpc_client.list_software_deployments(req.context, **params)
         return {'software_deployments': sds}
 
     @util.policy_enforce
@@ -52,8 +52,8 @@ class SoftwareDeploymentController(object):
         """
         Gets detailed information for a software deployment
         """
-        sd = self.engine.show_software_deployment(
-            req.context, deployment_id)
+        sd = self.rpc_client.show_software_deployment(req.context,
+                                                      deployment_id)
         return {'software_deployment': sd}
 
     @util.policy_enforce
@@ -65,8 +65,8 @@ class SoftwareDeploymentController(object):
             'config_id', 'server_id', 'input_values', 'signal_id',
             'action', 'status', 'status_reason'))
 
-        sd = self.engine.create_software_deployment(
-            req.context, **create_data)
+        sd = self.rpc_client.create_software_deployment(req.context,
+                                                        **create_data)
         return {'software_deployment': sd}
 
     @util.policy_enforce
@@ -77,8 +77,9 @@ class SoftwareDeploymentController(object):
         update_data = dict((k, body.get(k)) for k in (
             'config_id', 'input_values', 'output_values', 'action',
             'status', 'status_reason'))
-        sd = self.engine.update_software_deployment(
-            req.context, deployment_id, **update_data)
+        sd = self.rpc_client.update_software_deployment(req.context,
+                                                        deployment_id,
+                                                        **update_data)
         return {'software_deployment': sd}
 
     @util.policy_enforce
@@ -86,8 +87,8 @@ class SoftwareDeploymentController(object):
         """
         Delete an existing software deployment
         """
-        res = self.engine.delete_software_deployment(
-            req.context, deployment_id)
+        res = self.rpc_client.delete_software_deployment(req.context,
+                                                         deployment_id)
 
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])

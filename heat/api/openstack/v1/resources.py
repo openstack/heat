@@ -65,7 +65,7 @@ class ResourceController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     @util.identified_stack
     def index(self, req, identity):
@@ -73,8 +73,8 @@ class ResourceController(object):
         Lists summary information for all resources
         """
 
-        res_list = self.engine.list_stack_resources(req.context,
-                                                    identity)
+        res_list = self.rpc_client.list_stack_resources(req.context,
+                                                        identity)
 
         return {'resources': [format_resource(req, res) for res in res_list]}
 
@@ -84,9 +84,9 @@ class ResourceController(object):
         Gets detailed information for a resource
         """
 
-        res = self.engine.describe_stack_resource(req.context,
-                                                  identity,
-                                                  resource_name)
+        res = self.rpc_client.describe_stack_resource(req.context,
+                                                      identity,
+                                                      resource_name)
 
         return {'resource': format_resource(req, res)}
 
@@ -96,19 +96,18 @@ class ResourceController(object):
         Gets metadata information for a resource
         """
 
-        res = self.engine.describe_stack_resource(req.context,
-                                                  identity,
-                                                  resource_name)
+        res = self.rpc_client.describe_stack_resource(req.context,
+                                                      identity,
+                                                      resource_name)
 
         return {engine_api.RES_METADATA: res[engine_api.RES_METADATA]}
 
     @util.identified_stack
     def signal(self, req, identity, resource_name, body=None):
-        self.engine.resource_signal(
-            req.context,
-            stack_identity=identity,
-            resource_name=resource_name,
-            details=body)
+        self.rpc_client.resource_signal(req.context,
+                                        stack_identity=identity,
+                                        resource_name=resource_name,
+                                        details=body)
 
 
 def create_resource(options):

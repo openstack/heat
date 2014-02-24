@@ -78,12 +78,12 @@ class EventController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     def _event_list(self, req, identity,
                     filter_func=lambda e: True, detail=False):
-        events = self.engine.list_events(req.context,
-                                         identity)
+        events = self.rpc_client.list_events(req.context,
+                                             identity)
         keys = None if detail else summary_keys
 
         return [format_event(req, e, keys) for e in events if filter_func(e)]

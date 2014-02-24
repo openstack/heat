@@ -30,7 +30,7 @@ class SoftwareConfigController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
@@ -40,7 +40,7 @@ class SoftwareConfigController(object):
         """
         Gets detailed information for a software config
         """
-        sc = self.engine.show_software_config(
+        sc = self.rpc_client.show_software_config(
             req.context, config_id)
         return {'software_config': sc}
 
@@ -57,7 +57,7 @@ class SoftwareConfigController(object):
             'outputs': body.get('outputs'),
             'options': body.get('options'),
         }
-        sc = self.engine.create_software_config(
+        sc = self.rpc_client.create_software_config(
             req.context, **create_data)
         return {'software_config': sc}
 
@@ -66,7 +66,7 @@ class SoftwareConfigController(object):
         """
         Delete an existing software config
         """
-        res = self.engine.delete_software_config(req.context, config_id)
+        res = self.rpc_client.delete_software_config(req.context, config_id)
 
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])

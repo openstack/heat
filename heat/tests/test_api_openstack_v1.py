@@ -438,7 +438,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'with_count': 'True'}
         req = self._get('/stacks', params=params)
-        engine = self.controller.engine
+        engine = self.controller.rpc_client
 
         engine.list_stacks = mock.Mock(return_value=[])
         engine.count_stacks = mock.Mock(return_value=0)
@@ -451,7 +451,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'with_count': ''}
         req = self._get('/stacks', params=params)
-        engine = self.controller.engine
+        engine = self.controller.rpc_client
 
         engine.list_stacks = mock.Mock(return_value=[])
         engine.count_stacks = mock.Mock()
@@ -466,7 +466,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'with_count': 'Truthy'}
         req = self._get('/stacks', params=params)
-        engine = self.controller.engine
+        engine = self.controller.rpc_client
 
         engine.list_stacks = mock.Mock(return_value=[])
         mock_count_stacks.side_effect = AttributeError("Should not exist")
@@ -3266,7 +3266,7 @@ class BuildInfoControllerTest(ControllerTest, HeatTestCase):
     def test_theres_a_default_api_build_revision(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
         req = self._get('/build_info')
-        self.controller.engine = mock.Mock()
+        self.controller.rpc_client = mock.Mock()
 
         response = self.controller.build_info(req, tenant_id=self.tenant)
         self.assertIn('api', response)
@@ -3280,7 +3280,7 @@ class BuildInfoControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/build_info')
         mock_engine = mock.Mock()
         mock_engine.get_revision.return_value = 'engine_revision'
-        self.controller.engine = mock_engine
+        self.controller.rpc_client = mock_engine
         mock_conf.revision = {'heat_revision': 'test'}
 
         response = self.controller.build_info(req, tenant_id=self.tenant)
@@ -3291,7 +3291,7 @@ class BuildInfoControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/build_info')
         mock_engine = mock.Mock()
         mock_engine.get_revision.return_value = 'engine_revision'
-        self.controller.engine = mock_engine
+        self.controller.rpc_client = mock_engine
 
         response = self.controller.build_info(req, tenant_id=self.tenant)
         self.assertIn('engine', response)
@@ -3335,7 +3335,7 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
 
         expected = {'software_config': return_value}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'show_software_config',
                 return_value=return_value):
             resp = self.controller.show(
@@ -3359,7 +3359,7 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
 
         expected = {'software_config': return_value}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'create_software_config',
                 return_value=return_value):
             resp = self.controller.create(
@@ -3373,7 +3373,7 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
         req = self._delete('/software_configs/%s' % config_id)
         return_value = None
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'delete_software_config',
                 return_value=return_value):
             self.assertRaises(
@@ -3387,7 +3387,7 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
         req = self._delete('/software_configs/%s' % config_id)
         return_value = {'Error': 'something wrong'}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'delete_software_config',
                 return_value=return_value):
             self.assertRaises(
@@ -3412,7 +3412,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/software_deployments')
         return_value = []
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'list_software_deployments',
                 return_value=return_value) as mock_call:
             resp = self.controller.index(req, tenant_id=self.tenant)
@@ -3423,7 +3423,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
         req = self._get('/software_deployments', {'server_id': server_id})
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'list_software_deployments',
                 return_value=return_value) as mock_call:
             resp = self.controller.index(req, tenant_id=self.tenant)
@@ -3458,7 +3458,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
 
         expected = {'software_deployment': return_value}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'show_software_deployment',
                 return_value=return_value):
             resp = self.controller.show(
@@ -3485,7 +3485,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
 
         expected = {'software_deployment': return_value}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'create_software_deployment',
                 return_value=return_value):
             resp = self.controller.create(
@@ -3511,7 +3511,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         return_value['server_id'] = server_id
         expected = {'software_deployment': return_value}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'update_software_deployment',
                 return_value=return_value):
             resp = self.controller.update(
@@ -3526,7 +3526,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         req = self._delete('/software_deployments/%s' % deployment_id)
         return_value = None
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'delete_software_deployment',
                 return_value=return_value):
             self.assertRaises(
@@ -3540,7 +3540,7 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         req = self._delete('/software_deployments/%s' % deployment_id)
         return_value = {'Error': 'something wrong'}
         with mock.patch.object(
-                self.controller.engine,
+                self.controller.rpc_client,
                 'delete_software_deployment',
                 return_value=return_value):
             self.assertRaises(

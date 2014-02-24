@@ -46,7 +46,7 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine_rpcapi = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
         self.policy = policy.Enforcer(scope='cloudformation')
 
     def _enforce(self, req, action):
@@ -104,7 +104,7 @@ class StackController(object):
         try:
             return dict(identifier.HeatIdentifier.from_arn(stack_name))
         except ValueError:
-            return self.engine_rpcapi.identify_stack(con, stack_name)
+            return self.rpc_client.identify_stack(con, stack_name)
 
     def list(self, req):
         """
@@ -143,7 +143,7 @@ class StackController(object):
 
         con = req.context
         try:
-            stack_list = self.engine_rpcapi.list_stacks(con)
+            stack_list = self.rpc_client.list_stacks(con)
         except Exception as ex:
             return exception.map_remote_error(ex)
 
@@ -233,7 +233,7 @@ class StackController(object):
             else:
                 identity = None
 
-            stack_list = self.engine_rpcapi.show_stack(con, identity)
+            stack_list = self.rpc_client.show_stack(con, identity)
 
         except Exception as ex:
             return exception.map_remote_error(ex)
@@ -314,8 +314,8 @@ class StackController(object):
             # This should not happen, so return HeatInternalFailureError
             return exception.HeatInternalFailureError(detail=msg)
 
-        engine_action = {self.CREATE_STACK: self.engine_rpcapi.create_stack,
-                         self.UPDATE_STACK: self.engine_rpcapi.update_stack}
+        engine_action = {self.CREATE_STACK: self.rpc_client.create_stack,
+                         self.UPDATE_STACK: self.rpc_client.update_stack}
 
         con = req.context
 
@@ -375,7 +375,7 @@ class StackController(object):
         con = req.context
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            templ = self.engine_rpcapi.get_template(con, identity)
+            templ = self.rpc_client.get_template(con, identity)
         except Exception as ex:
             return exception.map_remote_error(ex)
 
@@ -437,7 +437,7 @@ class StackController(object):
             }
 
         try:
-            res = self.engine_rpcapi.validate_template(con, template)
+            res = self.rpc_client.validate_template(con, template)
             if 'Error' in res:
                 return api_utils.format_response('ValidateTemplate',
                                                  res['Error'])
@@ -458,7 +458,7 @@ class StackController(object):
         con = req.context
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            res = self.engine_rpcapi.delete_stack(con, identity, cast=False)
+            res = self.rpc_client.delete_stack(con, identity, cast=False)
 
         except Exception as ex:
             return exception.map_remote_error(ex)
@@ -504,7 +504,7 @@ class StackController(object):
         stack_name = req.params.get('StackName', None)
         try:
             identity = stack_name and self._get_identity(con, stack_name)
-            events = self.engine_rpcapi.list_events(con, identity)
+            events = self.rpc_client.list_events(con, identity)
         except Exception as ex:
             return exception.map_remote_error(ex)
 
@@ -550,7 +550,7 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            resource_details = self.engine_rpcapi.describe_stack_resource(
+            resource_details = self.rpc_client.describe_stack_resource(
                 con,
                 stack_identity=identity,
                 resource_name=req.params.get('LogicalResourceId'))
@@ -614,10 +614,10 @@ class StackController(object):
             if stack_name is not None:
                 identity = self._get_identity(con, stack_name)
             else:
-                identity = self.engine_rpcapi.find_physical_resource(
+                identity = self.rpc_client.find_physical_resource(
                     con,
                     physical_resource_id=physical_resource_id)
-            resources = self.engine_rpcapi.describe_stack_resources(
+            resources = self.rpc_client.describe_stack_resources(
                 con,
                 stack_identity=identity,
                 resource_name=req.params.get('LogicalResourceId'))
@@ -659,7 +659,7 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            resources = self.engine_rpcapi.list_stack_resources(
+            resources = self.rpc_client.list_stack_resources(
                 con,
                 stack_identity=identity)
         except Exception as ex:

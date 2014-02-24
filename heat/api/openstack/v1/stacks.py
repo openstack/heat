@@ -147,7 +147,7 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
@@ -170,17 +170,17 @@ class StackController(object):
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
 
-        stacks = self.engine.list_stacks(req.context,
-                                         filters=filter_params,
-                                         **params)
+        stacks = self.rpc_client.list_stacks(req.context,
+                                             filters=filter_params,
+                                             **params)
 
         count = None
         if req.params.get('with_count'):
             try:
                 # Check if engine has been updated to a version with
                 # support to count_stacks before trying to use it.
-                count = self.engine.count_stacks(req.context,
-                                                 filters=filter_params)
+                count = self.rpc_client.count_stacks(req.context,
+                                                     filters=filter_params)
             except AttributeError as exc:
                 logger.warning("Old Engine Version: %s" % str(exc))
 
@@ -191,7 +191,7 @@ class StackController(object):
         """
         Lists detailed information for all stacks
         """
-        stacks = self.engine.list_stacks(req.context)
+        stacks = self.rpc_client.list_stacks(req.context)
 
         return {'stacks': [stacks_view.format_stack(req, s) for s in stacks]}
 
@@ -203,12 +203,12 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        result = self.engine.preview_stack(req.context,
-                                           data.stack_name(),
-                                           data.template(),
-                                           data.environment(),
-                                           data.files(),
-                                           data.args())
+        result = self.rpc_client.preview_stack(req.context,
+                                               data.stack_name(),
+                                               data.template(),
+                                               data.environment(),
+                                               data.files(),
+                                               data.args())
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
@@ -220,12 +220,12 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        result = self.engine.create_stack(req.context,
-                                          data.stack_name(),
-                                          data.template(),
-                                          data.environment(),
-                                          data.files(),
-                                          data.args())
+        result = self.rpc_client.create_stack(req.context,
+                                              data.stack_name(),
+                                              data.template(),
+                                              data.environment(),
+                                              data.files(),
+                                              data.args())
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -241,8 +241,8 @@ class StackController(object):
         try:
             identity = dict(identifier.HeatIdentifier.from_arn(stack_name))
         except ValueError:
-            identity = self.engine.identify_stack(req.context,
-                                                  stack_name)
+            identity = self.rpc_client.identify_stack(req.context,
+                                                      stack_name)
 
         location = util.make_url(req, identity)
         if path:
@@ -256,8 +256,8 @@ class StackController(object):
         Gets detailed information for a stack
         """
 
-        stack_list = self.engine.show_stack(req.context,
-                                            identity)
+        stack_list = self.rpc_client.show_stack(req.context,
+                                                identity)
 
         if not stack_list:
             raise exc.HTTPInternalServerError()
@@ -272,8 +272,8 @@ class StackController(object):
         Get the template body for an existing stack
         """
 
-        templ = self.engine.get_template(req.context,
-                                         identity)
+        templ = self.rpc_client.get_template(req.context,
+                                             identity)
 
         if templ is None:
             raise exc.HTTPNotFound()
@@ -288,12 +288,12 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        self.engine.update_stack(req.context,
-                                 identity,
-                                 data.template(),
-                                 data.environment(),
-                                 data.files(),
-                                 data.args())
+        self.rpc_client.update_stack(req.context,
+                                     identity,
+                                     data.template(),
+                                     data.environment(),
+                                     data.files(),
+                                     data.args())
 
         raise exc.HTTPAccepted()
 
@@ -303,9 +303,9 @@ class StackController(object):
         Delete the specified stack
         """
 
-        res = self.engine.delete_stack(req.context,
-                                       identity,
-                                       cast=False)
+        res = self.rpc_client.delete_stack(req.context,
+                                           identity,
+                                           cast=False)
 
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])
@@ -318,8 +318,8 @@ class StackController(object):
         Abandons specified stack by deleting the stack and it's resources
         from the database, but underlying resources will not be deleted.
         """
-        return self.engine.abandon_stack(req.context,
-                                         identity)
+        return self.rpc_client.abandon_stack(req.context,
+                                             identity)
 
     @util.policy_enforce
     def validate_template(self, req, body):
@@ -330,8 +330,8 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        result = self.engine.validate_template(req.context,
-                                               data.template())
+        result = self.rpc_client.validate_template(req.context,
+                                                   data.template())
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])
@@ -346,21 +346,21 @@ class StackController(object):
         support_status = req.params.get('support_status', None)
         return {
             'resource_types':
-            self.engine.list_resource_types(req.context, support_status)}
+            self.rpc_client.list_resource_types(req.context, support_status)}
 
     @util.policy_enforce
     def resource_schema(self, req, type_name):
         """
         Returns the schema of the given resource type.
         """
-        return self.engine.resource_schema(req.context, type_name)
+        return self.rpc_client.resource_schema(req.context, type_name)
 
     @util.policy_enforce
     def generate_template(self, req, type_name):
         """
         Generates a template based on the specified type.
         """
-        return self.engine.generate_template(req.context, type_name)
+        return self.rpc_client.generate_template(req.context, type_name)
 
 
 class StackSerializer(wsgi.JSONResponseSerializer):

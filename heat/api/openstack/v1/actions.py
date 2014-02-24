@@ -32,7 +32,7 @@ class ActionController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
 
     @util.identified_stack
     def action(self, req, identity, body={}):
@@ -52,9 +52,9 @@ class ActionController(object):
             raise exc.HTTPBadRequest(_("Invalid action %s specified") % ac)
 
         if ac == self.SUSPEND:
-            self.engine.stack_suspend(req.context, identity)
+            self.rpc_client.stack_suspend(req.context, identity)
         elif ac == self.RESUME:
-            self.engine.stack_resume(req.context, identity)
+            self.rpc_client.stack_resume(req.context, identity)
         else:
             raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
 

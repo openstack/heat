@@ -40,7 +40,7 @@ class WatchController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine_rpcapi = rpc_client.EngineClient()
+        self.rpc_client = rpc_client.EngineClient()
         self.policy = policy.Enforcer(scope='cloudwatch')
 
     def _enforce(self, req, action):
@@ -139,7 +139,7 @@ class WatchController(object):
             name = None
 
         try:
-            watch_list = self.engine_rpcapi.show_watch(con, watch_name=name)
+            watch_list = self.rpc_client.show_watch(con, watch_name=name)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -230,8 +230,8 @@ class WatchController(object):
             # so we pass None/None and do any filtering locally
             null_kwargs = {'metric_namespace': None,
                            'metric_name': None}
-            watch_data = self.engine_rpcapi.show_watch_metric(con,
-                                                              **null_kwargs)
+            watch_data = self.rpc_client.show_watch_metric(con,
+                                                           **null_kwargs)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -294,7 +294,7 @@ class WatchController(object):
                     'Dimensions': dimensions}}
 
         try:
-            self.engine_rpcapi.create_watch_data(con, watch_name, data)
+            self.rpc_client.create_watch_data(con, watch_name, data)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -330,8 +330,8 @@ class WatchController(object):
         logger.debug(_("setting %(name)s to %(state)s") % {
                      'name': name, 'state': state_map[state]})
         try:
-            self.engine_rpcapi.set_watch_state(con, watch_name=name,
-                                               state=state_map[state])
+            self.rpc_client.set_watch_state(con, watch_name=name,
+                                            state=state_map[state])
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
