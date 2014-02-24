@@ -32,7 +32,7 @@ class Template(collections.Mapping):
                ('AWSTemplateFormatVersion', 'Description', 'Mappings',
                 'Parameters', 'Resources', 'Outputs')
 
-    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS])
+    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
@@ -80,9 +80,6 @@ class Template(collections.Mapping):
             raise KeyError(
                 _('Section %s can not be accessed directly.') % section)
 
-        if section == self.VERSION:
-            return self.t[section]
-
         if section == self.DESCRIPTION:
             default = 'No description'
         else:
@@ -98,6 +95,15 @@ class Template(collections.Mapping):
     def __len__(self):
         '''Return the number of sections.'''
         return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
+
+    def version(self):
+        for key in ('HeatTemplateFormatVersion', 'AWSTemplateFormatVersion'):
+            if key in self.t:
+                return key, self.t[key]
+
+        # All user templates are forced to include a version string. This is
+        # just a convenient default for unit tests.
+        return 'HeatTemplateFormatVersion', '2012-12-12'
 
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
