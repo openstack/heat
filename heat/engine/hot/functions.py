@@ -205,7 +205,6 @@ def function_mapping(version_key, version):
 
     if version == '2013-05-23':
         return {
-            'Fn::FindInMap': cfn_funcs.FindInMap,
             'Fn::GetAZs': cfn_funcs.GetAZs,
             'get_param': GetParam,
             'get_resource': cfn_funcs.ResourceRef,
