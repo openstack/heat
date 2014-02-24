@@ -58,6 +58,7 @@ class KeystoneClient(object):
         self.context = context
         self._client_v3 = None
         self._admin_client = None
+        self._domain_admin_client = None
 
         if self.context.auth_url:
             self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
@@ -101,6 +102,22 @@ class KeystoneClient(object):
                 logger.error("Admin client authentication failed")
                 raise exception.AuthorizationFailure()
         return self._admin_client
+
+    @property
+    def domain_admin_client(self):
+        if not self._domain_admin_client:
+            # Create domain admin client connection to v3 API
+            admin_creds = self._domain_admin_creds()
+            admin_creds.update(self._ssl_options())
+            c = kc_v3.Client(**admin_creds)
+            # Note we must specify the domain when getting the token
+            # as only a domain scoped token can create projects in the domain
+            if c.authenticate(domain_id=self.stack_domain_id):
+                self._domain_admin_client = c
+            else:
+                logger.error("Domain admin client authentication failed")
+                raise exception.AuthorizationFailure()
+        return self._domain_admin_client
 
     def _v3_client_init(self):
         kwargs = {
@@ -155,6 +172,19 @@ class KeystoneClient(object):
             'auth_url': self.v3_endpoint,
             'endpoint': self.v3_endpoint,
             'project_name': cfg.CONF.keystone_authtoken.admin_tenant_name}
+        return creds
+
+    def _domain_admin_creds(self):
+        domain_admin_user = cfg.CONF.stack_domain_admin
+        if not domain_admin_user:
+            raise ValueError('heat.conf misconfigured, '
+                             'no stack_domain_admin user specified')
+        creds = {
+            'username': domain_admin_user,
+            'user_domain_id': self.stack_domain_id,
+            'password': cfg.CONF.stack_domain_admin_password,
+            'auth_url': self.v3_endpoint,
+            'endpoint': self.v3_endpoint}
         return creds
 
     def _ssl_options(self):
@@ -276,18 +306,18 @@ class KeystoneClient(object):
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
         # deployed on an instance (hence are implicitly untrusted)
-        roles_list = self.admin_client.roles.list()
+        roles_list = self.domain_admin_client.roles.list()
         role_id = self._get_stack_user_role(roles_list)
         if role_id:
             # Create user
-            user = self.admin_client.users.create(
+            user = self.domain_admin_client.users.create(
                 name=self._get_username(username), password=password,
                 default_project=project_id, domain=self.stack_domain_id)
             # Add to stack user role
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
-            self.admin_client.roles.grant(role=role_id, user=user.id,
-                                          project=project_id)
+            self.domain_admin_client.roles.grant(role=role_id, user=user.id,
+                                                 project=project_id)
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {'user': username,
@@ -299,7 +329,7 @@ class KeystoneClient(object):
 
     def _check_stack_domain_user(self, user_id, project_id, action):
         # Sanity check that domain/project is correct
-        user = self.admin_client.users.get(user_id)
+        user = self.domain_admin_client.users.get(user_id)
         if user.domain_id != self.stack_domain_id:
             raise ValueError(_('User %s in invalid domain') % action)
         if user.default_project_id != project_id:
@@ -307,7 +337,7 @@ class KeystoneClient(object):
 
     def delete_stack_domain_user(self, user_id, project_id):
         self._check_stack_domain_user(user_id, project_id, 'delete')
-        self.admin_client.users.delete(user_id)
+        self.domain_admin_client.users.delete(user_id)
 
     def delete_stack_user(self, user_id):
         self.client_v3.users.delete(user=user_id)
@@ -318,14 +348,14 @@ class KeystoneClient(object):
         # domain environment (where the tenant name may not be globally unique)
         project_name = '%s-%s' % (self.context.tenant_id, stack_name)
         desc = "Heat stack user project"
-        domain_project = self.admin_client.projects.create(
+        domain_project = self.domain_admin_client.projects.create(
             name=project_name,
             domain=self.stack_domain_id,
             description=desc)
         return domain_project.id
 
     def delete_stack_domain_project(self, project_id):
-        self.admin_client.projects.delete(project=project_id)
+        self.domain_admin_client.projects.delete(project=project_id)
 
     def _find_ec2_keypair(self, access, user_id=None):
         '''Lookup an ec2 keypair by access ID.'''
@@ -388,7 +418,7 @@ class KeystoneClient(object):
     def create_stack_domain_user_keypair(self, user_id, project_id):
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
-        creds = self.admin_client.credentials.create(
+        creds = self.domain_admin_client.credentials.create(
             user=user_id, type='ec2', data=json.dumps(data_blob),
             project=project_id)
         return AccessKey(id=creds.id,
@@ -403,11 +433,11 @@ class KeystoneClient(object):
 
     def disable_stack_domain_user(self, user_id, project_id):
         self._check_stack_domain_user(user_id, project_id, 'disable')
-        self.admin_client.users.update(user=user_id, enabled=False)
+        self.domain_admin_client.users.update(user=user_id, enabled=False)
 
     def enable_stack_domain_user(self, user_id, project_id):
         self._check_stack_domain_user(user_id, project_id, 'enable')
-        self.admin_client.users.update(user=user_id, enabled=True)
+        self.domain_admin_client.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
         default_region_name = cfg.CONF.region_name_for_services
