@@ -121,6 +121,9 @@ mapping_template = template_format.parse('''{
   }
 }''')
 
+empty_template = template_format.parse('''{
+  "HeatTemplateFormatVersion" : "2012-12-12",
+}''')
 
 parameter_template = template_format.parse('''{
   "HeatTemplateFormatVersion" : "2012-12-12",
@@ -260,17 +263,17 @@ Mappings:
         self.assertTrue(isinstance(parsed, template.ParamRef))
 
     def test_select_from_list(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
         self.assertEqual("bar", self.resolve(data, tmpl))
 
     def test_select_from_list_integer_index(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": [1, ["foo", "bar"]]}
         self.assertEqual("bar", self.resolve(data, tmpl))
 
     def test_select_from_list_out_of_bound(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["0", ["foo", "bar"]]}
         self.assertEqual("foo", self.resolve(data, tmpl))
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
@@ -279,34 +282,34 @@ Mappings:
         self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_dict(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
         self.assertEqual("robin", self.resolve(data, tmpl))
 
     def test_select_from_none(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["red", None]}
         self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_dict_not_existing(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["green", {"red": "robin", "re": "foo"}]}
         self.assertEqual("", self.resolve(data, tmpl))
 
     def test_select_from_serialized_json_map(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         js = json.dumps({"red": "robin", "re": "foo"})
         data = {"Fn::Select": ["re", js]}
         self.assertEqual("foo", self.resolve(data, tmpl))
 
     def test_select_from_serialized_json_list(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         js = json.dumps(["foo", "fee", "fum"])
         data = {"Fn::Select": ["0", js]}
         self.assertEqual("foo", self.resolve(data, tmpl))
 
     def test_select_empty_string(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Select": ["0", '']}
         self.assertEqual("", self.resolve(data, tmpl))
         data = {"Fn::Select": ["1", '']}
@@ -315,34 +318,34 @@ Mappings:
         self.assertEqual("", self.resolve(data, tmpl))
 
     def test_join(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         join = {"Fn::Join": [" ", ["foo", "bar"]]}
         self.assertEqual("foo bar", self.resolve(join, tmpl))
 
     def test_split_ok(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Split": [";", "foo; bar; achoo"]}
         self.assertEqual(['foo', ' bar', ' achoo'], self.resolve(data, tmpl))
 
     def test_split_no_delim_in_str(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         data = {"Fn::Split": [";", "foo, bar, achoo"]}
         self.assertEqual(['foo, bar, achoo'], self.resolve(data, tmpl))
 
     def test_base64(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::Base64": "foobar"}
         # For now, the Base64 function just returns the original text, and
         # does not convert to base64 (see issue #133)
         self.assertEqual("foobar", self.resolve(snippet, tmpl))
 
     def test_get_azs(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::GetAZs": ""}
         self.assertEqual(["nova"], self.resolve(snippet, tmpl))
 
     def test_get_azs_with_stack(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::GetAZs": ""}
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
@@ -352,7 +355,7 @@ Mappings:
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
 
     def test_replace_string_values(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::Replace": [
             {'$var1': 'foo', '%var2%': 'bar'},
             '$var1 is %var2%'
@@ -360,7 +363,7 @@ Mappings:
         self.assertEqual('foo is bar', self.resolve(snippet, tmpl))
 
     def test_replace_number_values(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::Replace": [
             {'$var1': 1, '%var2%': 2},
             '$var1 is not %var2%'
@@ -374,7 +377,7 @@ Mappings:
         self.assertEqual('1.3 is not 2.5', self.resolve(snippet, tmpl))
 
     def test_replace_none_values(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::Replace": [
             {'$var1': None, '${var2}': None},
             '"$var1" is "${var2}"'
@@ -382,7 +385,7 @@ Mappings:
         self.assertEqual('"" is ""', self.resolve(snippet, tmpl))
 
     def test_replace_missing_key(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::Replace": [
             {'$var1': 'foo', 'var2': 'bar'},
             '"$var1" is "${var3}"'
@@ -400,7 +403,7 @@ Mappings:
         self.assertEqual('wibble is quux', self.resolve(snippet, tmpl, stack))
 
     def test_member_list2map_good(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::MemberListToMap": [
             'Name', 'Value', ['.member.0.Name=metric',
                               '.member.0.Value=cpu',
@@ -410,7 +413,7 @@ Mappings:
                          self.resolve(snippet, tmpl))
 
     def test_member_list2map_good2(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         snippet = {"Fn::MemberListToMap": [
             'Key', 'Value', ['.member.2.Key=metric',
                              '.member.2.Value=cpu',
@@ -603,7 +606,7 @@ class TemplateFnErrorTest(HeatTestCase):
     ]
 
     def test_bad_input(self):
-        tmpl = parser.Template(mapping_template)
+        tmpl = parser.Template(empty_template)
         resolve = lambda s: TemplateTest.resolve(s, tmpl)
         error = self.assertRaises(self.expect,
                                   resolve,
