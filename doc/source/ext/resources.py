@@ -45,6 +45,13 @@ class ResourcePages(Directive):
             self.props_schemata = properties.schemata(
                 self.resource_class.properties_schema)
 
+            if resource_class.support_status.status == support.DEPRECATED:
+                sstatus = resource_class.support_status.to_dict()
+                para = nodes.inline(
+                    '', _('%(status)s - %(message)s') % sstatus)
+                warning = nodes.note('', para)
+                section.append(warning)
+
             cls_doc = resource_class.__doc__
             if cls_doc:
                 para = nodes.paragraph('', cls_doc)
