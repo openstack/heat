@@ -28,17 +28,19 @@ from oslo.config import cfg
 
 from heat.openstack.common.db import api as db_api
 
-db_opts = [
-    cfg.StrOpt('db_backend',
-               default='sqlalchemy',
-               help='The backend to use for db.')]
-
 CONF = cfg.CONF
-CONF.register_opts(db_opts)
+CONF.import_opt('backend', 'heat.openstack.common.db.options',
+                group='database')
+
 
 _BACKEND_MAPPING = {'sqlalchemy': 'heat.db.sqlalchemy.api'}
 
-IMPL = db_api.DBAPI(backend_mapping=_BACKEND_MAPPING)
+IMPL = db_api.DBAPI(CONF.database.backend, backend_mapping=_BACKEND_MAPPING,
+                    lazy=True)
+
+
+def get_engine():
+    return IMPL.get_engine()
 
 
 def get_session():
@@ -261,11 +263,11 @@ def software_deployment_delete(context, deployment_id):
     return IMPL.software_deployment_delete(context, deployment_id)
 
 
-def db_sync(version=None):
+def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
-    return IMPL.db_sync(version=version)
+    return IMPL.db_sync(engine, version=version)
 
 
-def db_version():
+def db_version(engine):
     """Display the current database version."""
-    return IMPL.db_version()
+    return IMPL.db_version(engine)

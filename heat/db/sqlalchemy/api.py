@@ -31,13 +31,28 @@ from heat.openstack.common.gettextutils import _
 
 cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
-get_engine = db_session.get_engine
-get_session = db_session.get_session
+CONF = cfg.CONF
+CONF.import_opt('max_events_per_stack', 'heat.common.config')
+CONF.import_opt('connection', 'heat.openstack.common.db.options',
+                group='database')
+
+_facade = None
+
+
+def get_facade():
+    global _facade
+
+    if not _facade:
+        _facade = db_session.EngineFacade(
+            CONF.database.connection, **dict(CONF.database.iteritems()))
+    return _facade
+
+get_engine = lambda: get_facade().get_engine()
+get_session = lambda: get_facade().get_session()
 
 
 def get_backend():
     """The backend is this module itself."""
-
     return sys.modules[__name__]
 
 
@@ -743,11 +758,11 @@ def purge_deleted(age, granularity='days'):
         engine.execute(user_creds_del)
 
 
-def db_sync(version=None):
+def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
-    return migration.db_sync(version=version)
+    return migration.db_sync(engine, version=version)
 
 
-def db_version():
+def db_version(engine):
     """Display the current database version."""
-    return migration.db_version()
+    return migration.db_version(engine)

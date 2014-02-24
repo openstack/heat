@@ -39,7 +39,7 @@ class LazyPluggable(object):
         return getattr(backend, key)
 
 
-IMPL = LazyPluggable('db_backend',
+IMPL = LazyPluggable('backend',
                      sqlalchemy='heat.db.sqlalchemy.api')
 
 

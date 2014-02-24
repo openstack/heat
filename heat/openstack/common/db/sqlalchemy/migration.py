@@ -39,51 +39,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import distutils.version as dist_version
 import os
 import re
 
-import migrate
 from migrate.changeset import ansisql
 from migrate.changeset.databases import sqlite
-from migrate.versioning import util as migrate_util
+from migrate import exceptions as versioning_exceptions
+from migrate.versioning import api as versioning_api
+from migrate.versioning.repository import Repository
 import sqlalchemy
 from sqlalchemy.schema import UniqueConstraint
 
 from heat.openstack.common.db import exception
-from heat.openstack.common.db.sqlalchemy import session as db_session
-from heat.openstack.common.gettextutils import _  # noqa
-
-
-@migrate_util.decorator
-def patched_with_engine(f, *a, **kw):
-    url = a[0]
-    engine = migrate_util.construct_engine(url, **kw)
-
-    try:
-        kw['engine'] = engine
-        return f(*a, **kw)
-    finally:
-        if isinstance(engine, migrate_util.Engine) and engine is not url:
-            migrate_util.log.debug('Disposing SQLAlchemy engine %s', engine)
-            engine.dispose()
-
-
-# TODO(jkoelker) When migrate 0.7.3 is released and nova depends
-#                on that version or higher, this can be removed
-MIN_PKG_VERSION = dist_version.StrictVersion('0.7.3')
-if (not hasattr(migrate, '__version__') or
-        dist_version.StrictVersion(migrate.__version__) < MIN_PKG_VERSION):
-    migrate_util.with_engine = patched_with_engine
-
-
-# NOTE(jkoelker) Delay importing migrate until we are patched
-from migrate import exceptions as versioning_exceptions
-from migrate.versioning import api as versioning_api
-from migrate.versioning.repository import Repository
-
-
-get_engine = db_session.get_engine
+from heat.openstack.common.gettextutils import _
 
 
 def _get_unique_constraints(self, table):
@@ -200,11 +168,12 @@ def patch_migrate():
                                 sqlite.SQLiteConstraintGenerator)
 
 
-def db_sync(abs_path, version=None, init_version=0, sanity_check=True):
+def db_sync(engine, abs_path, version=None, init_version=0, sanity_check=True):
     """Upgrade or downgrade a database.
 
     Function runs the upgrade() or downgrade() functions in change scripts.
 
+    :param engine:       SQLAlchemy engine instance for a given database
     :param abs_path:     Absolute path to migrate repository.
     :param version:      Database will upgrade/downgrade until this version.
                          If None - database will update to the latest
@@ -220,19 +189,24 @@ def db_sync(abs_path, version=None, init_version=0, sanity_check=True):
             raise exception.DbMigrationError(
                 message=_("version should be an integer"))
 
-    current_version = db_version(abs_path, init_version)
+    current_version = db_version(engine, abs_path, init_version)
     repository = _find_migrate_repo(abs_path)
     if sanity_check:
-        _db_schema_sanity_check()
+        _db_schema_sanity_check(engine)
     if version is None or version > current_version:
-        return versioning_api.upgrade(get_engine(), repository, version)
+        return versioning_api.upgrade(engine, repository, version)
     else:
-        return versioning_api.downgrade(get_engine(), repository,
+        return versioning_api.downgrade(engine, repository,
                                         version)
 
 
-def _db_schema_sanity_check():
-    engine = get_engine()
+def _db_schema_sanity_check(engine):
+    """Ensure all database tables were created with required parameters.
+
+    :param engine:  SQLAlchemy engine instance for a given database
+
+    """
+
     if engine.name == 'mysql':
         onlyutf8_sql = ('SELECT TABLE_NAME,TABLE_COLLATION '
                         'from information_schema.TABLES '
@@ -254,23 +228,23 @@ def _db_schema_sanity_check():
                                ) % ','.join(table_names))
 
 
-def db_version(abs_path, init_version):
+def db_version(engine, abs_path, init_version):
     """Show the current version of the repository.
 
+    :param engine:  SQLAlchemy engine instance for a given database
     :param abs_path: Absolute path to migrate repository
     :param version:  Initial database version
     """
     repository = _find_migrate_repo(abs_path)
     try:
-        return versioning_api.db_version(get_engine(), repository)
+        return versioning_api.db_version(engine, repository)
     except versioning_exceptions.DatabaseNotControlledError:
         meta = sqlalchemy.MetaData()
-        engine = get_engine()
         meta.reflect(bind=engine)
         tables = meta.tables
-        if len(tables) == 0:
-            db_version_control(abs_path, init_version)
-            return versioning_api.db_version(get_engine(), repository)
+        if len(tables) == 0 or 'alembic_version' in tables:
+            db_version_control(engine, abs_path, version=init_version)
+            return versioning_api.db_version(engine, repository)
         else:
             raise exception.DbMigrationError(
                 message=_(
@@ -279,17 +253,18 @@ def db_version(abs_path, init_version):
                     "manually."))
 
 
-def db_version_control(abs_path, version=None):
+def db_version_control(engine, abs_path, version=None):
     """Mark a database as under this repository's version control.
 
     Once a database is under version control, schema changes should
     only be done via change scripts in this repository.
 
+    :param engine:  SQLAlchemy engine instance for a given database
     :param abs_path: Absolute path to migrate repository
     :param version:  Initial database version
     """
     repository = _find_migrate_repo(abs_path)
-    versioning_api.version_control(get_engine(), repository, version)
+    versioning_api.version_control(engine, repository, version)
     return version
 
 

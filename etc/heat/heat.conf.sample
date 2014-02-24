@@ -154,14 +154,6 @@
 
 
 #
-# Options defined in heat.db.api
-#
-
-# The backend to use for db. (string value)
-#db_backend=sqlalchemy
-
-
-#
 # Options defined in heat.engine.clients
 #
 
@@ -177,17 +169,6 @@
 # Custom template for the built-in loadbalancer nested stack.
 # (string value)
 #loadbalancer_template=<None>
-
-
-#
-# Options defined in heat.openstack.common.db.sqlalchemy.session
-#
-
-# the filename to use with sqlite (string value)
-#sqlite_db=heat.sqlite
-
-# If true, use synchronous mode for sqlite (boolean value)
-#sqlite_synchronous=true
 
 
 #
@@ -801,30 +782,34 @@
 [database]
 
 #
-# Options defined in heat.openstack.common.db.api
+# Options defined in heat.openstack.common.db.options
 #
+
+# The file name to use with SQLite (string value)
+#sqlite_db=heat.sqlite
+
+# If True, SQLite uses synchronous mode (boolean value)
+#sqlite_synchronous=true
 
 # The backend to use for db (string value)
 # Deprecated group/name - [DEFAULT]/db_backend
 #backend=sqlalchemy
-
-
-#
-# Options defined in heat.openstack.common.db.sqlalchemy.session
-#
 
 # The SQLAlchemy connection string used to connect to the
 # database (string value)
 # Deprecated group/name - [DEFAULT]/sql_connection
 # Deprecated group/name - [DATABASE]/sql_connection
 # Deprecated group/name - [sql]/connection
-#connection=sqlite:////heat/openstack/common/db/$sqlite_db
+#connection=<None>
 
-# The SQLAlchemy connection string used to connect to the
-# slave database (string value)
-#slave_connection=
+# The SQL mode to be used for MySQL sessions. This option,
+# including the default, overrides any server-set SQL mode. To
+# use whatever SQL mode is set by the server configuration,
+# set this to no value. Example: mysql_sql_mode= (string
+# value)
+#mysql_sql_mode=TRADITIONAL
 
-# timeout before idle sql connections are reaped (integer
+# Timeout before idle sql connections are reaped (integer
 # value)
 # Deprecated group/name - [DEFAULT]/sql_idle_timeout
 # Deprecated group/name - [DATABASE]/sql_idle_timeout
@@ -843,13 +828,13 @@
 # Deprecated group/name - [DATABASE]/sql_max_pool_size
 #max_pool_size=<None>
 
-# maximum db connection retries during startup. (setting -1
+# Maximum db connection retries during startup. (setting -1
 # implies an infinite retry count) (integer value)
 # Deprecated group/name - [DEFAULT]/sql_max_retries
 # Deprecated group/name - [DATABASE]/sql_max_retries
 #max_retries=10
 
-# interval between retries of opening a sql connection
+# Interval between retries of opening a sql connection
 # (integer value)
 # Deprecated group/name - [DEFAULT]/sql_retry_interval
 # Deprecated group/name - [DATABASE]/reconnect_interval
@@ -875,6 +860,25 @@
 # (integer value)
 # Deprecated group/name - [DATABASE]/sqlalchemy_pool_timeout
 #pool_timeout=<None>
+
+# Enable the experimental use of database reconnect on
+# connection lost (boolean value)
+#use_db_reconnect=false
+
+# seconds between db connection retries (integer value)
+#db_retry_interval=1
+
+# Whether to increase interval between db connection retries,
+# up to db_max_retry_interval (boolean value)
+#db_inc_retry_interval=true
+
+# max seconds between db connection retries, if
+# db_inc_retry_interval is enabled (integer value)
+#db_max_retry_interval=10
+
+# maximum db connection retries before error is raised.
+# (setting -1 implies an infinite retry count) (integer value)
+#db_max_retries=20
 
 
 [ec2authtoken]

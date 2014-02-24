@@ -24,11 +24,14 @@ from sqlalchemy.orm.session import Session
 
 from heat.db.sqlalchemy.types import Json
 from heat.openstack.common.db.sqlalchemy import models
-from heat.openstack.common.db.sqlalchemy import session
 from heat.openstack.common import timeutils
 
 BASE = declarative_base()
-get_session = session.get_session
+
+
+def get_session():
+    from heat.db.sqlalchemy import api as db_api
+    return db_api.get_session()
 
 
 class HeatBase(models.ModelBase, models.TimestampMixin):
