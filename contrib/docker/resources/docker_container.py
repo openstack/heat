@@ -272,11 +272,14 @@ class DockerContainer(resource.Resource):
 
 
 def resource_mapping():
-    # only register if docker client installed
+    return {
+        'OS::Docker::Container': DockerContainer,
+    }
+
+
+def available_resource_mapping():
     if DOCKER_INSTALLED:
-        return {
-            'OS::Docker::Container': DockerContainer
-        }
+        return resource_mapping()
     else:
         logger.warn("Docker plug-in loaded, but docker lib not installed.")
-    return {}
+        return {}
