@@ -813,7 +813,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -858,7 +858,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1061,7 +1061,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -1119,7 +1119,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(old_stack.t)
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
-                     old_stack.t, old_stack.env).AndReturn(old_stack)
+                     old_stack.t, old_stack.env,
+                     timeout_mins=60).AndReturn(old_stack)
 
         self.m.ReplayAll()
 
