@@ -674,6 +674,11 @@ class Stack(collections.Mapping):
         other than move to SUSPEND_COMPLETE, so the resources must implement
         handle_suspend for this to have any effect.
         '''
+        # No need to suspend if the stack has been suspended
+        if self.state == (self.SUSPEND, self.COMPLETE):
+            logger.info(_('%s is already suspended') % str(self))
+            return
+
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.SUSPEND,
                                         reverse=True)
@@ -688,6 +693,11 @@ class Stack(collections.Mapping):
         other than move to RESUME_COMPLETE, so the resources must implement
         handle_resume for this to have any effect.
         '''
+        # No need to resume if the stack has been resumed
+        if self.state == (self.RESUME, self.COMPLETE):
+            logger.info(_('%s is already resumed') % str(self))
+            return
+
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.RESUME,
                                         reverse=False)

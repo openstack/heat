@@ -1143,6 +1143,56 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_suspend_stack_suspended_ok(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        self.stack = parser.Stack(self.ctx, 'suspend_test',
+                                  parser.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+        self.stack.suspend()
+        self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
+                         self.stack.state)
+
+        # unexpected to call Resource.suspend
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'suspend')
+        self.m.ReplayAll()
+
+        self.stack.suspend()
+        self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_resume_stack_resumeed_ok(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        self.stack = parser.Stack(self.ctx, 'suspend_test',
+                                  parser.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+        self.stack.suspend()
+        self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
+                         self.stack.state)
+
+        self.stack.resume()
+        self.assertEqual((self.stack.RESUME, self.stack.COMPLETE),
+                         self.stack.state)
+
+        # unexpected to call Resource.resume
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'resume')
+        self.m.ReplayAll()
+
+        self.stack.resume()
+        self.assertEqual((self.stack.RESUME, self.stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_suspend_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
