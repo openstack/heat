@@ -16,6 +16,8 @@
 
 import itertools
 
+from heat.engine import environment
+from heat.engine import plugin_manager
 from heat.engine import resources
 from heat.engine import properties
 from heat.engine import support
@@ -24,6 +26,9 @@ from heat.openstack.common.gettextutils import _
 from docutils import nodes
 from sphinx.util.compat import Directive
 import pydoc
+
+
+global_env = environment.Environment({}, user_env=False)
 
 
 class resourcepages(nodes.General, nodes.Element):
@@ -279,23 +284,29 @@ Resources:
 
 
 def _all_resources(prefix=None):
-    g_env = resources.global_env()
-    all_resources = g_env.get_types()
-    for resource_type in sorted(all_resources):
-        resource_class = g_env.get_class(resource_type)
-        if not prefix or resource_type.startswith(prefix):
-            yield resource_type, resource_class
+    type_names = sorted(global_env.get_types())
+    if prefix is not None:
+        def prefix_match(name):
+            return name.startswith(prefix)
+
+        type_names = itertools.ifilter(prefix_match, type_names)
+
+    def resource_type(name):
+        return name, global_env.get_class(name)
+
+    return itertools.imap(resource_type, type_names)
 
 
 def _load_all_resources():
-    env = resources.global_env()
-    for package, modules in resources._global_modules():
-        maps = (resources._get_all_module_resources(m) for m in modules)
-        resources._register_resources(env, itertools.chain.from_iterable(maps))
+    manager = plugin_manager.PluginManager('heat.engine.resources')
+    resource_mapping = plugin_manager.PluginMapping('resource')
+    res_plugin_mappings = resource_mapping.load_all(manager)
+
+    resources._register_resources(global_env, res_plugin_mappings)
+    environment.read_global_environment(global_env)
 
 
 def setup(app):
-    resources.initialise()
     _load_all_resources()
     app.add_node(resourcepages)
 
