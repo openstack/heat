@@ -183,6 +183,11 @@ class AccessKey(resource.Resource):
         ),
     }
 
+    attributes_schema = {
+        'UserName': _('Username associated with the AccessKey.'),
+        'SecretAccessKey': _('Keypair secret key.'),
+    }
+
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
         self._secret = None
@@ -283,22 +288,11 @@ class AccessKey(resource.Resource):
 
         return self._secret or '000-000-000'
 
-    def FnGetAtt(self, key):
-        res = None
-        log_res = None
-        if key == 'UserName':
-            res = self.properties[self.USER_NAME]
-            log_res = res
-        elif key == 'SecretAccessKey':
-            res = self._secret_accesskey()
-            log_res = "<SANITIZED>"
-        else:
-            raise exception.InvalidTemplateAttribute(
-                resource=self.physical_resource_name(), key=key)
-
-        logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
-                                             key, log_res))
-        return unicode(res)
+    def _resolve_attribute(self, name):
+        if name == 'UserName':
+            return self.properties[self.USER_NAME]
+        elif name == 'SecretAccessKey':
+            return self._secret_accesskey()
 
     def _register_access_key(self):
 
