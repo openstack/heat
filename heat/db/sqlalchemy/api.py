@@ -616,18 +616,16 @@ def software_config_get(context, config_id):
     result = model_query(context, models.SoftwareConfig).get(config_id)
     if (result is not None and context is not None and
             result.tenant != context.tenant_id):
-        return None
+        result = None
 
+    if not result:
+        raise exception.NotFound(_('Software config with id %s not found') %
+                                 config_id)
     return result
 
 
 def software_config_delete(context, config_id):
     config = software_config_get(context, config_id)
-    if not config:
-        raise exception.NotFound(
-            _('Attempt to delete software config with '
-              '%(id)s %(msg)s') % {'id': config_id,
-                                   'msg': 'that does not exist'})
     session = Session.object_session(config)
     session.delete(config)
     session.flush()
@@ -644,8 +642,11 @@ def software_deployment_get(context, deployment_id):
     result = model_query(context, models.SoftwareDeployment).get(deployment_id)
     if (result is not None and context is not None and
             result.tenant != context.tenant_id):
-        return None
+        result = None
 
+    if not result:
+        raise exception.NotFound(_('Deployment with id %s not found') %
+                                 deployment_id)
     return result
 
 
@@ -660,13 +661,6 @@ def software_deployment_get_all(context, server_id=None):
 
 def software_deployment_update(context, deployment_id, values):
     deployment = software_deployment_get(context, deployment_id)
-
-    if not deployment:
-        raise exception.NotFound(
-            _('Attempt to update software deployment with '
-              'id: %(id)s %(msg)s') % {'id': deployment_id,
-                                       'msg': 'that does not exist'})
-
     deployment.update(values)
     deployment.save(_session(context))
     return deployment
@@ -674,11 +668,6 @@ def software_deployment_update(context, deployment_id, values):
 
 def software_deployment_delete(context, deployment_id):
     deployment = software_deployment_get(context, deployment_id)
-    if not deployment:
-        raise exception.NotFound(
-            _('Attempt to delete software deployment '
-              'with %(id)s %(msg)s') % {'id': deployment_id,
-                                        'msg': 'that does not exist'})
     session = Session.object_session(deployment)
     session.delete(deployment)
     session.flush()

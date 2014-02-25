@@ -617,8 +617,11 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(tenant_id, config.tenant)
 
     def test_software_config_get(self):
-        self.assertIsNone(
-            db_api.software_config_get(self.ctx, str(uuid.uuid4())))
+        self.assertRaises(
+            exception.NotFound,
+            db_api.software_config_get,
+            self.ctx,
+            str(uuid.uuid4()))
         io = {'inputs': [{'name': 'foo'}, {'name': 'bar'}],
               'outputs': [{'name': 'result'}]}
         tenant_id = self.ctx.tenant_id
@@ -640,8 +643,11 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(conf, config.config)
         self.assertEqual(io, config.io)
         self.ctx.tenant_id = None
-        config = db_api.software_config_get(self.ctx, config_id)
-        self.assertIsNone(config)
+        self.assertRaises(
+            exception.NotFound,
+            db_api.software_config_get,
+            self.ctx,
+            config_id)
 
     def test_software_config_delete(self):
         tenant_id = self.ctx.tenant_id
@@ -650,8 +656,13 @@ class SqlAlchemyTest(HeatTestCase):
                        'tenant': tenant_id})
         config_id = config.id
         db_api.software_config_delete(self.ctx, config_id)
-        config = db_api.software_config_get(self.ctx, config_id)
-        self.assertIsNone(config)
+        err = self.assertRaises(
+            exception.NotFound,
+            db_api.software_config_get,
+            self.ctx,
+            config_id)
+        self.assertIn(config_id, str(err))
+
         err = self.assertRaises(
             exception.NotFound, db_api.software_config_delete,
             self.ctx, config_id)
@@ -678,8 +689,11 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(values['tenant'], deployment.tenant)
 
     def test_software_deployment_get(self):
-        self.assertIsNone(
-            db_api.software_deployment_get(self.ctx, str(uuid.uuid4())))
+        self.assertRaises(
+            exception.NotFound,
+            db_api.software_deployment_get,
+            self.ctx,
+            str(uuid.uuid4()))
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         self.assertIsNotNone(deployment)
@@ -691,8 +705,11 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(values['server_id'], deployment.server_id)
         self.assertEqual(values['input_values'], deployment.input_values)
         self.ctx.tenant_id = None
-        deployment = db_api.software_deployment_get(self.ctx, deployment_id)
-        self.assertIsNone(deployment)
+        self.assertRaises(
+            exception.NotFound,
+            db_api.software_deployment_get,
+            self.ctx,
+            deployment_id)
 
     def test_software_deployment_get_all(self):
         self.assertEqual([], db_api.software_deployment_get_all(self.ctx))
@@ -737,8 +754,14 @@ class SqlAlchemyTest(HeatTestCase):
         deployment = db_api.software_deployment_get(self.ctx, deployment_id)
         self.assertIsNotNone(deployment)
         db_api.software_deployment_delete(self.ctx, deployment_id)
-        deployment = db_api.software_deployment_get(self.ctx, deployment_id)
-        self.assertIsNone(deployment)
+
+        err = self.assertRaises(
+            exception.NotFound,
+            db_api.software_deployment_get,
+            self.ctx,
+            deployment_id)
+
+        self.assertIn(deployment_id, str(err))
 
 
 def create_raw_template(context, **kwargs):
