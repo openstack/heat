@@ -605,7 +605,10 @@ class CloudServersTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertIn("The heat-script.sh script exited", str(exc))
+        self.assertEqual("Error: The heat-script.sh script exited with a "
+                         "non-zero exit status.  To see the error message, "
+                         "log into the server at 192.0.2.0 and view "
+                         "/root/heat-script.log", str(exc))
         self.m.VerifyAll()
 
     def test_create_cfnuserdata_nonzero_exit_status(self):
@@ -615,7 +618,10 @@ class CloudServersTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertIn("The cfn-userdata script exited", str(exc))
+        self.assertEqual("Error: The cfn-userdata script exited with a "
+                         "non-zero exit status.  To see the error message, "
+                         "log into the server at 192.0.2.0 and view "
+                         "/root/cfn-userdata.log", str(exc))
         self.m.VerifyAll()
 
     def test_validate_too_many_personality_rackspace(self):
