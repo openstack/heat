@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.engine import constraints as constr
 from heat.engine import parameters
 
@@ -124,8 +123,8 @@ class HOTParameters(parameters.Parameters):
         if stack_identifier is not None:
             self.params[self.PARAM_STACK_ID].schema.set_default(
                 stack_identifier.stack_id)
-        else:
-            raise exception.InvalidStackIdentifier()
+            return True
+        return False
 
     def _pseudo_parameters(self, stack_identifier):
         stack_id = getattr(stack_identifier, 'stack_id', '')
