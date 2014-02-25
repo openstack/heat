@@ -13,6 +13,7 @@
 #    under the License.
 """Utilities for Resources that use the OpenStack Nova API."""
 
+import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -176,6 +177,9 @@ def build_userdata(resource, userdata=None, instance_user=None,
     if user_data_format == 'RAW':
         return userdata
 
+    is_cfntools = user_data_format == 'HEAT_CFNTOOLS'
+    is_software_config = user_data_format == 'SOFTWARE_CONFIG'
+
     def make_subpart(content, filename, subtype=None):
         if subtype is None:
             subtype = os.path.splitext(filename)[0]
@@ -192,41 +196,62 @@ def build_userdata(resource, userdata=None, instance_user=None,
 
     attachments = [(read_cloudinit_file('config'), 'cloud-config'),
                    (read_cloudinit_file('boothook.sh'), 'boothook.sh',
-                    'cloud-boothook'),
-                   (read_cloudinit_file('part_handler.py'),
-                    'part-handler.py'),
-                   (userdata, 'cfn-userdata', 'x-cfninitdata'),
-                   (read_cloudinit_file('loguserdata.py'),
-                    'loguserdata.py', 'x-shellscript')]
+                    'cloud-boothook')]
+    attachments.append((read_cloudinit_file('part_handler.py'),
+                       'part-handler.py'))
 
-    if 'Metadata' in resource.t:
-        attachments.append((json.dumps(resource.metadata),
+    if is_cfntools:
+        attachments.append((userdata, 'cfn-userdata', 'x-cfninitdata'))
+    elif is_software_config:
+        # attempt to parse userdata as a multipart message, and if it
+        # is, add each part as an attachment
+        userdata_parts = None
+        try:
+            userdata_parts = email.message_from_string(userdata)
+        except:
+            pass
+        if userdata_parts and userdata_parts.is_multipart():
+            for part in userdata_parts.get_payload():
+                attachments.append((part.get_payload(),
+                                    part.get_filename(),
+                                    part.get_content_subtype()))
+        else:
+            attachments.append((userdata, 'userdata', 'x-shellscript'))
+
+    if is_cfntools:
+        attachments.append((read_cloudinit_file('loguserdata.py'),
+                           'loguserdata.py', 'x-shellscript'))
+
+    metadata = resource.metadata
+    if metadata:
+        attachments.append((json.dumps(metadata),
                             'cfn-init-data', 'x-cfninitdata'))
 
     attachments.append((cfg.CONF.heat_watch_server_url,
                         'cfn-watch-server', 'x-cfninitdata'))
 
-    attachments.append((cfg.CONF.heat_metadata_server_url,
-                        'cfn-metadata-server', 'x-cfninitdata'))
+    if is_cfntools:
+        attachments.append((cfg.CONF.heat_metadata_server_url,
+                            'cfn-metadata-server', 'x-cfninitdata'))
 
-    # Create a boto config which the cfntools on the host use to know
-    # where the cfn and cw API's are to be accessed
-    cfn_url = urlutils.urlparse(cfg.CONF.heat_metadata_server_url)
-    cw_url = urlutils.urlparse(cfg.CONF.heat_watch_server_url)
-    is_secure = cfg.CONF.instance_connection_is_secure
-    vcerts = cfg.CONF.instance_connection_https_validate_certificates
-    boto_cfg = "\n".join(["[Boto]",
-                          "debug = 0",
-                          "is_secure = %s" % is_secure,
-                          "https_validate_certificates = %s" % vcerts,
-                          "cfn_region_name = heat",
-                          "cfn_region_endpoint = %s" %
-                          cfn_url.hostname,
-                          "cloudwatch_region_name = heat",
-                          "cloudwatch_region_endpoint = %s" %
-                          cw_url.hostname])
-    attachments.append((boto_cfg,
-                        'cfn-boto-cfg', 'x-cfninitdata'))
+        # Create a boto config which the cfntools on the host use to know
+        # where the cfn and cw API's are to be accessed
+        cfn_url = urlutils.urlparse(cfg.CONF.heat_metadata_server_url)
+        cw_url = urlutils.urlparse(cfg.CONF.heat_watch_server_url)
+        is_secure = cfg.CONF.instance_connection_is_secure
+        vcerts = cfg.CONF.instance_connection_https_validate_certificates
+        boto_cfg = "\n".join(["[Boto]",
+                              "debug = 0",
+                              "is_secure = %s" % is_secure,
+                              "https_validate_certificates = %s" % vcerts,
+                              "cfn_region_name = heat",
+                              "cfn_region_endpoint = %s" %
+                              cfn_url.hostname,
+                              "cloudwatch_region_name = heat",
+                              "cloudwatch_region_endpoint = %s" %
+                              cw_url.hostname])
+        attachments.append((boto_cfg,
+                            'cfn-boto-cfg', 'x-cfninitdata'))
 
     subparts = [make_subpart(*args) for args in attachments]
     mime_blob = MIMEMultipart(_subparts=subparts)

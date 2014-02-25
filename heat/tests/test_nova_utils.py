@@ -179,7 +179,7 @@ class NovaUtilsUserdataTests(HeatTestCase):
     def test_build_userdata(self):
         """Tests the build_userdata function."""
         resource = self.m.CreateMockAnything()
-        resource.t = {}
+        resource.metadata = {}
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
         cnf.instance_user = self.conf_user
