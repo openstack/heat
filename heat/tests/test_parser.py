@@ -886,7 +886,8 @@ class StackTest(HeatTestCase):
                               'parent', owner_id=None,
                               stack_user_project_id=None,
                               created_time=IgnoreArg(),
-                              updated_time=None)
+                              updated_time=None,
+                              user_creds_id=stack.user_creds_id)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
