@@ -122,6 +122,9 @@ class UserTest(UserPolicyTestCase):
         self.assertEqual(utils.PhysName('test_stack', 'CfnUser'),
                          rsrc.FnGetRefId())
 
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          rsrc.FnGetAtt, 'Foo')
+
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})

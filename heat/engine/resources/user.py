@@ -142,11 +142,6 @@ class User(resource.Resource):
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
 
-    def FnGetAtt(self, key):
-        #TODO(asalkeld) Implement Arn attribute
-        raise exception.InvalidTemplateAttribute(
-            resource=self.name, key=key)
-
     def access_allowed(self, resource_name):
         policies = (self.properties[self.POLICIES] or [])
         for policy in policies:
