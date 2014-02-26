@@ -310,9 +310,8 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl_str = "heat_template_version: this-ain't-valid"
         hot_tmpl = template_format.parse(tmpl_str)
-        exc = self.assertRaises(ValueError, template.Template, hot_tmpl)
-        self.assertIn('"this-ain\'t-valid" is not a valid '
-                      'heat_template_version', str(exc))
+        self.assertRaises(exception.InvalidTemplateVersion,
+                          template.Template, hot_tmpl)
 
     def test_valid_hot_version(self):
         """

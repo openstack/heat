@@ -276,6 +276,7 @@ def map_remote_error(ex):
             'WatchRuleNotFound',
             'StackValidationFailed',
             'InvalidTemplateReference',
+            'InvalidTemplateVersion',
             'UnknownUserParameter',
             'UserParameterMissing',
             'InvalidTemplateParameter',
