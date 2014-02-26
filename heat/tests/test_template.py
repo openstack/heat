@@ -14,6 +14,8 @@
 
 from heat.tests.common import HeatTestCase
 
+from heat.common import exception
+
 from heat.engine import plugin_manager
 from heat.engine import template
 from heat.engine.cfn.template import CfnTemplate
@@ -38,3 +40,55 @@ class TestTemplatePluginManager(HeatTestCase):
 
         self.assertTrue(isinstance(test_pm, plugin_manager.PluginManager))
         self.assertEqual(tpm.plugin_managers['heat.tests'], test_pm)
+
+
+class TestTemplateVersion(HeatTestCase):
+
+    versions = (('heat_template_version', '2013-05-23'),
+                ('HeatTemplateFormatVersion', '2012-12-12'),
+                ('AWSTemplateFormatVersion', '2010-09-09'))
+
+    def test_hot_version(self):
+        tmpl = {
+            'heat_template_version': '2013-05-23',
+            'foo': 'bar',
+            'parameters': {}
+        }
+        self.assertEqual(('heat_template_version', '2013-05-23'),
+                         template.get_version(tmpl, self.versions))
+
+    def test_cfn_version(self):
+        tmpl = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'foo': 'bar',
+            'Parameters': {}
+        }
+        self.assertEqual(('AWSTemplateFormatVersion', '2010-09-09'),
+                         template.get_version(tmpl, self.versions))
+
+    def test_heat_cfn_version(self):
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'foo': 'bar',
+            'Parameters': {}
+        }
+        self.assertEqual(('HeatTemplateFormatVersion', '2012-12-12'),
+                         template.get_version(tmpl, self.versions))
+
+    def test_missing_version(self):
+        tmpl = {
+            'foo': 'bar',
+            'Parameters': {}
+        }
+        self.assertEqual(('HeatTemplateFormatVersion', '2012-12-12'),
+                         template.get_version(tmpl, self.versions))
+
+    def test_ambiguous_version(self):
+        tmpl = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'foo': 'bar',
+            'Parameters': {}
+        }
+        self.assertRaises(exception.InvalidTemplateVersion,
+                          template.get_version, tmpl, self.versions)

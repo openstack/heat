@@ -485,7 +485,7 @@ Mappings:
 
     def test_parameters_section_not_iterable(self):
         expected_description = "This can be accessed"
-        tmpl = parser.Template({'AWSTemplateFormatVersion': '',
+        tmpl = parser.Template({'AWSTemplateFormatVersion': '2010-09-09',
                                 'Description': expected_description,
                                 'Parameters':
                                 {'foo': {'Type': 'String', 'Required': True}}})
