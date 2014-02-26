@@ -21,6 +21,7 @@ from heat.openstack.common.gettextutils import _
 
 from docutils import nodes
 from sphinx.util.compat import Directive
+import pydoc
 
 
 class resourcepages(nodes.General, nodes.Element):
@@ -52,7 +53,7 @@ class ResourcePages(Directive):
                 warning = nodes.note('', para)
                 section.append(warning)
 
-            cls_doc = resource_class.__doc__
+            cls_doc = pydoc.getdoc(resource_class)
             if cls_doc:
                 para = nodes.paragraph('', cls_doc)
                 section.append(para)
