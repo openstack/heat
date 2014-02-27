@@ -915,6 +915,9 @@ class DBAPIUserCredsTest(HeatTestCase):
                                          user_creds.decrypt_method),
                          ret_user_creds['password'])
 
+    def test_user_creds_get_noexist(self):
+        self.assertIsNone(db_api.user_creds_get(123456))
+
 
 class DBAPIStackTest(HeatTestCase):
     def setUp(self):
