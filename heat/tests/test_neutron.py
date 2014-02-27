@@ -66,6 +66,8 @@ neutron_template = '''
         "ip_version": 4,
         "cidr": "10.0.3.0/24",
         "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
+        "host_routes": [
+            {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
         "dns_nameservers": ["8.8.8.8"]
       }
     },
@@ -619,6 +621,8 @@ class NeutronSubnetTest(HeatTestCase):
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
+                'host_routes': [
+                    {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}],
                 'ip_version': 4,
                 'cidr': u'10.0.3.0/24',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
@@ -632,6 +636,8 @@ class NeutronSubnetTest(HeatTestCase):
                 "dns_nameservers": ["8.8.8.8"],
                 "enable_dhcp": True,
                 "gateway_ip": "10.0.3.1",
+                "host_routes": [
+                    {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
                 "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
                 "ip_version": 4,
                 "name": "name",
@@ -650,6 +656,8 @@ class NeutronSubnetTest(HeatTestCase):
                 "allocation_pools": [
                     {"start": "10.0.3.20", "end": "10.0.3.150"}],
                 "gateway_ip": "10.0.3.1",
+                'host_routes': [
+                    {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}],
                 "ip_version": 4,
                 "cidr": "10.0.3.0/24",
                 "dns_nameservers": ["8.8.8.8"],
@@ -716,7 +724,9 @@ class NeutronSubnetTest(HeatTestCase):
                 "cidr": "10.0.3.0/24",
                 "allocation_pools": [
                     {"start": "10.0.3.20", "end": "10.0.3.150"}],
-                "dns_nameservers": ["8.8.8.8", "192.168.1.254"]
+                "dns_nameservers": ["8.8.8.8", "192.168.1.254"],
+                'host_routes': [
+                    {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}]
             }
         }
         rsrc.handle_update(update_snippet, {}, {})
@@ -737,6 +747,8 @@ class NeutronSubnetTest(HeatTestCase):
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
+                'host_routes': [
+                    {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}],
                 'ip_version': 4,
                 'enable_dhcp': False,
                 'cidr': u'10.0.3.0/24',
@@ -746,6 +758,8 @@ class NeutronSubnetTest(HeatTestCase):
             "subnet": {
                 "allocation_pools": [
                     {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                "host_routes": [
+                    {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
                 "cidr": "10.0.3.0/24",
                 "dns_nameservers": ["8.8.8.8"],
                 "enable_dhcp": False,
@@ -766,6 +780,9 @@ class NeutronSubnetTest(HeatTestCase):
                     "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
                     "allocation_pools": [
                         {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                    "host_routes": [
+                        {"destination": "10.0.4.0/24",
+                         "nexthop": "10.0.3.20"}],
                     "gateway_ip": "10.0.3.1",
                     "ip_version": 4,
                     "cidr": "10.0.3.0/24",

@@ -30,17 +30,23 @@ class Subnet(neutron.NeutronResource):
     PROPERTIES = (
         NETWORK_ID, CIDR, VALUE_SPECS, NAME, IP_VERSION,
         DNS_NAMESERVERS, GATEWAY_IP, ENABLE_DHCP, ALLOCATION_POOLS,
-        TENANT_ID,
+        TENANT_ID, HOST_ROUTES,
     ) = (
         'network_id', 'cidr', 'value_specs', 'name', 'ip_version',
         'dns_nameservers', 'gateway_ip', 'enable_dhcp', 'allocation_pools',
-        'tenant_id',
+        'tenant_id', 'host_routes',
     )
 
     _ALLOCATION_POOL_KEYS = (
         ALLOCATION_POOL_START, ALLOCATION_POOL_END,
     ) = (
         'start', 'end',
+    )
+
+    _HOST_ROUTES_KEYS = (
+        ROUTE_DESTINATION, ROUTE_NEXTHOP,
+    ) = (
+        'destination', 'nexthop',
     )
 
     properties_schema = {
@@ -101,6 +107,22 @@ class Subnet(neutron.NeutronResource):
         TENANT_ID: properties.Schema(
             properties.Schema.STRING
         ),
+        HOST_ROUTES: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    ROUTE_DESTINATION: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    ROUTE_NEXTHOP: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
 
     attributes_schema = {
@@ -109,9 +131,9 @@ class Subnet(neutron.NeutronResource):
         "tenant_id": _("Tenant owning the subnet."),
         "allocation_pools": _("Ip allocation pools and their ranges."),
         "gateway_ip": _("Ip of the subnet's gateway."),
+        "host_routes": _("Additional routes for this subnet."),
         "ip_version": _("Ip version for the subnet."),
         "cidr": _("CIDR block notation for this subnet."),
-        # dns_nameservers isn't in the api docs; is it right?
         "dns_nameservers": _("List of dns nameservers."),
         "enable_dhcp": _("'true' if DHCP is enabled for this subnet; 'false' "
                          "otherwise."),
