@@ -99,6 +99,11 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         t = get_table(engine, table)
         self.assertNotIn(column, t.c)
 
+    def assertColumnIsNullable(self, engine, table, column):
+        t = get_table(engine, table)
+        col = getattr(t.c, column)
+        self.assertTrue(col.nullable)
+
     def assertIndexExists(self, engine, table, index):
         t = get_table(engine, table)
         index_names = [idx.name for idx in t.indexes]
@@ -237,3 +242,6 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_038(self, engine, data):
         self.assertColumnNotExists(engine, 'software_config', 'io')
+
+    def _check_039(self, engine, data):
+        self.assertColumnIsNullable(engine, 'stack', 'user_creds_id')

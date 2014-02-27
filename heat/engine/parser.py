@@ -644,16 +644,24 @@ class Stack(collections.Mapping):
             reason = '%s timed out' % action.title()
 
         if stack_status != self.FAILED and not backup:
-            # If we created a trust, delete it
-            user_creds = db_api.user_creds_get(self.user_creds_id)
-            trust_id = user_creds.get('trust_id')
-            if trust_id:
-                try:
-                    self.clients.keystone().delete_trust(trust_id)
-                except Exception as ex:
-                    logger.exception(ex)
-                    stack_status = self.FAILED
-                    reason = "Error deleting trust: %s" % str(ex)
+            # Cleanup stored user_creds so they aren't accessible via
+            # the soft-deleted stack which remains in the DB
+            if self.user_creds_id:
+                user_creds = db_api.user_creds_get(self.user_creds_id)
+                # If we created a trust, delete it
+                trust_id = user_creds.get('trust_id')
+                if trust_id:
+                    try:
+                        self.clients.keystone().delete_trust(trust_id)
+                    except Exception as ex:
+                        logger.exception(ex)
+                        stack_status = self.FAILED
+                        reason = "Error deleting trust: %s" % str(ex)
+
+                # Delete the stored credentials
+                db_api.user_creds_delete(self.context, self.user_creds_id)
+                self.user_creds_id = None
+                self.store()
 
             # If the stack has a domain project, delete it
             if self.stack_user_project_id:
