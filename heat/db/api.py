@@ -162,6 +162,10 @@ def user_creds_create(context):
     return IMPL.user_creds_create(context)
 
 
+def user_creds_delete(context, user_creds_id):
+    return IMPL.user_creds_delete(context, user_creds_id)
+
+
 def user_creds_get(context_id):
     return IMPL.user_creds_get(context_id)
 
