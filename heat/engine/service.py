@@ -1103,6 +1103,17 @@ class EngineService(service.Service):
         result = [api.format_software_deployment(sd) for sd in all_sd]
         return result
 
+    @request_context
+    def metadata_software_deployments(self, cnxt, server_id):
+        if not server_id:
+            raise ValueError(_('server_id must be specified'))
+        all_sd = db_api.software_deployment_get_all(cnxt, server_id)
+        # sort the configs by config name, to give the list of metadata a
+        # deterministic and controllable order.
+        all_sd_s = sorted(all_sd, key=lambda sd: sd.config.name)
+        result = [api.format_software_config(sd.config) for sd in all_sd_s]
+        return result
+
     @rpc_common.client_exceptions(exception.NotFound)
     @request_context
     def show_software_deployment(self, cnxt, deployment_id):

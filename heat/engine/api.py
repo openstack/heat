@@ -338,11 +338,5 @@ def format_software_deployment(sd):
         api.SOFTWARE_DEPLOYMENT_STATUS_REASON: sd.status_reason,
         api.SOFTWARE_DEPLOYMENT_SIGNAL_ID: sd.signal_id,
         api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
-        api.SOFTWARE_CONFIG_CONFIG: sd.config.config,
-        api.SOFTWARE_CONFIG_NAME: sd.config.name,
-        api.SOFTWARE_CONFIG_GROUP: sd.config.group,
-        api.SOFTWARE_CONFIG_INPUTS: sd.config.io['inputs'],
-        api.SOFTWARE_CONFIG_OUTPUTS: sd.config.io['outputs'],
-        api.SOFTWARE_CONFIG_OPTIONS: sd.config.io['options']
     }
     return result
