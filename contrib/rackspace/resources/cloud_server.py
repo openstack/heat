@@ -57,6 +57,9 @@ then
 fi
 yum install -y python-boto python-pip gcc python-devel python-argparse
 pip-python install heat-cfntools
+if [[ -e /etc/cloud/cloud.cfg.d/10_rackspace.cfg ]]; then
+  sed -i 's/ConfigDrive, None/NoCloud/' /etc/cloud/cloud.cfg.d/10_rackspace.cfg
+fi
 """,
         'rhel': """
 if ! (yum repolist 2> /dev/null | egrep -q "^[\!\*]?epel ");
@@ -81,6 +84,7 @@ pip install heat-cfntools
 """}
 
     SCRIPT_CREATE_DATA_SOURCE = """
+rm -rf /var/lib/cloud
 mkdir -p /var/lib/cloud/seed/nocloud-net
 mv /tmp/userdata /var/lib/cloud/seed/nocloud-net/user-data
 touch /var/lib/cloud/seed/nocloud-net/meta-data
