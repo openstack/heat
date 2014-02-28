@@ -26,7 +26,6 @@ from heat.openstack.common.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session
 from sqlalchemy.orm.session import Session
 from heat.db.sqlalchemy.types import Json
-from heat.db.sqlalchemy.types import LongText
 
 BASE = declarative_base()
 get_session = session.get_session
@@ -264,8 +263,7 @@ class SoftwareConfig(BASE, HeatBase):
     name = sqlalchemy.Column('name', sqlalchemy.String(255),
                              nullable=True)
     group = sqlalchemy.Column('group', sqlalchemy.String(255))
-    config = sqlalchemy.Column('config', LongText)
-    io = sqlalchemy.Column('io', Json)
+    config = sqlalchemy.Column('config', Json)
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(256), nullable=False)
 

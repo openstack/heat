@@ -234,3 +234,6 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_036(self, engine, data):
         self.assertColumnExists(engine, 'stack', 'stack_user_project_id')
+
+    def _check_038(self, engine, data):
+        self.assertColumnNotExists(engine, 'software_config', 'io')

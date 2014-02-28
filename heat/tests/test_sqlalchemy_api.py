@@ -622,16 +622,19 @@ class SqlAlchemyTest(HeatTestCase):
             db_api.software_config_get,
             self.ctx,
             str(uuid.uuid4()))
-        io = {'inputs': [{'name': 'foo'}, {'name': 'bar'}],
-              'outputs': [{'name': 'result'}]}
-        tenant_id = self.ctx.tenant_id
         conf = ('#!/bin/bash\n'
                 'echo "$bar and $foo"\n')
+        config = {
+            'inputs': [{'name': 'foo'}, {'name': 'bar'}],
+            'outputs': [{'name': 'result'}],
+            'config': conf,
+            'options': {}
+        }
+        tenant_id = self.ctx.tenant_id
         values = {'name': 'config_mysql',
                   'tenant': tenant_id,
                   'group': 'Heat::Shell',
-                  'config': conf,
-                  'io': io}
+                  'config': config}
         config = db_api.software_config_create(
             self.ctx, values)
         config_id = config.id
@@ -640,8 +643,7 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual('config_mysql', config.name)
         self.assertEqual(tenant_id, config.tenant)
         self.assertEqual('Heat::Shell', config.group)
-        self.assertEqual(conf, config.config)
-        self.assertEqual(io, config.io)
+        self.assertEqual(conf, config.config['config'])
         self.ctx.tenant_id = None
         self.assertRaises(
             exception.NotFound,
