@@ -434,8 +434,30 @@ class LoadBalancer(stack_resource.StackResource):
             contents = lb_template_default
         return template_format.parse(contents)
 
-    def handle_create(self):
+    def child_params(self):
+        params = {}
+
+        # If the owning stack defines KeyName, we use that key for the nested
+        # template, otherwise use no key
+        if 'KeyName' in self.stack.parameters:
+            params['KeyName'] = self.stack.parameters['KeyName']
+
+        return params
+
+    def child_template(self):
         templ = self.get_parsed_template()
+
+        # If the owning stack defines KeyName, we use that key for the nested
+        # template, otherwise use no key
+        if 'KeyName' not in self.stack.parameters:
+            del templ['Resources']['LB_instance']['Properties']['KeyName']
+            del templ['Parameters']['KeyName']
+
+        return templ
+
+    def handle_create(self):
+        templ = self.child_template()
+        params = self.child_params()
 
         if self.properties[self.INSTANCES]:
             md = templ['Resources']['LB_instance']['Metadata']
@@ -443,16 +465,7 @@ class LoadBalancer(stack_resource.StackResource):
             cfg = self._haproxy_config(templ, self.properties[self.INSTANCES])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
-        # If the owning stack defines KeyName, we use that key for the nested
-        # template, otherwise use no key
-        try:
-            param = {'KeyName': self.stack.parameters['KeyName']}
-        except KeyError:
-            del templ['Resources']['LB_instance']['Properties']['KeyName']
-            del templ['Parameters']['KeyName']
-            param = {}
-
-        return self.create_with_template(templ, param)
+        return self.create_with_template(templ, params)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         '''
