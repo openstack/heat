@@ -49,10 +49,13 @@ class SignalResponder(stack_user.StackUser):
 
     def handle_delete(self):
         super(SignalResponder, self).handle_delete()
+        self._delete_signed_url()
+
+    def _delete_signed_url(self):
         try:
             db_api.resource_data_delete(self, 'ec2_signed_url')
         except exception.NotFound:
-                pass
+            pass
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
