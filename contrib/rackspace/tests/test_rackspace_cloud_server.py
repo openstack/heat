@@ -174,7 +174,8 @@ class CloudServersTest(HeatTestCase):
                 config_drive=None,
                 disk_config=None,
                 reservation_id=None,
-                files=mox.IgnoreArg()).AndReturn(return_server)
+                files=mox.IgnoreArg(),
+                admin_pass=None).AndReturn(return_server)
 
         self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
         cloud_server.CloudServer.script = "foobar"
@@ -336,7 +337,8 @@ class CloudServersTest(HeatTestCase):
             meta=None, nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
             disk_config=None, reservation_id=None,
-            files=expected_personality).AndReturn(return_server)
+            files=expected_personality,
+            admin_pass=None).AndReturn(return_server)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()

@@ -40,12 +40,14 @@ class Server(resource.Resource):
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
+        ADMIN_PASS,
     ) = (
         'name', 'image', 'block_device_mapping', 'flavor',
         'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
+        'admin_pass',
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -243,7 +245,13 @@ class Server(resource.Resource):
             _('A map of files to create/overwrite on the server upon boot. '
               'Keys are file names and values are the file contents.'),
             default={}
-        )
+        ),
+        ADMIN_PASS: properties.Schema(
+            properties.Schema.STRING,
+            _('The administrator password for the server.'),
+            required=False,
+            update_allowed=True
+        ),
     }
 
     attributes_schema = {
@@ -319,6 +327,7 @@ class Server(resource.Resource):
         reservation_id = self.properties.get(self.RESERVATION_ID)
         config_drive = self.properties.get(self.CONFIG_DRIVE)
         disk_config = self.properties.get(self.DISK_CONFIG)
+        admin_pass = self.properties.get(self.ADMIN_PASS) or None
 
         server = None
         try:
@@ -337,7 +346,8 @@ class Server(resource.Resource):
                 reservation_id=reservation_id,
                 config_drive=config_drive,
                 disk_config=disk_config,
-                files=self._personality())
+                files=self._personality(),
+                admin_pass=admin_pass)
         finally:
             # Avoid a race condition where the thread could be cancelled
             # before the ID is stored
