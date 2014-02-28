@@ -15,6 +15,7 @@ from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import router
+from heat.engine import support
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
@@ -22,16 +23,25 @@ if clients.neutronclient is not None:
 
 class FloatingIP(neutron.NeutronResource):
     PROPERTIES = (
-        FLOATING_NETWORK_ID, VALUE_SPECS, PORT_ID, FIXED_IP_ADDRESS,
+        FLOATING_NETWORK_ID, FLOATING_NETWORK,
+        VALUE_SPECS, PORT_ID, FIXED_IP_ADDRESS,
     ) = (
-        'floating_network_id', 'value_specs', 'port_id', 'fixed_ip_address',
+        'floating_network_id', 'floating_network',
+        'value_specs', 'port_id', 'fixed_ip_address',
     )
 
     properties_schema = {
         FLOATING_NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
-            _('ID of network to allocate floating IP from.'),
-            required=True
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % FLOATING_NETWORK),
+            required=False
+        ),
+        FLOATING_NETWORK: properties.Schema(
+            properties.Schema.STRING,
+            _('Network to allocate floating IP from.'),
+            required=False
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
@@ -69,15 +79,28 @@ class FloatingIP(neutron.NeutronResource):
         # depend on any RouterGateway in this template with the same
         # network_id as this floating_network_id
         for resource in self.stack.itervalues():
-            if (resource.has_interface('OS::Neutron::RouterGateway') and
-                resource.properties.get(router.RouterGateway.NETWORK_ID) ==
-                    self.properties.get(self.FLOATING_NETWORK_ID)):
-                        deps += (self, resource)
+            if resource.has_interface('OS::Neutron::RouterGateway'):
+                gateway_network = resource.properties.get(
+                    router.RouterGateway.NETWORK) or resource.properties.get(
+                        router.RouterGateway.NETWORK_ID)
+                floating_network = self.properties.get(
+                    self.FLOATING_NETWORK) or self.properties.get(
+                        self.FLOATING_NETWORK_ID)
+                if gateway_network == floating_network:
+                    deps += (self, resource)
+
+    def validate(self):
+        super(FloatingIP, self).validate()
+        self._validate_depr_property_required(
+            self.properties, self.FLOATING_NETWORK, self.FLOATING_NETWORK_ID)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        self._resolve_network(
+            self.neutron(), props, self.FLOATING_NETWORK,
+            'floating_network_id')
         fip = self.neutron().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])

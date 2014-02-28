@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import mox
 
 from testtools import skipIf
 
@@ -19,6 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.neutron import vpnservice
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -27,6 +29,26 @@ from heat.tests import utils
 
 
 neutronclient = try_import('neutronclient.v2_0.client')
+
+vpnservice_template_deprecated = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test VPN service resource",
+  "Parameters" : {},
+  "Resources" : {
+    "VPNService" : {
+      "Type" : "OS::Neutron::VPNService",
+      "Properties" : {
+        "name" : "VPNService",
+        "description" : "My new VPN service",
+        "admin_state_up" : true,
+        "router_id" : "rou123",
+        "subnet_id" : "sub123"
+      }
+    }
+  }
+}
+'''
 
 vpnservice_template = '''
 {
@@ -41,7 +63,7 @@ vpnservice_template = '''
         "description" : "My new VPN service",
         "admin_state_up" : true,
         "router_id" : "rou123",
-        "subnet_id" : "sub123"
+        "subnet" : "sub123"
       }
     }
   }
@@ -152,21 +174,38 @@ class VPNServiceTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
+        self.m.StubOutWithMock(neutron.neutronV20,
+                               'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-    def create_vpnservice(self):
+    def create_vpnservice(self, resolve_neutron=True):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
+        if resolve_neutron:
+            neutron.neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'subnet',
+                'sub123'
+            ).AndReturn('sub123')
+            snippet = template_format.parse(vpnservice_template)
+        else:
+            snippet = template_format.parse(vpnservice_template_deprecated)
         neutronclient.Client.create_vpnservice(
             self.VPN_SERVICE_CONF).AndReturn({'vpnservice': {'id': 'vpn123'}})
-        snippet = template_format.parse(vpnservice_template)
+
         self.stack = utils.parse_stack(snippet)
         return vpnservice.VPNService('vpnservice',
                                      snippet['Resources']['VPNService'],
                                      self.stack)
 
+    def test_create_deprecated(self):
+        self._test_create(resolve_neutron=False)
+
     def test_create(self):
-        rsrc = self.create_vpnservice()
+        self._test_create()
+
+    def _test_create(self, resolve_neutron=True):
+        rsrc = self.create_vpnservice(resolve_neutron)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -175,6 +214,12 @@ class VPNServiceTest(HeatTestCase):
     def test_create_failed(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub123'
+        ).AndReturn('sub123')
+
         neutronclient.Client.create_vpnservice(self.VPN_SERVICE_CONF).AndRaise(
             vpnservice.NeutronClientException())
         self.m.ReplayAll()

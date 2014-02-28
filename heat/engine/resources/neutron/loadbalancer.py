@@ -19,10 +19,10 @@ from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
+from heat.engine import support
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
-    from neutronclient.neutron import v2_0 as neutronV20
 
 
 class HealthMonitor(neutron.NeutronResource):
@@ -148,10 +148,10 @@ class Pool(neutron.NeutronResource):
     """
 
     PROPERTIES = (
-        PROTOCOL, SUBNET_ID, LB_METHOD, NAME, DESCRIPTION,
+        PROTOCOL, SUBNET_ID, SUBNET, LB_METHOD, NAME, DESCRIPTION,
         ADMIN_STATE_UP, VIP, MONITORS,
     ) = (
-        'protocol', 'subnet_id', 'lb_method', 'name', 'description',
+        'protocol', 'subnet_id', 'subnet', 'lb_method', 'name', 'description',
         'admin_state_up', 'vip', 'monitors',
     )
 
@@ -182,9 +182,16 @@ class Pool(neutron.NeutronResource):
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % SUBNET),
+            required=False
+        ),
+        SUBNET: properties.Schema(
+            properties.Schema.STRING,
             _('The subnet for the port on which the members '
               'of the pool will be connected.'),
-            required=True
+            required=False
         ),
         LB_METHOD: properties.Schema(
             properties.Schema.STRING,
@@ -298,7 +305,8 @@ class Pool(neutron.NeutronResource):
         res = super(Pool, self).validate()
         if res:
             return res
-
+        self._validate_depr_property_required(
+            self.properties, self.SUBNET, self.SUBNET_ID)
         session_p = self.properties[self.VIP].get(self.VIP_SESSION_PERSISTENCE)
         if session_p is None:
             # session persistence is not configured, skip validation
@@ -317,6 +325,8 @@ class Pool(neutron.NeutronResource):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        self._resolve_subnet(
+            self.neutron(), properties, self.SUBNET, 'subnet_id')
         vip_properties = properties.pop(self.VIP)
         monitors = properties.pop(self.MONITORS)
         client = self.neutron()
@@ -339,13 +349,11 @@ class Pool(neutron.NeutronResource):
         vip_arguments['protocol'] = self.properties[self.PROTOCOL]
 
         if vip_arguments.get(self.VIP_SUBNET) is None:
-            vip_arguments['subnet_id'] = self.properties[self.SUBNET_ID]
+            vip_arguments['subnet_id'] = properties[self.SUBNET_ID]
         else:
-            vip_arguments[
-                'subnet_id'] = neutronV20.find_resourceid_by_name_or_id(
-                    self.neutron(),
-                    'subnet',
-                    vip_arguments.pop(self.VIP_SUBNET))
+            vip_arguments['subnet_id'] = self._resolve_subnet(
+                self.neutron(),
+                vip_arguments, self.VIP_SUBNET, 'subnet_id')
 
         vip_arguments['pool_id'] = pool['id']
         vip = client.create_vip({'vip': vip_arguments})['vip']
