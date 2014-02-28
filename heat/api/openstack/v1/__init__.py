@@ -225,6 +225,11 @@ class API(wsgi.Router):
                               action="index",
                               conditions={'method': 'GET'})
 
+            sa_mapper.connect("software_deployment_metadata",
+                              "/metadata/{server_id}",
+                              action="metadata",
+                              conditions={'method': 'GET'})
+
             sa_mapper.connect("software_deployment_create",
                               "",
                               action="create",
