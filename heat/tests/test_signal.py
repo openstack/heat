@@ -43,9 +43,6 @@ test_template_signal = '''
   "Resources" : {
     "signal_handler" : {"Type" : "SignalResourceType"},
     "resource_X" : {"Type" : "GenericResourceType"}
-  },
-  "Outputs": {
-    "signed_url": {"Fn::GetAtt": ["signal_handler", "AlarmUrl"]}
   }
 }
 '''
