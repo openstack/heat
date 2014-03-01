@@ -165,6 +165,10 @@ class StackController(object):
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
+
+        if not filter_params:
+            filter_params = None
+
         stacks = self.rpc_client.list_stacks(req.context,
                                              filters=filter_params,
                                              tenant_safe=tenant_safe,
