@@ -81,11 +81,12 @@ def format_stack(stack):
     Return a representation of the given stack that matches the API output
     expectations.
     '''
+    updated_time = stack.updated_time and timeutils.isotime(stack.updated_time)
     info = {
         api.STACK_NAME: stack.name,
         api.STACK_ID: dict(stack.identifier()),
         api.STACK_CREATION_TIME: timeutils.isotime(stack.created_time),
-        api.STACK_UPDATED_TIME: timeutils.isotime(stack.updated_time),
+        api.STACK_UPDATED_TIME: updated_time,
         api.STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
         api.STACK_PARAMETERS: stack.parameters.map(str),
         api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],

@@ -15,7 +15,6 @@
 
 import copy
 import base64
-from datetime import datetime
 
 from heat.engine import event
 from heat.common import exception
@@ -751,9 +750,6 @@ class Resource(object):
 
             new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
-
-            self.stack.updated_time = datetime.utcnow()
-
         except Exception as ex:
             logger.error(_('DB error %s') % str(ex))
 
@@ -781,8 +777,6 @@ class Resource(object):
                                     'status_reason': reason,
                                     'stack_id': self.stack.id,
                                     'nova_instance': self.resource_id})
-
-                self.stack.updated_time = datetime.utcnow()
             except Exception as ex:
                 logger.error(_('DB error %s') % str(ex))
 

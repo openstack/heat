@@ -119,6 +119,11 @@ class Stack(BASE, HeatBase, SoftDelete):
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
 
+    # Override timestamp column to store the correct value: it should be the
+    # time the create/update call was issued, not the time the DB entry is
+    # created/modified. (bug #1193269)
+    updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
+
 
 class StackLock(BASE, HeatBase):
     """Store stack locks for deployments with multiple-engines."""

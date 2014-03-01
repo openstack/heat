@@ -17,7 +17,7 @@ import mock
 import time
 
 from keystoneclient import exceptions as kc_exceptions
-
+from mox import IgnoreArg
 from oslo.config import cfg
 
 from heat.engine import environment
@@ -885,7 +885,9 @@ class StackTest(HeatTestCase):
                               stack.action, stack.status, stack.status_reason,
                               stack.timeout, True, stack.disable_rollback,
                               'parent', owner_id=None,
-                              stack_user_project_id=None)
+                              stack_user_project_id=None,
+                              created_time=IgnoreArg(),
+                              updated_time=None)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -1012,14 +1014,17 @@ class StackTest(HeatTestCase):
 
     @utils.stack_delete_after
     def test_updated_time(self):
-        self.stack = parser.Stack(self.ctx, 'update_time_test',
+        self.stack = parser.Stack(self.ctx, 'updated_time_test',
                                   parser.Template({}))
         self.assertIsNone(self.stack.updated_time)
         self.stack.store()
-        stored_time = self.stack.updated_time
-        self.stack.state_set(self.stack.CREATE, self.stack.IN_PROGRESS, 'test')
+        self.stack.create()
+
+        tmpl = {'Resources': {'R1': {'Type': 'GenericResourceType'}}}
+        newstack = parser.Stack(self.ctx, 'updated_time_test',
+                                parser.Template(tmpl))
+        self.stack.update(newstack)
         self.assertIsNotNone(self.stack.updated_time)
-        self.assertNotEqual(self.stack.updated_time, stored_time)
 
     @utils.stack_delete_after
     def test_delete(self):
@@ -1367,7 +1372,7 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.FAILED),
                          self.stack.state)
-        self.stack.update({})
+        self.stack.update(mock.Mock())
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
                          self.stack.state)
 

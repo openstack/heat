@@ -15,7 +15,7 @@
 
 import collections
 import copy
-import functools
+from datetime import datetime
 import re
 import six
 
@@ -29,7 +29,6 @@ from heat.engine import function
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
-from heat.engine import timestamp
 from heat.engine import update
 from heat.engine.notification import stack as notification
 from heat.engine.parameter_groups import ParameterGroups
@@ -55,20 +54,14 @@ class Stack(collections.Mapping):
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
 
-    created_time = timestamp.Timestamp(functools.partial(db_api.stack_get,
-                                                         show_deleted=True),
-                                       'created_at')
-    updated_time = timestamp.Timestamp(functools.partial(db_api.stack_get,
-                                                         show_deleted=True),
-                                       'updated_at')
-
     _zones = None
 
     def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=60, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
-                 adopt_stack_data=None, stack_user_project_id=None):
+                 adopt_stack_data=None, stack_user_project_id=None,
+                 created_time=None, updated_time=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -99,6 +92,8 @@ class Stack(collections.Mapping):
         self._access_allowed_handlers = {}
         self.adopt_stack_data = adopt_stack_data
         self.stack_user_project_id = stack_user_project_id
+        self.created_time = created_time
+        self.updated_time = updated_time
 
         resources.initialise()
 
@@ -191,7 +186,9 @@ class Stack(collections.Mapping):
                     stack.id, stack.action, stack.status, stack.status_reason,
                     stack.timeout, resolve_data, stack.disable_rollback,
                     parent_resource, owner_id=stack.owner_id,
-                    stack_user_project_id=stack.stack_user_project_id)
+                    stack_user_project_id=stack.stack_user_project_id,
+                    created_time=stack.created_at,
+                    updated_time=stack.updated_at)
 
         return stack
 
@@ -200,7 +197,6 @@ class Stack(collections.Mapping):
         Store the stack in the database and return its ID
         If self.id is set, we update the existing stack
         '''
-
         s = {
             'name': self._backup_name() if backup else self.name,
             'raw_template_id': self.t.store(self.context),
@@ -214,6 +210,7 @@ class Stack(collections.Mapping):
             'timeout': self.timeout_mins,
             'disable_rollback': self.disable_rollback,
             'stack_user_project_id': self.stack_user_project_id,
+            'updated_at': self.updated_time,
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)
@@ -229,6 +226,7 @@ class Stack(collections.Mapping):
 
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
+            self.created_time = new_s.created_at
 
         self._set_param_stackid()
 
@@ -518,6 +516,7 @@ class Stack(collections.Mapping):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
+        self.updated_time = datetime.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack)
         updater()
 
