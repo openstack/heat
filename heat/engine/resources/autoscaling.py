@@ -814,6 +814,72 @@ class LaunchConfiguration(resource.Resource):
         return unicode(self.physical_resource_name())
 
 
+class AutoScalingResourceGroup(AutoScalingGroup):
+    """An autoscaling group that can scale arbitrary resources."""
+
+    PROPERTIES = (
+        RESOURCE, MAX_SIZE, MIN_SIZE, COOLDOWN, DESIRED_CAPACITY
+    ) = (
+        'resource', 'max_size', 'min_size', 'cooldown', 'desired_capacity'
+    )
+
+    properties_schema = {
+        RESOURCE: properties.Schema(
+            properties.Schema.MAP,
+            _('Resource definition for the resources in the group, in HOT '
+              'format. The value of this property is the definition of a '
+              'resource just as if it had been declared in the template '
+              'itself.'),
+            required=True
+        ),
+        MAX_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Maximum number of resources in the group.'),
+            required=True,
+            update_allowed=True,
+            constraints=[constraints.Range(min=0)],
+        ),
+        MIN_SIZE: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Minimum number of resources in the group.'),
+            required=True,
+            update_allowed=True,
+            constraints=[constraints.Range(min=0)]
+        ),
+        COOLDOWN: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Cooldown period, in seconds.'),
+            update_allowed=True
+        ),
+        DESIRED_CAPACITY: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Desired initial number of resources.'),
+            update_allowed=True
+        ),
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    def _get_instance_definition(self):
+        resource_definition = self.properties[self.RESOURCE]
+        # resolve references within the context of this stack.
+        return self.stack.resolve_runtime_data(resource_definition)
+
+    def _lb_reload(self, exclude=None):
+        """AutoScalingResourceGroup does not maintain load balancer
+        connections, so we just ignore calls to update the LB.
+        """
+        pass
+
+    def _create_template(self, *args, **kwargs):
+        """Use a HOT format for the template in the nested stack."""
+        tpl = super(AutoScalingResourceGroup, self)._create_template(
+            *args, **kwargs)
+        tpl['heat_template_version'] = '2013-05-23'
+        tpl['resources'] = tpl.pop('Resources')
+        return tpl
+
+
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     PROPERTIES = (
         AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
@@ -944,4 +1010,5 @@ def resource_mapping():
         'AWS::AutoScaling::AutoScalingGroup': AutoScalingGroup,
         'AWS::AutoScaling::ScalingPolicy': ScalingPolicy,
         'OS::Heat::InstanceGroup': InstanceGroup,
+        'OS::Heat::AutoScalingGroup': AutoScalingResourceGroup,
     }
