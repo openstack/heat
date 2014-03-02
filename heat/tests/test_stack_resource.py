@@ -335,7 +335,7 @@ class StackResourceTest(HeatTestCase):
         ex = self.assertRaises(exception.Error,
                                self.parent_resource.check_update_complete,
                                updater)
-        self.assertEqual('Nested stack update failed: ', str(ex))
+        self.assertEqual('Nested stack UPDATE failed: ', str(ex))
 
         self.m.VerifyAll()
 
@@ -459,7 +459,7 @@ class StackResourceTest(HeatTestCase):
                              "Stack CREATE started").WithSideEffects(st_set)
 
         self.stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
-                             "Stack create completed successfully")
+                             "Stack CREATE completed successfully")
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourceFailure,
@@ -489,7 +489,7 @@ class StackResourceTest(HeatTestCase):
                              "Stack SUSPEND started").WithSideEffects(st_set)
 
         self.stack.state_set(parser.Stack.SUSPEND, parser.Stack.COMPLETE,
-                             "Stack suspend completed successfully")
+                             "Stack SUSPEND completed successfully")
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourceFailure,
@@ -521,7 +521,7 @@ class StackResourceTest(HeatTestCase):
                              "Stack RESUME started").WithSideEffects(st_set)
 
         self.stack.state_set(parser.Stack.RESUME, parser.Stack.COMPLETE,
-                             "Stack resume completed successfully")
+                             "Stack RESUME completed successfully")
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourceFailure,

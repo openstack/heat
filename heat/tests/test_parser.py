@@ -1163,7 +1163,7 @@ class StackTest(HeatTestCase):
 
         self.assertEqual((self.stack.SUSPEND, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource suspend failed: Exception: foo',
+        self.assertEqual('Resource SUSPEND failed: Exception: foo',
                          self.stack.status_reason)
         self.m.VerifyAll()
 
@@ -1191,7 +1191,7 @@ class StackTest(HeatTestCase):
 
         self.assertEqual((self.stack.RESUME, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource resume failed: Exception: foo',
+        self.assertEqual('Resource RESUME failed: Exception: foo',
                          self.stack.status_reason)
         self.m.VerifyAll()
 
@@ -1337,7 +1337,7 @@ class StackTest(HeatTestCase):
         self.stack.adopt()
         self.assertEqual((self.stack.ADOPT, self.stack.FAILED),
                          self.stack.state)
-        expected = ('Resource adopt failed: Exception: Resource ID was not'
+        expected = ('Resource ADOPT failed: Exception: Resource ID was not'
                     ' provided.')
         self.assertEqual(expected, self.stack.status_reason)
 
@@ -2101,7 +2101,7 @@ class StackTest(HeatTestCase):
 
         self.assertEqual((self.stack.DELETE, self.stack.FAILED),
                          self.stack.state)
-        self.assertEqual('Resource delete failed: Exception: foo',
+        self.assertEqual('Resource DELETE failed: Exception: foo',
                          self.stack.status_reason)
         self.m.VerifyAll()
 

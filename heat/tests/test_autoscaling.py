@@ -488,7 +488,7 @@ class AutoScalingTest(HeatTestCase):
         sus_task = scheduler.TaskRunner(rsrc.suspend)
         self.assertRaises(exception.ResourceFailure, sus_task, ())
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
-        self.assertEqual('Error: Resource suspend failed: Exception: oops',
+        self.assertEqual('Error: Resource SUSPEND failed: Exception: oops',
                          rsrc.status_reason)
 
         rsrc.delete()
@@ -524,7 +524,7 @@ class AutoScalingTest(HeatTestCase):
         sus_task = scheduler.TaskRunner(rsrc.resume)
         self.assertRaises(exception.ResourceFailure, sus_task, ())
         self.assertEqual((rsrc.RESUME, rsrc.FAILED), rsrc.state)
-        self.assertEqual('Error: Resource resume failed: Exception: oops',
+        self.assertEqual('Error: Resource RESUME failed: Exception: oops',
                          rsrc.status_reason)
 
         rsrc.delete()

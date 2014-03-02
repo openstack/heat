@@ -105,7 +105,7 @@ class NotificationTest(common.HeatTestCase):
                       'orchestration.stack.%s.end' % action,
                       'INFO',
                       {'state_reason':
-                       'Stack %s completed successfully' % action,
+                       'Stack %s completed successfully' % action.upper(),
                        'user_id': 'test_username',
                        'stack_identity': stack_arn,
                        'tenant_id': 'test_tenant',
@@ -220,7 +220,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                     'orchestration.autoscaling.start',
                     'INFO',
                     {'state_reason':
-                     'Stack create completed successfully',
+                     'Stack CREATE completed successfully',
                      'user_id': 'test_username',
                      'stack_identity': stack_arn,
                      'tenant_id': 'test_tenant',
@@ -240,7 +240,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                          'orchestration.autoscaling.error',
                          'ERROR',
                          {'state_reason':
-                          'Stack create completed successfully',
+                          'Stack CREATE completed successfully',
                           'user_id': 'test_username',
                           'stack_identity': stack_arn,
                           'tenant_id': 'test_tenant',
@@ -259,7 +259,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                          'orchestration.autoscaling.end',
                          'INFO',
                          {'state_reason':
-                          'Stack create completed successfully',
+                          'Stack CREATE completed successfully',
                           'user_id': 'test_username',
                           'stack_identity': stack_arn,
                           'tenant_id': 'test_tenant',

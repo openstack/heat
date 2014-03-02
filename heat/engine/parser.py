@@ -435,7 +435,7 @@ class Stack(collections.Mapping):
                        'Stack %s started' % action)
 
         stack_status = self.COMPLETE
-        reason = 'Stack %s completed successfully' % action.lower()
+        reason = 'Stack %s completed successfully' % action
 
         def resource_action(r):
             # Find e.g resource.create and call it
@@ -456,7 +456,7 @@ class Stack(collections.Mapping):
             yield action_task()
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action.lower(), str(ex))
+            reason = 'Resource %s failed: %s' % (action, str(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
@@ -523,7 +523,8 @@ class Stack(collections.Mapping):
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE):
         if action not in (self.UPDATE, self.ROLLBACK):
-            logger.error(_("Unexpected action %s passed to update!") % action)
+            logger.error(_("Unexpected action %s passed to update!") %
+                         action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -609,8 +610,9 @@ class Stack(collections.Mapping):
             return
 
         stack_status = self.COMPLETE
-        reason = 'Stack %s completed successfully' % action.lower()
-        self.state_set(action, self.IN_PROGRESS, 'Stack %s started' % action)
+        reason = 'Stack %s completed successfully' % action
+        self.state_set(action, self.IN_PROGRESS, 'Stack %s started' %
+                       action)
 
         backup_stack = self._backup_stack(False)
         if backup_stack is not None:
@@ -629,7 +631,7 @@ class Stack(collections.Mapping):
             scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action.lower(), str(ex))
+            reason = 'Resource %s failed: %s' % (action, str(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
