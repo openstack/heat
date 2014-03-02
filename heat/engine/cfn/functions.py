@@ -161,7 +161,7 @@ class GetAtt(function.Function):
 
         r = self._resource()
         if (r.status in (r.IN_PROGRESS, r.COMPLETE) and
-                r.action in (r.CREATE, r.RESUME, r.UPDATE)):
+                r.action in (r.CREATE, r.SUSPEND, r.RESUME, r.UPDATE)):
             return r.FnGetAtt(attribute)
         else:
             return None
