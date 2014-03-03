@@ -11,6 +11,7 @@
 #    under the License.
 
 import copy
+import datetime
 
 from oslo.config import cfg
 
@@ -20,6 +21,8 @@ from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
+
+from heat.openstack.common import timeutils
 
 from heat.tests import fakes
 from heat.tests import utils
@@ -298,3 +301,76 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
         self.assertEqual(1, len(group.get_instances()))
         scale_up.signal()
         self.assertEqual(2, len(group.get_instances()))
+
+
+class ScalingPolicyTest(HeatTestCase):
+
+    as_template = '''
+        heat_template_version: 2013-05-23
+        resources:
+          my-policy:
+            type: OS::Heat::ScalingPolicy
+            properties:
+                auto_scaling_group_id: {get_resource: my-group}
+                adjustment_type: change_in_capacity
+                scaling_adjustment: 1
+          my-group:
+            type: OS::Heat::AutoScalingGroup
+            properties:
+              max_size: 5
+              min_size: 1
+              resource:
+                type: ResourceWithProps
+                properties:
+                    Foo: hello
+    '''
+
+    def setUp(self):
+        super(ScalingPolicyTest, self).setUp()
+        utils.setup_dummy_db()
+        resource._register_class('ResourceWithProps',
+                                 generic_resource.ResourceWithProps)
+        self.fc = fakes.FakeKeystoneClient()
+        client = self.patchobject(clients.OpenStackClients, "keystone")
+        client.return_value = self.fc
+        self.parsed = template_format.parse(self.as_template)
+
+    def test_alarm_attribute(self):
+        stack = utils.parse_stack(self.parsed)
+        stack.create()
+        policy = stack['my-policy']
+        self.assertIn("my-policy", policy.FnGetAtt('alarm_url'))
+
+    def test_signal(self):
+        stack = utils.parse_stack(self.parsed)
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+        policy = stack['my-policy']
+        group = stack['my-group']
+
+        self.assertEqual("1234", policy.FnGetRefId())
+
+        self.assertEqual(1, len(group.get_instance_names()))
+        policy.signal()
+        self.assertEqual(2, len(group.get_instance_names()))
+
+    def test_signal_with_cooldown(self):
+        self.parsed['resources']['my-policy']['properties']['cooldown'] = 60
+        stack = utils.parse_stack(self.parsed)
+        stack.create()
+        policy = stack['my-policy']
+        group = stack['my-group']
+
+        self.assertEqual(1, len(group.get_instance_names()))
+        policy.signal()
+        self.assertEqual(2, len(group.get_instance_names()))
+        policy.signal()
+        # The second signal shouldn't have changed it because of cooldown
+        self.assertEqual(2, len(group.get_instance_names()))
+
+        past = timeutils.strtime(timeutils.utcnow() -
+                                 datetime.timedelta(seconds=65))
+        policy.metadata = {past: 'ChangeInCapacity : 1'}
+
+        policy.signal()
+        self.assertEqual(3, len(group.get_instance_names()))

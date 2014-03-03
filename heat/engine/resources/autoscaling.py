@@ -889,6 +889,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         'Cooldown',
     )
 
+    EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
+        'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
+
     properties_schema = {
         AUTO_SCALING_GROUP_NAME: properties.Schema(
             properties.Schema.STRING,
@@ -942,6 +945,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                                          self.name,
                                          self.context)
 
+    def _get_adjustement_type(self):
+        return self.properties[self.ADJUSTMENT_TYPE]
+
     def handle_signal(self, details=None):
         # ceilometer sends details like this:
         # {u'alarm_id': ID, u'previous': u'ok', u'current': u'alarm',
@@ -982,8 +988,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                         'name': self.name, 'group': group.name,
                         'asgn_id': asgn_id,
                         'filter': self.properties[self.SCALING_ADJUSTMENT]})
-        group.adjust(self.properties[self.SCALING_ADJUSTMENT],
-                     self.properties[self.ADJUSTMENT_TYPE])
+        adjustment_type = self._get_adjustement_type()
+        group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type)
 
         self._cooldown_timestamp("%s : %s" %
                                  (self.properties[self.ADJUSTMENT_TYPE],
@@ -1004,6 +1010,72 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             return unicode(self.name)
 
 
+class AutoScalingPolicy(ScalingPolicy):
+    """A resource to manage scaling of `OS::Heat::AutoScalingGroup`.
+
+    **Note** while it may incidentally support
+    `AWS::AutoScaling::AutoScalingGroup` for now, please don't use it for that
+    purpose and use `AWS::AutoScaling::ScalingPolicy` instead.
+    """
+    PROPERTIES = (
+        AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
+        COOLDOWN,
+    ) = (
+        'auto_scaling_group_id', 'scaling_adjustment', 'adjustment_type',
+        'cooldown',
+    )
+
+    EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
+        'exact_capacity', 'change_in_capacity', 'percent_change_in_capacity')
+
+    properties_schema = {
+        AUTO_SCALING_GROUP_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('AutoScaling group ID to apply policy to.'),
+            required=True
+        ),
+        SCALING_ADJUSTMENT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Size of adjustment.'),
+            required=True,
+            update_allowed=True
+        ),
+        ADJUSTMENT_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Type of adjustment (absolute or percentage).'),
+            required=True,
+            constraints=[
+                constraints.AllowedValues([CHANGE_IN_CAPACITY,
+                                           EXACT_CAPACITY,
+                                           PERCENT_CHANGE_IN_CAPACITY]),
+            ],
+            update_allowed=True
+        ),
+        COOLDOWN: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Cooldown period, in seconds.'),
+            update_allowed=True
+        ),
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    attributes_schema = {
+        "alarm_url": _("A signed url to handle the alarm.")
+    }
+
+    def _get_adjustement_type(self):
+        adjustment_type = self.properties[self.ADJUSTMENT_TYPE]
+        return ''.join([t.capitalize() for t in adjustment_type.split('_')])
+
+    def _resolve_attribute(self, name):
+        if name == 'alarm_url' and self.resource_id is not None:
+            return unicode(self._get_signed_url())
+
+    def FnGetRefId(self):
+        return resource.Resource.FnGetRefId(self)
+
+
 def resource_mapping():
     return {
         'AWS::AutoScaling::LaunchConfiguration': LaunchConfiguration,
@@ -1011,4 +1083,5 @@ def resource_mapping():
         'AWS::AutoScaling::ScalingPolicy': ScalingPolicy,
         'OS::Heat::InstanceGroup': InstanceGroup,
         'OS::Heat::AutoScalingGroup': AutoScalingResourceGroup,
+        'OS::Heat::ScalingPolicy': AutoScalingPolicy,
     }
