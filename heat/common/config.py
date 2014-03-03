@@ -28,6 +28,8 @@ from heat.common import wsgi
 from heat.openstack.common import log as logging
 from heat.openstack.common import rpc
 
+logger = logging.getLogger(__name__)
+
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor',
@@ -80,7 +82,11 @@ service_opts = [
 engine_opts = [
     cfg.StrOpt('instance_user',
                default='ec2-user',
-               help='The default user for new instances.'),
+               help="The default user for new instances. This option "
+                    "is deprecated and will be removed in the Juno release. "
+                    "If it's empty, Heat will use the default user set up "
+                    "with your cloud image (for OS::Nova::Server) or "
+                    "'ec2-user' (for AWS::EC2::Instance)."),
     cfg.StrOpt('instance_driver',
                default='heat.engine.nova',
                help='Driver to use for controlling instances.'),
@@ -212,6 +218,10 @@ allowed_rpc_exception_modules = cfg.CONF.allowed_rpc_exception_modules
 allowed_rpc_exception_modules.append('heat.common.exception')
 cfg.CONF.set_default(name='allowed_rpc_exception_modules',
                      default=allowed_rpc_exception_modules)
+
+if cfg.CONF.instance_user:
+    logger.warn(_('The "instance_user" option in heat.conf is deprecated and '
+                  'will be removed in the Juno release.'))
 
 
 def _get_deployment_flavor():

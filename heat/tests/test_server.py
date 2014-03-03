@@ -1858,7 +1858,100 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertEqual(server._resolve_attribute("accessIPv4"), '')
+        self.m.VerifyAll()
 
+    def test_default_instance_user(self):
+        """The default value for instance_user in heat.conf is ec2-user."""
+        return_server = self.fc.servers.list()[1]
+        server = self._setup_test_server(return_server, 'default_user')
+        self.m.StubOutWithMock(nova_utils, 'build_userdata')
+        nova_utils.build_userdata(server,
+                                  'wordpress',
+                                  instance_user='ec2-user',
+                                  user_data_format='HEAT_CFNTOOLS')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_admin_user_property(self):
+        """Test the admin_user property on the server overrides instance_user.
+
+        Launching the instance should call build_userdata with the
+        custom user name. This property is deprecated and will be
+        removed in Juno.
+        """
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'stack_with_custom_admin_user_server'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['admin_user'] = 'custom_user'
+        server = servers.Server('create_metadata_test_server',
+                                t['Resources']['WebServer'], stack)
+        server.t = server.stack.resolve_runtime_data(server.t)
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',
+            name=mox.IgnoreArg(), security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=mox.IgnoreArg(), nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(return_server)
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova_utils, 'build_userdata')
+        nova_utils.build_userdata(server,
+                                  'wordpress',
+                                  instance_user='custom_user',
+                                  user_data_format='HEAT_CFNTOOLS')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_custom_instance_user(self):
+        """Test instance_user in heat.conf being set to a custom value.
+
+        Launching the instance should call build_userdata with the
+        custom user name.
+
+        This option is deprecated and will be removed in Juno.
+        """
+        return_server = self.fc.servers.list()[1]
+        server = self._setup_test_server(return_server, 'custom_user')
+        self.m.StubOutWithMock(servers.cfg.CONF, 'instance_user')
+        servers.cfg.CONF.instance_user = 'custom_user'
+        self.m.StubOutWithMock(nova_utils, 'build_userdata')
+        nova_utils.build_userdata(server,
+                                  'wordpress',
+                                  instance_user='custom_user',
+                                  user_data_format='HEAT_CFNTOOLS')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_empty_instance_user(self):
+        """Test instance_user in heat.conf being empty.
+
+        Launching the instance should not pass any user to
+        build_userdata. The default cloud-init user set up for the image
+        will be used instead.
+
+        This will the default behaviour in Juno once we remove the
+        instance_user option.
+        """
+        return_server = self.fc.servers.list()[1]
+        server = self._setup_test_server(return_server, 'custom_user')
+        self.m.StubOutWithMock(servers.cfg.CONF, 'instance_user')
+        servers.cfg.CONF.instance_user = ''
+        self.m.StubOutWithMock(nova_utils, 'build_userdata')
+        nova_utils.build_userdata(server,
+                                  'wordpress',
+                                  instance_user=None,
+                                  user_data_format='HEAT_CFNTOOLS')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
 
