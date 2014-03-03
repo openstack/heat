@@ -174,7 +174,7 @@ class SecurityGroup(neutron.NeutronResource):
                 rule[self.RULE_REMOTE_GROUP_ID] = None
 
         for key in (self.RULE_PORT_RANGE_MIN, self.RULE_PORT_RANGE_MAX):
-            if rule.get(key, None) is not None:
+            if rule.get(key) is not None:
                 rule[key] = str(rule[key])
         return rule
 

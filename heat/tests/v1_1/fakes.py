@@ -60,7 +60,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                                  (method, url, callback))
 
         # Note the call
-        self.callstack.append((method, url, kwargs.get('body', None)))
+        self.callstack.append((method, url, kwargs.get('body')))
 
         status, body = getattr(self, callback)(**kwargs)
         if hasattr(status, 'items'):
