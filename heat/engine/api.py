@@ -318,10 +318,10 @@ def format_software_config(sc):
         api.SOFTWARE_CONFIG_ID: sc.id,
         api.SOFTWARE_CONFIG_NAME: sc.name,
         api.SOFTWARE_CONFIG_GROUP: sc.group,
-        api.SOFTWARE_CONFIG_CONFIG: sc.config,
-        api.SOFTWARE_CONFIG_INPUTS: sc.io['inputs'],
-        api.SOFTWARE_CONFIG_OUTPUTS: sc.io['outputs'],
-        api.SOFTWARE_CONFIG_OPTIONS: sc.io['options']
+        api.SOFTWARE_CONFIG_CONFIG: sc.config['config'],
+        api.SOFTWARE_CONFIG_INPUTS: sc.config['inputs'],
+        api.SOFTWARE_CONFIG_OUTPUTS: sc.config['outputs'],
+        api.SOFTWARE_CONFIG_OPTIONS: sc.config['options']
     }
     return result
 

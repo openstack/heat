@@ -1080,14 +1080,15 @@ class EngineService(service.Service):
     @request_context
     def create_software_config(self, cnxt, group, name, config,
                                inputs, outputs, options):
+
         sc = db_api.software_config_create(cnxt, {
             'group': group,
             'name': name,
-            'config': config,
-            'io': {
+            'config': {
                 'inputs': inputs,
                 'outputs': outputs,
-                'options': options
+                'options': options,
+                'config': config
             },
             'tenant': cnxt.tenant_id})
         return api.format_software_config(sc)

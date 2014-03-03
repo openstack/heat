@@ -761,12 +761,12 @@ class FormatSoftwareConfigDeploymentTest(HeatTestCase):
         config = mock.Mock()
         config.name = 'config_mysql'
         config.group = 'Heat::Shell'
-        config.config = '#!/bin/bash\n'
         config.id = str(uuid.uuid4())
-        config.io = {
+        config.config = {
             'inputs': [{'name': 'bar'}],
             'outputs': [{'name': 'result'}],
-            'options': {}
+            'options': {},
+            'config': '#!/bin/bash\n'
         }
         return config
 
