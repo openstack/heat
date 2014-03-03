@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import base64
+import copy
+from datetime import datetime
 
 from heat.engine import event
 from heat.common import exception
@@ -25,7 +26,6 @@ from heat.common import short_id
 from heat.engine import scheduler
 from heat.engine import resources
 from heat.engine import support
-from heat.engine import timestamp
 # import class to avoid name collisions and ugly aliasing
 from heat.engine.attributes import Attributes
 from heat.engine.properties import Properties
@@ -102,9 +102,6 @@ class Resource(object):
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
 
-    created_time = timestamp.Timestamp(db_api.resource_get, 'created_at')
-    updated_time = timestamp.Timestamp(db_api.resource_get, 'updated_at')
-
     _metadata = Metadata()
 
     # Resource implementation set this to the subset of template keys
@@ -167,6 +164,8 @@ class Resource(object):
             self.status_reason = resource.status_reason
             self.id = resource.id
             self.data = resource.data
+            self.created_time = resource.created_at
+            self.updated_time = resource.updated_at
         else:
             self.resource_id = None
             # if the stack is being deleted, assume we've already been deleted
@@ -178,6 +177,8 @@ class Resource(object):
             self.status_reason = ''
             self.id = None
             self.data = []
+            self.created_time = None
+            self.updated_time = None
 
     def reparse(self):
         self.t = self.stack.resolve_static_data(self.json_snippet)
@@ -539,6 +540,7 @@ class Resource(object):
         logger.info('updating %s' % str(self))
 
         try:
+            self.updated_time = datetime.utcnow()
             self.state_set(action, self.IN_PROGRESS)
             properties = Properties(self.properties_schema,
                                     after.get('Properties', {}),
@@ -750,6 +752,7 @@ class Resource(object):
 
             new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
+            self.created_time = new_rs.created_at
         except Exception as ex:
             logger.error(_('DB error %s') % str(ex))
 
@@ -776,6 +779,7 @@ class Resource(object):
                                     'status': self.status,
                                     'status_reason': reason,
                                     'stack_id': self.stack.id,
+                                    'updated_at': self.updated_time,
                                     'nova_instance': self.resource_id})
             except Exception as ex:
                 logger.error(_('DB error %s') % str(ex))

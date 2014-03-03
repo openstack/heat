@@ -226,13 +226,26 @@ class ResourceTest(HeatTestCase):
         self.assertIsNotNone(res.created_time)
 
     def test_updated_time(self):
-        tmpl = {'Type': 'Foo'}
-        res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
+        tmpl = {'Type': 'GenericResourceType'}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Type',)
         res._store()
         stored_time = res.updated_time
-        res.state_set(res.CREATE, res.IN_PROGRESS, 'testing')
+
+        utmpl = {'Type': 'Foo'}
+        scheduler.TaskRunner(res.update, utmpl)()
         self.assertIsNotNone(res.updated_time)
         self.assertNotEqual(res.updated_time, stored_time)
+
+    def test_updated_time_changes_only_on_update_calls(self):
+        tmpl = {'Type': 'GenericResourceType'}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Type',)
+        res._store()
+        self.assertIsNone(res.updated_time)
+
+        res._store_or_update(res.UPDATE, res.COMPLETE, 'should not change')
+        self.assertIsNone(res.updated_time)
 
     def test_store_or_update(self):
         tmpl = {'Type': 'Foo'}

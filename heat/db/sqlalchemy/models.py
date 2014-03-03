@@ -221,6 +221,11 @@ class Resource(BASE, HeatBase):
                         cascade="all,delete",
                         backref=backref('resource'))
 
+    # Override timestamp column to store the correct value: it should be the
+    # time the create/update call was issued, not the time the DB entry is
+    # created/modified. (bug #1193269)
+    updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
+
 
 class WatchRule(BASE, HeatBase):
     """Represents a watch_rule created by the heat engine."""
