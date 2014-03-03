@@ -24,20 +24,41 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import glob
 import os
+import re
 import sys
+
+from oslo.config import cfg
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+CONTRIB_DIR = os.path.join(ROOT, 'contrib')
+PLUGIN_DIRS = glob.glob(os.path.join(CONTRIB_DIR, '*'))
 
 sys.path.insert(0, ROOT)
 sys.path.insert(0, BASE_DIR)
+sys.path = PLUGIN_DIRS + sys.path
+
+cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
+cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
 
 # This is required for ReadTheDocs.org, but isn't a bad idea anyway.
 os.environ['DJANGO_SETTINGS_MODULE'] = 'openstack_dashboard.settings'
 
 
 def write_autodoc_index():
+
+    def get_contrib_sources():
+        module_dirs = glob.glob(os.path.join(CONTRIB_DIR, '*'))
+        module_names = map(os.path.basename, module_dirs)
+
+        return {
+            'contrib/%s' % module_name: {
+                'module': module_name,
+                'path': os.path.join(CONTRIB_DIR, module_name),
+            }
+            for module_name in module_names}
 
     def find_autodoc_modules(module_name, sourcedir):
         """Return a list of modules in the SOURCE directory."""
@@ -56,15 +77,15 @@ def write_autodoc_index():
                     if not (base == "__init__"):
                         elements.append(base)
                     result = ".".join(elements)
-                    #print(result)
                     modlist.append(result)
         return modlist
 
     RSTDIR = os.path.abspath(os.path.join(BASE_DIR, "sourcecode"))
-    SRCS = {'heat': ROOT}
+    SRCS = {'heat': {'module': 'heat',
+                     'path': ROOT}}
+    SRCS.update(get_contrib_sources())
 
-    EXCLUDED_MODULES = ('heat.tests',
-                        'heat.testing',
+    EXCLUDED_MODULES = ('heat.testing',
                         'heat.cmd',
                         'heat.common',
                         'heat.cloudinit',
@@ -73,7 +94,9 @@ def write_autodoc_index():
                         'heat.db',
                         'heat.engine.resources',
                         'heat.locale',
-                        'heat.openstack')
+                        'heat.openstack',
+                        '.*\.tests',
+                        '.*\.resources')
     CURRENT_SOURCES = {}
 
     if not(os.path.exists(RSTDIR)):
@@ -85,21 +108,23 @@ def write_autodoc_index():
     INDEXOUT.write("Source Code Index\n")
     INDEXOUT.write("=================\n")
 
-    for modulename, path in SRCS.items():
+    for title, info in SRCS.items():
+        path = info['path']
+        modulename = info['module']
         sys.stdout.write("Generating source documentation for %s\n" %
-                         modulename)
-        INDEXOUT.write("\n%s\n" % modulename.capitalize())
-        INDEXOUT.write("%s\n" % ("=" * len(modulename),))
+                         title)
+        INDEXOUT.write("\n%s\n" % title.capitalize())
+        INDEXOUT.write("%s\n" % ("=" * len(title),))
         INDEXOUT.write(".. toctree::\n")
         INDEXOUT.write("   :maxdepth: 1\n")
         INDEXOUT.write("\n")
 
-        MOD_DIR = os.path.join(RSTDIR, modulename)
+        MOD_DIR = os.path.join(RSTDIR, title)
         CURRENT_SOURCES[MOD_DIR] = []
         if not(os.path.exists(MOD_DIR)):
-            os.mkdir(MOD_DIR)
+            os.makedirs(MOD_DIR)
         for module in find_autodoc_modules(modulename, path):
-            if any([module.startswith(exclude)
+            if any([re.match(exclude, module)
                     for exclude
                     in EXCLUDED_MODULES]):
                 print("Excluded module %s." % module)
@@ -107,7 +132,7 @@ def write_autodoc_index():
             mod_path = os.path.join(path, *module.split("."))
             generated_file = os.path.join(MOD_DIR, "%s.rst" % module)
 
-            INDEXOUT.write("   %s/%s\n" % (modulename, module))
+            INDEXOUT.write("   %s/%s\n" % (title, module))
 
             # Find the __init__.py module if this is a directory
             if os.path.isdir(mod_path):
