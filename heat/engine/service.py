@@ -236,7 +236,7 @@ class EngineService(service.Service):
 
         # Create a periodic_watcher_task per-stack
         admin_context = context.get_admin_context()
-        stacks = db_api.stack_get_all(admin_context)
+        stacks = db_api.stack_get_all(admin_context, tenant_safe=False)
         for s in stacks:
             self._start_watch_task(s.id, admin_context)
 
