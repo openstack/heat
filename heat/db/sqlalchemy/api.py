@@ -354,8 +354,8 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
                            whitelisted_sort_keys, marker, sort_dir)
 
 
-def stack_count_all_by_tenant(context, filters=None):
-    query = _query_stack_get_all(context)
+def stack_count_all(context, filters=None, tenant_safe=True):
+    query = _query_stack_get_all(context, tenant_safe=tenant_safe)
     query = db_filters.exact_filter(query, models.Stack, filters)
     return query.count()
 

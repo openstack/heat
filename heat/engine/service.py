@@ -342,7 +342,7 @@ class EngineService(service.Service):
         :param filters: a dict of ATTR:VALUE to match against stacks
         :returns: a integer representing the number of matched stacks
         """
-        return db_api.stack_count_all_by_tenant(cnxt, filters=filters)
+        return db_api.stack_count_all(cnxt, filters=filters)
 
     def _validate_deferred_auth_context(self, cnxt, stack):
         if cfg.CONF.deferred_auth_method != 'password':
@@ -361,7 +361,7 @@ class EngineService(service.Service):
             raise exception.StackExists(stack_name=stack_name)
 
         tenant_limit = cfg.CONF.max_stacks_per_tenant
-        if db_api.stack_count_all_by_tenant(cnxt) >= tenant_limit:
+        if db_api.stack_count_all(cnxt) >= tenant_limit:
             message = _("You have reached the maximum stacks per tenant, %d."
                         " Please delete some stacks.") % tenant_limit
             raise exception.RequestLimitExceeded(message=message)
