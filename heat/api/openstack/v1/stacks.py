@@ -181,7 +181,8 @@ class StackController(object):
             except AttributeError as exc:
                 logger.warning("Old Engine Version: %s" % str(exc))
 
-        return stacks_view.collection(req, stacks=stacks, count=count)
+        return stacks_view.collection(req, stacks=stacks, count=count,
+                                      tenant_safe=tenant_safe)
 
     @util.policy_enforce
     def global_index(self, req):

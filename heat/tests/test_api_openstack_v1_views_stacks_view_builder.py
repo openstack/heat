@@ -58,6 +58,30 @@ class TestFormatStack(HeatTestCase):
         self.assertIn('links', result)
         self.assertEqual(['blah'], result['links'])
 
+    @mock.patch.object(stacks_view, 'util', new=mock.Mock())
+    def test_doesnt_add_project_by_default(self):
+        stack = {'stack_identity': {'stack_id': 'foo', 'tenant': 'bar'}}
+
+        result = stacks_view.format_stack(self.request, stack, None)
+        self.assertNotIn('project', result)
+
+    @mock.patch.object(stacks_view, 'util', new=mock.Mock())
+    def test_doesnt_add_project_if_tenant_safe(self):
+        stack = {'stack_identity': {'stack_id': 'foo', 'tenant': 'bar'}}
+
+        result = stacks_view.format_stack(self.request, stack,
+                                          None, tenant_safe=True)
+        self.assertNotIn('project', result)
+
+    @mock.patch.object(stacks_view, 'util', new=mock.Mock())
+    def test_adds_project_if_not_tenant_safe(self):
+        stack = {'stack_identity': {'stack_id': 'foo', 'tenant': 'bar'}}
+
+        result = stacks_view.format_stack(self.request, stack,
+                                          None, tenant_safe=False)
+        self.assertIn('project', result)
+        self.assertEqual('bar', result['project'])
+
     def test_includes_all_other_keys(self):
         stack = {'foo': 'bar'}
 
@@ -116,7 +140,8 @@ class TestStacksViewBuilder(HeatTestCase):
         stacks_view.collection(self.request, stacks)
         mock_format_stack.assert_called_once_with(self.request,
                                                   self.stack1,
-                                                  expected_keys)
+                                                  expected_keys,
+                                                  mock.ANY)
 
     @mock.patch.object(stacks_view.views_common, 'get_collection_links')
     def test_append_collection_links(self, mock_get_collection_links):

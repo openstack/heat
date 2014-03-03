@@ -31,7 +31,7 @@ basic_keys = (engine_api.STACK_ID,
               engine_api.STACK_UPDATED_TIME)
 
 
-def format_stack(req, stack, keys=None):
+def format_stack(req, stack, keys=None, tenant_safe=True):
     def transform(key, value):
         if keys and key not in keys:
             return
@@ -39,6 +39,8 @@ def format_stack(req, stack, keys=None):
         if key == engine_api.STACK_ID:
             yield ('id', value['stack_id'])
             yield ('links', [util.make_link(req, value)])
+            if not tenant_safe:
+                yield ('project', value['tenant'])
         elif key == engine_api.STACK_ACTION:
             return
         elif (key == engine_api.STACK_STATUS and
@@ -57,8 +59,10 @@ def format_stack(req, stack, keys=None):
         transform(k, v) for k, v in stack.items()))
 
 
-def collection(req, stacks, count=None):
-    formatted_stacks = [format_stack(req, s, basic_keys) for s in stacks]
+def collection(req, stacks, count=None, tenant_safe=True):
+    keys = basic_keys
+    formatted_stacks = [format_stack(req, s, keys, tenant_safe)
+                        for s in stacks]
 
     result = {'stacks': formatted_stacks}
     links = views_common.get_collection_links(req, formatted_stacks)
