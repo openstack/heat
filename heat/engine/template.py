@@ -13,36 +13,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
 import collections
 import functools
 
 from heat.db import api as db_api
-from heat.engine import parameters
-from heat.engine.cfn import functions
-from heat.openstack.common.gettextutils import _
 
 
 class Template(collections.Mapping):
     '''A stack template.'''
 
-    SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
-                PARAMETERS, RESOURCES, OUTPUTS) = \
-               ('AWSTemplateFormatVersion', 'Description', 'Mappings',
-                'Parameters', 'Resources', 'Outputs')
-
-    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
-
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
 
         if cls == Template:
+            # deferred module imports to avoid circular dependency
             if 'heat_template_version' in template:
-
-                # defer import of HOT module to avoid circular dependency
-                # at load time
                 from heat.engine import hot
-
                 return hot.HOTemplate(template, *args, **kwargs)
+            else:
+                from heat.engine.cfn import template as cfn
+                return cfn.CfnTemplate(template, *args, **kwargs)
 
         return super(Template, cls).__new__(cls)
 
@@ -72,21 +63,6 @@ class Template(collections.Mapping):
             self.id = new_rt.id
         return self.id
 
-    def __getitem__(self, section):
-        '''Get the relevant section in the template.'''
-        if section not in self.SECTIONS:
-            raise KeyError(_('"%s" is not a valid template section') % section)
-        if section in self.SECTIONS_NO_DIRECT_ACCESS:
-            raise KeyError(
-                _('Section %s can not be accessed directly.') % section)
-
-        if section == self.DESCRIPTION:
-            default = 'No description'
-        else:
-            default = {}
-
-        return self.t.get(section, default)
-
     def __iter__(self):
         '''Return an iterator over the section names.'''
         return (s for s in self.SECTIONS
@@ -96,29 +72,26 @@ class Template(collections.Mapping):
         '''Return the number of sections.'''
         return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
 
+    @abc.abstractmethod
     def version(self):
-        for key in ('HeatTemplateFormatVersion', 'AWSTemplateFormatVersion'):
-            if key in self.t:
-                return key, self.t[key]
+        '''Return a (versionkey, version) tuple for the template.'''
+        pass
 
-        # All user templates are forced to include a version string. This is
-        # just a convenient default for unit tests.
-        return 'HeatTemplateFormatVersion', '2012-12-12'
-
+    @abc.abstractmethod
     def param_schemata(self):
-        params = self.t.get(self.PARAMETERS, {}).iteritems()
-        return dict((name, parameters.Schema.from_dict(schema))
-                    for name, schema in params)
+        '''Return a dict of parameters.Schema objects for the parameters.'''
+        pass
 
+    @abc.abstractmethod
     def parameters(self, stack_identifier, user_params, validate_value=True,
                    context=None):
-        return parameters.Parameters(stack_identifier, self,
-                                     user_params=user_params,
-                                     validate_value=validate_value,
-                                     context=context)
+        '''Return a parameters.Parameters object for the stack.'''
+        pass
 
+    @abc.abstractmethod
     def functions(self):
-        return functions.function_mapping(*self.version())
+        '''Return a dict of template functions keyed by name.'''
+        pass
 
     def parse(self, stack, snippet):
         parse = functools.partial(self.parse, stack)

@@ -177,7 +177,7 @@ class StackResourceTest(HeatTestCase):
 
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
-        tmpl = {stack_resource.parser.Template.RESOURCES: [1]}
+        tmpl = {'Resources': [1]}
         template = stack_resource.parser.Template(tmpl)
         root_resources = mock.Mock(return_value=2)
         self.parent_resource.stack.root_stack.total_resources = root_resources

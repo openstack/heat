@@ -14,6 +14,7 @@
 
 from heat.common import exception
 from heat.engine import template
+from heat.engine.cfn import template as cfn_template
 from heat.engine import parameters
 from heat.engine import constraints as constr
 from heat.openstack.common.gettextutils import _
@@ -41,7 +42,7 @@ class HOTemplate(template.Template):
     """
 
     SECTIONS = (VERSION, DESCRIPTION, PARAMETER_GROUPS, PARAMETERS,
-                RESOURCES, OUTPUTS, UNDEFINED) = \
+                RESOURCES, OUTPUTS, MAPPINGS) = \
                ('heat_template_version', 'description', 'parameter_groups',
                 'parameters', 'resources', 'outputs', '__undefined__')
 
@@ -49,12 +50,12 @@ class HOTemplate(template.Template):
 
     VERSIONS = ('2013-05-23',)
 
-    _CFN_TO_HOT_SECTIONS = {template.Template.VERSION: VERSION,
-                            template.Template.DESCRIPTION: DESCRIPTION,
-                            template.Template.PARAMETERS: PARAMETERS,
-                            template.Template.MAPPINGS: UNDEFINED,
-                            template.Template.RESOURCES: RESOURCES,
-                            template.Template.OUTPUTS: OUTPUTS}
+    _CFN_TO_HOT_SECTIONS = {cfn_template.CfnTemplate.VERSION: VERSION,
+                            cfn_template.CfnTemplate.DESCRIPTION: DESCRIPTION,
+                            cfn_template.CfnTemplate.PARAMETERS: PARAMETERS,
+                            cfn_template.CfnTemplate.MAPPINGS: MAPPINGS,
+                            cfn_template.CfnTemplate.RESOURCES: RESOURCES,
+                            cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
     def __init__(self, template, *args, **kwargs):
         version = template[self.VERSION]
@@ -79,7 +80,7 @@ class HOTemplate(template.Template):
             raise KeyError(
                 _('Section %s can not be accessed directly.') % section)
 
-        if section == self.UNDEFINED:
+        if section == self.MAPPINGS:
             return {}
 
         if section == self.DESCRIPTION:
