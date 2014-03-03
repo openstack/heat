@@ -22,6 +22,7 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import scheduler
+from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.engine.resources import volume as vol
@@ -179,10 +180,13 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'check_create_complete')
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
@@ -663,10 +667,12 @@ class VolumeTest(HeatTestCase):
 
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
-        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        clients.OpenStackClients.nova("compute").MultipleTimes().AndReturn(
+            self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         nova_utils.get_image_id(
-            self.fc, '46988116-6703-4623-9dbc-2bc6d284021b').AndReturn(
-                '46988116-6703-4623-9dbc-2bc6d284021b')
+            self.fc, '46988116-6703-4623-9dbc-2bc6d284021b'
+        ).MultipleTimes().AndReturn('46988116-6703-4623-9dbc-2bc6d284021b')
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
             display_description='ImageVolumeDescription',

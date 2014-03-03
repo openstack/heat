@@ -74,6 +74,9 @@ class Server(resource.Resource):
         IMAGE: properties.Schema(
             properties.Schema.STRING,
             _('The ID or name of the image to boot with.'),
+            constraints=[
+                constraints.CustomConstraint('glance.image')
+            ],
             update_allowed=True
         ),
         BLOCK_DEVICE_MAPPING: properties.Schema(
@@ -539,9 +542,7 @@ class Server(resource.Resource):
 
         # make sure the image exists if specified.
         image = self.properties.get(self.IMAGE)
-        if image:
-            nova_utils.get_image_id(self.nova(), image)
-        elif not image and not bootable_vol:
+        if not image and not bootable_vol:
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
             raise exception.StackValidationFailed(message=msg)

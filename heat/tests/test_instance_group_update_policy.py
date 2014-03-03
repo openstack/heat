@@ -19,6 +19,7 @@ import copy
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_keypair
 from heat.tests.common import HeatTestCase
@@ -166,6 +167,9 @@ class InstanceGroupTest(HeatTestCase):
         parser.Stack.validate().MultipleTimes()
         self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
         nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.m.StubOutWithMock(image.ImageConstraint, 'validate')
+        image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
     def _stub_grp_create(self, capacity):
