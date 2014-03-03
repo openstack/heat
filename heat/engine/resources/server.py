@@ -13,6 +13,7 @@
 #    under the License.
 
 from oslo.config import cfg
+import uuid
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
@@ -42,14 +43,14 @@ class Server(stack_user.StackUser):
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
-        ADMIN_PASS,
+        ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT
     ) = (
         'name', 'image', 'block_device_mapping', 'flavor',
         'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
-        'admin_pass',
+        'admin_pass', 'software_config_transport'
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -74,6 +75,12 @@ class Server(stack_user.StackUser):
         HEAT_CFNTOOLS, RAW, SOFTWARE_CONFIG
     ) = (
         'HEAT_CFNTOOLS', 'RAW', 'SOFTWARE_CONFIG'
+    )
+
+    _SOFTWARE_CONFIG_TRANSPORTS = (
+        POLL_SERVER_CFN, POLL_SERVER_HEAT
+    ) = (
+        'POLL_SERVER_CFN', 'POLL_SERVER_HEAT'
     )
 
     properties_schema = {
@@ -236,6 +243,19 @@ class Server(stack_user.StackUser):
                 constraints.AllowedValues(_SOFTWARE_CONFIG_FORMATS),
             ]
         ),
+        SOFTWARE_CONFIG_TRANSPORT: properties.Schema(
+            properties.Schema.STRING,
+            _('How the server should receive the metadata required for '
+              'software configuration. POLL_SERVER_CFN will allow calls to '
+              'the cfn API action DescribeStackResource authenticated with '
+              'the provided keypair. POLL_SERVER_HEAT will allow calls to '
+              'the Heat API resource-show using the provided keystone '
+              'credentials.'),
+            default=POLL_SERVER_CFN,
+            constraints=[
+                constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
+            ]
+        ),
         USER_DATA: properties.Schema(
             properties.Schema.STRING,
             _('User data script to be executed by cloud-init.'),
@@ -298,7 +318,7 @@ class Server(stack_user.StackUser):
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
-        if self.access_key:
+        if self.user_data_software_config():
             self._register_access_key()
 
     def physical_resource_name(self):
@@ -322,13 +342,22 @@ class Server(stack_user.StackUser):
             server_id=server_id)
 
     def _build_deployments_metadata(self):
-        meta = {'os-collect-config': {'cfn': {
-            'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
-            'access_key_id': self.access_key,
-            'secret_access_key': self.secret_key,
-            'stack_name': self.stack.name,
-            'path': '%s.Metadata' % self.name}
-        }}
+        meta = {}
+        if self.transport_poll_server_heat():
+            meta['os-collect-config'] = {'heat_server_poll': {
+                'username': self._get_user_id(),
+                'password': self.password,
+                'auth_url': self.context.auth_url,
+                'project_id': self.stack.stack_user_project_id}
+            }
+        elif self.transport_poll_server_cfn():
+            meta['os-collect-config'] = {'cfn': {
+                'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
+                'access_key_id': self.access_key,
+                'secret_access_key': self.secret_key,
+                'stack_name': self.stack.name,
+                'path': '%s.Metadata' % self.name}
+            }
 
         # cannot query the deployments if the nova server does
         # not exist yet
@@ -346,8 +375,24 @@ class Server(stack_user.StackUser):
         '''
         def access_allowed(resource_name):
             return resource_name == self.name
-        self.stack.register_access_allowed_handler(
-            self.access_key, access_allowed)
+
+        if self.transport_poll_server_cfn():
+            self.stack.register_access_allowed_handler(
+                self.access_key, access_allowed)
+        elif self.transport_poll_server_heat():
+            self.stack.register_access_allowed_handler(
+                self._get_user_id(), access_allowed)
+
+    def _create_transport_credentials(self):
+        if self.transport_poll_server_cfn():
+            self._create_user()
+            self._create_keypair()
+
+        elif self.transport_poll_server_heat():
+            self.password = uuid.uuid4().hex
+            self._create_user()
+
+        self._register_access_key()
 
     @property
     def access_key(self):
@@ -360,6 +405,23 @@ class Server(stack_user.StackUser):
     def secret_key(self):
         try:
             return db_api.resource_data_get(self, 'secret_key')
+        except exception.NotFound:
+            pass
+
+    @property
+    def password(self):
+        try:
+            return db_api.resource_data_get(self, 'password')
+        except exception.NotFound:
+            pass
+
+    @password.setter
+    def password(self, password):
+        try:
+            if password is None:
+                db_api.resource_data_delete(self, 'password')
+            else:
+                db_api.resource_data_set(self, 'password', password, True)
         except exception.NotFound:
             pass
 
@@ -382,6 +444,14 @@ class Server(stack_user.StackUser):
         return self.properties.get(
             self.USER_DATA_FORMAT) == self.SOFTWARE_CONFIG
 
+    def transport_poll_server_cfn(self):
+        return self.properties.get(
+            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_SERVER_CFN
+
+    def transport_poll_server_heat(self):
+        return self.properties.get(
+            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_SERVER_HEAT
+
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
@@ -397,10 +467,8 @@ class Server(stack_user.StackUser):
                     # no config was found, so do not modify the user_data
                     pass
 
-            if self.user_data_software_config():
-                self._create_user()
-                self._create_keypair()
-                self._register_access_key()
+        if self.user_data_software_config():
+            self._create_transport_credentials()
 
         userdata = nova_utils.build_userdata(
             self,

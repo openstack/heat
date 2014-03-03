@@ -92,7 +92,8 @@ class ServersTest(HeatTestCase):
         template = parser.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment({'key_name': 'test'}),
-                             stack_id=str(uuid.uuid4()))
+                             stack_id=str(uuid.uuid4()),
+                             stack_user_project_id='8888')
         return (t, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
@@ -522,6 +523,76 @@ class ServersTest(HeatTestCase):
                                         t['Resources']['WebServer'], stack)
         self.assertEqual('4567', created_server.access_key)
         self.assertTrue(stack.access_allowed('4567', 'WebServer'))
+
+        self.m.VerifyAll()
+
+    def test_server_create_software_config_poll_heat(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'software_config_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        props = t['Resources']['WebServer']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        props['software_config_transport'] = 'POLL_SERVER_HEAT'
+
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        self.m.StubOutWithMock(server, 'keystone')
+        self.m.StubOutWithMock(server, 'heat')
+        self.m.StubOutWithMock(server, '_get_deployments_metadata')
+
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server.keystone().MultipleTimes().AndReturn(self.fkc)
+        server.heat().MultipleTimes().AndReturn(self.fc)
+        server._get_deployments_metadata(
+            self.fc, 5678).AndReturn({'foo': 'bar'})
+
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+
+        #self.assertEqual('4567', server.access_key)
+        #self.assertEqual('8901', server.secret_key)
+        self.assertEqual('1234', server._get_user_id())
+
+        self.assertTrue(stack.access_allowed('1234', 'WebServer'))
+        self.assertFalse(stack.access_allowed('45678', 'WebServer'))
+        self.assertFalse(stack.access_allowed('4567', 'wWebServer'))
+
+        self.assertEqual({
+            'os-collect-config': {
+                'heat_server_poll': {
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'password': server.password,
+                    'project_id': '8888',
+                    'username': u'1234'
+                }
+            },
+            'deployments': {'foo': 'bar'}
+        }, server.metadata)
+
+        created_server = servers.Server('WebServer',
+                                        t['Resources']['WebServer'], stack)
+        self.assertEqual('1234', created_server._get_user_id())
+        self.assertTrue(stack.access_allowed('1234', 'WebServer'))
 
         self.m.VerifyAll()
 
