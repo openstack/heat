@@ -30,9 +30,11 @@ class Port(neutron.NeutronResource):
     PROPERTIES = (
         NETWORK_ID, NAME, VALUE_SPECS, ADMIN_STATE_UP, FIXED_IPS,
         MAC_ADDRESS, DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
+        DEVICE_OWNER,
     ) = (
         'network_id', 'name', 'value_specs', 'admin_state_up', 'fixed_ips',
         'mac_address', 'device_id', 'security_groups', 'allowed_address_pairs',
+        'device_owner',
     )
 
     _FIXED_IP_KEYS = (
@@ -123,6 +125,13 @@ class Port(neutron.NeutronResource):
                     ),
                 },
             )
+        ),
+        DEVICE_OWNER: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the network owning the port. '
+              'The value is typically network:floatingip '
+              'or network:router_interface or network:dhcp'),
+            update_allowed=True
         ),
     }
 
