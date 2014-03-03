@@ -649,3 +649,298 @@ class CloudServersTest(HeatTestCase):
         self.assertEqual("The personality property may not contain "
                          "greater than 4 entries.", str(exc))
         self.m.VerifyAll()
+
+    def test_ssh_exception_recovered(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'test_create_ssh_exception_recovered'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
+
+        server_name = 'test_create_ssh_exception_server'
+        server = cloud_server.CloudServer(server_name,
+                                          t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server._private_key = rsa_key
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1,
+            flavor=1,
+            key_name=None,
+            name=mox.IgnoreArg(),
+            security_groups=[],
+            userdata=mox.IgnoreArg(),
+            scheduler_hints=None,
+            meta=None,
+            nics=None,
+            availability_zone=None,
+            block_device_mapping=None,
+            config_drive=None,
+            disk_config=None,
+            reservation_id=None,
+            files=mox.IgnoreArg(),
+            admin_pass=None).AndReturn(return_server)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
+        cloud_server.CloudServer.script = "foobar"
+
+        # Make paramiko raise an SSHException the first time
+        self.m.StubOutWithMock(paramiko, "Transport")
+        paramiko.Transport((mox.IgnoreArg(), 22)).AndRaise(
+            paramiko.SSHException())
+
+        transport = self.m.CreateMockAnything()
+
+        # The second time it works
+        paramiko.Transport((mox.IgnoreArg(), 22)).AndReturn(transport)
+
+        transport.connect(hostkey=None, username="root", pkey=mox.IgnoreArg())
+        sftp = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko, "SFTPClient")
+        paramiko.SFTPClient.from_transport(transport).AndReturn(sftp)
+        sftp_file = self.m.CreateMockAnything()
+        sftp.open(mox.IgnoreArg(), 'w').MultipleTimes().AndReturn(sftp_file)
+        sftp_file.write(mox.IgnoreArg()).MultipleTimes()
+        sftp_file.close().MultipleTimes()
+        sftp.close()
+        transport.close()
+
+        self.m.StubOutWithMock(paramiko, "SSHClient")
+        self.m.StubOutWithMock(paramiko, "MissingHostKeyPolicy")
+        ssh = self.m.CreateMockAnything()
+        paramiko.SSHClient().AndReturn(ssh)
+        paramiko.MissingHostKeyPolicy()
+        ssh.set_missing_host_key_policy(None)
+        ssh.connect(mox.IgnoreArg(),
+                    key_filename=mox.IgnoreArg(),
+                    username='root')
+        fake_chan = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko.SSHClient, "get_transport")
+        chan = ssh.get_transport().AndReturn(fake_chan)
+        fake_chan_session = self.m.CreateMockAnything()
+        chan_session = chan.open_session().AndReturn(fake_chan_session)
+        fake_chan_session.settimeout(3600.0)
+        chan_session.exec_command(mox.IgnoreArg())
+        fake_chan_session.recv(1024)
+        chan_session.recv_exit_status().AndReturn(0)
+        fake_chan_session.close()
+        ssh.close()
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.create)()
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
+
+        self.m.VerifyAll()
+
+    def test_ssh_exception_failed(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'test_create_ssh_exception_failed'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
+
+        server_name = 'test_create_ssh_exception_server'
+        server = cloud_server.CloudServer(server_name,
+                                          t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server._private_key = rsa_key
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1,
+            flavor=1,
+            key_name=None,
+            name=mox.IgnoreArg(),
+            security_groups=[],
+            userdata=mox.IgnoreArg(),
+            scheduler_hints=None,
+            meta=None,
+            nics=None,
+            availability_zone=None,
+            block_device_mapping=None,
+            config_drive=None,
+            disk_config=None,
+            reservation_id=None,
+            files=mox.IgnoreArg(),
+            admin_pass=None).AndReturn(return_server)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
+        cloud_server.CloudServer.script = "foobar"
+
+        # Make paramiko raise an SSHException every time
+        self.m.StubOutWithMock(paramiko, "Transport")
+        paramiko.Transport((mox.IgnoreArg(), 22)).MultipleTimes().AndRaise(
+            paramiko.SSHException())
+        self.m.ReplayAll()
+
+        create = scheduler.TaskRunner(server.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual("Error: Failed to establish SSH connection after 30 "
+                         "tries", str(exc))
+
+        self.m.VerifyAll()
+
+    def test_eof_error_recovered(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'test_create_ssh_exception_recovered'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
+
+        server_name = 'test_create_ssh_exception_server'
+        server = cloud_server.CloudServer(server_name,
+                                          t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server._private_key = rsa_key
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1,
+            flavor=1,
+            key_name=None,
+            name=mox.IgnoreArg(),
+            security_groups=[],
+            userdata=mox.IgnoreArg(),
+            scheduler_hints=None,
+            meta=None,
+            nics=None,
+            availability_zone=None,
+            block_device_mapping=None,
+            config_drive=None,
+            disk_config=None,
+            reservation_id=None,
+            files=mox.IgnoreArg(),
+            admin_pass=None).AndReturn(return_server)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
+        cloud_server.CloudServer.script = "foobar"
+
+        transport = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko, "Transport")
+        paramiko.Transport((mox.IgnoreArg(), 22)).MultipleTimes().\
+            AndReturn(transport)
+
+        # Raise an EOFError the first time
+        transport.connect(hostkey=None, username="root",
+                          pkey=mox.IgnoreArg()).AndRaise(EOFError)
+        transport.connect(hostkey=None, username="root",
+                          pkey=mox.IgnoreArg())
+
+        sftp = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko, "SFTPClient")
+        paramiko.SFTPClient.from_transport(transport).AndReturn(sftp)
+        sftp_file = self.m.CreateMockAnything()
+        sftp.open(mox.IgnoreArg(), 'w').MultipleTimes().AndReturn(sftp_file)
+        sftp_file.write(mox.IgnoreArg()).MultipleTimes()
+        sftp_file.close().MultipleTimes()
+        sftp.close()
+        transport.close()
+
+        self.m.StubOutWithMock(paramiko, "SSHClient")
+        self.m.StubOutWithMock(paramiko, "MissingHostKeyPolicy")
+        ssh = self.m.CreateMockAnything()
+        paramiko.SSHClient().AndReturn(ssh)
+        paramiko.MissingHostKeyPolicy()
+        ssh.set_missing_host_key_policy(None)
+        ssh.connect(mox.IgnoreArg(),
+                    key_filename=mox.IgnoreArg(),
+                    username='root')
+        fake_chan = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko.SSHClient, "get_transport")
+        chan = ssh.get_transport().AndReturn(fake_chan)
+        fake_chan_session = self.m.CreateMockAnything()
+        chan_session = chan.open_session().AndReturn(fake_chan_session)
+        fake_chan_session.settimeout(3600.0)
+        chan_session.exec_command(mox.IgnoreArg())
+        fake_chan_session.recv(1024)
+        chan_session.recv_exit_status().AndReturn(0)
+        fake_chan_session.close()
+        ssh.close()
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.create)()
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
+
+        self.m.VerifyAll()
+
+    def test_eof_error_failed(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'test_create_ssh_exception_failed'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
+
+        server_name = 'test_create_ssh_exception_server'
+        server = cloud_server.CloudServer(server_name,
+                                          t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server._private_key = rsa_key
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1,
+            flavor=1,
+            key_name=None,
+            name=mox.IgnoreArg(),
+            security_groups=[],
+            userdata=mox.IgnoreArg(),
+            scheduler_hints=None,
+            meta=None,
+            nics=None,
+            availability_zone=None,
+            block_device_mapping=None,
+            config_drive=None,
+            disk_config=None,
+            reservation_id=None,
+            files=mox.IgnoreArg(),
+            admin_pass=None).AndReturn(return_server)
+
+        self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
+        cloud_server.CloudServer.script = "foobar"
+
+        transport = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko, "Transport")
+        paramiko.Transport((mox.IgnoreArg(), 22)).MultipleTimes().\
+            AndReturn(transport)
+
+        # Raise an EOFError every time
+        transport.connect(hostkey=None, username="root",
+                          pkey=mox.IgnoreArg()).MultipleTimes().\
+            AndRaise(EOFError)
+        self.m.ReplayAll()
+
+        create = scheduler.TaskRunner(server.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual("Error: Failed to establish SSH connection after 30 "
+                         "tries", str(exc))
+
+        self.m.VerifyAll()
