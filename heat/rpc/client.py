@@ -52,7 +52,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                              stack_name=stack_name))
 
     def list_stacks(self, ctxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None):
+                    sort_dir=None, filters=None, tenant_safe=True):
         """
         The list_stacks method returns attributes of all stacks.  It supports
         pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
@@ -64,21 +64,25 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc')
         :param filters: a dict with attribute:value to filter the list
+        :param tenant_safe: if true, scope the request by the current tenant
         :returns: a list of stacks
         """
         return self.call(ctxt, self.make_msg('list_stacks', limit=limit,
                          sort_keys=sort_keys, marker=marker,
-                         sort_dir=sort_dir, filters=filters))
+                         sort_dir=sort_dir, filters=filters,
+                         tenant_safe=tenant_safe))
 
-    def count_stacks(self, ctxt, filters=None):
+    def count_stacks(self, ctxt, filters=None, tenant_safe=True):
         """
         Return the number of stacks that match the given filters
         :param ctxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
+        :param tenant_safe: if true, scope the request by the current tenant
         :returns: a integer representing the number of matched stacks
         """
         return self.call(ctxt, self.make_msg('count_stacks',
-                                             filters=filters))
+                                             filters=filters,
+                                             tenant_safe=tenant_safe))
 
     def show_stack(self, ctxt, stack_identity):
         """

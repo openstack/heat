@@ -67,6 +67,7 @@ class FaultWrapper(wsgi.Middleware):
         'ResourceNotAvailable': webob.exc.HTTPNotFound,
         'PhysicalResourceNotFound': webob.exc.HTTPNotFound,
         'InvalidTenant': webob.exc.HTTPForbidden,
+        'Forbidden': webob.exc.HTTPForbidden,
         'StackExists': webob.exc.HTTPConflict,
         'StackValidationFailed': webob.exc.HTTPBadRequest,
         'InvalidTemplateReference': webob.exc.HTTPBadRequest,

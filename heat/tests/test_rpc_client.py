@@ -88,9 +88,17 @@ class EngineRpcAPITestCase(testtools.TestCase):
             'sort_keys': mock.ANY,
             'marker': mock.ANY,
             'sort_dir': mock.ANY,
-            'filters': mock.ANY
+            'filters': mock.ANY,
+            'tenant_safe': mock.ANY,
         }
         self._test_engine_api('list_stacks', 'call', **default_args)
+
+    def test_count_stacks(self):
+        default_args = {
+            'filters': mock.ANY,
+            'tenant_safe': mock.ANY,
+        }
+        self._test_engine_api('count_stacks', 'call', **default_args)
 
     def test_identify_stack(self):
         self._test_engine_api('identify_stack', 'call',

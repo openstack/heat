@@ -152,11 +152,7 @@ class StackController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    @util.policy_enforce
-    def index(self, req):
-        """
-        Lists summary information for all stacks
-        """
+    def _index(self, req, tenant_safe=True):
         filter_whitelist = {
             'status': 'mixed',
             'name': 'mixed',
@@ -169,9 +165,9 @@ class StackController(object):
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
-
         stacks = self.rpc_client.list_stacks(req.context,
                                              filters=filter_params,
+                                             tenant_safe=tenant_safe,
                                              **params)
 
         count = None
@@ -180,11 +176,27 @@ class StackController(object):
                 # Check if engine has been updated to a version with
                 # support to count_stacks before trying to use it.
                 count = self.rpc_client.count_stacks(req.context,
-                                                     filters=filter_params)
+                                                     filters=filter_params,
+                                                     tenant_safe=tenant_safe)
             except AttributeError as exc:
                 logger.warning("Old Engine Version: %s" % str(exc))
 
         return stacks_view.collection(req, stacks=stacks, count=count)
+
+    @util.policy_enforce
+    def global_index(self, req):
+        return self._index(req, tenant_safe=False)
+
+    @util.policy_enforce
+    def index(self, req):
+        """
+        Lists summary information for all stacks
+        """
+        global_tenant = bool(req.params.get('global_tenant', False))
+        if global_tenant:
+            return self.global_index(req, req.context.tenant_id)
+
+        return self._index(req)
 
     @util.policy_enforce
     def detail(self, req):
