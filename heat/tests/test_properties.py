@@ -837,7 +837,10 @@ class PropertyTest(testtools.TestCase):
     def test_map_schema_bad_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
         p = properties.Property({'Type': 'Map', 'Schema': map_schema})
-        self.assertRaises(ValueError, p.validate_data, {'valid': 'fish'})
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               p.validate_data, {'valid': 'fish'})
+        self.assertEqual('Property error : valid "fish" is not '
+                         'a valid boolean', str(ex))
 
     def test_map_schema_missing_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
@@ -847,7 +850,10 @@ class PropertyTest(testtools.TestCase):
     def test_map_schema_missing_required_data(self):
         map_schema = {'valid': {'Type': 'Boolean', 'Required': True}}
         p = properties.Property({'Type': 'Map', 'Schema': map_schema})
-        self.assertRaises(ValueError, p.validate_data, {})
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               p.validate_data, {})
+        self.assertEqual('Property error : Property valid not assigned',
+                         str(ex))
 
     def test_list_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
@@ -862,8 +868,11 @@ class PropertyTest(testtools.TestCase):
         map_schema = {'valid': {'Type': 'Boolean'}}
         list_schema = {'Type': 'Map', 'Schema': map_schema}
         p = properties.Property({'Type': 'List', 'Schema': list_schema})
-        self.assertRaises(ValueError, p.validate_data, [{'valid': 'True'},
-                                                        {'valid': 'fish'}])
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               p.validate_data,
+                               [{'valid': 'True'}, {'valid': 'fish'}])
+        self.assertEqual('Property error : 1 Property error : 1: valid '
+                         '"fish" is not a valid boolean', str(ex))
 
     def test_list_schema_int_good(self):
         list_schema = {'Type': 'Integer'}
@@ -873,7 +882,10 @@ class PropertyTest(testtools.TestCase):
     def test_list_schema_int_bad_data(self):
         list_schema = {'Type': 'Integer'}
         p = properties.Property({'Type': 'List', 'Schema': list_schema})
-        self.assertRaises(ValueError, p.validate_data, [42, 'fish'])
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               p.validate_data, [42, 'fish'])
+        self.assertEqual('Property error : 1 Value \'fish\' is not '
+                         'an integer', str(ex))
 
 
 class PropertiesTest(testtools.TestCase):
@@ -1546,3 +1558,81 @@ class PropertiesValidationTest(testtools.TestCase):
                          support.DEPRECATED)
         self.assertEqual(props.props['bar_dep'].support_status().message,
                          'Do not use this ever')
+
+    def test_nested_properties_schema_invalid_property_in_list(self):
+        child_schema = {'Key': {'Type': 'String',
+                                'Required': True},
+                        'Value': {'Type': 'Boolean',
+                                  'Required': True,
+                                  'Default': True}}
+        list_schema = {'Type': 'Map', 'Schema': child_schema}
+        schema = {'foo': {'Type': 'List', 'Schema': list_schema}}
+
+        valid_data = {'foo': [{'Key': 'Test'}]}
+        props = properties.Properties(schema, valid_data)
+        self.assertIsNone(props.validate())
+
+        invalid_data = {'foo': [{'Key': 'Test', 'bar': 'baz'}]}
+        props = properties.Properties(schema, invalid_data)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               props.validate)
+        self.assertEqual('Property error : foo Property error : foo: 0 '
+                         'Unknown Property bar', str(ex))
+
+    def test_nested_properties_schema_invalid_property_in_map(self):
+        child_schema = {'Key': {'Type': 'String',
+                                'Required': True},
+                        'Value': {'Type': 'Boolean',
+                                  'Required': True,
+                                  'Default': True}}
+        map_schema = {'boo': {'Type': 'Map', 'Schema': child_schema}}
+        schema = {'foo': {'Type': 'Map', 'Schema': map_schema}}
+
+        valid_data = {'foo': {'boo': {'Key': 'Test'}}}
+        props = properties.Properties(schema, valid_data)
+        self.assertIsNone(props.validate())
+
+        invalid_data = {'foo': {'boo': {'Key': 'Test', 'bar': 'baz'}}}
+        props = properties.Properties(schema, invalid_data)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               props.validate)
+        self.assertEqual('Property error : foo Property error : foo: boo '
+                         'Unknown Property bar', str(ex))
+
+    def test_more_nested_properties_schema_invalid_property_in_list(self):
+        nested_child_schema = {'Key': {'Type': 'String',
+                                       'Required': True}}
+        child_schema = {'doo': {'Type': 'Map', 'Schema': nested_child_schema}}
+        list_schema = {'Type': 'Map', 'Schema': child_schema}
+        schema = {'foo': {'Type': 'List', 'Schema': list_schema}}
+
+        valid_data = {'foo': [{'doo': {'Key': 'Test'}}]}
+        props = properties.Properties(schema, valid_data)
+        self.assertIsNone(props.validate())
+
+        invalid_data = {'foo': [{'doo': {'Key': 'Test', 'bar': 'baz'}}]}
+        props = properties.Properties(schema, invalid_data)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               props.validate)
+        self.assertEqual('Property error : foo Property error : foo: 0 '
+                         'Property error : 0: doo Unknown Property bar',
+                         str(ex))
+
+    def test_more_nested_properties_schema_invalid_property_in_map(self):
+        nested_child_schema = {'Key': {'Type': 'String',
+                                       'Required': True}}
+        child_schema = {'doo': {'Type': 'Map', 'Schema': nested_child_schema}}
+        map_schema = {'boo': {'Type': 'Map', 'Schema': child_schema}}
+        schema = {'foo': {'Type': 'Map', 'Schema': map_schema}}
+
+        valid_data = {'foo': {'boo': {'doo': {'Key': 'Test'}}}}
+        props = properties.Properties(schema, valid_data)
+        self.assertIsNone(props.validate())
+
+        invalid_data = {'foo': {'boo': {'doo': {'Key': 'Test', 'bar': 'baz'}}}}
+        props = properties.Properties(schema, invalid_data)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               props.validate)
+        self.assertEqual('Property error : foo Property error : foo: boo '
+                         'Property error : boo: doo Unknown Property bar',
+                         str(ex))

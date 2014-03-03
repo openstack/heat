@@ -221,6 +221,7 @@ class Property(object):
             properties = Properties(schemata, dict(child_values),
                                     parent_name=self.name,
                                     context=self.context)
+            properties.validate()
             return ((k, properties[k]) for k in keys)
         else:
             return child_values
