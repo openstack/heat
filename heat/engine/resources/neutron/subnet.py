@@ -46,23 +46,28 @@ class Subnet(neutron.NeutronResource):
     properties_schema = {
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
+            _('The ID of the attached network.'),
             required=True
         ),
         CIDR: properties.Schema(
             properties.Schema.STRING,
+            _('The CIDR.'),
             required=True
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
+            _('Extra parameters to include in the creation request.'),
             default={},
             update_allowed=True
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
+            _('The name of the subnet.'),
             update_allowed=True
         ),
         IP_VERSION: properties.Schema(
             properties.Schema.INTEGER,
+            _('The IP version, which is 4 or 6.'),
             default=4,
             constraints=[
                 constraints.AllowedValues([4, 6]),
@@ -70,20 +75,24 @@ class Subnet(neutron.NeutronResource):
         ),
         DNS_NAMESERVERS: properties.Schema(
             properties.Schema.LIST,
+            _('A specified set of DNS name servers to be used.'),
             default=[],
             update_allowed=True
         ),
         GATEWAY_IP: properties.Schema(
             properties.Schema.STRING,
+            _('The gateway IP address.'),
             update_allowed=True
         ),
         ENABLE_DHCP: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Set to true if DHCP is enabled and false if DHCP is disabled.'),
             default=True,
             update_allowed=True
         ),
         ALLOCATION_POOLS: properties.Schema(
             properties.Schema.LIST,
+            _('The start and end addresses for the allocation pools.'),
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
@@ -99,7 +108,9 @@ class Subnet(neutron.NeutronResource):
             )
         ),
         TENANT_ID: properties.Schema(
-            properties.Schema.STRING
+            properties.Schema.STRING,
+            _('The ID of the tenant who owns the network. Only administrative'
+              ' users can specify a tenant ID other than their own.')
         ),
     }
 
