@@ -423,7 +423,7 @@ class NeutronNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -465,11 +465,11 @@ class NeutronNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
@@ -673,7 +673,7 @@ class NeutronProviderNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         # Delete script
         neutronclient.Client.delete_network(
@@ -686,11 +686,11 @@ class NeutronProviderNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient())
+        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
 
         self.m.ReplayAll()
 
@@ -1686,7 +1686,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         }})
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.PortNotFoundClient())
+        ).AndRaise(qe.PortNotFoundClient(status_code=404))
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
@@ -1797,7 +1797,7 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.PortNotFoundClient())
+        ).AndRaise(qe.PortNotFoundClient(status_code=404))
 
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -1811,7 +1811,7 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.PortNotFoundClient())
+        ).AndRaise(qe.PortNotFoundClient(status_code=404))
 
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
