@@ -71,7 +71,8 @@ class Server(resource.Resource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Server name.')
+            _('Server name.'),
+            update_allowed=True
         ),
         IMAGE: properties.Schema(
             properties.Schema.STRING,
@@ -501,6 +502,10 @@ class Server(resource.Resource):
                 preserve_ephemeral=preserve_ephemeral)
             checkers.append(checker)
 
+        if self.NAME in prop_diff:
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            nova_utils.rename(server, prop_diff[self.NAME])
         # Optimization: make sure the first task is started before
         # check_update_complete.
         if checkers:

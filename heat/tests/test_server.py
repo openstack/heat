@@ -734,6 +734,28 @@ class ServersTest(HeatTestCase):
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
+    def test_server_update_server_name(self):
+        """
+        Server.handle_update supports changing the name.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
+        server = self._create_test_server(return_server,
+                                          'srv_update')
+        new_name = 'new_name'
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['name'] = new_name
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'update')
+        return_server.update(new_name).AndReturn(None)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
     def test_server_update_server_flavor(self):
         """
         Server.handle_update supports changing the flavor, and makes
