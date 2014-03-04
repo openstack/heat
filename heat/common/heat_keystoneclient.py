@@ -32,8 +32,17 @@ logger = logging.getLogger('heat.common.keystoneclient')
 
 AccessKey = namedtuple('AccessKey', ['id', 'access', 'secret'])
 
+_default_keystone_backend = "heat.common.heat_keystoneclient.KeystoneClientV3"
 
-class KeystoneClient(object):
+keystone_opts = [
+    cfg.StrOpt('keystone_backend',
+               default=_default_keystone_backend,
+               help="Fully qualified class name to use as a keystone backend.")
+]
+cfg.CONF.register_opts(keystone_opts)
+
+
+class KeystoneClientV3(object):
     """
     Wrap keystone client so we can encapsulate logic used in resources
     Note this is intended to be initialized from a resource on a per-session
@@ -447,3 +456,18 @@ class KeystoneClient(object):
     @property
     def auth_token(self):
         return self.client_v3.auth_token
+
+
+class KeystoneClient(object):
+    """
+    Delay choosing the backend client module until the client's class
+    needs to be initialized.
+    """
+    def __new__(cls, context):
+        if cfg.CONF.keystone_backend == _default_keystone_backend:
+            return KeystoneClientV3(context)
+        else:
+            return importutils.import_object(
+                cfg.CONF.keystone_backend,
+                context
+            )
