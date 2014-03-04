@@ -12,7 +12,7 @@
 
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine import clients
+from heat.engine.clients import Clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import nova_utils
@@ -144,9 +144,8 @@ class KeypairConstraint(object):
             # Don't validate empty key, which can happen when you use a KeyPair
             # resource
             return True
-        nova_client = clients.OpenStackClients(context).nova()
         try:
-            nova_utils.get_keypair(nova_client, value)
+            nova_utils.get_keypair(Clients(context).nova(), value)
         except exception.UserKeyPairMissing:
             return False
         else:
