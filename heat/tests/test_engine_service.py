@@ -2608,7 +2608,7 @@ class StackServiceTest(HeatTestCase):
 
     def test_validate_new_stack_checks_resource_limit(self):
         cfg.CONF.set_override('max_resources_per_stack', 5)
-        template = {service.parser.Template.RESOURCES: [1, 2, 3, 4, 5, 6]}
+        template = {'Resources': [1, 2, 3, 4, 5, 6]}
         parsed_template = service.parser.Template(template)
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,

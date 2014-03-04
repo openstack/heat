@@ -1473,7 +1473,7 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('BTemplate',
-                         self.stack.t[template.Template.DESCRIPTION])
+                         self.stack.t[self.stack.t.DESCRIPTION])
 
     @utils.stack_delete_after
     def test_update_modify_ok_replace(self):
