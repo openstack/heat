@@ -133,7 +133,7 @@ def constraint_mapping():
         cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
-        resources._load_all(env)
+        resources._load_global_environment(env)
 
         self.assertEqual("MyConstraint",
                          env.get_constraint("constraint1").__name__)
@@ -152,7 +152,8 @@ def constraint_mapping():
         cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
-        error = self.assertRaises(ValueError, resources._load_all, env)
+        error = self.assertRaises(ValueError,
+                                  resources._load_global_environment, env)
         self.assertEqual("oops", str(error))
 
 
@@ -199,50 +200,50 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
 class GlobalEnvLoadingTest(common.HeatTestCase):
 
     def test_happy_path(self):
-        list_dir = 'heat.engine.resources._list_environment_files'
-        with mock.patch(list_dir) as m_ldir:
+        with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml']
             env_dir = '/etc_etc/heat/environment.d'
             env_content = '{"resource_registry": {}}'
 
-            with mock.patch('heat.engine.resources.open',
+            env = environment.Environment({}, user_env=False)
+
+            with mock.patch('heat.engine.environment.open',
                             mock.mock_open(read_data=env_content),
                             create=True) as m_open:
-                resources._load_global_environment(resources.global_env(),
-                                                   env_dir)
+                environment.read_global_environment(env, env_dir)
 
-        m_ldir.assert_called_once_with(env_dir)
+        m_ldir.assert_called_once_with(env_dir + '/*')
         m_open.assert_called_once_with('%s/a.yaml' % env_dir)
 
     def test_empty_env_dir(self):
-        list_dir = 'heat.engine.resources._list_environment_files'
-        with mock.patch(list_dir) as m_ldir:
+        with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = []
             env_dir = '/etc_etc/heat/environment.d'
-            resources._load_global_environment(resources.global_env(),
-                                               env_dir)
 
-        m_ldir.assert_called_once_with(env_dir)
+            env = environment.Environment({}, user_env=False)
+            environment.read_global_environment(env, env_dir)
+
+        m_ldir.assert_called_once_with(env_dir + '/*')
 
     def test_continue_on_ioerror(self):
         """assert we get all files processed even if there are
         processing exceptions.
         """
-        list_dir = 'heat.engine.resources._list_environment_files'
-        with mock.patch(list_dir) as m_ldir:
+        with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',
                                    '/etc_etc/heat/environment.d/b.yaml']
             env_dir = '/etc_etc/heat/environment.d'
             env_content = '{}'
 
-            with mock.patch('heat.engine.resources.open',
+            env = environment.Environment({}, user_env=False)
+
+            with mock.patch('heat.engine.environment.open',
                             mock.mock_open(read_data=env_content),
                             create=True) as m_open:
                 m_open.side_effect = IOError
-                resources._load_global_environment(resources.global_env(),
-                                                   env_dir)
+                environment.read_global_environment(env, env_dir)
 
-        m_ldir.assert_called_once_with(env_dir)
+        m_ldir.assert_called_once_with(env_dir + '/*')
         expected = [mock.call('%s/a.yaml' % env_dir),
                     mock.call('%s/b.yaml' % env_dir)]
         self.assertEqual(expected, m_open.call_args_list)
@@ -251,20 +252,20 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         """assert we get all files processed even if there are
         processing exceptions.
         """
-        list_dir = 'heat.engine.resources._list_environment_files'
-        with mock.patch(list_dir) as m_ldir:
+        with mock.patch('glob.glob') as m_ldir:
             m_ldir.return_value = ['/etc_etc/heat/environment.d/a.yaml',
                                    '/etc_etc/heat/environment.d/b.yaml']
             env_dir = '/etc_etc/heat/environment.d'
             env_content = '{@$%#$%'
 
-            with mock.patch('heat.engine.resources.open',
+            env = environment.Environment({}, user_env=False)
+
+            with mock.patch('heat.engine.environment.open',
                             mock.mock_open(read_data=env_content),
                             create=True) as m_open:
-                resources._load_global_environment(resources.global_env(),
-                                                   env_dir)
+                environment.read_global_environment(env, env_dir)
 
-        m_ldir.assert_called_once_with(env_dir)
+        m_ldir.assert_called_once_with(env_dir + '/*')
         expected = [mock.call('%s/a.yaml' % env_dir),
                     mock.call('%s/b.yaml' % env_dir)]
         self.assertEqual(expected, m_open.call_args_list)
@@ -288,7 +289,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
-        resources._load_all(g_env)
+        resources._load_global_environment(g_env)
 
         # 3. assert our resource is in place.
         self.assertEqual('file:///not_really_here.yaml',
@@ -310,7 +311,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
-        resources._load_all(g_env)
+        resources._load_global_environment(g_env)
 
         # 3. assert our resource is in now gone.
         self.assertIsNone(g_env.get_resource_info('OS::Nova::Server'))
@@ -335,7 +336,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
-        resources._load_all(g_env)
+        resources._load_global_environment(g_env)
 
         # 3. assert our resources are now gone.
         self.assertIsNone(g_env.get_resource_info('AWS::EC2::Instance'))
@@ -376,10 +377,10 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
-        with mock.patch('heat.engine.resources.open',
+        with mock.patch('heat.engine.environment.open',
                         mock.mock_open(read_data=g_env_content),
                         create=True) as m_open:
-            resources._load_all(g_env)
+            resources._load_global_environment(g_env)
 
         # 3. assert that the file were ignored
         expected = [mock.call('%s/a.yaml' % envdir.path),

@@ -13,14 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import glob
 import itertools
-import os
-import os.path
 
 from oslo.config import cfg
 
-from heat.common import environment_format
 from heat.openstack.common import log
 from heat.openstack.common.gettextutils import _
 from heat.engine import environment
@@ -94,46 +90,9 @@ _environment = None
 
 
 def global_env():
-    global _environment
     if _environment is None:
         initialise()
     return _environment
-
-
-def _list_environment_files(env_dir):
-    try:
-        return glob.glob(os.path.join(env_dir, '*'))
-    except OSError as osex:
-        LOG.error(_('Failed to read %s') % env_dir)
-        LOG.exception(osex)
-        return []
-
-
-def _load_all(env):
-    _load_global_resources(env)
-    _load_global_environment(env)
-
-
-def _load_global_environment(env, env_dir=None):
-    if env_dir is None:
-        cfg.CONF.import_opt('environment_dir', 'heat.common.config')
-        env_dir = cfg.CONF.environment_dir
-
-    for file_path in _list_environment_files(env_dir):
-        try:
-            with open(file_path) as env_fd:
-                LOG.info(_('Loading %s') % file_path)
-                env_body = environment_format.parse(env_fd.read())
-                environment_format.default_for_missing(env_body)
-                env.load(env_body)
-        except ValueError as vex:
-            LOG.error(_('Failed to parse %(file_path)s') % {
-                      'file_path': file_path})
-            LOG.exception(vex)
-        except IOError as ioex:
-            LOG.error(_('Failed to read %(file_path)s') % {
-                      'file_path': file_path})
-            LOG.exception(ioex)
 
 
 def initialise():
@@ -141,8 +100,14 @@ def initialise():
     if _environment is not None:
         return
 
-    _environment = environment.Environment({}, user_env=False)
-    _load_all(_environment)
+    global_env = environment.Environment({}, user_env=False)
+    _load_global_environment(global_env)
+    _environment = global_env
+
+
+def _load_global_environment(env):
+    _load_global_resources(env)
+    environment.read_global_environment(env)
 
 
 def _global_modules():

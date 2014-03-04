@@ -13,10 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import glob
 import itertools
+import os.path
+
+from oslo.config import cfg
 
 from heat.openstack.common import log
 from heat.openstack.common.gettextutils import _
+from heat.common import environment_format
 from heat.common import exception
 
 
@@ -235,9 +240,9 @@ class ResourceRegistry(object):
         def is_a_glob(resource_type):
             return resource_type.endswith('*')
         globs = itertools.ifilter(is_a_glob, self._registry.keys())
-        for glob in globs:
-            if self._registry[glob].matches(resource_type):
-                yield self._registry[glob]
+        for pattern in globs:
+            if self._registry[pattern].matches(resource_type):
+                yield self._registry[pattern]
 
     def get_resource_info(self, resource_type, resource_name=None,
                           registry_type=None):
@@ -377,3 +382,32 @@ class Environment(object):
 
     def get_constraint(self, name):
         return self.constraints.get(name)
+
+
+def read_global_environment(env, env_dir=None):
+    if env_dir is None:
+        cfg.CONF.import_opt('environment_dir', 'heat.common.config')
+        env_dir = cfg.CONF.environment_dir
+
+    try:
+        env_files = glob.glob(os.path.join(env_dir, '*'))
+    except OSError as osex:
+        LOG.error(_('Failed to read %s') % env_dir)
+        LOG.exception(osex)
+        return
+
+    for file_path in env_files:
+        try:
+            with open(file_path) as env_fd:
+                LOG.info(_('Loading %s') % file_path)
+                env_body = environment_format.parse(env_fd.read())
+                environment_format.default_for_missing(env_body)
+                env.load(env_body)
+        except ValueError as vex:
+            LOG.error(_('Failed to parse %(file_path)s') % {
+                      'file_path': file_path})
+            LOG.exception(vex)
+        except IOError as ioex:
+            LOG.error(_('Failed to read %(file_path)s') % {
+                      'file_path': file_path})
+            LOG.exception(ioex)
