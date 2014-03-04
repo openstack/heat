@@ -50,6 +50,8 @@ class KeystoneClientTest(HeatTestCase):
         cfg.CONF.set_override('admin_tenant_name', 'service',
                               group='keystone_authtoken')
         cfg.CONF.set_override('stack_user_domain', 'adomain123')
+        cfg.CONF.set_override('stack_domain_admin', 'adminuser123')
+        cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret')
         self.addCleanup(self.m.VerifyAll)
 
     def _stub_admin_client(self, auth_ok=True):
@@ -64,6 +66,23 @@ class KeystoneClientTest(HeatTestCase):
             project_name='service',
             username='heat').AndReturn(self.mock_admin_client)
         self.mock_admin_client.authenticate().AndReturn(auth_ok)
+        if auth_ok:
+            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
+            self.mock_admin_client.auth_ref.user_id = '1234'
+
+    def _stub_domain_admin_client(self, auth_ok=True):
+        kc_v3.Client(
+            auth_url='http://server.test:5000/v3',
+            cacert=None,
+            cert=None,
+            endpoint='http://server.test:5000/v3',
+            insecure=False,
+            key=None,
+            password='adminsecret',
+            user_domain_id='adomain123',
+            username='adminuser123').AndReturn(self.mock_admin_client)
+        self.mock_admin_client.authenticate(
+            domain_id='adomain123').AndReturn(auth_ok)
         if auth_ok:
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
             self.mock_admin_client.auth_ref.user_id = '1234'
@@ -180,7 +199,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -205,7 +224,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
 
         # mock keystone client functions
         self.mock_admin_client.roles = self.m.CreateMockAnything()
@@ -226,7 +245,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -247,7 +266,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -269,7 +288,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'duser123'
@@ -599,7 +618,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
         self.mock_admin_client.users.update(user='duser123', enabled=True
                                             ).AndReturn(None)
@@ -616,7 +635,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
         self.m.ReplayAll()
 
@@ -631,7 +650,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
         self.m.ReplayAll()
 
@@ -646,7 +665,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
         self.mock_admin_client.users.update(user='duser123', enabled=False
                                             ).AndReturn(None)
@@ -663,7 +682,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
         self.m.ReplayAll()
 
@@ -678,7 +697,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         # mock keystone client functions
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
         self.m.ReplayAll()
 
@@ -733,7 +752,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test creating ec2 credentials for domain user."""
 
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -903,7 +922,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         expected_name = '%s-astack' % ctx.tenant_id
 
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         dummy = self.m.CreateMockAnything()
         dummy.id = 'aproject123'
@@ -922,7 +941,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test the delete_stack_domain_project function."""
 
-        self._stub_admin_client()
+        self._stub_domain_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         self.mock_admin_client.projects.delete(project='aprojectid')
         self.m.ReplayAll()

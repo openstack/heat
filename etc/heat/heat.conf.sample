@@ -102,6 +102,15 @@
 # users. (string value)
 #stack_user_domain=<None>
 
+# Keystone username, a user with roles sufficient to
+# manageusers and projects in the stack_user_domain. (string
+# value)
+#stack_domain_admin=<None>
+
+# Keystone password for stack_domain_admin user. (string
+# value)
+#stack_domain_admin_password=<None>
+
 # Maximum raw byte size of any template. (integer value)
 #max_template_size=524288
 

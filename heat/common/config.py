@@ -68,6 +68,11 @@ service_opts = [
     cfg.StrOpt('stack_user_domain',
                help='Keystone domain ID which contains heat template-defined '
                     'users.'),
+    cfg.StrOpt('stack_domain_admin',
+               help='Keystone username, a user with roles sufficient to manage'
+                    'users and projects in the stack_user_domain.'),
+    cfg.StrOpt('stack_domain_admin_password',
+               help='Keystone password for stack_domain_admin user.'),
     cfg.IntOpt('max_template_size',
                default=524288,
                help='Maximum raw byte size of any template.'),
