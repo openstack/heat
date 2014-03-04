@@ -51,13 +51,14 @@ class Schema(constr.Schema):
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
-                 constraints=[], hidden=False, context=None):
+                 constraints=[], hidden=False, context=None, label=None):
         super(Schema, self).__init__(data_type=data_type,
                                      description=description,
                                      default=default,
                                      schema=schema,
                                      required=default is None,
-                                     constraints=constraints)
+                                     constraints=constraints,
+                                     label=label)
         self.hidden = hidden
         self.context = context
 
@@ -123,7 +124,8 @@ class Schema(constr.Schema):
                    default=schema_dict.get(DEFAULT),
                    constraints=list(constraints()),
                    hidden=str(schema_dict.get(NO_ECHO,
-                                              'false')).lower() == 'true')
+                                              'false')).lower() == 'true',
+                   label=schema_dict.get(LABEL))
 
     def validate(self, name, value):
         super(Schema, self).validate_constraints(value, self.context)
@@ -201,6 +203,10 @@ class Parameter(object):
     def description(self):
         '''Return the description of the parameter.'''
         return self.schema.description or ''
+
+    def label(self):
+        '''Return the label or param name.'''
+        return self.schema.label or self.name
 
     def has_default(self):
         '''Return whether the parameter has a default value.'''

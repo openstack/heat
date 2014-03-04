@@ -215,7 +215,8 @@ class HOTParamSchema(parameters.Schema):
                    description=schema_dict.get(HOTParamSchema.DESCRIPTION),
                    default=schema_dict.get(HOTParamSchema.DEFAULT),
                    constraints=list(constraints()),
-                   hidden=schema_dict.get(HOTParamSchema.HIDDEN, False))
+                   hidden=schema_dict.get(HOTParamSchema.HIDDEN, False),
+                   label=schema_dict.get(HOTParamSchema.LABEL))
 
 
 class HOTParameters(parameters.Parameters):

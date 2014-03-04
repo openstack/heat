@@ -539,13 +539,66 @@ test_template_unique_logical_name = '''
     }
     '''
 
-test_template_duplicate_parameters = '''
-# This is a hello world HOT template just defining a single compute instance
+test_template_cfn_parameter_label = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String",
+          "Label" : "Nova KeyPair Name"
+        },
+  },
+
+  "Resources" : {
+     "AName": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "NetworkInterfaces": [ "mgmt", "data" ]
+          }
+     }
+  }
+}
+'''
+
+test_template_hot_parameter_label = '''
 heat_template_version: 2013-05-23
 
 description: >
   Hello world HOT template that just defines a single compute instance.
   Contains just base features to verify base HOT support.
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    label: Nova KeyPair Name
+
+resources:
+  my_instance:
+    type: AWS::EC2::Instance
+    properties:
+      KeyName: { get_param: KeyName }
+      ImageId: { get_param: ImageId }
+      InstanceType: { get_param: InstanceType }
+
+outputs:
+  instance_ip:
+    description: The IP address of the deployed instance
+    value: { get_attr: [my_instance, PublicIp] }
+'''
+
+test_template_duplicate_parameters = '''
+# This is a hello world HOT template just defining a single compute instance
+heat_template_version: 2013-05-23
 
 parameter_groups:
   - label: Server Group
@@ -682,6 +735,28 @@ outputs:
     description: The IP address of the deployed instance
     value: { get_attr: [my_instance, PublicIp] }
 '''
+
+test_template_hot_no_parameter_label = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+
+resources:
+  my_instance:
+    type: AWS::EC2::Instance
+    properties:
+      KeyName: { get_param: KeyName }
+      ImageId: { get_param: ImageId }
+      InstanceType: { get_param: InstanceType }
+'''
+
 test_template_no_parameters = '''
 heat_template_version: 2013-05-23
 
@@ -811,8 +886,69 @@ class validateTest(HeatTestCase):
             'Type': 'String',
             'Description': 'Name of an existing EC2KeyPair to enable SSH '
                            'access to the instances',
-            'NoEcho': 'false'}}
+            'NoEcho': 'false',
+            'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
+
+    def test_validate_hot_parameter_label(self):
+        t = template_format.parse(test_template_hot_parameter_label)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        parameters = res['Parameters']
+
+        expected = {'KeyName': {
+            'Type': 'String',
+            'Description': 'Name of an existing key pair to use for the '
+                           'instance',
+            'NoEcho': 'false',
+            'Label': 'Nova KeyPair Name'}}
+        self.assertEqual(expected, parameters)
+
+    def test_validate_hot_no_parameter_label(self):
+        t = template_format.parse(test_template_hot_no_parameter_label)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        parameters = res['Parameters']
+
+        expected = {'KeyName': {
+            'Type': 'String',
+            'Description': 'Name of an existing key pair to use for the '
+                           'instance',
+            'NoEcho': 'false',
+            'Label': 'KeyName'}}
+        self.assertEqual(expected, parameters)
+
+    def test_validate_cfn_parameter_label(self):
+        t = template_format.parse(test_template_cfn_parameter_label)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        parameters = res['Parameters']
+
+        expected = {'KeyName': {
+            'Type': 'String',
+            'Description': 'Name of an existing EC2KeyPair to enable SSH '
+                           'access to the instances',
+            'NoEcho': 'false',
+            'Label': 'Nova KeyPair Name'}}
+        self.assertEqual(expected, parameters)
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)

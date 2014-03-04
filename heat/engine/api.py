@@ -271,7 +271,8 @@ def format_validate_parameter(param):
         api.PARAM_TYPE: schema_to_api_types.get(param.schema.type,
                                                 param.schema.type),
         api.PARAM_DESCRIPTION: param.description(),
-        api.PARAM_NO_ECHO: 'true' if param.hidden() else 'false'
+        api.PARAM_NO_ECHO: 'true' if param.hidden() else 'false',
+        api.PARAM_LABEL: param.label()
     }
 
     if param.has_default():
