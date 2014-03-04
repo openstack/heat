@@ -53,12 +53,12 @@ def write_autodoc_index():
         module_dirs = glob.glob(os.path.join(CONTRIB_DIR, '*'))
         module_names = map(os.path.basename, module_dirs)
 
-        return {
-            'contrib/%s' % module_name: {
-                'module': module_name,
-                'path': os.path.join(CONTRIB_DIR, module_name),
-            }
-            for module_name in module_names}
+        return dict(
+            ('contrib/%s' % module_name,
+             {'module': module_name,
+              'path': os.path.join(CONTRIB_DIR, module_name)}
+             )
+            for module_name in module_names)
 
     def find_autodoc_modules(module_name, sourcedir):
         """Return a list of modules in the SOURCE directory."""
