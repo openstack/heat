@@ -226,7 +226,7 @@ class StackResource(resource.Resource):
         nested_stack = self.nested()
         if nested_stack.state != (nested_stack.UPDATE,
                                   nested_stack.COMPLETE):
-            raise exception.Error(_("Nested stack update failed: %s") %
+            raise exception.Error(_("Nested stack UPDATE failed: %s") %
                                   nested_stack.status_reason)
         return True
 
