@@ -187,38 +187,55 @@ class HOTParamSchema(parameters.Schema):
         'string', 'number', 'comma_delimited_list', 'json',
     )
 
+    PARAMETER_KEYS = KEYS
+
     @classmethod
     def from_dict(cls, schema_dict):
         """
         Return a Parameter Schema object from a legacy schema dictionary.
         """
+        cls._validate_dict(schema_dict)
 
         def constraints():
             constraints = schema_dict.get(CONSTRAINTS)
             if constraints is None:
                 return
 
+            if not isinstance(constraints, list):
+                raise constr.InvalidSchemaError(
+                    _("Invalid parameter constraints, expected a list"))
+
+            valid_keys = (DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES,
+                          ALLOWED_PATTERN, CUSTOM_CONSTRAINT)
+
             for constraint in constraints:
+                cls._check_dict(constraint, valid_keys,
+                                'parameter constraints')
                 desc = constraint.get(DESCRIPTION)
                 if RANGE in constraint:
                     cdef = constraint.get(RANGE)
+                    cls._check_dict(cdef, (MIN, MAX), 'range constraint')
                     yield constr.Range(parameters.Schema.get_num(MIN, cdef),
                                        parameters.Schema.get_num(MAX, cdef),
                                        desc)
-                if LENGTH in constraint:
+                elif LENGTH in constraint:
                     cdef = constraint.get(LENGTH)
+                    cls._check_dict(cdef, (MIN, MAX), 'length constraint')
                     yield constr.Length(parameters.Schema.get_num(MIN, cdef),
                                         parameters.Schema.get_num(MAX, cdef),
                                         desc)
-                if ALLOWED_VALUES in constraint:
+                elif ALLOWED_VALUES in constraint:
                     cdef = constraint.get(ALLOWED_VALUES)
                     yield constr.AllowedValues(cdef, desc)
-                if ALLOWED_PATTERN in constraint:
+                elif ALLOWED_PATTERN in constraint:
                     cdef = constraint.get(ALLOWED_PATTERN)
                     yield constr.AllowedPattern(cdef, desc)
-                if CUSTOM_CONSTRAINT in constraint:
+                elif CUSTOM_CONSTRAINT in constraint:
                     cdef = constraint.get(CUSTOM_CONSTRAINT)
                     yield constr.CustomConstraint(cdef, desc)
+                else:
+                    raise constr.InvalidSchemaError(
+                        _("No constraint expressed"))
 
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
