@@ -1128,13 +1128,12 @@ class EngineService(service.Service):
 
     @request_context
     def create_software_deployment(self, cnxt, server_id, config_id,
-                                   input_values, signal_id, action, status,
+                                   input_values, action, status,
                                    status_reason):
         sd = db_api.software_deployment_create(cnxt, {
             'config_id': config_id,
             'server_id': server_id,
             'input_values': input_values,
-            'signal_id': signal_id,
             'tenant': cnxt.tenant_id,
             'action': action,
             'status': status,

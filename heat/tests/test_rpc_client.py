@@ -246,7 +246,6 @@ class EngineRpcAPITestCase(testtools.TestCase):
                               server_id='9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
                               config_id='48e8ade1-9196-42d5-89a2-f709fde42632',
                               input_values={},
-                              signal_id=None,
                               action='INIT',
                               status='COMPLETE',
                               status_reason=None)

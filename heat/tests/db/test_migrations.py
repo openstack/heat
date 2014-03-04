@@ -245,3 +245,6 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_039(self, engine, data):
         self.assertColumnIsNullable(engine, 'stack', 'user_creds_id')
+
+    def _check_040(self, engine, data):
+        self.assertColumnNotExists(engine, 'software_deployment', 'signal_id')
