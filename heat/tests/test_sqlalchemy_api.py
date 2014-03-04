@@ -1001,6 +1001,15 @@ class DBAPIStackTest(HeatTestCase):
         stack = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
         self.assertIsNone(stack)
 
+    def test_stack_get_tenant_is_stack_user_project_id(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds,
+                             stack_user_project_id='astackuserproject')
+        self.ctx.tenant_id = 'astackuserproject'
+        ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)
+        self.assertIsNotNone(ret_stack)
+        self.assertEqual(stack.id, ret_stack.id)
+        self.assertEqual('db_test_stack_name', ret_stack.name)
+
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         self.ctx.tenant_id = 'abc'
