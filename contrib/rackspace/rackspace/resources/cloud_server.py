@@ -394,7 +394,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         if not self._check_active(server):
             return False
 
-        server.get()
+        nova_utils.refresh_server(server)
 
         if 'rack_connect' in self.context.roles and not \
            self._check_rack_connect_complete(server):
