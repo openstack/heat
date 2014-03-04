@@ -42,16 +42,7 @@ class Template(collections.Mapping):
                 # at load time
                 from heat.engine import hot
 
-                version = template['heat_template_version']
-                valid_versions = hot.HOTemplate.VERSIONS
-                if version in valid_versions:
-                    return hot.HOTemplate(template, *args, **kwargs)
-                else:
-                    msg = _('"%(version)s" is not a valid '
-                            'heat_template_version. Should be one of: '
-                            '%(valid)s')
-                    raise ValueError(msg % {'version': version,
-                                            'valid': str(valid_versions)})
+                return hot.HOTemplate(template, *args, **kwargs)
 
         return super(Template, cls).__new__(cls)
 

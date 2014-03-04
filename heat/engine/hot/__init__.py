@@ -56,6 +56,17 @@ class HOTemplate(template.Template):
                             template.Template.RESOURCES: RESOURCES,
                             template.Template.OUTPUTS: OUTPUTS}
 
+    def __init__(self, template, *args, **kwargs):
+        version = template[self.VERSION]
+        if version not in self.VERSIONS:
+            msg = _('"%(version)s" is not a valid '
+                    'heat_template_version. Should be one of: '
+                    '%(valid)s')
+            raise ValueError(msg % {'version': version,
+                                    'valid': str(self.VERSIONS)})
+
+        super(HOTemplate, self).__init__(template, *args, **kwargs)
+
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         #first translate from CFN into HOT terminology if necessary
