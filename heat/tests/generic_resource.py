@@ -14,6 +14,7 @@
 
 from heat.engine import resource
 from heat.engine import signal_responder
+from heat.engine import stack_user
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -101,3 +102,12 @@ class SignalResource(signal_responder.SignalResponder):
     def _resolve_attribute(self, name):
         if name == 'AlarmUrl' and self.resource_id is not None:
             return unicode(self._get_signed_url())
+
+
+class StackUserResource(stack_user.StackUser):
+    properties_schema = {}
+    attributes_schema = {}
+
+    def handle_create(self):
+        super(StackUserResource, self).handle_create()
+        self.resource_id_set(self._get_user_id())

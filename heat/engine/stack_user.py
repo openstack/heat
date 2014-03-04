@@ -28,21 +28,38 @@ logger = logging.getLogger(__name__)
 
 class StackUser(resource.Resource):
 
-    # Subclasses create a user, and optionally keypair
-    # associated with a resource in a stack
+    # Subclasses create a user, and optionally keypair associated with a
+    # resource in a stack. Users are created  in the heat stack user domain
+    # (in a project specific to the stack)
+    def __init__(self, name, json_snippet, stack):
+        super(StackUser, self).__init__(name, json_snippet, stack)
+        self.password = None
+
     def handle_create(self):
         self._create_user()
 
     def _create_user(self):
-        user_id = self.keystone().create_stack_user(
-            self.physical_resource_name())
+        # Check for stack user project, create if not yet set
+        if not self.stack.stack_user_project_id:
+            project_id = self.keystone().create_stack_domain_project(
+                stack_name=self.stack.name)
+            self.stack.set_stack_user_project_id(project_id)
 
+        # Create a keystone user in the stack domain project
+        user_id = self.keystone().create_stack_domain_user(
+            username=self.physical_resource_name(),
+            password=self.password,
+            project_id=self.stack.stack_user_project_id)
+
+        # Store the ID in resource data, for compatibility with SignalResponder
         db_api.resource_data_set(self, 'user_id', user_id)
 
     def _get_user_id(self):
         try:
             return db_api.resource_data_get(self, 'user_id')
         except exception.NotFound:
+            # FIXME(shardy): This is a legacy hack for backwards compatibility
+            # remove after an appropriate transitional period...
             # Assume this is a resource that was created with
             # a previous version of heat and that the resource_id
             # is the user_id
@@ -58,11 +75,21 @@ class StackUser(resource.Resource):
         if user_id is None:
             return
         try:
-            self.keystone().delete_stack_user(user_id)
+            self.keystone().delete_stack_domain_user(
+                user_id=user_id, project_id=self.stack.stack_user_project_id)
         except kc_exception.NotFound:
             pass
-        for data_key in ('ec2_signed_url', 'access_key', 'secret_key',
-                         'credential_id'):
+        except ValueError:
+            # FIXME(shardy): This is a legacy delete path for backwards
+            # compatibility with resources created before the migration
+            # to stack_user.StackUser domain users.  After an appropriate
+            # transitional period, this should be removed.
+            logger.warning(_('Reverting to legacy user delete path'))
+            try:
+                self.keystone().delete_stack_user(user_id)
+            except kc_exception.NotFound:
+                pass
+        for data_key in ('credential_id', 'access_key', 'secret_key'):
             try:
                 db_api.resource_data_delete(self, data_key)
             except exception.NotFound:
@@ -73,7 +100,8 @@ class StackUser(resource.Resource):
         # an ec2 keypair associated with the user, the resulting keys are
         # stored in resource_data
         user_id = self._get_user_id()
-        kp = self.keystone().create_ec2_keypair(user_id)
+        kp = self.keystone().create_stack_domain_user_keypair(
+            user_id=user_id, project_id=self.stack.stack_user_project_id)
         if not kp:
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
@@ -84,3 +112,4 @@ class StackUser(resource.Resource):
                                      redact=True)
             db_api.resource_data_set(self, 'secret_key', kp.secret,
                                      redact=True)
+        return kp
