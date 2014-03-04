@@ -169,12 +169,12 @@ class TemplateTest(HeatTestCase):
     def test_aws_version(self):
         tmpl = parser.Template(mapping_template)
         self.assertEqual(('AWSTemplateFormatVersion', '2010-09-09'),
-                         tmpl.version())
+                         tmpl.version)
 
     def test_heat_version(self):
         tmpl = parser.Template(resource_template)
         self.assertEqual(('HeatTemplateFormatVersion', '2012-12-12'),
-                         tmpl.version())
+                         tmpl.version)
 
     def test_invalid_template(self):
         scanner_error = '''

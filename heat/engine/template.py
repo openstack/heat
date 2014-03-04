@@ -73,11 +73,6 @@ class Template(collections.Mapping):
         return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
 
     @abc.abstractmethod
-    def version(self):
-        '''Return a (versionkey, version) tuple for the template.'''
-        pass
-
-    @abc.abstractmethod
     def param_schemata(self):
         '''Return a dict of parameters.Schema objects for the parameters.'''
         pass

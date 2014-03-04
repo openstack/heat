@@ -58,7 +58,10 @@ class HOTemplate(template.Template):
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
     def __init__(self, template, *args, **kwargs):
-        version = template[self.VERSION]
+        # All user templates are forced to include a version string. This is
+        # just a convenient default for unit tests.
+        version = template.get(self.VERSION, '2013-05-23')
+
         if version not in self.VERSIONS:
             msg = _('"%(version)s" is not a valid '
                     'heat_template_version. Should be one of: '
@@ -67,6 +70,7 @@ class HOTemplate(template.Template):
                                     'valid': str(self.VERSIONS)})
 
         super(HOTemplate, self).__init__(template, *args, **kwargs)
+        self.version = self.VERSION, version
 
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
@@ -146,14 +150,6 @@ class HOTemplate(template.Template):
 
         return cfn_outputs
 
-    def version(self):
-        if self.VERSION in self.t:
-            return self.VERSION, self.t[self.VERSION]
-
-        # All user templates are forced to include a version string. This is
-        # just a convenient default for unit tests.
-        return self.VERSION, '2013-05-23'
-
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, HOTParamSchema.from_dict(schema))
@@ -166,7 +162,7 @@ class HOTemplate(template.Template):
 
     def functions(self):
         from heat.engine.hot import functions
-        return functions.function_mapping(*self.version())
+        return functions.function_mapping(*self.version)
 
 
 class HOTParamSchema(parameters.Schema):
