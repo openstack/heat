@@ -312,8 +312,8 @@ class HOTemplateTest(HeatTestCase):
         tmpl_str = "heat_template_version: 2013-05-23"
         hot_tmpl = template_format.parse(tmpl_str)
         parsed_tmpl = template.Template(hot_tmpl)
-        expected = '2013-05-23'
-        observed = parsed_tmpl.version()[1]
+        expected = ('heat_template_version', '2013-05-23')
+        observed = parsed_tmpl.version
         self.assertEqual(expected, observed)
 
 

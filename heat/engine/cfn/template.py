@@ -27,6 +27,10 @@ class CfnTemplate(template.Template):
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 
+    def __init__(self, template, *args, **kwargs):
+        super(CfnTemplate, self).__init__(template, *args, **kwargs)
+        self.version = self._version()
+
     def __getitem__(self, section):
         '''Get the relevant section in the template.'''
         if section not in self.SECTIONS:
@@ -42,7 +46,7 @@ class CfnTemplate(template.Template):
 
         return self.t.get(section, default)
 
-    def version(self):
+    def _version(self):
         for key in ('HeatTemplateFormatVersion', 'AWSTemplateFormatVersion'):
             if key in self.t:
                 return key, self.t[key]
@@ -64,4 +68,4 @@ class CfnTemplate(template.Template):
                                      context=context)
 
     def functions(self):
-        return functions.function_mapping(*self.version())
+        return functions.function_mapping(*self.version)
