@@ -107,8 +107,7 @@ class Volume(resource.Resource):
         cinder = self.cinder()
         if backup_id is not None:
             if volume_backups is None:
-                raise exception.Error(
-                    '%s not supported' % self.BACKUP_ID)
+                raise exception.Error(_('Backups not supported.'))
             vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)

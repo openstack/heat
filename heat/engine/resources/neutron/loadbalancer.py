@@ -352,11 +352,15 @@ class Pool(neutron.NeutronResource):
             elif vip_attributes['status'] == 'ACTIVE':
                 return True
             raise exception.Error(
-                'neutron reported unexpected vip resource[%s] status[%s]' %
-                (vip_attributes['name'], vip_attributes['status']))
+                _('neutron reported unexpected vip resource[%(name)s] '
+                  'status[%(status)s]') %
+                {'name': vip_attributes['name'],
+                 'status': vip_attributes['status']})
         raise exception.Error(
-            'neutron report unexpected pool resource[%s] status[%s]' %
-            (attributes['name'], attributes['status']))
+            _('neutron reported unexpected pool resource[%(name)s] '
+              'status[%(status)s]') %
+            {'name': attributes['name'],
+             'status': attributes['status']})
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
