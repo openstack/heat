@@ -11,7 +11,7 @@ function usage {
     echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
     echo "  -f, --func               Functional tests have been removed."
     echo "  -u, --unit               Run unit tests (default when nothing specified)"
-    echo "  -p, --pep8               Only run flake8 and HACKING compliance check"
+    echo "  -p, --pep8               Run flake8 and HACKING compliance check (default when nothing specified)"
     echo "  -P, --no-pep8            Don't run flake8 and HACKING compliance check"
     echo "  --all                    Run pep8 and unit tests"
     echo "  -c, --coverage           Generate coverage report"
