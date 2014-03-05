@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import logging
+import os
+import sys
+from keystoneclient.v3 import client
+import keystoneclient.exceptions as kc_exception
+
+logger = logging.getLogger(__name__)
+
+DEBUG = False
+USERNAME=os.environ.get('OS_USERNAME', None)
+PASSWORD=os.environ.get('OS_PASSWORD', None)
+AUTH_URL=os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
+
+HEAT_DOMAIN_NAME=os.environ.get('HEAT_DOMAIN', 'heat')
+HEAT_DOMAIN_ADMIN=os.environ.get('HEAT_DOMAIN_ADMIN', 'heat_domain_admin')
+HEAT_DOMAIN_PASSWORD=os.environ.get('HEAT_DOMAIN_PASSWORD', None)
+HEAT_DOMAIN_DESCRIPTION='Contains users and projects created by heat'
+
+logger.debug("USERNAME=%s" % USERNAME)
+logger.debug("PASSWORD=%s" % PASSWORD)
+logger.debug("AUTH_URL=%s" % AUTH_URL)
+
+def main():
+    log_lvl = logging.DEBUG if DEBUG else logging.INFO
+    logging.basicConfig(
+        format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
+        level=log_lvl)
+
+    c = client.Client(debug=DEBUG,
+                      username=USERNAME,
+                      password=PASSWORD,
+                      auth_url=AUTH_URL,
+                      endpoint=AUTH_URL)
+    ret = c.authenticate()
+
+    # Create the heat domain
+    logger.info("Creating domain %s" % HEAT_DOMAIN_NAME)
+    try:
+        heat_domain = c.domains.create(name=HEAT_DOMAIN_NAME,
+                                       description=HEAT_DOMAIN_DESCRIPTION)
+    except kc_exception.Conflict:
+        logger.warning("Domain %s already exists" % HEAT_DOMAIN_NAME)
+        heat_domain = c.domains.list(name=HEAT_DOMAIN_NAME)[0]
+        if heat_domain.name != HEAT_DOMAIN_NAME:
+            logger.error("Unexpected filtered list response, please upgrade "
+                         "keystoneclient to >= 0.5")
+            sys.exit(1)
+
+    # Create heat domain admin user
+    if not HEAT_DOMAIN_PASSWORD:
+        logger.error("Must export HEAT_DOMAIN_PASSWORD for domain admin user")
+        sys.exit(1)
+
+    try:
+        domain_admin = c.users.create(name=HEAT_DOMAIN_ADMIN,
+                                      password=HEAT_DOMAIN_PASSWORD,
+                                      domain=heat_domain,
+                                      description="Heat domain admin")
+    except kc_exception.Conflict:
+        logger.warning("User %s already exists" % HEAT_DOMAIN_ADMIN)
+        domain_admin = c.users.list(name=HEAT_DOMAIN_ADMIN)[0]
+
+    # Make the user a domain admin
+    roles_list =  c.roles.list()
+    # FIXME(shardy): seems filtering roles by name currently doesn't work
+    admin_role = [r for r in roles_list
+                  if r.name == 'admin'][0]
+    c.roles.grant(role=admin_role, user=domain_admin, domain=heat_domain)
+
+    print "\nPlease update your heat.conf with the following in [DEFAULT]\n"
+    print "stack_user_domain=%s" % heat_domain.id
+    print "stack_domain_admin=%s" % HEAT_DOMAIN_ADMIN
+    print "stack_domain_admin_password=%s" % HEAT_DOMAIN_PASSWORD
+
+
+if __name__ == "__main__":
+    main()
+
