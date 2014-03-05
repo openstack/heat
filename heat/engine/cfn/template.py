@@ -14,7 +14,6 @@
 
 from heat.engine import parameters
 from heat.engine import template
-from heat.engine.cfn import functions
 
 
 class CfnTemplate(template.Template):
@@ -66,6 +65,3 @@ class CfnTemplate(template.Template):
                                      user_params=user_params,
                                      validate_value=validate_value,
                                      context=context)
-
-    def functions(self):
-        return functions.function_mapping(*self.version)
