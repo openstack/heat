@@ -2749,11 +2749,19 @@ class ThreadGroupManagerTest(HeatTestCase):
         self.f = 'function'
         self.fargs = ('spam', 'ham', 'eggs')
         self.fkwargs = {'foo': 'bar'}
+        self.cnxt = 'ctxt'
+        self.engine_id = 'engine_id'
         self.stack = mock.Mock()
         self.lock_mock = mock.Mock()
         self.stlock_mock = self.useFixture(
             mockpatch.Patch('heat.engine.service.stack_lock')).mock
         self.stlock_mock.StackLock.return_value = self.lock_mock
+        self.tg_mock = mock.Mock()
+        self.thg_mock = self.useFixture(
+            mockpatch.Patch('heat.engine.service.threadgroup')).mock
+        self.thg_mock.ThreadGroup.return_value = self.tg_mock
+        self.cfg_mock = self.useFixture(
+            mockpatch.Patch('heat.engine.service.cfg')).mock
 
     def test_tgm_start_with_acquired_lock(self):
         thm = service.ThreadGroupManager()
@@ -2777,3 +2785,50 @@ class ThreadGroupManagerTest(HeatTestCase):
                                              self.f, *self.fargs,
                                              **self.fkwargs)
                 self.lock_mock.release.assert_called_with(self.stack.id)
+
+    def test_tgm_start_with_lock(self):
+        thm = service.ThreadGroupManager()
+        with self.patchobject(thm, 'start_with_acquired_lock'):
+            thm.start_with_lock(self.cnxt, self.stack, self.engine_id, self.f,
+                                *self.fargs, **self.fkwargs)
+            self.stlock_mock.StackLock.assert_called_with(self.cnxt,
+                                                          self.stack,
+                                                          self.engine_id)
+            self.lock_mock.acquire.assert_called_once()
+            thm.start_with_acquired_lock.assert_called_once()
+            calls = thm.start_with_acquired_lock.call_args
+            self.assertEqual((self.stack, self.lock_mock, self.f) + self.fargs,
+                             calls[0])
+            self.assertEqual(self.fkwargs, calls[1])
+
+    def test_tgm_start(self):
+        stack_id = 'test'
+
+        thm = service.ThreadGroupManager()
+        ret = thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
+
+        self.assertEqual(self.tg_mock, thm.groups['test'])
+        self.tg_mock.add_thread.assert_called_with(self.f, *self.fargs,
+                                                   **self.fkwargs)
+        self.assertEqual(self.tg_mock.add_thread(), ret)
+
+    def test_tgm_stop(self):
+        stack_id = 'test'
+
+        thm = service.ThreadGroupManager()
+        thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
+        thm.stop(stack_id)
+
+        self.tg_mock.stop.assert_called_once()
+        self.assertNotIn(stack_id, thm.groups)
+
+    def test_tgm_add_timer(self):
+        stack_id = 'test'
+
+        thm = service.ThreadGroupManager()
+        thm.add_timer(stack_id, self.f, *self.fargs, **self.fkwargs)
+
+        self.assertEqual(thm.groups[stack_id], self.tg_mock)
+        self.tg_mock.add_timer.assert_called_with(
+            self.cfg_mock.CONF.periodic_interval,
+            self.f, *self.fargs, **self.fkwargs)
