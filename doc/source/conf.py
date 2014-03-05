@@ -193,7 +193,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath',
               'sphinx.ext.viewcode',
               'sphinx.ext.doctest',
-              'oslo.sphinx',
+              'oslosphinx',
               'ext.resources']
 
 todo_include_todos = True

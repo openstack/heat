@@ -7,12 +7,12 @@ For user and admin docs, go to the directory `doc/docbkx`.
 Dependencies
 ============
 
-You'll need to install python *Sphinx* package and *oslo.sphinx*
+You'll need to install python *Sphinx* package and *oslosphinx*
 package:
 
 ::
 
-   sudo pip install sphinx oslo.sphinx
+   sudo pip install sphinx oslosphinx
 
 If you are using the virtualenv you'll need to install them in the
 virtualenv.
