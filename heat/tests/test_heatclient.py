@@ -218,6 +218,35 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client.create_stack_domain_user(username='duser',
                                                 project_id='aproject')
 
+    def test_create_stack_domain_user_legacy_fallback(self):
+        """Test creating a stack domain user, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stubs_v3()
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'auser123'
+        self.mock_ks_v3_client.users.create(name='auser',
+                                            password='password',
+                                            default_project=ctx.tenant_id
+                                            ).AndReturn(mock_user)
+
+        self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.roles.list().AndReturn(self._mock_roles_list())
+        self.mock_ks_v3_client.roles.grant(project=ctx.tenant_id,
+                                           role='4546',
+                                           user='auser123').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.create_stack_domain_user(username='auser',
+                                                project_id='aproject',
+                                                password='password')
+
     def test_create_stack_domain_user_error_norole(self):
         """Test creating a stack domain user, no role error path."""
         ctx = utils.dummy_context()
@@ -256,6 +285,23 @@ class KeystoneClientTest(HeatTestCase):
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_user(user_id='duser123',
+                                                project_id='aproject')
+
+    def test_delete_stack_domain_user_legacy_fallback(self):
+        """Test deleting a stack domain user, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stubs_v3()
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.delete(user='user123').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user(user_id='user123',
                                                 project_id='aproject')
 
     def test_delete_stack_domain_user_error_domain(self):
@@ -409,11 +455,26 @@ class KeystoneClientTest(HeatTestCase):
         self.assertEqual('atrust123', trust_context.trust_id)
         self.assertEqual('5678', trust_context.trustor_user_id)
 
-    def test_init_domain_cfg_not_set(self):
+    def test_init_domain_cfg_not_set_fallback(self):
 
-        """Test error path when config lacks stack domain ID."""
+        """Test error path when config lacks domain config."""
 
         cfg.CONF.clear_override('stack_user_domain')
+        cfg.CONF.clear_override('stack_domain_admin')
+        cfg.CONF.clear_override('stack_domain_admin_password')
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        self.assertIsNotNone(heat_keystoneclient.KeystoneClient(ctx))
+
+    def test_init_domain_cfg_not_set_error(self):
+
+        """Test error path when config lacks domain config."""
+
+        cfg.CONF.clear_override('stack_domain_admin')
+        cfg.CONF.clear_override('stack_domain_admin_password')
 
         ctx = utils.dummy_context()
         ctx.username = None
@@ -421,7 +482,10 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         err = self.assertRaises(exception.Error,
                                 heat_keystoneclient.KeystoneClient, ctx)
-        self.assertIn('stack_user_domain ID not set in heat.conf', err)
+        exp_msg = ('heat.conf misconfigured, cannot specify stack_user_domain '
+                   'without stack_domain_admin and '
+                   'stack_domain_admin_password')
+        self.assertIn(exp_msg, err)
 
     def test_init_admin_client(self):
 
@@ -627,6 +691,24 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client.enable_stack_domain_user(user_id='duser123',
                                                 project_id='aproject')
 
+    def test_enable_stack_domain_user_legacy_fallback(self):
+        """Test enabling a stack domain user, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stubs_v3()
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.update(user='user123', enabled=True
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.enable_stack_domain_user(user_id='user123',
+                                                project_id='aproject')
+
     def test_enable_stack_domain_user_error_project(self):
         """Test enabling a stack domain user, wrong project."""
 
@@ -672,6 +754,24 @@ class KeystoneClientTest(HeatTestCase):
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.disable_stack_domain_user(user_id='duser123',
+                                                 project_id='aproject')
+
+    def test_disable_stack_domain_user_legacy_fallback(self):
+        """Test enabling a stack domain user, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stubs_v3()
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.update(user='user123', enabled=False
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.disable_stack_domain_user(user_id='user123',
                                                  project_id='aproject')
 
     def test_disable_stack_domain_user_error_project(self):
@@ -775,6 +875,43 @@ class KeystoneClientTest(HeatTestCase):
         self.mock_admin_client.credentials.create(
             user='atestuser2', type='ec2', data=ex_data_json,
             project='aproject').AndReturn(mock_credential)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        ec2_cred = heat_ks_client.create_stack_domain_user_keypair(
+            user_id='atestuser2', project_id='aproject')
+        self.assertEqual('1234567', ec2_cred.id)
+        self.assertEqual('dummy_access2', ec2_cred.access)
+        self.assertEqual('dummy_secret2', ec2_cred.secret)
+
+    def test_create_stack_domain_user_keypair_legacy_fallback(self):
+
+        """Test creating ec2 credentials for domain user, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        ex_data = {'access': 'dummy_access2',
+                   'secret': 'dummy_secret2'}
+        ex_data_json = json.dumps(ex_data)
+
+        # stub UUID.hex to match ex_data
+        self._stub_uuid(['dummy_access2', 'dummy_secret2'])
+
+        # mock keystone client credentials functions
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        mock_credential = self.m.CreateMockAnything()
+        mock_credential.id = '1234567'
+        mock_credential.user_id = 'atestuser2'
+        mock_credential.blob = ex_data_json
+        mock_credential.type = 'ec2'
+
+        # mock keystone client create function
+        self.mock_ks_v3_client.credentials.create(
+            user='atestuser2', type='ec2', data=ex_data_json,
+            project=ctx.tenant_id).AndReturn(mock_credential)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         ec2_cred = heat_ks_client.create_stack_domain_user_keypair(
@@ -936,6 +1073,18 @@ class KeystoneClientTest(HeatTestCase):
                          heat_ks_client.create_stack_domain_project(
                              stack_name='astack'))
 
+    def test_create_stack_domain_project_legacy_fallback(self):
+        """Test the create_stack_domain_project function, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual(ctx.tenant_id,
+                         heat_ks_client.create_stack_domain_project(
+                             stack_name='astack'))
+
     def test_delete_stack_domain_project(self):
 
         """Test the delete_stack_domain_project function."""
@@ -949,6 +1098,16 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
+
+    def test_delete_stack_domain_project_legacy_fallback(self):
+        """Test the delete_stack_domain_project function, fallback path."""
+        cfg.CONF.clear_override('stack_user_domain')
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertIsNone(heat_ks_client.delete_stack_domain_project(
+            project_id='aprojectid'))
 
     def _test_url_for(self, service_url, expected_kwargs, **kwargs):
         """
