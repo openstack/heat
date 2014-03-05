@@ -109,7 +109,7 @@ class GetAtt(cfn_funcs.GetAtt):
     def result(self):
         attribute = super(GetAtt, self).result()
         if attribute is None:
-            return ''
+            return None
 
         path_components = function.resolve(self._path_components)
 
@@ -127,7 +127,7 @@ class GetAtt(cfn_funcs.GetAtt):
         try:
             return reduce(get_path_component, path_components, attribute)
         except (KeyError, IndexError, TypeError):
-            return ''
+            return None
 
 
 class Replace(cfn_funcs.Replace):

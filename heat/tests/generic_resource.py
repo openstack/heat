@@ -53,6 +53,23 @@ class GenericResource(resource.Resource):
                        self.type())
 
 
+class ResWithComplexPropsAndAttrs(GenericResource):
+
+    properties_schema = {'a_string': {'Type': 'String'},
+                         'a_list': {'Type': 'List'},
+                         'a_map': {'Type': 'Map'}}
+
+    attributes_schema = {'list': 'A list',
+                         'map': 'A map',
+                         'string': 'A string'}
+
+    def _resolve_attribute(self, name):
+        try:
+            return self.properties["a_%s" % name]
+        except KeyError:
+            return None
+
+
 class ResourceWithProps(GenericResource):
     properties_schema = {'Foo': {'Type': 'String'}}
 

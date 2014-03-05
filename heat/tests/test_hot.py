@@ -47,6 +47,19 @@ resources:
     type: ResourceWithComplexAttributesType
 ''')
 
+hot_tpl_mapped_props = template_format.parse('''
+heat_template_version: 2013-05-23
+resources:
+  resource1:
+    type: ResourceWithComplexAttributesType
+  resource2:
+    type: ResWithComplexPropsAndAttrsType
+    properties:
+      a_list: { get_attr: [ resource1, list] }
+      a_string: { get_attr: [ resource1, string ] }
+      a_map: { get_attr: [ resource1, flat_map ] }
+''')
+
 
 class HOTemplateTest(HeatTestCase):
     """Test processing of HOT templates."""
@@ -465,6 +478,8 @@ class StackAttributesTest(HeatTestCase):
                                  generic_rsrc.GenericResource)
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
+        resource._register_class('ResWithComplexPropsAndAttrsType',
+                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
         self.m.ReplayAll()
 
@@ -519,7 +534,7 @@ class StackAttributesTest(HeatTestCase):
                                               'none',
                                               'who_cares']}},
               resource_name='resource1',
-              expected={'Value': ''}))
+              expected={'Value': None}))
     ]
 
     @utils.stack_delete_after
@@ -546,6 +561,37 @@ class StackAttributesTest(HeatTestCase):
             resolved = function.resolve(self.stack.t.parse(self.stack,
                                                            self.snippet))
             self.assertEqual(self.expected, resolved)
+
+
+class StackGetAttrValidationTest(HeatTestCase):
+
+    def setUp(self):
+        super(StackGetAttrValidationTest, self).setUp()
+        self.ctx = utils.dummy_context()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithComplexAttributesType',
+                                 generic_rsrc.ResourceWithComplexAttributes)
+        resource._register_class('ResWithComplexPropsAndAttrsType',
+                                 generic_rsrc.ResWithComplexPropsAndAttrs)
+
+    def test_validate_props_from_attrs(self):
+        stack = parser.Stack(self.ctx, 'test_props_from_attrs',
+                             template.Template(hot_tpl_mapped_props))
+        stack.resources['resource1'].list = None
+        stack.resources['resource1'].flat_map = None
+        stack.resources['resource1'].nested_dict = None
+        try:
+            stack.validate()
+        except exception.StackValidationFailed as exc:
+            self.fail("Validation should have passed: %s" % str(exc))
+        self.assertEqual([],
+                         stack.resources['resource2'].properties['a_list'])
+        self.assertEqual({},
+                         stack.resources['resource2'].properties['a_map'])
+        self.assertEqual('',
+                         stack.resources['resource2'].properties['a_string'])
 
 
 class StackParametersTest(HeatTestCase):
