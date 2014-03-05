@@ -19,6 +19,7 @@ from heat.engine import function
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import hot
+from heat.engine.hot import parameters as hot_param
 from heat.engine import resources
 from heat.engine import template
 from heat.engine import constraints
@@ -661,7 +662,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_name']
 
         def v(value):
-            hot.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
             return True
 
         value = 'wp'
@@ -750,7 +751,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         def v(value):
-            hot.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
             return True
 
         value = 29999
@@ -791,7 +792,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['param1']
 
         def v(value):
-            hot.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
             return True
 
         value = "1"
@@ -819,7 +820,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         err = self.assertRaises(constraints.InvalidSchemaError,
-                                hot.HOTParamSchema.from_dict, schema)
+                                hot_param.HOTParamSchema.from_dict, schema)
         self.assertIn(range_desc, str(err))
 
     def test_validate_schema_wrong_key(self):
