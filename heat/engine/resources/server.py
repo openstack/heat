@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
 from heat.engine.resources import nova_utils
+from heat.engine.resources.software_config import software_config as sc
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -65,6 +66,12 @@ class Server(resource.Resource):
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
+    )
+
+    _SOFTWARE_CONFIG_FORMATS = (
+        HEAT_CFNTOOLS, RAW
+    ) = (
+        'HEAT_CFNTOOLS', 'RAW'
     )
 
     properties_schema = {
@@ -217,9 +224,9 @@ class Server(resource.Resource):
               'HEAT_CFNTOOLS, the user_data is bundled as part of the '
               'heat-cfntools cloud-init boot configuration data. For RAW, '
               'the user_data is passed to Nova unmodified.'),
-            default='HEAT_CFNTOOLS',
+            default=HEAT_CFNTOOLS,
             constraints=[
-                constraints.AllowedValues(['HEAT_CFNTOOLS', 'RAW']),
+                constraints.AllowedValues(_SOFTWARE_CONFIG_FORMATS),
             ]
         ),
         USER_DATA: properties.Schema(
@@ -300,13 +307,26 @@ class Server(resource.Resource):
         # This method is overridden by the derived CloudServer resource
         return self.properties.get(self.KEY_NAME)
 
+    def user_data_raw(self):
+        return self.properties.get(self.USER_DATA_FORMAT) == 'RAW'
+
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
         user_data_format = self.properties.get(self.USER_DATA_FORMAT)
+        ud_content = self.properties.get(self.USER_DATA)
+        if self.user_data_raw() and uuidutils.is_uuid_like(ud_content):
+            # attempt to load the userdata from software config
+            try:
+                ud_content = sc.SoftwareConfig.get_software_config(
+                    self.heat(), ud_content)
+            except exception.SoftwareConfigMissing:
+                # no config was found, so do not modify the user_data
+                pass
+
         userdata = nova_utils.build_userdata(
             self,
-            self.properties.get(self.USER_DATA),
+            ud_content,
             instance_user=self.properties[self.ADMIN_USER],
             user_data_format=user_data_format)
 

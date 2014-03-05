@@ -28,6 +28,7 @@ from heat.engine import scheduler
 from heat.engine.resources import image
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
+from heat.engine.resources.software_config import software_config as sc
 from heat.openstack.common import uuidutils
 from heat.openstack.common.gettextutils import _
 from heat.tests.common import HeatTestCase
@@ -355,6 +356,93 @@ class ServersTest(HeatTestCase):
             security_groups=[],
             userdata='wordpress', scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_server_create_raw_config_userdata(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'raw_userdata_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+            'RAW'
+        t['Resources']['WebServer']['Properties']['user_data'] = \
+            '8c813873-f6ee-4809-8eec-959ef39acb55'
+
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        self.m.StubOutWithMock(server, 'heat')
+        self.m.StubOutWithMock(sc.SoftwareConfig, 'get_software_config')
+        server.heat().AndReturn(None)
+        sc.SoftwareConfig.get_software_config(
+            None, '8c813873-f6ee-4809-8eec-959ef39acb55').AndReturn(
+                'wordpress from config')
+
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata='wordpress from config', scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_server_create_raw_config_userdata_None(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'raw_userdata_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        sc_id = '8c813873-f6ee-4809-8eec-959ef39acb55'
+        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+            'RAW'
+        t['Resources']['WebServer']['Properties']['user_data'] = sc_id
+
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        self.m.StubOutWithMock(server, 'heat')
+        self.m.StubOutWithMock(sc.SoftwareConfig, 'get_software_config')
+        server.heat().AndReturn(None)
+        sc.SoftwareConfig.get_software_config(
+            None, sc_id).AndRaise(exception.SoftwareConfigMissing(
+                software_config_id=sc_id))
+
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata=sc_id,
+            scheduler_hints=None, meta=None,
+            nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
             disk_config=None, reservation_id=None, files={},
             admin_pass=None).AndReturn(return_server)
