@@ -54,6 +54,12 @@ def refresh_server(server):
     '''
     try:
         server.get()
+    except clients.novaclient.exceptions.OverLimit as exc:
+        msg = _("Server %(name)s (%(id)s) received an OverLimit "
+                "response during server.get(): %(exception)s")
+        logger.warning(msg % {'name': server.name,
+                              'id': server.id,
+                              'exception': str(exc)})
     except clients.novaclient.exceptions.ClientException as exc:
         if exc.code == 500:
             msg = _('Server "%(name)s" (%(id)s) received the following '
