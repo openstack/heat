@@ -12,16 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
-
-from oslo.config import cfg
-
-from heat.openstack.common import log
-from heat.openstack.common.gettextutils import _
 from heat.engine import environment
-
-
-LOG = log.getLogger(__name__)
+from heat.engine import plugin_manager
 
 
 def _register_resources(env, type_pairs):
@@ -32,57 +24,6 @@ def _register_resources(env, type_pairs):
 def _register_constraints(env, type_pairs):
     for constraint_name, constraint in type_pairs:
         env.register_constraint(constraint_name, constraint)
-
-
-def _get_all_module_resources(module):
-    '''Returns all resource in `module`.'''
-    if callable(getattr(module, 'resource_mapping', None)):
-        try:
-            return module.resource_mapping().iteritems()
-        except Exception:
-            LOG.info(_('Failed to list resources from %s') % str(module))
-    else:
-        return {}
-
-
-def _get_available_module_resources(module):
-    '''
-    Returns resources in `module` available for registration
-
-    Sometimes resources should not be available for registration in Heat due to
-    unsatisfied dependencies.  This function will look for a function called
-    `available_resource_mapping` and, if present, return the resources the can
-    be properly loaded. If this is not present, it'll look for the regular
-    `resource_mapping` and return all resources from there.
-    '''
-    try:
-        if callable(getattr(module, 'available_resource_mapping', None)):
-            return module.available_resource_mapping().iteritems()
-        elif callable(getattr(module, 'resource_mapping', None)):
-            return module.resource_mapping().iteritems()
-    except Exception:
-        LOG.error(_('Failed to load resources from %s') % str(module))
-
-    return {}
-
-
-def _get_module_constraints(module):
-    if callable(getattr(module, 'constraint_mapping', None)):
-        return module.constraint_mapping().iteritems()
-    else:
-        return []
-
-
-def _register_modules(env, modules):
-    data_lists = [(_get_available_module_resources(m),
-                   _get_module_constraints(m))
-                  for m in modules]
-
-    if data_lists:
-        resource_lists, constraint_lists = zip(*data_lists)
-        _register_resources(env, itertools.chain.from_iterable(resource_lists))
-        _register_constraints(
-            env, itertools.chain.from_iterable(constraint_lists))
 
 
 _environment = None
@@ -109,24 +50,16 @@ def _load_global_environment(env):
     environment.read_global_environment(env)
 
 
-def _global_modules():
-    '''
-    Returns all core and plugin resource modules in Heat.
-
-    Core resource modules are yielded first to allow plugin modules to
-    override them if desired.
-    '''
-    import sys
-    from heat.common import plugin_loader
-
-    cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-    plugin_pkg = plugin_loader.create_subpackage(cfg.CONF.plugin_dirs,
-                                                 'heat.engine')
-
-    yield __name__, plugin_loader.load_modules(sys.modules[__name__])
-    yield plugin_pkg.__name__, plugin_loader.load_modules(plugin_pkg, True)
-
-
 def _load_global_resources(env):
-    for package, modules in _global_modules():
-        _register_modules(env, modules)
+    manager = plugin_manager.PluginManager(__name__)
+
+    # Sometimes resources should not be available for registration in Heat due
+    # to unsatisfied dependencies. We look first for the function
+    # 'available_resource_mapping', which should return the filtered resources.
+    # If it is not found, we look for the legacy 'resource_mapping'.
+    resource_mapping = plugin_manager.PluginMapping(['available_resource',
+                                                     'resource'])
+    constraint_mapping = plugin_manager.PluginMapping('constraint')
+
+    _register_resources(env, resource_mapping.load_all(manager))
+    _register_constraints(env, constraint_mapping.load_all(manager))
