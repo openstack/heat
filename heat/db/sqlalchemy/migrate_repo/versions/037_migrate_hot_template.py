@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 
 from heat.openstack.common.gettextutils import _
 from heat.db.sqlalchemy import models
-from heat.engine.hot import HOTParamSchema
+from heat.engine.hot.parameters import HOTParamSchema
 
 
 def upgrade(migrate_engine):

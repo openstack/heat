@@ -14,7 +14,7 @@
 
 from heat.engine import constraints
 from heat.common import exception
-from heat.engine import hot
+from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
@@ -1369,7 +1369,7 @@ class PropertiesTest(testtools.TestCase):
                 ]
             }
         }
-        params = dict((n, hot.HOTParamSchema.from_dict(s)) for n, s
+        params = dict((n, hot_param.HOTParamSchema.from_dict(s)) for n, s
                       in params_snippet.items())
         props_schemata = properties.Properties.schema_from_params(params)
 
