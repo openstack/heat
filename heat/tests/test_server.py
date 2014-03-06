@@ -674,6 +674,33 @@ class ServersTest(HeatTestCase):
                       str(ex))
         self.m.VerifyAll()
 
+    def test_server_validate_net_security_groups(self):
+        # Test that if network 'ports' are assigned security groups are
+        # not, because they'll be ignored
+        stack_name = 'srv_net_secgroups'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['networks'] = [
+            {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
+        t['Resources']['WebServer']['Properties']['security_groups'] = \
+            ['my_security_group']
+
+        server = servers.Server('server_validate_net_security_groups',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.ResourcePropertyConflict,
+                                  server.validate)
+        self.assertEqual("Cannot define the following properties at the same "
+                         "time: security_groups, networks/port.",
+                         str(error))
+        self.m.VerifyAll()
+
     def test_server_delete(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,

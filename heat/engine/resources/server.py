@@ -171,7 +171,9 @@ class Server(resource.Resource):
         ),
         SECURITY_GROUPS: properties.Schema(
             properties.Schema.LIST,
-            _('List of security group names or IDs.'),
+            _('List of security group names or IDs. Cannot be used if '
+              'neutron ports are associated with this server; assign '
+              'security groups to the ports instead.'),
             default=[]
         ),
         NETWORKS: properties.Schema(
@@ -580,10 +582,15 @@ class Server(resource.Resource):
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
             raise exception.StackValidationFailed(message=msg)
+
         # network properties 'uuid' and 'network' shouldn't be used
         # both at once for all networks
         networks = self.properties.get(self.NETWORKS) or []
+        # record if any networks include explicit ports
+        networks_with_port = False
         for network in networks:
+            networks_with_port = networks_with_port or \
+                network.get(self.NETWORK_PORT)
             if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
                 msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
                         'to the network "%(network)s" for the server '
@@ -609,6 +616,13 @@ class Server(resource.Resource):
         personality = self._personality()
         if metadata is not None or personality is not None:
             limits = nova_utils.absolute_limits(self.nova())
+
+        # if 'security_groups' present for the server and explict 'port'
+        # in one or more entries in 'networks', raise validation error
+        if networks_with_port and self.properties.get(self.SECURITY_GROUPS):
+            raise exception.ResourcePropertyConflict(
+                self.SECURITY_GROUPS,
+                "/".join([self.NETWORKS, self.NETWORK_PORT]))
 
         # verify that the number of metadata entries is not greater
         # than the maximum number allowed in the provider's absolute
