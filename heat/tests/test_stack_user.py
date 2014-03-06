@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests.common import HeatTestCase
@@ -48,7 +46,6 @@ class StackUserTest(HeatTestCase):
         resource._register_class('StackUserResourceType',
                                  generic_resource.StackUserResource)
         self.fc = fakes.FakeKeystoneClient()
-        self.resource_id = str(uuid.uuid4())
 
     def tearDown(self):
         super(StackUserTest, self).tearDown()
@@ -71,8 +68,9 @@ class StackUserTest(HeatTestCase):
         else:
             stack.set_stack_user_project_id(project_id)
 
+        rsrc._store()
         self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(self.resource_id).AndReturn('aabbcc')
+        short_id.get_id(rsrc.id).AndReturn('aabbcc')
 
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'create_stack_domain_user')
@@ -89,8 +87,7 @@ class StackUserTest(HeatTestCase):
                                  user_id='auser123')
         self.m.ReplayAll()
 
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual({'user_id': 'auser123'}, rs_data)
@@ -103,8 +100,7 @@ class StackUserTest(HeatTestCase):
                                  create_project=False)
         self.m.ReplayAll()
 
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual({'user_id': 'auser456'}, rs_data)
@@ -122,8 +118,7 @@ class StackUserTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
@@ -142,8 +137,7 @@ class StackUserTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
@@ -156,8 +150,7 @@ class StackUserTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         db_api.resource_data_delete(rsrc, 'user_id')
         scheduler.TaskRunner(rsrc.delete)()
