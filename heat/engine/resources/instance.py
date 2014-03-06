@@ -667,7 +667,7 @@ class Instance(resource.Resource):
             else:
                 suspend_runner.step()
         else:
-            return volumes_runner.step()
+            volumes_runner.step()
 
     def handle_resume(self):
         '''
