@@ -318,14 +318,19 @@ class AccessPolicy(resource.Resource):
     }
 
     def handle_create(self):
+        pass
+
+    def validate(self):
+        """Make sure all the AllowedResources are present."""
+        super(AccessPolicy, self).validate()
+
         resources = self.properties[self.ALLOWED_RESOURCES]
         # All of the provided resource names must exist in this stack
         for resource in resources:
             if resource not in self.stack:
-                logger.error(_("AccessPolicy resource %s not in stack") %
-                             resource)
-                raise exception.ResourceNotFound(resource_name=resource,
-                                                 stack_name=self.stack.name)
+                msg = _("AccessPolicy resource %s not in stack") % resource
+                logger.error(msg)
+                raise exception.StackValidationFailed(message=msg)
 
     def access_allowed(self, resource_name):
         return resource_name in self.properties[self.ALLOWED_RESOURCES]

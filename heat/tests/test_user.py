@@ -426,10 +426,7 @@ class AccessPolicyTest(UserPolicyTestCase):
             'NoExistResource']
         stack = utils.parse_stack(t)
 
-        rsrc = user.AccessPolicy(resource_name,
-                                 t['Resources'][resource_name],
-                                 stack)
-        self.assertRaises(exception.ResourceNotFound, rsrc.handle_create)
+        self.assertRaises(exception.StackValidationFailed, stack.validate)
 
     def test_accesspolicy_update(self):
         t = template_format.parse(user_policy_template)

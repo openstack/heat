@@ -1026,6 +1026,41 @@ class StackTest(HeatTestCase):
         self.assertIsNotNone(self.stack.updated_time)
 
     @utils.stack_delete_after
+    def test_access_policy_update(self):
+        tmpl = {'Resources': {
+                'R1': {'Type': 'GenericResourceType'},
+                'Policy': {
+                    'Type': 'OS::Heat::AccessPolicy',
+                    'Properties': {
+                        'AllowedResources': ['R1'],
+                    },
+                }}}
+
+        self.stack = parser.Stack(self.ctx, 'update_stack_access_policy_test',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'Resources': {
+                 'R1': {'Type': 'GenericResourceType'},
+                 'R2': {'Type': 'GenericResourceType'},
+                 'Policy': {
+                     'Type': 'OS::Heat::AccessPolicy',
+                     'Properties': {
+                         'AllowedResources': ['R1', 'R2'],
+                     },
+                 }}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+    @utils.stack_delete_after
     def test_delete(self):
         self.stack = parser.Stack(self.ctx, 'delete_test',
                                   parser.Template({}))
