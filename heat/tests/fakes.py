@@ -143,7 +143,7 @@ class FakeKeystoneClient(object):
     def delete_stack_domain_project(self, project_id):
         pass
 
-    def create_stack_domain_project(self, stack_name):
+    def create_stack_domain_project(self, stack_id):
         return 'aprojectid'
 
     def create_stack_domain_user(self, username, project_id, password=None):

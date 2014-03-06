@@ -65,7 +65,7 @@ class StackUserTest(HeatTestCase):
             self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                    'create_stack_domain_project')
             fakes.FakeKeystoneClient.create_stack_domain_project(
-                stack_name=stack_name).AndReturn(project_id)
+                stack.id).AndReturn(project_id)
         else:
             stack.set_stack_user_project_id(project_id)
 

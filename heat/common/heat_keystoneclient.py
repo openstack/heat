@@ -370,7 +370,7 @@ class KeystoneClientV3(object):
     def delete_stack_user(self, user_id):
         self.client_v3.users.delete(user=user_id)
 
-    def create_stack_domain_project(self, stack_name):
+    def create_stack_domain_project(self, stack_id):
         '''Creates a project in the heat stack-user domain.'''
         if not self.stack_domain_id:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
@@ -380,7 +380,7 @@ class KeystoneClientV3(object):
             return self.context.tenant_id
         # Note we use the tenant ID not name to ensure uniqueness in a multi-
         # domain environment (where the tenant name may not be globally unique)
-        project_name = '%s-%s' % (self.context.tenant_id, stack_name)
+        project_name = ('%s-%s' % (self.context.tenant_id, stack_id))[:64]
         desc = "Heat stack user project"
         domain_project = self.domain_admin_client.projects.create(
             name=project_name,

@@ -121,7 +121,7 @@ class UserTest(HeatTestCase):
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'create_stack_domain_project')
         fakes.FakeKeystoneClient.create_stack_domain_project(
-            stack_name=stack.name).AndReturn(project_id)
+            stack.id).AndReturn(project_id)
 
         self.m.StubOutWithMock(short_id, 'get_id')
         short_id.get_id(self.resource_id).MultipleTimes().AndReturn('aabbcc')

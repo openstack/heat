@@ -41,7 +41,7 @@ class StackUser(resource.Resource):
         # Check for stack user project, create if not yet set
         if not self.stack.stack_user_project_id:
             project_id = self.keystone().create_stack_domain_project(
-                stack_name=self.stack.name)
+                self.stack.id)
             self.stack.set_stack_user_project_id(project_id)
 
         # Create a keystone user in the stack domain project
