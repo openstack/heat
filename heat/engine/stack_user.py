@@ -94,6 +94,24 @@ class StackUser(resource.Resource):
             except exception.NotFound:
                 pass
 
+    def handle_suspend(self):
+        user_id = self._get_user_id()
+        try:
+            self.keystone().disable_stack_domain_user(
+                user_id=user_id, project_id=self.stack.stack_user_project_id)
+        except ValueError:
+            # FIXME(shardy): This is a legacy path for backwards compatibility
+            self.keystone().disable_stack_user(user_id=user_id)
+
+    def handle_resume(self):
+        user_id = self._get_user_id()
+        try:
+            self.keystone().enable_stack_domain_user(
+                user_id=user_id, project_id=self.stack.stack_user_project_id)
+        except ValueError:
+            # FIXME(shardy): This is a legacy path for backwards compatibility
+            self.keystone().enable_stack_user(user_id=user_id)
+
     def _create_keypair(self):
         # Subclasses may optionally call this in handle_create to create
         # an ec2 keypair associated with the user, the resulting keys are

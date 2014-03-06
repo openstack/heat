@@ -156,3 +156,85 @@ class StackUserTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
+
+    def test_handle_suspend(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'disable_stack_domain_user')
+        fakes.FakeKeystoneClient.disable_stack_domain_user(
+            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        scheduler.TaskRunner(rsrc.suspend)()
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_handle_suspend_legacy(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'disable_stack_domain_user')
+        fakes.FakeKeystoneClient.disable_stack_domain_user(
+            user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'disable_stack_user')
+        fakes.FakeKeystoneClient.disable_stack_user(
+            user_id='auserdel').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        scheduler.TaskRunner(rsrc.suspend)()
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_handle_resume(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'enable_stack_domain_user')
+        fakes.FakeKeystoneClient.enable_stack_domain_user(
+            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
+        scheduler.TaskRunner(rsrc.resume)()
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_handle_resume_legacy(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'enable_stack_domain_user')
+        fakes.FakeKeystoneClient.enable_stack_domain_user(
+            user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'enable_stack_user')
+        fakes.FakeKeystoneClient.enable_stack_user(
+            user_id='auserdel').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
+        scheduler.TaskRunner(rsrc.resume)()
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()

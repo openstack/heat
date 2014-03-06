@@ -153,3 +153,9 @@ class FakeKeystoneClient(object):
 
     def create_stack_domain_user_keypair(self, user_id, project_id):
         return self.creds
+
+    def enable_stack_domain_user(self, user_id, project_id):
+        pass
+
+    def disable_stack_domain_user(self, user_id, project_id):
+        pass
