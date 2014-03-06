@@ -159,10 +159,6 @@ class HOTemplate(template.Template):
         return HOTParameters(stack_identifier, self, user_params=user_params,
                              validate_value=validate_value, context=context)
 
-    def functions(self):
-        from heat.engine.hot import functions
-        return functions.function_mapping(*self.version)
-
 
 class HOTParamSchema(parameters.Schema):
     """HOT parameter schema."""

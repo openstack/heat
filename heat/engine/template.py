@@ -17,10 +17,42 @@ import collections
 import functools
 
 from heat.db import api as db_api
+from heat.engine import plugin_manager
+
+
+__all__ = ['Template']
+
+
+class TemplatePluginManager(object):
+    '''A Descriptor class for caching PluginManagers.
+
+    Keeps a cache of PluginManagers with the search directories corresponding
+    to the package containing the owner class.
+    '''
+
+    def __init__(self):
+        self.plugin_managers = {}
+
+    @staticmethod
+    def package_name(obj_class):
+        '''Return the package containing the given class.'''
+        module_name = obj_class.__module__
+        return module_name.rsplit('.', 1)[0]
+
+    def __get__(self, obj, obj_class):
+        '''Get a PluginManager for a class.'''
+        pkg = self.package_name(obj_class)
+        if pkg not in self.plugin_managers:
+            self.plugin_managers[pkg] = plugin_manager.PluginManager(pkg)
+
+        return self.plugin_managers[pkg]
 
 
 class Template(collections.Mapping):
     '''A stack template.'''
+
+    _plugins = TemplatePluginManager()
+    _functionmaps = {}
 
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
@@ -82,10 +114,14 @@ class Template(collections.Mapping):
         '''Return a parameters.Parameters object for the stack.'''
         pass
 
-    @abc.abstractmethod
     def functions(self):
         '''Return a dict of template functions keyed by name.'''
-        pass
+        if self.version not in self._functionmaps:
+            mappings = plugin_manager.PluginMapping('function', *self.version)
+            funcs = dict(mappings.load_all(self._plugins))
+            self._functionmaps[self.version] = funcs
+
+        return self._functionmaps[self.version]
 
     def parse(self, stack, snippet):
         parse = functools.partial(self.parse, stack)
