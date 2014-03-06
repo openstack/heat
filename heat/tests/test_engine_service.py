@@ -166,31 +166,6 @@ user_policy_template = '''
 }
 '''
 
-nested_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Nested resource",
-  "Parameters" : {},
-  "Resources" : {
-    "ServerGroup": {
-      "Type": "OS::Heat::ResourceGroup",
-      "Properties": {
-        "count": 2,
-        "resource_def": {
-          "type": "AWS::EC2::Instance",
-            "properties": {
-              "KeyName"      : "test",
-              "ImageId"      : "F17-x86_64-gold",
-              "InstanceType" : "m1.large",
-              "UserData"     : "wordpress"
-            }
-        }
-      }
-    }
-  }
-}
-'''
-
 
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
@@ -1923,75 +1898,6 @@ class StackServiceTest(HeatTestCase):
                           self.ctx, self.stack.identifier(), 'foo')
 
         self.m.VerifyAll()
-
-    def test_stack_resource_describe_nested(self):
-        stack = get_stack('service_stack_resource_describe_nested_test_stack',
-                          self.ctx,
-                          nested_template)
-        self.stack = stack
-        stack.store()
-
-        fc = fakes.FakeClient()
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
-
-        patcher = mock.patch.object(
-            nova_utils, 'build_userdata', return_value=None)
-        patcher.start()
-        self.m.StubOutWithMock(fc.servers, 'create')
-        fc.servers.create(image=744, flavor=3, key_name='test',
-                          name=utils.PhysName(
-                              utils.PhysName(stack.name, 'ServerGroup'),
-                              '0', 53),
-                          security_groups=None,
-                          userdata=None, scheduler_hints=None,
-                          meta=None, nics=None,
-                          availability_zone=None).InAnyOrder().AndReturn(
-                              fc.servers.list()[1])
-        fc.servers.create(image=744, flavor=3, key_name='test',
-                          name=utils.PhysName(
-                              utils.PhysName(stack.name, 'ServerGroup'),
-                              '1', 53),
-                          security_groups=None,
-                          userdata=None, scheduler_hints=None,
-                          meta=None, nics=None,
-                          availability_zone=None).InAnyOrder().AndReturn(
-                              fc.servers.list()[1])
-
-        self.m.ReplayAll()
-        stack.create()
-
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx,
-                          stack=mox.IgnoreArg()).AndReturn(self.stack)
-        self.m.ReplayAll()
-
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'ServerGroup')
-
-        self.assertIn('resource_identity', r)
-        self.assertIn('description', r)
-        self.assertIn('updated_time', r)
-        self.assertIn('stack_identity', r)
-        self.assertIsNotNone(r['stack_identity'])
-        self.assertIn('stack_name', r)
-        self.assertEqual(self.stack.name, r['stack_name'])
-        self.assertIn('metadata', r)
-        self.assertIn('resource_status', r)
-        self.assertIn('resource_status_reason', r)
-        self.assertIn('resource_type', r)
-        self.assertIn('physical_resource_id', r)
-        self.assertIn('resource_name', r)
-        self.assertIn('members', r)
-        self.assertEqual([5678, 5678], r['members'])
-        self.assertEqual('ServerGroup', r['resource_name'])
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-        patcher.stop()
-        self.stack.delete()
 
     @stack_context('service_resources_describe_test_stack')
     def test_stack_resources_describe(self):
