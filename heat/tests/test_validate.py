@@ -25,7 +25,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
 from heat.engine import parser
-from heat.engine.hot import HOTemplate
+from heat.engine.hot.template import HOTemplate
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
