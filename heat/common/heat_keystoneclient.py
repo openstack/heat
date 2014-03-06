@@ -470,6 +470,20 @@ class KeystoneClientV3(object):
                          access=data_blob['access'],
                          secret=data_blob['secret'])
 
+    def delete_stack_domain_user_keypair(self, user_id, project_id,
+                                         credential_id):
+        if not self.stack_domain_id:
+            # FIXME(shardy): Legacy fallback for folks using old heat.conf
+            # files which lack domain configuration
+            logger.warning(_('Falling back to legacy non-domain keypair, '
+                             'configure domain in heat.conf'))
+            return self.delete_ec2_keypair(credential_id=credential_id)
+        self._check_stack_domain_user(user_id, project_id, 'delete_keypair')
+        try:
+            self.domain_admin_client.credentials.delete(credential_id)
+        except kc_exception.NotFound:
+            pass
+
     def disable_stack_user(self, user_id):
         self.client_v3.users.update(user=user_id, enabled=False)
 
