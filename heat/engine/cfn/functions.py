@@ -114,7 +114,7 @@ def Ref(stack, fn_name, args):
 
         { "Ref" : "<resource_name>" }
     '''
-    if args in stack.t[stack.t.RESOURCES]:
+    if args in stack:
         RefClass = ResourceRef
     else:
         RefClass = ParamRef

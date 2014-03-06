@@ -1864,6 +1864,58 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_update_with_new_resources_with_reference(self):
+        '''
+        assertion:
+        check, that during update with new resources which one has
+        reference on second, reference will be correct resolved.
+        '''
+        tmpl = {'Resources': {
+                'CResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'abc'}}}}
+        tmpl2 = {'Resources': {
+                 'CResource': {'Type': 'ResourceWithPropsType',
+                               'Properties': {'Foo': 'abc'}},
+                 'AResource': {'Type': 'ResourceWithPropsType',
+                               'Properties': {'Foo': 'smelly'}},
+                 'BResource': {'Type': 'ResourceWithPropsType',
+                               'Properties': {
+                                   'Foo': {'Ref': 'AResource'}}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+
+        self.m.ReplayAll()
+
+        self.stack.store()
+        self.stack.create()
+        self.m.VerifyAll()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc', self.stack['CResource'].properties['Foo'])
+        self.assertEqual(1, len(self.stack.resources))
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+
+        generic_rsrc.ResourceWithProps.handle_create().MultipleTimes().\
+            AndReturn(None)
+
+        self.m.ReplayAll()
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual('AResource',
+                         self.stack['BResource'].properties['Foo'])
+
+        self.assertEqual(3, len(self.stack.resources))
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_update_by_reference_and_rollback_1(self):
         '''
         assertion:

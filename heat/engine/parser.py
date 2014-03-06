@@ -267,7 +267,10 @@ class Stack(collections.Mapping):
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
-        return key in self.resources
+        if self._resources is not None:
+            return key in self.resources
+        else:
+            return key in self.t[self.t.RESOURCES]
 
     def __eq__(self, other):
         '''
