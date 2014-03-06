@@ -2227,6 +2227,8 @@ class StackTest(HeatTestCase):
         for action, status in (
                 (rsrc.CREATE, rsrc.IN_PROGRESS),
                 (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.SUSPEND, rsrc.IN_PROGRESS),
+                (rsrc.SUSPEND, rsrc.COMPLETE),
                 (rsrc.RESUME, rsrc.IN_PROGRESS),
                 (rsrc.RESUME, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.IN_PROGRESS),
