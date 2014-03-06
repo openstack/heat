@@ -17,6 +17,7 @@ from heat.tests import generic_resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
+from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 
@@ -237,4 +238,46 @@ class StackUserTest(HeatTestCase):
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_create_keypair(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        # create_stack_domain_user_keypair(self, user_id, project_id):
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'create_stack_domain_user_keypair')
+        fakes.FakeKeystoneClient.create_stack_domain_user_keypair(
+            user_id='auserdel', project_id='aprojectdel').AndReturn(
+                self.fc.creds)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        kp = rsrc._create_keypair()
+        self.assertEqual(self.fc.credential_id, kp.id)
+        self.assertEqual(self.fc.access, kp.access)
+        self.assertEqual(self.fc.secret, kp.secret)
+        rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual(self.fc.credential_id, rs_data['credential_id'])
+        self.assertEqual(self.fc.access, rs_data['access_key'])
+        self.assertEqual(self.fc.secret, rs_data['secret_key'])
+        self.m.VerifyAll()
+
+    def test_create_keypair_error(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+
+        # create_stack_domain_user_keypair(self, user_id, project_id):
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'create_stack_domain_user_keypair')
+        fakes.FakeKeystoneClient.create_stack_domain_user_keypair(
+            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertRaises(exception.Error, rsrc._create_keypair)
         self.m.VerifyAll()
