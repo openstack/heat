@@ -407,6 +407,16 @@ class ProviderTemplateTest(HeatTestCase):
         for k, v in json_snippet.get("Properties").items():
             self.assertEqual(v, templ_resource.properties[k])
 
+    def test_persisted_unregistered_provider_templates(self):
+        """
+        Test that templates persisted in the database prior to
+        https://review.openstack.org/#/c/79953/1 are registered correctly.
+        """
+        env = {'resource_registry': {'http://example.com/test.template': None,
+                                     'resources': {}}}
+        #A KeyError will be thrown prior to this fix.
+        environment.Environment(env=env)
+
     def test_system_template_retrieve_by_file(self):
         # make sure that a TemplateResource defined in the global environment
         # can be created and the template retrieved using the "file:"
