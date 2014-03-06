@@ -150,6 +150,7 @@ class KeystoneClientV3(object):
             # trust impersonating the trustor user.
             kwargs.update(self._service_admin_creds())
             kwargs['trust_id'] = self.context.trust_id
+            kwargs.pop('project_name')
         elif self.context.auth_token is not None:
             kwargs['project_name'] = self.context.tenant
             kwargs['token'] = self.context.auth_token
