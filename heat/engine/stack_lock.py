@@ -56,7 +56,6 @@ class StackLock(object):
         """
         return db_api.stack_lock_create(self.stack.id, self.engine_id)
 
-    @rpc_common.client_exceptions(exception.ActionInProgress)
     def acquire(self, retry=True):
         """
         Acquire a lock on the stack.
