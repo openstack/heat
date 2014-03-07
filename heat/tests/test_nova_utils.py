@@ -135,6 +135,17 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
         self.assertIsNone(nova_utils.refresh_server(server))
         self.m.VerifyAll()
 
+    def test_503_error(self):
+        server = self.m.CreateMockAnything()
+        msg = ("ClientException: The server has either erred or is "
+               "incapable of performing the requested operation.")
+        server.get().AndRaise(
+            clients.novaclient.exceptions.ClientException(503, msg))
+        self.m.ReplayAll()
+
+        self.assertIsNone(nova_utils.refresh_server(server))
+        self.m.VerifyAll()
+
     def test_unhandled_exception(self):
         server = self.m.CreateMockAnything()
         msg = ("ClientException: The server has either erred or is "
