@@ -128,7 +128,7 @@ class KeystoneClientTest(HeatTestCase):
         self.ctx.auth_token = None
         self.ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClientV2(self.ctx)
-        self.assertIsNotNone(heat_ks_client.client_v2)
+        self.assertIsNotNone(heat_ks_client.client)
 
     def test_init_v2_bad_nocreds(self):
         """Test creating the client without trusts, no credentials."""
@@ -153,8 +153,8 @@ class KeystoneClientTest(HeatTestCase):
         self.ctx.trust_id = 'atrust123'
         self.ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClientV2(self.ctx)
-        client_v2 = heat_ks_client.client_v2
-        self.assertIsNotNone(client_v2)
+        client = heat_ks_client.client
+        self.assertIsNotNone(client)
 
     def test_trust_init_fail(self):
         """Test consuming a trust when initializing, error scoping."""
@@ -194,7 +194,7 @@ class KeystoneClientTest(HeatTestCase):
         self.ctx.trust_id = 'atrust123'
         self.ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClientV2(self.ctx)
-        self.assertIsNotNone(heat_ks_client._client_v2)
+        self.assertIsNotNone(heat_ks_client._client)
 
     def test_trust_init_token(self):
         """Test trust_id takes precedence when token specified."""
@@ -207,7 +207,7 @@ class KeystoneClientTest(HeatTestCase):
         self.ctx.trust_id = 'atrust123'
         self.ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClientV2(self.ctx)
-        self.assertIsNotNone(heat_ks_client._client_v2)
+        self.assertIsNotNone(heat_ks_client._client)
 
     # ##################### #
     # V3 Compatible Methods #

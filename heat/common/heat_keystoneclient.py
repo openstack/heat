@@ -64,7 +64,7 @@ class KeystoneClientV3(object):
         # - context.auth_url is expected to contain a versioned keystone
         #   path, we will work with either a v2.0 or v3 path
         self.context = context
-        self._client_v3 = None
+        self._client = None
         self._admin_client = None
         self._domain_admin_client = None
 
@@ -79,7 +79,7 @@ class KeystoneClientV3(object):
         if self.context.trust_id:
             # Create a client with the specified trust_id, this
             # populates self.context.auth_token with a trust-scoped token
-            self._client_v3 = self._v3_client_init()
+            self._client = self._v3_client_init()
 
         # The stack domain user ID should be set in heat.conf
         # It can be created via python-openstackclient
@@ -102,11 +102,11 @@ class KeystoneClientV3(object):
         logger.debug(_('Using stack domain %s') % self.stack_domain_id)
 
     @property
-    def client_v3(self):
-        if not self._client_v3:
+    def client(self):
+        if not self._client:
             # Create connection to v3 API
-            self._client_v3 = self._v3_client_init()
-        return self._client_v3
+            self._client = self._v3_client_init()
+        return self._client
 
     @property
     def admin_client(self):
@@ -164,24 +164,24 @@ class KeystoneClientV3(object):
                          "trust or auth_token!"))
             raise exception.AuthorizationFailure()
         kwargs.update(self._ssl_options())
-        client_v3 = kc_v3.Client(**kwargs)
-        client_v3.authenticate()
+        client = kc_v3.Client(**kwargs)
+        client.authenticate()
         # If we are authenticating with a trust set the context auth_token
         # with the trust scoped token
         if 'trust_id' in kwargs:
             # Sanity check
-            if not client_v3.auth_ref.trust_scoped:
+            if not client.auth_ref.trust_scoped:
                 logger.error(_("trust token re-scoping failed!"))
                 raise exception.AuthorizationFailure()
             # All OK so update the context with the token
-            self.context.auth_token = client_v3.auth_ref.auth_token
+            self.context.auth_token = client.auth_ref.auth_token
             self.context.auth_url = kwargs.get('auth_url')
             # Sanity check that impersonation is effective
-            if self.context.trustor_user_id != client_v3.auth_ref.user_id:
+            if self.context.trustor_user_id != client.auth_ref.user_id:
                 logger.error("Trust impersonation failed")
                 raise exception.AuthorizationFailure()
 
-        return client_v3
+        return client
 
     def _service_admin_creds(self):
         # Import auth_token to have keystone_authtoken settings setup.
@@ -235,14 +235,14 @@ class KeystoneClientV3(object):
         # can't lookup the ID in keystoneclient unless they're admin
         # workaround this by getting the user_id from admin_client
         trustee_user_id = self.admin_client.auth_ref.user_id
-        trustor_user_id = self.client_v3.auth_ref.user_id
-        trustor_project_id = self.client_v3.auth_ref.project_id
+        trustor_user_id = self.client.auth_ref.user_id
+        trustor_project_id = self.client.auth_ref.project_id
         roles = cfg.CONF.trusts_delegated_roles
-        trust = self.client_v3.trusts.create(trustor_user=trustor_user_id,
-                                             trustee_user=trustee_user_id,
-                                             project=trustor_project_id,
-                                             impersonation=True,
-                                             role_names=roles)
+        trust = self.client.trusts.create(trustor_user=trustor_user_id,
+                                          trustee_user=trustee_user_id,
+                                          project=trustor_project_id,
+                                          impersonation=True,
+                                          role_names=roles)
 
         trust_context = context.RequestContext.from_dict(
             self.context.to_dict())
@@ -255,7 +255,7 @@ class KeystoneClientV3(object):
         Delete the specified trust.
         """
         try:
-            self.client_v3.trusts.delete(trust_id)
+            self.client.trusts.delete(trust_id)
         except kc_exception.NotFound:
             pass
 
@@ -287,18 +287,18 @@ class KeystoneClientV3(object):
         # create_stack_domain user, but this function is expected to
         # be removed after the transition of all resources to domain
         # users has been completed
-        roles_list = self.client_v3.roles.list()
+        roles_list = self.client.roles.list()
         role_id = self._get_stack_user_role(roles_list)
         if role_id:
             # Create the user
-            user = self.client_v3.users.create(
+            user = self.client.users.create(
                 name=self._get_username(username), password=password,
                 default_project=self.context.tenant_id)
             # Add user to heat_stack_user_role
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
-            self.client_v3.roles.grant(role=role_id, user=user.id,
-                                       project=self.context.tenant_id)
+            self.client.roles.grant(role=role_id, user=user.id,
+                                    project=self.context.tenant_id)
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {
@@ -368,7 +368,7 @@ class KeystoneClientV3(object):
         self.domain_admin_client.users.delete(user_id)
 
     def delete_stack_user(self, user_id):
-        self.client_v3.users.delete(user=user_id)
+        self.client.users.delete(user=user_id)
 
     def create_stack_domain_project(self, stack_name):
         '''Creates a project in the heat stack-user domain.'''
@@ -401,7 +401,7 @@ class KeystoneClientV3(object):
         '''Lookup an ec2 keypair by access ID.'''
         # FIXME(shardy): add filtering for user_id when keystoneclient
         # extensible-crud-manager-operations bp lands
-        credentials = self.client_v3.credentials.list()
+        credentials = self.client.credentials.list()
         for cr in credentials:
             ec2_creds = json.loads(cr.blob)
             if ec2_creds.get('access') == access:
@@ -413,10 +413,10 @@ class KeystoneClientV3(object):
                            user_id=None):
         '''Delete credential containing ec2 keypair.'''
         if credential_id:
-            self.client_v3.credentials.delete(credential_id)
+            self.client.credentials.delete(credential_id)
         elif access:
             cred = self._find_ec2_keypair(access=access, user_id=user_id)
-            self.client_v3.credentials.delete(cred.id)
+            self.client.credentials.delete(cred.id)
         else:
             raise ValueError("Must specify either credential_id or access")
 
@@ -428,7 +428,7 @@ class KeystoneClientV3(object):
         # compatibility is required (resource only has acccess stored)
         # then we'll have to to a brute-force lookup locally
         if credential_id:
-            cred = self.client_v3.credentials.get(credential_id)
+            cred = self.client.credentials.get(credential_id)
             ec2_creds = json.loads(cred.blob)
             return AccessKey(id=cred.id,
                              access=ec2_creds['access'],
@@ -439,11 +439,11 @@ class KeystoneClientV3(object):
             raise ValueError("Must specify either credential_id or access")
 
     def create_ec2_keypair(self, user_id=None):
-        user_id = user_id or self.client_v3.auth_ref.user_id
+        user_id = user_id or self.client.auth_ref.user_id
         project_id = self.context.tenant_id
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
-        ec2_creds = self.client_v3.credentials.create(
+        ec2_creds = self.client.credentials.create(
             user=user_id, type='ec2', data=json.dumps(data_blob),
             project=project_id)
 
@@ -486,10 +486,10 @@ class KeystoneClientV3(object):
             pass
 
     def disable_stack_user(self, user_id):
-        self.client_v3.users.update(user=user_id, enabled=False)
+        self.client.users.update(user=user_id, enabled=False)
 
     def enable_stack_user(self, user_id):
-        self.client_v3.users.update(user=user_id, enabled=True)
+        self.client.users.update(user=user_id, enabled=True)
 
     def disable_stack_domain_user(self, user_id, project_id):
         if not self.stack_domain_id:
@@ -514,11 +514,11 @@ class KeystoneClientV3(object):
     def url_for(self, **kwargs):
         default_region_name = cfg.CONF.region_name_for_services
         kwargs.setdefault('region_name', default_region_name)
-        return self.client_v3.service_catalog.url_for(**kwargs)
+        return self.client.service_catalog.url_for(**kwargs)
 
     @property
     def auth_token(self):
-        return self.client_v3.auth_token
+        return self.client.auth_token
 
 
 class KeystoneClient(object):

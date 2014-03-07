@@ -47,18 +47,18 @@ class KeystoneClientV2(object):
         #
         # - context.auth_url is expected to contain the v2.0 keystone endpoint
         self.context = context
-        self._client_v2 = None
+        self._client = None
 
         if self.context.trust_id:
             # Create a connection to the v2 API, with the trust_id, this
             # populates self.context.auth_token with a trust-scoped token
-            self._client_v2 = self._v2_client_init()
+            self._client = self._v2_client_init()
 
     @property
-    def client_v2(self):
-        if not self._client_v2:
-            self._client_v2 = self._v2_client_init()
-        return self._client_v2
+    def client(self):
+        if not self._client:
+            self._client = self._v2_client_init()
+        return self._client
 
     def _v2_client_init(self):
         kwargs = {
@@ -91,27 +91,27 @@ class KeystoneClientV2(object):
         kwargs['insecure'] = self._get_client_option('insecure')
         kwargs['cert'] = self._get_client_option('cert_file')
         kwargs['key'] = self._get_client_option('key_file')
-        client_v2 = kc.Client(**kwargs)
+        client = kc.Client(**kwargs)
 
-        client_v2.authenticate(**auth_kwargs)
+        client.authenticate(**auth_kwargs)
         # If we are authenticating with a trust auth_kwargs are set, so set
         # the context auth_token with the re-scoped trust token
         if auth_kwargs:
             # Sanity check
-            if not client_v2.auth_ref.trust_scoped:
+            if not client.auth_ref.trust_scoped:
                 logger.error(_("v2 trust token re-scoping failed!"))
                 raise exception.AuthorizationFailure()
             # All OK so update the context with the token
-            self.context.auth_token = client_v2.auth_ref.auth_token
+            self.context.auth_token = client.auth_ref.auth_token
             self.context.auth_url = kwargs.get('auth_url')
             # Ensure the v2 API we're using is not impacted by keystone
             # bug #1239303, otherwise we can't trust the user_id
-            if self.context.trustor_user_id != client_v2.auth_ref.user_id:
+            if self.context.trustor_user_id != client.auth_ref.user_id:
                 logger.error("Trust impersonation failed, bug #1239303 "
                              "suspected, you may need a newer keystone")
                 raise exception.AuthorizationFailure()
 
-        return client_v2
+        return client
 
     @staticmethod
     def _service_admin_creds():
@@ -148,26 +148,25 @@ class KeystoneClientV2(object):
                            "characters.") % username)
             #get the last 64 characters of the username
             username = username[-64:]
-        user = self.client_v2.users.create(username,
-                                           password,
-                                           '%s@openstack.org' %
-                                           username,
-                                           tenant_id=self.context.tenant_id,
-                                           enabled=True)
+        user = self.client.users.create(username,
+                                        password,
+                                        '%s@openstack.org' % username,
+                                        tenant_id=self.context.tenant_id,
+                                        enabled=True)
 
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
         # deployed on an instance (hence are implicitly untrusted)
-        roles = self.client_v2.roles.list()
+        roles = self.client.roles.list()
         stack_user_role = [r.id for r in roles
                            if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0]
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
-            self.client_v2.roles.add_user_role(user.id, role_id,
-                                               self.context.tenant_id)
+            self.client.roles.add_user_role(user.id, role_id,
+                                            self.context.tenant_id)
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {'user': username,
@@ -176,31 +175,31 @@ class KeystoneClientV2(object):
         return user.id
 
     def delete_stack_user(self, user_id):
-        self.client_v2.users.delete(user_id)
+        self.client.users.delete(user_id)
 
     def delete_ec2_keypair(self, user_id, accesskey):
-        self.client_v2.ec2.delete(user_id, accesskey)
+        self.client.ec2.delete(user_id, accesskey)
 
     def get_ec2_keypair(self, access, user_id=None):
-        uid = user_id or self.client_v2.auth_ref.user_id
-        return self.client_v2.ec2.get(uid, access)
+        uid = user_id or self.client.auth_ref.user_id
+        return self.client.ec2.get(uid, access)
 
     def create_ec2_keypair(self, user_id=None):
-        uid = user_id or self.client_v2.auth_ref.user_id
-        return self.client_v2.ec2.create(uid, self.context.tenant_id)
+        uid = user_id or self.client.auth_ref.user_id
+        return self.client.ec2.create(uid, self.context.tenant_id)
 
     def disable_stack_user(self, user_id):
-        self.client_v2.users.update_enabled(user_id, False)
+        self.client.users.update_enabled(user_id, False)
 
     def enable_stack_user(self, user_id):
-        self.client_v2.users.update_enabled(user_id, True)
+        self.client.users.update_enabled(user_id, True)
 
     def url_for(self, **kwargs):
-        return self.client_v2.service_catalog.url_for(**kwargs)
+        return self.client.service_catalog.url_for(**kwargs)
 
     @property
     def auth_token(self):
-        return self.client_v2.auth_token
+        return self.client.auth_token
 
     # ##################### #
     # V3 Compatible Methods #

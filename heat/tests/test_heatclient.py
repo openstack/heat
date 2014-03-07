@@ -375,8 +375,8 @@ class KeystoneClientTest(HeatTestCase):
         ctx.password = None
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        heat_ks_client.client_v3
-        self.assertIsNotNone(heat_ks_client._client_v3)
+        heat_ks_client.client
+        self.assertIsNotNone(heat_ks_client._client)
 
     def test_init_v3_password(self):
 
@@ -389,8 +389,8 @@ class KeystoneClientTest(HeatTestCase):
         ctx.auth_token = None
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        client_v3 = heat_ks_client.client_v3
-        self.assertIsNotNone(client_v3)
+        client = heat_ks_client.client
+        self.assertIsNotNone(client)
 
     def test_init_v3_bad_nocreds(self):
 
@@ -537,7 +537,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client.client_v3)
+        self.assertIsNotNone(heat_ks_client.client)
 
     def test_trust_init_fail(self):
 
@@ -585,7 +585,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client._client_v3)
+        self.assertIsNotNone(heat_ks_client._client)
 
     def test_trust_init_token(self):
 
@@ -600,7 +600,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client._client_v3)
+        self.assertIsNotNone(heat_ks_client._client)
 
     def test_delete_trust(self):
 
