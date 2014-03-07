@@ -104,3 +104,18 @@ class SignalResponder(stack_user.StackUser):
 
         self.data_set('ec2_signed_url', url)
         return url
+
+    def _get_signal_url(self):
+        stored = self.data().get('signal_url')
+        if stored is not None:
+            return stored
+
+        url = self.client_plugin('heat').get_heat_url()
+        host_url = urlparse.urlparse(url)
+        path = self.identifier().url_path()
+
+        url = urlparse.urlunsplit(
+            (host_url.scheme, host_url.netloc, 'v1/%s/signal' % path, '', ''))
+
+        self.data_set('signal_url', url)
+        return url

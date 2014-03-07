@@ -22,6 +22,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import signal_responder
+from heat.engine import support
 from heat.scaling import cooldown
 
 LOG = logging.getLogger(__name__)
@@ -47,9 +48,9 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
         'exact_capacity', 'change_in_capacity', 'percent_change_in_capacity')
 
     ATTRIBUTES = (
-        ALARM_URL,
+        ALARM_URL, SIGNAL_URL
     ) = (
-        'alarm_url',
+        'alarm_url', 'signal_url'
     )
 
     properties_schema = {
@@ -100,6 +101,11 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
     attributes_schema = {
         ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm.")
+        ),
+        SIGNAL_URL: attributes.Schema(
+            _("A url to handle the alarm using native API."),
+            support_status=support.SupportStatus(version='2015.2'),
+            type=attributes.Schema.STRING
         ),
     }
 
@@ -182,8 +188,10 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                                   self.properties[self.SCALING_ADJUSTMENT]))
 
     def _resolve_attribute(self, name):
-        if name == self.ALARM_URL and self.resource_id is not None:
+        if name == self.ALARM_URL:
             return six.text_type(self._get_signed_url())
+        elif name == self.SIGNAL_URL:
+            return six.text_type(self._get_signal_url())
 
     def FnGetRefId(self):
         return resource.Resource.FnGetRefId(self)
