@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import template
 from heat.engine.cfn import template as cfn_template
 from heat.engine.hot import parameters
@@ -47,11 +48,8 @@ class HOTemplate(template.Template):
         version = template.get(self.VERSION, '2013-05-23')
 
         if version not in self.VERSIONS:
-            msg = _('"%(version)s" is not a valid '
-                    'heat_template_version. Should be one of: '
-                    '%(valid)s')
-            raise ValueError(msg % {'version': version,
-                                    'valid': str(self.VERSIONS)})
+            msg = _('Should be one of: %s') % str(self.VERSIONS)
+            raise exception.InvalidTemplateVersion(explanation=msg)
 
         super(HOTemplate, self).__init__(template, *args, **kwargs)
         self.version = self.VERSION, version
