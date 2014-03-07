@@ -17,8 +17,8 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import hot
 from heat.engine.hot import parameters as hot_param
+from heat.engine.hot import template as hot_template
 from heat.engine import resources
 from heat.engine import template
 from heat.engine import constraints
@@ -74,7 +74,7 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl_empty)
         # check if we get the right class
-        self.assertIsInstance(tmpl, hot.HOTemplate)
+        self.assertIsInstance(tmpl, hot_template.HOTemplate)
         # test getting an invalid section
         self.assertNotIn('foobar', tmpl)
 

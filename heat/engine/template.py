@@ -60,7 +60,7 @@ class Template(collections.Mapping):
         if cls == Template:
             # deferred module imports to avoid circular dependency
             if 'heat_template_version' in template:
-                from heat.engine import hot
+                from heat.engine.hot import template as hot
                 return hot.HOTemplate(template, *args, **kwargs)
             else:
                 from heat.engine.cfn import template as cfn
