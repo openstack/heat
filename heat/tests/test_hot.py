@@ -422,6 +422,13 @@ class StackTest(test_parser.StackTest):
                          stack_identifier.stack_id)
         self.m.VerifyAll()
 
+    def test_set_wrong_param(self):
+        tmpl = parser.Template(hot_tpl_empty)
+        stack_id = identifier.HeatIdentifier('', "stack_testit", None)
+        params = tmpl.parameters(None, {})
+        self.assertFalse(params.set_stack_id(None))
+        self.assertTrue(params.set_stack_id(stack_id))
+
     @utils.stack_delete_after
     def test_set_param_id_update(self):
         tmpl = template.Template(

@@ -416,6 +416,7 @@ class Parameters(collections.Mapping):
             self.params[self.PARAM_STACK_ID].schema.set_default(
                 stack_identifier.arn())
             return True
+        return False
 
     def _validate(self, user_params):
         schemata = self.tmpl.param_schemata()
