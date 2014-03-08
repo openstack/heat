@@ -60,7 +60,7 @@ def refresh_server(server):
                               'id': server.id,
                               'exception': str(exc)})
     except clients.novaclient.exceptions.ClientException as exc:
-        if exc.code == 500:
+        if exc.code in (500, 503):
             msg = _('Server "%(name)s" (%(id)s) received the following '
                     'exception during server.get(): %(exception)s')
             logger.warning(msg % {'name': server.name,
