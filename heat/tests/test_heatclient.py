@@ -114,7 +114,6 @@ class KeystoneClientTest(HeatTestCase):
             kc_v3.Client(
                 username='heat',
                 password='verybadpass',
-                project_name='service',
                 auth_url='http://server.test:5000/v3',
                 endpoint='http://server.test:5000/v3',
                 trust_id='atrust123',
