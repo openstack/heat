@@ -453,6 +453,8 @@ def user_creds_create(context):
 
 def user_creds_get(user_creds_id):
     db_result = model_query(None, models.UserCreds).get(user_creds_id)
+    if db_result is None:
+        return None
     # Return a dict copy of db results, do not decrypt details into db_result
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
