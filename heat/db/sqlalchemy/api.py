@@ -464,6 +464,17 @@ def user_creds_get(user_creds_id):
     return result
 
 
+def user_creds_delete(context, user_creds_id):
+    creds = model_query(context, models.UserCreds).get(user_creds_id)
+    if not creds:
+        raise exception.NotFound(
+            _('Attempt to delete user creds with id '
+              '%(id)s that does not exist') % {'id': user_creds_id})
+    session = Session.object_session(creds)
+    session.delete(creds)
+    session.flush()
+
+
 def event_get(context, event_id):
     result = model_query(context, models.Event).get(event_id)
 

@@ -918,6 +918,19 @@ class DBAPIUserCredsTest(HeatTestCase):
     def test_user_creds_get_noexist(self):
         self.assertIsNone(db_api.user_creds_get(123456))
 
+    def test_user_creds_delete(self):
+        user_creds = create_user_creds(self.ctx)
+        self.assertIsNotNone(user_creds.id)
+        db_api.user_creds_delete(self.ctx, user_creds.id)
+        creds = db_api.user_creds_get(user_creds.id)
+        self.assertIsNone(creds)
+        err = self.assertRaises(
+            exception.NotFound, db_api.user_creds_delete,
+            self.ctx, user_creds.id)
+        exp_msg = ('Attempt to delete user creds with id '
+                   '%s that does not exist' % user_creds.id)
+        self.assertIn(exp_msg, str(err))
+
 
 class DBAPIStackTest(HeatTestCase):
     def setUp(self):
