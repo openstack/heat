@@ -60,7 +60,8 @@ class Stack(collections.Mapping):
                  status_reason='', timeout_mins=60, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
-                 created_time=None, updated_time=None):
+                 created_time=None, updated_time=None,
+                 user_creds_id=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -93,6 +94,7 @@ class Stack(collections.Mapping):
         self.stack_user_project_id = stack_user_project_id
         self.created_time = created_time
         self.updated_time = updated_time
+        self.user_creds_id = user_creds_id
 
         resources.initialise()
 
@@ -187,7 +189,8 @@ class Stack(collections.Mapping):
                     parent_resource, owner_id=stack.owner_id,
                     stack_user_project_id=stack.stack_user_project_id,
                     created_time=stack.created_at,
-                    updated_time=stack.updated_at)
+                    updated_time=stack.updated_at,
+                    user_creds_id=stack.user_creds_id)
 
         return stack
 
@@ -210,6 +213,7 @@ class Stack(collections.Mapping):
             'disable_rollback': self.disable_rollback,
             'stack_user_project_id': self.stack_user_project_id,
             'updated_at': self.updated_time,
+            'user_creds_id': self.user_creds_id
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)
@@ -222,6 +226,7 @@ class Stack(collections.Mapping):
             else:
                 new_creds = db_api.user_creds_create(self.context)
             s['user_creds_id'] = new_creds.id
+            self.user_creds_id = new_creds.id
 
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
@@ -640,8 +645,7 @@ class Stack(collections.Mapping):
 
         if stack_status != self.FAILED and not backup:
             # If we created a trust, delete it
-            stack = db_api.stack_get(self.context, self.id)
-            user_creds = db_api.user_creds_get(stack.user_creds_id)
+            user_creds = db_api.user_creds_get(self.user_creds_id)
             trust_id = user_creds.get('trust_id')
             if trust_id:
                 try:
