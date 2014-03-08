@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.engine import template
 from heat.engine.cfn import template as cfn_template
 from heat.engine.hot import parameters
@@ -41,18 +40,6 @@ class HOTemplate(template.Template):
                             cfn_template.CfnTemplate.MAPPINGS: MAPPINGS,
                             cfn_template.CfnTemplate.RESOURCES: RESOURCES,
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
-
-    def __init__(self, template, *args, **kwargs):
-        # All user templates are forced to include a version string. This is
-        # just a convenient default for unit tests.
-        version = template.get(self.VERSION, '2013-05-23')
-
-        if version not in self.VERSIONS:
-            msg = _('Should be one of: %s') % str(self.VERSIONS)
-            raise exception.InvalidTemplateVersion(explanation=msg)
-
-        super(HOTemplate, self).__init__(template, *args, **kwargs)
-        self.version = self.VERSION, version
 
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
@@ -143,3 +130,9 @@ class HOTemplate(template.Template):
                                         user_params=user_params,
                                         validate_value=validate_value,
                                         context=context)
+
+
+def template_mapping():
+    return {
+        ('heat_template_version', '2013-05-23'): HOTemplate,
+    }
