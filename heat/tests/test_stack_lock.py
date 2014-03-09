@@ -17,6 +17,7 @@ from heat.openstack.common.rpc import proxy
 from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.common import exception
 
 
 class StackLockTest(HeatTestCase):
@@ -49,7 +50,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        self.assertRaises(rpc_common.ClientException, slock.acquire)
+        self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
     def test_successful_acquire_existing_lock_engine_dead(self):
@@ -87,7 +88,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        self.assertRaises(rpc_common.ClientException, slock.acquire)
+        self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
     def test_failed_acquire_existing_lock_engine_dead(self):
@@ -109,7 +110,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        self.assertRaises(rpc_common.ClientException, slock.acquire)
+        self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
     def test_successful_acquire_with_retry(self):
@@ -177,5 +178,5 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        self.assertRaises(rpc_common.ClientException, slock.acquire)
+        self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()

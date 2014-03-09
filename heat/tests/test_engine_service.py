@@ -1425,9 +1425,8 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_identify_nonexist(self):
-        e = self.assertRaises(rpc_common.ClientException,
-                              self.eng.identify_stack, self.ctx, 'wibble')
-        self.assertIs(e._exc_info[0], exception.StackNotFound)
+        self.assertRaises(exception.StackNotFound,
+                          self.eng.identify_stack, self.ctx, 'wibble')
 
     @stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
@@ -2541,10 +2540,9 @@ class SoftwareConfigServiceTest(HeatTestCase):
     def test_show_software_config(self):
         config_id = str(uuid.uuid4())
 
-        e = self.assertRaises(rpc_common.ClientException,
-                              self.engine.show_software_config,
-                              self.ctx, config_id)
-        self.assertIs(e._exc_info[0], exception.NotFound)
+        self.assertRaises(exception.NotFound,
+                          self.engine.show_software_config,
+                          self.ctx, config_id)
 
         config = self._create_software_config()
         config_id = config['id']
@@ -2581,10 +2579,9 @@ class SoftwareConfigServiceTest(HeatTestCase):
         config_id = config['id']
         self.engine.delete_software_config(self.ctx, config_id)
 
-        e = self.assertRaises(rpc_common.ClientException,
-                              self.engine.show_software_config,
-                              self.ctx, config_id)
-        self.assertIs(e._exc_info[0], exception.NotFound)
+        self.assertRaises(exception.NotFound,
+                          self.engine.show_software_config,
+                          self.ctx, config_id)
 
     def _create_software_deployment(self, config_id=None, input_values={},
                                     signal_id=None, action='INIT',
@@ -2644,10 +2641,9 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_show_software_deployment(self):
         deployment_id = str(uuid.uuid4())
-        e = self.assertRaises(rpc_common.ClientException,
-                              self.engine.show_software_deployment,
-                              self.ctx, deployment_id)
-        self.assertIs(e._exc_info[0], exception.NotFound)
+        self.assertRaises(exception.NotFound,
+                          self.engine.show_software_deployment,
+                          self.ctx, deployment_id)
 
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
@@ -2723,10 +2719,9 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_delete_software_deployment(self):
         deployment_id = str(uuid.uuid4())
-        e = self.assertRaises(rpc_common.ClientException,
-                              self.engine.delete_software_deployment,
-                              self.ctx, deployment_id)
-        self.assertIs(e._exc_info[0], exception.NotFound)
+        self.assertRaises(exception.NotFound,
+                          self.engine.delete_software_deployment,
+                          self.ctx, deployment_id)
 
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
