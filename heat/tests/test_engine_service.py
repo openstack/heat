@@ -1392,7 +1392,7 @@ class StackServiceTest(HeatTestCase):
         s2 = mock.Mock(id=2)
         mock_get_all.return_value = [s1, s2]
         mock_watch = mock.Mock()
-        self.eng._start_watch_task = mock_watch
+        self.eng.stack_watch.start_watch_task = mock_watch
 
         self.eng.start()
         calls = mock_watch.call_args_list
@@ -2039,8 +2039,8 @@ class StackServiceTest(HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        self.m.StubOutWithMock(service.EngineService, '_load_user_creds')
-        service.EngineService._load_user_creds(
+        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
+        service.StackWatch.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
 
         self.m.StubOutWithMock(rsrs.Resource, 'signal')
@@ -2070,8 +2070,8 @@ class StackServiceTest(HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        self.m.StubOutWithMock(service.EngineService, '_load_user_creds')
-        service.EngineService._load_user_creds(
+        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
+        service.StackWatch.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
@@ -2094,8 +2094,8 @@ class StackServiceTest(HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
         self.m.StubOutWithMock(instances.Instance, 'metadata_update')
         instances.Instance.metadata_update(new_metadata=test_metadata)
-        self.m.StubOutWithMock(service.EngineService, '_load_user_creds')
-        service.EngineService._load_user_creds(
+        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
+        service.StackWatch.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
@@ -2144,7 +2144,7 @@ class StackServiceTest(HeatTestCase):
     @stack_context('periodic_watch_task_not_created')
     def test_periodic_watch_task_not_created(self):
         self.eng.thread_group_mgr.groups[self.stack.id] = DummyThreadGroup()
-        self.eng._start_watch_task(self.stack.id, self.ctx)
+        self.eng.stack_watch.start_watch_task(self.stack.id, self.ctx)
         self.assertEqual(
             [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
 
@@ -2157,8 +2157,8 @@ class StackServiceTest(HeatTestCase):
         stack.store()
         stack.create()
         self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
-        self.eng._start_watch_task(stack.id, self.ctx)
-        expected = [self.eng._periodic_watcher_task]
+        self.eng.stack_watch.start_watch_task(stack.id, self.ctx)
+        expected = [self.eng.stack_watch.periodic_watcher_task]
         observed = self.eng.thread_group_mgr.groups[stack.id].threads
         self.assertEqual(expected, observed)
         self.stack.delete()
@@ -2178,8 +2178,8 @@ class StackServiceTest(HeatTestCase):
         stack.store()
         stack.create()
         self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
-        self.eng._start_watch_task(stack.id, self.ctx)
-        self.assertEqual([self.eng._periodic_watcher_task],
+        self.eng.stack_watch.start_watch_task(stack.id, self.ctx)
+        self.assertEqual([self.eng.stack_watch.periodic_watcher_task],
                          self.eng.thread_group_mgr.groups[stack.id].threads)
         self.stack.delete()
 
