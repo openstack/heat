@@ -30,6 +30,22 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
+def generate_class(name, template_name):
+    try:
+        data = urlfetch.get(template_name, allowed_schemes=('file',))
+    except IOError:
+        return TemplateResource
+    tmpl = template.Template(template_format.parse(data))
+    properties_schema = properties.Properties.schema_from_params(
+        tmpl.param_schemata())
+    attributes_schema = attributes.Attributes.schema_from_outputs(
+        tmpl[tmpl.OUTPUTS])
+    cls = type(name, (TemplateResource,),
+               {"properties_schema": properties_schema,
+                "attributes_schema": attributes_schema})
+    return cls
+
+
 class TemplateResource(stack_resource.StackResource):
     '''
     A resource implemented by a nested stack.

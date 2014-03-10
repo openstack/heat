@@ -360,6 +360,26 @@ class ProviderTemplateTest(HeatTestCase):
         cls = env.get_class('OS::ResourceType', 'fred')
         self.assertEqual(template_resource.TemplateResource, cls)
 
+    def test_get_template_resource_class(self):
+        test_templ_name = 'file:///etc/heatr/frodo.yaml'
+        minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
+                                   'Parameters': {},
+                                   'Resources': {}})
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('file',)).AndReturn(minimal_temp)
+        self.m.ReplayAll()
+
+        env_str = {'resource_registry': {'resources': {'fred': {
+            "OS::ResourceType": test_templ_name}}}}
+        env = environment.Environment(env_str)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertNotEqual(template_resource.TemplateResource, cls)
+        self.assertTrue(issubclass(cls, template_resource.TemplateResource))
+        self.assertTrue(hasattr(cls, "properties_schema"))
+        self.assertTrue(hasattr(cls, "attributes_schema"))
+        self.m.VerifyAll()
+
     def test_template_as_resource(self):
         """
         Test that the resulting resource has the right prop and attrib schema.
@@ -378,6 +398,8 @@ class ProviderTemplateTest(HeatTestCase):
             test_templ = test_templ_file.read()
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('file',)).AndRaise(IOError)
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https')).AndReturn(test_templ)
         parsed_test_templ = template_format.parse(test_templ)

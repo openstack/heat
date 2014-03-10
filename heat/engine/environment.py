@@ -114,7 +114,8 @@ class TemplateResourceInfo(ResourceInfo):
 
     def get_class(self):
         from heat.engine.resources import template_resource
-        return template_resource.TemplateResource
+        return template_resource.generate_class(str(self.name),
+                                                self.template_name)
 
 
 class MapResourceInfo(ResourceInfo):
