@@ -17,8 +17,10 @@ from oslo.config import cfg
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import scheduler
+from heat.engine import stack_user
 from heat.engine.resources import nova_utils
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import constraints
@@ -32,7 +34,7 @@ from heat.openstack.common import uuidutils
 logger = logging.getLogger(__name__)
 
 
-class Server(resource.Resource):
+class Server(stack_user.StackUser):
 
     PROPERTIES = (
         NAME, IMAGE, BLOCK_DEVICE_MAPPING, FLAVOR,
@@ -69,9 +71,9 @@ class Server(resource.Resource):
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
-        HEAT_CFNTOOLS, RAW
+        HEAT_CFNTOOLS, RAW, SOFTWARE_CONFIG
     ) = (
-        'HEAT_CFNTOOLS', 'RAW'
+        'HEAT_CFNTOOLS', 'RAW', 'SOFTWARE_CONFIG'
     )
 
     properties_schema = {
@@ -224,8 +226,11 @@ class Server(resource.Resource):
             properties.Schema.STRING,
             _('How the user_data should be formatted for the server. For '
               'HEAT_CFNTOOLS, the user_data is bundled as part of the '
-              'heat-cfntools cloud-init boot configuration data. For RAW, '
-              'the user_data is passed to Nova unmodified.'),
+              'heat-cfntools cloud-init boot configuration data. For RAW '
+              'the user_data is passed to Nova unmodified. '
+              'For SOFTWARE_CONFIG user_data is bundled as part of the '
+              'software config data, and metadata is derived from any '
+              'associated SoftwareDeployment resources.'),
             default=HEAT_CFNTOOLS,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_FORMATS),
@@ -293,6 +298,8 @@ class Server(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
+        if self.access_key:
+            self._register_access_key()
 
     def physical_resource_name(self):
         name = self.properties.get(self.NAME)
@@ -309,22 +316,91 @@ class Server(resource.Resource):
         # This method is overridden by the derived CloudServer resource
         return self.properties.get(self.KEY_NAME)
 
+    @staticmethod
+    def _get_deployments_metadata(heatclient, server_id):
+        return heatclient.software_deployments.metadata(
+            server_id=server_id)
+
+    def _build_deployments_metadata(self):
+        meta = {'os-collect-config': {'cfn': {
+            'metadata_url': '%s/v1/' % cfg.CONF.heat_metadata_server_url,
+            'access_key_id': self.access_key,
+            'secret_access_key': self.secret_key,
+            'stack_name': self.stack.name,
+            'path': '%s.Metadata' % self.name}
+        }}
+
+        # cannot query the deployments if the nova server does
+        # not exist yet
+        if not self.resource_id:
+            return meta
+
+        meta['deployments'] = self._get_deployments_metadata(
+            self.heat(), self.resource_id)
+
+        return meta
+
+    def _register_access_key(self):
+        '''
+        Access is limited to this resource, which created the keypair
+        '''
+        def access_allowed(resource_name):
+            return resource_name == self.name
+        self.stack.register_access_allowed_handler(
+            self.access_key, access_allowed)
+
+    @property
+    def access_key(self):
+        try:
+            return db_api.resource_data_get(self, 'access_key')
+        except exception.NotFound:
+            pass
+
+    @property
+    def secret_key(self):
+        try:
+            return db_api.resource_data_get(self, 'secret_key')
+        except exception.NotFound:
+            pass
+
+    @property
+    def metadata(self):
+        if self.user_data_software_config():
+            return self._build_deployments_metadata()
+        else:
+            return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        if not self.user_data_software_config():
+            self._metadata = metadata
+
     def user_data_raw(self):
-        return self.properties.get(self.USER_DATA_FORMAT) == 'RAW'
+        return self.properties.get(self.USER_DATA_FORMAT) == self.RAW
+
+    def user_data_software_config(self):
+        return self.properties.get(
+            self.USER_DATA_FORMAT) == self.SOFTWARE_CONFIG
 
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
         user_data_format = self.properties.get(self.USER_DATA_FORMAT)
         ud_content = self.properties.get(self.USER_DATA)
-        if self.user_data_raw() and uuidutils.is_uuid_like(ud_content):
-            # attempt to load the userdata from software config
-            try:
-                ud_content = sc.SoftwareConfig.get_software_config(
-                    self.heat(), ud_content)
-            except exception.SoftwareConfigMissing:
-                # no config was found, so do not modify the user_data
-                pass
+        if self.user_data_software_config() or self.user_data_raw():
+            if uuidutils.is_uuid_like(ud_content):
+                # attempt to load the userdata from software config
+                try:
+                    ud_content = sc.SoftwareConfig.get_software_config(
+                        self.heat(), ud_content)
+                except exception.SoftwareConfigMissing:
+                    # no config was found, so do not modify the user_data
+                    pass
+
+            if self.user_data_software_config():
+                self._create_user()
+                self._create_keypair()
+                self._register_access_key()
 
         userdata = nova_utils.build_userdata(
             self,
@@ -657,6 +733,9 @@ class Server(resource.Resource):
         '''
         if self.resource_id is None:
             return
+
+        if self.user_data_software_config():
+            self._delete_user()
 
         try:
             server = self.nova().servers.get(self.resource_id)

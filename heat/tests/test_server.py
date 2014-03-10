@@ -18,7 +18,8 @@ import mox
 import uuid
 
 from heat.engine import environment
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
+from heat.tests import fakes
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
@@ -65,7 +66,9 @@ wp_template = '''
 class ServersTest(HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
+        self.fkc = fakes.FakeKeystoneClient()
+
         utils.setup_dummy_db()
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
@@ -449,6 +452,77 @@ class ServersTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
+    def test_server_create_software_config(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'software_config_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+            'SOFTWARE_CONFIG'
+
+        stack.stack_user_project_id = '8888'
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        self.m.StubOutWithMock(server, 'keystone')
+        self.m.StubOutWithMock(server, 'heat')
+        self.m.StubOutWithMock(server, '_get_deployments_metadata')
+
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        server.keystone().MultipleTimes().AndReturn(self.fkc)
+        server.heat().MultipleTimes().AndReturn(self.fc)
+        server._get_deployments_metadata(
+            self.fc, 5678).AndReturn({'foo': 'bar'})
+
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+
+        self.assertEqual('4567', server.access_key)
+        self.assertEqual('8901', server.secret_key)
+        self.assertEqual('1234', server._get_user_id())
+
+        self.assertTrue(stack.access_allowed('4567', 'WebServer'))
+        self.assertFalse(stack.access_allowed('45678', 'WebServer'))
+        self.assertFalse(stack.access_allowed('4567', 'wWebServer'))
+
+        self.assertEqual({
+            'os-collect-config': {
+                'cfn': {
+                    'access_key_id': '4567',
+                    'metadata_url': '/v1/',
+                    'path': 'WebServer.Metadata',
+                    'secret_access_key': '8901',
+                    'stack_name': 'software_config_s'
+                }
+            },
+            'deployments': {'foo': 'bar'}
+        }, server.metadata)
+
+        created_server = servers.Server('WebServer',
+                                        t['Resources']['WebServer'], stack)
+        self.assertEqual('4567', created_server.access_key)
+        self.assertTrue(stack.access_allowed('4567', 'WebServer'))
+
         self.m.VerifyAll()
 
     @mock.patch.object(clients.OpenStackClients, 'nova')
