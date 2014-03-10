@@ -884,10 +884,6 @@ class Resource(object):
             return 'Unknown'
 
         try:
-            if self.action in (self.SUSPEND, self.DELETE):
-                msg = _('Cannot signal resource during %s') % self.action
-                raise Exception(msg)
-
             if not callable(getattr(self, 'handle_signal', None)):
                 msg = (_('Resource %s is not able to receive a signal') %
                        str(self))
