@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import mox
 
 from testtools import skipIf
 
@@ -47,6 +48,27 @@ health_monitor_template = '''
 }
 '''
 
+pool_template_with_vip_subnet = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test load balancer resources",
+  "Parameters" : {},
+  "Resources" : {
+    "pool": {
+      "Type": "OS::Neutron::Pool",
+      "Properties": {
+        "protocol": "HTTP",
+        "subnet_id": "sub123",
+        "lb_method": "ROUND_ROBIN",
+        "vip": {
+          "protocol_port": 80,
+          "subnet": "sub9999"
+        }
+      }
+    }
+  }
+}
+'''
 pool_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -273,12 +295,14 @@ class PoolTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disassociate_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
+        self.m.StubOutWithMock(loadbalancer.neutronV20,
+                               'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
 
-    def create_pool(self):
+    def create_pool(self, with_vip_subnet=False):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
         neutronclient.Client.create_pool({
@@ -287,24 +311,50 @@ class PoolTest(HeatTestCase):
                 'name': utils.PhysName('test_stack', 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
         ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+
+        stvipvsn = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
-                'admin_state_up': True, 'subnet_id': u'sub123',
-                'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
+                'admin_state_up': True, 'subnet_id': u'sub9999',
+                'pool_id': '5678', 'protocol_port': 80}
+        }
+
+        stvippsn = copy.deepcopy(stvipvsn)
+        stvippsn['vip']['subnet_id'] = 'sub123'
+
+        if with_vip_subnet:
+            neutronclient.Client.create_vip(stvipvsn
+                                            ).AndReturn({'vip': {'id': 'xyz'}})
+            snippet = template_format.parse(pool_template_with_vip_subnet)
+        else:
+            neutronclient.Client.create_vip(stvippsn
+                                            ).AndReturn({'vip': {'id': 'xyz'}})
+            snippet = template_format.parse(pool_template)
+
         neutronclient.Client.show_pool('5678').AndReturn(
             {'pool': {'status': 'ACTIVE'}})
         neutronclient.Client.show_vip('xyz').AndReturn(
             {'vip': {'status': 'ACTIVE'}})
 
-        snippet = template_format.parse(pool_template)
         stack = utils.parse_stack(snippet)
         return loadbalancer.Pool(
             'pool', snippet['Resources']['pool'], stack)
 
     def test_create(self):
         rsrc = self.create_pool()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_create_with_vip_subnet(self):
+        loadbalancer.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub9999'
+        ).AndReturn('sub9999')
+
+        rsrc = self.create_pool(with_vip_subnet=True)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -471,7 +521,7 @@ class PoolTest(HeatTestCase):
         pool = snippet['Resources']['pool']
         persistence = pool['Properties']['vip']['session_persistence']
 
-        #When persistence type is set to APP_COOKIE, cookie_name is required
+        # When persistence type is set to APP_COOKIE, cookie_name is required
         persistence['type'] = 'APP_COOKIE'
         persistence['cookie_name'] = None
 
@@ -514,12 +564,12 @@ class PoolTest(HeatTestCase):
         pool = snippet['Resources']['pool']
         persistence = pool['Properties']['vip']['session_persistence']
 
-        #change persistence type to HTTP_COOKIE that not require cookie_name
+        # change persistence type to HTTP_COOKIE that not require cookie_name
         persistence['type'] = 'HTTP_COOKIE'
         del persistence['cookie_name']
         resource = loadbalancer.Pool('pool', pool, utils.parse_stack(snippet))
 
-        #assert that properties contain cookie_name property with None value
+        # assert that properties contain cookie_name property with None value
         persistence = resource.properties['vip']['session_persistence']
         self.assertIn('cookie_name', persistence)
         self.assertIsNone(persistence['cookie_name'])
