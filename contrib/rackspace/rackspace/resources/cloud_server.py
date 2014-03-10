@@ -19,6 +19,7 @@ import paramiko
 
 from heat.common import exception
 from heat.db.sqlalchemy import api as db_api
+from heat.engine import properties
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server
 from heat.openstack.common.gettextutils import _
@@ -113,6 +114,20 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
     RC_STATUS_FAILED = 'FAILED'
     RC_STATUS_UNPROCESSABLE = 'UNPROCESSABLE'
 
+    # Admin Pass Properties
+    SAVE_ADMIN_PASS = 'save_admin_pass'
+
+    properties_schema = copy.deepcopy(server.Server.properties_schema)
+    properties_schema.update(
+        {
+            SAVE_ADMIN_PASS: properties.Schema(
+                properties.Schema.BOOLEAN,
+                _('True if the system should remember the admin password; '
+                  'False otherwise.'),
+                default=False
+            ),
+        }
+    )
     attributes_schema = copy.deepcopy(server.Server.attributes_schema)
     attributes_schema.update(
         {
@@ -470,7 +485,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
         #  Server will not have an adminPass attribute if Nova's
         #  "enable_instance_password" config option is turned off
-        if hasattr(server, 'adminPass') and server.adminPass:
+        if (self.properties.get(self.SAVE_ADMIN_PASS) and
+                hasattr(server, 'adminPass') and server.adminPass):
             db_api.resource_data_set(self, self.ADMIN_PASS,
                                      server.adminPass,
                                      redact=True)
