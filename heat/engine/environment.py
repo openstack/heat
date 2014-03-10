@@ -310,15 +310,17 @@ class ResourceRegistry(object):
     def get_types(self, support_status):
         '''Return a list of valid resource types.'''
 
-        def is_plugin(key):
-            return isinstance(self._registry[key], ClassResourceInfo)
+        def is_resource(key):
+            return isinstance(self._registry[key], (ClassResourceInfo,
+                                                    TemplateResourceInfo))
 
         def status_matches(cls):
-            return support_status is None or \
-                cls.value.support_status.status == support_status.encode()
+            return (support_status is None or
+                    cls.get_class().support_status.status ==
+                    support_status.encode())
 
         return [name for name, cls in self._registry.iteritems()
-                if is_plugin(name) and status_matches(cls)]
+                if is_resource(name) and status_matches(cls)]
 
 
 SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
