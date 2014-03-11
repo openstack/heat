@@ -246,7 +246,10 @@ def resource_get_all_by_stack(context, stack_id):
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(context, models.Stack).\
-        filter_by(tenant=context.tenant_id).\
+        filter(sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id
+        )).\
         filter_by(name=stack_name).\
         filter_by(owner_id=owner_id)
 
@@ -255,7 +258,10 @@ def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
 
 def stack_get_by_name(context, stack_name):
     query = soft_delete_aware_query(context, models.Stack).\
-        filter_by(tenant=context.tenant_id).\
+        filter(sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id
+        )).\
         filter_by(name=stack_name)
 
     return query.first()
