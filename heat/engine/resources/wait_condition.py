@@ -14,7 +14,6 @@
 
 import json
 
-from heat.common import exception
 from heat.common import identifier
 from heat.engine import constraints
 from heat.engine import properties
@@ -183,6 +182,11 @@ class WaitCondition(resource.Resource):
         ),
     }
 
+    attributes_schema = {
+        'Data': _('JSON serialized dict containing data associated with wait '
+                  'condition signals sent to the handle.'),
+    }
+
     update_allowed_keys = ('Properties',)
 
     def __init__(self, name, json_snippet, stack):
@@ -271,7 +275,7 @@ class WaitCondition(resource.Resource):
         handle = self.stack[self.resource_id]
         handle.metadata = {}
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, key):
         res = {}
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]
@@ -279,15 +283,12 @@ class WaitCondition(resource.Resource):
             meta = handle.metadata
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])
-        else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+            logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %
+                         {'name': self.name,
+                          'key': key,
+                          'res': res})
 
-        logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %
-                     {'name': self.name,
-                      'key': key,
-                      'res': res})
-        return unicode(json.dumps(res))
+            return unicode(json.dumps(res))
 
 
 def resource_mapping():
