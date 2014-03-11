@@ -804,7 +804,6 @@ class FormatSoftwareConfigDeploymentTest(HeatTestCase):
         deployment.action = 'INIT'
         deployment.status = 'COMPLETE'
         deployment.status_reason = 'Because'
-        deployment.signal_id = 'http://192.0.2.2/signal'
         return deployment
 
     def test_format_software_config(self):
@@ -827,7 +826,6 @@ class FormatSoftwareConfigDeploymentTest(HeatTestCase):
         self.assertEqual(deployment.server_id, result['server_id'])
         self.assertEqual(deployment.input_values, result['input_values'])
         self.assertEqual(deployment.output_values, result['output_values'])
-        self.assertEqual(deployment.signal_id, result['signal_id'])
         self.assertEqual(deployment.action, result['action'])
         self.assertEqual(deployment.status, result['status'])
         self.assertEqual(deployment.status_reason, result['status_reason'])

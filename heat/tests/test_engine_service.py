@@ -2584,7 +2584,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
                           self.ctx, config_id)
 
     def _create_software_deployment(self, config_id=None, input_values={},
-                                    signal_id=None, action='INIT',
+                                    action='INIT',
                                     status='COMPLETE', status_reason='',
                                     config_group=None,
                                     server_id=str(uuid.uuid4()),
@@ -2594,7 +2594,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
                                                   name=config_name)
             config_id = config['id']
         return self.engine.create_software_deployment(
-            self.ctx, server_id, config_id, input_values, signal_id,
+            self.ctx, server_id, config_id, input_values,
             action, status, status_reason)
 
     def test_list_software_deployments(self):
@@ -2666,7 +2666,6 @@ class SoftwareConfigServiceTest(HeatTestCase):
         kwargs = {
             'config_id': config_id,
             'input_values': {'mode': 'standalone'},
-            'signal_id': None,
             'action': 'INIT',
             'status': 'COMPLETE',
             'status_reason': ''

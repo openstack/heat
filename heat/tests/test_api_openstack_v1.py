@@ -3407,7 +3407,6 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
             'action': 'INIT',
             'status': 'COMPLETE',
             'status_reason': None,
-            'signal_id': None,
             'config_id': config_id,
             'config': '#!/bin/bash',
             'name': 'config_mysql',
@@ -3436,7 +3435,6 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
             'action': 'INIT',
             'status': 'COMPLETE',
             'status_reason': None,
-            'signal_id': None,
             'config_id': config_id}
         return_value = body.copy()
         deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
@@ -3462,7 +3460,6 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
             'action': 'INIT',
             'status': 'COMPLETE',
             'status_reason': None,
-            'signal_id': None,
             'config_id': config_id}
         return_value = body.copy()
         deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'

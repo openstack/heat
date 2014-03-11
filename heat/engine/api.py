@@ -333,7 +333,6 @@ def format_software_deployment(sd):
         api.SOFTWARE_DEPLOYMENT_ACTION: sd.action,
         api.SOFTWARE_DEPLOYMENT_STATUS: sd.status,
         api.SOFTWARE_DEPLOYMENT_STATUS_REASON: sd.status_reason,
-        api.SOFTWARE_DEPLOYMENT_SIGNAL_ID: sd.signal_id,
         api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
     }
     return result

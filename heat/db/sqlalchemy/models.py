@@ -297,7 +297,6 @@ class SoftwareDeployment(BASE, HeatBase):
                                   nullable=False)
     input_values = sqlalchemy.Column('input_values', Json)
     output_values = sqlalchemy.Column('output_values', Json)
-    signal_id = sqlalchemy.Column(sqlalchemy.String(1024))
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(256), nullable=False)
     action = sqlalchemy.Column('action', sqlalchemy.String(255))
