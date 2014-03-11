@@ -1585,6 +1585,30 @@ class StackTest(HeatTestCase):
                          self.stack.t[self.stack.t.DESCRIPTION])
 
     @utils.stack_delete_after
+    def test_update_disable_rollback(self):
+        tmpl = {'Description': 'ATemplate',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'Description': 'ATemplate',
+                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2),
+                                     disable_rollback=True)
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(True, self.stack.disable_rollback)
+
+    @utils.stack_delete_after
     def test_update_modify_ok_replace(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -1768,7 +1792,8 @@ class StackTest(HeatTestCase):
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2))
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
 
         # Calls to GenericResource.handle_update will raise
         # resource.UpdateReplace because we've not specified the modified
@@ -1803,7 +1828,8 @@ class StackTest(HeatTestCase):
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2))
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
 
         # Calls to GenericResource.handle_update will raise
         # resource.UpdateReplace because we've not specified the modified
@@ -1839,7 +1865,8 @@ class StackTest(HeatTestCase):
                  'BResource': {'Type': 'GenericResourceType'}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2))
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and succeed on the second call (rollback)
@@ -1870,7 +1897,8 @@ class StackTest(HeatTestCase):
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2))
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
 
         # patch in a dummy delete making the destroy fail
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
@@ -1878,6 +1906,7 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
+
         self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertIn('BResource', self.stack)
@@ -1903,7 +1932,8 @@ class StackTest(HeatTestCase):
                                              'Properties': {'Foo': 'bar'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2))
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
 
         # patch in a dummy delete making the destroy fail
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
