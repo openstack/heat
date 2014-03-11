@@ -61,7 +61,6 @@ class ResourceGroup(stack_resource.StackResource):
             properties.Schema.INTEGER,
             _('The number of instances to create.'),
             default=1,
-            required=True,
             constraints=[
                 constraints.Range(min=1),
             ],

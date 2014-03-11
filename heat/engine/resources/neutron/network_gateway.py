@@ -102,7 +102,6 @@ class NetworkGateway(neutron.NeutronResource):
                             'L2 segmentation strategy on the external '
                             'side of the network gateway.'),
                         default='flat',
-                        required=True,
                         constraints=[constraints.AllowedValues(
                             ('flat', 'vlan'))]
                     ),
