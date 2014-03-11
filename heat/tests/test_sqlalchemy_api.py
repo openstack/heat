@@ -96,13 +96,15 @@ class SqlAlchemyTest(HeatTestCase):
     def tearDown(self):
         super(SqlAlchemyTest, self).tearDown()
 
-    def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None):
+    def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None,
+                          stack_user_project_id=None):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
         stack_id = stack_id or str(uuid.uuid4())
         stack = parser.Stack(self.ctx, stack_name, template,
                              environment.Environment({'KeyName': 'test'}),
-                             owner_id=owner_id)
+                             owner_id=owner_id,
+                             stack_user_project_id=stack_user_project_id)
         with utils.UUIDStub(stack_id):
             stack.store()
         return (t, stack)
@@ -280,8 +282,17 @@ class SqlAlchemyTest(HeatTestCase):
                           db_api.resource_data_get, rsrc, 'test')
 
     def test_stack_get_by_name(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack', UUID1,
+                                       stack_user_project_id=UUID2)[1]
 
+        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        self.assertEqual(UUID1, st.id)
+
+        self.ctx.tenant_id = UUID3
+        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        self.assertIsNone(st)
+
+        self.ctx.tenant_id = UUID2
         st = db_api.stack_get_by_name(self.ctx, 'stack')
         self.assertEqual(UUID1, st.id)
 
@@ -304,14 +315,27 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertIsNone(result)
 
     def test_stack_get_by_name_and_owner_id(self):
-        stack1 = self._setup_test_stack('stack1', UUID1)[1]
+        stack1 = self._setup_test_stack('stack1', UUID1,
+                                        stack_user_project_id=UUID3)[1]
         stack2 = self._setup_test_stack('stack2', UUID2,
-                                        owner_id=stack1.id)[1]
+                                        owner_id=stack1.id,
+                                        stack_user_project_id=UUID3)[1]
 
         result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
                                                        None)
         self.assertIsNone(result)
 
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+                                                       stack1.id)
+
+        self.assertEqual(UUID2, result.id)
+
+        self.ctx.tenant_id = str(uuid.uuid4())
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+                                                       None)
+        self.assertIsNone(result)
+
+        self.ctx.tenant_id = UUID3
         result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
                                                        stack1.id)
 
