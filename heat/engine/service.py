@@ -198,7 +198,7 @@ class StackWatch(object):
             logger.error(_("Unable to retrieve stack %s for periodic task") %
                          sid)
             return
-        stack_context = self.load_user_creds(stack.user_creds_id)
+        stack_context = EngineService.load_user_creds(stack.user_creds_id)
 
         # recurse into any nested stacks.
         children = db_api.stack_get_all_by_owner_id(admin_context, sid)
@@ -235,15 +235,6 @@ class StackWatch(object):
         sid = stack ID
         """
         self.check_stack_watches(sid)
-
-    def load_user_creds(self, creds_id):
-        user_creds = db_api.user_creds_get(creds_id)
-        stored_context = context.RequestContext.from_dict(user_creds)
-        # heat_keystoneclient populates the context with an auth_token
-        # either via the stored user/password or trust_id, depending
-        # on how deferred_auth_method is configured in the conf file
-        hkc.KeystoneClient(stored_context)
-        return stored_context
 
 
 class EngineListener(service.Service):
@@ -303,6 +294,16 @@ class EngineService(service.Service):
         stacks = db_api.stack_get_all(admin_context, tenant_safe=False)
         for s in stacks:
             self.stack_watch.start_watch_task(s.id, admin_context)
+
+    @staticmethod
+    def load_user_creds(creds_id):
+        user_creds = db_api.user_creds_get(creds_id)
+        stored_context = context.RequestContext.from_dict(user_creds)
+        # heat_keystoneclient populates the context with an auth_token
+        # either via the stored user/password or trust_id, depending
+        # on how deferred_auth_method is configured in the conf file
+        hkc.KeystoneClient(stored_context)
+        return stored_context
 
     @request_context
     def identify_stack(self, cnxt, stack_name):
@@ -865,7 +866,7 @@ class EngineService(service.Service):
         # but this happens because the keystone user associated with the
         # signal doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
-        stack_context = self.stack_watch.load_user_creds(s.user_creds_id)
+        stack_context = self.load_user_creds(s.user_creds_id)
         stack = parser.Stack.load(stack_context, stack=s)
 
         if resource_name not in stack:
@@ -968,7 +969,7 @@ class EngineService(service.Service):
         # but this happens because the keystone user associated with the
         # WaitCondition doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
-        stack_context = self.stack_watch.load_user_creds(s.user_creds_id)
+        stack_context = self.load_user_creds(s.user_creds_id)
         refresh_stack = parser.Stack.load(stack_context, stack=s)
 
         # Refresh the metadata for all other resources, since we expect

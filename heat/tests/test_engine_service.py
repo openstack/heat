@@ -2039,8 +2039,8 @@ class StackServiceTest(HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
-        service.StackWatch.load_user_creds(
+        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
+        service.EngineService.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
 
         self.m.StubOutWithMock(rsrs.Resource, 'signal')
@@ -2070,8 +2070,8 @@ class StackServiceTest(HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
-        service.StackWatch.load_user_creds(
+        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
+        service.EngineService.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
@@ -2094,8 +2094,8 @@ class StackServiceTest(HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
         self.m.StubOutWithMock(instances.Instance, 'metadata_update')
         instances.Instance.metadata_update(new_metadata=test_metadata)
-        self.m.StubOutWithMock(service.StackWatch, 'load_user_creds')
-        service.StackWatch.load_user_creds(
+        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
+        service.EngineService.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
