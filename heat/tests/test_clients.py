@@ -30,7 +30,7 @@ class ClientsTest(HeatTestCase):
         obj = clients.Clients(con)
         obj._get_client_option = mock.Mock()
         obj._get_client_option.return_value = None
-        self.assertEqual(None, obj._get_heat_url())
+        self.assertIsNone(obj._get_heat_url())
         heat_url = "http://0.0.0.0:8004/v1/%(tenant_id)s"
         obj._get_client_option.return_value = heat_url
         tenant_id = "b363706f891f48019483f8bd6503c54b"
