@@ -102,9 +102,8 @@
 # users. (string value)
 #stack_user_domain=<None>
 
-# Keystone username, a user with roles sufficient to
-# manageusers and projects in the stack_user_domain. (string
-# value)
+# Keystone username, a user with roles sufficient to manage
+# users and projects in the stack_user_domain. (string value)
 #stack_domain_admin=<None>
 
 # Keystone password for stack_domain_admin user. (string
