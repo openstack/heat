@@ -26,9 +26,9 @@ Adding the following line to your `localrc` file will enable the heat services::
 It would also be useful to automatically download and register
 a VM image that Heat can launch::
 
-    IMAGE_URLS+=",http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-x86_64-cfntools.qcow2,http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-i386-cfntools.qcow2"
+    IMAGE_URLS+=",http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2"
 
-URLs for any of [http://fedorapeople.org/groups/heat/prebuilt-jeos-images/ these prebuilt JEOS images] can be specified.
+URLs for any cloud image may be specified, but fedora images from F20 contain the heat-cfntools package which is required for some heat functionality.
 
 That is all the configuration that is required. When you run `./stack.sh` the Heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
