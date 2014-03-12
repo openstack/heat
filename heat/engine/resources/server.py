@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from oslo.config import cfg
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
@@ -260,8 +262,8 @@ class Server(resource.Resource):
 
     attributes_schema = {
         'show': _('A dict of all server details as returned by the API.'),
-        'addresses': _('A dict of all network addresses as returned by '
-                       'the API.'),
+        'addresses': _('A dict of all network addresses with corresponding'
+                       'port_id.'),
         'networks': _('A dict of assigned network addresses of the form: '
                       '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
         'first_address': _('Convenience attribute to fetch the first '
@@ -437,13 +439,25 @@ class Server(resource.Resource):
             nics.append(nic_info)
         return nics
 
+    def _add_port_for_address(self, server):
+        nets = copy.deepcopy(server.addresses)
+        ifaces = server.interface_list()
+        ip_mac_mapping_on_port_id = dict(((iface.fixed_ips[0]['ip_address'],
+                                           iface.mac_addr), iface.port_id)
+                                         for iface in ifaces)
+        for net_name in nets:
+            for addr in nets[net_name]:
+                addr['port'] = ip_mac_mapping_on_port_id.get(
+                    (addr['addr'], addr['OS-EXT-IPS-MAC:mac_addr']))
+        return nets
+
     def _resolve_attribute(self, name):
         if name == 'first_address':
             return nova_utils.server_to_ipaddress(
                 self.nova(), self.resource_id) or ''
         server = self.nova().servers.get(self.resource_id)
         if name == 'addresses':
-            return server.addresses
+            return self._add_port_for_address(server)
         if name == 'networks':
             return server.networks
         if name == 'instance_name':
