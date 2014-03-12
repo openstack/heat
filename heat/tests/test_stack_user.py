@@ -304,6 +304,12 @@ class StackUserTest(HeatTestCase):
         self.assertEqual({'user_id': 'auserdel'}, rs_data)
         self.m.VerifyAll()
 
+    def test_delete_keypair_no_credential_id(self):
+        rsrc = self._user_create(stack_name='user_testdel',
+                                 project_id='aprojectdel',
+                                 user_id='auserdel')
+        rsrc._delete_keypair()
+
     def test_delete_keypair_legacy(self):
         rsrc = self._user_create(stack_name='user_testdel',
                                  project_id='aprojectdel',
