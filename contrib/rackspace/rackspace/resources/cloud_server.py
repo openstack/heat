@@ -130,6 +130,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         self._server = None
         self._distro = None
         self._image = None
+        self._retry_iterations = 0
 
     @property
     def server(self):
@@ -267,12 +268,26 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
     def _sftp_files(self, files):
         """Transfer files to the Cloud Server via SFTP."""
+
+        if self._retry_iterations > 30:
+            raise exception.Error(_("Failed to establish SSH connection after "
+                                    "30 tries"))
+        self._retry_iterations += 1
+
+        try:
+            transport = paramiko.Transport((self.server.accessIPv4, 22))
+        except paramiko.SSHException:
+            logger.debug("Failed to get SSH transport, will retry")
+            return False
         with tempfile.NamedTemporaryFile() as private_key_file:
             private_key_file.write(self.private_key)
             private_key_file.seek(0)
             pkey = paramiko.RSAKey.from_private_key_file(private_key_file.name)
-            transport = paramiko.Transport((self.server.accessIPv4, 22))
-            transport.connect(hostkey=None, username="root", pkey=pkey)
+            try:
+                transport.connect(hostkey=None, username="root", pkey=pkey)
+            except EOFError:
+                logger.debug("Failed to connect to SSH transport, will retry")
+                return False
             sftp = paramiko.SFTPClient.from_transport(transport)
             try:
                 for remote_file in files:
@@ -375,7 +390,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
         files = [{'path': "/tmp/userdata", 'data': userdata},
                  {'path': "/root/heat-script.sh", 'data': self.script}]
-        self._sftp_files(files)
+        if self._sftp_files(files) is False:
+            return False
 
         # Connect via SSH and run script
         cmd = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
@@ -405,7 +421,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             return False
 
         if self.has_userdata:
-            self._run_userdata()
+            if self._run_userdata() is False:
+                return False
 
         return True
 
