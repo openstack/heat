@@ -127,6 +127,13 @@ class StackResourceTest(HeatTestCase):
         preview = self.parent_resource.preview()
         self.assertIsInstance(preview, stack_resource.StackResource)
 
+    def test_propagated_files(self):
+        self.parent_stack.t.files["foo"] = "bar"
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"})
+        self.stack = self.parent_resource.nested()
+        self.assertEqual({"foo": "bar"}, self.stack.t.files)
+
     @mock.patch.object(stack_resource.environment, 'Environment')
     @mock.patch.object(stack_resource.parser, 'Template')
     @mock.patch.object(stack_resource.parser, 'Stack')
@@ -305,6 +312,24 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
 
     @utils.stack_delete_after
+    def test_update_with_template_files(self):
+        create_result = self.parent_resource.create_with_template(
+            self.simple_template, {})
+        while not create_result.step():
+            pass
+        self.stack = self.parent_resource.nested()
+
+        new_templ = self.simple_template.copy()
+        inst_snippet = new_templ["Resources"]["WebServer"].copy()
+        new_templ["Resources"]["WebServer2"] = inst_snippet
+        self.parent_stack.t.files["foo"] = "bar"
+        updater = self.parent_resource.update_with_template(
+            new_templ, {})
+        updater.run_to_completion()
+
+        self.assertEqual({"foo": "bar"}, self.stack.t.files)
+
+    @utils.stack_delete_after
     def test_update_with_template_state_err(self):
         """
         update_with_template_state_err method should raise error when update
@@ -440,7 +465,7 @@ class StackResourceTest(HeatTestCase):
                                   parent_resource=self.parent_resource)
 
         self.m.StubOutWithMock(parser, 'Template')
-        parser.Template(self.templ).AndReturn(templ)
+        parser.Template(self.templ, files={}).AndReturn(templ)
 
         self.m.StubOutWithMock(environment, 'Environment')
         environment.Environment({"KeyName": "test"}).AndReturn(env)
