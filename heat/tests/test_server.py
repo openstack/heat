@@ -145,20 +145,49 @@ class ServersTest(HeatTestCase):
         scheduler.TaskRunner(server.create)()
         return server
 
+    def _create_fake_iface(self, port, mac, ip):
+        class fake_interface():
+            def __init__(self, port_id, mac_addr, fixed_ip):
+                self.port_id = port_id
+                self.mac_addr = mac_addr
+                self.fixed_ips = [{'ip_address': fixed_ip}]
+
+        return fake_interface(port, mac, ip)
+
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
         server = self._create_test_server(return_server,
                                           'test_server_create')
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
+        interfaces = [
+            self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
+            self._create_fake_iface('5678', 'fa:16:3e:8c:33:bb', '5.6.9.8'),
+            self._create_fake_iface(
+                '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().MultipleTimes().AndReturn(interfaces)
+        self.m.ReplayAll()
+
         public_ip = return_server.networks['public'][0]
+        self.assertEqual('1234',
+                         server.FnGetAtt('addresses')['public'][0]['port'])
+        self.assertEqual('5678',
+                         server.FnGetAtt('addresses')['public'][1]['port'])
         self.assertEqual(public_ip,
                          server.FnGetAtt('addresses')['public'][0]['addr'])
         self.assertEqual(public_ip,
                          server.FnGetAtt('networks')['public'][0])
 
         private_ip = return_server.networks['private'][0]
+        self.assertEqual('1013',
+                         server.FnGetAtt('addresses')['private'][0]['port'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('addresses')['private'][0]['addr'])
         self.assertEqual(private_ip,
@@ -205,6 +234,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
         server = self._setup_test_server(return_server,
                                          'test_server_create_image_id',
                                          image_id='1',
@@ -212,6 +242,17 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
 
+        interfaces = [
+            self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
+            self._create_fake_iface('5678', 'fa:16:3e:8c:33:bb', '5.6.9.8'),
+            self._create_fake_iface(
+                '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().MultipleTimes().AndReturn(interfaces)
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
 
@@ -219,12 +260,18 @@ class ServersTest(HeatTestCase):
         self.assertTrue(server.id > 0)
 
         public_ip = return_server.networks['public'][0]
+        self.assertEqual('1234',
+                         server.FnGetAtt('addresses')['public'][0]['port'])
+        self.assertEqual('5678',
+                         server.FnGetAtt('addresses')['public'][1]['port'])
         self.assertEqual(
             server.FnGetAtt('addresses')['public'][0]['addr'], public_ip)
         self.assertEqual(
             server.FnGetAtt('networks')['public'][0], public_ip)
 
         private_ip = return_server.networks['private'][0]
+        self.assertEqual('1013',
+                         server.FnGetAtt('addresses')['private'][0]['port'])
         self.assertEqual(
             server.FnGetAtt('addresses')['private'][0]['addr'], private_ip)
         self.assertEqual(
@@ -1557,12 +1604,21 @@ class ServersTest(HeatTestCase):
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
+        return_server.id = 9102
         server = self._create_test_server(return_server,
                                           'wo_ipaddr')
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().MultipleTimes().AndReturn([])
+        self.m.ReplayAll()
 
         self.assertEqual({'empty_net': []}, server.FnGetAtt('addresses'))
         self.assertEqual({'empty_net': []}, server.FnGetAtt('networks'))
         self.assertEqual('', server.FnGetAtt('first_address'))
+        self.m.VerifyAll()
 
     def test_build_block_device_mapping(self):
         self.assertIsNone(servers.Server._build_block_device_mapping([]))

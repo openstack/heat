@@ -104,11 +104,17 @@ class FakeHTTPClient(base_client.HTTPClient):
                           "accessIPv4": "192.0.2.0",
                           "accessIPv6": "::babe:4317:0A83",
                           "addresses": {"public": [{"version": 4,
-                                                    "addr": "4.5.6.7"},
+                                                    "addr": "4.5.6.7",
+                                                    "OS-EXT-IPS-MAC:mac_addr":
+                                                    "fa:16:3e:8c:22:aa"},
                                                    {"version": 4,
-                                                    "addr": "5.6.9.8"}],
+                                                    "addr": "5.6.9.8",
+                                                    "OS-EXT-IPS-MAC:mac_addr":
+                                                    "fa:16:3e:8c:33:bb"}],
                                         "private": [{"version": 4,
-                                                     "addr": "10.13.12.13"}]},
+                                                     "addr": "10.13.12.13",
+                                                    "OS-EXT-IPS-MAC:mac_addr":
+                                                    "fa:16:3e:8c:44:cc"}]},
                           "metadata": {}},
                          {"id": 9101,
                           "name": "hard-reboot",
