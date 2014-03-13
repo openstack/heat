@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as nova_exceptions
+
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine.clients import Clients
@@ -18,8 +20,6 @@ from heat.engine import resource
 from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-
-from novaclient import exceptions as nova_exceptions
 
 logger = logging.getLogger(__name__)
 

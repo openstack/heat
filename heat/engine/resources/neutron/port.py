@@ -13,10 +13,10 @@
 #    under the License.
 
 from heat.engine import clients
-from heat.openstack.common import log as logging
+from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
-from heat.engine import properties
+from heat.openstack.common import log as logging
 
 if clients.neutronclient is not None:
     import neutronclient.common.exceptions as neutron_exp

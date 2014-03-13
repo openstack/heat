@@ -14,13 +14,13 @@
 
 import copy
 
+from heat.common import exception
+from heat.engine import constraints
 from heat.engine import parser
 from heat.engine import properties
-from heat.engine import constraints
 from heat.engine import stack_resource
-from heat.common import exception
-
 from heat.openstack.common.gettextutils import _
+
 
 template_template = {
     "heat_template_version": "2013-05-23",

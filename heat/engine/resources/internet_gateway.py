@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import clients
 from heat.common import exception
-from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
+from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import route_table
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

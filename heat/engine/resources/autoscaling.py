@@ -16,22 +16,21 @@ import functools
 import json
 import math
 
-from heat.engine import environment
-from heat.engine import function
-from heat.engine import resource
-from heat.engine import signal_responder
-
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
+from heat.engine import constraints
+from heat.engine import environment
+from heat.engine import function
+from heat.engine.notification import autoscaling as notification
+from heat.engine import properties
+from heat.engine.properties import Properties
+from heat.engine import resource
+from heat.engine import scheduler
+from heat.engine import signal_responder
+from heat.engine import stack_resource
 from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
-from heat.engine.properties import Properties
-from heat.engine import constraints
-from heat.engine.notification import autoscaling as notification
-from heat.engine import properties
-from heat.engine import scheduler
-from heat.engine import stack_resource
 from heat.scaling import template
 
 logger = logging.getLogger(__name__)

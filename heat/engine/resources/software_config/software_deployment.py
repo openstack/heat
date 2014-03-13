@@ -16,16 +16,16 @@
 import copy
 import uuid
 
+import heatclient.exc as heat_exp
+
+from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import constraints
-from heat.common import exception
 from heat.engine import properties
-from heat.engine import signal_responder
 from heat.engine import resource
 from heat.engine.resources.software_config import software_config as sc
+from heat.engine import signal_responder
 from heat.openstack.common import log as logging
-
-import heatclient.exc as heat_exp
 
 logger = logging.getLogger(__name__)
 

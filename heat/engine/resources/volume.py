@@ -14,17 +14,16 @@
 
 import json
 
-from heat.openstack.common import log as logging
-from heat.openstack.common.importutils import try_import
-
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import support
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
+from heat.engine import support
+from heat.openstack.common.importutils import try_import
+from heat.openstack.common import log as logging
 
 volume_backups = try_import('cinderclient.v1.volume_backups')
 

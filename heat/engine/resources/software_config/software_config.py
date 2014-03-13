@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import heatclient.exc as heat_exp
+
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-
-import heatclient.exc as heat_exp
 
 logger = logging.getLogger(__name__)
 

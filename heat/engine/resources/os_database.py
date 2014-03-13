@@ -13,14 +13,13 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine.clients import troveclient
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.clients import troveclient
 from heat.engine.resources import nova_utils
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
-
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

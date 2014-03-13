@@ -14,10 +14,10 @@
 
 import hashlib
 import json
+
 from requests import exceptions
 
 from heat.common import exception
-
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
@@ -25,7 +25,6 @@ from heat.engine import environment
 from heat.engine import properties
 from heat.engine import stack_resource
 from heat.engine import template
-
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
