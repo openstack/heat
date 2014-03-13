@@ -707,7 +707,7 @@ class PoolTest(HeatTestCase):
         neutronclient.Client.show_vip('xyz').AndReturn(
             {'vip': {'status': 'ACTIVE'}})
         neutronclient.Client.disassociate_health_monitor(
-            '5678', {'health_monitor': {'id': 'mon456'}})
+            '5678', 'mon456')
         neutronclient.Client.associate_health_monitor(
             '5678', {'health_monitor': {'id': 'mon789'}})
 
