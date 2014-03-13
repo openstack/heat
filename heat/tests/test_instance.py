@@ -377,6 +377,270 @@ class InstancesTest(HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
         self.m.VerifyAll()
 
+    def create_fake_iface(self, port, net, ip):
+        class fake_interface():
+            def __init__(self, port_id, net_id, fixed_ip):
+                self.port_id = port_id
+                self.net_id = net_id
+                self.fixed_ips = [{'ip_address': fixed_ip}]
+
+        return fake_interface(port, net, ip)
+
+    def test_instance_update_network_interfaces(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        # if new overlaps with old, detach the different ones in old, and
+        # attach the different ones in new
+        old_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'},
+            {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+             'DeviceIndex': '1'}]
+        new_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'},
+            {'NetworkInterfaceId': '34b752ec-14de-416a-8722-9531015e04a5',
+             'DeviceIndex': '3'}]
+
+        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach('34b752ec-14de-416a-8722-9531015e04a5',
+                                       None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_instance_update_network_interfaces_old_include_new(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        # if old include new, just detach the different ones in old
+        old_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'},
+            {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+             'DeviceIndex': '1'}]
+        new_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'}]
+
+        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+
+    def test_instance_update_network_interfaces_new_include_old(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        # if new include old, just attach the different ones in new
+        old_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'}]
+        new_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'},
+            {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+             'DeviceIndex': '1'}]
+
+        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+                                       None, None).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+
+    def test_instance_update_network_interfaces_new_old_all_different(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        # if different, detach the old ones and attach the new ones
+        old_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'}]
+        new_interfaces = [
+            {'NetworkInterfaceId': '34b752ec-14de-416a-8722-9531015e04a5',
+             'DeviceIndex': '3'},
+            {'NetworkInterfaceId': 'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+             'DeviceIndex': '1'}]
+
+        instance.t['Properties']['NetworkInterfaces'] = old_interfaces
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'ea29f957-cd35-4364-98fb-57ce9732c10d').AndReturn(None)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+                                       None, None).AndReturn(None)
+        return_server.interface_attach('34b752ec-14de-416a-8722-9531015e04a5',
+                                       None, None).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+
+    def test_instance_update_network_interfaces_no_old(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        new_interfaces = [
+            {'NetworkInterfaceId': 'ea29f957-cd35-4364-98fb-57ce9732c10d',
+             'DeviceIndex': '2'},
+            {'NetworkInterfaceId': '34b752ec-14de-416a-8722-9531015e04a5',
+             'DeviceIndex': '3'}]
+        iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+                                       'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
+                                       '10.0.0.4')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = new_interfaces
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach('ea29f957-cd35-4364-98fb-57ce9732c10d',
+                                       None, None).AndReturn(None)
+        return_server.interface_attach('34b752ec-14de-416a-8722-9531015e04a5',
+                                       None, None).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_instance_update_network_interfaces_no_old_no_new(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+                                       'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
+                                       '10.0.0.4')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = []
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(None, None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_instance_update_network_interfaces_no_old_new_with_subnet(self):
+        """
+        Instance.handle_update supports changing the NetworkInterfaces,
+        and makes the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'ud_network_interfaces')
+        iface = self.create_fake_iface('d1e9c73c-04fe-4e9e-983c-d5ef94cd1a46',
+                                       'c4485ba1-283a-4f5f-8868-0cd46cdda52f',
+                                       '10.0.0.4')
+        subnet_id = '8c1aaddf-e49e-4f28-93ea-ca9f0b3c6240'
+        nics = [{'port-id': 'ea29f957-cd35-4364-98fb-57ce9732c10d'}]
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['NetworkInterfaces'] = []
+        update_template['Properties']['SubnetId'] = subnet_id
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'd1e9c73c-04fe-4e9e-983c-d5ef94cd1a46').AndReturn(None)
+        self.m.StubOutWithMock(instance, '_build_nics')
+        instance._build_nics([], security_groups=None,
+                             subnet_id=subnet_id).AndReturn(nics)
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach('ea29f957-cd35-4364-98fb-57ce9732c10d',
+                                       None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.update, update_template)()
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
     def test_instance_update_replace(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
