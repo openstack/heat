@@ -407,7 +407,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 'Deployment exited with non-zero status code: %s'
             ) % details.get(self.STATUS_CODE)
 
-        for output in sc.outputs:
+        for output in sc.outputs or []:
             out_key = output['name']
             if out_key in details:
                 ov[out_key] = details[out_key]
