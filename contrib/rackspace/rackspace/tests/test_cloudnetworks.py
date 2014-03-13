@@ -10,15 +10,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import uuid
+
+import mock
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.tests import utils
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 
 from ..resources import cloudnetworks  # noqa
 

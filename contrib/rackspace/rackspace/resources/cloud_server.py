@@ -10,19 +10,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import socket
 import copy
+import socket
 import tempfile
 
 from Crypto.PublicKey import RSA
 import paramiko
 
 from heat.common import exception
+from heat.db.sqlalchemy import api as db_api
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server
-from heat.db.sqlalchemy import api as db_api
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 try:
     import pyrax  # noqa

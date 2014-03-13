@@ -10,6 +10,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+from heat.common import exception
+from heat.engine import constraints
+from heat.engine import properties
+from heat.engine.properties import Properties
+from heat.engine import resource
+from heat.engine import scheduler
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+
 try:
     from pyrax.exceptions import NotFound
     PYRAX_INSTALLED = True
@@ -19,15 +29,6 @@ except ImportError:
         pass
 
     PYRAX_INSTALLED = False
-
-from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
-from heat.engine import scheduler
-from heat.engine import constraints
-from heat.engine import properties
-from heat.engine import resource
-from heat.engine.properties import Properties
-from heat.common import exception
 
 logger = logging.getLogger(__name__)
 

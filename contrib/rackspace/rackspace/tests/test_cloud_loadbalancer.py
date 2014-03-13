@@ -12,18 +12,18 @@
 #    under the License.
 
 
-import uuid
-import json
 import copy
+import json
+import uuid
 
+from heat.common.exception import StackValidationFailed
 from heat.common import template_format
-from heat.engine import scheduler
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 from ..resources import cloud_loadbalancer as lb  # noqa
-from heat.common.exception import StackValidationFailed
 
 # The following fakes are for pyrax
 

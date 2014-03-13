@@ -14,13 +14,12 @@
 
 from oslo.config import cfg
 
-from heat.openstack.common import log as logging
-
-logger = logging.getLogger(__name__)
-
 from heat.common import exception
 from heat.engine import clients
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+
+logger = logging.getLogger(__name__)
 
 try:
     import pyrax
