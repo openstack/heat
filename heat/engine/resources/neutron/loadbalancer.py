@@ -385,8 +385,8 @@ class Pool(neutron.NeutronResource):
             if monitors:
                 old_monitors = set(self.t['Properties'][self.MONITORS])
                 for monitor in old_monitors - monitors:
-                    client.disassociate_health_monitor(
-                        self.resource_id, {'health_monitor': {'id': monitor}})
+                    client.disassociate_health_monitor(self.resource_id,
+                                                       monitor)
                 for monitor in monitors - old_monitors:
                     client.associate_health_monitor(
                         self.resource_id, {'health_monitor': {'id': monitor}})
