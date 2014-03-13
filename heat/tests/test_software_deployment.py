@@ -173,7 +173,8 @@ class SoftwareDeploymentTest(HeatTestCase):
                 'description': 'ID of the stack this deployment belongs to',
                 'name': 'deploy_stack_id',
                 'type': 'String',
-                'value': '42f6f66b-631a-44e7-8d01-e22fb54574a9'
+                'value': ('software_deployment_test_stack'
+                          '/42f6f66b-631a-44e7-8d01-e22fb54574a9')
             }, {
                 'description': 'Name of this deployment resource in the stack',
                 'name': 'deploy_resource_name',

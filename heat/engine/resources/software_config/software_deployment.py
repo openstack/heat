@@ -59,13 +59,13 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         DEPLOY_SIGNAL_ID, DEPLOY_STACK_ID,
         DEPLOY_RESOURCE_NAME, DEPLOY_AUTH_URL,
         DEPLOY_USERNAME, DEPLOY_PASSWORD,
-        DEPLOY_PROJECT_ID,
+        DEPLOY_PROJECT_ID, DEPLOY_USER_ID
     ) = (
         'deploy_server_id', 'deploy_action',
         'deploy_signal_id', 'deploy_stack_id',
         'deploy_resource_name', 'deploy_auth_url',
         'deploy_username', 'deploy_password',
-        'deploy_project_id'
+        'deploy_project_id', 'deploy_user_id'
     )
 
     SIGNAL_TRANSPORTS = (
@@ -261,7 +261,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             scl.NAME: self.DEPLOY_STACK_ID,
             scl.DESCRIPTION: _('ID of the stack this deployment belongs to'),
             scl.TYPE: 'String',
-            'value': self.stack.identifier().stack_id
+            'value': self.stack.identifier().stack_path()
         }, {
             scl.NAME: self.DEPLOY_RESOURCE_NAME,
             scl.DESCRIPTION: _('Name of this deployment resource in the '
@@ -282,12 +282,17 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 scl.NAME: self.DEPLOY_AUTH_URL,
                 scl.DESCRIPTION: _('URL for API authentication'),
                 scl.TYPE: 'String',
-                'value': self.context.auth_url
+                'value': self.keystone().v3_endpoint
             }, {
                 scl.NAME: self.DEPLOY_USERNAME,
                 scl.DESCRIPTION: _('Username for API authentication'),
                 scl.TYPE: 'String',
                 'value': self.physical_resource_name(),
+            }, {
+                scl.NAME: self.DEPLOY_USER_ID,
+                scl.DESCRIPTION: _('User ID for API authentication'),
+                scl.TYPE: 'String',
+                'value': self._get_user_id(),
             }, {
                 scl.NAME: self.DEPLOY_PASSWORD,
                 scl.DESCRIPTION: _('Password for API authentication'),
