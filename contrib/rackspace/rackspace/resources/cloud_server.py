@@ -131,6 +131,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         self._distro = None
         self._image = None
         self._retry_iterations = 0
+        self._managed_cloud_started_event_sent = False
+        self._rack_connect_started_event_sent = False
 
     @property
     def server(self):
@@ -327,6 +329,11 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         return None
 
     def _check_managed_cloud_complete(self, server):
+        if not self._managed_cloud_started_event_sent:
+            msg = _("Waiting for Managed Cloud automation to complete")
+            self._add_event(self.action, self.status, msg)
+            self._managed_cloud_started_event_sent = True
+
         if 'rax_service_level_automation' not in server.metadata:
             logger.debug(_("Managed Cloud server does not have the "
                            "rax_service_level_automation metadata tag yet"))
@@ -339,6 +346,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             return False
 
         elif mc_status == self.MC_STATUS_COMPLETE:
+            msg = _("Managed Cloud automation has completed")
+            self._add_event(self.action, self.status, msg)
             return True
 
         elif mc_status == self.MC_STATUS_BUILD_ERROR:
@@ -349,6 +358,11 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
                                     "status: %s") % mc_status)
 
     def _check_rack_connect_complete(self, server):
+        if not self._rack_connect_started_event_sent:
+            msg = _("Waiting for RackConnect automation to complete")
+            self._add_event(self.action, self.status, msg)
+            self._rack_connect_started_event_sent = True
+
         if 'rackconnect_automation_status' not in server.metadata:
             logger.debug(_("RackConnect server does not have the "
                            "rackconnect_automation_status metadata tag yet"))
@@ -374,6 +388,9 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             if reason is not None:
                 logger.warning(_("RackConnect unprocessable reason: %s") %
                                reason)
+
+            msg = _("RackConnect automation has completed")
+            self._add_event(self.action, self.status, msg)
             return True
 
         elif rc_status == self.RC_STATUS_FAILED:
@@ -384,6 +401,9 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             raise exception.Error(msg)
 
     def _run_userdata(self):
+        msg = _("Running user_data")
+        self._add_event(self.action, self.status, msg)
+
         # Create heat-script and userdata files on server
         raw_userdata = self.properties[self.USER_DATA]
         userdata = nova_utils.build_userdata(self, raw_userdata)
@@ -404,6 +424,9 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             raise exception.Error(self.SCRIPT_ERROR_MSG %
                                   {'path': "heat-script.sh",
                                    'log': "/root/heat-script.log"})
+
+        msg = _("Successfully ran user_data")
+        self._add_event(self.action, self.status, msg)
 
     def check_create_complete(self, server):
         """Check if server creation is complete and handle server configs."""
