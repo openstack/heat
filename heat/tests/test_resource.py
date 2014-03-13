@@ -999,7 +999,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 'foo': {'type': 'GenericResourceType'},
                 'bar': {
                     'type': 'ResourceWithPropsType',
-                    'Properties': {
+                    'properties': {
                         'Foo': {'get_attr': ['foo', 'bar']},
                     }
                 }
@@ -1193,6 +1193,26 @@ class ResourceDependenciesTest(HeatTestCase):
                 'bar': {
                     'Type': 'GenericResourceType',
                     'DependsOn': 'foo',
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+
+        res = stack['bar']
+        res.add_dependencies(self.deps)
+        graph = self.deps.graph()
+
+        self.assertIn(res, graph)
+        self.assertIn(stack['foo'], graph[res])
+
+    def test_dependson_hot(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'foo': {'type': 'GenericResourceType'},
+                'bar': {
+                    'type': 'GenericResourceType',
+                    'depends_on': 'foo',
                 }
             }
         })

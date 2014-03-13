@@ -292,6 +292,11 @@ class InstanceGroup(stack_resource.StackResource):
         # resolve references within the context of this stack.
         return self.stack.resolve_runtime_data(instance_definition)
 
+    def _get_instance_templates(self):
+        """Get templates for resource instances."""
+        return [(instance.name, instance.t)
+                for instance in self.get_instances()]
+
     def _create_template(self, num_instances, num_replace=0):
         """
         Create a template to represent autoscaled instances.
@@ -299,8 +304,7 @@ class InstanceGroup(stack_resource.StackResource):
         Also see heat.scaling.template.resource_templates.
         """
         instance_definition = self._get_instance_definition()
-        old_resources = [(instance.name, instance.t)
-                         for instance in self.get_instances()]
+        old_resources = self._get_instance_templates()
         templates = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
         return {"Resources": dict(templates)}
@@ -869,6 +873,34 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         connections, so we just ignore calls to update the LB.
         """
         pass
+
+    def _get_instance_templates(self):
+        """
+        Get templates for resource instances in HOT format.
+
+        AutoScalingResourceGroup uses HOT as template format for scaled
+        resources. Templates for existing resources use CFN syntax and
+        have to be converted to HOT since those templates get used for
+        generating scaled resource templates.
+        """
+        CFN_TO_HOT_ATTRS = {'Type': 'type',
+                            'Properties': 'properties',
+                            'Metadata': 'metadata',
+                            'DependsOn': 'depends_on',
+                            'DeletionPolicy': 'deletion_policy',
+                            'UpdatePolicy': 'update_policy'}
+
+        def to_hot(template):
+            hot_template = {}
+
+            for attr, attr_value in template.iteritems():
+                hot_attr = CFN_TO_HOT_ATTRS.get(attr, attr)
+                hot_template[hot_attr] = attr_value
+
+            return hot_template
+
+        return [(instance.name, to_hot(instance.t))
+                for instance in self.get_instances()]
 
     def _create_template(self, *args, **kwargs):
         """Use a HOT format for the template in the nested stack."""
