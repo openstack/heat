@@ -13,22 +13,17 @@
 #    under the License.
 
 import routes
-
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat')
-
-from heat.api.cloudwatch import watch
-from heat.common import wsgi
-
 from webob import Request
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+
 from heat.api.cloudwatch import versions
-
-
+from heat.api.cloudwatch import watch
+from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.common import wsgi
+from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
+gettextutils.install('heat')
 
 
 class API(wsgi.Router):

@@ -21,8 +21,9 @@ Cinder's faultwrapper
 """
 
 import traceback
-import webob
+
 from oslo.config import cfg
+import webob
 
 cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 

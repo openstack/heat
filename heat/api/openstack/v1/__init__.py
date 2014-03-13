@@ -14,15 +14,14 @@
 
 import routes
 
-from heat.api.openstack.v1 import stacks
-from heat.api.openstack.v1 import resources
-from heat.api.openstack.v1 import events
 from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
+from heat.api.openstack.v1 import events
+from heat.api.openstack.v1 import resources
 from heat.api.openstack.v1 import software_configs
 from heat.api.openstack.v1 import software_deployments
+from heat.api.openstack.v1 import stacks
 from heat.common import wsgi
-
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)

@@ -17,15 +17,14 @@ endpoint for heat AWS-compatible CloudWatch API
 """
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
-from heat.common import wsgi
-from heat.common import policy
 from heat.common import exception as heat_exception
-from heat.rpc import client as rpc_client
-from heat.rpc import api as engine_api
-
-import heat.openstack.common.rpc.common as rpc_common
-from heat.openstack.common import log as logging
+from heat.common import policy
+from heat.common import wsgi
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.openstack.common.rpc import common as rpc_common
+from heat.rpc import api as engine_api
+from heat.rpc import client as rpc_client
 
 logger = logging.getLogger(__name__)
 

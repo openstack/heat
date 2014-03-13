@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.api.cfn import versions
+from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.openstack.common import gettextutils
 
 gettextutils.install('heat')
-
-
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
-from heat.api.cfn import versions
 
 
 def version_negotiation_filter(app, conf, **local_conf):

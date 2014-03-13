@@ -16,12 +16,12 @@
 Helper utilities related to the AWS API implementations
 '''
 
-import re
 import itertools
-from heat.api.aws import exception
+import re
 
-from heat.openstack.common import log as logging
+from heat.api.aws import exception
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

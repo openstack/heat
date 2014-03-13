@@ -21,17 +21,16 @@ import socket
 
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
-from heat.common import wsgi
 from heat.common import exception as heat_exception
-from heat.rpc import client as rpc_client
-from heat.common import template_format
-from heat.rpc import api as engine_api
 from heat.common import identifier
-from heat.common import urlfetch
 from heat.common import policy
-
-from heat.openstack.common import log as logging
+from heat.common import template_format
+from heat.common import urlfetch
+from heat.common import wsgi
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.rpc import api as engine_api
+from heat.rpc import client as rpc_client
 
 logger = logging.getLogger(__name__)
 

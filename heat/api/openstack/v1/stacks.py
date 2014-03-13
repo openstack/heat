@@ -20,15 +20,14 @@ from webob import exc
 
 from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import stacks_view
-from heat.common import identifier
-from heat.common import wsgi
-from heat.common import template_format
 from heat.common import environment_format
+from heat.common import identifier
+from heat.common import template_format
+from heat.common import urlfetch
+from heat.common import wsgi
+from heat.openstack.common import log as logging
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
-from heat.common import urlfetch
-
-from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

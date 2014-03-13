@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.api.aws import exception
+from heat.common import identifier
 from heat.common import wsgi
 from heat.rpc import client as rpc_client
-from heat.common import identifier
-from heat.api.aws import exception
 
 
 class SignalController(object):

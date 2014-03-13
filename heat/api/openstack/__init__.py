@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.api.middleware.fault import FaultWrapper
 from heat.api.middleware.ssl import SSLMiddleware
+from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.api.openstack import versions
 
 
