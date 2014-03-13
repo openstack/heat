@@ -241,6 +241,52 @@ class NeutronNetworkGatewayTest(HeatTestCase):
             }
         })
 
+        neutronclient.Client.disconnect_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
+                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'segmentation_id': 10,
+                'segmentation_type': u'vlan'
+            }
+        ).AndReturn(None)
+
+        neutronclient.Client.delete_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
+        ).AndReturn(None)
+
+        neutronclient.Client.create_network_gateway({
+            'network_gateway': {
+                'name': u'NetworkGateway',
+                'devices': [{'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                             'interface_name': u'breth2'}]
+            }
+        }
+        ).AndReturn({
+            'network_gateway': {
+                'id': 'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
+                'name': 'NetworkGateway',
+                'default': False,
+                'tenant_id': '96ba52dc-c5c5-44c6-9a9d-d3ba1a03f77f',
+                'devices': [{
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth2'}]
+            }
+        }
+        )
+
+        neutronclient.Client.connect_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
+                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'segmentation_id': 10,
+                'segmentation_type': u'vlan'
+            }
+        ).AndReturn({
+            'connection_info': {
+                'network_gateway_id': u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
+                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'port_id': u'aa800972-f6be-4c65-8453-9ab31834bf80'
+            }
+        })
+
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -289,6 +335,28 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                                              prop_diff))
 
         # update connections once more
+        self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
+                                             prop_diff))
+
+        # update devices
+        snippet_for_update = {
+            'Type': u'OS::Neutron::NetworkGateway',
+            'Properties': {
+                'name': u'NetworkGateway',
+                'devices': [{
+                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': u'breth2'}],
+                'connections': [{
+                    'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'segmentation_type': u'vlan',
+                    'segmentation_id': 10}]
+            }
+        }
+        prop_diff = {
+            'devices': [{
+                'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                'interface_name': u'breth2'}]
+        }
         self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
                                              prop_diff))
 
