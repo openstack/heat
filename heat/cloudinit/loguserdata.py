@@ -12,15 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
 import datetime
+from distutils.version import LooseVersion
+import errno
 import logging
-import pkg_resources
 import os
+import pkg_resources
 import subprocess
 import sys
-
-from distutils.version import LooseVersion
 
 
 VAR_PATH = '/var/lib/heat-cfntools'

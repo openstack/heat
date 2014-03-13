@@ -14,13 +14,13 @@
 
 import uuid
 
-from heat.openstack.common import local
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
+from heat.db import api as db_api
 from heat.openstack.common import context
 from heat.openstack.common import importutils
-from heat.db import api as db_api
+from heat.openstack.common import local
 
 
 def generate_request_id():

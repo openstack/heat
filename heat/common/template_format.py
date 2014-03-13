@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import re
-import yaml
 import json
+import re
 
 from oslo.config import cfg
+import yaml
 
 from heat.common import exception
 from heat.openstack.common.gettextutils import _

@@ -17,8 +17,8 @@ Startup notification using a shell script or systemd NOTIFY_SOCKET
 style notification
 """
 
-from heat.openstack.common import log as logging
 from heat.openstack.common import importutils
+from heat.openstack.common import log as logging
 from heat.openstack.common import processutils
 
 logger = logging.getLogger(__name__)

@@ -16,16 +16,15 @@
 Utility for fetching a resource (e.g. a template) from a URL.
 '''
 
+from oslo.config import cfg
 import requests
 from requests import exceptions
 
-from oslo.config import cfg
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.openstack.common.py3kcompat import urlutils
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
-
-from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
-from heat.openstack.common.py3kcompat import urlutils
 
 logger = logging.getLogger(__name__)
 
