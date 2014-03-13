@@ -91,7 +91,10 @@ neutron_template = '''
       }
     },
     "router": {
-      "Type": "OS::Neutron::Router"
+      "Type": "OS::Neutron::Router",
+      "Properties": {
+        "agent_id": "792ff887-6c85-4a56-b518-23f24fa65581"
+      }
     },
     "router_interface": {
       "Type": "OS::Neutron::RouterInterface",
@@ -140,36 +143,6 @@ neutron_dhcp_agent_template = '''
       "Properties": {
         "network_id": "66a426ef-8b77-4e25-8098-b3a7c0964b93",
         "dhcp_agent_id": "9f0df05b-4846-4d3d-971e-a2e1a06b1622"
-      }
-    }
-  }
-}
-'''
-
-neutron_l3_agent_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test Neutron resources",
-  "Resources" : {
-    "router_l3_agent": {
-      "Type": "OS::Neutron::RouterL3Agent",
-      "Properties": {
-        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
-        "l3_agent_id": "5dab1619-9bb0-4e6f-9725-c5e2bfdec434"
-      }
-    },
-    "router_interface": {
-      "Type": "OS::Neutron::RouterInterface",
-      "Properties": {
-        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
-        "subnet_id": "10c69b87-6322-4e5f-9616-fb18ad6547b4"
-      }
-    },
-    "router_gateway": {
-      "Type": "OS::Neutron::RouterGateway",
-      "Properties": {
-        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
-        "network_id": "b3ae63e2-a17b-4a1e-823b-5a082c562725"
       }
     }
   }
@@ -1033,6 +1006,8 @@ class NeutronRouterTest(HeatTestCase):
                                'add_router_to_l3_agent')
         self.m.StubOutWithMock(neutronclient.Client,
                                'remove_router_from_l3_agent')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'list_l3_agent_hosting_routers')
         self.m.StubOutWithMock(router.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
@@ -1082,6 +1057,13 @@ class NeutronRouterTest(HeatTestCase):
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
             }
         })
+        neutronclient.Client.list_l3_agent_hosting_routers(
+            u'3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({"agents": []})
+        neutronclient.Client.add_router_to_l3_agent(
+            u'792ff887-6c85-4a56-b518-23f24fa65581',
+            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
+        ).AndReturn(None)
         neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
@@ -1135,6 +1117,41 @@ class NeutronRouterTest(HeatTestCase):
             })
 
         # Update script
+        neutronclient.Client.list_l3_agent_hosting_routers(
+            u'3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({
+            "agents": [{
+                "admin_state_up": True,
+                "agent_type": "L3 agent",
+                "alive": True,
+                "binary": "neutron-l3-agent",
+                "configurations": {
+                    "ex_gw_ports": 1,
+                    "floating_ips": 0,
+                    "gateway_external_network_id": "",
+                    "handle_internal_only_routers": True,
+                    "interface_driver": "DummyDriver",
+                    "interfaces": 1,
+                    "router_id": "",
+                    "routers": 1,
+                    "use_namespaces": True},
+                "created_at": "2014-03-11 05:00:05",
+                "description": None,
+                "heartbeat_timestamp": "2014-03-11 05:01:49",
+                "host": "l3_agent_host",
+                "id": "792ff887-6c85-4a56-b518-23f24fa65581",
+                "started_at": "2014-03-11 05:00:05",
+                "topic": "l3_agent"
+            }]
+        })
+        neutronclient.Client.remove_router_from_l3_agent(
+            u'792ff887-6c85-4a56-b518-23f24fa65581',
+            u'3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn(None)
+        neutronclient.Client.add_router_to_l3_agent(
+            u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
+        ).AndReturn(None)
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'router': {
@@ -1173,10 +1190,16 @@ class NeutronRouterTest(HeatTestCase):
             "Type": "OS::Neutron::Router",
             "Properties": {
                 "admin_state_up": False,
-                "name": "myrouter"
+                "name": "myrouter",
+                "agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
             }
         }
-        rsrc.handle_update(update_snippet, {}, {})
+        prop_diff = {
+            "admin_state_up": False,
+            "name": "myrouter",
+            "agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
+        }
+        rsrc.handle_update(update_snippet, {}, prop_diff)
 
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
@@ -1342,103 +1365,6 @@ class NeutronRouterTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
-
-    def test_router_l3_agent(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
-        neutronclient.Client.add_router_to_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
-        ).AndReturn(None)
-
-        neutronclient.Client.remove_router_from_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
-        ).AndReturn(None)
-
-        neutronclient.Client.remove_router_from_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_l3_agent_template)
-        stack = utils.parse_stack(t)
-        rsrc = router.RouterL3Agent('test_router_l3_agent',
-                                    t['Resources']['router_l3_agent'], stack)
-
-        # assert the implicit dependency between the l3_agent and the
-        # interface, and the l3_agent and the gateway
-        deps = stack.dependencies[stack['router_l3_agent']]
-        self.assertIn(stack['router_gateway'], deps)
-        self.assertIn(stack['router_interface'], deps)
-
-        # assert the implicit dependency between the router and the interface
-        deps = stack.dependencies[stack['router_interface']]
-        self.assertIn(stack['router_gateway'], deps)
-
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
-        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
-
-        self.m.VerifyAll()
-
-    def test_router_l3_agent_create_failed(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
-        neutronclient.Client.add_router_to_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
-        ).AndRaise(qe.NeutronClientException(status_code=500))
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_l3_agent_template)
-        stack = utils.parse_stack(t)
-        rsrc = router.RouterL3Agent('test_router_l3_agent',
-                                    t['Resources']['router_l3_agent'], stack)
-        error = self.assertRaises(exception.ResourceFailure,
-                                  scheduler.TaskRunner(rsrc.create))
-        self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
-            str(error))
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
-
-        self.m.VerifyAll()
-
-    def test_router_l3_agent_delete_failed(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
-        neutronclient.Client.add_router_to_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
-        ).AndReturn(None)
-
-        neutronclient.Client.remove_router_from_l3_agent(
-            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
-            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
-        ).AndRaise(qe.NeutronClientException(status_code=500))
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_l3_agent_template)
-        stack = utils.parse_stack(t)
-        rsrc = router.RouterL3Agent('test_router_l3_agent',
-                                    t['Resources']['router_l3_agent'], stack)
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        error = self.assertRaises(exception.ResourceFailure,
-                                  scheduler.TaskRunner(rsrc.delete))
-        self.assertEqual(
-            'NeutronClientException: An unknown exception occurred.',
-            str(error))
-        self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
-
         self.m.VerifyAll()
 
     def _create_router_with_gateway(self):
