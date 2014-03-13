@@ -1791,6 +1791,7 @@ class StackServiceTest(HeatTestCase):
         resources = self.eng.list_resource_types(self.ctx)
         self.assertIsInstance(resources, list)
         self.assertIn('AWS::EC2::Instance', resources)
+        self.assertIn('AWS::RDS::DBInstance', resources)
 
     def test_list_resource_types_deprecated(self):
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
