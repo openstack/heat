@@ -16,6 +16,7 @@ import mock
 from heat.engine import clients
 from heat.tests.common import HeatTestCase
 from heatclient import client as heatclient
+from keystoneclient import exceptions as keystone_exceptions
 
 
 class ClientsTest(HeatTestCase):
@@ -56,3 +57,32 @@ class ClientsTest(HeatTestCase):
         obj._heat = None
         obj.heat()
         self.assertEqual('url_from_config', mock_call.call_args[0][1])
+
+    @mock.patch.object(heatclient, 'Client')
+    def test_clients_heat_no_auth_token(self, mock_call):
+        con = mock.Mock()
+        con.auth_url = "http://auth.example.com:5000/v2.0"
+        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.auth_token = None
+        obj = clients.Clients(con)
+        obj._get_heat_url = mock.Mock(name="_get_heat_url")
+        obj._get_heat_url.return_value = None
+        obj.url_for = mock.Mock(name="url_for")
+        obj.url_for.return_value = "url_from_keystone"
+        self.assertRaises(keystone_exceptions.AuthorizationFailure, obj.heat)
+
+    @mock.patch.object(heatclient, 'Client')
+    def test_clients_heat_cached(self, mock_call):
+        con = mock.Mock()
+        con.auth_url = "http://auth.example.com:5000/v2.0"
+        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
+        obj = clients.Clients(con)
+        obj._get_heat_url = mock.Mock(name="_get_heat_url")
+        obj._get_heat_url.return_value = None
+        obj.url_for = mock.Mock(name="url_for")
+        obj.url_for.return_value = "url_from_keystone"
+        obj._heat = None
+        heat = obj.heat()
+        heat_cached = obj.heat()
+        self.assertEqual(heat, heat_cached)
