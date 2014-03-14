@@ -276,6 +276,7 @@ class Pool(neutron.NeutronResource):
         MONITORS: properties.Schema(
             properties.Schema.LIST,
             _('List of health monitors associated with the pool.'),
+            default=[],
             update_allowed=True
         ),
     }
@@ -319,7 +320,7 @@ class Pool(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
         vip_properties = properties.pop(self.VIP)
-        monitors = properties.pop(self.MONITORS, [])
+        monitors = properties.pop(self.MONITORS)
         client = self.neutron()
         pool = client.create_pool({'pool': properties})['pool']
         self.resource_id_set(pool['id'])
@@ -383,7 +384,7 @@ class Pool(neutron.NeutronResource):
             client = self.neutron()
             monitors = set(prop_diff.pop(self.MONITORS, []))
             if monitors:
-                old_monitors = set(self.t['Properties'][self.MONITORS])
+                old_monitors = set(self.properties[self.MONITORS])
                 for monitor in old_monitors - monitors:
                     client.disassociate_health_monitor(self.resource_id,
                                                        monitor)
