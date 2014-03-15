@@ -163,17 +163,21 @@ class Template(collections.Mapping):
         return self._functionmaps[self.version]
 
     def parse(self, stack, snippet):
-        parse = functools.partial(self.parse, stack)
+        return parse(self.functions(), stack, snippet)
 
-        if isinstance(snippet, collections.Mapping):
-            if len(snippet) == 1:
-                fn_name, args = next(snippet.iteritems())
-                Func = self.functions().get(fn_name)
-                if Func is not None:
-                    return Func(stack, fn_name, parse(args))
-            return dict((k, parse(v)) for k, v in snippet.iteritems())
-        elif (not isinstance(snippet, basestring) and
-              isinstance(snippet, collections.Iterable)):
-            return [parse(v) for v in snippet]
-        else:
-            return snippet
+
+def parse(functions, stack, snippet):
+    recurse = functools.partial(parse, functions, stack)
+
+    if isinstance(snippet, collections.Mapping):
+        if len(snippet) == 1:
+            fn_name, args = next(snippet.iteritems())
+            Func = functions.get(fn_name)
+            if Func is not None:
+                return Func(stack, fn_name, recurse(args))
+        return dict((k, recurse(v)) for k, v in snippet.iteritems())
+    elif (not isinstance(snippet, basestring) and
+          isinstance(snippet, collections.Iterable)):
+        return [recurse(v) for v in snippet]
+    else:
+        return snippet
