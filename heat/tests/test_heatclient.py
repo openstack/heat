@@ -91,7 +91,7 @@ class KeystoneClientTest(HeatTestCase):
 
         if method == 'token':
             kc_v3.Client(
-                token='abcd1234', project_name='test_tenant',
+                token='abcd1234', project_id='test_tenant_id',
                 auth_url='http://server.test:5000/v3',
                 endpoint='http://server.test:5000/v3',
                 cacert=None,
@@ -102,7 +102,6 @@ class KeystoneClientTest(HeatTestCase):
             kc_v3.Client(
                 username='test_username',
                 password='password',
-                project_name='test_tenant',
                 project_id='test_tenant_id',
                 auth_url='http://server.test:5000/v3',
                 endpoint='http://server.test:5000/v3',
