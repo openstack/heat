@@ -63,6 +63,8 @@ class StructuredDeployment(sd.SoftwareDeployment):
             sd.SoftwareDeployment.DEPLOY_ACTIONS],
         sd.SoftwareDeployment.SIGNAL_TRANSPORT: _sd_ps[
             sd.SoftwareDeployment.SIGNAL_TRANSPORT],
+        sd.SoftwareDeployment.NAME: _sd_ps[
+            sd.SoftwareDeployment.NAME],
         INPUT_KEY: properties.Schema(
             properties.Schema.STRING,
             _('Name of key to use for substituting inputs during deployment'),
