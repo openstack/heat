@@ -302,6 +302,16 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
         scale_up.signal()
         self.assertEqual(2, len(group.get_instances()))
 
+    def test_no_instance_list(self):
+        """
+        The InstanceList attribute is not inherited from
+        AutoScalingResourceGroup's superclasses.
+        """
+        stack = self.create_stack(self.parsed)
+        group = stack['my-group']
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          group.FnGetAtt, 'InstanceList')
+
 
 class ScalingPolicyTest(HeatTestCase):
 

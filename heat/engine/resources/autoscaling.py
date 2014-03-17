@@ -862,6 +862,10 @@ class AutoScalingResourceGroup(AutoScalingGroup):
 
     update_allowed_keys = ('Properties',)
 
+    # Override the InstanceGroup attributes_schema; we don't want any
+    # attributes.
+    attributes_schema = {}
+
     def _get_instance_definition(self):
         resource_definition = self.properties[self.RESOURCE]
         # resolve references within the context of this stack.
