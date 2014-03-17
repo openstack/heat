@@ -23,9 +23,6 @@ from heat.openstack.common.gettextutils import _
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
-HEAT_VERSIONS = (u'2012-12-12',)
-CFN_VERSIONS = (u'2010-09-09',)
-
 if hasattr(yaml, 'CSafeLoader'):
     yaml_loader = yaml.CSafeLoader
 else:
