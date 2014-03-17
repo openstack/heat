@@ -401,7 +401,7 @@ to the syntax below.
       metadata:
         <resource specific metadata>
       depends_on: <resource ID or list of ID>
-      update_poliy: <update policy>
+      update_policy: <update policy>
       deletion_policy: <deletion policy>
 
 resource ID
