@@ -15,6 +15,8 @@
 import random
 import string
 
+from six.moves import xrange
+
 from heat.db import api as db_api
 from heat.engine import constraints
 from heat.engine import properties

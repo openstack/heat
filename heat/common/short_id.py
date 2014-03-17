@@ -19,6 +19,8 @@ each comprise 12 (lower-case) alphanumeric characters.
 import base64
 import uuid
 
+from six.moves import xrange
+
 
 def _to_byte_string(value, num_bits):
     '''
