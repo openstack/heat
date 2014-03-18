@@ -28,6 +28,7 @@ import glob
 import os
 import re
 import sys
+import tempfile
 
 from oslo.config import cfg
 
@@ -35,6 +36,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
 CONTRIB_DIR = os.path.join(ROOT, 'contrib')
 PLUGIN_DIRS = glob.glob(os.path.join(CONTRIB_DIR, '*'))
+ENV_DIR = os.path.join(ROOT, "etc", "heat", "environment.d")
+TEMP_ENV_DIR = tempfile.mkdtemp()
+
+for f in glob.glob(os.path.join(ENV_DIR, "*.yaml")):
+    with open(f, "r") as fin:
+        name = os.path.split(f)[-1]
+        with open(os.path.join(TEMP_ENV_DIR, name), "w") as fout:
+            fout.write(fin.read().replace("file:///", "file://%s/" % ROOT))
 
 sys.path.insert(0, ROOT)
 sys.path.insert(0, BASE_DIR)
@@ -42,6 +51,9 @@ sys.path = PLUGIN_DIRS + sys.path
 
 cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
 cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
+
+cfg.CONF.import_opt('environment_dir', 'heat.common.config')
+cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR)
 
 # This is required for ReadTheDocs.org, but isn't a bad idea anyway.
 os.environ['DJANGO_SETTINGS_MODULE'] = 'openstack_dashboard.settings'
