@@ -61,6 +61,7 @@ class NetworkGateway(neutron.NeutronResource):
             description=_('Device info for this network gateway.'),
             required=True,
             constraints=[constraints.Length(min=1)],
+            update_allowed=True,
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
@@ -188,6 +189,14 @@ class NetworkGateway(neutron.NeutronResource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
         connections = props.pop(self.CONNECTIONS)
+
+        if self.DEVICES in prop_diff:
+            self.handle_delete()
+            self.properties.data.update(props)
+            self.handle_create()
+            return
+        else:
+            props.pop(self.DEVICES, None)
 
         if self.NAME in prop_diff:
             self.neutron().update_network_gateway(
