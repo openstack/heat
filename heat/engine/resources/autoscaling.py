@@ -251,12 +251,7 @@ class InstanceGroup(stack_resource.StackResource):
                                          self.context)
 
             # Replace instances first if launch configuration has changed
-            if (self.update_policy[self.ROLLING_UPDATE] and
-                    self.LAUNCH_CONFIGURATION_NAME in prop_diff):
-                policy = self.update_policy[self.ROLLING_UPDATE]
-                self._replace(policy[self.MIN_INSTANCES_IN_SERVICE],
-                              policy[self.MAX_BATCH_SIZE],
-                              policy[self.PAUSE_TIME])
+            self._try_rolling_update(prop_diff)
 
             # Get the current capacity, we may need to adjust if
             # Size has changed
@@ -310,16 +305,28 @@ class InstanceGroup(stack_resource.StackResource):
             old_resources, instance_definition, num_instances, num_replace)
         return {"Resources": dict(templates)}
 
-    def _replace(self, min_in_service, batch_size, pause_time):
+    def _try_rolling_update(self, prop_diff):
+        if (self.update_policy[self.ROLLING_UPDATE] and
+                self.LAUNCH_CONFIGURATION_NAME in prop_diff):
+            policy = self.update_policy[self.ROLLING_UPDATE]
+            pause_sec = iso8601utils.parse_isoduration(policy[self.PAUSE_TIME])
+            self._replace(policy[self.MIN_INSTANCES_IN_SERVICE],
+                          policy[self.MAX_BATCH_SIZE],
+                          pause_sec)
+
+    def _replace(self, min_in_service, batch_size, pause_sec):
         """
         Replace the instances in the group using updated launch configuration
         """
         def changing_instances(tmpl):
             instances = self.get_instances()
+            # To support both HOT and CFN, need to find out what the name of
+            # the resources key is.
+            resources_key = self.nested().t.RESOURCES
             serialize_template = functools.partial(json.dumps, sort_keys=True)
             current = set((i.name, serialize_template(i.t)) for i in instances)
             updated = set((k, serialize_template(v))
-                          for k, v in tmpl['Resources'].items())
+                          for k, v in tmpl[resources_key].items())
             # includes instances to be updated and deleted
             affected = set(k for k, v in current ^ updated)
             return set(i.FnGetRefId() for i in instances if i.name in affected)
@@ -334,7 +341,6 @@ class InstanceGroup(stack_resource.StackResource):
         capacity = len(self.nested()) if self.nested() else 0
         efft_bat_sz = min(batch_size, capacity)
         efft_min_sz = min(min_in_service, capacity)
-        pause_sec = iso8601utils.parse_isoduration(pause_time)
 
         batch_cnt = (capacity + efft_bat_sz - 1) // efft_bat_sz
         if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
@@ -586,12 +592,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                          self.context)
 
             # Replace instances first if launch configuration has changed
-            if (self.update_policy[self.ROLLING_UPDATE] and
-                    self.LAUNCH_CONFIGURATION_NAME in prop_diff):
-                policy = self.update_policy[self.ROLLING_UPDATE]
-                self._replace(policy[self.MIN_INSTANCES_IN_SERVICE],
-                              policy[self.MAX_BATCH_SIZE],
-                              policy[self.PAUSE_TIME])
+            self._try_rolling_update(prop_diff)
 
             # Get the current capacity, we may need to adjust if
             # MinSize or MaxSize has changed
@@ -820,9 +821,17 @@ class AutoScalingResourceGroup(AutoScalingGroup):
     """An autoscaling group that can scale arbitrary resources."""
 
     PROPERTIES = (
-        RESOURCE, MAX_SIZE, MIN_SIZE, COOLDOWN, DESIRED_CAPACITY
+        RESOURCE, MAX_SIZE, MIN_SIZE, COOLDOWN, DESIRED_CAPACITY,
+        ROLLING_UPDATES,
     ) = (
-        'resource', 'max_size', 'min_size', 'cooldown', 'desired_capacity'
+        'resource', 'max_size', 'min_size', 'cooldown', 'desired_capacity',
+        'rolling_updates',
+    )
+
+    _ROLLING_UPDATES_SCHEMA = (
+        MIN_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME,
+    ) = (
+        'min_in_service', 'max_batch_size', 'pause_time',
     )
 
     properties_schema = {
@@ -832,7 +841,8 @@ class AutoScalingResourceGroup(AutoScalingGroup):
               'format. The value of this property is the definition of a '
               'resource just as if it had been declared in the template '
               'itself.'),
-            required=True
+            required=True,
+            update_allowed=True,
         ),
         MAX_SIZE: properties.Schema(
             properties.Schema.INTEGER,
@@ -858,6 +868,31 @@ class AutoScalingResourceGroup(AutoScalingGroup):
             _('Desired initial number of resources.'),
             update_allowed=True
         ),
+        ROLLING_UPDATES: properties.Schema(
+            properties.Schema.MAP,
+            _('Policy for rolling updates for this scaling group.'),
+            required=False,
+            update_allowed=True,
+            schema={
+                MIN_IN_SERVICE: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The minimum number of resources in service while '
+                      'rolling updates are being executed.'),
+                    constraints=[constraints.Range(min=0)],
+                    default=0),
+                MAX_BATCH_SIZE: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The maximum number of resources to replace at once.'),
+                    constraints=[constraints.Range(min=0)],
+                    default=1),
+                PAUSE_TIME: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The number of seconds to wait between batches of '
+                      'updates.'),
+                    constraints=[constraints.Range(min=0)],
+                    default=0),
+            },
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -876,6 +911,14 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         connections, so we just ignore calls to update the LB.
         """
         pass
+
+    def _try_rolling_update(self, prop_diff):
+        if (self.properties[self.ROLLING_UPDATES] and
+                self.RESOURCE in prop_diff):
+            policy = self.properties[self.ROLLING_UPDATES]
+            self._replace(policy[self.MIN_IN_SERVICE],
+                          policy[self.MAX_BATCH_SIZE],
+                          policy[self.PAUSE_TIME])
 
     def _get_instance_templates(self):
         """
