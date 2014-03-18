@@ -198,7 +198,7 @@ class ResourceRegistry(object):
                 LOG.warn(_('Removing %(item)s from %(path)s') % {
                     'item': name,
                     'path': descriptive_path})
-                del registry[name]
+                registry.pop(name, None)
             return
 
         if name in registry and isinstance(registry[name], ResourceInfo):
