@@ -145,6 +145,8 @@ class ResourceGroup(stack_resource.StackResource):
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)
         resource_def = self.properties[self.RESOURCE_DEF]
+        if resource_def[self.RESOURCE_DEF_PROPERTIES] is None:
+            resource_def[self.RESOURCE_DEF_PROPERTIES] = {}
         if not include_all:
             resource_def_props = resource_def[self.RESOURCE_DEF_PROPERTIES]
             clean = dict((k, v) for k, v in resource_def_props.items() if v)

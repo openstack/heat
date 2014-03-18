@@ -134,6 +134,14 @@ class ResourceGroupTest(common.HeatTestCase):
         expect['resources']["0"]['properties'] = {"Foo": None}
         self.assertEqual(expect, resg._assemble_nested(1, include_all=True))
 
+    def test_assemble_no_properties(self):
+        templ = copy.deepcopy(template)
+        res_def = templ["resources"]["group1"]["properties"]['resource_def']
+        del res_def['properties']
+        stack = utils.parse_stack(templ)
+        resg = stack.resources['group1']
+        self.assertIsNone(resg.validate())
+
     def test_invalid_res_type(self):
         """Test that error raised for unknown resource type."""
         tmp = copy.deepcopy(template)
