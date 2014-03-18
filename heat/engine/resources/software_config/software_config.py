@@ -92,8 +92,7 @@ class SoftwareConfig(resource.Resource):
             _('Namespace to group this software config by when delivered to '
               'a server. This may imply what configuration tool is going to '
               'perform the configuration.'),
-            default='Heat::Ungrouped',
-            required=True
+            default='Heat::Ungrouped'
         ),
         CONFIG: properties.Schema(
             properties.Schema.STRING,
