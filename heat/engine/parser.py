@@ -61,7 +61,7 @@ class Stack(collections.Mapping):
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
-                 user_creds_id=None):
+                 user_creds_id=None, tenant_id=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -95,6 +95,10 @@ class Stack(collections.Mapping):
         self.created_time = created_time
         self.updated_time = updated_time
         self.user_creds_id = user_creds_id
+
+        # This will use the provided tenant ID when loading the stack
+        # from the DB or get it from the context for new stacks.
+        self.tenant_id = tenant_id or self.context.tenant_id
 
         resources.initialise()
 
@@ -190,7 +194,7 @@ class Stack(collections.Mapping):
                     stack_user_project_id=stack.stack_user_project_id,
                     created_time=stack.created_at,
                     updated_time=stack.updated_at,
-                    user_creds_id=stack.user_creds_id)
+                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant)
 
         return stack
 
@@ -205,7 +209,7 @@ class Stack(collections.Mapping):
             'parameters': self.env.user_env_as_dict(),
             'owner_id': self.owner_id,
             'username': self.context.username,
-            'tenant': self.context.tenant_id,
+            'tenant': self.tenant_id,
             'action': self.action,
             'status': self.status,
             'status_reason': self.status_reason,
@@ -243,8 +247,7 @@ class Stack(collections.Mapping):
         '''
         Return an identifier for this stack.
         '''
-        return identifier.HeatIdentifier(self.context.tenant_id,
-                                         self.name, self.id)
+        return identifier.HeatIdentifier(self.tenant_id, self.name, self.id)
 
     def __iter__(self):
         '''

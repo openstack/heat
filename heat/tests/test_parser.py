@@ -739,6 +739,17 @@ class StackTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+    def test_stack_reads_tenant(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             tenant_id='bar')
+        self.assertEqual('bar', stack.tenant_id)
+
+    def test_stack_reads_tenant_from_context_if_empty(self):
+        self.ctx.tenant_id = 'foo'
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             tenant_id=None)
+        self.assertEqual('foo', stack.tenant_id)
+
     def test_stack_string_repr(self):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         expected = 'Stack "%s" [%s]' % (stack.name, stack.id)
@@ -888,7 +899,8 @@ class StackTest(HeatTestCase):
                               stack_user_project_id=None,
                               created_time=IgnoreArg(),
                               updated_time=None,
-                              user_creds_id=stack.user_creds_id)
+                              user_creds_id=stack.user_creds_id,
+                              tenant_id='test_tenant_id')
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -904,7 +916,7 @@ class StackTest(HeatTestCase):
                                   parser.Template({}))
         self.stack.store()
         identifier = self.stack.identifier()
-        self.assertEqual(self.ctx.tenant_id, identifier.tenant)
+        self.assertEqual(self.stack.tenant_id, identifier.tenant)
         self.assertEqual('identifier_test', identifier.stack_name)
         self.assertTrue(identifier.stack_id)
         self.assertFalse(identifier.path)
@@ -1004,6 +1016,16 @@ class StackTest(HeatTestCase):
 
         newstack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
         self.assertEqual(identifier.arn(), newstack.parameters['AWS::StackId'])
+
+    @utils.stack_delete_after
+    def test_load_reads_tenant_id(self):
+        self.ctx.tenant_id = 'foobar'
+        self.stack = parser.Stack(self.ctx, 'stack_name', parser.Template({}))
+        self.stack.store()
+        stack_id = self.stack.id
+        self.ctx.tenant_id = None
+        stack = parser.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertEqual('foobar', stack.tenant_id)
 
     @utils.stack_delete_after
     def test_created_time(self):
