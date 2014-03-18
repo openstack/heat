@@ -125,14 +125,14 @@ class ThreadGroupManager(object):
         :param kwargs: Keyword-args to be passed to func
 
         """
-        def release(gt, *args, **kwargs):
+        def release(gt, *args):
             """
             Callback function that will be passed to GreenThread.link().
             """
             lock.release(*args)
 
         try:
-            th = self.start(stack.id, func, *args)
+            th = self.start(stack.id, func, *args, **kwargs)
             th.link(release, stack.id)
         except:
             with excutils.save_and_reraise_exception():

@@ -46,6 +46,7 @@ from heat.engine.resources import nova_utils
 from heat.engine import resource as rsrs
 from heat.engine import stack_lock
 from heat.engine import watchrule
+from heat.openstack.common.fixture import mockpatch
 from heat.openstack.common import threadgroup
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
@@ -2735,3 +2736,39 @@ class SoftwareConfigServiceTest(HeatTestCase):
             self.ctx, server_id=None)
         deployment_ids = [x['id'] for x in deployments]
         self.assertNotIn(deployment_id, deployment_ids)
+
+
+class ThreadGroupManagerTest(HeatTestCase):
+    def setUp(self):
+        super(ThreadGroupManagerTest, self).setUp()
+        self.f = 'function'
+        self.fargs = ('spam', 'ham', 'eggs')
+        self.fkwargs = {'foo': 'bar'}
+        self.stack = mock.Mock()
+        self.lock_mock = mock.Mock()
+        self.stlock_mock = self.useFixture(
+            mockpatch.Patch('heat.engine.service.stack_lock')).mock
+        self.stlock_mock.StackLock.return_value = self.lock_mock
+
+    def test_tgm_start_with_acquired_lock(self):
+        thm = service.ThreadGroupManager()
+        with self.patchobject(thm, 'start'):
+            thm.start_with_acquired_lock(self.stack, self.lock_mock,
+                                         self.f, *self.fargs,
+                                         **self.fkwargs)
+            thm.start.assert_called_with(self.stack.id, self.f,
+                                         *self.fargs, **self.fkwargs)
+            self.assertEqual(self.stack.id,
+                             thm.start().link.call_args[0][1])
+
+            self.assertFalse(self.lock_mock.release.called)
+
+    def test_tgm_start_with_acquired_lock_fail(self):
+        thm = service.ThreadGroupManager()
+        with self.patchobject(thm, 'start'):
+            with mock.patch('heat.engine.service.excutils'):
+                thm.start.side_effect = Exception
+                thm.start_with_acquired_lock(self.stack, self.lock_mock,
+                                             self.f, *self.fargs,
+                                             **self.fkwargs)
+                self.lock_mock.release.assert_called_with(self.stack.id)
