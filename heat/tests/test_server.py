@@ -1845,6 +1845,22 @@ class ServersTest(HeatTestCase):
                          "file size (10240 bytes).", str(exc))
         self.m.VerifyAll()
 
+    def test_resolve_attribute_server_not_found(self):
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'srv_resolve_attr')
+
+        server.resource_id = 1234
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndRaise(servers.clients.novaclient.exceptions.NotFound(404))
+        mox.Replay(get)
+        self.m.ReplayAll()
+
+        self.assertEqual(server._resolve_attribute("accessIPv4"), '')
+
+        self.m.VerifyAll()
+
 
 class FlavorConstraintTest(HeatTestCase):
 

@@ -606,7 +606,12 @@ class Server(stack_user.StackUser):
         if name == 'first_address':
             return nova_utils.server_to_ipaddress(
                 self.nova(), self.resource_id) or ''
-        server = self.nova().servers.get(self.resource_id)
+        try:
+            server = self.nova().servers.get(self.resource_id)
+        except clients.novaclient.exceptions.NotFound as ex:
+            logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
+                        'server': self.resource_id, 'ex': str(ex)})
+            return ''
         if name == 'addresses':
             return server.addresses
         if name == 'networks':
