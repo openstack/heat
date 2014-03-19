@@ -30,6 +30,14 @@ DEFAULT_INPUT_KEY = 'get_input'
 
 
 class StructuredConfig(sc.SoftwareConfig):
+    '''
+    This resource is like OS::Heat::SoftwareConfig except that the config
+    property is represented by a Map rather than a String.
+
+    This is useful for configuration tools which use YAML or JSON as their
+    configuration syntax. The resulting configuration is transferred,
+    stored and returned by the software_configs API as parsed JSON.
+    '''
 
     properties_schema = {
         sc.SoftwareConfig.GROUP: sc.SoftwareConfig.properties_schema[
@@ -49,6 +57,20 @@ class StructuredConfig(sc.SoftwareConfig):
 
 
 class StructuredDeployment(sd.SoftwareDeployment):
+    '''
+    A deployment resource like OS::Heat::SoftwareDeployment, but which
+    performs input value substitution on the config defined by a
+    OS::Heat::StructuredConfig resource.
+
+    Some configuration tools have no concept of inputs, so the input value
+    substitution needs to occur in the deployment resource. An example of this
+    is the JSON metadata consumed by the cfn-init tool.
+
+    Where the config contains {get_input: input_name} this will be substituted
+    with the value of input_name in this resource's input_values. If get_input
+    needs to be passed through to the substituted configuration then a
+    different input_key property value can be specified.
+    '''
 
     _sd_ps = sd.SoftwareDeployment.properties_schema
 

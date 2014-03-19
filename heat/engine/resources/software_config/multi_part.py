@@ -27,9 +27,20 @@ from heat.openstack.common.gettextutils import _
 class MultipartMime(software_config.SoftwareConfig):
     '''
     A resource which assembles a collection of software configurations
-    as a multi-part mime message. Any configuration which is itself a
-    multi-part message will be broken into parts and those parts appended
-    to this message.
+    as a multi-part mime message.
+
+    Parts in the message can be populated with inline configuration or
+    references to other config resources. If the referenced resource is itself
+    a valid multi-part mime message, that will be broken into parts and
+    those parts appended to this message.
+
+    The resulting multi-part mime message will be stored by the configs API
+    and can be referenced in properties such as OS::Nova::Server user_data.
+
+    This resource is generally used to build a list of cloud-init
+    configuration elements including scripts and cloud-config. Since
+    cloud-init is boot-only configuration, any changes to the definition
+    will result in the replacement of all servers which reference it.
     '''
 
     PROPERTIES = (

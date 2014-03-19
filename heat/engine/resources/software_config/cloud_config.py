@@ -19,6 +19,19 @@ from heat.engine.resources.software_config import software_config
 
 
 class CloudConfig(software_config.SoftwareConfig):
+    '''
+    A configuration resource for representing cloud-init cloud-config.
+
+    This resource allows cloud-config YAML to be defined and stored by the
+    config API. Any intrinsic functions called in the config will be resolved
+    before storing the result.
+
+    This resource will generally be referenced by OS::Nova::Server user_data,
+    or OS::Heat::MultipartMime parts config. Since cloud-config is boot-only
+    configuration, any changes to the definition will result in the
+    replacement of all servers which reference it.
+    '''
+
     PROPERTIES = (
         CLOUD_CONFIG
     ) = (
