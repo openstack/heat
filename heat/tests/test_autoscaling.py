@@ -1578,14 +1578,15 @@ class AutoScalingTest(HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    def test_invalid_vpc_zone_identifier(self):
+    def test_toomany_vpc_zone_identifier(self):
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['VPCZoneIdentifier'] = ['xxxx', 'yyyy']
 
         stack = utils.parse_stack(t, params=self.params)
 
-        self.assertRaises(exception.NotSupported, self.create_scaling_group, t,
+        self.assertRaises(exception.NotSupported,
+                          self.create_scaling_group, t,
                           stack, 'WebServerGroup')
 
     def test_invalid_min_size(self):

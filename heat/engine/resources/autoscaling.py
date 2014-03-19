@@ -509,7 +509,15 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         ),
         VPCZONE_IDENTIFIER: properties.Schema(
             properties.Schema.LIST,
-            _('List of VPC subnet identifiers.')
+            _('Use only with Neutron, to list the internal subnet to '
+              'which the instance will be attached; '
+              'needed only if multiple exist; '
+              'list length must be exactly 1.'),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                _('UUID of the internal subnet to which the instance '
+                  'will be attached.')
+            )
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
