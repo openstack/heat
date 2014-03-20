@@ -79,13 +79,21 @@ def get_template_class(plugin_mgr, template_data):
 
     available_versions = _template_classes.keys()
     version = get_version(template_data, available_versions)
+    version_type = version[0]
     try:
         return _template_classes[version]
     except KeyError:
+        av_list = [v for k, v in available_versions if k == version_type]
         msg_data = {'version': ': '.join(version),
-                    'available': ', '.join(v for vk, v in available_versions)}
-        explanation = _('Unknown version (%(version)s). '
-                        'Should be one of: %(available)s') % msg_data
+                    'version_type': version_type,
+                    'available': ', '.join(v for v in av_list)}
+
+        if len(av_list) > 1:
+            explanation = _('"%(version)s". "%(version_type)s" '
+                            'should be one of: %(available)s') % msg_data
+        else:
+            explanation = _('"%(version)s". "%(version_type)s" '
+                            'should be: %(available)s') % msg_data
         raise exception.InvalidTemplateVersion(explanation=explanation)
 
 
