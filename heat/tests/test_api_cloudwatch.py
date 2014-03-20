@@ -15,11 +15,11 @@ import os
 
 from oslo.config import cfg
 
-from heat.common import policy
-from heat.openstack.common import rpc
-from heat.common.wsgi import Request
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
+from heat.common import policy
+from heat.common.wsgi import Request
+from heat.openstack.common import rpc
 from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase
 from heat.tests import utils

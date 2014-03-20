@@ -13,22 +13,21 @@
 
 
 import mox
-
 from oslo.config import cfg
-from heat.tests import fakes
-from heat.tests.common import HeatTestCase
-from heat.tests import utils
 
-from heat.engine import environment
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine import environment
 from heat.engine import parser
-from heat.engine import scheduler
-from heat.engine import service
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_keypair
 from heat.engine.resources import wait_condition as wc
+from heat.engine import scheduler
+from heat.engine import service
+from heat.tests.common import HeatTestCase
+from heat.tests import fakes
+from heat.tests import utils
 
 
 test_template_metadata = '''

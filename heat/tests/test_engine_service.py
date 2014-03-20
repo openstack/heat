@@ -13,47 +13,43 @@
 
 
 import functools
-from eventlet import greenpool
 import json
 import sys
 import uuid
 
+from eventlet import greenpool
 import mock
 import mox
-
 from oslo.config import cfg
 
-cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
-
 from heat.common import exception
-from heat.common import urlfetch
-from heat.tests import fakes as test_fakes
-from heat.tests.v1_1 import fakes
-import heat.rpc.api as engine_api
-import heat.db.api as db_api
 from heat.common import identifier
 from heat.common import template_format
+from heat.common import urlfetch
+import heat.db.api as db_api
 from heat.engine import clients
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resource import _register_class
-from heat.engine import service
 from heat.engine.properties import Properties
 from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
-from heat.engine import resource as rsrs
+from heat.engine import service
 from heat.engine import stack_lock
 from heat.engine import watchrule
 from heat.openstack.common.fixture import mockpatch
-from heat.openstack.common import threadgroup
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
+from heat.openstack.common import threadgroup
+import heat.rpc.api as engine_api
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
+cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
 wp_template = '''
 {
@@ -1298,8 +1294,8 @@ class StackServiceAuthorizeTest(HeatTestCase):
 
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-        _register_class('ResourceWithPropsType',
-                        generic_rsrc.ResourceWithProps)
+        res._register_class('ResourceWithPropsType',
+                            generic_rsrc.ResourceWithProps)
 
         utils.setup_dummy_db()
 
@@ -1373,8 +1369,8 @@ class StackServiceTest(HeatTestCase):
 
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-        _register_class('ResourceWithPropsType',
-                        generic_rsrc.ResourceWithProps)
+        res._register_class('ResourceWithPropsType',
+                            generic_rsrc.ResourceWithProps)
 
         utils.setup_dummy_db()
 
@@ -1495,8 +1491,8 @@ class StackServiceTest(HeatTestCase):
 
     @stack_context('event_list_deleted_stack')
     def test_stack_event_list_deleted_resource(self):
-        rsrs._register_class('GenericResourceType',
-                             generic_rsrc.GenericResource)
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
 
         thread = self.m.CreateMockAnything()
         thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
@@ -2045,8 +2041,8 @@ class StackServiceTest(HeatTestCase):
         service.EngineService.load_user_creds(
             mox.IgnoreArg()).AndReturn(self.ctx)
 
-        self.m.StubOutWithMock(rsrs.Resource, 'signal')
-        rsrs.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        self.m.StubOutWithMock(res.Resource, 'signal')
+        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
         self.m.ReplayAll()
 
         self.eng.resource_signal(self.ctx,

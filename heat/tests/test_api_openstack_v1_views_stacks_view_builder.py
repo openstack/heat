@@ -13,9 +13,9 @@
 
 import mock
 
-from heat.tests.common import HeatTestCase
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import identifier
+from heat.tests.common import HeatTestCase
 
 
 class TestFormatStack(HeatTestCase):

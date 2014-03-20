@@ -14,8 +14,8 @@
 
 import testtools
 
-from heat.engine.dependencies import Dependencies
 from heat.engine.dependencies import CircularDependencyException
+from heat.engine.dependencies import Dependencies
 
 
 class dependenciesTest(testtools.TestCase):

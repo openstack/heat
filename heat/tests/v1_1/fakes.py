@@ -17,9 +17,9 @@ import httplib2
 
 from novaclient import client as base_client
 from novaclient.v1_1 import client
-from heat.tests import fakes
 
 from heat.openstack.common.py3kcompat import urlutils
+from heat.tests import fakes
 
 
 class FakeClient(fakes.FakeClient, client.Client):

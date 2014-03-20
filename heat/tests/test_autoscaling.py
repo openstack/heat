@@ -11,31 +11,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 import copy
+import datetime
 
 import mock
 import mox
-
+from oslo.config import cfg
 from testtools import skipIf
 
-from oslo.config import cfg
-
+from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
-from heat.common import exception
-from heat.engine.resources import autoscaling as asc
-from heat.engine.resources import loadbalancer
-from heat.engine.resources import instance
-from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resource import Metadata
+from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import image
-from heat.openstack.common import timeutils
+from heat.engine.resources import instance
+from heat.engine.resources import loadbalancer
+from heat.engine.resources.neutron import loadbalancer as neutron_lb
+from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
+from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils

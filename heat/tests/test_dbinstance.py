@@ -12,10 +12,10 @@
 #    under the License.
 
 from heat.common import template_format
+from heat.engine import parser
 from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.engine import parser
 
 
 rds_template = '''

@@ -10,24 +10,24 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from heat.common import template_format
+
 from heat.common import exception
 from heat.common import identifier
+from heat.common import template_format
+from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
-from heat.engine import parser
-from heat.engine import resource
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
+from heat.engine import parameters
+from heat.engine import parser
+from heat.engine import resource
 from heat.engine import resources
 from heat.engine import template
-from heat.engine import constraints
-from heat.engine import parameters
-
 from heat.tests.common import HeatTestCase
+from heat.tests import generic_resource as generic_rsrc
 from heat.tests import test_parser
 from heat.tests import utils
-from heat.tests import generic_resource as generic_rsrc
 
 
 hot_tpl_empty = template_format.parse('''

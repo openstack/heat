@@ -12,17 +12,18 @@
 #    under the License.
 
 import copy
+
 import mox
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import parser
+from heat.engine import resource
+from heat.engine import resources
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_keypair
-from heat.engine import resource
-from heat.engine import resources
 from heat.engine import scheduler
-from heat.engine import parser
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

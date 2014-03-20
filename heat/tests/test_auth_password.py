@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keystoneclient.v2_0 import client as keystone_client
 from keystoneclient.exceptions import Unauthorized
+from keystoneclient.v2_0 import client as keystone_client
 import webob
 
 from heat.common.auth_password import KeystonePasswordAuthProtocol

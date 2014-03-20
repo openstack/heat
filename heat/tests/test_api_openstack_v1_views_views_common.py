@@ -13,9 +13,9 @@
 
 import mock
 
-from heat.tests.common import HeatTestCase
 from heat.api.openstack.v1.views import views_common
 from heat.openstack.common.py3kcompat import urlutils
+from heat.tests.common import HeatTestCase
 
 
 class TestViewsCommon(HeatTestCase):

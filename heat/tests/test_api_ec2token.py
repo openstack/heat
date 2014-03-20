@@ -12,17 +12,16 @@
 #    under the License.
 
 
-from heat.tests.common import HeatTestCase
-
-import requests
 import json
-from oslo.config import cfg
 
+from oslo.config import cfg
+import requests
+
+from heat.api.aws import ec2token
 from heat.api.aws import exception
 from heat.common.wsgi import Request
-from heat.api.aws import ec2token
-
 from heat.openstack.common import importutils
+from heat.tests.common import HeatTestCase
 
 
 class Ec2TokenTest(HeatTestCase):

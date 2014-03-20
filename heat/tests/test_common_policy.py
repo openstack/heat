@@ -17,8 +17,8 @@ import os.path
 
 from oslo.config import cfg
 
-from heat.common import policy
 from heat.common import exception
+from heat.common import policy
 from heat.openstack.common import policy as base_policy
 from heat.tests.common import HeatTestCase
 from heat.tests import utils

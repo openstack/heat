@@ -12,20 +12,19 @@
 #    under the License.
 
 import mox
-
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import eip
 from heat.engine import clients
-from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine import parser
+from heat.engine import resource
+from heat.engine.resources import eip
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests.v1_1 import fakes
 from heat.tests import fakes as fakec
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 
 eip_template = '''

@@ -11,19 +11,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-import mock
-import uuid
 from datetime import datetime
+import json
+import uuid
 
-import heat.engine.api as api
+import mock
 
-from heat.common import template_format
-from heat.engine import parser
-from heat.engine import parameters
-from heat.engine import resource
-from heat.engine.event import Event
 from heat.common.identifier import EventIdentifier
+from heat.common import template_format
+from heat.engine import api
+from heat.engine.event import Event
+from heat.engine import parameters
+from heat.engine import parser
+from heat.engine import resource
 from heat.rpc import api as rpc_api
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc

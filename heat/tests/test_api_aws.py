@@ -12,8 +12,8 @@
 #    under the License.
 
 
-from heat.tests.common import HeatTestCase
 from heat.api.aws import utils as api_utils
+from heat.tests.common import HeatTestCase
 
 
 class AWSCommonTest(HeatTestCase):

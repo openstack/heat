@@ -12,34 +12,31 @@
 #    under the License.
 
 import json
-import mock
 
+import mock
 from oslo.config import cfg
 import webob.exc
 
-from heat.common import identifier
-from heat.openstack.common import rpc
-
+import heat.api.middleware.fault as fault
+import heat.api.openstack.v1 as api_v1
+import heat.api.openstack.v1.actions as actions
+import heat.api.openstack.v1.build_info as build_info
+import heat.api.openstack.v1.events as events
+import heat.api.openstack.v1.resources as resources
+import heat.api.openstack.v1.software_configs as software_configs
+import heat.api.openstack.v1.software_deployments as software_deployments
+import heat.api.openstack.v1.stacks as stacks
 from heat.common import exception as heat_exc
+from heat.common import identifier
 from heat.common import policy
-from heat.common.wsgi import Request
 from heat.common import urlfetch
+from heat.common.wsgi import Request
+from heat.openstack.common import rpc
 from heat.openstack.common.rpc import common as rpc_common
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.tests.common import HeatTestCase
-
-import heat.api.openstack.v1 as api_v1
-import heat.api.openstack.v1.stacks as stacks
-import heat.api.openstack.v1.resources as resources
-import heat.api.openstack.v1.events as events
-import heat.api.openstack.v1.actions as actions
-import heat.api.openstack.v1.build_info as build_info
-import heat.api.openstack.v1.software_configs as software_configs
-import heat.api.openstack.v1.software_deployments as software_deployments
 from heat.tests import utils
-
-import heat.api.middleware.fault as fault
 
 
 def request_with_middleware(middleware, func, req, *args, **kwargs):
