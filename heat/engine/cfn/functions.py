@@ -75,11 +75,16 @@ class ParamRef(function.Function):
         { "Ref" : "<param_name>" }
     '''
 
+    def __init__(self, stack, fn_name, args):
+        super(ParamRef, self).__init__(stack, fn_name, args)
+
+        self.parameters = self.stack.parameters
+
     def result(self):
         param_name = function.resolve(self.args)
 
         try:
-            return self.stack.parameters[param_name]
+            return self.parameters[param_name]
         except (KeyError, ValueError):
             raise exception.UserParameterMissing(key=param_name)
 

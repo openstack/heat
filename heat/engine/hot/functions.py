@@ -35,6 +35,11 @@ class GetParam(function.Function):
           - ...
     '''
 
+    def __init__(self, stack, fn_name, args):
+        super(GetParam, self).__init__(stack, fn_name, args)
+
+        self.parameters = self.stack.parameters
+
     def result(self):
         args = function.resolve(self.args)
 
@@ -57,7 +62,7 @@ class GetParam(function.Function):
                             self.fn_name)
 
         try:
-            parameter = self.stack.parameters[param_name]
+            parameter = self.parameters[param_name]
         except KeyError:
             raise exception.UserParameterMissing(key=param_name)
 
