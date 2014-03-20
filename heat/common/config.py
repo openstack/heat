@@ -28,8 +28,6 @@ from heat.common import wsgi
 from heat.openstack.common import log as logging
 from heat.openstack.common import rpc
 
-DEFAULT_PORT = 8000
-
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor',
