@@ -135,7 +135,11 @@ class StackUser(resource.Resource):
         # Subclasses may optionally call this to delete a keypair created
         # via _create_keypair
         user_id = self._get_user_id()
-        credential_id = db_api.resource_data_get(self, 'credential_id')
+        try:
+            credential_id = db_api.resource_data_get(self, 'credential_id')
+        except exception.NotFound:
+            return
+
         try:
             self.keystone().delete_stack_domain_user_keypair(
                 user_id=user_id, project_id=self.stack.stack_user_project_id,
