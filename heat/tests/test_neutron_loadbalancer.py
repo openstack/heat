@@ -152,6 +152,50 @@ pool_with_session_persistence_template = '''
 '''
 
 
+pool_with_health_monitors_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test load balancer resources",
+  "Parameters" : {},
+  "Resources" : {
+    "monitor1": {
+      "Type": "OS::Neutron::HealthMonitor",
+      "Properties": {
+        "type": "HTTP",
+        "delay": 3,
+        "max_retries": 5,
+        "timeout": 10
+        }
+    },
+    "monitor2": {
+      "Type": "OS::Neutron::HealthMonitor",
+      "Properties": {
+        "type": "HTTP",
+        "delay": 3,
+        "max_retries": 5,
+        "timeout": 10
+        }
+    },
+    "pool": {
+      "Type": "OS::Neutron::Pool",
+      "Properties": {
+        "protocol": "HTTP",
+        "subnet_id": "sub123",
+        "lb_method": "ROUND_ROBIN",
+        "vip": {
+          "protocol_port": 80
+        },
+        "monitors": [
+          {"Ref": "monitor1"},
+          {"Ref": "monitor2"}
+        ]
+      }
+    }
+  }
+}
+'''
+
+
 @skipIf(neutronclient is None, 'neutronclient unavailable')
 class HealthMonitorTest(HeatTestCase):
 
@@ -920,4 +964,82 @@ class LoadBalancerTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class PoolUpdateHealthMonitorsTest(HeatTestCase):
+
+    def setUp(self):
+        super(PoolUpdateHealthMonitorsTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_pool')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_pool')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_pool')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_pool')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'associate_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'disassociate_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        utils.setup_dummy_db()
+
+    @utils.stack_delete_after
+    def test_update_pool_with_references_to_health_monitors(self):
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_health_monitor({
+            'health_monitor': {
+                'delay': 3, 'max_retries': 5, 'type': u'HTTP',
+                'timeout': 10, 'admin_state_up': True}}
+        ).AndReturn({'health_monitor': {'id': '5555'}})
+
+        neutronclient.Client.create_health_monitor({
+            'health_monitor': {
+                'delay': 3, 'max_retries': 5, 'type': u'HTTP',
+                'timeout': 10, 'admin_state_up': True}}
+        ).AndReturn({'health_monitor': {'id': '6666'}})
+        neutronclient.Client.create_pool({
+            'pool': {
+                'subnet_id': 'sub123', 'protocol': u'HTTP',
+                'name': utils.PhysName('test_stack', 'pool'),
+                'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
+        ).AndReturn({'pool': {'id': '5678'}})
+        neutronclient.Client.associate_health_monitor(
+            '5678', {'health_monitor': {'id': '5555'}}).InAnyOrder()
+        neutronclient.Client.associate_health_monitor(
+            '5678', {'health_monitor': {'id': '6666'}}).InAnyOrder()
+        neutronclient.Client.create_vip({
+            'vip': {
+                'protocol': u'HTTP', 'name': 'pool.vip',
+                'admin_state_up': True, 'subnet_id': u'sub123',
+                'pool_id': '5678', 'protocol_port': 80}}
+        ).AndReturn({'vip': {'id': 'xyz'}})
+        neutronclient.Client.show_pool('5678').AndReturn(
+            {'pool': {'status': 'ACTIVE'}})
+        neutronclient.Client.show_vip('xyz').AndReturn(
+            {'vip': {'status': 'ACTIVE'}})
+
+        neutronclient.Client.disassociate_health_monitor(
+            '5678', mox.IsA(unicode))
+
+        self.m.ReplayAll()
+        snippet = template_format.parse(pool_with_health_monitors_template)
+        self.stack = utils.parse_stack(snippet)
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+        snippet['Resources']['pool']['Properties']['monitors'] = [
+            {u'Ref': u'monitor1'}]
+        updated_stack = utils.parse_stack(snippet)
+        self.stack.update(updated_stack)
+        self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
+                         self.stack.state)
         self.m.VerifyAll()
