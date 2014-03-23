@@ -76,7 +76,8 @@ class SoftwareDeploymentTest(HeatTestCase):
         self.stack = parser.Stack(
             self.ctx, 'software_deployment_test_stack',
             template.Template(tmpl),
-            stack_id='42f6f66b-631a-44e7-8d01-e22fb54574a9'
+            stack_id='42f6f66b-631a-44e7-8d01-e22fb54574a9',
+            stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591'
         )
 
         self.patchobject(sd.SoftwareDeployment, '_create_user')
@@ -189,6 +190,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             {'action': 'CREATE',
              'config_id': derived_sc.id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
              'status_reason': 'Not waiting for outputs signal'},
             self.deployments.create.call_args[1])
@@ -207,6 +209,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             {'action': 'CREATE',
              'config_id': derived_sc.id,
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'IN_PROGRESS',
              'status_reason': 'Deploy data available'},
             args)
@@ -281,6 +284,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             'action': 'DELETE',
             'config_id': derived_sc.id,
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'
         }, args)
@@ -365,6 +369,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             'action': 'SUSPEND',
             'config_id': derived_sc.id,
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'
         }, args)
@@ -383,6 +388,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             'action': 'RESUME',
             'config_id': derived_sc.id,
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'
         }, args)

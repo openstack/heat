@@ -696,12 +696,14 @@ class SqlAlchemyTest(HeatTestCase):
 
     def _deployment_values(self):
         tenant_id = self.ctx.tenant_id
+        stack_user_project_id = str(uuid.uuid4())
         config_id = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql', 'tenant': tenant_id}).id
         server_id = str(uuid.uuid4())
         input_values = {'foo': 'fooooo', 'bar': 'baaaaa'}
         values = {
             'tenant': tenant_id,
+            'stack_user_project_id': stack_user_project_id,
             'config_id': config_id,
             'server_id': server_id,
             'input_values': input_values
@@ -730,12 +732,22 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(values['config_id'], deployment.config_id)
         self.assertEqual(values['server_id'], deployment.server_id)
         self.assertEqual(values['input_values'], deployment.input_values)
-        self.ctx.tenant_id = None
+        self.assertEqual(
+            values['stack_user_project_id'], deployment.stack_user_project_id)
+
+        # assert not found with invalid context tenant
+        self.ctx.tenant_id = str(uuid.uuid4())
         self.assertRaises(
             exception.NotFound,
             db_api.software_deployment_get,
             self.ctx,
             deployment_id)
+
+        # assert found with stack_user_project_id context tenant
+        self.ctx.tenant_id = deployment.stack_user_project_id
+        deployment = db_api.software_deployment_get(self.ctx, deployment_id)
+        self.assertIsNotNone(deployment)
+        self.assertEqual(values['tenant'], deployment.tenant)
 
     def test_software_deployment_get_all(self):
         self.assertEqual([], db_api.software_deployment_get_all(self.ctx))

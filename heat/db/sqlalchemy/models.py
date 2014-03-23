@@ -299,6 +299,8 @@ class SoftwareDeployment(BASE, HeatBase):
     output_values = sqlalchemy.Column('output_values', Json)
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(256), nullable=False)
+    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
+                                              nullable=True)
     action = sqlalchemy.Column('action', sqlalchemy.String(255))
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
     status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
