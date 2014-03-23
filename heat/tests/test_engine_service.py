@@ -445,10 +445,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def test_stack_create_exceeds_max_per_tenant(self):
         cfg.CONF.set_override('max_stacks_per_tenant', 0)
         stack_name = 'service_create_test_stack_exceeds_max'
-        exc = self.assertRaises(exception.RequestLimitExceeded,
-                                self._test_stack_create, stack_name)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self._test_stack_create, stack_name)
+        self.assertEqual(ex._exc_info[0], exception.RequestLimitExceeded)
         self.assertIn("You have reached the maximum stacks per tenant",
-                      str(exc))
+                      str(ex._exc_info[1]))
 
     def test_stack_create_verify_err(self):
         stack_name = 'service_create_verify_err_test_stack'
@@ -473,11 +474,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(
-            exception.StackValidationFailed,
+        ex = self.assertRaises(
+            rpc_common.ClientException,
             self.man.create_stack,
             self.ctx, stack_name,
             template, params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.StackValidationFailed)
         self.m.VerifyAll()
 
     def test_stack_create_invalid_stack_name(self):
@@ -528,19 +530,21 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        ex = self.assertRaises(exception.MissingCredentialError,
+        ex = self.assertRaises(rpc_common.ClientException,
                                self.man.create_stack,
                                ctx_no_pwd, stack_name,
                                template, params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', str(ex))
+            'Missing required credential: X-Auth-Key', str(ex._exc_info[1]))
 
-        ex = self.assertRaises(exception.MissingCredentialError,
+        ex = self.assertRaises(rpc_common.ClientException,
                                self.man.create_stack,
                                ctx_no_user, stack_name,
                                template, params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-User', str(ex))
+            'Missing required credential: X-Auth-User', str(ex._exc_info[1]))
 
     def test_stack_create_total_resources_equals_max(self):
         stack_name = 'service_create_stack_total_resources_equals_max'
@@ -588,11 +592,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                'C': {'Type': 'GenericResourceType'}}}
         template = parser.Template(tpl)
         cfg.CONF.set_override('max_resources_per_stack', 2)
-        ex = self.assertRaises(exception.RequestLimitExceeded,
+        ex = self.assertRaises(rpc_common.ClientException,
                                self.man.create_stack, self.ctx, stack_name,
                                template, params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      str(ex))
+                      str(ex._exc_info[1]))
 
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
@@ -644,9 +649,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.man.delete_stack,
-                          self.ctx, stack.identifier())
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.delete_stack,
+                               self.ctx, stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
     def test_stack_delete_acquired_lock(self):
@@ -717,8 +723,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
             .AndRaise(rpc_common.Timeout)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StopActionFailed,
-                          self.man.delete_stack, self.ctx, stack.identifier())
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.delete_stack,
+                               self.ctx, stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.StopActionFailed)
         self.m.VerifyAll()
 
     def test_stack_delete_other_engine_active_lock_succeeded(self):
@@ -1021,12 +1029,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         cfg.CONF.set_override('max_resources_per_stack', 2)
 
-        ex = self.assertRaises(exception.RequestLimitExceeded,
+        ex = self.assertRaises(rpc_common.ClientException,
                                self.man.update_stack, self.ctx,
-                               old_stack.identifier(), template, params, None,
-                               {})
+                               old_stack.identifier(), template, params,
+                               None, {})
+        self.assertEqual(ex._exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      str(ex))
+                      str(ex._exc_info[1]))
 
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'
@@ -1058,11 +1067,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(
-            exception.StackValidationFailed,
+        ex = self.assertRaises(
+            rpc_common.ClientException,
             self.man.update_stack,
             self.ctx, old_stack.identifier(),
             template, params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.StackValidationFailed)
         self.m.VerifyAll()
 
     def test_stack_update_nonexist(self):
@@ -1073,10 +1083,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.man.update_stack,
-                          self.ctx, stack.identifier(), template, params,
-                          None, {})
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.update_stack,
+                               self.ctx, stack.identifier(), template,
+                               params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
     def test_stack_update_no_credentials(self):
@@ -1110,13 +1121,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        ex = self.assertRaises(exception.MissingCredentialError,
+        ex = self.assertRaises(rpc_common.ClientException,
                                self.man.update_stack, self.ctx,
                                old_stack.identifier(),
                                template, params, None, {})
-
+        self.assertEqual(ex._exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', str(ex))
+            'Missing required credential: X-Auth-Key', str(ex._exc_info[1]))
 
         self.m.VerifyAll()
 
@@ -1149,16 +1160,14 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         ex = self.assertRaises(exception.MissingCredentialError,
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
-        self.assertEqual(
-            'Missing required credential: X-Auth-User', str(ex))
+        self.assertEqual('Missing required credential: X-Auth-User', str(ex))
 
         # missing password
         ctx = utils.dummy_context(password=None)
         ex = self.assertRaises(exception.MissingCredentialError,
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
-        self.assertEqual(
-            'Missing required credential: X-Auth-Key', str(ex))
+        self.assertEqual('Missing required credential: X-Auth-Key', str(ex))
 
 
 class StackServiceUpdateNotSupportedTest(HeatTestCase):
@@ -1203,10 +1212,11 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
 
         params = {'foo': 'bar'}
         template = '{ "Resources": {} }'
-        self.assertRaises(exception.NotSupported,
-                          self.man.update_stack,
-                          self.ctx, old_stack.identifier(), template, params,
-                          None, {})
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.update_stack,
+                               self.ctx, old_stack.identifier(), template,
+                               params, None, {})
+        self.assertEqual(ex._exc_info[0], exception.NotSupported)
         self.m.VerifyAll()
 
 
@@ -1267,8 +1277,10 @@ class StackServiceSuspendResumeTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.man.stack_suspend, self.ctx, stack.identifier())
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.stack_suspend, self.ctx,
+                               stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
     def test_stack_resume_nonexist(self):
@@ -1277,8 +1289,10 @@ class StackServiceSuspendResumeTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.man.stack_resume, self.ctx, stack.identifier())
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.man.stack_resume, self.ctx,
+                               stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
 
@@ -1422,14 +1436,16 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_identify_nonexist(self):
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.identify_stack, self.ctx, 'wibble')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.identify_stack, self.ctx, 'wibble')
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
 
     @stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
-        self.assertRaises(exception.StackExists, self.eng.create_stack,
-                          self.ctx, self.stack.name, self.stack.t, {},
-                          None, {})
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.create_stack, self.ctx,
+                               self.stack.name, self.stack.t, {}, None, {})
+        self.assertEqual(ex._exc_info[0], exception.StackExists)
 
     @stack_context('service_name_tenants_test_stack', False)
     def test_stack_by_name_tenants(self):
@@ -1713,9 +1729,10 @@ class StackServiceTest(HeatTestCase):
             show_deleted=True).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.show_stack,
-                          self.ctx, non_exist_identifier)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.show_stack,
+                               self.ctx, non_exist_identifier)
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
     def test_stack_describe_bad_tenant(self):
@@ -1731,9 +1748,10 @@ class StackServiceTest(HeatTestCase):
             show_deleted=True).AndRaise(invalid_tenant_exc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.InvalidTenant,
-                          self.eng.show_stack,
-                          self.ctx, non_exist_identifier)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.show_stack,
+                               self.ctx, non_exist_identifier)
+        self.assertEqual(ex._exc_info[0], exception.InvalidTenant)
 
         self.m.VerifyAll()
 
@@ -1863,9 +1881,10 @@ class StackServiceTest(HeatTestCase):
             self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.describe_stack_resource,
-                          self.ctx, non_exist_identifier, 'WebServer')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.describe_stack_resource,
+                               self.ctx, non_exist_identifier, 'WebServer')
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
 
         self.m.VerifyAll()
 
@@ -1876,9 +1895,10 @@ class StackServiceTest(HeatTestCase):
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
 
         self.m.ReplayAll()
-        self.assertRaises(exception.ResourceNotFound,
-                          self.eng.describe_stack_resource,
-                          self.ctx, self.stack.identifier(), 'foo')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.describe_stack_resource,
+                               self.ctx, self.stack.identifier(), 'foo')
+        self.assertEqual(ex._exc_info[0], exception.ResourceNotFound)
 
         self.m.VerifyAll()
 
@@ -1890,9 +1910,10 @@ class StackServiceTest(HeatTestCase):
                                                     'foo').AndReturn(False)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.Forbidden,
-                          self.eng.describe_stack_resource,
-                          self.ctx, self.stack.identifier(), 'foo')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.describe_stack_resource,
+                               self.ctx, self.stack.identifier(), 'foo')
+        self.assertEqual(ex._exc_info[0], exception.Forbidden)
 
         self.m.VerifyAll()
 
@@ -1959,9 +1980,10 @@ class StackServiceTest(HeatTestCase):
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.describe_stack_resources,
-                          self.ctx, non_exist_identifier, 'WebServer')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.describe_stack_resources,
+                               self.ctx, non_exist_identifier, 'WebServer')
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
 
     @stack_context('find_phys_res_stack')
     def test_find_physical_resource(self):
@@ -1977,9 +1999,10 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual('WebServer', resource_identity.resource_name)
 
     def test_find_physical_resource_nonexist(self):
-        self.assertRaises(exception.PhysicalResourceNotFound,
-                          self.eng.find_physical_resource,
-                          self.ctx, 'foo')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.find_physical_resource,
+                               self.ctx, 'foo')
+        self.assertEqual(ex._exc_info[0], exception.PhysicalResourceNotFound)
 
     @stack_context('service_resources_list_test_stack')
     def test_stack_resources_list(self):
@@ -2015,9 +2038,10 @@ class StackServiceTest(HeatTestCase):
             self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.list_stack_resources,
-                          self.ctx, non_exist_identifier)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.list_stack_resources,
+                               self.ctx, non_exist_identifier)
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
 
         self.m.VerifyAll()
 
@@ -2073,11 +2097,12 @@ class StackServiceTest(HeatTestCase):
             mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ResourceNotFound,
-                          self.eng.resource_signal, self.ctx,
-                          dict(self.stack.identifier()),
-                          'resource_does_not_exist',
-                          test_data)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.resource_signal, self.ctx,
+                               dict(self.stack.identifier()),
+                               'resource_does_not_exist',
+                               test_data)
+        self.assertEqual(ex._exc_info[0], exception.ResourceNotFound)
         self.m.VerifyAll()
         self.stack.delete()
 
@@ -2118,10 +2143,11 @@ class StackServiceTest(HeatTestCase):
         self.m.ReplayAll()
 
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        self.assertRaises(exception.StackNotFound,
-                          self.eng.metadata_update,
-                          self.ctx, non_exist_identifier,
-                          'WebServer', test_metadata)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.metadata_update,
+                               self.ctx, non_exist_identifier,
+                               'WebServer', test_metadata)
+        self.assertEqual(ex._exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
 
     @stack_context('service_metadata_err_resource_test_stack', False)
@@ -2132,10 +2158,11 @@ class StackServiceTest(HeatTestCase):
         self.m.ReplayAll()
 
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        self.assertRaises(exception.ResourceNotFound,
-                          self.eng.metadata_update,
-                          self.ctx, dict(self.stack.identifier()),
-                          'NooServer', test_metadata)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.metadata_update,
+                               self.ctx, dict(self.stack.identifier()),
+                               'NooServer', test_metadata)
+        self.assertEqual(ex._exc_info[0], exception.ResourceNotFound)
 
         self.m.VerifyAll()
 
@@ -2227,9 +2254,10 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('name', result[0])
         self.assertEqual('show_watch_2', result[0]['name'])
 
-        self.assertRaises(exception.WatchRuleNotFound,
-                          self.eng.show_watch,
-                          self.ctx, watch_name="nonexistent")
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.show_watch,
+                               self.ctx, watch_name="nonexistent")
+        self.assertEqual(ex._exc_info[0], exception.WatchRuleNotFound)
 
         # Check the response has all keys defined in the engine API
         for key in engine_api.WATCH_KEYS:
@@ -2387,9 +2415,11 @@ class StackServiceTest(HeatTestCase):
             .AndRaise(exception.WatchRuleNotFound(watch_name='test'))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.WatchRuleNotFound,
-                          self.eng.set_watch_state,
-                          self.ctx, watch_name="nonexistent", state=state)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.set_watch_state,
+                               self.ctx, watch_name="nonexistent",
+                               state=state)
+        self.assertEqual(ex._exc_info[0], exception.WatchRuleNotFound)
         self.m.VerifyAll()
 
     def test_stack_list_all_empty(self):
@@ -2482,7 +2512,9 @@ class StackServiceTest(HeatTestCase):
     def test_preview_stack_validates_new_stack(self):
         exc = exception.StackExists(stack_name='Validation Failed')
         self.eng._validate_new_stack = mock.Mock(side_effect=exc)
-        self.assertRaises(exception.StackExists, self._preview_stack)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self._preview_stack)
+        self.assertEqual(ex._exc_info[0], exception.StackExists)
 
     @mock.patch.object(service.api, 'format_stack_preview', new=mock.Mock())
     @mock.patch.object(service.parser, 'Stack')
@@ -2491,7 +2523,9 @@ class StackServiceTest(HeatTestCase):
         mock_parsed_stack = mock.Mock()
         mock_parsed_stack.validate.side_effect = exc
         mock_parser.return_value = mock_parsed_stack
-        self.assertRaises(exception.StackValidationFailed, self._preview_stack)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self._preview_stack)
+        self.assertEqual(ex._exc_info[0], exception.StackValidationFailed)
 
     @mock.patch.object(service.db_api, 'stack_get_by_name')
     def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):
@@ -2538,9 +2572,10 @@ class SoftwareConfigServiceTest(HeatTestCase):
     def test_show_software_config(self):
         config_id = str(uuid.uuid4())
 
-        self.assertRaises(exception.NotFound,
-                          self.engine.show_software_config,
-                          self.ctx, config_id)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.engine.show_software_config,
+                               self.ctx, config_id)
+        self.assertEqual(ex._exc_info[0], exception.NotFound)
 
         config = self._create_software_config()
         config_id = config['id']
@@ -2577,9 +2612,10 @@ class SoftwareConfigServiceTest(HeatTestCase):
         config_id = config['id']
         self.engine.delete_software_config(self.ctx, config_id)
 
-        self.assertRaises(exception.NotFound,
-                          self.engine.show_software_config,
-                          self.ctx, config_id)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.engine.show_software_config,
+                               self.ctx, config_id)
+        self.assertEqual(ex._exc_info[0], exception.NotFound)
 
     def _create_software_deployment(self, config_id=None, input_values={},
                                     action='INIT',
@@ -2639,9 +2675,10 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_show_software_deployment(self):
         deployment_id = str(uuid.uuid4())
-        self.assertRaises(exception.NotFound,
-                          self.engine.show_software_deployment,
-                          self.ctx, deployment_id)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.engine.show_software_deployment,
+                               self.ctx, deployment_id)
+        self.assertEqual(ex._exc_info[0], exception.NotFound)
 
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
@@ -2716,9 +2753,10 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_delete_software_deployment(self):
         deployment_id = str(uuid.uuid4())
-        self.assertRaises(exception.NotFound,
-                          self.engine.delete_software_deployment,
-                          self.ctx, deployment_id)
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.engine.delete_software_deployment,
+                               self.ctx, deployment_id)
+        self.assertEqual(ex._exc_info[0], exception.NotFound)
 
         deployment = self._create_software_deployment()
         self.assertIsNotNone(deployment)
