@@ -316,6 +316,10 @@ class EngineService(service.Service):
         """
         if uuidutils.is_uuid_like(stack_name):
             s = db_api.stack_get(cnxt, stack_name, show_deleted=True)
+            # may be the name is in uuid format, so if get by id returns None,
+            # we should get the info by name again
+            if not s:
+                s = db_api.stack_get_by_name(cnxt, stack_name)
         else:
             s = db_api.stack_get_by_name(cnxt, stack_name)
         if s:

@@ -1409,6 +1409,18 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @stack_context('ef0c41a4-644f-447c-ad80-7eecb0becf79', False)
+    def test_stack_identify_by_name_in_uuid(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+
+        self.m.ReplayAll()
+        identity = self.eng.identify_stack(self.ctx, self.stack.name)
+        self.assertEqual(self.stack.identifier(), identity)
+
+        self.m.VerifyAll()
+
     @stack_context('service_identify_uuid_test_stack', False)
     def test_stack_identify_uuid(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
