@@ -3684,3 +3684,43 @@ class StackTest(HeatTestCase):
         fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
         self.stack.delete_snapshot(fake_snapshot)
         self.assertEqual([data['resources']['AResource']], snapshots)
+
+    def test_incorrect_outputs_cfn_get_attr(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'abc'}}},
+                'Outputs': {
+                    'Resource_attr': {
+                        'Value': {
+                            'Fn::GetAtt': ['AResource', 'Bar']}}}}
+
+        self.stack = parser.Stack(self.ctx, 'stack_with_correct_outputs',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertEqual('Output validation error: The Referenced Attribute '
+                         '(AResource Bar) is incorrect.',
+                         str(ex))
+
+    def test_incorrect_outputs_hot_get_attr(self):
+        tmpl = {'heat_template_version': '2013-05-23',
+                'resources': {
+                'AResource': {'type': 'ResourceWithPropsType',
+                              'properties': {'Foo': 'abc'}}},
+                'outputs': {
+                    'resource_attr': {
+                        'value': {
+                            'get_attr': ['AResource', 'Bar']}}}}
+
+        self.stack = parser.Stack(self.ctx, 'stack_with_correct_outputs',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertEqual('Output validation error: The Referenced Attribute '
+                         '(AResource Bar) is incorrect.',
+                         str(ex))

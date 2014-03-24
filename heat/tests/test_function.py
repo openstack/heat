@@ -13,9 +13,18 @@
 
 import copy
 import six
+import uuid
 
+from heat.common import exception
+from heat.engine.cfn import functions
+from heat.engine import environment
 from heat.engine import function
+from heat.engine import parser
+from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.tests.common import HeatTestCase
+from heat.tests import generic_resource as generic_rsrc
+from heat.tests import utils
 
 
 class TestFunction(function.Function):
@@ -143,3 +152,66 @@ class DependenciesTest(HeatTestCase):
         self.assertIn('foo', deps)
         self.assertIn('bar', deps)
         self.assertEqual(2, len(deps))
+
+
+class ValidateGetAttTest(HeatTestCase):
+    def setUp(self):
+        super(ValidateGetAttTest, self).setUp()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+
+        env = environment.Environment()
+        env.load({u'resource_registry':
+                  {u'OS::Test::GenericResource': u'GenericResourceType'}})
+
+        class FakeResource(generic_rsrc.GenericResource):
+            def FnGetAtt(self, name):
+                pass
+
+        resource._register_class('OverwrittenFnGetAttType', FakeResource)
+        env.load({u'resource_registry':
+                  {u'OS::Test::FakeResource': u'OverwrittenFnGetAttType'}})
+
+        self.stack = parser.Stack(
+            utils.dummy_context(), 'test_stack',
+            parser.Template({"HeatTemplateFormatVersion": "2012-12-12"}),
+            env=env, stack_id=str(uuid.uuid4()))
+        res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
+                                                'OS::Test::GenericResource')
+        self.rsrc = resource.Resource('test_rsrc', res_defn, self.stack)
+        self.stack.add_resource(self.rsrc)
+
+    def test_resource_is_appear_in_stack(self):
+        func = functions.GetAtt(self.stack, 'Fn::GetAtt',
+                                [self.rsrc.name, 'Foo'])
+        self.assertIsNone(func.validate())
+
+    def test_resource_is_not_appear_in_stack(self):
+        self.stack.remove_resource(self.rsrc.name)
+
+        func = functions.GetAtt(self.stack, 'Fn::GetAtt',
+                                [self.rsrc.name, 'Foo'])
+        ex = self.assertRaises(exception.InvalidTemplateReference,
+                               func.validate)
+        self.assertEqual('The specified reference "test_rsrc" (in unknown) '
+                         'is incorrect.', str(ex))
+
+    def test_resource_no_attribute_with_default_fn_get_att(self):
+        func = functions.GetAtt(self.stack, 'Fn::GetAtt',
+                                [self.rsrc.name, 'Bar'])
+        ex = self.assertRaises(exception.InvalidTemplateAttribute,
+                               func.validate)
+        self.assertEqual('The Referenced Attribute (test_rsrc Bar) '
+                         'is incorrect.', str(ex))
+
+    def test_resource_no_attribute_with_overwritten_fn_get_att(self):
+        res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
+                                                'OS::Test::FakeResource')
+        self.rsrc = resource.Resource('test_rsrc', res_defn, self.stack)
+        self.stack.add_resource(self.rsrc)
+        self.rsrc.attributes_schema = {}
+
+        func = functions.GetAtt(self.stack, 'Fn::GetAtt',
+                                [self.rsrc.name, 'Foo'])
+        self.assertIsNone(func.validate())
