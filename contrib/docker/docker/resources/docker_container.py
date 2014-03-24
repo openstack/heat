@@ -130,6 +130,7 @@ class DockerContainer(resource.Resource):
         'info': _('Container info'),
         'network_info': _('Container network info'),
         'network_ip': _('Container ip address'),
+        'network_gateway': _('Container ip gateway'),
         'network_tcp_ports': _('Container TCP ports'),
         'network_udp_ports': _('Container UDP ports'),
         'logs': _('Container logs'),
@@ -183,6 +184,10 @@ class DockerContainer(resource.Resource):
             client = self.get_client()
             networkinfo = self._container_networkinfo(client, self.resource_id)
             return networkinfo['IPAddress']
+        if name == 'network_gateway':
+            client = self.get_client()
+            networkinfo = self._container_networkinfo(client, self.resource_id)
+            return networkinfo['Gateway']
         if name == 'network_tcp_ports':
             client = self.get_client()
             networkinfo = self._container_networkinfo(client, self.resource_id)
