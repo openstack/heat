@@ -111,6 +111,7 @@ class TemplateResourceInfo(ResourceInfo):
             self.template_name = self.name
         else:
             self.template_name = value
+        self.value = self.template_name
 
     def get_class(self):
         from heat.engine.resources import template_resource

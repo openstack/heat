@@ -428,6 +428,10 @@ class ProviderTemplateTest(HeatTestCase):
             self.assertIn(attrib, templ_resource.attributes)
         for k, v in json_snippet.get("Properties").items():
             self.assertEqual(v, templ_resource.properties[k])
+        self.assertEqual(
+            {'WordPress_Single_Instance.yaml':
+             'WordPress_Single_Instance.yaml', 'resources': {}},
+            stack.env.user_env_as_dict()["resource_registry"])
 
     def test_persisted_unregistered_provider_templates(self):
         """
