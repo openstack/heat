@@ -226,7 +226,7 @@ class FormatTest(HeatTestCase):
             'stack_status': '',
             'stack_status_reason': '',
             'template_description': 'No description',
-            'timeout_mins': 60,
+            'timeout_mins': None,
             'parameters': {
                 'AWS::Region': 'ap-southeast-1',
                 'AWS::StackId': aws_id,

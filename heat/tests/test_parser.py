@@ -775,6 +775,17 @@ class StackTest(HeatTestCase):
         self.assertEqual((None, None), stack.state)
         self.assertEqual('', stack.status_reason)
 
+    def test_timeout_secs_default(self):
+        cfg.CONF.set_override('stack_action_timeout', 1000)
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
+        self.assertIsNone(stack.timeout_mins)
+        self.assertEqual(1000, stack.timeout_secs())
+
+    def test_timeout_secs(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             timeout_mins=10)
+        self.assertEqual(600, stack.timeout_secs())
+
     def test_no_auth_token(self):
         ctx = utils.dummy_context()
         ctx.auth_token = None
