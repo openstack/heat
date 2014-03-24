@@ -115,10 +115,18 @@ class HeatIdentifier(collections.Mapping):
         in the form:
             stacks/<stack_name>/<stack_id><path>
         '''
-        return 'stacks/%s/%s%s' % (urlutils.quote(self.stack_name, ''),
-                                   urlutils.quote(self.stack_id, ''),
-                                   urlutils.quote(strutils.safe_encode(
-                                       self.path)))
+        return 'stacks/%s%s' % (self.stack_path(),
+                                urlutils.quote(strutils.safe_encode(
+                                    self.path)))
+
+    def stack_path(self):
+        '''
+        Return a URL-encoded path segment of a URL,
+        in the form:
+            <stack_name>/<stack_id>
+        '''
+        return '%s/%s' % (urlutils.quote(self.stack_name, ''),
+                          urlutils.quote(self.stack_id, ''))
 
     def _path_components(self):
         '''Return a list of the path components.'''

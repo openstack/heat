@@ -48,6 +48,10 @@ class IdentifierTest(testtools.TestCase):
         hi.identity['foo'] = 'bar'
         self.assertRaises(KeyError, lambda o, k: o[k], hi, 'foo')
 
+    def test_stack_path(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
+        self.assertEqual('s/i', hi.stack_path())
+
     def test_arn(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
         self.assertEqual('arn:openstack:heat::t:stacks/s/i/p', hi.arn())
