@@ -253,6 +253,50 @@ neutron_port_with_address_pair_template = '''
 }
 '''
 
+neutron_subnet_and_external_gateway_template = '''
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "net_external": {
+      "Type": "OS::Neutron::Net",
+      "Properties": {
+        "name": "net_external",
+        "admin_state_up": true,
+        "value_specs": {
+          "provider:network_type": "flat",
+          "provider:physical_network": "default",
+          "router:external": true
+        }
+      }
+    },
+    "subnet_external": {
+      "Type": "OS::Neutron::Subnet",
+      "Properties": {
+        "name": "subnet_external",
+        "network_id": {
+          "Ref": "net_external"
+        },
+        "ip_version": 4,
+        "cidr": "192.168.10.0/24",
+        "gateway_ip": "192.168.10.11",
+        "enable_dhcp": false
+      }
+    },
+    "router": {
+      "Type": "OS::Neutron::Router",
+      "Properties": {
+        "name": "router_heat",
+        "external_gateway_info": {
+          "network": {
+            "Ref": "net_external"
+          }
+        }
+      }
+    }
+  }
+}
+'''
+
 stpna = {
     "network": {
         "status": "ACTIVE",
@@ -1205,6 +1249,15 @@ class NeutronRouterTest(HeatTestCase):
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
+
+    def test_router_dependence(self):
+        # assert the implicit dependency between the router
+        # and subnet
+        t = template_format.parse(
+            neutron_subnet_and_external_gateway_template)
+        stack = utils.parse_stack(t)
+        deps = stack.dependencies[stack['subnet_external']]
+        self.assertIn(stack['router'], deps)
 
     def test_router_interface(self):
         clients.OpenStackClients.keystone().AndReturn(
