@@ -1661,6 +1661,53 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_update_modify_param_ok_replace(self):
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'foo': {'Type': 'String'}
+            },
+            'Resources': {
+                'AResource': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {'Foo': {'Ref': 'foo'}}
+                }
+            }
+        }
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
+                               'update_template_diff')
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  environment.Environment({'foo': 'abc'}))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl),
+                                     environment.Environment({'foo': 'xyz'}))
+
+        def check_props(*args):
+            self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+
+        generic_rsrc.ResourceWithProps.update_template_diff(
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'xyz'}},
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'abc'}}).WithSideEffects(check_props) \
+                                           .AndRaise(resource.UpdateReplace)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_update_modify_update_failed(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
