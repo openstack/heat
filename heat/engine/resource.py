@@ -18,6 +18,7 @@ from datetime import datetime
 
 from heat.engine import event
 from heat.common import exception
+from heat.engine import function
 from heat.openstack.common import excutils
 from heat.db import api as db_api
 from heat.common import identifier
@@ -642,6 +643,7 @@ class Resource(object):
     def validate(self):
         logger.info(_('Validating %s') % str(self))
 
+        function.validate(self.t)
         self.validate_deletion_policy(self.t)
         return self.properties.validate()
 
