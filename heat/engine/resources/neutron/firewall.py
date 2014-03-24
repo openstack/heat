@@ -37,32 +37,39 @@ class Firewall(neutron.NeutronResource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
+            _('Name for the firewall.'),
             update_allowed=True
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
+            _('Description for the firewall.'),
             update_allowed=True
         ),
         ADMIN_STATE_UP: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Administrative state of the firewall. If false (down), '
+              'firewall does not forward packets and will drop all '
+              'traffic to/from VMs behind the firewall.'),
             default=True,
             update_allowed=True
         ),
         FIREWALL_POLICY_ID: properties.Schema(
             properties.Schema.STRING,
+            _('The ID of the firewall policy that this firewall is '
+              'associated with.'),
             required=True,
             update_allowed=True
         ),
     }
 
     attributes_schema = {
-        'name': _('Name for the Firewall.'),
-        'description': _('Description of the Firewall.'),
-        'admin_state_up': _('The administrative state of the Firewall.'),
-        'firewall_policy_id': _('Unique identifier of the FirewallPolicy '
-                                'used to  create the Firewall.'),
-        'status': _('The status of the Firewall.'),
-        'tenant_id': _('Id of the tenant owning the Firewall.'),
+        'name': _('Name for the firewall.'),
+        'description': _('Description of the firewall.'),
+        'admin_state_up': _('The administrative state of the firewall.'),
+        'firewall_policy_id': _('Unique identifier of the firewall policy '
+                                'used to create the firewall.'),
+        'status': _('The status of the firewall.'),
+        'tenant_id': _('Id of the tenant owning the firewall.'),
         'show': _('All attributes.'),
     }
 
@@ -108,36 +115,45 @@ class FirewallPolicy(neutron.NeutronResource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
+            _('Name for the firewall policy.'),
             update_allowed=True
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
+            _('Description for the firewall policy.'),
             update_allowed=True
         ),
         SHARED: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Whether this policy should be shared across all tenants.'),
             default=False,
             update_allowed=True
         ),
         AUDITED: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Whether this policy should be audited. When set to True, '
+              'each time the firewall policy or the associated firewall '
+              'rules are changed, this attribute will be set to False and '
+              'will have to be explicitly set to True through an update '
+              'operation.'),
             default=False,
             update_allowed=True
         ),
         FIREWALL_RULES: properties.Schema(
             properties.Schema.LIST,
+            _('An ordered list of firewall rules to apply to the firewall.'),
             required=True,
             update_allowed=True
         ),
     }
 
     attributes_schema = {
-        'name': _('Name for the FirewallPolicy.'),
-        'description': _('Description of the FirewallPolicy.'),
-        'firewall_rules': _('List of FirewallRules in this FirewallPolicy.'),
-        'shared': _('Shared status of this FirewallPolicy.'),
-        'audited': _('Audit status of this FirewallPolicy.'),
-        'tenant_id': _('Id of the tenant owning the FirewallPolicy.')
+        'name': _('Name for the firewall policy.'),
+        'description': _('Description of the firewall policy.'),
+        'firewall_rules': _('List of firewall rules in this firewall policy.'),
+        'shared': _('Shared status of this firewall policy.'),
+        'audited': _('Audit status of this firewall policy.'),
+        'tenant_id': _('Id of the tenant owning the firewall policy.')
     }
 
     update_allowed_keys = ('Properties',)
@@ -187,19 +203,23 @@ class FirewallRule(neutron.NeutronResource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
+            _('Name for the firewall rule.'),
             update_allowed=True
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
+            _('Description for the firewall rule.'),
             update_allowed=True
         ),
         SHARED: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Whether this rule should be shared across all tenants.'),
             default=False,
             update_allowed=True
         ),
         PROTOCOL: properties.Schema(
             properties.Schema.STRING,
+            _('Protocol for the firewall rule.'),
             constraints=[
                 constraints.AllowedValues(['tcp', 'udp', 'icmp', None]),
             ],
@@ -207,6 +227,7 @@ class FirewallRule(neutron.NeutronResource):
         ),
         IP_VERSION: properties.Schema(
             properties.Schema.STRING,
+            _('Internet protocol version.'),
             default='4',
             constraints=[
                 constraints.AllowedValues(['4', '6']),
@@ -215,22 +236,27 @@ class FirewallRule(neutron.NeutronResource):
         ),
         SOURCE_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
+            _('Source IP address or CIDR.'),
             update_allowed=True
         ),
         DESTINATION_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
+            _('Destination IP address or CIDR.'),
             update_allowed=True
         ),
         SOURCE_PORT: properties.Schema(
             properties.Schema.STRING,
+            _('Source port number or a range.'),
             update_allowed=True
         ),
         DESTINATION_PORT: properties.Schema(
             properties.Schema.STRING,
+            _('Destination port number or a range.'),
             update_allowed=True
         ),
         ACTION: properties.Schema(
             properties.Schema.STRING,
+            _('Action to be performed on the traffic matching the rule.'),
             default='deny',
             constraints=[
                 constraints.AllowedValues(['allow', 'deny']),
@@ -239,28 +265,31 @@ class FirewallRule(neutron.NeutronResource):
         ),
         ENABLED: properties.Schema(
             properties.Schema.BOOLEAN,
+            _('Whether this rule should be enabled.'),
             default=True,
             update_allowed=True
         ),
     }
 
     attributes_schema = {
-        'name': _('Name for the FirewallRule.'),
-        'description': _('Description of the FirewallRule.'),
-        'firewall_policy_id': _('Unique identifier of the FirewallPolicy to '
-                                'which this FirewallRule belongs.'),
-        'shared': _('Shared status of this FirewallRule.'),
-        'protocol': _('Protocol value for this FirewallRule.'),
-        'ip_version': _('Ip_version for this FirewallRule.'),
-        'source_ip_address': _('Source ip_address for this FirewallRule.'),
+        'name': _('Name for the firewall rule.'),
+        'description': _('Description of the firewall rule.'),
+        'firewall_policy_id': _('Unique identifier of the firewall policy to '
+                                'which this firewall rule belongs.'),
+        'shared': _('Shared status of this firewall rule.'),
+        'protocol': _('Protocol value for this firewall rule.'),
+        'ip_version': _('Ip_version for this firewall rule.'),
+        'source_ip_address': _('Source ip_address for this firewall rule.'),
         'destination_ip_address': _('Destination ip_address for this '
-                                    'FirewallRule.'),
-        'source_port': _('Source port range for this FirewallRule.'),
-        'destination_port': _('Destination port range for this FirewallRule.'),
-        'action': _('Allow or deny action for this FirewallRule.'),
-        'enabled': _('Indicates whether this FirewallRule is enabled or not.'),
-        'position': _('Position of the rule within the FirewallPolicy.'),
-        'tenant_id': _('Id of the tenant owning the Firewall.')
+                                    'firewall rule.'),
+        'source_port': _('Source port range for this firewall rule.'),
+        'destination_port': _('Destination port range for this firewall '
+                              'rule.'),
+        'action': _('Allow or deny action for this firewall rule.'),
+        'enabled': _('Indicates whether this firewall rule is enabled or '
+                     'not.'),
+        'position': _('Position of the rule within the firewall policy.'),
+        'tenant_id': _('Id of the tenant owning the firewall.')
     }
 
     update_allowed_keys = ('Properties',)
