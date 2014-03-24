@@ -57,7 +57,7 @@ class Stack(collections.Mapping):
 
     def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, action=None, status=None,
-                 status_reason='', timeout_mins=60, resolve_data=True,
+                 status_reason='', timeout_mins=None, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
@@ -409,11 +409,10 @@ class Stack(collections.Mapping):
 
     def timeout_secs(self):
         '''
-        Return the stack creation timeout in seconds, or None if no timeout
-        should be used.
+        Return the stack action timeout in seconds.
         '''
         if self.timeout_mins is None:
-            return None
+            return cfg.CONF.stack_action_timeout
 
         return self.timeout_mins * 60
 

@@ -204,6 +204,19 @@ class StackResourceTest(HeatTestCase):
                          self.stack.name)
         self.assertEqual(self.templ, self.stack.t.t)
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
+        self.assertIsNone(self.stack.timeout_mins)
+
+    @utils.stack_delete_after
+    def test_create_with_template_timeout_mins(self):
+        self.assertIsNone(self.parent_stack.timeout_mins)
+        self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
+        self.parent_stack.timeout_mins = 100
+        self.m.ReplayAll()
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"})
+        self.stack = self.parent_resource.nested()
+        self.assertEqual(100, self.stack.timeout_mins)
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_adopt_with_template_ok(self):
@@ -306,11 +319,35 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(('UPDATE', 'COMPLETE'), self.stack.state)
         self.assertEqual(set(["WebServer", "WebServer2"]),
                          set(self.stack.keys()))
+        self.assertIsNone(self.stack.timeout_mins)
 
         # The stack's owner_id is maintained.
         saved_stack = parser.Stack.load(
             self.parent_stack.context, self.stack.id)
         self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
+
+    @utils.stack_delete_after
+    def test_update_with_template_timeout_mins(self):
+        self.assertIsNone(self.parent_stack.timeout_mins)
+        self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
+        self.parent_stack.timeout_mins = 100
+        self.m.ReplayAll()
+
+        create_result = self.parent_resource.create_with_template(
+            self.simple_template, {})
+        while not create_result.step():
+            pass
+        self.stack = self.parent_resource.nested()
+        self.assertEqual(100, self.stack.timeout_mins)
+
+        self.parent_stack.timeout_mins = 200
+        self.m.ReplayAll()
+
+        updater = self.parent_resource.update_with_template(
+            self.simple_template, {})
+        updater.run_to_completion()
+        self.assertEqual(200, self.stack.timeout_mins)
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_update_with_template_files(self):

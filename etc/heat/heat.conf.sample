@@ -58,6 +58,10 @@
 # unlimited events per stack. (integer value)
 #max_events_per_stack=1000
 
+# Timeout in seconds for stack action (ie. create or update).
+# (integer value)
+#stack_action_timeout=3600
+
 # RPC timeout for the engine liveness check that is used for
 # stack locking. (integer value)
 #engine_life_check_timeout=2

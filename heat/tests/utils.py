@@ -146,11 +146,13 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
     })
 
 
-def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
+def parse_stack(t, params={}, stack_name='test_stack', stack_id=None,
+                timeout_mins=None):
     ctx = dummy_context()
     template = parser.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
-                         environment.Environment(params), stack_id)
+                         environment.Environment(params), stack_id,
+                         timeout_mins=timeout_mins)
     stack.store()
 
     return stack

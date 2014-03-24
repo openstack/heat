@@ -140,6 +140,9 @@ class StackResource(resource.Resource):
         self._validate_nested_resources(template)
         self._outputs_to_attribs(child_template)
 
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
+
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
         nested = parser.Stack(self.context,
@@ -193,6 +196,9 @@ class StackResource(resource.Resource):
         if new_size > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
+
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
