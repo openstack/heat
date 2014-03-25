@@ -405,14 +405,17 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def create_software_deployment(self, cnxt, server_id, config_id=None,
                                    input_values={}, action='INIT',
-                                   status='COMPLETE', status_reason=''):
-        return self.call(cnxt, self.make_msg('create_software_deployment',
-                                             server_id=server_id,
-                                             config_id=config_id,
-                                             input_values=input_values,
-                                             action=action,
-                                             status=status,
-                                             status_reason=status_reason))
+                                   status='COMPLETE', status_reason='',
+                                   stack_user_project_id=None):
+        return self.call(cnxt, self.make_msg(
+            'create_software_deployment',
+            server_id=server_id,
+            config_id=config_id,
+            input_values=input_values,
+            action=action,
+            status=status,
+            status_reason=status_reason,
+            stack_user_project_id=stack_user_project_id))
 
     def update_software_deployment(self, cnxt, deployment_id,
                                    config_id=None, input_values=None,

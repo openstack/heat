@@ -173,7 +173,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         props = {
             'config_id': config_id,
             'server_id': properties[SoftwareDeployment.SERVER],
-            'action': action
+            'action': action,
+            'stack_user_project_id': self.stack.stack_user_project_id
         }
 
         if self._signal_transport_none():

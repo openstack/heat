@@ -662,7 +662,8 @@ def software_deployment_create(context, values):
 def software_deployment_get(context, deployment_id):
     result = model_query(context, models.SoftwareDeployment).get(deployment_id)
     if (result is not None and context is not None and
-            result.tenant != context.tenant_id):
+        context.tenant_id not in (result.tenant,
+                                  result.stack_user_project_id)):
         result = None
 
     if not result:
@@ -672,9 +673,13 @@ def software_deployment_get(context, deployment_id):
 
 
 def software_deployment_get_all(context, server_id=None):
-    query = model_query(context, models.SoftwareDeployment).\
-        filter_by(tenant=context.tenant_id).\
-        order_by(models.SoftwareDeployment.created_at)
+    sd = models.SoftwareDeployment
+    query = model_query(context, sd).\
+        filter(sqlalchemy.or_(
+            sd.tenant == context.tenant_id,
+            sd.stack_user_project_id == context.tenant_id
+        )).\
+        order_by(sd.created_at)
     if server_id:
         query = query.filter_by(server_id=server_id)
     return query.all()

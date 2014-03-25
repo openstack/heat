@@ -2634,14 +2634,15 @@ class SoftwareConfigServiceTest(HeatTestCase):
                                     status='COMPLETE', status_reason='',
                                     config_group=None,
                                     server_id=str(uuid.uuid4()),
-                                    config_name=None):
+                                    config_name=None,
+                                    stack_user_project_id=None):
         if config_id is None:
             config = self._create_software_config(group=config_group,
                                                   name=config_name)
             config_id = config['id']
         return self.engine.create_software_deployment(
             self.ctx, server_id, config_id, input_values,
-            action, status, status_reason)
+            action, status, status_reason, stack_user_project_id)
 
     def test_list_software_deployments(self):
         deployment = self._create_software_deployment()
@@ -2659,15 +2660,22 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def test_metadata_software_deployments(self):
         server_id = str(uuid.uuid4())
-        d1 = self._create_software_deployment(config_group='mygroup',
-                                              server_id=server_id,
-                                              config_name='02_second')
-        d2 = self._create_software_deployment(config_group='mygroup',
-                                              server_id=server_id,
-                                              config_name='01_first')
-        d3 = self._create_software_deployment(config_group='myothergroup',
-                                              server_id=server_id,
-                                              config_name='03_third')
+        stack_user_project_id = str(uuid.uuid4())
+        d1 = self._create_software_deployment(
+            config_group='mygroup',
+            server_id=server_id,
+            config_name='02_second',
+            stack_user_project_id=stack_user_project_id)
+        d2 = self._create_software_deployment(
+            config_group='mygroup',
+            server_id=server_id,
+            config_name='01_first',
+            stack_user_project_id=stack_user_project_id)
+        d3 = self._create_software_deployment(
+            config_group='myothergroup',
+            server_id=server_id,
+            config_name='03_third',
+            stack_user_project_id=stack_user_project_id)
         metadata = self.engine.metadata_software_deployments(
             self.ctx, server_id=server_id)
         self.assertEqual(3, len(metadata))
@@ -2684,6 +2692,19 @@ class SoftwareConfigServiceTest(HeatTestCase):
         deployments = self.engine.metadata_software_deployments(
             self.ctx, server_id=str(uuid.uuid4()))
         self.assertEqual([], deployments)
+
+        # assert get results when the context tenant_id matches
+        # the stored stack_user_project_id
+        ctx = utils.dummy_context(tenant_id=stack_user_project_id)
+        metadata = self.engine.metadata_software_deployments(
+            ctx, server_id=server_id)
+        self.assertEqual(3, len(metadata))
+
+        # assert get no results when the context tenant_id is unknown
+        ctx = utils.dummy_context(tenant_id=str(uuid.uuid4()))
+        metadata = self.engine.metadata_software_deployments(
+            ctx, server_id=server_id)
+        self.assertEqual(0, len(metadata))
 
     def test_show_software_deployment(self):
         deployment_id = str(uuid.uuid4())
