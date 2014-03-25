@@ -96,7 +96,7 @@ neutron_template = '''
     "router": {
       "Type": "OS::Neutron::Router",
       "Properties": {
-        "agent_id": "792ff887-6c85-4a56-b518-23f24fa65581"
+        "l3_agent_id": "792ff887-6c85-4a56-b518-23f24fa65581"
       }
     },
     "router_interface": {
@@ -1115,13 +1115,13 @@ class NeutronRouterTest(HeatTestCase):
             "Properties": {
                 "admin_state_up": False,
                 "name": "myrouter",
-                "agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
+                "l3_agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
             }
         }
         prop_diff = {
             "admin_state_up": False,
             "name": "myrouter",
-            "agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
+            "l3_agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
         }
         rsrc.handle_update(update_snippet, {}, prop_diff)
 
