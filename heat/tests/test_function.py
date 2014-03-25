@@ -19,6 +19,10 @@ from heat.engine import function
 
 
 class TestFunction(function.Function):
+    def validate(self):
+        if len(self.args) < 2:
+            raise Exception(_('Need more arguments'))
+
     def result(self):
         return 'wibble'
 
@@ -80,3 +84,42 @@ class ResolveTest(HeatTestCase):
         self.assertEqual(['foo', {'bar': ['baz', {'blarg': 'wibble'}]}],
                          result)
         self.assertIsNot(result, snippet)
+
+
+class ValidateTest(HeatTestCase):
+    def setUp(self):
+        super(ValidateTest, self).setUp()
+        self.func = TestFunction(None, 'foo', ['bar', 'baz'])
+
+    def test_validate_func(self):
+        self.assertIsNone(function.validate(self.func))
+        self.func = TestFunction(None, 'foo', ['bar'])
+        ex = self.assertRaises(Exception, function.validate, self.func)
+        self.assertEqual('Need more arguments', str(ex))
+
+    def test_validate_dict(self):
+        snippet = {'foo': 'bar', 'blarg': self.func}
+        function.validate(snippet)
+
+        self.func = TestFunction(None, 'foo', ['bar'])
+        snippet = {'foo': 'bar', 'blarg': self.func}
+        ex = self.assertRaises(Exception, function.validate, snippet)
+        self.assertEqual('Need more arguments', str(ex))
+
+    def test_validate_list(self):
+        snippet = ['foo', 'bar', 'baz', 'blarg', self.func]
+        function.validate(snippet)
+
+        self.func = TestFunction(None, 'foo', ['bar'])
+        snippet = {'foo': 'bar', 'blarg': self.func}
+        ex = self.assertRaises(Exception, function.validate, snippet)
+        self.assertEqual('Need more arguments', str(ex))
+
+    def test_validate_all(self):
+        snippet = ['foo', {'bar': ['baz', {'blarg': self.func}]}]
+        function.validate(snippet)
+
+        self.func = TestFunction(None, 'foo', ['bar'])
+        snippet = {'foo': 'bar', 'blarg': self.func}
+        ex = self.assertRaises(Exception, function.validate, snippet)
+        self.assertEqual('Need more arguments', str(ex))
