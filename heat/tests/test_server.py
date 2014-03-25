@@ -292,8 +292,8 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image "Slackware" does not '
-            'validate glance.image',
+            'server_create_image_err: image Error validating value '
+            '\'Slackware\': The Image (Slackware) could not be found.',
             str(error))
 
         self.m.VerifyAll()
@@ -343,8 +343,8 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image "1" does not '
-            'validate glance.image',
+            'server_create_image_err: image Error validating value \'1\': '
+            'The Image (1) could not be found.',
             str(error))
 
         self.m.VerifyAll()
@@ -816,8 +816,8 @@ class ServersTest(HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   server.validate)
         self.assertEqual(
-            'Property error : server_validate_test: key_name "test2" does '
-            'not validate nova.keypair',
+            'Property error : server_validate_test: key_name Error validating '
+            'value \'test2\': The Key (test2) could not be found.',
             str(error))
         self.m.VerifyAll()
 

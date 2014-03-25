@@ -14,7 +14,7 @@
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
-from heat.engine.clients import Clients
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import nova_utils
@@ -117,19 +117,17 @@ class KeyPair(resource.Resource):
         return self.resource_id
 
 
-class KeypairConstraint(object):
+class KeypairConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
+    expected_exceptions = (exception.UserKeyPairMissing,)
+
+    def validate_with_client(self, client, value):
         if not value:
             # Don't validate empty key, which can happen when you use a KeyPair
             # resource
             return True
-        try:
-            nova_utils.get_keypair(Clients(context).nova(), value)
-        except exception.UserKeyPairMissing:
-            return False
-        else:
-            return True
+        nova_client = client.nova()
+        nova_utils.get_keypair(nova_client, value)
 
 
 def constraint_mapping():

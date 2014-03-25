@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.engine import clients
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
@@ -166,17 +167,14 @@ class Net(neutron.NeutronResource):
                     raise ex
 
 
-class NetworkConstraint(object):
+class NetworkConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
-        try:
-            neutron_client = clients.Clients(context).neutron()
-            neutronV20.find_resourceid_by_name_or_id(
-                neutron_client, 'network', value)
-        except neutron_exp.NeutronClientException:
-            return False
-        else:
-            return True
+    expected_exceptions = (neutron_exp.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.neutron()
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'network', value)
 
 
 def constraint_mapping():
