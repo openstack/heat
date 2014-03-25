@@ -19,12 +19,12 @@ These instructions assume you already have a working DevStack installation which
 
 Configure DevStack to enable Heat
 ---------------------------------
-Adding the following line to your `localrc` file will enable the heat services::
-
-    ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
+Heat is configured by default on devstack for Icehouse or newer
+versions of OpenStack.
 
 It would also be useful to automatically download and register
-a VM image that Heat can launch::
+a VM image that Heat can launch. To do that add the following to your
+devstack `localrc`::
 
     IMAGE_URLS+=",http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2"
 
