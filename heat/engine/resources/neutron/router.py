@@ -100,6 +100,17 @@ class Router(neutron.NeutronResource):
 
     update_allowed_keys = ('Properties',)
 
+    def add_dependencies(self, deps):
+        super(Router, self).add_dependencies(deps)
+        external_gw = self.properties.get(self.EXTERNAL_GATEWAY)
+        if external_gw:
+            external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
+            for res in self.stack.itervalues():
+                if res.has_interface('OS::Neutron::Subnet'):
+                    subnet_net = res.properties.get(subnet.Subnet.NETWORK_ID)
+                    if subnet_net == external_gw_net:
+                        deps += (self, res)
+
     def prepare_properties(self, properties, name):
         props = super(Router, self).prepare_properties(properties, name)
         gateway = props.get(self.EXTERNAL_GATEWAY)
