@@ -27,8 +27,10 @@ logger = logging.getLogger(__name__)
 class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
+        DHCP_AGENT_IDS,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
+        'dhcp_agent_ids',
     )
 
     properties_schema = {
@@ -67,6 +69,13 @@ class Net(neutron.NeutronResource):
             default=False,
             update_allowed=True
         ),
+        DHCP_AGENT_IDS: properties.Schema(
+            properties.Schema.LIST,
+            _('The IDs of the DHCP agent to schedule the network. Note that '
+              'the default policy setting in Neutron restricts usage of this '
+              'property to administrative users only.'),
+            update_allowed=True
+        ),
     }
 
     attributes_schema = {
@@ -84,8 +93,14 @@ class Net(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+
+        dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
+
         net = self.neutron().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
+
+        if dhcp_agent_ids:
+            self._replace_dhcp_agents(dhcp_agent_ids)
 
     def _show_resource(self):
         return self.neutron().show_network(
@@ -107,7 +122,16 @@ class Net(neutron.NeutronResource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
 
-        self.neutron().update_network(self.resource_id, {'network': props})
+        dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
+
+        if self.DHCP_AGENT_IDS in prop_diff:
+            if dhcp_agent_ids is not None:
+                self._replace_dhcp_agents(dhcp_agent_ids)
+            del prop_diff[self.DHCP_AGENT_IDS]
+
+        if len(prop_diff) > 0:
+            self.neutron().update_network(
+                self.resource_id, {'network': props})
 
     def check_update_complete(self, *args):
         attributes = self._show_resource()
@@ -119,59 +143,31 @@ class Net(neutron.NeutronResource):
                 isinstance(ex, neutron_exp.NetworkNotFoundClient)):
             raise ex
 
+    def _replace_dhcp_agents(self, dhcp_agent_ids):
+        ret = self.neutron().list_dhcp_agent_hosting_networks(
+            self.resource_id)
+        old = set([agent['id'] for agent in ret['agents']])
+        new = set(dhcp_agent_ids)
 
-class NetDHCPAgent(neutron.NeutronResource):
-    PROPERTIES = (
-        NETWORK_ID, DHCP_AGENT_ID,
-    ) = (
-        'network_id', 'dhcp_agent_id',
-    )
+        for dhcp_agent_id in new - old:
+            try:
+                self.neutron().add_network_to_dhcp_agent(
+                    dhcp_agent_id, {'network_id': self.resource_id})
+            except neutron_exp.NeutronClientException as ex:
+                # if 409 is happened, the agent is already associated.
+                if ex.status_code != 409:
+                    raise ex
 
-    properties_schema = {
-        NETWORK_ID: properties.Schema(
-            properties.Schema.STRING,
-            _('The ID of the network you want to be scheduled by the '
-              'dhcp_agent. Note that the default policy setting in Neutron '
-              'restricts usage of this property to administrative users '
-              'only.'),
-            required=True
-        ),
-        DHCP_AGENT_ID: properties.Schema(
-            properties.Schema.STRING,
-            _('The ID of the dhcp-agent to schedule the network. Note that '
-              'the default policy setting in Neutron restricts usage of this '
-              'property to administrative users only.'),
-            required=True
-        ),
-    }
-
-    def handle_create(self):
-        network_id = self.properties[self.NETWORK_ID]
-        dhcp_agent_id = self.properties[self.DHCP_AGENT_ID]
-        try:
-            self.neutron().add_network_to_dhcp_agent(
-                dhcp_agent_id, {'network_id': network_id})
-        except neutron_exp.NeutronClientException as ex:
-            # if 409 is happened, the agent is already associated.
-            if ex.status_code != 409:
-                raise ex
-        self.resource_id_set('%(net)s:%(agt)s' %
-                             {'net': network_id, 'agt': dhcp_agent_id})
-
-    def handle_delete(self):
-        if not self.resource_id:
-            return
-        client = self.neutron()
-        network_id, dhcp_agent_id = self.resource_id.split(':')
-        try:
-            client.remove_network_from_dhcp_agent(
-                dhcp_agent_id, network_id)
-        except neutron_exp.NeutronClientException as ex:
-            # assume 2 patterns about status_code following:
-            #  404: the network or agent is already gone
-            #  409: the network isn't scheduled by the dhcp_agent
-            if ex.status_code not in (404, 409):
-                raise ex
+        for dhcp_agent_id in old - new:
+            try:
+                self.neutron().remove_network_from_dhcp_agent(
+                    dhcp_agent_id, self.resource_id)
+            except neutron_exp.NeutronClientException as ex:
+                # assume 2 patterns about status_code following:
+                #  404: the network or agent is already gone
+                #  409: the network isn't scheduled by the dhcp_agent
+                if ex.status_code not in (404, 409):
+                    raise ex
 
 
 class NetworkConstraint(object):
@@ -199,5 +195,4 @@ def resource_mapping():
 
     return {
         'OS::Neutron::Net': Net,
-        'OS::Neutron::NetDHCPAgent': NetDHCPAgent,
     }
