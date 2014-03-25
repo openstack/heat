@@ -59,7 +59,10 @@ def request_context(func):
     def wrapped(self, ctx, *args, **kwargs):
         if ctx is not None and not isinstance(ctx, context.RequestContext):
             ctx = context.RequestContext.from_dict(ctx.to_dict())
-        return func(self, ctx, *args, **kwargs)
+        try:
+            return func(self, ctx, *args, **kwargs)
+        except exception.HeatException:
+            raise rpc_common.ClientException()
     return wrapped
 
 
