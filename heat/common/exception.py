@@ -306,13 +306,16 @@ class EgressRuleNotAllowed(HeatException):
                 "Neutron is used and the 'VpcId' property is set.")
 
 
-class Error(Exception):
-    def __init__(self, message=None):
-        super(Error, self).__init__(message)
+class Error(HeatException):
+    def __init__(self, msg_fmt):
+        self.msg_fmt = msg_fmt
+        super(Error, self).__init__()
 
 
-class NotFound(Error):
-    pass
+class NotFound(HeatException):
+    def __init__(self, msg_fmt):
+        self.msg_fmt = msg_fmt
+        super(NotFound, self).__init__()
 
 
 class InvalidContentType(HeatException):

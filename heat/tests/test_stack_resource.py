@@ -414,10 +414,11 @@ class StackResourceTest(HeatTestCase):
 
         self.parent_resource._nested = None
         self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource,
-                          show_deleted=False).AndRaise(exception.NotFound)
+        parser.Stack.load(
+            self.parent_resource.context,
+            self.parent_resource.resource_id,
+            parent_resource=self.parent_resource,
+            show_deleted=False).AndRaise(exception.NotFound(''))
         self.m.ReplayAll()
 
         self.assertIsNone(self.parent_resource.delete_nested())

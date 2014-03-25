@@ -67,7 +67,7 @@ class StackResource(resource.Resource):
                                              show_deleted=False)
 
             if self._nested is None:
-                raise exception.NotFound(_('Nested stack not found in DB'))
+                raise exception.NotFound(_("Nested stack not found in DB"))
 
         return self._nested
 
