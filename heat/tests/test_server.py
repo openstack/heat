@@ -273,8 +273,8 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image "CentOS 5.2" does not '
-            'validate glance.image',
+            'server_create_image_err: image Multiple physical resources were '
+            'found with name (CentOS 5.2).',
             str(error))
 
         self.m.VerifyAll()
