@@ -195,11 +195,13 @@ def setup_mocks(mocks, stack):
 
     instance = stack['WebServer']
     user_data = instance.properties['UserData']
-    server_userdata = nova_utils.build_userdata(instance, user_data)
+    server_userdata = nova_utils.build_userdata(instance, user_data,
+                                                'ec2-user')
     mocks.StubOutWithMock(nova_utils, 'build_userdata')
     nova_utils.build_userdata(
         instance,
-        instance.t['Properties']['UserData']).AndReturn(server_userdata)
+        instance.t['Properties']['UserData'],
+        'ec2-user').AndReturn(server_userdata)
 
     mocks.StubOutWithMock(fc.servers, 'create')
     fc.servers.create(image=744, flavor=3, key_name='test',

@@ -171,8 +171,12 @@ class Server(stack_user.StackUser):
         ),
         ADMIN_USER: properties.Schema(
             properties.Schema.STRING,
-            _('Name of the administrative user to use on the server.'),
-            default=cfg.CONF.instance_user
+            _('Name of the administrative user to use on the server. '
+              'This property will be removed from Juno in favor of the '
+              'default cloud-init user set up for each image (e.g. "ubuntu" '
+              'for Ubuntu 12.04+, "fedora" for Fedora 19+ and "cloud-user" '
+              'for CentOS/RHEL 6.5).'),
+            support_status=support.SupportStatus(status=support.DEPRECATED)
         ),
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
@@ -470,10 +474,17 @@ class Server(stack_user.StackUser):
         if self.user_data_software_config():
             self._create_transport_credentials()
 
+        if self.properties[self.ADMIN_USER]:
+            instance_user = self.properties[self.ADMIN_USER]
+        elif cfg.CONF.instance_user:
+            instance_user = cfg.CONF.instance_user
+        else:
+            instance_user = None
+
         userdata = nova_utils.build_userdata(
             self,
             ud_content,
-            instance_user=self.properties[self.ADMIN_USER],
+            instance_user=instance_user,
             user_data_format=user_data_format)
 
         flavor = self.properties[self.FLAVOR]

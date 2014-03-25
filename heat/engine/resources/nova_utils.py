@@ -19,6 +19,7 @@ from email.mime.text import MIMEText
 import json
 import os
 import pkgutil
+import string
 
 from oslo.config import cfg
 import six
@@ -187,16 +188,33 @@ def build_userdata(resource, userdata=None, instance_user=None,
         return msg
 
     def read_cloudinit_file(fn):
-        data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
-        data = data.replace('@INSTANCE_USER@',
-                            instance_user or cfg.CONF.instance_user)
-        return data
+        return pkgutil.get_data('heat', 'cloudinit/%s' % fn)
 
-    attachments = [(read_cloudinit_file('config'), 'cloud-config'),
-                   (read_cloudinit_file('boothook.sh'), 'boothook.sh',
-                    'cloud-boothook')]
-    attachments.append((read_cloudinit_file('part_handler.py'),
-                       'part-handler.py'))
+    if instance_user:
+        config_custom_user = 'user: %s' % instance_user
+        # FIXME(shadower): compatibility workaround for cloud-init 0.6.3. We
+        # can drop this once we stop supporting 0.6.3 (which ships with Ubuntu
+        # 12.04 LTS).
+        #
+        # See bug https://bugs.launchpad.net/heat/+bug/1257410
+        boothook_custom_user = r"""useradd -m %s
+echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
+""" % (instance_user, instance_user)
+    else:
+        config_custom_user = ''
+        boothook_custom_user = ''
+
+    cloudinit_config = string.Template(
+        read_cloudinit_file('config')).safe_substitute(
+            add_custom_user=config_custom_user)
+    cloudinit_boothook = string.Template(
+        read_cloudinit_file('boothook.sh')).safe_substitute(
+            add_custom_user=boothook_custom_user)
+
+    attachments = [(cloudinit_config, 'cloud-config'),
+                   (cloudinit_boothook, 'boothook.sh', 'cloud-boothook'),
+                   (read_cloudinit_file('part_handler.py'),
+                    'part-handler.py')]
 
     if is_cfntools:
         attachments.append((userdata, 'cfn-userdata', 'x-cfninitdata'))

@@ -14,7 +14,11 @@
 # Options defined in heat.common.config
 #
 
-# The default user for new instances. (string value)
+# The default user for new instances. This option is
+# deprecated and will be removed in the Juno release. If it's
+# empty, Heat will use the default user set up with your cloud
+# image (for OS::Nova::Server) or 'ec2-user' (for
+# AWS::EC2::Instance). (string value)
 #instance_user=ec2-user
 
 # Driver to use for controlling instances. (string value)

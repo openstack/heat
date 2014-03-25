@@ -68,11 +68,13 @@ class nokeyTest(HeatTestCase):
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
             instance,
-            instance.t['Properties']['UserData'])
+            instance.t['Properties']['UserData'],
+            'ec2-user')
         self.m.StubOutWithMock(nova_utils, 'build_userdata')
         nova_utils.build_userdata(
             instance,
-            instance.t['Properties']['UserData']).AndReturn(server_userdata)
+            instance.t['Properties']['UserData'],
+            'ec2-user').AndReturn(server_userdata)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
