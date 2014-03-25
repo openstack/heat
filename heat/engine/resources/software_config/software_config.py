@@ -25,6 +25,26 @@ logger = logging.getLogger(__name__)
 
 
 class SoftwareConfig(resource.Resource):
+    '''
+    A resource for describing and storing software configuration.
+
+    The software_configs API which backs this resource creates immutable
+    configs, so any change to the template resource definition will result
+    in a new config being created, and the old one being deleted.
+
+    Configs can be defined in the same template which uses them, or they can
+    be created in one stack, and passed to another stack via a parameter.
+
+    A config resource can be referenced in other resource properties which
+    are config-aware. This includes the properties OS::Nova::Server user_data,
+    OS::Heat::SoftwareDeployment config and OS::Heat::MultipartMime parts
+    config.
+
+    Along with the config script itself, this resource can define schemas for
+    inputs and outputs which the config script is expected to consume and
+    produce. Inputs and outputs are optional and will map to concepts which
+    are specific to the configuration tool being used.
+    '''
 
     PROPERTIES = (
         GROUP, CONFIG, OPTIONS, INPUTS, OUTPUTS
@@ -102,7 +122,7 @@ class SoftwareConfig(resource.Resource):
         OPTIONS: properties.Schema(
             properties.Schema.MAP,
             _('Map containing options specific to the configuration '
-              'management tool used by this.'),
+              'management tool used by this resource.'),
         ),
         INPUTS: properties.Schema(
             properties.Schema.LIST,

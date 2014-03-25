@@ -31,6 +31,34 @@ logger = logging.getLogger(__name__)
 
 
 class SoftwareDeployment(signal_responder.SignalResponder):
+    '''
+    This resource associates a server with some configuration which
+    is to be deployed to that server.
+
+    A deployment allows input values to be specified which map to the inputs
+    schema defined in the config resource. These input values are interpreted
+    by the configuration tool in a tool-specific manner.
+
+    Whenever this resource goes to an IN_PROGRESS state, it creates an
+    ephemeral config that includes the inputs values plus a number of extra
+    inputs which have names prefixed with deploy_. The extra inputs relate
+    to the current state of the stack, along with the information and
+    credentials required to signal back the deployment results.
+
+    Unless signal_transport=NO_SIGNAL, this resource will remain in an
+    IN_PROGRESS state until the server signals it with the output values
+    for that deployment. Those output values are then available as resource
+    attributes, along with the default attributes deploy_stdout,
+    deploy_stderr and deploy_status_code.
+
+    Specifying actions other than the default CREATE and UPDATE will result
+    in the deployment being triggered in those actions. For example this would
+    allow cleanup configuration to be performed during actions SUSPEND and
+    DELETE. A config could be designed to only work with some specific
+    actions, or a config can read the value of the deploy_action input to
+    allow conditional logic to perform different configuration for different
+    actions.
+    '''
 
     PROPERTIES = (
         CONFIG, SERVER, INPUT_VALUES,
@@ -93,7 +121,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         ),
         DEPLOY_ACTIONS: properties.Schema(
             properties.Schema.LIST,
-            _('Which actions the deployment will be triggered in.'),
+            _('Which stack actions will result in this deployment being '
+              'triggered.'),
             update_allowed=True,
             default=[resource.Resource.CREATE, resource.Resource.UPDATE],
             constraints=[constraints.AllowedValues(ALLOWED_DEPLOY_ACTIONS)]
