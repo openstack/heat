@@ -12,6 +12,7 @@
 
 import mock
 
+from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources import image
 from heat.engine.resources import nova_utils
@@ -32,5 +33,6 @@ class ImageConstraintTest(HeatTestCase):
     def test_validation_error(self, mock_get_image):
         with mock.patch.object(clients, "OpenStackClients"):
             constraint = image.ImageConstraint()
-            mock_get_image.side_effect = ValueError("Not found")
+            mock_get_image.side_effect = exception.ImageNotFound(
+                image_name='bar')
             self.assertFalse(constraint.validate("bar", None))

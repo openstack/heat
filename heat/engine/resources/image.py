@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources import nova_utils
 
@@ -21,7 +22,7 @@ class ImageConstraint(object):
         try:
             nova_client = clients.Clients(context).nova()
             nova_utils.get_image_id(nova_client, value)
-        except Exception:
+        except exception.ImageNotFound:
             return False
         else:
             return True
