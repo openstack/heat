@@ -31,10 +31,10 @@ class Router(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
-        AGENT_ID,
+        L3_AGENT_ID,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
-        'agent_id',
+        'l3_agent_id',
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -80,7 +80,7 @@ class Router(neutron.NeutronResource):
             default=True,
             update_allowed=True
         ),
-        AGENT_ID: properties.Schema(
+        L3_AGENT_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of the L3 agent. NOTE: The default policy setting in '
               'Neutron restricts usage of this property to administrative '
@@ -126,13 +126,13 @@ class Router(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        agent_id = props.pop(self.AGENT_ID, None)
+        l3_agent_id = props.pop(self.L3_AGENT_ID, None)
 
         router = self.neutron().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
-        if agent_id:
-            self._replace_agent(agent_id)
+        if l3_agent_id:
+            self._replace_agent(l3_agent_id)
 
     def _show_resource(self):
         return self.neutron().show_router(
@@ -154,25 +154,25 @@ class Router(neutron.NeutronResource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
 
-        agent_id = props.pop(self.AGENT_ID, None)
+        l3_agent_id = props.pop(self.L3_AGENT_ID, None)
 
-        if self.AGENT_ID in prop_diff:
-            self._replace_agent(agent_id)
-            del prop_diff[self.AGENT_ID]
+        if self.L3_AGENT_ID in prop_diff:
+            self._replace_agent(l3_agent_id)
+            del prop_diff[self.L3_AGENT_ID]
 
         if len(prop_diff) > 0:
             self.neutron().update_router(
                 self.resource_id, {'router': props})
 
-    def _replace_agent(self, agent_id=None):
+    def _replace_agent(self, l3_agent_id=None):
         ret = self.neutron().list_l3_agent_hosting_routers(
             self.resource_id)
         for agent in ret['agents']:
             self.neutron().remove_router_from_l3_agent(
                 agent['id'], self.resource_id)
-        if agent_id:
+        if l3_agent_id:
             self.neutron().add_router_to_l3_agent(
-                agent_id, {'router_id': self.resource_id})
+                l3_agent_id, {'router_id': self.resource_id})
 
 
 class RouterInterface(neutron.NeutronResource):
