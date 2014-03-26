@@ -218,13 +218,16 @@ class DockerContainer(resource.Resource):
             'dns': self.properties['dns'],
             'volumes': self.properties['volumes'],
             'volumes_from': self.properties['volumes_from'],
-            'privileged': self.properties['privileged'],
         }
         client = self.get_client()
         result = client.create_container(**args)
         container_id = result['Id']
         self.resource_id_set(container_id)
-        client.start(container_id)
+
+        kwargs = {}
+        if self.properties['privileged']:
+            kwargs['privileged'] = True
+        client.start(container_id, **kwargs)
         return container_id
 
     def _get_container_status(self, container_id):

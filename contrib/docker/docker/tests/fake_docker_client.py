@@ -72,7 +72,7 @@ class FakeDockerClient(object):
         self._set_running(container_id, False)
         return self.inspect_container(container_id)
 
-    def start(self, container_id):
+    def start(self, container_id, privileged=None):
         self._set_running(container_id, True)
 
     def stop(self, container_id):
