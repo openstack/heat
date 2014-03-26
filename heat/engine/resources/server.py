@@ -218,7 +218,8 @@ class Server(stack_user.StackUser):
                           'server.')
                     ),
                 },
-            )
+            ),
+            update_allowed=True
         ),
         SCHEDULER_HINTS: properties.Schema(
             properties.Schema.MAP,
@@ -636,6 +637,52 @@ class Server(stack_user.StackUser):
         if name == 'show':
             return server._info
 
+    def _get_network_matches(self, old_networks, new_networks):
+        # make new_networks similar on old_networks
+        for net in new_networks:
+            for key in ('port', 'network', 'fixed_ip'):
+                net.setdefault(key)
+        # find matches and remove them from old and new networks
+        not_updated_networks = []
+        for net in old_networks:
+            net.pop('uuid', None)
+            if net in new_networks:
+                new_networks.remove(net)
+                not_updated_networks.append(net)
+        for net in not_updated_networks:
+            old_networks.remove(net)
+        return not_updated_networks
+
+    def update_networks_matching_iface_port(self, nets, interfaces):
+
+        def find_equal(port, net_id, ip, nets):
+            for net in nets:
+                if (net.get('port') == port or
+                        (net.get('fixed_ip') == ip and
+                            net.get('network') == net_id)):
+                    return net
+
+        def find_poor_net(net_id, nets):
+            for net in nets:
+                if net == {'port': None, 'network': net_id, 'fixed_ip': None}:
+                    return net
+
+        for iface in interfaces:
+            # get interface properties
+            props = {'port': iface.port_id,
+                     'net_id': iface.net_id,
+                     'ip': iface.fixed_ips[0]['ip_address'],
+                     'nets': nets}
+            # try to match by port or network_id with fixed_ip
+            net = find_equal(**props)
+            if net is not None:
+                net['port'] = props['port']
+                continue
+            # find poor net that has only network_id
+            net = find_poor_net(props['net_id'], nets)
+            if net is not None:
+                net['port'] = props['port']
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff['Metadata']
@@ -687,6 +734,69 @@ class Server(stack_user.StackUser):
             if not server:
                 server = self.nova().servers.get(self.resource_id)
             nova_utils.rename(server, prop_diff[self.NAME])
+
+        if self.NETWORKS in prop_diff:
+            new_networks = prop_diff.get(self.NETWORKS)
+            attach_first_free_port = False
+            if not new_networks:
+                new_networks = []
+                attach_first_free_port = True
+            old_networks = self.properties.get(self.NETWORKS)
+
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            interfaces = server.interface_list()
+
+            # if old networks is None, it means that the server got first
+            # free port. so we should detach this interface.
+            if old_networks is None:
+                for iface in interfaces:
+                    checker = scheduler.TaskRunner(server.interface_detach,
+                                                   iface.port_id)
+                    checkers.append(checker)
+            # if we have any information in networks field, we should:
+            # 1. find similar networks, if they exist
+            # 2. remove these networks from new_networks and old_networks
+            #    lists
+            # 3. detach unmatched networks, which were present in old_networks
+            # 4. attach unmatched networks, which were present in new_networks
+            else:
+                # remove not updated networks from old and new networks lists,
+                # also get list these networks
+                not_updated_networks = \
+                    self._get_network_matches(old_networks, new_networks)
+
+                self.update_networks_matching_iface_port(
+                    old_networks + not_updated_networks, interfaces)
+
+                # according to nova interface-detach command detached port
+                # will be deleted
+                for net in old_networks:
+                    checker = scheduler.TaskRunner(server.interface_detach,
+                                                   net.get('port'))
+                    checkers.append(checker)
+
+            # attach section similar for both variants that
+            # were mentioned above
+
+            for net in new_networks:
+                if net.get('port'):
+                    checker = scheduler.TaskRunner(server.interface_attach,
+                                                   net['port'], None, None)
+                    checkers.append(checker)
+                elif net.get('network'):
+                    checker = scheduler.TaskRunner(server.interface_attach,
+                                                   None, net['network'],
+                                                   net.get('fixed_ip'))
+                    checkers.append(checker)
+
+            # if new_networks is None, we should attach first free port,
+            # according to similar behavior during instance creation
+            if attach_first_free_port:
+                checker = scheduler.TaskRunner(server.interface_attach,
+                                               None, None, None)
+                checkers.append(checker)
+
         # Optimization: make sure the first task is started before
         # check_update_complete.
         if checkers:

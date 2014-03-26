@@ -1954,6 +1954,398 @@ class ServersTest(HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
+    def create_old_net(self, port=None, net=None, ip=None):
+        return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': None}
+
+    def create_fake_iface(self, port, net, ip):
+        class fake_interface():
+            def __init__(self, port_id, net_id, fixed_ip):
+                self.port_id = port_id
+                self.net_id = net_id
+                self.fixed_ips = [{'ip_address': fixed_ip}]
+
+        return fake_interface(port, net, ip)
+
+    def test_get_network_matches_no_matching(self):
+        return_server = self.fc.servers.list()[3]
+        server = self._create_test_server(return_server, 'networks_update')
+
+        for new_nets in ([],
+                         [{'port': '952fd4ae-53b9-4b39-9e5f-8929c553b5ae'}]):
+
+            old_nets = [
+                self.create_old_net(
+                    port='2a60cbaa-3d33-4af6-a9ce-83594ac546fc'),
+                self.create_old_net(
+                    net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', ip='1.2.3.4'),
+                self.create_old_net(
+                    net='0da8adbf-a7e2-4c59-a511-96b03d2da0d7')]
+
+            new_nets_copy = copy.deepcopy(new_nets)
+            old_nets_copy = copy.deepcopy(old_nets)
+            for net in old_nets_copy:
+                net.pop('uuid')
+            for net in new_nets_copy:
+                for key in ('port', 'network', 'fixed_ip'):
+                    net[key] = net.get(key)
+
+            matched_nets = server._get_network_matches(old_nets, new_nets)
+            self.assertEqual([], matched_nets)
+            self.assertEqual(old_nets_copy, old_nets)
+            self.assertEqual(new_nets_copy, new_nets)
+
+    def test_get_network_matches_success(self):
+        return_server = self.fc.servers.list()[3]
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_nets = [
+            self.create_old_net(
+                port='2a60cbaa-3d33-4af6-a9ce-83594ac546fc'),
+            self.create_old_net(
+                net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                ip='1.2.3.4'),
+            self.create_old_net(
+                net='0da8adbf-a7e2-4c59-a511-96b03d2da0d7')]
+        new_nets = [
+            {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'},
+            {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+             'fixed_ip': '1.2.3.4'},
+            {'port': '952fd4ae-53b9-4b39-9e5f-8929c553b5ae'}]
+
+        new_nets_copy = copy.deepcopy(new_nets)
+        old_nets_copy = copy.deepcopy(old_nets)
+        for net in old_nets_copy:
+            net.pop('uuid')
+        for net in new_nets_copy:
+            for key in ('port', 'network', 'fixed_ip'):
+                net[key] = net.get(key)
+
+        matched_nets = server._get_network_matches(old_nets, new_nets)
+        self.assertEqual(old_nets_copy[:-1], matched_nets)
+        self.assertEqual([old_nets_copy[2]], old_nets)
+        self.assertEqual([new_nets_copy[2]], new_nets)
+
+    def test_update_networks_matching_iface_port(self):
+        return_server = self.fc.servers.list()[3]
+        server = self._create_test_server(return_server, 'networks_update')
+
+        # old order 0 1 2 3 4 5
+        nets = [
+            {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'network': None, 'fixed_ip': None},
+            {'port': None, 'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'fixed_ip': '1.2.3.4', },
+            {'port': None, 'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+             'fixed_ip': None},
+            {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+             'network': None, 'fixed_ip': None},
+            {'port': None, 'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'fixed_ip': '5.6.7.8'},
+            {'port': None, 'network': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
+             'fixed_ip': None}]
+        # new order 5 2 3 0 1 4
+        interfaces = [
+            self.create_fake_iface('ffffffff-ffff-ffff-ffff-ffffffffffff',
+                                   nets[5]['network'], '10.0.0.10'),
+            self.create_fake_iface('cccccccc-cccc-cccc-cccc-cccccccccccc',
+                                   nets[2]['network'], '10.0.0.11'),
+            self.create_fake_iface(nets[3]['port'],
+                                   'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                                   '10.0.0.12'),
+            self.create_fake_iface(nets[0]['port'],
+                                   'gggggggg-1111-1111-1111-gggggggggggg',
+                                   '10.0.0.13'),
+            self.create_fake_iface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                                   nets[1]['network'], nets[1]['fixed_ip']),
+            self.create_fake_iface('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+                                   nets[4]['network'], nets[4]['fixed_ip'])]
+        # all networks should get port id
+        expected = [
+            {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'network': None, 'fixed_ip': None},
+            {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'fixed_ip': '1.2.3.4'},
+            {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+             'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+             'fixed_ip': None},
+            {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+             'network': None, 'fixed_ip': None},
+            {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'fixed_ip': '5.6.7.8'},
+            {'port': 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+             'network': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
+             'fixed_ip': None}]
+
+        server.update_networks_matching_iface_port(nets, interfaces)
+        self.assertEqual(expected, nets)
+
+    def test_server_update_None_networks_with_port(self):
+        return_server = self.fc.servers.list()[3]
+        return_server.id = 9102
+        server = self._create_test_server(return_server, 'networks_update')
+
+        new_networks = [{'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = new_networks
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        # to make sure, that old_networks will be None
+        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
+
+        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                                       '1.2.3.4')
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa').AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(new_networks[0]['port'],
+                                       None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_None_networks_with_network_id(self):
+        return_server = self.fc.servers.list()[3]
+        return_server.id = 9102
+        server = self._create_test_server(return_server, 'networks_update')
+
+        new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                         'fixed_ip': '1.2.3.4'}]
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = new_networks
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        # to make sure, that old_networks will be None
+        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
+
+        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                                       '1.2.3.4')
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa').AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(None, new_networks[0]['network'],
+                                       new_networks[0]['fixed_ip']).AndReturn(
+                                           None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_empty_networks_with_complex_parameters(self):
+        return_server = self.fc.servers.list()[3]
+        return_server.id = 9102
+        server = self._create_test_server(return_server, 'networks_update')
+
+        new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                         'fixed_ip': '1.2.3.4',
+                         'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = new_networks
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        # to make sure, that old_networks will be None
+        self.assertFalse(hasattr(server.t['Properties'], 'networks'))
+
+        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                                       '1.2.3.4')
+        self.m.StubOutWithMock(return_server, 'interface_list')
+        return_server.interface_list().AndReturn([iface])
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa').AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(
+            new_networks[0]['port'], None, None).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_networks_with_complex_parameters(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '1.2.3.4'},
+            {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '31.32.33.34'}]
+
+        new_networks = [
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '1.2.3.4'},
+            {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+
+        server.t['Properties']['networks'] = old_networks
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = new_networks
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+
+        poor_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14'),
+            self.create_fake_iface('450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '1.2.3.4'),
+            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '21.22.23.24'),
+            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '31.32.33.34')
+        ]
+
+        return_server.interface_list().AndReturn(poor_interfaces)
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            poor_interfaces[0].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[2].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[3].port_id).InAnyOrder().AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(
+            new_networks[1]['port'], None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_networks_with_None(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
+            {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '31.32.33.34'}]
+
+        server.t['Properties']['networks'] = old_networks
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = None
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+
+        poor_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14'),
+            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '21.22.23.24'),
+            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '31.32.33.34')
+        ]
+
+        return_server.interface_list().AndReturn(poor_interfaces)
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            poor_interfaces[0].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[1].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[2].port_id).InAnyOrder().AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(None, None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_networks_with_empty_list(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 5678
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
+            {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '31.32.33.34'}]
+
+        server.t['Properties']['networks'] = old_networks
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['networks'] = []
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+
+        self.m.StubOutWithMock(return_server, 'interface_list')
+
+        poor_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14'),
+            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '21.22.23.24'),
+            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '31.32.33.34')
+        ]
+
+        return_server.interface_list().AndReturn(poor_interfaces)
+
+        self.m.StubOutWithMock(return_server, 'interface_detach')
+        return_server.interface_detach(
+            poor_interfaces[0].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[1].port_id).InAnyOrder().AndReturn(None)
+        return_server.interface_detach(
+            poor_interfaces[2].port_id).InAnyOrder().AndReturn(None)
+
+        self.m.StubOutWithMock(return_server, 'interface_attach')
+        return_server.interface_attach(None, None, None).AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
 
 class FlavorConstraintTest(HeatTestCase):
 
