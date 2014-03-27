@@ -288,6 +288,9 @@ class ResourceRegistry(object):
             msg = _('Non-empty resource type is required '
                     'for resource "%s"') % resource_name
             raise exception.StackValidationFailed(message=msg)
+        elif not isinstance(resource_type, basestring):
+            msg = _('Resource "%s" type is not a string') % resource_name
+            raise exception.StackValidationFailed(message=msg)
 
         info = self.get_resource_info(resource_type,
                                       resource_name=resource_name)
