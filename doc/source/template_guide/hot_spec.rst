@@ -450,7 +450,7 @@ property values.
 .. _hot_spec_resources_dependencies:
 
 Resource Dependencies
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 By means of the *depends_on* attribute within a resource section it is possible
 to define a dependency between a resource and one or more other resources. If
