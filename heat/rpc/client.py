@@ -153,16 +153,18 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                              files=files,
                                              args=args))
 
-    def validate_template(self, ctxt, template):
+    def validate_template(self, ctxt, template, params=None):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
 
         :param ctxt: RPC context.
         :param template: Template of stack you want to create.
+        :param params: Stack Input Params/Environment
         """
         return self.call(ctxt, self.make_msg('validate_template',
-                                             template=template))
+                                             template=template,
+                                             params=params))
 
     def authenticated_to_backend(self, ctxt):
         """

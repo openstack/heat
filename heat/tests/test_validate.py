@@ -806,7 +806,24 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
+        self.assertEqual('test.', res['Description'])
+
+    def test_validate_with_environment(self):
+        test_template = test_template_ref % 'WikiDatabase'
+        test_template = test_template.replace('AWS::EC2::Instance',
+                                              'My::Instance')
+        t = template_format.parse(test_template)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        params = {'resource_registry': {'My::Instance': 'AWS::EC2::Instance'}}
+        res = dict(engine.validate_template(None, t, params))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_hot_valid(self):
@@ -825,7 +842,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_ref_invalid(self):
@@ -838,7 +855,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
@@ -851,7 +868,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
 
     def test_validate_findinmap_invalid(self):
@@ -864,7 +881,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_parameters(self):
@@ -877,7 +894,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         # Note: the assertion below does not expect a CFN dict of the parameter
         # but a dict of the parameters.Schema object.
         # For API CFN backward compatibility, formating to CFN is done in the
@@ -899,7 +916,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -919,7 +936,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -939,7 +956,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
 
         expected = {'KeyName': {
@@ -959,7 +976,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
@@ -971,7 +988,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Resources must contain Resource. '
                           'Found a [string] instead'},
                          res)
@@ -1035,7 +1052,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
             {'Error': 'Property SourceDestCheck not implemented yet'},
             res)
@@ -1049,7 +1066,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Invalid DeletionPolicy Destroy'}, res)
 
     def test_snapshot_deletion_policy(self):
@@ -1061,7 +1078,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
             {'Error': 'Snapshot DeletionPolicy not supported'}, res)
 
@@ -1076,7 +1093,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, t))
+        res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
 
     def test_validate_template_without_resources(self):
@@ -1089,7 +1106,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'At least one Resources member '
                                    'must be defined.'}, res)
 
@@ -1114,7 +1131,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Type" is not a valid keyword '
                                    'inside a resource definition\''}, res)
 
@@ -1139,7 +1156,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Properties" is not a valid keyword '
                                    'inside a resource definition\''}, res)
 
@@ -1164,7 +1181,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Metadata" is not a valid keyword '
                                    'inside a resource definition\''}, res)
 
@@ -1189,7 +1206,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
                                    'inside a resource definition\''}, res)
 
@@ -1214,7 +1231,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"DeletionPolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)
@@ -1240,7 +1257,7 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.validate_template(None, hot_tpl))
+        res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"UpdatePolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)

@@ -581,13 +581,14 @@ class EngineService(service.Service):
         return dict(current_stack.identifier())
 
     @request_context
-    def validate_template(self, cnxt, template):
+    def validate_template(self, cnxt, template, params=None):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
 
         :param cnxt: RPC context.
         :param template: Template of stack you want to create.
+        :param params: Stack Input Params
         """
         logger.info(_('validate_template'))
         if template is None:
@@ -606,6 +607,8 @@ class EngineService(service.Service):
         if not tmpl_resources:
             return {'Error': 'At least one Resources member must be defined.'}
 
+        env = environment.Environment(params)
+
         for res in tmpl_resources.values():
             try:
                 if not res.get('Type'):
@@ -620,7 +623,7 @@ class EngineService(service.Service):
                         'Resources must contain Resource. '
                         'Found a [%s] instead' % type_res}
 
-            ResourceClass = resource.get_class(res['Type'])
+            ResourceClass = env.get_class(res['Type'])
             if ResourceClass == resources.template_resource.TemplateResource:
                 # we can't validate a TemplateResource unless we instantiate
                 # it as we need to download the template and convert the
