@@ -26,6 +26,7 @@ cfg.CONF.import_opt('event_purge_batch_size', 'heat.common.config')
 cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 tmpl = {
+    'HeatTemplateFormatVersion': '2012-12-12',
     'Resources': {
         'EventTestResource': {
             'Type': 'ResourceWithRequiredProps',
@@ -144,7 +145,8 @@ class EventTest(HeatTestCase):
         self.assertIsNone(e.identifier())
 
     def test_badprop(self):
-        tmpl = {'Type': 'ResourceWithRequiredProps',
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Type': 'ResourceWithRequiredProps',
                 'Properties': {'Foo': False}}
         rname = 'bad_resource'
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)

@@ -53,7 +53,8 @@ class NotificationTest(common.HeatTestCase):
                                  generic_resource.ResourceWithProps)
 
     def create_test_stack(self):
-        test_template = {'Parameters': {'Foo': {'Type': 'String'},
+        test_template = {'HeatTemplateFormatVersion': '2012-12-12',
+                         'Parameters': {'Foo': {'Type': 'String'},
                                         'Pass': {'Type': 'String',
                                                  'NoEcho': True}},
                          'Resources':

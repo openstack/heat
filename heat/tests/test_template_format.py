@@ -172,8 +172,8 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
     def compare_stacks(self, json_file, yaml_file, parameters):
         t1 = self.load_template(json_file)
         t2 = self.load_template(yaml_file)
-        del(t2[u'HeatTemplateFormatVersion'])
         del(t1[u'AWSTemplateFormatVersion'])
+        t1[u'HeatTemplateFormatVersion'] = t2[u'HeatTemplateFormatVersion']
         stack1 = utils.parse_stack(t1, parameters)
         stack2 = utils.parse_stack(t2, parameters)
 

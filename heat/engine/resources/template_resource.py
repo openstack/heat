@@ -86,7 +86,8 @@ class TemplateResource(stack_resource.StackResource):
             tmpl = template.Template(self.child_template())
         except ValueError as download_error:
             self.validation_exception = download_error
-            tmpl = template.Template({})
+            tmpl = template.Template(
+                {"HeatTemplateFormatVersion": "2012-12-12"})
 
         # re-generate the properties and attributes from the template.
         self.properties_schema = (properties.Properties

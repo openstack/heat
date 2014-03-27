@@ -78,8 +78,10 @@ class TestTemplateVersion(HeatTestCase):
             'foo': 'bar',
             'Parameters': {}
         }
-        self.assertEqual(('HeatTemplateFormatVersion', '2012-12-12'),
-                         template.get_version(tmpl, self.versions))
+        ex = self.assertRaises(exception.InvalidTemplateVersion,
+                               template.get_version, tmpl, self.versions)
+        self.assertEqual('The template version is invalid: Template version '
+                         'was not provided', str(ex))
 
     def test_ambiguous_version(self):
         tmpl = {

@@ -301,7 +301,8 @@ class InstanceGroup(stack_resource.StackResource):
         old_resources = self._get_instance_templates()
         templates = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
-        return {"Resources": dict(templates)}
+        return {"HeatTemplateFormatVersion": "2012-12-12",
+                "Resources": dict(templates)}
 
     def _try_rolling_update(self, prop_diff):
         if (self.update_policy[self.ROLLING_UPDATE] and
@@ -958,6 +959,7 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         """Use a HOT format for the template in the nested stack."""
         tpl = super(AutoScalingResourceGroup, self)._create_template(
             *args, **kwargs)
+        tpl.pop('HeatTemplateFormatVersion', None)
         tpl['heat_template_version'] = '2013-05-23'
         tpl['resources'] = tpl.pop('Resources')
         return tpl

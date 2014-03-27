@@ -31,6 +31,9 @@ from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
+empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
+
+
 class MyCloudResource(generic_rsrc.GenericResource):
     pass
 
@@ -115,7 +118,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         map_prop_val = {
@@ -174,7 +178,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         json_snippet = {
@@ -187,6 +192,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_attributes_missing(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Outputs': {
                 'Blarg': {'Value': 'wibble'},
             },
@@ -206,7 +212,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -242,7 +249,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -251,6 +259,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_properties_missing(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'Blarg': {'Type': 'String', 'Default': 'wibble'},
             },
@@ -272,7 +281,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -282,6 +292,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_properties_extra_required(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'Blarg': {'Type': 'String'},
             },
@@ -304,7 +315,8 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(empty_template, files=files),
+                             env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -337,7 +349,9 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}, files=files), env=env,
+                             parser.Template(
+                                 {'HeatTemplateFormatVersion': '2012-12-12'},
+                                 files=files), env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -411,7 +425,8 @@ class ProviderTemplateTest(HeatTestCase):
             }
         }
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}), stack_id=str(uuid.uuid4()))
+                             parser.Template(empty_template),
+                             stack_id=str(uuid.uuid4()))
         templ_resource = resource.Resource("test_templ_resource", json_snippet,
                                            stack)
         self.m.VerifyAll()
@@ -449,7 +464,7 @@ class ProviderTemplateTest(HeatTestCase):
         g_env.load({'resource_registry':
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}),
+                             parser.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
         minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
@@ -475,7 +490,7 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}), env=env,
+                             parser.Template(empty_template), env=env,
                              stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -495,7 +510,7 @@ class ProviderTemplateTest(HeatTestCase):
         g_env.load({'resource_registry':
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}),
+                             parser.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
@@ -522,7 +537,7 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}), env=env,
+                             parser.Template(empty_template), env=env,
                              stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
@@ -548,7 +563,7 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}), env=env,
+                             parser.Template(empty_template), env=env,
                              stack_id=str(uuid.uuid4()))
 
         self.m.ReplayAll()

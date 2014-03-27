@@ -46,7 +46,7 @@ class WatchRuleTest(HeatTestCase):
         # must be associated with a stack
         ctx = utils.dummy_context()
         ctx.auth_token = 'abcd1234'
-        empty_tmpl = {"template": {}}
+        empty_tmpl = {'HeatTemplateFormatVersion': '2012-12-12'}
         tmpl = parser.Template(empty_tmpl)
         stack_name = 'dummystack'
         dummy_stack = parser.Stack(ctx, stack_name, tmpl)

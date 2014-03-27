@@ -34,6 +34,7 @@ class FormatTest(HeatTestCase):
         super(FormatTest, self).setUp()
 
         template = parser.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'generic1': {'Type': 'GenericResourceType'},
                 'generic2': {

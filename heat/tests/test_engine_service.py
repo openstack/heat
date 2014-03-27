@@ -494,7 +494,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.assertRaises(ValueError,
                           self.man.create_stack,
-                          self.ctx, stack_name, stack.t, {}, None, {})
+                          self.ctx, stack_name, stack.t.t, {}, None, {})
 
     def test_stack_create_invalid_resource_name(self):
         stack_name = 'service_create_test_stack_invalid_res'
@@ -506,7 +506,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertRaises(ValueError,
                           self.man.create_stack,
                           self.ctx, stack_name,
-                          stack.t, {}, None, {})
+                          stack.t.t, {}, None, {})
 
     def test_stack_create_no_credentials(self):
         stack_name = 'test_stack_create_no_credentials'
@@ -557,7 +557,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         params = {}
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
-        tpl = {'Resources': {
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources': {
                'A': {'Type': 'GenericResourceType'},
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
@@ -593,15 +594,15 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         params = {}
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
-        tpl = {'Resources': {
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources': {
                'A': {'Type': 'GenericResourceType'},
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
-        template = parser.Template(tpl)
         cfg.CONF.set_override('max_resources_per_stack', 2)
         ex = self.assertRaises(rpc_common.ClientException,
                                self.man.create_stack, self.ctx, stack_name,
-                               template, params, None, {})
+                               tpl, params, None, {})
         self.assertEqual(ex._exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       str(ex._exc_info[1]))
@@ -862,7 +863,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         params = {}
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
-        tpl = {'Resources': {
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources': {
                'A': {'Type': 'GenericResourceType'},
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
@@ -1046,13 +1048,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         params = {}
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
-        tpl = {'Resources': {
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources': {
                'A': {'Type': 'GenericResourceType'},
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
 
         template = parser.Template(tpl)
-
         old_stack = parser.Stack(self.ctx, stack_name, template)
         sid = old_stack.store()
         self.assertIsNotNone(sid)
@@ -1061,7 +1063,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         ex = self.assertRaises(rpc_common.ClientException,
                                self.man.update_stack, self.ctx,
-                               old_stack.identifier(), template, params,
+                               old_stack.identifier(), tpl, params,
                                None, {})
         self.assertEqual(ex._exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
@@ -1507,7 +1509,7 @@ class StackServiceTest(HeatTestCase):
     def test_stack_create_existing(self):
         ex = self.assertRaises(rpc_common.ClientException,
                                self.eng.create_stack, self.ctx,
-                               self.stack.name, self.stack.t, {}, None, {})
+                               self.stack.name, self.stack.t.t, {}, None, {})
         self.assertEqual(ex._exc_info[0], exception.StackExists)
 
     @stack_context('service_name_tenants_test_stack', False)
@@ -1581,7 +1583,8 @@ class StackServiceTest(HeatTestCase):
             return thread
         self.eng.thread_group_mgr.start = run
 
-        new_tmpl = {'Resources': {'AResource': {'Type':
+        new_tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                    'Resources': {'AResource': {'Type':
                                                 'GenericResourceType'}}}
 
         self.m.StubOutWithMock(instances.Instance, 'handle_delete')
@@ -2570,6 +2573,7 @@ class StackServiceTest(HeatTestCase):
                             generic_rsrc.GenericResource)
 
         lazy_load_template = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -2607,13 +2611,11 @@ class StackServiceTest(HeatTestCase):
         params = {}
         files = None
         stack_name = 'SampleStack'
-        tpl = {
-            'Description': 'Lorem ipsum.',
-            'Resources': {
-                'SampleResource1': {'Type': 'GenericResource1'},
-                'SampleResource2': {'Type': 'GenericResource2'},
-            }
-        }
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Description': 'Lorem ipsum.',
+               'Resources': {
+                   'SampleResource1': {'Type': 'GenericResource1'},
+                   'SampleResource2': {'Type': 'GenericResource2'}}}
 
         return self.eng.preview_stack(self.ctx, stack_name, tpl,
                                       params, files, args)
@@ -2669,14 +2671,16 @@ class StackServiceTest(HeatTestCase):
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
-        template = service.parser.Template({})
+        template = service.parser.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12'})
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', template)
 
     def test_validate_new_stack_checks_resource_limit(self):
         cfg.CONF.set_override('max_resources_per_stack', 5)
-        template = {'Resources': [1, 2, 3, 4, 5, 6]}
+        template = {'HeatTemplateFormatVersion': '2012-12-12',
+                    'Resources': [1, 2, 3, 4, 5, 6]}
         parsed_template = service.parser.Template(template)
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,

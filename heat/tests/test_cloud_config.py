@@ -33,6 +33,7 @@ class CloudConfigTest(HeatTestCase):
         self.stack = parser.Stack(
             self.ctx, 'software_config_test_stack',
             template.Template({
+                'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
                     'config_mysql': {
                         'Type': 'OS::Heat::CloudConfig',
