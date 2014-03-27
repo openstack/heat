@@ -52,13 +52,13 @@ hot_tpl_mapped_props = template_format.parse('''
 heat_template_version: 2013-05-23
 resources:
   resource1:
-    type: ResourceWithComplexAttributesType
+    type: ResWithComplexPropsAndAttrsType
   resource2:
     type: ResWithComplexPropsAndAttrsType
     properties:
       a_list: { get_attr: [ resource1, list] }
       a_string: { get_attr: [ resource1, string ] }
-      a_map: { get_attr: [ resource1, flat_map ] }
+      a_map: { get_attr: [ resource1, map] }
 ''')
 
 
@@ -797,8 +797,6 @@ class StackGetAttrValidationTest(HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        resource._register_class('ResourceWithComplexAttributesType',
-                                 generic_rsrc.ResourceWithComplexAttributes)
         resource._register_class('ResWithComplexPropsAndAttrsType',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
 
@@ -806,8 +804,8 @@ class StackGetAttrValidationTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_props_from_attrs',
                              template.Template(hot_tpl_mapped_props))
         stack.resources['resource1'].list = None
-        stack.resources['resource1'].flat_map = None
-        stack.resources['resource1'].nested_dict = None
+        stack.resources['resource1'].map = None
+        stack.resources['resource1'].string = None
         try:
             stack.validate()
         except exception.StackValidationFailed as exc:
