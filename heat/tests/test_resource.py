@@ -84,6 +84,15 @@ class ResourceTest(HeatTestCase):
                                snippet, self.stack)
         self.assertIn(_('Resource "%s" has no type') % resource_name, str(ex))
 
+    def test_resource_wrong_type(self):
+        snippet = {'Type': {}}
+        resource_name = 'aresource'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               resource.Resource, resource_name,
+                               snippet, self.stack)
+        self.assertIn(_('Resource "%s" type is not a string') % resource_name,
+                      str(ex))
+
     def test_resource_missed_type(self):
         snippet = {'not-a-Type': 'GenericResourceType'}
         resource_name = 'aresource'
