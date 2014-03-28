@@ -182,7 +182,7 @@ class DockerContainer(resource.Resource):
         if name == 'network_ip':
             client = self.get_client()
             networkinfo = self._container_networkinfo(client, self.resource_id)
-            return networkinfo['Gateway']
+            return networkinfo['IPAddress']
         if name == 'network_tcp_ports':
             client = self.get_client()
             networkinfo = self._container_networkinfo(client, self.resource_id)
