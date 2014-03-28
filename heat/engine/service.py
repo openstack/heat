@@ -602,6 +602,9 @@ class EngineService(service.Service):
         except KeyError as ex:
             return {'Error': str(ex)}
 
+        # validate overall template (top-level structure)
+        tmpl.validate()
+
         if not tmpl_resources:
             return {'Error': 'At least one Resources member must be defined.'}
 

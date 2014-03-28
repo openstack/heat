@@ -90,3 +90,76 @@ class TestTemplateVersion(HeatTestCase):
         }
         self.assertRaises(exception.InvalidTemplateVersion,
                           template.get_version, tmpl, self.versions)
+
+
+class TestTemplateValidate(HeatTestCase):
+
+    def test_template_validate_cfn_good(self):
+        t = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'Description': 'foo',
+            'Parameters': {},
+            'Mappings': {},
+            'Resources': {},
+            'Outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        err = tmpl.validate()
+        self.assertIsNone(err)
+
+        # test with alternate version key
+        t = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Description': 'foo',
+            'Parameters': {},
+            'Mappings': {},
+            'Resources': {},
+            'Outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        err = tmpl.validate()
+        self.assertIsNone(err)
+
+    def test_template_validate_cfn_bad_section(self):
+        t = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'Description': 'foo',
+            'Parameteers': {},
+            'Mappings': {},
+            'Resources': {},
+            'Outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        err = self.assertRaises(exception.InvalidTemplateSection,
+                                tmpl.validate)
+        self.assertIn('Parameteers', str(err))
+
+    def test_template_validate_hot_good(self):
+        t = {
+            'heat_template_version': '2013-05-23',
+            'description': 'foo',
+            'parameters': {},
+            'resources': {},
+            'outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        err = tmpl.validate()
+        self.assertIsNone(err)
+
+    def test_template_validate_hot_bad_section(self):
+        t = {
+            'heat_template_version': '2013-05-23',
+            'description': 'foo',
+            'parameteers': {},
+            'resources': {},
+            'outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        err = self.assertRaises(exception.InvalidTemplateSection,
+                                tmpl.validate)
+        self.assertIn('parameteers', str(err))

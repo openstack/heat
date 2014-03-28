@@ -73,6 +73,7 @@ class FaultWrapper(wsgi.Middleware):
         'StackValidationFailed': webob.exc.HTTPBadRequest,
         'InvalidTemplateReference': webob.exc.HTTPBadRequest,
         'InvalidTemplateVersion': webob.exc.HTTPBadRequest,
+        'InvalidTemplateSection': webob.exc.HTTPBadRequest,
         'UnknownUserParameter': webob.exc.HTTPBadRequest,
         'RevertFailed': webob.exc.HTTPInternalServerError,
         'StopActionFailed': webob.exc.HTTPInternalServerError,

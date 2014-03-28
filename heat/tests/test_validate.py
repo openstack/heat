@@ -25,6 +25,7 @@ from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
+from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -974,6 +975,56 @@ class validateTest(HeatTestCase):
         self.assertEqual({'Error': 'Resources must contain Resource. '
                           'Found a [string] instead'},
                          res)
+
+    def test_invalid_section_cfn(self):
+        t = template_format.parse(
+            """
+            {
+                'AWSTemplateFormatVersion': '2010-09-09',
+                'Resources': {
+                    'server': {
+                        'Type': 'OS::Nova::Server'
+                    }
+                },
+                'Output': {}
+            }
+            """)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               engine.validate_template, None, t)
+        self.assertEqual(ex._exc_info[0], exception.InvalidTemplateSection)
+        self.assertEqual('The template section is invalid: Output',
+                         str(ex._exc_info[1]))
+
+    def test_invalid_section_hot(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            resources:
+              server:
+                type: OS::Nova::Server
+            output:
+            """)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        ex = self.assertRaises(rpc_common.ClientException,
+                               engine.validate_template, None, t)
+        self.assertEqual(ex._exc_info[0], exception.InvalidTemplateSection)
+        self.assertEqual('The template section is invalid: output',
+                         str(ex._exc_info[1]))
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)

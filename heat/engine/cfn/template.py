@@ -19,12 +19,13 @@ from heat.engine import template
 class CfnTemplate(template.Template):
     '''A stack template.'''
 
-    SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
+    SECTIONS = (VERSION, ALTERNATE_VERSION, DESCRIPTION, MAPPINGS,
                 PARAMETERS, RESOURCES, OUTPUTS) = \
-               ('AWSTemplateFormatVersion', 'Description', 'Mappings',
-                'Parameters', 'Resources', 'Outputs')
+               ('AWSTemplateFormatVersion', 'HeatTemplateFormatVersion',
+                'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs'
+                )
 
-    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
+    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION, ALTERNATE_VERSION])
 
     def __getitem__(self, section):
         '''Get the relevant section in the template.'''
