@@ -1988,11 +1988,9 @@ class ServersTest(HeatTestCase):
 
             new_nets_copy = copy.deepcopy(new_nets)
             old_nets_copy = copy.deepcopy(old_nets)
-            for net in old_nets_copy:
-                net.pop('uuid')
             for net in new_nets_copy:
-                for key in ('port', 'network', 'fixed_ip'):
-                    net[key] = net.get(key)
+                for key in ('port', 'network', 'fixed_ip', 'uuid'):
+                    net.setdefault(key)
 
             matched_nets = server._get_network_matches(old_nets, new_nets)
             self.assertEqual([], matched_nets)
@@ -2019,11 +2017,9 @@ class ServersTest(HeatTestCase):
 
         new_nets_copy = copy.deepcopy(new_nets)
         old_nets_copy = copy.deepcopy(old_nets)
-        for net in old_nets_copy:
-            net.pop('uuid')
         for net in new_nets_copy:
-            for key in ('port', 'network', 'fixed_ip'):
-                net[key] = net.get(key)
+            for key in ('port', 'network', 'fixed_ip', 'uuid'):
+                net.setdefault(key)
 
         matched_nets = server._get_network_matches(old_nets, new_nets)
         self.assertEqual(old_nets_copy[:-1], matched_nets)

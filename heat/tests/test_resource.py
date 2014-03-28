@@ -364,44 +364,68 @@ class ResourceTest(HeatTestCase):
         self.assertEqual({'Metadata': None}, diff)
 
     def test_update_template_diff_properties_none(self):
+        before_props = {}
         tmpl = {'Type': 'Foo'}
-        update_snippet = {'Type': 'Foo'}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        diff = res.update_template_diff_properties(update_snippet, tmpl)
+        after_props = {}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        diff = res.update_template_diff_properties(after_props, before_props)
         self.assertEqual({}, diff)
 
     def test_update_template_diff_properties_added(self):
+        before_props = {}
         tmpl = {'Type': 'Foo'}
-        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 123}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual({'Bar': 123}, diff)
+        after_props = {'Foo': '123'}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        diff = res.update_template_diff_properties(after_props, before_props)
+        self.assertEqual({'Foo': '123'}, diff)
 
-    def test_update_template_diff_properties_removed(self):
-        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
-        update_snippet = {'Type': 'Foo', 'Properties': {}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual({'Bar': None}, diff)
+    def test_update_template_diff_properties_removed_no_default_value(self):
+        before_props = {'Foo': '123'}
+        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        # Here should be used real property to get default value
+        new_t = {'Type': 'Foo'}
+        new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
+        after_props = new_res.properties
+
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        diff = res.update_template_diff_properties(after_props, before_props)
+        self.assertEqual({'Foo': None}, diff)
+
+    def test_update_template_diff_properties_removed_with_default_value(self):
+        before_props = {'Foo': '123'}
+        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        generic_rsrc.ResourceWithProps.properties_schema = \
+            {'Foo': {'Type': 'String', 'Default': '567'}}
+        # Here should be used real property to get default value
+        new_t = {'Type': 'Foo'}
+        new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
+        after_props = new_res.properties
+
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        diff = res.update_template_diff_properties(after_props, before_props)
+        self.assertEqual({'Foo': '567'}, diff)
 
     def test_update_template_diff_properties_changed(self):
-        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
-        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual({'Bar': 456}, diff)
+        before_props = {'Foo': '123'}
+        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        after_props = {'Foo': '456'}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        diff = res.update_template_diff_properties(after_props, before_props)
+        self.assertEqual({'Foo': '456'}, diff)
 
     def test_update_template_diff_properties_notallowed(self):
-        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
-        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        before_props = {'Foo': '123'}
+        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        after_props = {'Bar': '456'}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
         self.assertRaises(resource.UpdateReplace,
                           res.update_template_diff_properties,
-                          update_snippet, tmpl)
+                          after_props, before_props)
 
     def test_resource(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
