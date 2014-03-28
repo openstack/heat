@@ -44,7 +44,7 @@ def upgrade(migrate_engine):
 
                 try:
                     dt = time.strptime(version, '%Y-%m-%d')
-                except ValueError:
+                except (TypeError, ValueError):
                     dt = None
 
                 if dt is None or dt < patch_date:
