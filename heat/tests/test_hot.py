@@ -131,7 +131,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('Type', str(err))
+        self.assertEqual('u\'"Type" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_resources_bad_properties(self):
         """Test translation of resources including invalid keyword."""
@@ -153,7 +155,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('Properties', str(err))
+        self.assertEqual('u\'"Properties" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_resources_bad_metadata(self):
         """Test translation of resources including invalid keyword."""
@@ -175,7 +179,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('Metadata', str(err))
+        self.assertEqual('u\'"Metadata" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_resources_bad_depends_on(self):
         """Test translation of resources including invalid keyword."""
@@ -197,7 +203,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('DependsOn', str(err))
+        self.assertEqual('u\'"DependsOn" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_resources_bad_deletion_polciy(self):
         """Test translation of resources including invalid keyword."""
@@ -219,7 +227,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('DeletionPolicy', str(err))
+        self.assertEqual('u\'"DeletionPolicy" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_resources_bad_update_policy(self):
         """Test translation of resources including invalid keyword."""
@@ -241,7 +251,9 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertIn('UpdatePolicy', str(err))
+        self.assertEqual('u\'"UpdatePolicy" is not a valid keyword '
+                         'inside a resource definition\'',
+                         str(err))
 
     def test_translate_outputs_good(self):
         """Test translation of outputs into internal engine format."""
