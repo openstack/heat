@@ -1146,9 +1146,11 @@ class ServersTest(HeatTestCase):
                                           'srv_updimgrbld')
 
         new_image = 'F17-x86_64-gold'
+        # current test demonstrate updating when image_update_policy was not
+        # changed, so image_update_policy will be used from self.properties
+        server.t['Properties']['image_update_policy'] = policy
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = new_image
-        server.t['Properties']['image_update_policy'] = policy
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
@@ -1198,9 +1200,11 @@ class ServersTest(HeatTestCase):
                                           'srv_updrbldfail')
 
         new_image = 'F17-x86_64-gold'
+        # current test demonstrate updating when image_update_policy was not
+        # changed, so image_update_policy will be used from self.properties
+        server.t['Properties']['image_update_policy'] = 'REBUILD'
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = new_image
-        server.t['Properties']['image_update_policy'] = 'REBUILD'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
