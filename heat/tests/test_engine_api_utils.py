@@ -51,6 +51,11 @@ class EngineApiTest(HeatTestCase):
         args = api.extract_args(p)
         self.assertNotIn('timeout_mins', args)
 
+    def test_timeout_extract_negative(self):
+        p = {'timeout_mins': '-100'}
+        error = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertIn('Invalid timeout value', str(error))
+
     def test_timeout_extract_not_present(self):
         args = api.extract_args({})
         self.assertNotIn('timeout_mins', args)

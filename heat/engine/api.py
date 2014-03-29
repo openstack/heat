@@ -29,13 +29,17 @@ def extract_args(params):
     conversion where appropriate
     '''
     kwargs = {}
-    try:
-        timeout_mins = int(params.get(api.PARAM_TIMEOUT, 0))
-    except (ValueError, TypeError):
-        logger.exception(_('create timeout conversion'))
-    else:
-        if timeout_mins > 0:
-            kwargs[api.PARAM_TIMEOUT] = timeout_mins
+    timeout_mins = params.get(api.PARAM_TIMEOUT)
+    if timeout_mins not in ('0', 0, None):
+        try:
+            timeout = int(timeout_mins)
+        except (ValueError, TypeError):
+            logger.exception(_('Timeout conversion failed'))
+        else:
+            if timeout > 0:
+                kwargs[api.PARAM_TIMEOUT] = timeout
+            else:
+                raise ValueError(_('Invalid timeout value %s') % timeout)
 
     if api.PARAM_DISABLE_ROLLBACK in params:
         disable_rollback = params.get(api.PARAM_DISABLE_ROLLBACK)
