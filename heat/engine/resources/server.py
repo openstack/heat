@@ -21,6 +21,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources.neutron import subnet
 from heat.engine.resources import nova_utils
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import scheduler
@@ -636,6 +637,26 @@ class Server(stack_user.StackUser):
             return server.accessIPv6
         if name == 'show':
             return server._info
+
+    def add_dependencies(self, deps):
+        super(Server, self).add_dependencies(deps)
+        # Depend on any Subnet in this template with the same
+        # network_id as the networks attached to this server.
+        # It is not known which subnet a server might be assigned
+        # to so all subnets in a network should be created before
+        # the servers in that network.
+        for res in self.stack.itervalues():
+            if (res.has_interface('OS::Neutron::Subnet')):
+                subnet_net = res.properties.get(subnet.Subnet.NETWORK_ID)
+                for net in self.properties.get(self.NETWORKS):
+                    # we do not need to worry about NETWORK_ID values which are
+                    # names instead of UUIDs since these were not created
+                    # by this stack
+                    net_id = (net.get(self.NETWORK_ID) or
+                              net.get(self.NETWORK_UUID))
+                    if net_id and net_id == subnet_net:
+                        deps += (self, res)
+                        break
 
     def _get_network_matches(self, old_networks, new_networks):
         # make new_networks similar on old_networks
