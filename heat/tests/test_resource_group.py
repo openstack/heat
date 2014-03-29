@@ -17,8 +17,8 @@ import mock
 
 from heat.common import exception
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resources import resource_group
+from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import generic_resource
 from heat.tests import utils

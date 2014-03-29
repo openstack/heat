@@ -11,20 +11,15 @@
 #    under the License.
 
 import mock
-
 from oslo.config import cfg
 
-from heat.openstack.common import timeutils
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-
 # imports for mocking
-from heat.engine import signal_responder as signal
-from heat.engine import stack_resource
 from heat.engine.resources import autoscaling
 from heat.engine.resources import image
 from heat.engine.resources import instance
@@ -32,13 +27,14 @@ from heat.engine.resources import loadbalancer
 from heat.engine.resources import nova_keypair
 from heat.engine.resources import user
 from heat.engine.resources import wait_condition as waitc
-
-from heat.tests import generic_resource
-from heat.tests import utils
+from heat.engine import signal_responder as signal
+from heat.engine import stack_resource
+from heat.openstack.common import timeutils
 from heat.tests import common
-
+from heat.tests import generic_resource
 # reuse the same template than autoscaling tests
 from heat.tests.test_autoscaling import as_template
+from heat.tests import utils
 
 
 class NotificationTest(common.HeatTestCase):

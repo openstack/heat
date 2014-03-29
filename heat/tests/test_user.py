@@ -20,8 +20,8 @@ from heat.common import short_id
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resources import user
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils

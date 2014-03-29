@@ -11,15 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 
 import testtools
-import json
 
 from heat.common import exception
 from heat.common import identifier
+from heat.engine import constraints as constr
 from heat.engine import parameters
 from heat.engine import template
-from heat.engine import constraints as constr
 
 
 class ParameterTest(testtools.TestCase):

@@ -17,11 +17,11 @@ import copy
 from novaclient import exceptions as nova_exceptions
 
 from heat.engine import clients
-from heat.engine import scheduler
 from heat.engine.resources import nova_keypair
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests.v1_1 import fakes
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 
 class NovaKeyPairTest(HeatTestCase):

@@ -13,28 +13,29 @@
 
 import collections
 import copy
-import mock
-import mox
 import uuid
 
-from heat.engine import environment
-from heat.tests.v1_1 import fakes as fakes_v1_1
-from heat.tests import fakes
+import mock
+import mox
+from novaclient import exceptions
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine.resources import image
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
 from heat.engine.resources.software_config import software_config as sc
-from heat.openstack.common import uuidutils
+from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes
 from heat.tests import utils
-from novaclient import exceptions
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 wp_template = '''

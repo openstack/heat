@@ -11,12 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-import mox
 import uuid
 
-from heat.common import template_format
+import mock
+import mox
+
 from heat.common import exception
+from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource

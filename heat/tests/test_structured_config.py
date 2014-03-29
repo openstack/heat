@@ -14,9 +14,8 @@
 import mock
 
 from heat.engine import parser
+from heat.engine.resources.software_config import structured_config as sc
 from heat.engine import template
-import heat.engine.resources.software_config.structured_config as sc
-
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

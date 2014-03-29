@@ -11,15 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import testtools
 
-from heat.engine import constraints
 from heat.common import exception
+from heat.engine import constraints
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
-import testtools
 
 
 class PropertySchemaTest(testtools.TestCase):

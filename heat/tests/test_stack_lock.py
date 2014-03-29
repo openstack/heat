@@ -11,13 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import stack_lock
-from heat.openstack.common.rpc import proxy
 from heat.openstack.common.rpc import common as rpc_common
+from heat.openstack.common.rpc import proxy
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.common import exception
 
 
 class StackLockTest(HeatTestCase):

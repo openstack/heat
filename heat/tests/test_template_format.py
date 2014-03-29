@@ -11,15 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
+
+import mock
 import testtools
 import yaml
 
-from heat.engine import clients
 from heat.common import config
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

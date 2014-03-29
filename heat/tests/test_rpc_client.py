@@ -24,9 +24,9 @@ import stubout
 import testtools
 
 from heat.common import identifier
+from heat.openstack.common import rpc
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
-from heat.openstack.common import rpc
 from heat.tests import utils
 
 

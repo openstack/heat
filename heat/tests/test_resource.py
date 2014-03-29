@@ -11,24 +11,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import itertools
+import json
 import uuid
 
 import mock
 
 from heat.common import exception
+import heat.db.api as db_api
 from heat.engine import dependencies
+from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
-from heat.engine import environment
 from heat.openstack.common.gettextutils import _
-import heat.db.api as db_api
 
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
+from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 

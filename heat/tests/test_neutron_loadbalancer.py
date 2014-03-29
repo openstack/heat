@@ -19,12 +19,12 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import scheduler
 from heat.engine.resources.neutron import loadbalancer
+from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
+from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
-from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes as nova_fakes
 
 neutronclient = try_import('neutronclient.v2_0.client')

@@ -15,19 +15,19 @@ import collections
 
 from testtools import skipIf
 
-from heat.engine import clients
-from heat.engine import environment
-from heat.tests.v1_1 import fakes
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
+from heat.engine import environment
+from heat.engine.hot.template import HOTemplate
+from heat.engine import parser
 from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
-from heat.engine import parser
-from heat.engine.hot.template import HOTemplate
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 test_template_volumeattach = '''
 {

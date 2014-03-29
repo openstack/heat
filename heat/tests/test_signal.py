@@ -13,12 +13,8 @@
 
 import datetime
 
+from keystoneclient import exceptions as kc_exceptions
 from oslo.config import cfg
-
-from heat.tests import generic_resource
-from heat.tests import fakes
-from heat.tests.common import HeatTestCase
-from heat.tests import utils
 
 from heat.common import exception
 from heat.common import template_format
@@ -31,7 +27,10 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_user
 
-from keystoneclient import exceptions as kc_exceptions
+from heat.tests.common import HeatTestCase
+from heat.tests import fakes
+from heat.tests import generic_resource
+from heat.tests import utils
 
 
 test_template_signal = '''

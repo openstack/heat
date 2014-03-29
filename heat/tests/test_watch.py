@@ -13,13 +13,14 @@
 
 
 import datetime
+
 import mox
-import heat.db.api as db_api
 
 from heat.common import exception
-from heat.openstack.common import timeutils
-from heat.engine import watchrule
+import heat.db.api as db_api
 from heat.engine import parser
+from heat.engine import watchrule
+from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

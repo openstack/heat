@@ -15,11 +15,11 @@ import uuid
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients import troveclient
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine import scheduler
-from heat.engine.clients import troveclient
 from heat.engine.resources import os_database
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

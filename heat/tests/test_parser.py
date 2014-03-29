@@ -12,35 +12,32 @@
 #    under the License.
 
 import json
-import mock
 import time
 
 from keystoneclient import exceptions as kc_exceptions
+import mock
 from mox import IgnoreArg
 from oslo.config import cfg
 from six.moves import xrange
 
-from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
+import heat.db.api as db_api
+import heat.engine.cfn.functions
 from heat.engine import clients
+from heat.engine import environment
 from heat.engine import function
-from heat.engine import resource
 from heat.engine import parameters
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
-
-import heat.engine.cfn.functions
-
-from heat.tests.fakes import FakeKeystoneClient
 from heat.tests.common import HeatTestCase
+from heat.tests.fakes import FakeKeystoneClient
+from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
-from heat.tests import generic_resource as generic_rsrc
-
-import heat.db.api as db_api
 
 
 def join(raw):

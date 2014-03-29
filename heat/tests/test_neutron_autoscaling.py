@@ -12,10 +12,11 @@
 #    under the License.
 
 import copy
-from testtools import skipIf
+import uuid
+
 import mox
 from oslo.config import cfg
-import uuid
+from testtools import skipIf
 
 from heat.common import template_format
 from heat.db import api as db_api

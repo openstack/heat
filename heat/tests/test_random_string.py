@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from testtools.matchers import HasLength
+from testtools.matchers import MatchesRegex
 
 from heat.common import exception
 from heat.common import template_format
@@ -19,9 +21,6 @@ from heat.engine.resources.random_string import RandomString
 
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-
-from testtools.matchers import MatchesRegex
-from testtools.matchers import HasLength
 
 
 class TestRandomString(HeatTestCase):

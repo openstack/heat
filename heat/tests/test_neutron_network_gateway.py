@@ -14,18 +14,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from mox import IgnoreArg
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import scheduler
 from heat.engine.resources.neutron import network_gateway
+from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
+from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
-from heat.tests.common import HeatTestCase
-from mox import IgnoreArg
 
 neutronclient = try_import('neutronclient.v2_0.client')
 neutronV20 = try_import('neutronclient.neutron.v2_0')

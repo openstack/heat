@@ -28,9 +28,9 @@ from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-from heat.tests.common import HeatTestCase
 
 
 class NestedStackTest(HeatTestCase):

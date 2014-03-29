@@ -15,8 +15,8 @@ from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import clients
+from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase

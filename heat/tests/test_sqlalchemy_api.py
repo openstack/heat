@@ -10,33 +10,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
 from datetime import datetime
 from datetime import timedelta
+import uuid
 
 import fixtures
-from json import loads
 from json import dumps
+from json import loads
 import mock
 import mox
 
-from heat.db.sqlalchemy import api as db_api
-from heat.engine import environment
-from heat.tests.v1_1 import fakes
-from heat.engine.resource import Resource
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import instance as instances
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import clients
+from heat.engine.clients import novaclient
+from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resource import Resource
+from heat.engine.resources import instance as instances
 from heat.engine import scheduler
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
-
-from heat.engine.clients import novaclient
 
 wp_template = '''
 {
