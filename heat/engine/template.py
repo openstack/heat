@@ -164,17 +164,43 @@ class Template(collections.Mapping):
     def parse(self, stack, snippet):
         return parse(self.functions(), stack, snippet)
 
-    def validate(self):
+    def validate(self, allow_empty=True):
         '''Validate the template.
 
-        Only validates the top-level sections of the template. Syntax inside
-        sections is not checked here but in code parts that are responsible
-        for working with the respective sections.
+        Validates the top-level sections of the template as well as syntax
+        inside select sections. Some sections are not checked here but in
+        code parts that are responsible for working with the respective
+        sections (e.g. parameters are check by parameters schema class).
+
+        :param allow_empty: whether to allow an empty resources section
         '''
 
+        # check top-level sections
         for k in self.t.keys():
             if k not in self.SECTIONS:
                 raise exception.InvalidTemplateSection(section=k)
+
+        # check resources
+        tmpl_resources = self[self.RESOURCES]
+
+        if not allow_empty and not tmpl_resources:
+            message = _('The template is invalid. A Resources section with at '
+                        'least one resource must be defined.')
+            raise exception.StackValidationFailed(message=message)
+
+        for res in tmpl_resources.values():
+            try:
+                if not res.get('Type'):
+                    message = _('Every Resource object must '
+                                'contain a Type member.')
+                    raise exception.StackValidationFailed(message=message)
+            except AttributeError:
+                type_res = type(res)
+                if isinstance(res, unicode):
+                    type_res = "string"
+                message = _('Resources must contain Resource. '
+                            'Found a [%s] instead') % type_res
+                raise exception.StackValidationFailed(message=message)
 
 
 def parse(functions, stack, snippet):

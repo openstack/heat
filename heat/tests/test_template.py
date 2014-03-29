@@ -100,7 +100,11 @@ class TestTemplateValidate(HeatTestCase):
             'Description': 'foo',
             'Parameters': {},
             'Mappings': {},
-            'Resources': {},
+            'Resources': {
+                'server': {
+                    'Type': 'OS::Nova::Server'
+                }
+            },
             'Outputs': {},
         }
 
@@ -114,7 +118,11 @@ class TestTemplateValidate(HeatTestCase):
             'Description': 'foo',
             'Parameters': {},
             'Mappings': {},
-            'Resources': {},
+            'Resources': {
+                'server': {
+                    'Type': 'OS::Nova::Server'
+                }
+            },
             'Outputs': {},
         }
 
@@ -128,7 +136,11 @@ class TestTemplateValidate(HeatTestCase):
             'Description': 'foo',
             'Parameteers': {},
             'Mappings': {},
-            'Resources': {},
+            'Resources': {
+                'server': {
+                    'Type': 'OS::Nova::Server'
+                }
+            },
             'Outputs': {},
         }
 
@@ -142,7 +154,11 @@ class TestTemplateValidate(HeatTestCase):
             'heat_template_version': '2013-05-23',
             'description': 'foo',
             'parameters': {},
-            'resources': {},
+            'resources': {
+                'server': {
+                    'type': 'OS::Nova::Server'
+                }
+            },
             'outputs': {},
         }
 
@@ -155,7 +171,11 @@ class TestTemplateValidate(HeatTestCase):
             'heat_template_version': '2013-05-23',
             'description': 'foo',
             'parameteers': {},
-            'resources': {},
+            'resources': {
+                'server': {
+                    'type': 'OS::Nova::Server'
+                }
+            },
             'outputs': {},
         }
 

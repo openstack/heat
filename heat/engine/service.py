@@ -597,33 +597,19 @@ class EngineService(service.Service):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         tmpl = parser.Template(template)
+
+        # validate overall template
         try:
-            tmpl_resources = tmpl['Resources']
-        except KeyError as ex:
+            tmpl.validate(allow_empty=False)
+        except Exception as ex:
             return {'Error': six.text_type(ex)}
 
-        # validate overall template (top-level structure)
-        tmpl.validate()
-
-        if not tmpl_resources:
-            return {'Error': 'At least one Resources member must be defined.'}
+        # validate resource classes
+        tmpl_resources = tmpl[tmpl.RESOURCES]
 
         env = environment.Environment(params)
 
         for res in tmpl_resources.values():
-            try:
-                if not res.get('Type'):
-                    return {'Error':
-                            'Every Resource object must '
-                            'contain a Type member.'}
-            except AttributeError:
-                type_res = type(res)
-                if isinstance(res, unicode):
-                    type_res = "string"
-                return {'Error':
-                        'Resources must contain Resource. '
-                        'Found a [%s] instead' % type_res}
-
             ResourceClass = env.get_class(res['Type'])
             if ResourceClass == resources.template_resource.TemplateResource:
                 # we can't validate a TemplateResource unless we instantiate
@@ -640,6 +626,7 @@ class EngineService(service.Service):
             except Exception as ex:
                 return {'Error': six.text_type(ex)}
 
+        # validate parameters
         tmpl_params = tmpl.parameters(None, {}, validate_value=False)
         is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
         params = tmpl_params.map(api.format_validate_parameter, is_real_param)

@@ -25,7 +25,6 @@ from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
-from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -769,6 +768,10 @@ parameter_groups:
     description: A group of parameters for the server
   - label: Database Group
     description: A group of parameters for the database
+
+resources:
+  server:
+    type: OS::Nova::Server
 '''
 
 
@@ -992,11 +995,9 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        ex = self.assertRaises(rpc_common.ClientException,
-                               engine.validate_template, None, t)
-        self.assertEqual(ex._exc_info[0], exception.InvalidTemplateSection)
-        self.assertEqual('The template section is invalid: Output',
-                         str(ex._exc_info[1]))
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual({'Error': 'The template section is invalid: Output'},
+                         res)
 
     def test_invalid_section_hot(self):
         t = template_format.parse(
@@ -1015,11 +1016,9 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        ex = self.assertRaises(rpc_common.ClientException,
-                               engine.validate_template, None, t)
-        self.assertEqual(ex._exc_info[0], exception.InvalidTemplateSection)
-        self.assertEqual('The template section is invalid: output',
-                         str(ex._exc_info[1]))
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual({'Error': 'The template section is invalid: output'},
+                         res)
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)
@@ -1077,8 +1076,9 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'At least one Resources member '
-                                   'must be defined.'}, res)
+        self.assertEqual({'Error': 'The template is invalid. '
+                          'A Resources section with at least one resource '
+                          'must be defined.'}, res)
 
     def test_validate_template_with_invalid_resource_type(self):
         hot_tpl = template_format.parse('''
