@@ -156,7 +156,14 @@ class NovaFloatingIPTest(HeatTestCase):
 
         self.novaclient.servers.get(
             '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
-        self.novaclient.servers.remove_floating_ip('server', '1')
+        self.novaclient.floating_ips.get('1').AndReturn(
+            self._make_obj(**{
+                'id': '1',
+                'ip': '11.0.0.1',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
 
         self.m.ReplayAll()
 
