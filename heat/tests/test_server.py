@@ -580,11 +580,13 @@ class ServersTest(HeatTestCase):
 
         self.assertEqual({
             'os-collect-config': {
-                'heat_server_poll': {
+                'heat': {
                     'auth_url': 'http://server.test:5000/v2.0',
-                    'password': server.password,
+                    'password': None,
                     'project_id': '8888',
-                    'username': u'1234'
+                    'resource_name': 'WebServer',
+                    'stack_id': 'software_config_s/%s' % stack.id,
+                    'user_id': '1234'
                 }
             },
             'deployments': {'foo': 'bar'}

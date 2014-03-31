@@ -350,11 +350,13 @@ class Server(stack_user.StackUser):
     def _build_deployments_metadata(self):
         meta = {}
         if self.transport_poll_server_heat():
-            meta['os-collect-config'] = {'heat_server_poll': {
-                'username': self._get_user_id(),
+            meta['os-collect-config'] = {'heat': {
+                'user_id': self._get_user_id(),
                 'password': self.password,
                 'auth_url': self.context.auth_url,
-                'project_id': self.stack.stack_user_project_id}
+                'project_id': self.stack.stack_user_project_id,
+                'stack_id': self.stack.identifier().stack_path(),
+                'resource_name': self.name}
             }
         elif self.transport_poll_server_cfn():
             meta['os-collect-config'] = {'cfn': {
