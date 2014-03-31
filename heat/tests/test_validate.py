@@ -1028,6 +1028,172 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t))
         self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
 
+    def test_validate_template_without_resources(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'At least one Resources member '
+                                   'must be defined.'}, res)
+
+    def test_validate_template_with_invalid_resource_type(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            Type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            metadata:
+              foo: bar
+            depends_on: dummy
+            deletion_policy: dummy
+            update_policy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"Type" is not a valid keyword '
+                                   'inside a resource definition\''}, res)
+
+    def test_validate_template_with_invalid_resource_properties(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            Properties:
+              property1: value1
+            metadata:
+              foo: bar
+            depends_on: dummy
+            deletion_policy: dummy
+            update_policy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"Properties" is not a valid keyword '
+                                   'inside a resource definition\''}, res)
+
+    def test_validate_template_with_invalid_resource_matadata(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            Metadata:
+              foo: bar
+            depends_on: dummy
+            deletion_policy: dummy
+            update_policy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"Metadata" is not a valid keyword '
+                                   'inside a resource definition\''}, res)
+
+    def test_validate_template_with_invalid_resource_depends_on(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            metadata:
+              foo: bar
+            DependsOn: dummy
+            deletion_policy: dummy
+            update_policy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
+                                   'inside a resource definition\''}, res)
+
+    def test_validate_template_with_invalid_resource_deletion_polciy(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            metadata:
+              foo: bar
+            depends_on: dummy
+            DeletionPolicy: dummy
+            update_policy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"DeletionPolicy" is not a valid '
+                                   'keyword inside a resource definition\''},
+                         res)
+
+    def test_validate_template_with_invalid_resource_update_policy(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            metadata:
+              foo: bar
+            depends_on: dummy
+            deletion_policy: dummy
+            UpdatePolicy:
+              foo: bar
+        ''')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, hot_tpl))
+        self.assertEqual({'Error': 'u\'"UpdatePolicy" is not a valid '
+                                   'keyword inside a resource definition\''},
+                         res)
+
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
         template = parser.Template(t)
