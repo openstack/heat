@@ -90,10 +90,27 @@ class TestPluginManager(HeatTestCase):
             self.assertTrue(module.__name__.startswith('heat.tests') or
                             module.__name__.startswith('heat.engine.plugins'))
 
-    def test_load_all(self):
+    def test_load_all_skip_tests(self):
         mgr = plugin_manager.PluginManager('heat.tests')
         pm = plugin_manager.PluginMapping('current_test')
 
         all_items = pm.load_all(mgr)
+
+        for item in current_test_mapping().iteritems():
+            self.assertNotIn(item, all_items)
+
+    def test_load_all(self):
+        import heat.tests.test_plugin_manager
+        mgr = plugin_manager.PluginManager('heat.tests')
+        pm = plugin_manager.PluginMapping('current_test')
+
+        # NOTE(chmou): We force the modules to be ourself so we can get
+        # the current_test_mapping if not we will would be
+        # skipped by plugin_loader.load_modules since we are skipping
+        # the loading of the package with tests in there
+        mgr.modules = [heat.tests.test_plugin_manager]
+
+        all_items = pm.load_all(mgr)
+
         for item in current_test_mapping().iteritems():
             self.assertIn(item, all_items)

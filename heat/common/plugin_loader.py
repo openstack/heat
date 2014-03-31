@@ -86,6 +86,11 @@ def load_modules(package, ignore_error=False):
 
     for importer, module_name, is_package in pkgutil.walk_packages(path,
                                                                    pkg_prefix):
+        # NOTE(chmouel): Skips tests package or this will try to load
+        # them when loading plugins.
+        if '.tests.' in module_name:
+            continue
+
         try:
             module = _import_module(importer, module_name, package)
         except ImportError:
