@@ -100,7 +100,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
     SCRIPT_ERROR_MSG = _("The %(path)s script exited with a non-zero exit "
                          "status.  To see the error message, log into the "
-                         "server and view %(log)s")
+                         "server at %(ip)s and view %(log)s")
 
     # Managed Cloud automation statuses
     MC_STATUS_IN_PROGRESS = 'In Progress'
@@ -397,10 +397,12 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         if exit_code == 42:
             raise exception.Error(self.SCRIPT_ERROR_MSG %
                                   {'path': "cfn-userdata",
+                                   'ip': self.server.accessIPv4,
                                    'log': "/root/cfn-userdata.log"})
         elif exit_code != 0:
             raise exception.Error(self.SCRIPT_ERROR_MSG %
                                   {'path': "heat-script.sh",
+                                   'ip': self.server.accessIPv4,
                                    'log': "/root/heat-script.log"})
 
     def check_create_complete(self, server):
