@@ -79,7 +79,8 @@ class Schema(constr.Schema):
                                                       'string: %s') % str(err))
             try:
                 self.validate_constraints(default_value)
-            except (ValueError, TypeError) as exc:
+            except (ValueError, TypeError,
+                    exception.StackValidationFailed) as exc:
                 raise constr.InvalidSchemaError(_('Invalid default '
                                                   '%(default)s (%(exc)s)') %
                                                 dict(default=self.default,

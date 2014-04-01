@@ -622,13 +622,15 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'AllowedPattern': '[a-z]*'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, '1foo')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, '1foo')
 
     def test_string_pattern_bad_suffix(self):
         schema = {'Type': 'String',
                   'AllowedPattern': '[a-z]*'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 'foo1')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, 'foo1')
 
     def test_string_value_list_good(self):
         schema = {'Type': 'String',
@@ -640,7 +642,8 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'AllowedValues': ['foo', 'bar', 'baz']}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 'blarg')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, 'blarg')
 
     def test_string_maxlength_good(self):
         schema = {'Type': 'String',
@@ -652,7 +655,8 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'MaxLength': '5'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 'abcdef')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, 'abcdef')
 
     def test_string_length_in_range(self):
         schema = {'Type': 'String',
@@ -671,7 +675,8 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'MinLength': '5'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 'abcd')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, 'abcd')
 
     def test_int_good(self):
         schema = {'Type': 'Integer',
@@ -702,13 +707,13 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'Integer',
                   'MinValue': 4}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 3)
+        self.assertRaises(exception.StackValidationFailed, p.validate_data, 3)
 
     def test_integer_high(self):
         schema = {'Type': 'Integer',
                   'MaxValue': 2}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 3)
+        self.assertRaises(exception.StackValidationFailed, p.validate_data, 3)
 
     def test_integer_value_list_good(self):
         schema = {'Type': 'Integer',
@@ -720,7 +725,7 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'Integer',
                   'AllowedValues': [1, 3, 5]}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, 2)
+        self.assertRaises(exception.StackValidationFailed, p.validate_data, 2)
 
     def test_number_good(self):
         schema = {'Type': 'Number',
@@ -747,19 +752,22 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'AllowedValues': ['1', '3', '5']}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, '2')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, '2')
 
     def test_number_low(self):
         schema = {'Type': 'Number',
                   'MinValue': '4'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, '3')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, '3')
 
     def test_number_high(self):
         schema = {'Type': 'Number',
                   'MaxValue': '2'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, '3')
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, '3')
 
     def test_boolean_true(self):
         p = properties.Property({'Type': 'Boolean'})
@@ -799,7 +807,8 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'List',
                   'MaxLength': '2'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, ['1', '2', '3'])
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, ['1', '2', '3'])
 
     def test_list_length_in_range(self):
         schema = {'Type': 'List',
@@ -818,7 +827,8 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'List',
                   'MinLength': '4'}
         p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, ['1', '2', '3'])
+        self.assertRaises(exception.StackValidationFailed,
+                          p.validate_data, ['1', '2', '3'])
 
     def test_map_string(self):
         p = properties.Property({'Type': 'Map'})
