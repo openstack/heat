@@ -466,11 +466,7 @@ Mappings:
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
-        error = self.assertRaises(KeyError,
-                                  self.resolve,
-                                  snippet,
-                                  stack.t, stack)
-        self.assertIn(snippet.keys()[0], str(error))
+        self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
 
     def test_prevent_parameters_access(self):
         expected_description = "This can be accessed"

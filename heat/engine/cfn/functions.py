@@ -529,14 +529,7 @@ class ResourceFacade(function.Function):
         elif attr == self.UPDATE_POLICY:
             return self.stack.parent_resource.t.get(attr, {})
         elif attr == self.DELETION_POLICY:
-            try:
-                return self.stack.parent_resource.t[attr]
-            except KeyError:
-                # TODO(zaneb): This should have a default!
-                fmt_data = {'fn_name': self.fn_name,
-                            'key': attr}
-                raise KeyError(_('"%(fn_name)s" '
-                                 'key "%(key)s" not found') % fmt_data)
+            return self.stack.parent_resource.t.get(attr, 'Delete')
 
 
 def function_mapping(version_key, version):
