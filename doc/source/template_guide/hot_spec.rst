@@ -779,3 +779,13 @@ If this template was launched from a local file this would result in
 a *files* dictionary containing entries with keys
 *file:///path/to/my_instance_user_data.sh* and
 *http://example.com/my_other_instance_user_data.sh*.
+
+resource_facade
+---------------
+The *resource_facade* function allows a provider template to retrieve data
+about its resource facade in the parent template. (A provider template is used to provide a custom definition of a resource - the facade - in the form of a Heat template. The resource's properties are passed to the provider template as its parameters, but other resource data can be included using this function.)
+The syntax of the *resource_facade* function is as follows::
+
+  resource_facade: <data type>
+
+The *data type* can be `metadata`, `deletion_policy` or `update_policy`.

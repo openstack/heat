@@ -203,6 +203,26 @@ class GetFile(function.Function):
         return f
 
 
+class ResourceFacade(cfn_funcs.ResourceFacade):
+    '''
+    A function for obtaining data from the facade resource from within the
+    corresponding provider template.
+
+    Takes the form::
+
+        resource_facade: <attribute_type>
+
+    where the valid attribute types are "metadata", "deletion_policy" and
+    "update_policy".
+    '''
+
+    _RESOURCE_ATTRIBUTES = (
+        METADATA, DELETION_POLICY, UPDATE_POLICY,
+    ) = (
+        'metadata', 'deletion_policy', 'update_policy'
+    )
+
+
 def function_mapping(version_key, version):
     if version_key != 'heat_template_version':
         return {}
@@ -221,6 +241,7 @@ def function_mapping(version_key, version):
             'Fn::Replace': cfn_funcs.Replace,
             'Fn::Base64': cfn_funcs.Base64,
             'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
+            'resource_facade': ResourceFacade,
             'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
             'get_file': GetFile,
         }
