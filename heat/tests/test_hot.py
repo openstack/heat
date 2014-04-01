@@ -512,6 +512,78 @@ class HOTemplateTest(HeatTestCase):
         observed = parsed_tmpl.version
         self.assertEqual(expected, observed)
 
+    def test_resource_facade(self):
+        metadata_snippet = {'resource_facade': 'metadata'}
+        deletion_policy_snippet = {'resource_facade': 'deletion_policy'}
+        update_policy_snippet = {'resource_facade': 'update_policy'}
+
+        class DummyClass(object):
+            pass
+        parent_resource = DummyClass()
+        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.t = {'DeletionPolicy': 'Retain',
+                             'UpdatePolicy': {"blarg": "wibble"}}
+        parent_resource.stack = parser.Stack(utils.dummy_context(),
+                                             'toplevel_stack',
+                                             parser.Template({}))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(hot_tpl_empty),
+                             parent_resource=parent_resource)
+        self.assertEqual({"foo": "bar"},
+                         self.resolve(metadata_snippet, stack.t, stack))
+        self.assertEqual('Retain',
+                         self.resolve(deletion_policy_snippet, stack.t, stack))
+        self.assertEqual({"blarg": "wibble"},
+                         self.resolve(update_policy_snippet, stack.t, stack))
+
+    def test_resource_facade_function(self):
+        deletion_policy_snippet = {'resource_facade': 'deletion_policy'}
+
+        class DummyClass(object):
+            pass
+        parent_resource = DummyClass()
+        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.stack = parser.Stack(utils.dummy_context(),
+                                             'toplevel_stack',
+                                             parser.Template({}))
+        parent_snippet = {'DeletionPolicy': {'Fn::Join': ['eta',
+                                                          ['R', 'in']]}}
+        parent_tmpl = parent_resource.stack.t.parse(parent_resource.stack,
+                                                    parent_snippet)
+        parent_resource.t = parent_tmpl
+
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(hot_tpl_empty),
+                             parent_resource=parent_resource)
+        self.assertEqual('Retain',
+                         self.resolve(deletion_policy_snippet, stack.t, stack))
+
+    def test_resource_facade_invalid_arg(self):
+        snippet = {'resource_facade': 'wibble'}
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(hot_tpl_empty))
+        error = self.assertRaises(ValueError,
+                                  self.resolve,
+                                  snippet,
+                                  stack.t, stack)
+        self.assertIn(snippet.keys()[0], str(error))
+
+    def test_resource_facade_missing_deletion_policy(self):
+        snippet = {'resource_facade': 'deletion_policy'}
+
+        class DummyClass(object):
+            pass
+        parent_resource = DummyClass()
+        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.t = {}
+        parent_resource.stack = parser.Stack(utils.dummy_context(),
+                                             'toplevel_stack',
+                                             parser.Template({}))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(hot_tpl_empty),
+                             parent_resource=parent_resource)
+        self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
+
 
 class StackTest(test_parser.StackTest):
     """Test stack function when stack was created from HOT template."""
