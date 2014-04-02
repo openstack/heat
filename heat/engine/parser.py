@@ -364,6 +364,14 @@ class Stack(collections.Mapping):
             if result:
                 raise StackValidationFailed(message=result)
 
+            for val in self.outputs.values():
+                snippet = val.get('Value', '')
+                try:
+                    function.validate(snippet)
+                except Exception as ex:
+                    reason = 'Output validation error: %s' % str(ex)
+                    raise StackValidationFailed(message=reason)
+
     def requires_deferred_auth(self):
         '''
         Returns whether this stack may need to perform API requests
