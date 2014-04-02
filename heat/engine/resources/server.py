@@ -365,14 +365,13 @@ class Server(stack_user.StackUser):
                 'path': '%s.Metadata' % self.name}
             }
 
+        deployments = []
         # cannot query the deployments if the nova server does
         # not exist yet
-        if not self.resource_id:
-            return meta
-
-        meta['deployments'] = self._get_deployments_metadata(
-            self.heat(), self.resource_id)
-
+        if self.resource_id:
+            deployments = self._get_deployments_metadata(
+                self.heat(), self.resource_id)
+        meta['deployments'] = deployments
         return meta
 
     def _register_access_key(self):

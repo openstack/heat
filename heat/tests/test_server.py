@@ -597,6 +597,20 @@ class ServersTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_server_metadata_with_empty_deploy(self):
+        stack_name = 'software_config_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+        props = t['Resources']['WebServer']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+        self.m.StubOutWithMock(server, 'keystone')
+        server.t = server.stack.resolve_runtime_data(server.t)
+        self.m.ReplayAll()
+        deployments = server.metadata['deployments']
+        self.assertEqual([], deployments)
+        self.m.VerifyAll()
+
     @mock.patch.object(clients.OpenStackClients, 'nova')
     def test_server_create_default_admin_pass(self, mock_nova):
         return_server = self.fc.servers.list()[1]
