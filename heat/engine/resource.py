@@ -880,6 +880,13 @@ class Resource(object):
                 elif 'state' in details:
                     # this is from watchrule
                     return 'alarm state changed to %(state)s' % details
+                elif 'deploy_status_code' in details:
+                    # this is for SoftwareDeployment
+                    if details['deploy_status_code'] == 0:
+                        return 'deployment succeeded'
+                    else:
+                        return ('deployment failed '
+                                '(%(deploy_status_code)s)' % details)
 
             return 'Unknown'
 

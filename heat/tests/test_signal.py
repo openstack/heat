@@ -295,6 +295,16 @@ class SignalTest(HeatTestCase):
         none_details = None
         none_expected = 'No signal details provided'
 
+        # signal from a successful deployment
+        sds_details = {'deploy_stdout': 'foo', 'deploy_stderr': 'bar',
+                       'deploy_status_code': 0}
+        sds_expected = 'deployment succeeded'
+
+        # signal from a failed deployment
+        sdf_details = {'deploy_stdout': 'foo', 'deploy_stderr': 'bar',
+                       'deploy_status_code': -1}
+        sdf_expected = 'deployment failed (-1)'
+
         # to confirm we get a string reason
         self.m.StubOutWithMock(generic_resource.SignalResource,
                                '_add_event')
@@ -306,11 +316,15 @@ class SignalTest(HeatTestCase):
             'signal', 'COMPLETE', str_expected).AndReturn(None)
         generic_resource.SignalResource._add_event(
             'signal', 'COMPLETE', none_expected).AndReturn(None)
+        generic_resource.SignalResource._add_event(
+            'signal', 'COMPLETE', sds_expected).AndReturn(None)
+        generic_resource.SignalResource._add_event(
+            'signal', 'COMPLETE', sdf_expected).AndReturn(None)
 
         self.m.ReplayAll()
 
-        for test_d in (ceilo_details, watch_details,
-                       str_details, none_details):
+        for test_d in (ceilo_details, watch_details, str_details,
+                       none_details, sds_details, sdf_details):
             rsrc.signal(details=test_d)
 
         self.m.VerifyAll()
