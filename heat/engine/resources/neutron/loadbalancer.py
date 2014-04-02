@@ -382,8 +382,8 @@ class Pool(neutron.NeutronResource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             client = self.neutron()
-            monitors = set(prop_diff.pop(self.MONITORS, []))
-            if monitors:
+            if self.MONITORS in prop_diff:
+                monitors = set(prop_diff.pop(self.MONITORS))
                 old_monitors = set(self.properties[self.MONITORS])
                 for monitor in old_monitors - monitors:
                     client.disassociate_health_monitor(self.resource_id,
