@@ -36,6 +36,15 @@ class Function(object):
         self.fn_name = fn_name
         self.args = args
 
+    def validate(self):
+        """
+        Validate arguments without resolving the function.
+
+        Function subclasses must override this method to validate their
+        args.
+        """
+        validate(self.args)
+
     @abc.abstractmethod
     def result(self):
         """
@@ -110,3 +119,15 @@ def resolve(snippet):
         return [resolve(v) for v in snippet]
 
     return snippet
+
+
+def validate(snippet):
+    if isinstance(snippet, Function):
+        snippet.validate()
+    elif isinstance(snippet, collections.Mapping):
+        for v in snippet.values():
+            validate(v)
+    elif (not isinstance(snippet, basestring) and
+          isinstance(snippet, collections.Iterable)):
+        for v in snippet:
+            validate(v)
