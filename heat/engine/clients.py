@@ -100,10 +100,6 @@ class OpenStackClients(object):
             return self._nova[service_type]
 
         con = self.context
-        if self.auth_token is None:
-            logger.error(_("Nova connection failed, no auth_token!"))
-            return None
-
         computeshell = novashell.OpenStackComputeShell()
         extensions = computeshell._discover_extensions("1.1")
 
@@ -137,10 +133,6 @@ class OpenStackClients(object):
             return self._swift
 
         con = self.context
-        if self.auth_token is None:
-            logger.error(_("Swift connection failed, no auth_token!"))
-            return None
-
         endpoint_type = self._get_client_option('swift', 'endpoint_type')
         args = {
             'auth_version': '2.0',
@@ -192,10 +184,6 @@ class OpenStackClients(object):
             return self._cinder
 
         con = self.context
-        if self.auth_token is None:
-            logger.error(_("Cinder connection failed, no auth_token!"))
-            return None
-
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         args = {
             'service_type': 'volume',
@@ -223,10 +211,6 @@ class OpenStackClients(object):
             return self._trove
 
         con = self.context
-        if self.auth_token is None:
-            logger.error(_("Trove connection failed, no auth_token!"))
-            return None
-
         endpoint_type = self._get_client_option('trove', 'endpoint_type')
         args = {
             'service_type': service_type,
@@ -253,11 +237,7 @@ class OpenStackClients(object):
         if self._ceilometer:
             return self._ceilometer
 
-        if self.auth_token is None:
-            logger.error(_("Ceilometer connection failed, no auth_token!"))
-            return None
         con = self.context
-
         endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
         endpoint = self.url_for(service_type='metering',
                                 endpoint_type=endpoint_type)
@@ -300,10 +280,6 @@ class OpenStackClients(object):
             return self._heat
 
         con = self.context
-        if self.auth_token is None:
-            logger.error(_("Heat connection failed, no auth_token!"))
-            return None
-
         endpoint_type = self._get_client_option('heat', 'endpoint_type')
         args = {
             'auth_url': con.auth_url,
