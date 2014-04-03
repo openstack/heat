@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.openstack.common.py3kcompat import urlutils
+from six.moves.urllib import parse as urlparse
 
 
 def get_collection_links(request, items):
@@ -38,4 +38,4 @@ def _get_next_link(request, marker):
     params = request.params.copy()
     params['marker'] = marker
 
-    return "%s?%s" % (request.path_url, urlutils.urlencode(params))
+    return "%s?%s" % (request.path_url, urlparse.urlencode(params))
