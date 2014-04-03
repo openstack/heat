@@ -278,36 +278,26 @@ class Resource(object):
 
         return dict((k, after.get(k)) for k in changed_keys_set)
 
-    def update_template_diff_properties(self, after, before):
+    def update_template_diff_properties(self, after_props, before_props):
         '''
-        Returns the changed Properties between the before and after json
-        snippets. If a property has been removed in after which exists in
-        before we set it to None. If any properties have changed which are not
-        in update_allowed_properties, raises UpdateReplace if the modified
-        properties are not in the update_allowed_properties
+        Returns the changed Properties between the before and after properties.
+        If any properties have changed which are not in
+        update_allowed_properties, raises UpdateReplace.
         '''
         update_allowed_set = set(self.update_allowed_properties)
         for (psk, psv) in self.properties.props.iteritems():
             if psv.update_allowed():
                 update_allowed_set.add(psk)
 
-        # Create a set containing the keys in both current and update template
-        current_properties = before.get('Properties', {})
-
-        template_properties = set(current_properties.keys())
-        updated_properties = after.get('Properties', {})
-        template_properties.update(set(updated_properties.keys()))
-
         # Create a set of keys which differ (or are missing/added)
-        changed_properties_set = set(k for k in template_properties
-                                     if current_properties.get(k) !=
-                                     updated_properties.get(k))
+        changed_properties_set = set(k for k in after_props
+                                     if before_props.get(k) !=
+                                     after_props.get(k))
 
         if not changed_properties_set.issubset(update_allowed_set):
             raise UpdateReplace(self.name)
 
-        return dict((k, updated_properties.get(k))
-                    for k in changed_properties_set)
+        return dict((k, after_props.get(k)) for k in changed_properties_set)
 
     def __str__(self):
         if self.stack.id:
@@ -542,14 +532,20 @@ class Resource(object):
         try:
             self.updated_time = datetime.utcnow()
             self.state_set(action, self.IN_PROGRESS)
-            properties = Properties(self.properties_schema,
-                                    after.get('Properties', {}),
-                                    self._resolve_runtime_data,
-                                    self.name,
-                                    self.context)
-            properties.validate()
+            before_properties = Properties(self.properties_schema,
+                                           before.get('Properties', {}),
+                                           self._resolve_runtime_data,
+                                           self.name,
+                                           self.context)
+            after_properties = Properties(self.properties_schema,
+                                          after.get('Properties', {}),
+                                          self._resolve_runtime_data,
+                                          self.name,
+                                          self.context)
+            after_properties.validate()
             tmpl_diff = self.update_template_diff(after, before)
-            prop_diff = self.update_template_diff_properties(after, before)
+            prop_diff = self.update_template_diff_properties(after_properties,
+                                                             before_properties)
             if callable(getattr(self, 'handle_update', None)):
                 handle_data = self.handle_update(after, tmpl_diff, prop_diff)
                 yield

@@ -140,6 +140,8 @@ class RackspaceDnsTest(common.HeatTestCase):
             fake_records = list()
             mock_domain.list_records().AndReturn(fake_records)
             mock_domain.add_records([{
+                'comment': None,
+                'priority': None,
                 'type': 'A',
                 'name': 'ftp.example.com',
                 'data': '192.0.2.8',
