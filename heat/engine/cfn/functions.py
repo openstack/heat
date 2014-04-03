@@ -527,10 +527,10 @@ class ResourceFacade(function.Function):
         if attr == self.METADATA:
             return self.stack.parent_resource.metadata
         elif attr == self.UPDATE_POLICY:
-            up = self.stack.parent_resource.t.get(attr, {})
+            up = self.stack.parent_resource.t.get('UpdatePolicy', {})
             return function.resolve(up)
         elif attr == self.DELETION_POLICY:
-            dp = self.stack.parent_resource.t.get(attr, 'Delete')
+            dp = self.stack.parent_resource.t.get('DeletionPolicy', 'Delete')
             return function.resolve(dp)
 
 
