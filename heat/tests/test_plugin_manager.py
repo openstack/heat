@@ -15,9 +15,8 @@
 import sys
 import types
 
-from heat.tests.common import HeatTestCase
-
 from heat.engine import plugin_manager
+from heat.tests.common import HeatTestCase
 
 
 def legacy_test_mapping():

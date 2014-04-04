@@ -12,8 +12,8 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine.resources import nova_utils
 from heat.engine import constraints
+from heat.engine.resources import nova_utils
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):

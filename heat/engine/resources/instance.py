@@ -16,8 +16,6 @@ import copy
 from oslo.config import cfg
 import six
 
-cfg.CONF.import_opt('instance_user', 'heat.common.config')
-
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import clients
@@ -32,6 +30,8 @@ from heat.engine import scheduler
 from heat.engine import signal_responder
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+
+cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
 logger = logging.getLogger(__name__)
 

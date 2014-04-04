@@ -17,7 +17,7 @@ import datetime
 import mox
 
 from heat.common import exception
-import heat.db.api as db_api
+from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import watchrule
 from heat.openstack.common import timeutils

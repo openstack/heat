@@ -12,9 +12,9 @@
 #    under the License.
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
-import mock
 import uuid
 
+import mock
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception

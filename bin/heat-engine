@@ -32,19 +32,16 @@ POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
     sys.path.insert(0, POSSIBLE_TOPDIR)
 
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat', lazy=False)
 
 from oslo.config import cfg
 
 from heat.common import notify
-
+from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
-
 from heat.rpc import api as rpc_api
 
+gettextutils.install('heat', lazy=False)
 
 LOG = logging.getLogger('heat.engine')
 

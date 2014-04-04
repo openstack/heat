@@ -19,14 +19,12 @@ import yaml
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
-
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine.resources import template_resource
-
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils

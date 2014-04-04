@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-
 from six.moves.urllib import parse as urlparse
 
 from heat.api.openstack.v1.views import views_common

@@ -14,12 +14,10 @@
 
 import copy
 import json
+
 import mock
-from requests import exceptions
-
 from oslo.config import cfg
-
-cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
+from requests import exceptions
 
 from heat.common import exception
 from heat.common import template_format
@@ -31,6 +29,8 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
+
+cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 
 
 class NestedStackTest(HeatTestCase):

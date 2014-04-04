@@ -16,11 +16,10 @@
 
 import httplib2
 
-from six.moves.urllib import parse as urlparse
-
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
 from novaclient.v1_1 import client
+from six.moves.urllib import parse as urlparse
 
 from heat.tests import fakes
 

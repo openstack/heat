@@ -18,7 +18,7 @@ import uuid
 import mock
 
 from heat.common import exception
-import heat.db.api as db_api
+from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
@@ -26,7 +26,6 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
 from heat.openstack.common.gettextutils import _
-
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils

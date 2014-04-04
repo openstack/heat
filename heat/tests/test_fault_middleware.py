@@ -11,14 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import six
 
+import heat.api.middleware.fault as fault
 from heat.common import exception as heat_exc
 from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
-from oslo.config import cfg
-
-import heat.api.middleware.fault as fault
 
 
 class StackNotFoundChild(heat_exc.StackNotFound):

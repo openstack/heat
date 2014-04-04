@@ -12,16 +12,15 @@
 #    under the License.
 
 import email
+
+import heatclient.exc as exc
 import mock
 
 from heat.engine import parser
+from heat.engine.resources.software_config import multi_part as mp
 from heat.engine import template
-
-import heat.engine.resources.software_config.multi_part as mp
-
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-import heatclient.exc as exc
 
 
 class MultipartMimeTest(HeatTestCase):

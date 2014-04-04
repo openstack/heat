@@ -12,16 +12,16 @@
 #    under the License.
 
 import mock
-
-from heat.engine import parser
-from heat.engine import template
-from heat.engine import resource
-from heat.tests.common import HeatTestCase
-from heat.tests import utils
 from novaclient.exceptions import NotFound
 
-from ..resources.nova_flavor import resource_mapping  # noqa
+from heat.engine import parser
+from heat.engine import resource
+from heat.engine import template
+from heat.tests.common import HeatTestCase
+from heat.tests import utils
+
 from ..resources.nova_flavor import NovaFlavor  # noqa
+from ..resources.nova_flavor import resource_mapping  # noqa
 
 flavor_template = {
     'heat_template_version': '2013-05-23',

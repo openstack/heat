@@ -13,9 +13,8 @@
 
 import webob
 
-from heat.tests.common import HeatTestCase
-
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.tests.common import HeatTestCase
 
 
 class VersionController(object):

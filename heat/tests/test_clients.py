@@ -13,10 +13,11 @@
 
 import mock
 
-from heat.engine import clients
-from heat.tests.common import HeatTestCase
 from heatclient import client as heatclient
 from keystoneclient import exceptions as keystone_exceptions
+
+from heat.engine import clients
+from heat.tests.common import HeatTestCase
 
 
 class ClientsTest(HeatTestCase):

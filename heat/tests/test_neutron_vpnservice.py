@@ -19,8 +19,8 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine.resources.neutron import vpnservice
 from heat.engine.resources.neutron import neutron_utils
+from heat.engine.resources.neutron import vpnservice
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase

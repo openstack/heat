@@ -13,11 +13,11 @@
 
 from datetime import datetime
 from datetime import timedelta
+from json import dumps
+from json import loads
 import uuid
 
 import fixtures
-from json import dumps
-from json import loads
 import mock
 import mox
 

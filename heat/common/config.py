@@ -22,7 +22,6 @@ from eventlet.green import socket
 from oslo.config import cfg
 
 from heat.common import wsgi
-
 from heat.openstack.common import log as logging
 from heat.openstack.common import rpc
 

@@ -14,9 +14,9 @@
 import os
 
 import mock
+import six
 import testtools
 import yaml
-import six
 
 from heat.common import config
 from heat.common import exception

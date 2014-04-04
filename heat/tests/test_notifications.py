@@ -14,7 +14,6 @@
 import mock
 from oslo.config import cfg
 
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment

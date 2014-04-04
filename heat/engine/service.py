@@ -14,8 +14,8 @@
 import functools
 import json
 
-import six
 from oslo.config import cfg
+import six
 import webob
 
 from heat.common import context

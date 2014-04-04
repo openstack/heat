@@ -12,11 +12,12 @@
 
 import copy
 import time
+
 from migrate.versioning import util as migrate_util
 from sqlalchemy.orm import sessionmaker
 
-from heat.openstack.common.gettextutils import _
 from heat.db.sqlalchemy import models
+from heat.openstack.common.gettextutils import _
 
 
 def upgrade(migrate_engine):

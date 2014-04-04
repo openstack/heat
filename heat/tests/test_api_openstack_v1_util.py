@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-
 from webob import exc
 
 from heat.api.openstack.v1 import util
