@@ -42,6 +42,7 @@ venv=.venv
 with_venv=tools/with_venv.sh
 wrapper=""
 debug=0
+flake8args="heat bin/heat-api bin/heat-api-cfn bin/heat-api-cloudwatch bin/heat-engine bin/heat-manage contrib"
 
 function run_tests {
     echo 'Running tests'
@@ -72,7 +73,7 @@ function run_tests {
 
 function run_pep8 {
     echo "Running flake8..."
-    bash -c "${wrapper} flake8"
+    bash -c "${wrapper} flake8 ${flake8args}"
 }
 
 # run unit tests with pep8 when no arguments are specified
