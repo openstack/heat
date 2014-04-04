@@ -12,6 +12,7 @@
 #    under the License.
 
 import sqlalchemy
+
 from heat.db.sqlalchemy.types import Json
 
 

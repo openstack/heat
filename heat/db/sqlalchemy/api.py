@@ -13,17 +13,13 @@
 #    under the License.
 
 '''Implementation of SQLAlchemy backend.'''
-import sys
 from datetime import datetime
 from datetime import timedelta
+import sys
 
 from oslo.config import cfg
 import sqlalchemy
 from sqlalchemy.orm.session import Session
-
-cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
-
-from heat.openstack.common.gettextutils import _
 
 from heat.common import crypt
 from heat.common import exception
@@ -32,7 +28,9 @@ from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session as db_session
 from heat.openstack.common.db.sqlalchemy import utils
+from heat.openstack.common.gettextutils import _
 
+cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 get_engine = db_session.get_engine
 get_session = db_session.get_session

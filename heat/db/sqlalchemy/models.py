@@ -17,14 +17,15 @@ SQLAlchemy models for heat data.
 import uuid
 
 import sqlalchemy
-
-from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
-from heat.openstack.common import timeutils
+from sqlalchemy.orm import backref
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.session import Session
+
+from heat.db.sqlalchemy.types import Json
 from heat.openstack.common.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session
-from sqlalchemy.orm.session import Session
-from heat.db.sqlalchemy.types import Json
+from heat.openstack.common import timeutils
 
 BASE = declarative_base()
 get_session = session.get_session

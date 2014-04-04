@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.db.sqlalchemy.types import LongText
-from heat.db.sqlalchemy.types import Json
-
 import sqlalchemy
+
+from heat.db.sqlalchemy.types import Json
+from heat.db.sqlalchemy.types import LongText
 
 
 def upgrade(migrate_engine):

@@ -11,11 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
 import itertools
-import sqlalchemy
+import uuid
 
 import migrate.changeset.constraint as constraint
+import sqlalchemy
+
 from heat.openstack.common import timeutils
 
 
