@@ -799,8 +799,6 @@ class validateTest(HeatTestCase):
     def test_validate_ref_valid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -818,8 +816,6 @@ class validateTest(HeatTestCase):
               my_instance:
                 type: AWS::EC2::Instance
             """)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -831,8 +827,6 @@ class validateTest(HeatTestCase):
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -844,8 +838,6 @@ class validateTest(HeatTestCase):
     def test_validate_findinmap_valid(self):
         t = template_format.parse(test_template_findinmap_valid)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -857,8 +849,6 @@ class validateTest(HeatTestCase):
     def test_validate_findinmap_invalid(self):
         t = template_format.parse(test_template_findinmap_invalid)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -870,8 +860,6 @@ class validateTest(HeatTestCase):
     def test_validate_parameters(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -892,8 +880,6 @@ class validateTest(HeatTestCase):
 
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -912,8 +898,6 @@ class validateTest(HeatTestCase):
 
     def test_validate_hot_no_parameter_label(self):
         t = template_format.parse(test_template_hot_no_parameter_label)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -932,8 +916,6 @@ class validateTest(HeatTestCase):
 
     def test_validate_cfn_parameter_label(self):
         t = template_format.parse(test_template_cfn_parameter_label)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -952,8 +934,6 @@ class validateTest(HeatTestCase):
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -964,8 +944,6 @@ class validateTest(HeatTestCase):
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1028,8 +1006,6 @@ class validateTest(HeatTestCase):
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1042,8 +1018,6 @@ class validateTest(HeatTestCase):
 
     def test_invalid_deletion_policy(self):
         t = template_format.parse(test_template_invalid_deletion_policy)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1054,8 +1028,6 @@ class validateTest(HeatTestCase):
 
     def test_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_snapshot_deletion_policy)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1069,8 +1041,6 @@ class validateTest(HeatTestCase):
             'unable to import volume_backups')
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
