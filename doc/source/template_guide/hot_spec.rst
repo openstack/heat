@@ -27,10 +27,13 @@ at :ref:`hot_guide`.
 Status
 ------
 
-HOT support is still under development and needs more work to provide access to
-all functionality currently available via the CFN compatible template interface.
-This specification will be updated periodically whenever new features get
-implemented for HOT.
+HOT is considered reliable, supported, and standardized as of our
+Icehouse (April 2014) release.  The Heat core team may make improvements
+to the standard, which very likely would be backward compatible.  The template
+format is also versioned.  In our Juno release, Heat will support multiple
+different versions of the HOT specification if there is a need driven by the
+introduction of new features.
+
 
 ------------------
 Template Structure
