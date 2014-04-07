@@ -2726,3 +2726,59 @@ class StackTest(HeatTestCase):
 
         resources = self.stack.preview_resources()
         self.assertEqual(['foo'], resources)
+
+    def test_correct_outputs(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'abc'}},
+                'BResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'def'}}},
+                'Outputs': {
+                    'Resource_attr': {
+                        'Value': {
+                            'Fn::GetAtt': ['AResource', 'Foo']}}}}
+
+        self.stack = parser.Stack(self.ctx, 'stack_with_correct_outputs',
+                                  template.Template(tmpl))
+
+        self.stack.store()
+        self.stack.create()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        # According _resolve_attribute method in GenericResource output
+        # value will be equal with name AResource.
+        self.assertEqual('AResource', self.stack.output('Resource_attr'))
+
+        self.stack.delete()
+
+        self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
+                         self.stack.state)
+
+    def test_incorrect_outputs(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'abc'}}},
+                'Outputs': {
+                    'Resource_attr': {
+                        'Value': {
+                            'Fn::GetAtt': ['AResource', 'Bar']}}}}
+
+        self.stack = parser.Stack(self.ctx, 'stack_with_incorrect_outputs',
+                                  template.Template(tmpl))
+
+        self.stack.store()
+        self.stack.create()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        self.assertIsNone(self.stack.output('Resource_attr'))
+
+        self.stack.delete()
+
+        self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
+                         self.stack.state)
