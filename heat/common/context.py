@@ -132,17 +132,16 @@ class ContextMiddleware(wsgi.Middleware):
 
         try:
             username = None
-            user_id = None
             password = None
             aws_creds = None
 
             if headers.get('X-Auth-User') is not None:
                 username = headers.get('X-Auth-User')
-                user_id = headers.get('X-User-Id')
                 password = headers.get('X-Auth-Key')
             elif headers.get('X-Auth-EC2-Creds') is not None:
                 aws_creds = headers.get('X-Auth-EC2-Creds')
 
+            user_id = headers.get('X-User-Id')
             token = headers.get('X-Auth-Token')
             tenant = headers.get('X-Tenant-Name')
             tenant_id = headers.get('X-Tenant-Id')
