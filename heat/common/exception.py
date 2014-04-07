@@ -19,9 +19,10 @@
 import functools
 import sys
 
+from six.moves.urllib import parse as urlparse
+
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common.py3kcompat import urlutils
 
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class RedirectException(Exception):
     def __init__(self, url):
-        self.url = urlutils.urlparse(url)
+        self.url = urlparse.urlparse(url)
 
 
 class KeystoneError(Exception):

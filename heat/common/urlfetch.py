@@ -20,9 +20,10 @@ from oslo.config import cfg
 import requests
 from requests import exceptions
 
+from six.moves import urllib
+
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common.py3kcompat import urlutils
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
@@ -40,15 +41,15 @@ def get(url, allowed_schemes=('http', 'https')):
     '''
     logger.info(_('Fetching data from %s') % url)
 
-    components = urlutils.urlparse(url)
+    components = urllib.parse.urlparse(url)
 
     if components.scheme not in allowed_schemes:
         raise IOError(_('Invalid URL scheme %s') % components.scheme)
 
     if components.scheme == 'file':
         try:
-            return urlutils.urlopen(url).read()
-        except urlutils.URLError as uex:
+            return urllib.request.urlopen(url).read()
+        except urllib.error.URLError as uex:
             raise IOError(_('Failed to retrieve template: %s') % str(uex))
 
     try:

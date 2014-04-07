@@ -23,13 +23,13 @@ import string
 
 from oslo.config import cfg
 import six
+from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common.py3kcompat import urlutils
 from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
@@ -252,8 +252,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         # Create a boto config which the cfntools on the host use to know
         # where the cfn and cw API's are to be accessed
-        cfn_url = urlutils.urlparse(cfg.CONF.heat_metadata_server_url)
-        cw_url = urlutils.urlparse(cfg.CONF.heat_watch_server_url)
+        cfn_url = urlparse.urlparse(cfg.CONF.heat_metadata_server_url)
+        cw_url = urlparse.urlparse(cfg.CONF.heat_watch_server_url)
         is_secure = cfg.CONF.instance_connection_is_secure
         vcerts = cfg.CONF.instance_connection_https_validate_certificates
         boto_cfg = "\n".join(["[Boto]",

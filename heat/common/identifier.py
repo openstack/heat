@@ -14,7 +14,8 @@
 import collections
 import re
 
-from heat.openstack.common.py3kcompat import urlutils
+from six.moves.urllib import parse as urlparse
+
 from heat.openstack.common import strutils
 
 
@@ -61,10 +62,10 @@ class HeatIdentifier(collections.Mapping):
         if fields[1] != 'openstack' or fields[2] != 'heat' or not path:
             raise ValueError(_('"%s" is not a valid Heat ARN') % arn)
 
-        return cls(urlutils.unquote(fields[4]),
-                   urlutils.unquote(path.group(1)),
-                   urlutils.unquote(path.group(2)),
-                   urlutils.unquote(path.group(3)))
+        return cls(urlparse.unquote(fields[4]),
+                   urlparse.unquote(path.group(1)),
+                   urlparse.unquote(path.group(2)),
+                   urlparse.unquote(path.group(3)))
 
     @classmethod
     def from_arn_url(cls, url):
@@ -73,7 +74,7 @@ class HeatIdentifier(collections.Mapping):
         The URL is expected to contain a valid arn as part of the path
         '''
         # Sanity check the URL
-        urlp = urlutils.urlparse(url)
+        urlp = urlparse.urlparse(url)
         if (urlp.scheme not in ('http', 'https') or
                 not urlp.netloc or not urlp.path):
             raise ValueError(_('"%s" is not a valid URL') % url)
@@ -85,7 +86,7 @@ class HeatIdentifier(collections.Mapping):
             raise ValueError(_('"%s" is not a valid ARN URL') % url)
         # the +1 is to skip the leading /
         url_arn = urlp.path[match.start() + 1:]
-        arn = urlutils.unquote(url_arn)
+        arn = urlparse.unquote(url_arn)
         return cls.from_arn(arn)
 
     def arn(self):
@@ -93,21 +94,21 @@ class HeatIdentifier(collections.Mapping):
         Return an ARN of the form:
             arn:openstack:heat::<tenant>:stacks/<stack_name>/<stack_id><path>
         '''
-        return 'arn:openstack:heat::%s:%s' % (urlutils.quote(self.tenant, ''),
+        return 'arn:openstack:heat::%s:%s' % (urlparse.quote(self.tenant, ''),
                                               self._tenant_path())
 
     def arn_url_path(self):
         '''
         Return an ARN quoted correctly for use in a URL
         '''
-        return '/' + urlutils.quote(self.arn(), '')
+        return '/' + urlparse.quote(self.arn(), '')
 
     def url_path(self):
         '''
         Return a URL-encoded path segment of a URL in the form:
             <tenant>/stacks/<stack_name>/<stack_id><path>
         '''
-        return '/'.join((urlutils.quote(self.tenant, ''), self._tenant_path()))
+        return '/'.join((urlparse.quote(self.tenant, ''), self._tenant_path()))
 
     def _tenant_path(self):
         '''
@@ -116,7 +117,7 @@ class HeatIdentifier(collections.Mapping):
             stacks/<stack_name>/<stack_id><path>
         '''
         return 'stacks/%s%s' % (self.stack_path(),
-                                urlutils.quote(strutils.safe_encode(
+                                urlparse.quote(strutils.safe_encode(
                                     self.path)))
 
     def stack_path(self):
@@ -125,8 +126,8 @@ class HeatIdentifier(collections.Mapping):
         in the form:
             <stack_name>/<stack_id>
         '''
-        return '%s/%s' % (urlutils.quote(self.stack_name, ''),
-                          urlutils.quote(self.stack_id, ''))
+        return '%s/%s' % (urlparse.quote(self.stack_name, ''),
+                          urlparse.quote(self.stack_id, ''))
 
     def _path_components(self):
         '''Return a list of the path components.'''

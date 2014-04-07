@@ -15,10 +15,11 @@
 
 import httplib2
 
+from six.moves.urllib import parse as urlparse
+
 from novaclient import client as base_client
 from novaclient.v1_1 import client
 
-from heat.openstack.common.py3kcompat import urlutils
 from heat.tests import fakes
 
 
@@ -46,7 +47,7 @@ class FakeHTTPClient(base_client.HTTPClient):
             assert 'body' in kwargs
 
         # Call the method
-        args = urlutils.parse_qsl(urlutils.urlparse(url)[4])
+        args = urlparse.parse_qsl(urlparse.urlparse(url)[4])
         kwargs.update(args)
         munged_url = url.rsplit('?', 1)[0]
         munged_url = munged_url.strip('/').replace('/', '_').replace('.', '_')

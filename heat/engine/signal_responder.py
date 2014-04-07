@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from six.moves.urllib import parse as urlparse
+
 from oslo.config import cfg
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
@@ -22,7 +24,6 @@ from heat.engine import stack_user
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common.py3kcompat import urlutils
 
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class SignalResponder(stack_user.StackUser):
 
         waitcond_url = cfg.CONF.heat_waitcondition_server_url
         signal_url = waitcond_url.replace('/waitcondition', signal_type)
-        host_url = urlutils.urlparse(signal_url)
+        host_url = urlparse.urlparse(signal_url)
 
         path = self.identifier().arn_url_path()
 
@@ -90,7 +91,7 @@ class SignalResponder(stack_user.StackUser):
         # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
         # need to calculate the signature with the path component unquoted, but
         # ensure the actual URL contains the quoted version...
-        unquoted_path = urlutils.unquote(host_url.path + path)
+        unquoted_path = urlparse.unquote(host_url.path + path)
         request = {'host': host_url.netloc.lower(),
                    'verb': SIGNAL_VERB[signal_type],
                    'path': unquoted_path,
@@ -104,7 +105,7 @@ class SignalResponder(stack_user.StackUser):
         signer = ec2_utils.Ec2Signer(secret_key)
         request['params']['Signature'] = signer.generate(request)
 
-        qs = urlutils.urlencode(request['params'])
+        qs = urlparse.urlencode(request['params'])
         url = "%s%s?%s" % (signal_url.lower(),
                            path, qs)
 

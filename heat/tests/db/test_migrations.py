@@ -30,11 +30,12 @@ import uuid
 from migrate.versioning import repository
 import sqlalchemy
 
+from six.moves.urllib import parse as urlparse
+
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
 from heat.openstack.common.db.sqlalchemy import test_migrations
 from heat.openstack.common import log as logging
-from heat.openstack.common.py3kcompat import urlutils
 
 
 LOG = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         for key, eng in self.engines.items():
             if eng is engine:
                 conn_string = self.test_databases[key]
-                conn_pieces = urlutils.urlparse(conn_string)
+                conn_pieces = urlparse.urlparse(conn_string)
                 if conn_string.startswith('mysql'):
                     break
                 else:
