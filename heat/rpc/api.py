@@ -50,13 +50,13 @@ RES_KEYS = (
     RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
     RES_ACTION, RES_STATUS, RES_STATUS_DATA,
     RES_TYPE, RES_ID, RES_STACK_ID, RES_STACK_NAME,
-    RES_REQUIRED_BY,
+    RES_REQUIRED_BY, RES_NESTED_STACK_ID,
 ) = (
     'description', 'updated_time',
     'resource_name', 'physical_resource_id', 'metadata',
     'resource_action', 'resource_status', 'resource_status_reason',
     'resource_type', 'resource_identity', STACK_ID, STACK_NAME,
-    'required_by',
+    'required_by', 'nested_stack_id',
 )
 
 RES_SCHEMA_KEYS = (

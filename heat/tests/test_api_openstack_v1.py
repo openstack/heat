@@ -1851,6 +1851,58 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(expected, result)
         self.m.VerifyAll()
 
+    def test_show_with_nested_stack(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show', True)
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        nested_stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                          'nested', 'some_id')
+
+        req = self._get(stack_identity._tenant_path())
+
+        engine_resp = {
+            u'description': u'',
+            u'resource_identity': dict(res_identity),
+            u'stack_name': stack_identity.stack_name,
+            u'resource_name': res_name,
+            u'resource_status_reason': None,
+            u'updated_time': u'2012-07-23T13:06:00Z',
+            u'stack_identity': dict(stack_identity),
+            u'resource_action': u'CREATE',
+            u'resource_status': u'COMPLETE',
+            u'physical_resource_id':
+            u'a3455d8c-9f88-404d-a85b-5315293e67de',
+            u'resource_type': u'AWS::EC2::Instance',
+            u'metadata': {u'ensureRunning': u'true'},
+            u'nested_stack_id': dict(nested_stack_identity)
+        }
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.show(req, tenant_id=self.tenant,
+                                      stack_name=stack_identity.stack_name,
+                                      stack_id=stack_identity.stack_id,
+                                      resource_name=res_name)
+
+        expected = [{'href': self._url(res_identity), 'rel': 'self'},
+                    {'href': self._url(stack_identity), 'rel': 'stack'},
+                    {'href': self._url(nested_stack_identity), 'rel': 'nested'}
+                    ]
+
+        self.assertEqual(expected, result['resource']['links'])
+        self.assertIsNone(result.get(rpc_api.RES_NESTED_STACK_ID))
+        self.m.VerifyAll()
+
     def test_show_nonexist(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
         res_name = 'WikiDatabase'
