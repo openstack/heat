@@ -42,9 +42,11 @@ STACK_KEYS = (
 STACK_OUTPUT_KEYS = (
     OUTPUT_DESCRIPTION,
     OUTPUT_KEY, OUTPUT_VALUE,
+    OUTPUT_ERROR,
 ) = (
     'description',
     'output_key', 'output_value',
+    'output_error',
 )
 
 RES_KEYS = (

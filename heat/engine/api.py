@@ -68,10 +68,15 @@ def format_stack_outputs(stack, outputs):
     that matches the API output expectations.
     '''
     def format_stack_output(k):
-        return {api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
-                                                       'No description given'),
-                api.OUTPUT_KEY: k,
-                api.OUTPUT_VALUE: stack.output(k)}
+        output = {
+            api.OUTPUT_DESCRIPTION: outputs[k].get('Description',
+                                                   'No description given'),
+            api.OUTPUT_KEY: k,
+            api.OUTPUT_VALUE: stack.output(k)
+        }
+        if outputs[k].get('error_msg'):
+            output.update({api.OUTPUT_ERROR: outputs[k].get('error_msg')})
+        return output
 
     return [format_stack_output(key) for key in outputs]
 
