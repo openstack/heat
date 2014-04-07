@@ -163,6 +163,13 @@ user_policy_template = '''
 }
 '''
 
+server_config_template = '''
+heat_template_version: 2013-05-23
+resources:
+  WebServer:
+    type: OS::Nova::Server
+'''
+
 
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
@@ -1375,6 +1382,31 @@ class StackServiceAuthorizeTest(HeatTestCase):
 
         self.stack.delete()
         self.m.VerifyAll()
+
+    def test_stack_authorize_stack_user_user_id(self):
+        self.ctx = utils.dummy_context(user_id=str(uuid.uuid4()))
+        stack = get_stack('stack_authorize_stack_user',
+                          self.ctx,
+                          server_config_template)
+        self.stack = stack
+
+        def handler(resource_name):
+            return resource_name == 'WebServer'
+
+        self.stack.register_access_allowed_handler(self.ctx.user_id, handler)
+
+        # matching credential_id and resource_name
+        self.assertTrue(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'WebServer'))
+
+        # not matching resource_name
+        self.assertFalse(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'NoSuchResource'))
+
+        # not matching credential_id
+        self.ctx.user_id = str(uuid.uuid4())
+        self.assertFalse(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'WebServer'))
 
 
 class StackServiceTest(HeatTestCase):

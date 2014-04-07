@@ -13,8 +13,12 @@
 
 import mock
 import os
+from oslo.config import cfg
+import webob
 
 from heat.common import context
+from heat.common import exception
+from heat.openstack.common import policy as base_policy
 from heat.tests.common import HeatTestCase
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
@@ -94,3 +98,122 @@ class TestRequestContext(HeatTestCase):
             pc.return_value = False
             ctx = context.RequestContext(roles=['notadmin'])
             self.assertFalse(ctx.is_admin)
+
+
+class RequestContextMiddlewareTest(HeatTestCase):
+
+    scenarios = [(
+        'empty_headers',
+        dict(
+            headers={},
+            expected_exception=None,
+            context_dict={
+                'auth_token': None,
+                'auth_url': None,
+                'aws_creds': None,
+                'is_admin': False,
+                'password': None,
+                'roles': [],
+                'show_deleted': False,
+                'tenant': None,
+                'tenant_id': None,
+                'trust_id': None,
+                'trustor_user_id': None,
+                'user': None,
+                'user_id': None,
+                'username': None
+            })
+    ), (
+        'username_password',
+        dict(
+            headers={
+                'X-Auth-User': 'my_username',
+                'X-Auth-Key': 'my_password',
+                'X-Auth-EC2-Creds': '{"ec2Credentials": {}}',
+                'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'X-Auth-Token': 'atoken',
+                'X-Tenant-Name': 'my_tenant',
+                'X-Tenant-Id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'X-Auth-Url': 'http://192.0.2.1:5000/v1',
+                'X-Roles': 'role1,role2,role3'
+            },
+            expected_exception=None,
+            context_dict={
+                'auth_token': 'atoken',
+                'auth_url': 'http://192.0.2.1:5000/v1',
+                'aws_creds': None,
+                'is_admin': False,
+                'password': 'my_password',
+                'roles': ['role1', 'role2', 'role3'],
+                'show_deleted': False,
+                'tenant': 'my_tenant',
+                'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'trust_id': None,
+                'trustor_user_id': None,
+                'user': 'my_username',
+                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'username': 'my_username'
+            })
+    ), (
+        'aws_creds',
+        dict(
+            headers={
+                'X-Auth-EC2-Creds': '{"ec2Credentials": {}}',
+                'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'X-Auth-Token': 'atoken',
+                'X-Tenant-Name': 'my_tenant',
+                'X-Tenant-Id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'X-Auth-Url': 'http://192.0.2.1:5000/v1',
+                'X-Roles': 'role1,role2,role3',
+            },
+            expected_exception=None,
+            context_dict={
+                'auth_token': 'atoken',
+                'auth_url': 'http://192.0.2.1:5000/v1',
+                'aws_creds': '{"ec2Credentials": {}}',
+                'is_admin': False,
+                'password': None,
+                'roles': ['role1', 'role2', 'role3'],
+                'show_deleted': False,
+                'tenant': 'my_tenant',
+                'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'trust_id': None,
+                'trustor_user_id': None,
+                'user': None,
+                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'username': None
+            })
+    ), (
+        'malformed_roles',
+        dict(
+            headers={
+                'X-Roles': [],
+            },
+            expected_exception=exception.NotAuthenticated)
+    )]
+
+    def setUp(self):
+        super(RequestContextMiddlewareTest, self).setUp()
+        opts = [
+            cfg.StrOpt('config_dir', default=policy_path),
+            cfg.StrOpt('config_file', default='foo'),
+            cfg.StrOpt('project', default='heat'),
+        ]
+        cfg.CONF.register_opts(opts)
+        pf = policy_path + 'check_admin.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+    def test_context_middleware(self):
+
+        middleware = context.ContextMiddleware(None, None)
+        request = webob.Request.blank('/stacks', headers=self.headers)
+        if self.expected_exception:
+            self.assertRaises(
+                self.expected_exception, middleware.process_request, request)
+        else:
+            self.assertIsNone(middleware.process_request(request))
+            ctx = request.context.to_dict()
+            for k, v in self.context_dict.items():
+                self.assertEqual(v, ctx[k], 'Key %s values do not match' % k)

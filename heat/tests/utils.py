@@ -133,11 +133,12 @@ def reset_dummy_db():
 
 
 def dummy_context(user='test_username', tenant_id='test_tenant_id',
-                  password='password', roles=[]):
+                  password='password', roles=[], user_id=None):
     return context.RequestContext.from_dict({
         'tenant_id': tenant_id,
         'tenant': 'test_tenant',
         'username': user,
+        'user_id': user_id,
         'password': password,
         'roles': roles,
         'is_admin': False,
