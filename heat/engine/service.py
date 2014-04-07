@@ -836,8 +836,11 @@ class EngineService(service.Service):
         - The user must map to a User resource defined in the requested stack
         - The user resource must validate OK against any Policy specified
         '''
-        # We're expecting EC2 credentials because all in-instance credentials
-        # are deployed as ec2 keypairs
+        # first check whether access is allowd by context user_id
+        if stack.access_allowed(cnxt.user_id, resource_name):
+            return True
+
+        # fall back to looking for EC2 credentials in the context
         try:
             ec2_creds = json.loads(cnxt.aws_creds).get('ec2Credentials')
         except (TypeError, AttributeError):
