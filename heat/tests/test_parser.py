@@ -1622,6 +1622,30 @@ class StackTest(HeatTestCase):
                          self.stack.t[self.stack.t.DESCRIPTION])
 
     @utils.stack_delete_after
+    def test_update_timeout(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Description': 'ATemplate',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl), timeout_mins=60)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Description': 'ATemplate',
+                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2), timeout_mins=30)
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(30, self.stack.timeout_mins)
+
+    @utils.stack_delete_after
     def test_update_disable_rollback(self):
         tmpl = {'Description': 'ATemplate',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}

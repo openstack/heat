@@ -565,6 +565,8 @@ class EngineService(service.Service):
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name
         common_params = api.extract_args(args)
+        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
+                                 current_stack.timeout_mins)
         env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)
