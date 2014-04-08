@@ -118,6 +118,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         {
             'distro': _('The Linux distribution on the server.'),
             'privateIPv4': _('The private IPv4 address of the server.'),
+            'admin_pass': _('The administrator password for the server.'),
         }
     )
 
@@ -455,7 +456,26 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
             return self.distro
         if name == 'privateIPv4':
             return nova_utils.get_ip(self.server, 'private', 4)
+        if name == 'admin_pass':
+            try:
+                return db_api.resource_data_get(self, self.ADMIN_PASS)
+            except exception.NotFound:
+                logger.info(_('Administrator password not'
+                              'found for server: %s') % self.name)
+                return ''
         return super(CloudServer, self)._resolve_attribute(name)
+
+    def handle_create(self):
+        server = super(CloudServer, self).handle_create()
+
+        #  Server will not have an adminPass attribute if Nova's
+        #  "enable_instance_password" config option is turned off
+        if hasattr(server, 'adminPass') and server.adminPass:
+            db_api.resource_data_set(self, self.ADMIN_PASS,
+                                     server.adminPass,
+                                     redact=True)
+
+        return server
 
 
 def resource_mapping():
