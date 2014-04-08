@@ -413,6 +413,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         params = {
             'status': 'fake status',
             'name': 'fake name',
+            'action': 'fake action',
             'balrog': 'you shall not pass!'
         }
         req = self._get('/stacks', params=params)
@@ -425,9 +426,10 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(2, len(filters))
+        self.assertEqual(3, len(filters))
         self.assertIn('status', filters)
         self.assertIn('name', filters)
+        self.assertIn('action', filters)
         self.assertNotIn('balrog', filters)
 
     def test_index_returns_stack_count_if_with_count_is_true(
