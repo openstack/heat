@@ -990,8 +990,7 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
 
-    @utils.stack_delete_after
-    def test_update_pool_with_references_to_health_monitors(self):
+    def _create_pool_with_health_monitors(self):
         clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
             fakes.FakeKeystoneClient())
         neutronclient.Client.create_health_monitor({
@@ -1026,6 +1025,10 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
         neutronclient.Client.show_vip('xyz').AndReturn(
             {'vip': {'status': 'ACTIVE'}})
 
+    @utils.stack_delete_after
+    def test_update_pool_with_references_to_health_monitors(self):
+        self._create_pool_with_health_monitors()
+
         neutronclient.Client.disassociate_health_monitor(
             '5678', mox.IsA(unicode))
 
@@ -1038,6 +1041,52 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
 
         snippet['Resources']['pool']['Properties']['monitors'] = [
             {u'Ref': u'monitor1'}]
+        updated_stack = utils.parse_stack(snippet)
+        self.stack.update(updated_stack)
+        self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_update_pool_with_empty_list_of_health_monitors(self):
+        self._create_pool_with_health_monitors()
+
+        neutronclient.Client.disassociate_health_monitor(
+            '5678', '5555').InAnyOrder()
+        neutronclient.Client.disassociate_health_monitor(
+            '5678', '6666').InAnyOrder()
+
+        self.m.ReplayAll()
+        snippet = template_format.parse(pool_with_health_monitors_template)
+        self.stack = utils.parse_stack(snippet)
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+        snippet['Resources']['pool']['Properties']['monitors'] = []
+        updated_stack = utils.parse_stack(snippet)
+        self.stack.update(updated_stack)
+        self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_update_pool_without_health_monitors(self):
+        self._create_pool_with_health_monitors()
+
+        neutronclient.Client.disassociate_health_monitor(
+            '5678', '5555').InAnyOrder()
+        neutronclient.Client.disassociate_health_monitor(
+            '5678', '6666').InAnyOrder()
+
+        self.m.ReplayAll()
+        snippet = template_format.parse(pool_with_health_monitors_template)
+        self.stack = utils.parse_stack(snippet)
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+
+        snippet['Resources']['pool']['Properties'].pop('monitors')
         updated_stack = utils.parse_stack(snippet)
         self.stack.update(updated_stack)
         self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
