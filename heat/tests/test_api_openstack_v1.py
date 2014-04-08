@@ -1442,7 +1442,9 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'validate_template',
-                  'args': {'template': template},
+                  'args': {'template': template,
+                           'params': {'parameters': {},
+                                      'resource_registry': {}}},
                   'version': self.api_version},
                  None).AndReturn(engine_response)
         self.m.ReplayAll()
@@ -1464,7 +1466,9 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'validate_template',
-                  'args': {'template': template},
+                  'args': {'template': template,
+                           'params': {'parameters': {},
+                                      'resource_registry': {}}},
                   'version': self.api_version},
                  None).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()

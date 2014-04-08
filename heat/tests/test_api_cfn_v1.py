@@ -1146,7 +1146,7 @@ class CfnStackControllerTest(HeatTestCase):
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
                   'method': 'validate_template',
-                  'args': {'template': json_template},
+                  'args': {'template': json_template, 'params': None},
                   'version': self.api_version}, None).AndReturn(response)
         self.m.ReplayAll()
 

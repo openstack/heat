@@ -346,7 +346,8 @@ class StackController(object):
         data = InstantiationData(body)
 
         result = self.rpc_client.validate_template(req.context,
-                                                   data.template())
+                                                   data.template(),
+                                                   data.environment())
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])
