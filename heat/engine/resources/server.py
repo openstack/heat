@@ -301,7 +301,7 @@ class Server(stack_user.StackUser):
 
     attributes_schema = {
         'show': _('A dict of all server details as returned by the API.'),
-        'addresses': _('A dict of all network addresses with corresponding'
+        'addresses': _('A dict of all network addresses with corresponding '
                        'port_id.'),
         'networks': _('A dict of assigned network addresses of the form: '
                       '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
