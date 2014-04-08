@@ -394,7 +394,8 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
-                     allowed_schemes=('file',)).AndRaise(IOError)
+                     allowed_schemes=('file',))\
+            .AndRaise(urlfetch.URLFetchError(_('Failed to retrieve template')))
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https')).AndReturn(test_templ)
         parsed_test_templ = template_format.parse(test_templ)
@@ -499,7 +500,8 @@ class ProviderTemplateTest(HeatTestCase):
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https',
-                                      'file')).AndRaise(IOError)
+                                      'file'))\
+            .AndRaise(urlfetch.URLFetchError(_('Failed to retrieve template')))
         self.m.ReplayAll()
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -524,7 +526,8 @@ class ProviderTemplateTest(HeatTestCase):
 
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https')).AndRaise(IOError)
+                     allowed_schemes=('http', 'https'))\
+            .AndRaise(urlfetch.URLFetchError(_('Failed to retrieve template')))
         self.m.ReplayAll()
 
         temp_res = template_resource.TemplateResource('test_t_res',

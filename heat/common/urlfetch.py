@@ -21,12 +21,17 @@ from requests import exceptions
 
 from six.moves import urllib
 
+from heat.common import exception
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
 logger = logging.getLogger(__name__)
+
+
+class URLFetchError(exception.Error, IOError):
+    pass
 
 
 def get(url, allowed_schemes=('http', 'https')):
@@ -43,13 +48,13 @@ def get(url, allowed_schemes=('http', 'https')):
     components = urllib.parse.urlparse(url)
 
     if components.scheme not in allowed_schemes:
-        raise IOError(_('Invalid URL scheme %s') % components.scheme)
+        raise URLFetchError(_('Invalid URL scheme %s') % components.scheme)
 
     if components.scheme == 'file':
         try:
             return urllib.request.urlopen(url).read()
         except urllib.error.URLError as uex:
-            raise IOError(_('Failed to retrieve template: %s') % uex)
+            raise URLFetchError(_('Failed to retrieve template: %s') % uex)
 
     try:
         resp = requests.get(url, stream=True)
@@ -68,9 +73,9 @@ def get(url, allowed_schemes=('http', 'https')):
         for chunk in reader:
             result += chunk
             if len(result) > cfg.CONF.max_template_size:
-                raise IOError("Template exceeds maximum allowed size (%s "
-                              "bytes)" % cfg.CONF.max_template_size)
+                raise URLFetchError("Template exceeds maximum allowed size (%s"
+                                    " bytes)" % cfg.CONF.max_template_size)
         return result
 
     except exceptions.RequestException as ex:
-        raise IOError(_('Failed to retrieve template: %s') % ex)
+        raise URLFetchError(_('Failed to retrieve template: %s') % ex)

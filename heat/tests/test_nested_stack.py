@@ -629,7 +629,8 @@ Resources:
 
     @mock.patch.object(urlfetch, 'get')
     def test_child_template_when_io_error(self, mock_get):
-        mock_get.side_effect = IOError()
+        msg = 'Failed to retrieve template'
+        mock_get.side_effect = urlfetch.URLFetchError(msg)
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         nested_stack = stack['the_nested']
