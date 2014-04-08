@@ -737,7 +737,10 @@ class Stack(collections.Mapping):
         Get the value of the specified stack output.
         '''
         value = self.outputs[key].get('Value', '')
-        return self.resolve_runtime_data(value)
+        try:
+            return self.resolve_runtime_data(value)
+        except Exception:
+            return None
 
     def restart_resource(self, resource_name):
         '''
