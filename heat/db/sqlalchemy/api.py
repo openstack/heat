@@ -526,17 +526,10 @@ def _delete_event_rows(context, stack_id, limit):
     # confirmed via integration tests.
     query = _query_all_by_stack(context, stack_id)
     session = _session(context)
-    if 'postgres' not in session.connection().dialect.name:
-        ids = [r.id for r in query.order_by(
-            models.Event.id).limit(limit).all()]
-        q = session.query(models.Event).filter(
-            models.Event.id.in_(ids))
-    else:
-        stmt = session.query(
-            models.Event.id).filter_by(
-                stack_id=stack_id).order_by(
-                    models.Event.id).limit(limit).subquery()
-        q = query.join(stmt, models.Event.id == stmt.c.id)
+    ids = [r.id for r in query.order_by(
+        models.Event.id).limit(limit).all()]
+    q = session.query(models.Event).filter(
+        models.Event.id.in_(ids))
     return q.delete(synchronize_session='fetch')
 
 
