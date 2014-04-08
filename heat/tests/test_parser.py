@@ -1443,9 +1443,9 @@ class StackTest(HeatTestCase):
         "status": "COMPLETE",
         "name": "my-test-stack-name",
         "resources": {
-        "foo": {
+        "AResource": {
         "status": "COMPLETE",
-        "name": "foo",
+        "name": "AResource",
         "resource_data": {},
         "metadata": {},
         "resource_id": "test-res-id",
@@ -1454,23 +1454,27 @@ class StackTest(HeatTestCase):
           }
          }
         }'''
-        tmpl = template.Template({
-            'Resources': {
-                'foo': {'Type': 'GenericResourceType'},
+
+        tmpl = {
+            'Resources': {'AResource': {'Type': 'GenericResourceType'}},
+            'Outputs': {'TestOutput': {'Value': {
+                'Fn::GetAtt': ['AResource', 'Foo']}}
             }
-        })
+        }
+
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  tmpl,
+                                  template.Template(tmpl),
                                   adopt_stack_data=json.loads(adopt_data))
         self.stack.store()
         self.stack.adopt()
-        res = self.stack['foo']
+        res = self.stack['AResource']
         self.assertEqual(u'test-res-id', res.resource_id)
-        self.assertEqual('foo', res.name)
+        self.assertEqual('AResource', res.name)
         self.assertEqual('COMPLETE', res.status)
         self.assertEqual('ADOPT', res.action)
         self.assertEqual((self.stack.ADOPT, self.stack.COMPLETE),
                          self.stack.state)
+        self.assertEqual('AResource', self.stack.output('TestOutput'))
 
     @utils.stack_delete_after
     def test_adopt_stack_fails(self):
