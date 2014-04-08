@@ -502,7 +502,30 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
         self.m.VerifyAll()
 
-    def test_update_replace(self):
+    def test_update_replace_with_resource_name(self):
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
+        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
+        prop_diff = {'Foo': 'xyz'}
+        generic_rsrc.ResourceWithProps.handle_update(
+            utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace(
+                res.name))
+        self.m.ReplayAll()
+        # should be re-raised so parser.Stack can handle replacement
+        updater = scheduler.TaskRunner(res.update, utmpl)
+        ex = self.assertRaises(resource.UpdateReplace, updater)
+        self.assertEqual('The Resource test_resource requires replacement.',
+                         str(ex))
+        self.m.VerifyAll()
+
+    def test_update_replace_without_resource_name(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
@@ -519,7 +542,9 @@ class ResourceTest(HeatTestCase):
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         updater = scheduler.TaskRunner(res.update, utmpl)
-        self.assertRaises(resource.UpdateReplace, updater)
+        ex = self.assertRaises(resource.UpdateReplace, updater)
+        self.assertEqual('The Resource Unknown requires replacement.',
+                         str(ex))
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):
