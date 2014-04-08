@@ -21,6 +21,7 @@ from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import environment_format
 from heat.common import identifier
+from heat.common import serializers
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.common import wsgi
@@ -378,7 +379,7 @@ class StackController(object):
         return self.rpc_client.generate_template(req.context, type_name)
 
 
-class StackSerializer(wsgi.JSONResponseSerializer):
+class StackSerializer(serializers.JSONResponseSerializer):
     """Handles serialization of specific controller method responses."""
 
     def _populate_response_header(self, response, location, status):

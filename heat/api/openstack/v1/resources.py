@@ -15,6 +15,7 @@ import itertools
 
 from heat.api.openstack.v1 import util
 from heat.common import identifier
+from heat.common import serializers
 from heat.common import wsgi
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
@@ -113,5 +114,5 @@ def create_resource(options):
     Resources resource factory method.
     """
     deserializer = wsgi.JSONRequestDeserializer()
-    serializer = wsgi.JSONResponseSerializer()
+    serializer = serializers.JSONResponseSerializer()
     return wsgi.Resource(ResourceController(options), deserializer, serializer)

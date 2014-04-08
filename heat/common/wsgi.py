@@ -20,7 +20,6 @@
 Utility methods for working with WSGI servers
 """
 
-import datetime
 import errno
 import json
 import logging
@@ -34,7 +33,6 @@ from eventlet.green import socket
 from eventlet.green import ssl
 import eventlet.greenio
 import eventlet.wsgi
-from lxml import etree
 from oslo.config import cfg
 from paste import deploy
 import routes
@@ -43,6 +41,7 @@ import webob.dec
 import webob.exc
 
 from heat.common import exception
+from heat.common import serializers
 from heat.openstack.common import gettextutils
 from heat.openstack.common import importutils
 
@@ -565,65 +564,6 @@ class JSONRequestDeserializer(object):
             return {}
 
 
-class JSONResponseSerializer(object):
-
-    def to_json(self, data):
-        def sanitizer(obj):
-            if isinstance(obj, datetime.datetime):
-                return obj.isoformat()
-            return obj
-
-        response = json.dumps(data, default=sanitizer)
-        logging.debug("JSON response : %s" % response)
-        return response
-
-    def default(self, response, result):
-        response.content_type = 'application/json'
-        response.body = self.to_json(result)
-
-
-# Escape XML serialization for these keys, as the AWS API defines them as
-# JSON inside XML when the response format is XML.
-JSON_ONLY_KEYS = ('TemplateBody', 'Metadata')
-
-
-class XMLResponseSerializer(object):
-
-    def object_to_element(self, obj, element):
-        if isinstance(obj, list):
-            for item in obj:
-                subelement = etree.SubElement(element, "member")
-                self.object_to_element(item, subelement)
-        elif isinstance(obj, dict):
-            for key, value in obj.items():
-                subelement = etree.SubElement(element, key)
-                if key in JSON_ONLY_KEYS:
-                    if value:
-                        # Need to use json.dumps for the JSON inside XML
-                        # otherwise quotes get mangled and json.loads breaks
-                        try:
-                            subelement.text = json.dumps(value)
-                        except TypeError:
-                            subelement.text = str(value)
-                else:
-                    self.object_to_element(value, subelement)
-        else:
-            element.text = str(obj)
-
-    def to_xml(self, data):
-        # Assumption : root node is dict with single key
-        root = data.keys()[0]
-        eltree = etree.Element(root)
-        self.object_to_element(data.get(root), eltree)
-        response = etree.tostring(eltree)
-        logging.debug("XML response : %s" % response)
-        return response
-
-    def default(self, response, result):
-        response.content_type = 'application/xml'
-        response.body = self.to_xml(result)
-
-
 class Resource(object):
     """
     WSGI app that handles (de)serialization and controller dispatch.
@@ -708,9 +648,9 @@ class Resource(object):
             serializer = self.serializer
             if serializer is None:
                 if content_type == "JSON":
-                    serializer = JSONResponseSerializer()
+                    serializer = serializers.JSONResponseSerializer()
                 else:
-                    serializer = XMLResponseSerializer()
+                    serializer = serializers.XMLResponseSerializer()
 
             response = webob.Response(request=request)
             self.dispatch(serializer, action, response, action_result)

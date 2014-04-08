@@ -18,7 +18,7 @@
 
 import webob.exc
 
-from heat.common import wsgi
+from heat.common import serializers
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common.rpc import common as rpc_common
 
@@ -44,7 +44,7 @@ class HeatAPIException(webob.exc.HTTPError):
         paste pipeline.  We serialize in XML by default (as AWS does)
         '''
         webob.exc.HTTPError.__init__(self, detail=detail)
-        serializer = wsgi.XMLResponseSerializer()
+        serializer = serializers.XMLResponseSerializer()
         serializer.default(self, self.get_unserialized_body())
 
     def get_unserialized_body(self):

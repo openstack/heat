@@ -27,6 +27,7 @@ import webob
 
 cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
+from heat.common import serializers
 from heat.common import exception
 from heat.openstack.common import log as logging
 import heat.openstack.common.rpc.common as rpc_common
@@ -44,9 +45,9 @@ class Fault(object):
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
         if req.content_type == 'application/xml':
-            serializer = wsgi.XMLResponseSerializer()
+            serializer = serializers.XMLResponseSerializer()
         else:
-            serializer = wsgi.JSONResponseSerializer()
+            serializer = serializers.JSONResponseSerializer()
         resp = webob.Response(request=req)
         default_webob_exc = webob.exc.HTTPInternalServerError()
         resp.status_code = self.error.get('code', default_webob_exc.code)
