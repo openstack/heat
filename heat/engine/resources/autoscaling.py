@@ -335,7 +335,7 @@ class InstanceGroup(stack_resource.StackResource):
         pause_sec = iso8601utils.parse_isoduration(pause_time)
 
         batch_cnt = (capacity + efft_bat_sz - 1) // efft_bat_sz
-        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_mins * 60:
+        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
             raise ValueError('The current UpdatePolicy will result '
                              'in stack update timeout.')
 

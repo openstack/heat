@@ -830,8 +830,9 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+        api_args = {'timeout_mins': 60}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
-                                       template, params, None, {})
+                                       template, params, None, api_args)
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
@@ -877,8 +878,9 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         cfg.CONF.set_override('max_resources_per_stack', 3)
 
+        api_args = {'timeout_mins': 60}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
-                                       template, params, None, {})
+                                       template, params, None, api_args)
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
@@ -1076,11 +1078,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+        api_args = {'timeout_mins': 60}
         ex = self.assertRaises(
             rpc_common.ClientException,
             self.man.update_stack,
             self.ctx, old_stack.identifier(),
-            template, params, None, {})
+            template, params, None, api_args)
         self.assertEqual(ex._exc_info[0], exception.StackValidationFailed)
         self.m.VerifyAll()
 
@@ -1131,10 +1134,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+        api_args = {'timeout_mins': 60}
         ex = self.assertRaises(rpc_common.ClientException,
                                self.man.update_stack, self.ctx,
                                old_stack.identifier(),
-                               template, params, None, {})
+                               template, params, None, api_args)
         self.assertEqual(ex._exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
             'Missing required credential: X-Auth-Key', str(ex._exc_info[1]))

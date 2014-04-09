@@ -252,14 +252,15 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
                         username="root",
                         key_filename=private_key_file.name)
             chan = ssh.get_transport().open_session()
-            chan.settimeout(self.stack.timeout_mins * 60.0)
+            chan.settimeout(self.stack.timeout_secs())
             chan.exec_command(command)
             try:
                 # The channel timeout only works for read/write operations
                 chan.recv(1024)
             except socket.timeout:
-                raise exception.Error(_("SSH command timed out after %s "
-                                        "minutes") % self.stack.timeout_mins)
+                raise exception.Error(
+                    _("SSH command timed out after %s seconds") %
+                    self.stack.timeout_secs())
             else:
                 return chan.recv_exit_status()
             finally:
