@@ -290,6 +290,62 @@ class JSONResponseSerializerTest(HeatTestCase):
         self.assertEqual('{"key": "value"}', response.body)
 
 
+class XMLResponseSerializerTest(HeatTestCase):
+
+    def test_to_xml(self):
+        fixture = {"key": "value"}
+        expected = '<key>value</key>'
+        actual = wsgi.XMLResponseSerializer().to_xml(fixture)
+        self.assertEqual(expected, actual)
+
+    def test_to_xml_with_date_format_value(self):
+        fixture = {"date": datetime.datetime(1, 3, 8, 2)}
+        expected = '<date>0001-03-08 02:00:00</date>'
+        actual = wsgi.XMLResponseSerializer().to_xml(fixture)
+        self.assertEqual(expected, actual)
+
+    def test_to_xml_with_list(self):
+        fixture = {"name": ["1", "2"]}
+        expected = '<name><member>1</member><member>2</member></name>'
+        actual = wsgi.XMLResponseSerializer().to_xml(fixture)
+        self.assertEqual(expected, actual)
+
+    def test_to_xml_with_more_deep_format(self):
+        # Note we expect tree traversal from one root key, which is compatible
+        # with the AWS format responses we need to serialize
+        fixture = {"aresponse":
+                   {"is_public": True, "name": [{"name1": "test"}]}}
+        expected = ('<aresponse><is_public>True</is_public>'
+                    '<name><member><name1>test</name1></member></name>'
+                    '</aresponse>')
+        actual = wsgi.XMLResponseSerializer().to_xml(fixture)
+        self.assertEqual(expected, actual)
+
+    def test_to_xml_with_json_only_keys(self):
+        # Certain keys are excluded from serialization because CFN
+        # format demands a json blob in the XML body
+        fixture = {"aresponse":
+                   {"is_public": True,
+                    "TemplateBody": {"name1": "test"},
+                    "Metadata": {"name2": "test2"}}}
+        expected = ('<aresponse><is_public>True</is_public>'
+                    '<TemplateBody>{"name1": "test"}</TemplateBody>'
+                    '<Metadata>{"name2": "test2"}</Metadata></aresponse>')
+        actual = wsgi.XMLResponseSerializer().to_xml(fixture)
+        self.assertEqual(expected, actual)
+
+    def test_default(self):
+        fixture = {"key": "value"}
+        response = webob.Response()
+        wsgi.XMLResponseSerializer().default(response, fixture)
+        self.assertEqual(200, response.status_int)
+        content_types = filter(lambda h: h[0] == 'Content-Type',
+                               response.headerlist)
+        self.assertEqual(1, len(content_types))
+        self.assertEqual('application/xml', response.content_type)
+        self.assertEqual('<key>value</key>', response.body)
+
+
 class JSONRequestDeserializerTest(HeatTestCase):
 
     def test_has_body_no_content_length(self):
