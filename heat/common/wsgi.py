@@ -40,6 +40,7 @@ import routes.middleware
 import webob.dec
 import webob.exc
 
+from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common import serializers
 from heat.openstack.common import gettextutils
@@ -625,6 +626,11 @@ class Resource(object):
             # won't make it into the pipeline app that serializes errors
             raise exception.HTTPExceptionDisguise(http_exc)
         except webob.exc.HTTPException as err:
+            if isinstance(err, aws_exception.HeatAPIException):
+                # The AWS compatible API's don't use faultwrap, so
+                # we want to detect the HeatAPIException subclasses
+                # and raise rather than wrapping in HTTPExceptionDisguise
+                raise
             if not isinstance(err, webob.exc.HTTPError):
                 # Some HTTPException are actually not errors, they are
                 # responses ready to be sent back to the users, so we don't

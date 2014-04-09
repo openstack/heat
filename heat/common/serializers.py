@@ -81,7 +81,6 @@ class XMLResponseSerializer(object):
         eltree = etree.Element(root)
         self.object_to_element(data.get(root), eltree)
         response = etree.tostring(eltree)
-        logger.debug("XML response : %s" % response)
         return response
 
     def default(self, response, result):

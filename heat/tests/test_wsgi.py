@@ -20,6 +20,7 @@ from oslo.config import cfg
 import stubout
 import webob
 
+from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common import wsgi
 from heat.tests.common import HeatTestCase
@@ -229,6 +230,9 @@ class ResourceExceptionHandlingTest(HeatTestCase):
         ('client_exceptions', dict(
             exception=exception.StackResourceLimitExceeded,
             exception_catch=exception.StackResourceLimitExceeded)),
+        ('aws_exception', dict(
+            exception=aws_exception.HeatAccessDeniedError,
+            exception_catch=aws_exception.HeatAccessDeniedError)),
         ('webob_bad_request', dict(
             exception=webob.exc.HTTPBadRequest,
             exception_catch=exception.HTTPExceptionDisguise)),
