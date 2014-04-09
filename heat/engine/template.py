@@ -165,6 +165,18 @@ class Template(collections.Mapping):
     def parse(self, stack, snippet):
         return parse(self.functions(), stack, snippet)
 
+    def validate(self):
+        '''Validate the template.
+
+        Only validates the top-level sections of the template. Syntax inside
+        sections is not checked here but in code parts that are responsible
+        for working with the respective sections.
+        '''
+
+        for k in self.t.keys():
+            if k not in self.SECTIONS:
+                raise exception.InvalidTemplateSection(section=k)
+
 
 def parse(functions, stack, snippet):
     recurse = functools.partial(parse, functions, stack)

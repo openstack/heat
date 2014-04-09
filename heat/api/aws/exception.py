@@ -278,6 +278,7 @@ def map_remote_error(ex):
             'StackValidationFailed',
             'InvalidTemplateReference',
             'InvalidTemplateVersion',
+            'InvalidTemplateSection',
             'UnknownUserParameter',
             'UserParameterMissing',
             'InvalidTemplateParameter',

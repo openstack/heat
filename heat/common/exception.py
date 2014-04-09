@@ -196,6 +196,10 @@ class InvalidTemplateVersion(HeatException):
     msg_fmt = _("The template version is invalid: %(explanation)s")
 
 
+class InvalidTemplateSection(HeatException):
+    msg_fmt = _("The template section is invalid: %(section)s")
+
+
 class InvalidTemplateParameter(HeatException):
     msg_fmt = _("The Parameter (%(key)s) has no attributes.")
 
