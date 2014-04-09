@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Client Library for Marconi Resources."""
+
 from heat.engine import clients
 from heat.openstack.common import log as logging
 
@@ -24,9 +26,9 @@ except ImportError:
 
 
 class Clients(clients.OpenStackClients):
-    '''
-    Convenience class to create and cache client instances.
-    '''
+
+    """Convenience class to create and cache client instances."""
+
     def __init__(self, context):
         super(Clients, self).__init__(context)
         self._marconi = None
