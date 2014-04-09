@@ -419,11 +419,15 @@ class ParameterSchemaTest(testtools.TestCase):
 
     def test_validate_schema_wrong_key(self):
         error = self.assertRaises(constr.InvalidSchemaError,
-                                  parameters.Schema.from_dict, {"foo": "bar"})
-        self.assertEqual("Invalid key 'foo' for parameter", str(error))
+                                  parameters.Schema.from_dict, 'param_name',
+                                  {"foo": "bar"})
+        self.assertEqual("Invalid key 'foo' for parameter (param_name)",
+                         str(error))
 
     def test_validate_schema_no_type(self):
         error = self.assertRaises(constr.InvalidSchemaError,
                                   parameters.Schema.from_dict,
+                                  'broken',
                                   {"Description": "Hi!"})
-        self.assertEqual("Missing parameter type", str(error))
+        self.assertEqual("Missing parameter type for parameter: broken",
+                         str(error))

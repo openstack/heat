@@ -108,18 +108,25 @@ class Schema(constr.Schema):
                         "key": key, "entity": entity})
 
     @classmethod
-    def _validate_dict(cls, schema_dict):
-        cls._check_dict(schema_dict, cls.PARAMETER_KEYS, "parameter")
+    def _validate_dict(cls, param_name, schema_dict):
+        cls._check_dict(schema_dict,
+                        cls.PARAMETER_KEYS,
+                        "parameter (%s)" % param_name)
 
         if cls.TYPE not in schema_dict:
-            raise constr.InvalidSchemaError(_("Missing parameter type"))
+            raise constr.InvalidSchemaError(
+                _("Missing parameter type for parameter: %s") % param_name)
 
     @classmethod
-    def from_dict(cls, schema_dict):
+    def from_dict(cls, param_name, schema_dict):
         """
         Return a Parameter Schema object from a legacy schema dictionary.
+
+        :param param_name: name of the parameter owning the schema; used
+               for more verbose logging
+        :type  param_name: str
         """
-        cls._validate_dict(schema_dict)
+        cls._validate_dict(param_name, schema_dict)
 
         def constraints():
             desc = schema_dict.get(CONSTRAINT_DESCRIPTION)
@@ -171,7 +178,7 @@ class Parameter(object):
 
         # Check for fully-fledged Schema objects
         if not isinstance(schema, Schema):
-            schema = Schema.from_dict(schema)
+            schema = Schema.from_dict(name, schema)
 
         if schema.type == schema.STRING:
             ParamClass = StringParam

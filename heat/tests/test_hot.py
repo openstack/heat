@@ -1014,7 +1014,8 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_name']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
+                                                                      value)
             return True
 
         value = 'wp'
@@ -1107,7 +1108,8 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
+                                                                      value)
             return True
 
         value = 29999
@@ -1148,7 +1150,8 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['param1']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
+                                                                      value)
             return True
 
         value = "1"
@@ -1176,7 +1179,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         err = self.assertRaises(constraints.InvalidSchemaError,
-                                hot_param.HOTParamSchema.from_dict, schema)
+                                hot_param.HOTParamSchema.from_dict,
+                                'name',
+                                schema)
         self.assertIn(range_desc, str(err))
 
     def test_validate_schema_wrong_key(self):
@@ -1189,7 +1194,8 @@ class HOTParamValidatorTest(HeatTestCase):
         error = self.assertRaises(
             constraints.InvalidSchemaError, parameters.Parameters,
             "stack_testit", parser.Template(hot_tpl))
-        self.assertEqual("Invalid key 'foo' for parameter", str(error))
+        self.assertEqual("Invalid key 'foo' for parameter (param1)",
+                         str(error))
 
     def test_validate_schema_no_type(self):
         hot_tpl = template_format.parse('''
@@ -1201,7 +1207,8 @@ class HOTParamValidatorTest(HeatTestCase):
         error = self.assertRaises(
             constraints.InvalidSchemaError, parameters.Parameters,
             "stack_testit", parser.Template(hot_tpl))
-        self.assertEqual("Missing parameter type", str(error))
+        self.assertEqual("Missing parameter type for parameter: param1",
+                         str(error))
 
     def test_validate_schema_unknown_type(self):
         hot_tpl = template_format.parse('''
@@ -1246,7 +1253,8 @@ class HOTParamValidatorTest(HeatTestCase):
             constraints.InvalidSchemaError, parameters.Parameters,
             "stack_testit", parser.Template(hot_tpl))
         self.assertEqual(
-            "Invalid parameter constraints, expected a list", str(error))
+            "Invalid parameter constraints for parameter param1, "
+            "expected a list", str(error))
 
     def test_validate_schema_constraints_not_mapping(self):
         hot_tpl = template_format.parse('''

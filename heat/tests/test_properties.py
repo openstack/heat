@@ -320,7 +320,7 @@ class PropertySchemaTest(testtools.TestCase):
                           "m2.xlarge", "m2.2xlarge", "m2.4xlarge",
                           "c1.medium", "c1.xlarge", "cc1.4xlarge"]
         constraint_desc = "Must be a valid EC2 instance type."
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "String",
             "Description": description,
             "Default": "m1.large",
@@ -345,7 +345,7 @@ class PropertySchemaTest(testtools.TestCase):
         description = "WebServer EC2 instance type"
         allowed_pattern = "[A-Za-z0-9.]*"
         constraint_desc = "Must contain only alphanumeric characters."
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "String",
             "Description": description,
             "Default": "m1.large",
@@ -370,7 +370,7 @@ class PropertySchemaTest(testtools.TestCase):
         description = "WebServer EC2 instance type"
         allowed_pattern = "[A-Za-z0-9.]*"
         constraint_desc = "Must contain only alphanumeric characters."
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "String",
             "Description": description,
             "Default": "m1.large",
@@ -396,7 +396,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(constraint_desc, allowed_constraint.description)
 
     def test_from_param_string_min_len(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
             "Default": "m1.large",
@@ -413,7 +413,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertIsNone(len_constraint.max)
 
     def test_from_param_string_max_len(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
             "Default": "m1.large",
@@ -430,7 +430,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(11, len_constraint.max)
 
     def test_from_param_string_min_max_len(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
             "Default": "m1.large",
@@ -448,7 +448,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(11, len_constraint.max)
 
     def test_from_param_no_default(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
         })
@@ -460,7 +460,7 @@ class PropertySchemaTest(testtools.TestCase):
 
     def test_from_number_param_min(self):
         default = "42"
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "Number",
             "Default": default,
             "MinValue": "10",
@@ -480,7 +480,7 @@ class PropertySchemaTest(testtools.TestCase):
 
     def test_from_number_param_max(self):
         default = "42"
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "Number",
             "Default": default,
             "MaxValue": "100",
@@ -500,7 +500,7 @@ class PropertySchemaTest(testtools.TestCase):
 
     def test_from_number_param_min_max(self):
         default = "42"
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "Number",
             "Default": default,
             "MinValue": "10",
@@ -522,7 +522,7 @@ class PropertySchemaTest(testtools.TestCase):
     def test_from_number_param_allowed_vals(self):
         default = "42"
         constraint_desc = "The quick brown fox jumps over the lazy dog."
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "Number",
             "Default": default,
             "AllowedValues": ["10", "42", "100"],
@@ -542,7 +542,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(constraint_desc, allowed_constraint.description)
 
     def test_from_list_param(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "CommaDelimitedList",
             "Default": "foo,bar,baz"
         })
@@ -554,7 +554,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertFalse(schema.required)
 
     def test_from_json_param(self):
-        param = parameters.Schema.from_dict({
+        param = parameters.Schema.from_dict('name', {
             "Type": "Json",
             "Default": {"foo": "bar", "blarg": "wibble"}
         })
@@ -1206,7 +1206,7 @@ class PropertiesTest(testtools.TestCase):
                 ]
             },
         }
-        params = dict((n, parameters.Schema.from_dict(s)) for n, s
+        params = dict((n, parameters.Schema.from_dict(n, s)) for n, s
                       in params_snippet.items())
         props_schemata = properties.Properties.schema_from_params(params)
 
@@ -1379,7 +1379,7 @@ class PropertiesTest(testtools.TestCase):
                 ]
             }
         }
-        params = dict((n, hot_param.HOTParamSchema.from_dict(s)) for n, s
+        params = dict((n, hot_param.HOTParamSchema.from_dict(n, s)) for n, s
                       in params_snippet.items())
         props_schemata = properties.Properties.schema_from_params(params)
 

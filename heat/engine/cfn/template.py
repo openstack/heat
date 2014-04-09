@@ -44,7 +44,7 @@ class CfnTemplate(template.Template):
 
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS, {}).iteritems()
-        return dict((name, parameters.Schema.from_dict(schema))
+        return dict((name, parameters.Schema.from_dict(name, schema))
                     for name, schema in params)
 
     def parameters(self, stack_identifier, user_params, validate_value=True,
