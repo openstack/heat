@@ -3304,6 +3304,24 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
             self.assertEqual(expected, resp)
 
     @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_show_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show')
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._get('/software_configs/%s' % config_id)
+
+        error = heat_exc.NotFound('Not found %s' % config_id)
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'show_software_config',
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(fault.FaultWrapper,
+                                           self.controller.show,
+                                           req, config_id=config_id,
+                                           tenant_id=self.tenant)
+            self.assertEqual(404, resp.json['code'])
+            self.assertEqual('NotFound', resp.json['error']['type'])
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create')
         body = {
@@ -3346,14 +3364,34 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'delete')
         config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
         req = self._delete('/software_configs/%s' % config_id)
-        return_value = {'Error': 'something wrong'}
+        error = Exception('something wrong')
         with mock.patch.object(
                 self.controller.rpc_client,
                 'delete_software_config',
-                return_value=return_value):
-            self.assertRaises(
-                webob.exc.HTTPBadRequest, self.controller.delete,
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.delete,
                 req, config_id=config_id, tenant_id=self.tenant)
+
+            self.assertEqual(500, resp.json['code'])
+            self.assertEqual('Exception', resp.json['error']['type'])
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_configs/%s' % config_id)
+        error = heat_exc.NotFound('Not found %s' % config_id)
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'delete_software_config',
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.delete,
+                req, config_id=config_id, tenant_id=self.tenant)
+
+            self.assertEqual(404, resp.json['code'])
+            self.assertEqual('NotFound', resp.json['error']['type'])
 
 
 class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
@@ -3426,6 +3464,24 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
             self.assertEqual(expected, resp)
 
     @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_show_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show')
+        deployment_id = '38eccf10-97e5-4ae8-9d37-b577c9801750'
+        req = self._get('/software_deployments/%s' % deployment_id)
+
+        error = heat_exc.NotFound('Not found %s' % deployment_id)
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'show_software_deployment',
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.show,
+                req, deployment_id=deployment_id, tenant_id=self.tenant)
+
+            self.assertEqual(404, resp.json['code'])
+            self.assertEqual('NotFound', resp.json['error']['type'])
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create')
         config_id = 'd00ba4aa-db33-42e1-92f4-2a6469260107'
@@ -3465,7 +3521,8 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         return_value = body.copy()
         deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
         return_value['id'] = deployment_id
-        req = self._put('/software_deployments/%s', json.dumps(body))
+        req = self._put('/software_deployments/%s' % deployment_id,
+                        json.dumps(body))
         return_value['server_id'] = server_id
         expected = {'software_deployment': return_value}
         with mock.patch.object(
@@ -3476,6 +3533,24 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
                 req, deployment_id=deployment_id,
                 body=body, tenant_id=self.tenant)
             self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_update_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update')
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._put('/software_deployments/%s' % deployment_id,
+                        '{}')
+        error = heat_exc.NotFound('Not found %s' % deployment_id)
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'update_software_deployment',
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.update,
+                req, deployment_id=deployment_id,
+                body={}, tenant_id=self.tenant)
+            self.assertEqual(404, resp.json['code'])
+            self.assertEqual('NotFound', resp.json['error']['type'])
 
     @mock.patch.object(policy.Enforcer, 'enforce')
     def test_delete(self, mock_enforce):
@@ -3496,11 +3571,29 @@ class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'delete')
         deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
         req = self._delete('/software_deployments/%s' % deployment_id)
-        return_value = {'Error': 'something wrong'}
+        error = Exception('something wrong')
         with mock.patch.object(
                 self.controller.rpc_client,
                 'delete_software_deployment',
-                return_value=return_value):
-            self.assertRaises(
-                webob.exc.HTTPBadRequest, self.controller.delete,
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.delete,
                 req, deployment_id=deployment_id, tenant_id=self.tenant)
+            self.assertEqual(500, resp.json['code'])
+            self.assertEqual('Exception', resp.json['error']['type'])
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete_not_found(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_deployments/%s' % deployment_id)
+        error = heat_exc.NotFound('Not Found %s' % deployment_id)
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'delete_software_deployment',
+                side_effect=to_remote_error(error)):
+            resp = request_with_middleware(
+                fault.FaultWrapper, self.controller.delete,
+                req, deployment_id=deployment_id, tenant_id=self.tenant)
+            self.assertEqual(404, resp.json['code'])
+            self.assertEqual('NotFound', resp.json['error']['type'])
