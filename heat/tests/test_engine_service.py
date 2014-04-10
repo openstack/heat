@@ -1757,6 +1757,76 @@ class StackServiceTest(HeatTestCase):
                 'resource_id': 9999,
                 'status': 'COMPLETE',
                 'type': u'AWS::EC2::Instance'}}
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn(None)
+        self.m.ReplayAll()
+        ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
+        self.assertEqual(6, len(ret))
+        self.assertEqual('CREATE', ret['action'])
+        self.assertEqual('COMPLETE', ret['status'])
+        self.assertEqual('service_abandon_stack', ret['name'])
+        self.assertIn('id', ret)
+        self.assertEqual(expected_res, ret['resources'])
+        self.assertEqual(self.stack.t.t, ret['template'])
+        self.m.VerifyAll()
+
+    @stack_context('service_abandon_stack')
+    def test_abandon_stack_fails_action_in_progress_on_other_engine(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
+        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
+        stack_lock.StackLock.engine_alive(
+            self.ctx,
+            "other-engine-fake-uuid").AndReturn(True)
+
+        self.m.ReplayAll()
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.abandon_stack,
+                               self.ctx,
+                               self.stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.ActionInProgress)
+        self.m.VerifyAll()
+
+    @stack_context('service_abandon_stack')
+    def test_abandon_stack_fails_action_in_progress_on_same_engine(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn(self.eng.engine_id)
+
+        self.m.ReplayAll()
+        ex = self.assertRaises(rpc_common.ClientException,
+                               self.eng.abandon_stack,
+                               self.ctx,
+                               self.stack.identifier())
+        self.assertEqual(ex._exc_info[0], exception.ActionInProgress)
+        self.m.VerifyAll()
+
+    @stack_context('service_abandon_stack')
+    def test_abandon_stack_success_other_engine_not_alive(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
+        self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
+        stack_lock.StackLock.engine_alive(
+            self.ctx,
+            "other-engine-fake-uuid").AndReturn(False)
+
+        expected_res = {
+            u'WebServer': {
+                'action': 'CREATE',
+                'metadata': {},
+                'name': u'WebServer',
+                'resource_data': {},
+                'resource_id': 9999,
+                'status': 'COMPLETE',
+                'type': u'AWS::EC2::Instance'}}
         self.m.ReplayAll()
         ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
         self.assertEqual(6, len(ret))

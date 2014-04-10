@@ -748,13 +748,29 @@ class EngineService(service.Service):
         st = self._get_stack(cnxt, stack_identity)
         logger.info(_('abandoning stack %s') % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
+        lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
+        acquire_result = lock.try_acquire()
 
-        # Get stack details before deleting it.
-        stack_info = stack.get_abandon_data()
-        # Set deletion policy to 'Retain' for all resources in the stack.
-        stack.set_deletion_policy(resource.RETAIN)
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.delete)
+        # If an action is in progress, 'try_acquire' returns engine UUID. If
+        # the returned engine is alive, then throw ActionInProgress exception
+        if (acquire_result and
+                (acquire_result == self.engine_id or
+                 stack_lock.StackLock.engine_alive(cnxt, acquire_result))):
+            raise exception.ActionInProgress(stack_name=stack.name,
+                                             action=stack.action)
+
+        try:
+            # Get stack details before deleting it.
+            stack_info = stack.get_abandon_data()
+            # Set deletion policy to 'Retain' for all resources in the stack.
+            stack.set_deletion_policy(resource.RETAIN)
+        except:
+            with excutils.save_and_reraise_exception():
+                lock.release(stack.id)
+
+        self.thread_group_mgr.start_with_acquired_lock(stack,
+                                                       lock,
+                                                       stack.delete)
         return stack_info
 
     def list_resource_types(self, cnxt, support_status=None):
