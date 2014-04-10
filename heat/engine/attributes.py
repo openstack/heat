@@ -13,23 +13,72 @@
 
 import collections
 
+from heat.engine import constraints as constr
+from heat.engine import support
+
+
+class Schema(constr.Schema):
+    """
+    Simple schema class for attributes.
+
+    Schema objects are serialisable to dictionaries following a superset of
+    the HOT input Parameter schema using dict().
+    """
+
+    KEYS = (
+        DESCRIPTION,
+    ) = (
+        'description',
+    )
+
+    def __init__(self, description=None,
+                 support_status=support.SupportStatus()):
+        self.description = description
+        self.support_status = support_status
+
+    def __getitem__(self, key):
+        if key == self.DESCRIPTION:
+            if self.description is not None:
+                return self.description
+
+        raise KeyError(key)
+
+    @classmethod
+    def from_attribute(cls, schema_dict):
+        """
+        Return a Property Schema corresponding to a Attribute Schema.
+        """
+        if isinstance(schema_dict, cls):
+            return schema_dict
+        # it's necessary for supporting old attribute schema format,
+        # where value is not Schema object
+        return cls(description=schema_dict)
+
+
+def schemata(schema):
+    """
+    Return dictionary of Schema objects for given dictionary of schemata.
+    """
+    return dict((n, Schema.from_attribute(s)) for n, s in schema.items())
+
 
 class Attribute(object):
     """
     An Attribute schema.
     """
 
-    (DESCRIPTION,) = ('description',)
-
-    def __init__(self, attr_name, description):
+    def __init__(self, attr_name, schema):
         """
         Initialise with a name and description.
 
         :param attr_name: the name of the attribute
-        :param description: attribute description
+        :param schema: attribute schema
         """
         self.name = attr_name
-        self.description = description
+        self.schema = Schema.from_attribute(schema)
+
+    def support_status(self):
+        return self.schema.support_status
 
     def as_output(self, resource_name):
         """
@@ -42,7 +91,7 @@ class Attribute(object):
         return {
             "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
                                                        self.name),
-            "Description": self.description
+            "Description": self.schema.description
         }
 
 

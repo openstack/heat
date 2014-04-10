@@ -787,9 +787,9 @@ class EngineService(service.Service):
                     yield name, dict(schema)
 
         def attributes_schema():
-            for schema_item in resource_class.attributes_schema.items():
-                schema = attributes.Attribute(*schema_item)
-                yield schema.name, {schema.DESCRIPTION: schema.description}
+            for name, schema_data in resource_class.attributes_schema.items():
+                schema = attributes.Schema.from_attribute(schema_data)
+                yield name, {schema.DESCRIPTION: schema.description}
 
         return {
             rpc_api.RES_SCHEMA_RES_TYPE: type_name,
