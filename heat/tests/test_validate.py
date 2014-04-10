@@ -1076,9 +1076,8 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
-        self.assertEqual({'Error': 'The template is invalid. '
-                          'A Resources section with at least one resource '
-                          'must be defined.'}, res)
+        expected = {'Description': 'No description', 'Parameters': {}}
+        self.assertEqual(expected, res)
 
     def test_validate_template_with_invalid_resource_type(self):
         hot_tpl = template_format.parse('''
