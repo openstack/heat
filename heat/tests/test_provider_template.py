@@ -15,8 +15,6 @@ import json
 import os
 import uuid
 
-import testscenarios
-
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -31,9 +29,6 @@ from heat.engine.resources import template_resource
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class MyCloudResource(generic_rsrc.GenericResource):
