@@ -52,11 +52,15 @@ class HOTParamSchema(parameters.Schema):
     PARAMETER_KEYS = KEYS
 
     @classmethod
-    def from_dict(cls, schema_dict):
+    def from_dict(cls, param_name, schema_dict):
         """
         Return a Parameter Schema object from a legacy schema dictionary.
+
+        :param param_name: name of the parameter owning the schema; used
+               for more verbose logging
+        :type  param_name: str
         """
-        cls._validate_dict(schema_dict)
+        cls._validate_dict(param_name, schema_dict)
 
         def constraints():
             constraints = schema_dict.get(CONSTRAINTS)
@@ -65,7 +69,8 @@ class HOTParamSchema(parameters.Schema):
 
             if not isinstance(constraints, list):
                 raise constr.InvalidSchemaError(
-                    _("Invalid parameter constraints, expected a list"))
+                    _("Invalid parameter constraints for parameter %s, "
+                      "expected a list") % param_name)
 
             valid_keys = (DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES,
                           ALLOWED_PATTERN, CUSTOM_CONSTRAINT)
