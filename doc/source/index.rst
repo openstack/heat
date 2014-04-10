@@ -52,6 +52,7 @@ Developers Documentation
    :maxdepth: 1
 
    architecture
+   pluginguide
 
 API Documentation
 ========================
