@@ -318,7 +318,7 @@ class Error(HeatException):
 
 
 class NotFound(HeatException):
-    def __init__(self, msg_fmt):
+    def __init__(self, msg_fmt=_('Not found')):
         self.msg_fmt = msg_fmt
         super(NotFound, self).__init__()
 
