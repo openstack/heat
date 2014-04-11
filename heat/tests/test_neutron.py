@@ -1426,6 +1426,68 @@ class NeutronRouterTest(HeatTestCase):
         self.assertTrue(gateway_info.get('enable_snat'))
         self.m.VerifyAll()
 
+    def test_create_router_gateway_enable_snat(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+
+        router.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'public'
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+
+        neutronclient.Client.create_router({
+            "router": {
+                "name": "Test Router",
+                "external_gateway_info": {
+                    'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                },
+                "admin_state_up": True,
+            }
+        }).AndReturn({
+            "router": {
+                "status": "BUILD",
+                "external_gateway_info": None,
+                "name": "Test Router",
+                "admin_state_up": True,
+                "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+            }
+        })
+
+        neutronclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
+                "router": {
+                    "status": "ACTIVE",
+                    "external_gateway_info": {
+                        "network_id":
+                        "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                        "enable_snat": True
+                    },
+                    "name": "Test Router",
+                    "admin_state_up": True,
+                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                    "routes": [],
+                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+                }
+            })
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_external_gateway_template)
+        t["Resources"]["router"]["Properties"]["external_gateway_info"].pop(
+            "enable_snat")
+        stack = utils.parse_stack(t)
+        rsrc = self.create_router(t, stack, 'router')
+
+        rsrc.validate()
+
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
+        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         gateway_info.get('network_id'))
+        self.m.VerifyAll()
+
     def test_update_router_gateway_as_property(self):
         self._create_router_with_gateway()
 
