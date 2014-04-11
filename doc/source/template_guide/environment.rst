@@ -21,6 +21,9 @@ The environment is used to affect the runtime behaviour of the
 template. It provides a way to override the default resource
 implementation and the parameters passed to Heat.
 
+To fully understand the runtime behavior you also have to consider
+what plug-ins the cloud provider has installed.
+
 ------
 Format
 ------
@@ -35,9 +38,30 @@ Command line usage
 
    heat stack-create my_stack -e my_env.yaml -P "some_parm=bla" -f my_tmpl.yaml
 
-If you do not like the option "-e my_env.yaml", you can put file
-my_env.yaml in "/etc/heat/environment.d/" and restart heat engine.
-Then, you can use the heat client as in the example below:
+---------------------------------
+Global and effective environments
+---------------------------------
+
+The environment used for a stack is the combination of (1) the
+environment given by the user with the template for the stack and (2)
+a global environment that is determined by the cloud provider.
+Combination is asymmetric: an entry in the first environment takes
+precedence over an entry in the second.  The OpenStack software
+includes a default global environment, which supplies some resource
+types that are included in the standard documentation.  The cloud
+provider can add additional environment entries.
+
+The cloud provider can add to the global environment
+by putting environment files in a configurable directory wherever
+the heat engine runs.  The configuration variable is named
+"environment_dir" and is found in the "heat.common.config" module (AKA
+the "[DEFAULT]" section) of "/etc/heat/heat.conf".  The default for
+that directory is "/etc/heat/environment.d".  Its contents are
+combined in whatever order the shell delivers them when the heat
+engine starts up, which is the time when these files are read.
+
+If the "my_env.yaml" file from the example above had been put in the
+"environment_dir" then the user's command line could be this:
 
 ::
 
