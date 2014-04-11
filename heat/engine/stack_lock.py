@@ -12,17 +12,17 @@
 #    under the License.
 
 import uuid
-from oslo.config import cfg
 
-cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
+from oslo.config import cfg
 
 from heat.common import exception
 from heat.db import api as db_api
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
+
+cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
 logger = logging.getLogger(__name__)
 

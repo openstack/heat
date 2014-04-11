@@ -17,22 +17,16 @@ import json
 from oslo.config import cfg
 import webob
 
-cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
-cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
-cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
-
-from heat.openstack.common import timeutils
 from heat.common import context
+from heat.common import exception
+from heat.common import heat_keystoneclient as hkc
+from heat.common import identifier
 from heat.db import api as db_api
 from heat.engine import api
-from heat.rpc import api as rpc_api
 from heat.engine import attributes
 from heat.engine import clients
-from heat.engine.event import Event
 from heat.engine import environment
-from heat.common import exception
-from heat.common import identifier
-from heat.common import heat_keystoneclient as hkc
+from heat.engine.event import Event
 from heat.engine import parameter_groups
 from heat.engine import parser
 from heat.engine import properties
@@ -40,15 +34,20 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import stack_lock
 from heat.engine import watchrule
-
-from heat.openstack.common import log as logging
-from heat.openstack.common import threadgroup
+from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
 from heat.openstack.common.rpc import service
-from heat.openstack.common import excutils
+from heat.openstack.common import threadgroup
+from heat.openstack.common import timeutils
 from heat.openstack.common import uuidutils
+from heat.rpc import api as rpc_api
+
+cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
+cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
+cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
 
 logger = logging.getLogger(__name__)
 

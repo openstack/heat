@@ -14,9 +14,9 @@
 import collections
 
 from heat.common import exception
+from heat.engine import constraints as constr
 from heat.engine import parameters
 from heat.engine import support
-from heat.engine import constraints as constr
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,

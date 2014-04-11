@@ -11,10 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.openstack.common.notifier import api as notifier_api
-
 from heat.engine import api as engine_api
 from heat.engine import notification
+from heat.openstack.common.notifier import api as notifier_api
 
 
 def send(stack,

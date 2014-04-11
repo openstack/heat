@@ -16,7 +16,6 @@ import json
 
 from heat.api.aws import utils as aws_utils
 from heat.common import exception
-
 from heat.engine import function
 
 

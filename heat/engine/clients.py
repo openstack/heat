@@ -11,19 +11,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
-
-from heat.openstack.common import importutils
-from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
-
-logger = logging.getLogger(__name__)
-
-
-from heat.common import heat_keystoneclient as hkc
 from heatclient import client as heatclient
 from novaclient import client as novaclient
 from novaclient import shell as novashell
+from oslo.config import cfg
+
+from heat.common import heat_keystoneclient as hkc
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import importutils
+from heat.openstack.common import log as logging
+
+logger = logging.getLogger(__name__)
+
 
 try:
     from swiftclient import client as swiftclient

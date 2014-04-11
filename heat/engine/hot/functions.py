@@ -14,7 +14,6 @@
 import collections
 
 from heat.common import exception
-
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 

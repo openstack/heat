@@ -15,22 +15,20 @@ import base64
 import copy
 from datetime import datetime
 
-from heat.engine import event
 from heat.common import exception
-from heat.engine import function
-from heat.openstack.common import excutils
-from heat.db import api as db_api
 from heat.common import identifier
 from heat.common import short_id
-from heat.engine import scheduler
-from heat.engine import resources
-from heat.engine import support
-# import class to avoid name collisions and ugly aliasing
+from heat.db import api as db_api
 from heat.engine.attributes import Attributes
+from heat.engine import event
+from heat.engine import function
 from heat.engine.properties import Properties
-
-from heat.openstack.common import log as logging
+from heat.engine import resources
+from heat.engine import scheduler
+from heat.engine import support
+from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

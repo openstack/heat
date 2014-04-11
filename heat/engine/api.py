@@ -12,12 +12,11 @@
 #    under the License.
 
 from heat.common import template_format
-from heat.rpc import api
-from heat.openstack.common import timeutils
 from heat.engine import constraints as constr
-
-from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.openstack.common import timeutils
+from heat.rpc import api
 
 logger = logging.getLogger(__name__)
 
