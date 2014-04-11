@@ -19,9 +19,7 @@ from heat.api.cloudwatch import watch
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.common import wsgi
 from heat.openstack.common import gettextutils
-from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
 gettextutils.install('heat')
 
 

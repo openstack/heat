@@ -17,9 +17,6 @@ from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import watchrule
-from heat.openstack.common import log as logging
-
-logger = logging.getLogger(__name__)
 
 
 class CloudWatchAlarm(resource.Resource):

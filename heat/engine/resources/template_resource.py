@@ -25,9 +25,6 @@ from heat.engine import environment
 from heat.engine import properties
 from heat.engine import stack_resource
 from heat.engine import template
-from heat.openstack.common import log as logging
-
-logger = logging.getLogger(__name__)
 
 
 def generate_class(name, template_name):

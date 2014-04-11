@@ -21,10 +21,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 
-import heat.openstack.common.log as logging
 from heat.openstack.common import policy
-
-logger = logging.getLogger(__name__)
 
 
 CONF = cfg.CONF

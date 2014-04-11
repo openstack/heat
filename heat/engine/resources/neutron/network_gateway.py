@@ -19,12 +19,9 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
-from heat.openstack.common import log as logging
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
-
-logger = logging.getLogger(__name__)
 
 
 class NetworkGateway(neutron.NeutronResource):

@@ -19,13 +19,10 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common import log as logging
 from heat.tests import common
 from heat.tests import utils
 
 from ..resources import cloud_dns  # noqa
-
-logger = logging.getLogger(__name__)
 
 domain_only_template = '''
 {
