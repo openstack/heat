@@ -1,4 +1,3 @@
-#
 # Copyright 2010 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 # Copyright 2013 Hewlett-Packard Development Company, L.P.
@@ -16,8 +15,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+##############################################################################
+##############################################################################
+##
+## DO NOT MODIFY THIS FILE
+##
+## This file is being graduated to the heattest library. Please make all
+## changes there, and only backport critical fixes here. - dhellmann
+##
+##############################################################################
+##############################################################################
+
 import fixtures
-import mox
+from six.moves import mox
 
 
 class MoxStubout(fixtures.Fixture):

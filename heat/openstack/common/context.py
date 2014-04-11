@@ -1,4 +1,3 @@
-#
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -26,7 +25,7 @@ import uuid
 
 
 def generate_request_id():
-    return 'req-%s' % str(uuid.uuid4())
+    return b'req-' + str(uuid.uuid4()).encode('ascii')
 
 
 class RequestContext(object):
@@ -99,3 +98,14 @@ def get_context_from_function_and_args(function, args, kwargs):
             return arg
 
     return None
+
+
+def is_user_context(context):
+    """Indicates if the request context is a normal user."""
+    if not context:
+        return False
+    if context.is_admin:
+        return False
+    if not context.user_id or not context.project_id:
+        return False
+    return True

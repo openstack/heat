@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2012 Intel Corporation.
 # All Rights Reserved.
 #

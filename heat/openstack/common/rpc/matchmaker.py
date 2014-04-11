@@ -1,4 +1,3 @@
-#
 #    Copyright 2011 Cloudscaling Group, Inc
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -23,7 +22,7 @@ import contextlib
 import eventlet
 from oslo.config import cfg
 
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _, _LI
 from heat.openstack.common import log as logging
 
 
@@ -214,7 +213,7 @@ class HeartbeatMatchMakerBase(MatchMakerBase):
         self.hosts.discard(host)
         self.backend_unregister(key, '.'.join((key, host)))
 
-        LOG.info(_("Matchmaker unregistered: %(key)s, %(host)s"),
+        LOG.info(_LI("Matchmaker unregistered: %(key)s, %(host)s"),
                  {'key': key, 'host': host})
 
     def start_heartbeat(self):

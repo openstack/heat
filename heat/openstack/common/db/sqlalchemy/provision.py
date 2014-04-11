@@ -1,4 +1,3 @@
-#
 # Copyright 2013 Mirantis.inc
 # All Rights Reserved.
 #

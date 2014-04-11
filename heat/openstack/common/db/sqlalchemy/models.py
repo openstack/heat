@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2011 X.commerce, a business unit of eBay Inc.
 # Copyright 2010 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -71,7 +70,7 @@ class ModelBase(six.Iterator):
         return []
 
     def __iter__(self):
-        columns = dict(object_mapper(self).columns).keys()
+        columns = list(dict(object_mapper(self).columns).keys())
         # NOTE(russellb): Allow models to specify other keys that can be looked
         # up, beyond the actual db columns.  An example would be the 'name'
         # property for an Instance.

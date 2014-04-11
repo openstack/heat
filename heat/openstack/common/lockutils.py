@@ -1,4 +1,3 @@
-#
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -16,6 +15,7 @@
 
 import contextlib
 import errno
+import fcntl
 import functools
 import os
 import shutil
@@ -29,7 +29,7 @@ import weakref
 from oslo.config import cfg
 
 from heat.openstack.common import fileutils
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _, _LE, _LI
 from heat.openstack.common import log as logging
 
 
@@ -41,7 +41,7 @@ util_opts = [
                 help='Whether to disable inter-process locks'),
     cfg.StrOpt('lock_path',
                default=os.environ.get("HEAT_LOCK_PATH"),
-               help=('Directory to use for lock files.'))
+               help='Directory to use for lock files.')
 ]
 
 
@@ -53,7 +53,7 @@ def set_defaults(lock_path):
     cfg.set_defaults(util_opts, lock_path=lock_path)
 
 
-class _InterProcessLock(object):
+class _FileLock(object):
     """Lock implementation which allows multiple locks, working around
     issues like bugs.debian.org/cgi-bin/bugreport.cgi?bug=632857 and does
     not require any cleanup. Since the lock is always held on a file
@@ -75,12 +75,12 @@ class _InterProcessLock(object):
         self.lockfile = None
         self.fname = name
 
-    def __enter__(self):
+    def acquire(self):
         basedir = os.path.dirname(self.fname)
 
         if not os.path.exists(basedir):
             fileutils.ensure_tree(basedir)
-            LOG.info(_('Created lock path: %s'), basedir)
+            LOG.info(_LI('Created lock path: %s'), basedir)
 
         self.lockfile = open(self.fname, 'w')
 
@@ -91,24 +91,40 @@ class _InterProcessLock(object):
                 # Also upon reading the MSDN docs for locking(), it seems
                 # to have a laughable 10 attempts "blocking" mechanism.
                 self.trylock()
-                LOG.debug(_('Got file lock "%s"'), self.fname)
-                return self
+                LOG.debug('Got file lock "%s"', self.fname)
+                return True
             except IOError as e:
                 if e.errno in (errno.EACCES, errno.EAGAIN):
                     # external locks synchronise things like iptables
                     # updates - give it some time to prevent busy spinning
                     time.sleep(0.01)
                 else:
-                    raise
+                    raise threading.ThreadError(_("Unable to acquire lock on"
+                                                  " `%(filename)s` due to"
+                                                  " %(exception)s") %
+                                                {
+                                                    'filename': self.fname,
+                                                    'exception': e,
+                                                })
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def release(self):
         try:
             self.unlock()
             self.lockfile.close()
+            LOG.debug('Released file lock "%s"', self.fname)
         except IOError:
-            LOG.exception(_("Could not release the acquired lock `%s`"),
+            LOG.exception(_LE("Could not release the acquired lock `%s`"),
                           self.fname)
-        LOG.debug(_('Released file lock "%s"'), self.fname)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+
+    def exists(self):
+        return os.path.exists(self.fname)
 
     def trylock(self):
         raise NotImplementedError()
@@ -117,7 +133,7 @@ class _InterProcessLock(object):
         raise NotImplementedError()
 
 
-class _WindowsLock(_InterProcessLock):
+class _WindowsLock(_FileLock):
     def trylock(self):
         msvcrt.locking(self.lockfile.fileno(), msvcrt.LK_NBLCK, 1)
 
@@ -125,7 +141,7 @@ class _WindowsLock(_InterProcessLock):
         msvcrt.locking(self.lockfile.fileno(), msvcrt.LK_UNLCK, 1)
 
 
-class _PosixLock(_InterProcessLock):
+class _FcntlLock(_FileLock):
     def trylock(self):
         fcntl.lockf(self.lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
@@ -133,35 +149,106 @@ class _PosixLock(_InterProcessLock):
         fcntl.lockf(self.lockfile, fcntl.LOCK_UN)
 
 
+class _PosixLock(object):
+    def __init__(self, name):
+        # Hash the name because it's not valid to have POSIX semaphore
+        # names with things like / in them. Then use base64 to encode
+        # the digest() instead taking the hexdigest() because the
+        # result is shorter and most systems can't have shm sempahore
+        # names longer than 31 characters.
+        h = hashlib.sha1()
+        h.update(name.encode('ascii'))
+        self.name = str((b'/' + base64.urlsafe_b64encode(
+            h.digest())).decode('ascii'))
+
+    def acquire(self, timeout=None):
+        self.semaphore = posix_ipc.Semaphore(self.name,
+                                             flags=posix_ipc.O_CREAT,
+                                             initial_value=1)
+        self.semaphore.acquire(timeout)
+        return self
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def release(self):
+        self.semaphore.release()
+        self.semaphore.close()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+
+    def exists(self):
+        try:
+            semaphore = posix_ipc.Semaphore(self.name)
+        except posix_ipc.ExistentialError:
+            return False
+        else:
+            semaphore.close()
+        return True
+
+
 if os.name == 'nt':
     import msvcrt
     InterProcessLock = _WindowsLock
+    FileLock = _WindowsLock
 else:
-    import fcntl
+    import base64
+    import hashlib
+    import posix_ipc
     InterProcessLock = _PosixLock
+    FileLock = _FcntlLock
 
 _semaphores = weakref.WeakValueDictionary()
 _semaphores_lock = threading.Lock()
 
 
-def external_lock(name, lock_file_prefix=None):
-    with internal_lock(name):
-        LOG.debug(_('Attempting to grab external lock "%(lock)s"'),
-                  {'lock': name})
+def _get_lock_path(name, lock_file_prefix, lock_path=None):
+    # NOTE(mikal): the lock name cannot contain directory
+    # separators
+    name = name.replace(os.sep, '_')
+    if lock_file_prefix:
+        sep = '' if lock_file_prefix.endswith('-') else '-'
+        name = '%s%s%s' % (lock_file_prefix, sep, name)
 
-        # NOTE(mikal): the lock name cannot contain directory
-        # separators
-        name = name.replace(os.sep, '_')
-        if lock_file_prefix:
-            sep = '' if lock_file_prefix.endswith('-') else '-'
-            name = '%s%s%s' % (lock_file_prefix, sep, name)
+    local_lock_path = lock_path or CONF.lock_path
 
-        if not CONF.lock_path:
+    if not local_lock_path:
+        # NOTE(bnemec): Create a fake lock path for posix locks so we don't
+        # unnecessarily raise the RequiredOptError below.
+        if InterProcessLock is not _PosixLock:
             raise cfg.RequiredOptError('lock_path')
+        local_lock_path = 'posixlock:/'
 
-        lock_file_path = os.path.join(CONF.lock_path, name)
+    return os.path.join(local_lock_path, name)
 
-        return InterProcessLock(lock_file_path)
+
+def external_lock(name, lock_file_prefix=None, lock_path=None):
+    LOG.debug('Attempting to grab external lock "%(lock)s"',
+              {'lock': name})
+
+    lock_file_path = _get_lock_path(name, lock_file_prefix, lock_path)
+
+    # NOTE(bnemec): If an explicit lock_path was passed to us then it
+    # means the caller is relying on file-based locking behavior, so
+    # we can't use posix locks for those calls.
+    if lock_path:
+        return FileLock(lock_file_path)
+    return InterProcessLock(lock_file_path)
+
+
+def remove_external_lock_file(name, lock_file_prefix=None):
+    """Remove a external lock file when it's not used anymore
+    This will be helpful when we have a lot of lock files
+    """
+    with internal_lock(name):
+        lock_file_path = _get_lock_path(name, lock_file_prefix)
+        try:
+            os.remove(lock_file_path)
+        except OSError:
+            LOG.info(_LI('Failed to remove file %(file)s'),
+                     {'file': lock_file_path})
 
 
 def internal_lock(name):
@@ -172,12 +259,12 @@ def internal_lock(name):
             sem = threading.Semaphore()
             _semaphores[name] = sem
 
-    LOG.debug(_('Got semaphore "%(lock)s"'), {'lock': name})
+    LOG.debug('Got semaphore "%(lock)s"', {'lock': name})
     return sem
 
 
 @contextlib.contextmanager
-def lock(name, lock_file_prefix=None, external=False):
+def lock(name, lock_file_prefix=None, external=False, lock_path=None):
     """Context based lock
 
     This function yields a `threading.Semaphore` instance (if we don't use
@@ -192,15 +279,17 @@ def lock(name, lock_file_prefix=None, external=False):
       workers both run a a method decorated with @synchronized('mylock',
       external=True), only one of them will execute at a time.
     """
-    if external and not CONF.disable_process_locking:
-        lock = external_lock(name, lock_file_prefix)
-    else:
-        lock = internal_lock(name)
-    with lock:
-        yield lock
+    int_lock = internal_lock(name)
+    with int_lock:
+        if external and not CONF.disable_process_locking:
+            ext_lock = external_lock(name, lock_file_prefix, lock_path)
+            with ext_lock:
+                yield ext_lock
+        else:
+            yield int_lock
 
 
-def synchronized(name, lock_file_prefix=None, external=False):
+def synchronized(name, lock_file_prefix=None, external=False, lock_path=None):
     """Synchronization decorator.
 
     Decorating a method like so::
@@ -228,12 +317,12 @@ def synchronized(name, lock_file_prefix=None, external=False):
         @functools.wraps(f)
         def inner(*args, **kwargs):
             try:
-                with lock(name, lock_file_prefix, external):
-                    LOG.debug(_('Got semaphore / lock "%(function)s"'),
+                with lock(name, lock_file_prefix, external, lock_path):
+                    LOG.debug('Got semaphore / lock "%(function)s"',
                               {'function': f.__name__})
                     return f(*args, **kwargs)
             finally:
-                LOG.debug(_('Semaphore / lock released "%(function)s"'),
+                LOG.debug('Semaphore / lock released "%(function)s"',
                           {'function': f.__name__})
         return inner
     return wrap

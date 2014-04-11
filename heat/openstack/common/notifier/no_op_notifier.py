@@ -1,4 +1,3 @@
-#
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #

@@ -1,4 +1,3 @@
-#
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -17,7 +16,7 @@
 from oslo.config import cfg
 
 from heat.openstack.common import context as req_context
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _LE
 from heat.openstack.common import log as logging
 from heat.openstack.common import rpc
 
@@ -43,6 +42,6 @@ def notify(context, message):
         try:
             rpc.notify(context, topic, message)
         except Exception:
-            LOG.exception(_("Could not send notification to %(topic)s. "
-                            "Payload=%(message)s"),
+            LOG.exception(_LE("Could not send notification to %(topic)s. "
+                              "Payload=%(message)s"),
                           {"topic": topic, "message": message})
