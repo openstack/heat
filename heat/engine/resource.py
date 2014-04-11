@@ -53,7 +53,6 @@ class UpdateReplace(Exception):
     '''
     Raised when resource update requires replacement
     '''
-    _message = _("The Resource %s requires replacement.")
 
     def __init__(self, resource_name='Unknown',
                  message=_("The Resource %s requires replacement.")):
