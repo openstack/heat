@@ -17,6 +17,7 @@ from oslo.config import cfg
 import uuid
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -303,12 +304,18 @@ class Server(stack_user.StackUser):
                        'port_id.'),
         'networks': _('A dict of assigned network addresses of the form: '
                       '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
-        'first_address': _('Convenience attribute to fetch the first '
-                           'assigned network address, or an '
-                           'empty string if nothing has been assigned '
-                           'at this time. Result may not be predictable '
-                           'if the server has addresses from more than one '
-                           'network.'),
+        'first_address': attributes.Schema(
+            _('Convenience attribute to fetch the first assigned network '
+              'address, or an empty string if nothing has been assigned at '
+              'this time. Result may not be predictable if the server has '
+              'addresses from more than one network.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                message=_('Use the networks attribute instead of '
+                          'first_address. For example: "{get_attr: '
+                          '[<server name>, networks, <network name>, 0]}"')
+            )
+        ),
         'instance_name': _('AWS compatible instance name.'),
         'accessIPv4': _('The manually assigned alternative public IPv4 '
                         'address of the server.'),
