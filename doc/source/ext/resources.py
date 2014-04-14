@@ -53,8 +53,10 @@ class ResourcePages(Directive):
 
             if resource_class.support_status.status == support.DEPRECATED:
                 sstatus = resource_class.support_status.to_dict()
-                para = nodes.inline(
-                    '', _('%(status)s - %(message)s') % sstatus)
+                msg = _('%(status)s')
+                if sstatus['message'] is not None:
+                    msg = _('%(status)s - %(message)s')
+                para = nodes.inline('', msg % sstatus)
                 warning = nodes.note('', para)
                 section.append(warning)
 
@@ -191,9 +193,11 @@ Resources:
         prop_item.append(definition)
 
         if prop.support_status.status != support.SUPPORTED:
-            para = nodes.inline(
-                '',
-                _('%(status)s - %(message)s') % prop.support_status.to_dict())
+            sstatus = prop.support_status.to_dict()
+            msg = _('%(status)s')
+            if sstatus['message'] is not None:
+                msg = _('%(status)s - %(message)s')
+            para = nodes.inline('', msg % sstatus)
             warning = nodes.note('', para)
             definition.append(warning)
 
