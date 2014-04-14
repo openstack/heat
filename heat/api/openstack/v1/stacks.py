@@ -398,6 +398,22 @@ class StackController(object):
         """
         return self.rpc_client.generate_template(req.context, type_name)
 
+    @util.identified_stack
+    def snapshot(self, req, identity, body):
+        name = body.get('name')
+        return self.rpc_client.stack_snapshot(req.context, identity, name)
+
+    @util.identified_stack
+    def show_snapshot(self, req, identity, snapshot_id):
+        snapshot = self.rpc_client.show_snapshot(
+            req.context, identity, snapshot_id)
+        return {'snapshot': snapshot}
+
+    @util.identified_stack
+    def delete_snapshot(self, req, identity, snapshot_id):
+        self.rpc_client.delete_snapshot(req.context, identity, snapshot_id)
+        raise exc.HTTPNoContent()
+
 
 class StackSerializer(serializers.JSONResponseSerializer):
     """Handles serialization of specific controller method responses."""

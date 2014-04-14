@@ -481,3 +481,18 @@ class EngineClient(object):
     def delete_software_deployment(self, cnxt, deployment_id):
         return self.call(cnxt, self.make_msg('delete_software_deployment',
                                              deployment_id=deployment_id))
+
+    def stack_snapshot(self, ctxt, stack_identity, name):
+        return self.call(ctxt, self.make_msg('stack_snapshot',
+                                             stack_identity=stack_identity,
+                                             name=name))
+
+    def show_snapshot(self, cnxt, stack_identity, snapshot_id):
+        return self.call(cnxt, self.make_msg('show_snapshot',
+                                             stack_identity=stack_identity,
+                                             snapshot_id=snapshot_id))
+
+    def delete_snapshot(self, cnxt, stack_identity, snapshot_id):
+        return self.call(cnxt, self.make_msg('delete_snapshot',
+                                             stack_identity=stack_identity,
+                                             snapshot_id=snapshot_id))

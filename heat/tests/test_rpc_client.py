@@ -268,3 +268,20 @@ class EngineRpcAPITestCase(testtools.TestCase):
         deployment_id = '86729f02-4648-44d8-af44-d0ec65b6abc9'
         self._test_engine_api('delete_software_deployment', 'call',
                               deployment_id=deployment_id)
+
+    def test_show_snapshot(self):
+        snapshot_id = '86729f02-4648-44d8-af44-d0ec65b6abc9'
+        self._test_engine_api('show_snapshot', 'call',
+                              stack_identity=self.identity,
+                              snapshot_id=snapshot_id)
+
+    def test_stack_snapshot(self):
+        self._test_engine_api(
+            'stack_snapshot', 'call', stack_identity=self.identity,
+            name='snap1')
+
+    def test_delete_snapshot(self):
+        snapshot_id = '86729f02-4648-44d8-af44-d0ec65b6abc9'
+        self._test_engine_api('delete_snapshot', 'call',
+                              stack_identity=self.identity,
+                              snapshot_id=snapshot_id)
