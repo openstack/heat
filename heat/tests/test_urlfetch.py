@@ -41,7 +41,8 @@ class UrlFetchTest(HeatTestCase):
 
     def test_file_scheme_default_behaviour(self):
         self.m.ReplayAll()
-        self.assertRaises(IOError, urlfetch.get, 'file:///etc/profile')
+        self.assertRaises(urlfetch.URLFetchError,
+                          urlfetch.get, 'file:///etc/profile')
         self.m.VerifyAll()
 
     def test_file_scheme_supported(self):
@@ -62,7 +63,8 @@ class UrlFetchTest(HeatTestCase):
         urllib.request.urlopen(url).AndRaise(urllib.error.URLError('oops'))
         self.m.ReplayAll()
 
-        self.assertRaises(IOError, urlfetch.get, url, allowed_schemes=['file'])
+        self.assertRaises(urlfetch.URLFetchError,
+                          urlfetch.get, url, allowed_schemes=['file'])
         self.m.VerifyAll()
 
     def test_http_scheme(self):
@@ -89,7 +91,7 @@ class UrlFetchTest(HeatTestCase):
         requests.get(url, stream=True).AndRaise(exceptions.HTTPError())
         self.m.ReplayAll()
 
-        self.assertRaises(IOError, urlfetch.get, url)
+        self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
         self.m.VerifyAll()
 
     def test_non_exist_url(self):
@@ -98,12 +100,12 @@ class UrlFetchTest(HeatTestCase):
         requests.get(url, stream=True).AndRaise(exceptions.Timeout())
         self.m.ReplayAll()
 
-        self.assertRaises(IOError, urlfetch.get, url)
+        self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
         self.m.VerifyAll()
 
     def test_garbage(self):
         self.m.ReplayAll()
-        self.assertRaises(IOError, urlfetch.get, 'wibble')
+        self.assertRaises(urlfetch.URLFetchError, urlfetch.get, 'wibble')
         self.m.VerifyAll()
 
     def test_max_fetch_size_okay(self):
@@ -123,6 +125,7 @@ class UrlFetchTest(HeatTestCase):
         cfg.CONF.set_override('max_template_size', 5)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
-        exception = self.assertRaises(IOError, urlfetch.get, url)
+        exception = self.assertRaises(urlfetch.URLFetchError,
+                                      urlfetch.get, url)
         self.assertIn("Template exceeds", str(exception))
         self.m.VerifyAll()
