@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo.config import cfg
+import six
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
@@ -424,7 +425,15 @@ class Instance(resource.Resource):
         scheduler_hints = {}
         if self.properties[self.NOVA_SCHEDULER_HINTS]:
             for tm in self.properties[self.NOVA_SCHEDULER_HINTS]:
-                scheduler_hints[tm[self.TAG_KEY]] = tm[self.TAG_VALUE]
+                # adopted from novaclient shell
+                hint = tm[self.TAG_KEY]
+                hint_value = tm[self.TAG_VALUE]
+                if hint in scheduler_hints:
+                    if isinstance(scheduler_hints[hint], six.string_types):
+                        scheduler_hints[hint] = [scheduler_hints[hint]]
+                    scheduler_hints[hint].append(hint_value)
+                else:
+                    scheduler_hints[hint] = hint_value
         else:
             scheduler_hints = None
 

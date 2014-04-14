@@ -52,6 +52,10 @@ wp_template = '''
         "ImageId" : "F17-x86_64-gold",
         "InstanceType"   : "m1.large",
         "KeyName"        : "test",
+        "NovaSchedulerHints" : [{"Key": "foo", "Value": "spam"},
+                                {"Key": "bar", "Value": "eggs"},
+                                {"Key": "foo", "Value": "ham"},
+                                {"Key": "foo", "Value": "baz"}],
         "UserData"       : "wordpress"
       }
     }
@@ -101,7 +105,8 @@ class InstancesTest(HeatTestCase):
                     instance.name,
                     limit=instance.physical_resource_name_limit),
                 security_groups=None,
-                userdata=mox.IgnoreArg(), scheduler_hints=None,
+                userdata=mox.IgnoreArg(),
+                scheduler_hints={'foo': ['spam', 'ham', 'baz'], 'bar': 'eggs'},
                 meta=None, nics=None, availability_zone=None).AndReturn(
                     return_server)
 
