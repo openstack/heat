@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 
 from heat.common import exception
@@ -20,7 +21,6 @@ from heat.engine import parser
 from heat.engine import properties
 from heat.engine import stack_resource
 from heat.openstack.common.gettextutils import _
-
 
 template_template = {
     "heat_template_version": "2013-05-23",
@@ -33,20 +33,42 @@ class ResourceGroup(stack_resource.StackResource):
     A resource that creates one or more identically configured nested
     resources.
 
-    In addition to the "refs" attribute, this resource implements synthetic
+    In addition to the `refs` attribute, this resource implements synthetic
     attributes that mirror those of the resources in the group.  When
     getting an attribute from this resource, however, a list of attribute
     values for each resource in the group is returned. To get attribute values
     for a single resource in the group, synthetic attributes of the form
-    "resource.{resource index}.{attribute name}" can be used. The resource ID
+    `resource.{resource index}.{attribute name}` can be used. The resource ID
     of a particular resource in the group can be obtained via the synthetic
-    attribute "resource.{resource index}".
+    attribute `resource.{resource index}`.
+
+    While each resource in the group will be identically configured, this
+    resource does allow for some index-based customization of the properties
+    of the resources in the group. For example::
+
+      resources:
+        my_indexed_group:
+          type: OS::Heat::ResourceGroup
+          properties:
+            count: 3
+            resource_def:
+              type: OS::Nova::Server
+              properties:
+                # create a unique name for each server
+                # using its index in the group
+                name: my_server_%index%
+                image: CentOS 6.5
+                flavor: 4GB Performance
+
+    would result in a group of three servers having the same image and flavor,
+    but names of `my_server_0`, `my_server_1`, and `my_server_2`. The variable
+    used for substitution can be customized by using the `index_var` property.
     """
 
     PROPERTIES = (
-        COUNT, RESOURCE_DEF,
+        COUNT, INDEX_VAR, RESOURCE_DEF,
     ) = (
-        'count', 'resource_def',
+        'count', 'index_var', 'resource_def',
     )
 
     _RESOURCE_DEF_KEYS = (
@@ -70,6 +92,18 @@ class ResourceGroup(stack_resource.StackResource):
                 constraints.Range(min=1),
             ],
             update_allowed=True
+        ),
+        INDEX_VAR: properties.Schema(
+            properties.Schema.STRING,
+            _('A variable that this resource will use to replace with the '
+              'current index of a given resource in the group. Can be used, '
+              'for example, to customize the name property of grouped '
+              'servers in order to differentiate them when listed with '
+              'nova client.'),
+            default="%index%",
+            constraints=[
+                constraints.Length(min=3)
+            ]
         ),
         RESOURCE_DEF: properties.Schema(
             properties.Schema.MAP,
@@ -149,14 +183,34 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)
-        resource_def = self.properties[self.RESOURCE_DEF]
-        if resource_def[self.RESOURCE_DEF_PROPERTIES] is None:
-            resource_def[self.RESOURCE_DEF_PROPERTIES] = {}
+        res_def = self.properties[self.RESOURCE_DEF]
+        if res_def[self.RESOURCE_DEF_PROPERTIES] is None:
+            res_def[self.RESOURCE_DEF_PROPERTIES] = {}
         if not include_all:
-            resource_def_props = resource_def[self.RESOURCE_DEF_PROPERTIES]
+            resource_def_props = res_def[self.RESOURCE_DEF_PROPERTIES]
             clean = dict((k, v) for k, v in resource_def_props.items() if v)
-            resource_def[self.RESOURCE_DEF_PROPERTIES] = clean
-        resources = dict((str(k), resource_def)
+            res_def[self.RESOURCE_DEF_PROPERTIES] = clean
+
+        def handle_repl_val(repl_var, idx, val):
+            recurse = lambda x: handle_repl_val(repl_var, idx, x)
+            if isinstance(val, basestring):
+                return val.replace(repl_var, str(idx))
+            elif isinstance(val, collections.Mapping):
+                return dict(zip(val, map(recurse, val.values())))
+            elif isinstance(val, collections.Sequence):
+                return map(recurse, val)
+            return val
+
+        def do_prop_replace(repl_var, idx, res_def):
+            props = res_def[self.RESOURCE_DEF_PROPERTIES]
+            if props:
+                props = handle_repl_val(repl_var, idx, props)
+                res_def[self.RESOURCE_DEF_PROPERTIES] = props
+            return res_def
+
+        repl_var = self.properties[self.INDEX_VAR]
+        resources = dict((str(k), do_prop_replace(repl_var, k,
+                                                  copy.deepcopy(res_def)))
                          for k in range(count))
         child_template['resources'] = resources
         return child_template
