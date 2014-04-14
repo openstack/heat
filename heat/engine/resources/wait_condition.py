@@ -95,13 +95,11 @@ class WaitConditionHandle(signal_responder.SignalResponder):
 
     def get_status_reason(self, status):
         '''
-        Return the reason associated with a particular status
-        If there is more than one handle signal matching the specified status
-        then return a semicolon delimited string containing all reasons
+        Return a list of reasons associated with a particular status
         '''
-        return ';'.join([v['Reason']
-                         for v in self.metadata.values()
-                         if v['Status'] == status])
+        return [v['Reason']
+                for v in self.metadata.values()
+                if v['Status'] == status]
 
 
 WAIT_STATUSES = (
@@ -129,7 +127,7 @@ class UpdateWaitConditionHandle(WaitConditionHandle):
 class WaitConditionFailure(exception.Error):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_FAILURE)
-        super(WaitConditionFailure, self).__init__(reasons)
+        super(WaitConditionFailure, self).__init__(';'.join(reasons))
 
 
 class WaitConditionTimeout(exception.Error):
@@ -138,7 +136,7 @@ class WaitConditionTimeout(exception.Error):
         vals = {'len': len(reasons),
                 'count': wait_condition.properties[wait_condition.COUNT]}
         if reasons:
-            vals['reasons'] = reasons
+            vals['reasons'] = ';'.join(reasons)
             message = (_('%(len)d of %(count)d received - %(reasons)s') % vals)
         else:
             message = (_('%(len)d of %(count)d received') % vals)

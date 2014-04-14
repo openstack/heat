@@ -561,17 +561,17 @@ class WaitConditionHandleTest(HeatTestCase):
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual('bar', rsrc.get_status_reason('SUCCESS'))
+        self.assertEqual(['bar'], rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual('bar;cat', rsrc.get_status_reason('SUCCESS'))
+        self.assertEqual(['bar', 'cat'], rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual('hoo', rsrc.get_status_reason('FAILURE'))
+        self.assertEqual(['hoo'], rsrc.get_status_reason('FAILURE'))
         self.m.VerifyAll()
 
 
@@ -758,8 +758,9 @@ class WaitConditionUpdateTest(HeatTestCase):
         parsed_snippet = self.stack.resolve_static_data(update_snippet)
         updater = rsrc.handle_update(parsed_snippet, {}, prop_diff)
         self.assertEqual(5, rsrc.properties['Count'])
-        self.assertRaises(wc.WaitConditionTimeout, updater.run_to_completion)
-
+        ex = self.assertRaises(wc.WaitConditionTimeout,
+                               updater.run_to_completion)
+        self.assertEqual("0 of 5 received", str(ex))
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
