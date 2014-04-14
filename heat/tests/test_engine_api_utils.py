@@ -16,6 +16,7 @@ import json
 import uuid
 
 import mock
+import six
 
 from heat.common.identifier import EventIdentifier
 from heat.common import template_format
@@ -54,7 +55,7 @@ class EngineApiTest(HeatTestCase):
     def test_timeout_extract_negative(self):
         p = {'timeout_mins': '-100'}
         error = self.assertRaises(ValueError, api.extract_args, p)
-        self.assertIn('Invalid timeout value', str(error))
+        self.assertIn('Invalid timeout value', six.text_type(error))
 
     def test_timeout_extract_not_present(self):
         args = api.extract_args({})
@@ -70,7 +71,7 @@ class EngineApiTest(HeatTestCase):
         error = self.assertRaises(ValueError, api.extract_args, p)
         self.assertEqual(
             'Unexpected adopt data "foo". Adopt data must be a dict.',
-            str(error))
+            six.text_type(error))
 
     def test_adopt_stack_data_extract_not_present(self):
         args = api.extract_args({})

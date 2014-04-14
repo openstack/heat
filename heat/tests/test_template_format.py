@@ -16,6 +16,7 @@ import os
 import mock
 import testtools
 import yaml
+import six
 
 from heat.common import config
 from heat.common import exception
@@ -83,7 +84,7 @@ class YamlMinimalTest(HeatTestCase):
         parse_ex = self.assertRaises(ValueError,
                                      template_format.parse,
                                      tmpl_str)
-        self.assertIn(msg_str, str(parse_ex))
+        self.assertIn(msg_str, six.text_type(parse_ex))
 
     def test_long_yaml(self):
         template = {'HeatTemplateFormatVersion': '2012-12-12'}
