@@ -15,6 +15,7 @@ import hashlib
 import json
 
 from requests import exceptions
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -214,13 +215,13 @@ class TemplateResource(stack_resource.StackResource):
 
     def validate(self):
         if self.validation_exception is not None:
-            msg = str(self.validation_exception)
+            msg = six.text_type(self.validation_exception)
             raise exception.StackValidationFailed(message=msg)
 
         try:
             self.template_data()
         except ValueError as ex:
-            msg = _("Failed to retrieve template data: %s") % str(ex)
+            msg = _("Failed to retrieve template data: %s") % ex
             raise exception.StackValidationFailed(message=msg)
         cri = self.stack.env.get_resource_info(
             self.type(),

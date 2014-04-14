@@ -57,14 +57,14 @@ def refresh_server(server):
                 "response during server.get(): %(exception)s")
         logger.warning(msg % {'name': server.name,
                               'id': server.id,
-                              'exception': str(exc)})
+                              'exception': exc})
     except clients.novaclient.exceptions.ClientException as exc:
         if exc.code in (500, 503):
             msg = _('Server "%(name)s" (%(id)s) received the following '
                     'exception during server.get(): %(exception)s')
             logger.warning(msg % {'name': server.name,
                                   'id': server.id,
-                                  'exception': str(exc)})
+                                  'exception': exc})
         else:
             raise
 
@@ -90,8 +90,7 @@ def get_image_id(nova_client, image_identifier):
             image_list = nova_client.images.list()
         except clients.novaclient.exceptions.ClientException as ex:
             raise exception.Error(
-                message=(_("Error retrieving image list from nova: %s") %
-                         str(ex)))
+                message=(_("Error retrieving image list from nova: %s") % ex))
         image_names = dict(
             (o.id, o.name)
             for o in image_list if o.name == image_identifier)
@@ -370,7 +369,7 @@ def server_to_ipaddress(client, server):
         server = client.servers.get(server)
     except clients.novaclient.exceptions.NotFound as ex:
         logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
-                    'server': server, 'ex': str(ex)})
+                    'server': server, 'ex': ex})
     else:
         for n in server.networks:
             if len(server.networks[n]) > 0:

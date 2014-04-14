@@ -254,7 +254,7 @@ class StackController(object):
             try:
                 return urlfetch.get(url)
             except IOError as exc:
-                msg = _('Failed to fetch template: %s') % str(exc)
+                msg = _('Failed to fetch template: %s') % exc
                 raise exception.HeatInvalidParameterValueError(detail=msg)
 
         return None

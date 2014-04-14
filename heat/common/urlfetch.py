@@ -49,7 +49,7 @@ def get(url, allowed_schemes=('http', 'https')):
         try:
             return urllib.request.urlopen(url).read()
         except urllib.error.URLError as uex:
-            raise IOError(_('Failed to retrieve template: %s') % str(uex))
+            raise IOError(_('Failed to retrieve template: %s') % uex)
 
     try:
         resp = requests.get(url, stream=True)
@@ -73,4 +73,4 @@ def get(url, allowed_schemes=('http', 'https')):
         return result
 
     except exceptions.RequestException as ex:
-        raise IOError(_('Failed to retrieve template: %s') % str(ex))
+        raise IOError(_('Failed to retrieve template: %s') % ex)

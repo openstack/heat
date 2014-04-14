@@ -15,6 +15,8 @@ import base64
 import copy
 from datetime import datetime
 
+import six
+
 from heat.common import exception
 from heat.common import identifier
 from heat.common import short_id
@@ -409,7 +411,7 @@ class Resource(object):
         except Exception as ex:
             logger.exception('%s : %s' % (action, str(self)))
             failure = exception.ResourceFailure(ex, self, action)
-            self.state_set(action, self.FAILED, str(failure))
+            self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
         except:
             with excutils.save_and_reraise_exception():
@@ -553,9 +555,10 @@ class Resource(object):
                 logger.debug(_("Resource %s update requires replacement") %
                              self.name)
         except Exception as ex:
-            logger.exception('update %s : %s' % (str(self), str(ex)))
+            logger.exception(_('update %(resource)s : %(err)s') %
+                             {'resource': str(self), 'err': ex})
             failure = exception.ResourceFailure(ex, self, action)
-            self.state_set(action, self.FAILED, str(failure))
+            self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
         else:
             self.json_snippet = copy.deepcopy(after)
@@ -687,9 +690,9 @@ class Resource(object):
                     yield
 
         except Exception as ex:
-            logger.exception(_('Delete %s'), str(self))
+            logger.exception(_('Delete %s') % str(self))
             failure = exception.ResourceFailure(ex, self, self.action)
-            self.state_set(action, self.FAILED, str(failure))
+            self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
         except:
             with excutils.save_and_reraise_exception():
@@ -728,7 +731,7 @@ class Resource(object):
                 rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
-                logger.warn(_('db error %s') % str(ex))
+                logger.warn(_('db error %s') % ex)
 
     def _store(self):
         '''Create the resource in the database.'''
@@ -747,7 +750,7 @@ class Resource(object):
             self.id = new_rs.id
             self.created_time = new_rs.created_at
         except Exception as ex:
-            logger.error(_('DB error %s') % str(ex))
+            logger.error(_('DB error %s') % ex)
 
     def _add_event(self, action, status, reason):
         '''Add a state change event to the database.'''
@@ -758,7 +761,7 @@ class Resource(object):
         try:
             ev.store()
         except Exception as ex:
-            logger.error(_('DB error %s') % str(ex))
+            logger.error(_('DB error %s') % ex)
 
     def _store_or_update(self, action, status, reason):
         self.action = action
@@ -775,7 +778,7 @@ class Resource(object):
                                     'updated_at': self.updated_time,
                                     'nova_instance': self.resource_id})
             except Exception as ex:
-                logger.error(_('DB error %s') % str(ex))
+                logger.error(_('DB error %s') % ex)
 
         # store resource in DB on transition to CREATE_IN_PROGRESS
         # all other transistions (other than to DELETE_COMPLETE)
@@ -887,7 +890,7 @@ class Resource(object):
             self.handle_signal(details)
         except Exception as ex:
             logger.exception(_('signal %(name)s : %(msg)s') %
-                             {'name': str(self), 'msg': str(ex)})
+                             {'name': str(self), 'msg': ex})
             failure = exception.ResourceFailure(ex, self)
             raise failure
 

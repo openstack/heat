@@ -19,6 +19,7 @@
 import functools
 import sys
 
+import six
 from six.moves.urllib import parse as urlparse
 
 from heat.openstack.common.gettextutils import _
@@ -281,7 +282,7 @@ class ResourceFailure(HeatException):
         self.action = action
         exc_type = type(exception).__name__
         super(ResourceFailure, self).__init__(exc_type=exc_type,
-                                              message=str(exception))
+                                              message=six.text_type(exception))
 
 
 class NotSupported(HeatException):

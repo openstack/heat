@@ -64,14 +64,14 @@ class ElasticIp(resource.Resource):
                     ips = self.neutron().show_floatingip(self.resource_id)
                 except ne as e:
                     if e.status_code == 404:
-                        logger.warn(_("Floating IPs not found: %s") % str(e))
+                        logger.warn(_("Floating IPs not found: %s") % e)
                 else:
                     self.ipaddress = ips['floatingip']['floating_ip_address']
             else:
                 try:
                     ips = self.nova().floating_ips.get(self.resource_id)
                 except clients.novaclient.exceptions.NotFound as ex:
-                    logger.warn(_("Floating IPs not found: %s") % str(ex))
+                    logger.warn(_("Floating IPs not found: %s") % ex)
                 else:
                     self.ipaddress = ips.ip
         return self.ipaddress or ''

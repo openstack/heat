@@ -145,7 +145,7 @@ class S3Bucket(resource.Resource):
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Delete container failed: %s") % str(ex))
+                logger.warn(_("Delete container failed: %s") % ex)
 
     def FnGetRefId(self):
         return unicode(self.resource_id)

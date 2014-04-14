@@ -15,6 +15,8 @@ import functools
 import json
 import math
 
+import six
+
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
 from heat.engine import constraints
@@ -678,7 +680,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             with excutils.save_and_reraise_exception():
                 try:
                     notif.update({'suffix': 'error',
-                                  'message': str(resize_ex),
+                                  'message': six.text_type(resize_ex),
                                   })
                     notification.send(**notif)
                 except Exception:

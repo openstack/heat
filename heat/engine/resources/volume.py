@@ -273,8 +273,8 @@ class VolumeDetachTask(object):
             server_api.delete_server_volume(self.server_id, self.attachment_id)
         except (clients.novaclient.exceptions.BadRequest,
                 clients.novaclient.exceptions.NotFound) as e:
-            logger.warning('%(res)s - %(err)s' % {'res': str(self),
-                                                  'err': str(e)})
+            logger.warning(_('%(res)s - %(err)s') % {'res': str(self),
+                                                     'err': e})
 
         yield
 

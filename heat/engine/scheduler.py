@@ -60,7 +60,7 @@ class Timeout(BaseException):
         """
         Initialise with the TaskRunner and a timeout period in seconds.
         """
-        message = _('%s Timed out') % task_runner
+        message = _('%s Timed out') % str(task_runner)
         super(Timeout, self).__init__(message)
 
         # Note that we don't attempt to handle leap seconds or large clock

@@ -14,6 +14,8 @@
 import collections
 import json
 
+import six
+
 from heat.api.aws import utils as aws_utils
 from heat.common import exception
 from heat.engine import function
@@ -36,7 +38,7 @@ class FindInMap(function.Function):
         try:
             self._mapname, self._mapkey, self._mapvalue = self.args
         except ValueError as ex:
-            raise KeyError(str(ex))
+            raise KeyError(six.text_type(ex))
 
     def result(self):
         mapping = self.stack.t.maps[function.resolve(self._mapname)]

@@ -77,7 +77,7 @@ class WatchRule(object):
             except Exception as ex:
                 logger.warn(_('WatchRule.load (%(watch_name)s) db error '
                             '%(ex)s') % {
-                                'watch_name': watch_name, 'ex': str(ex)})
+                                'watch_name': watch_name, 'ex': ex})
         if watch is None:
             raise exception.WatchRuleNotFound(watch_name=watch_name)
         else:
