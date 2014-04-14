@@ -799,6 +799,110 @@ class SqlAlchemyTest(HeatTestCase):
 
         self.assertIn(deployment_id, str(err))
 
+    def test_snapshot_create(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(values['tenant'], snapshot.tenant)
+
+    def test_snapshot_create_with_name(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id, 'name': 'snap1'}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(values['tenant'], snapshot.tenant)
+        self.assertEqual('snap1', snapshot.name)
+
+    def test_snapshot_get_not_found(self):
+        self.assertRaises(
+            exception.NotFound,
+            db_api.snapshot_get,
+            self.ctx,
+            str(uuid.uuid4()))
+
+    def test_snapshot_get(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.assertIsNotNone(snapshot)
+        snapshot_id = snapshot.id
+        snapshot = db_api.snapshot_get(self.ctx, snapshot_id)
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(values['tenant'], snapshot.tenant)
+        self.assertEqual(values['status'], snapshot.status)
+        self.assertIsNotNone(snapshot.created_at)
+
+    def test_snapshot_get_not_found_invalid_tenant(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.ctx.tenant_id = str(uuid.uuid4())
+        self.assertRaises(
+            exception.NotFound,
+            db_api.snapshot_get,
+            self.ctx,
+            snapshot.id)
+
+    def test_snapshot_update_not_found(self):
+        snapshot_id = str(uuid.uuid4())
+        err = self.assertRaises(exception.NotFound,
+                                db_api.snapshot_update,
+                                self.ctx, snapshot_id, values={})
+        self.assertIn(snapshot_id, str(err))
+
+    def test_snapshot_update(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        snapshot_id = snapshot.id
+        values = {'status': 'COMPLETED'}
+        snapshot = db_api.snapshot_update(self.ctx, snapshot_id, values)
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(values['status'], snapshot.status)
+
+    def test_snapshot_delete_not_found(self):
+        snapshot_id = str(uuid.uuid4())
+        err = self.assertRaises(exception.NotFound,
+                                db_api.snapshot_delete,
+                                self.ctx, snapshot_id)
+        self.assertIn(snapshot_id, str(err))
+
+    def test_snapshot_delete(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        snapshot_id = snapshot.id
+        snapshot = db_api.snapshot_get(self.ctx, snapshot_id)
+        self.assertIsNotNone(snapshot)
+        db_api.snapshot_delete(self.ctx, snapshot_id)
+
+        err = self.assertRaises(
+            exception.NotFound,
+            db_api.snapshot_get,
+            self.ctx,
+            snapshot_id)
+
+        self.assertIn(snapshot_id, str(err))
+
 
 def create_raw_template(context, **kwargs):
     t = template_format.parse(wp_template)

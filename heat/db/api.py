@@ -263,6 +263,22 @@ def software_deployment_delete(context, deployment_id):
     return IMPL.software_deployment_delete(context, deployment_id)
 
 
+def snapshot_create(context, values):
+    return IMPL.snapshot_create(context, values)
+
+
+def snapshot_get(context, snapshot_id):
+    return IMPL.snapshot_get(context, snapshot_id)
+
+
+def snapshot_update(context, snapshot_id, values):
+    return IMPL.snapshot_update(context, snapshot_id, values)
+
+
+def snapshot_delete(context, snapshot_id):
+    return IMPL.snapshot_delete(context, snapshot_id)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

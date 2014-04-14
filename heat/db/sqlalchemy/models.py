@@ -323,3 +323,21 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
         'tenant', sqlalchemy.String(256), nullable=False)
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
+
+
+class Snapshot(BASE, HeatBase):
+
+    __tablename__ = 'snapshot'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                 sqlalchemy.ForeignKey('stack.id'),
+                                 nullable=False)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    data = sqlalchemy.Column('data', Json)
+    tenant = sqlalchemy.Column(
+        'tenant', sqlalchemy.String(256), nullable=False)
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
+    stack = relationship(Stack, backref=backref('snapshot'))

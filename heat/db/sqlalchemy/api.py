@@ -715,6 +715,39 @@ def software_deployment_delete(context, deployment_id):
     session.flush()
 
 
+def snapshot_create(context, values):
+    obj_ref = models.Snapshot()
+    obj_ref.update(values)
+    obj_ref.save(_session(context))
+    return obj_ref
+
+
+def snapshot_get(context, snapshot_id):
+    result = model_query(context, models.Snapshot).get(snapshot_id)
+    if (result is not None and context is not None and
+            context.tenant_id != result.tenant):
+        result = None
+
+    if not result:
+        raise exception.NotFound(_('Snapshot with id %s not found') %
+                                 snapshot_id)
+    return result
+
+
+def snapshot_update(context, snapshot_id, values):
+    snapshot = snapshot_get(context, snapshot_id)
+    snapshot.update(values)
+    snapshot.save(_session(context))
+    return snapshot
+
+
+def snapshot_delete(context, snapshot_id):
+    snapshot = snapshot_get(context, snapshot_id)
+    session = Session.object_session(snapshot)
+    session.delete(snapshot)
+    session.flush()
+
+
 def purge_deleted(age, granularity='days'):
     try:
         age = int(age)
