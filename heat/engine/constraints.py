@@ -22,7 +22,7 @@ from heat.engine import resources
 from heat.common import exception
 
 
-class InvalidSchemaError(Exception):
+class InvalidSchemaError(exception.Error):
     pass
 
 
