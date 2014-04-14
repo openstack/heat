@@ -66,9 +66,10 @@ class UpdateReplace(Exception):
 
 
 class Resource(object):
-    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
+    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,
+               SNAPSHOT,
                ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
-                    'SUSPEND', 'RESUME', 'ADOPT')
+                    'SUSPEND', 'RESUME', 'ADOPT', 'SNAPSHOT')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -603,6 +604,11 @@ class Resource(object):
 
         LOG.info(_('resuming %s') % str(self))
         return self._do_action(action)
+
+    def snapshot(self):
+        '''Snapshot the resource and return the created data, if any.'''
+        LOG.info(_('snapshotting %s') % str(self))
+        return self._do_action(self.SNAPSHOT)
 
     def physical_resource_name(self):
         if self.id is None:

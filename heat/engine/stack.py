@@ -44,9 +44,13 @@ LOG = logging.getLogger(__name__)
 
 class Stack(collections.Mapping):
 
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
-                    'RESUME', 'ADOPT')
+    ACTIONS = (
+        CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,
+        SNAPSHOT
+    ) = (
+        'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND', 'RESUME', 'ADOPT',
+        'SNAPSHOT'
+    )
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -767,6 +771,10 @@ class Stack(collections.Mapping):
                                'Failed to %s : %s' % (action, failure))
                 return
 
+        snapshots = db_api.snapshot_get_all(self.context, self.id)
+        for snapshot in snapshots:
+            self.delete_snapshot(snapshot)
+
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource.Resource.destroy,
                                                     reverse=True)
@@ -877,6 +885,22 @@ class Stack(collections.Mapping):
                                         action=self.RESUME,
                                         reverse=False)
         sus_task(timeout=self.timeout_secs())
+
+    def snapshot(self):
+        '''Snapshot the stack, invoking handle_snapshot on all resources.'''
+        sus_task = scheduler.TaskRunner(self.stack_task,
+                                        action=self.SNAPSHOT,
+                                        reverse=False)
+        sus_task(timeout=self.timeout_secs())
+
+    def delete_snapshot(self, snapshot):
+        '''Remove a snapshot from the backends.'''
+        for name, rsrc in self.resources.iteritems():
+            handle_delete_snapshot = getattr(
+                rsrc, 'handle_delete_snapshot', None)
+            if callable(handle_delete_snapshot):
+                data = snapshot.data['resources'].get(name)
+                handle_delete_snapshot(data)
 
     def output(self, key):
         '''

@@ -3110,3 +3110,72 @@ class ThreadGroupManagerStopTest(HeatTestCase):
 
         self.assertIn(thread, done)
         self.assertNotIn(stack_id, thm.groups)
+
+
+class SnapshotServiceTest(HeatTestCase):
+
+    def setUp(self):
+        super(SnapshotServiceTest, self).setUp()
+        self.ctx = utils.dummy_context()
+
+        self.m.ReplayAll()
+        self.engine = service.EngineService('a-host', 'a-topic')
+        self.engine.create_periodic_tasks()
+        utils.setup_dummy_db()
+        self.addCleanup(self.m.VerifyAll)
+
+    def _create_stack(self):
+        stack = get_wordpress_stack('stack', self.ctx)
+        sid = stack.store()
+
+        s = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+
+        parser.Stack.load(self.ctx, stack=s).MultipleTimes().AndReturn(stack)
+        return stack
+
+    def test_show_snapshot_not_found(self):
+        snapshot_id = str(uuid.uuid4())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.show_snapshot,
+                               self.ctx, None, snapshot_id)
+        self.assertEqual(ex.exc_info[0], exception.NotFound)
+
+    def test_create_snapshot(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        snapshot = self.engine.stack_snapshot(
+            self.ctx, stack.identifier(), 'snap1')
+        self.assertIsNotNone(snapshot['id'])
+        self.assertEqual('snap1', snapshot['name'])
+        self.assertEqual("IN_PROGRESS", snapshot['status'])
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+        snapshot = self.engine.show_snapshot(
+            self.ctx, stack.identifier(), snapshot['id'])
+        self.assertEqual("COMPLETE", snapshot['status'])
+        self.assertEqual("SNAPSHOT", snapshot['data']['action'])
+        self.assertEqual("COMPLETE", snapshot['data']['status'])
+        self.assertEqual(stack.id, snapshot['data']['id'])
+
+    def test_delete_snapshot_not_found(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        snapshot_id = str(uuid.uuid4())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.delete_snapshot,
+                               self.ctx, stack.identifier(), snapshot_id)
+        self.assertEqual(ex.exc_info[0], exception.NotFound)
+
+    def test_delete_snapshot(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        snapshot = self.engine.stack_snapshot(
+            self.ctx, stack.identifier(), 'snap1')
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+        snapshot_id = snapshot['id']
+        self.engine.delete_snapshot(self.ctx, stack.identifier(), snapshot_id)
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.show_snapshot, self.ctx,
+                               stack.identifier(), snapshot_id)
+        self.assertEqual(ex.exc_info[0], exception.NotFound)

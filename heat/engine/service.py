@@ -1036,6 +1036,51 @@ class EngineService(service.Service):
                                               _stack_resume, stack)
 
     @request_context
+    def stack_snapshot(self, cnxt, stack_identity, name):
+        def _stack_snapshot(stack, snapshot):
+            LOG.debug("snapshotting stack %s" % stack.name)
+            stack.snapshot()
+            data = stack.prepare_abandon()
+            db_api.snapshot_update(
+                cnxt,
+                snapshot.id,
+                {'data': data, 'status': stack.status,
+                 'status_reason': stack.status_reason})
+
+        s = self._get_stack(cnxt, stack_identity)
+
+        stack = parser.Stack.load(cnxt, stack=s)
+
+        lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
+
+        with lock.thread_lock(stack.id):
+            snapshot = db_api.snapshot_create(cnxt, {
+                'tenant': cnxt.tenant_id,
+                'name': name,
+                'stack_id': stack.id,
+                'status': 'IN_PROGRESS'})
+            self.thread_group_mgr.start_with_acquired_lock(
+                stack, lock, _stack_snapshot, stack, snapshot)
+            return api.format_snapshot(snapshot)
+
+    @request_context
+    def show_snapshot(self, cnxt, stack_identity, snapshot_id):
+        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+        return api.format_snapshot(snapshot)
+
+    @request_context
+    def delete_snapshot(self, cnxt, stack_identity, snapshot_id):
+        def _delete_snapshot(stack, snapshot):
+            stack.delete_snapshot(snapshot)
+            db_api.snapshot_delete(cnxt, snapshot_id)
+
+        s = self._get_stack(cnxt, stack_identity)
+        stack = parser.Stack.load(cnxt, stack=s)
+        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+        self.thread_group_mgr.start(
+            stack.id, _delete_snapshot, stack, snapshot)
+
+    @request_context
     def metadata_update(self, cnxt, stack_identity,
                         resource_name, metadata):
         """

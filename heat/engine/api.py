@@ -365,3 +365,16 @@ def format_software_deployment(sd):
         api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
     }
     return result
+
+
+def format_snapshot(snapshot):
+    if snapshot is None:
+        return
+    result = {
+        api.SNAPSHOT_ID: snapshot.id,
+        api.SNAPSHOT_NAME: snapshot.name,
+        api.SNAPSHOT_STATUS: snapshot.status,
+        api.SNAPSHOT_STATUS_REASON: snapshot.status_reason,
+        api.SNAPSHOT_DATA: snapshot.data,
+    }
+    return result

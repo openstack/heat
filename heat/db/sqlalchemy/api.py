@@ -801,6 +801,11 @@ def snapshot_delete(context, snapshot_id):
     session.flush()
 
 
+def snapshot_get_all(context, stack_id):
+    return model_query(context, models.Snapshot).filter_by(
+        stack_id=stack_id, tenant=context.tenant_id)
+
+
 def purge_deleted(age, granularity='days'):
     try:
         age = int(age)
