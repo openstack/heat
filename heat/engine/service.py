@@ -574,10 +574,6 @@ class EngineService(service.Service):
             msg = _('Updating a stack when it is suspended')
             raise exception.NotSupported(feature=msg)
 
-        if current_stack.status == current_stack.IN_PROGRESS:
-            msg = _('Updating a stack when another action is in progress')
-            raise exception.NotSupported(feature=msg)
-
         # Now parse the template and any parameters for the updated
         # stack definition.
         tmpl = parser.Template(template, files=files)
