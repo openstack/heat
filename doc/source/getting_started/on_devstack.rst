@@ -125,3 +125,13 @@ Note: The list operation will show no running stack.::
 
     heat stack-delete teststack
     heat stack-list
+
+Adding new users to DevStack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When DevStack is configured and launched with ``stack.sh`` script,
+Heat creates a specific role in Keystone (``heat_stack_owner`` by default)
+and assigns this role to both default users created by DevStack (admin and demo).
+If you later create another user, and want this user to be able to use all capabilities of Heat,
+don't forget to assign the ``heat_stack_owner`` role to this user too,
+otherwise the new user will not be allowed to create stacks.
