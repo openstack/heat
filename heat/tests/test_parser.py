@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import json
 import time
 
@@ -25,9 +26,11 @@ from heat.common import template_format
 from heat.common import urlfetch
 import heat.db.api as db_api
 import heat.engine.cfn.functions
+from heat.engine.cfn import template as cfn_t
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import function
+from heat.engine.hot import template as hot_t
 from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import resource
@@ -172,6 +175,106 @@ class TemplateTest(HeatTestCase):
         tmpl = parser.Template(resource_template)
         self.assertEqual(('HeatTemplateFormatVersion', '2012-12-12'),
                          tmpl.version)
+
+    def test_invalid_hot_version(self):
+        invalid_hot_version_tmp = template_format.parse(
+            '''{
+            "heat_template_version" : "2012-12-12",
+            }''')
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_hot_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"heat_template_version: 2012-12-12". '
+                        '"heat_template_version" should be: 2013-05-23')
+        self.assertEqual(ex_error_msg, str(init_ex))
+
+    def test_invalid_version_not_in_hot_versions(self):
+        invalid_hot_version_tmp = template_format.parse(
+            '''{
+            "heat_template_version" : "2012-12-12",
+            }''')
+        versions = {
+            ('heat_template_version', '2013-05-23'): hot_t.HOTemplate,
+            ('heat_template_version', '2013-06-23'): hot_t.HOTemplate
+        }
+
+        temp_copy = copy.deepcopy(template._template_classes)
+        template._template_classes = versions
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_hot_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"heat_template_version: 2012-12-12". '
+                        '"heat_template_version" should be '
+                        'one of: 2013-05-23, 2013-06-23')
+        self.assertEqual(ex_error_msg, str(init_ex))
+        template._template_classes = temp_copy
+
+    def test_invalid_aws_version(self):
+        invalid_aws_version_tmp = template_format.parse(
+            '''{
+            "AWSTemplateFormatVersion" : "2012-12-12",
+            }''')
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_aws_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"AWSTemplateFormatVersion: 2012-12-12". '
+                        '"AWSTemplateFormatVersion" should be: 2010-09-09')
+        self.assertEqual(ex_error_msg, str(init_ex))
+
+    def test_invalid_version_not_in_aws_versions(self):
+        invalid_aws_version_tmp = template_format.parse(
+            '''{
+            "AWSTemplateFormatVersion" : "2012-12-12",
+            }''')
+        versions = {
+            ('AWSTemplateFormatVersion', '2010-09-09'): cfn_t.CfnTemplate,
+            ('AWSTemplateFormatVersion', '2011-06-23'): cfn_t.CfnTemplate
+        }
+        temp_copy = copy.deepcopy(template._template_classes)
+        template._template_classes = versions
+
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_aws_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"AWSTemplateFormatVersion: 2012-12-12". '
+                        '"AWSTemplateFormatVersion" should be '
+                        'one of: 2010-09-09, 2011-06-23')
+        self.assertEqual(ex_error_msg, str(init_ex))
+        template._template_classes = temp_copy
+
+    def test_invalid_heat_version(self):
+        invalid_heat_version_tmp = template_format.parse(
+            '''{
+            "HeatTemplateFormatVersion" : "2010-09-09",
+            }''')
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_heat_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"HeatTemplateFormatVersion: 2010-09-09". '
+                        '"HeatTemplateFormatVersion" should be: 2012-12-12')
+        self.assertEqual(ex_error_msg, str(init_ex))
+
+    def test_invalid_version_not_in_heat_versions(self):
+        invalid_heat_version_tmp = template_format.parse(
+            '''{
+            "HeatTemplateFormatVersion" : "2010-09-09",
+            }''')
+        versions = {
+            ('HeatTemplateFormatVersion', '2012-12-12'): cfn_t.CfnTemplate,
+            ('HeatTemplateFormatVersion', '2014-12-12'): cfn_t.CfnTemplate
+        }
+        temp_copy = copy.deepcopy(template._template_classes)
+        template._template_classes = versions
+
+        init_ex = self.assertRaises(exception.InvalidTemplateVersion,
+                                    parser.Template, invalid_heat_version_tmp)
+        ex_error_msg = ('The template version is invalid: '
+                        '"HeatTemplateFormatVersion: 2010-09-09". '
+                        '"HeatTemplateFormatVersion" should be '
+                        'one of: 2012-12-12, 2014-12-12')
+        self.assertEqual(ex_error_msg, str(init_ex))
+
+        template._template_classes = temp_copy
 
     def test_invalid_template(self):
         scanner_error = '''
