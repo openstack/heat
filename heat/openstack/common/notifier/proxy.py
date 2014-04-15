@@ -1,4 +1,3 @@
-#
 # Copyright 2013 Red Hat, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,10 +13,10 @@
 #    under the License.
 
 """
-A temporary helper which emulates heat.messaging.Notifier.
+A temporary helper which emulates oslo.messaging.Notifier.
 
 This helper method allows us to do the tedious porting to the new Notifier API
-as a standalone commit so that the commit which switches us to heat.messaging
+as a standalone commit so that the commit which switches us to oslo.messaging
 is smaller and easier to review. This file will be removed as part of that
 commit.
 """

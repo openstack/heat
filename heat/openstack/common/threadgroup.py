@@ -1,4 +1,3 @@
-#
 # Copyright 2012 Red Hat, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,10 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import threading
 
 import eventlet
 from eventlet import greenpool
-from eventlet import greenthread
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import loopingcall
@@ -52,7 +51,7 @@ class Thread(object):
 
 
 class ThreadGroup(object):
-    """The point of the ThreadGroup classis to:
+    """The point of the ThreadGroup class is to:
 
     * keep track of timers and greenthreads (making it easier to stop them
       when need be).
@@ -87,7 +86,7 @@ class ThreadGroup(object):
         self.threads.remove(thread)
 
     def stop(self):
-        current = greenthread.getcurrent()
+        current = threading.current_thread()
 
         # Iterate over a copy of self.threads so thread_done doesn't
         # modify the list while we're iterating
@@ -115,7 +114,7 @@ class ThreadGroup(object):
                 pass
             except Exception as ex:
                 LOG.exception(ex)
-        current = greenthread.getcurrent()
+        current = threading.current_thread()
 
         # Iterate over a copy of self.threads so thread_done doesn't
         # modify the list while we're iterating

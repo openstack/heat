@@ -1,4 +1,3 @@
-#
 # Copyright 2010 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 # Copyright 2011 Justin Santa Barbara
@@ -37,17 +36,9 @@ import functools
 import inspect
 import itertools
 import json
-try:
-    import xmlrpclib
-except ImportError:
-    # NOTE(jaypipes): xmlrpclib was renamed to xmlrpc.client in Python3
-    #                 however the function and object call signatures
-    #                 remained the same. This whole try/except block should
-    #                 be removed and replaced with a call to six.moves once
-    #                 six 1.4.2 is released. See http://bit.ly/1bqrVzu
-    import xmlrpc.client as xmlrpclib
 
 import six
+import six.moves.xmlrpc_client as xmlrpclib
 
 from heat.openstack.common import gettextutils
 from heat.openstack.common import importutils

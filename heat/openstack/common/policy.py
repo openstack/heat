@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2012 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -47,6 +46,27 @@ policy rule::
 
     project_id:%(project_id)s and not role:dunce
 
+It is possible to perform policy checks on the following user
+attributes (obtained through the token): user_id, domain_id or
+project_id::
+
+    domain_id:<some_value>
+
+Attributes sent along with API calls can be used by the policy engine
+(on the right side of the expression), by using the following syntax::
+
+    <some_value>:user.id
+
+Contextual attributes of objects identified by their IDs are loaded
+from the database. They are also available to the policy engine and
+can be checked through the `target` keyword::
+
+    <some_value>:target.role.name
+
+All these attributes (related to users, API calls, and context) can be
+checked against each other or against constants, be it literals (True,
+<a_number>) or strings.
+
 Finally, two special policy checks should be mentioned; the policy
 check "@" will always accept an access, and the policy check "!" will
 always reject an access.  (Note that if a rule is either the empty
@@ -56,16 +76,18 @@ as it allows particular rules to be explicitly disabled.
 """
 
 import abc
+import ast
 import re
 
 from oslo.config import cfg
 import six
+import six.moves.urllib.parse as urlparse
+import six.moves.urllib.request as urlrequest
 
 from heat.openstack.common import fileutils
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _, _LE
 from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
-from heat.openstack.common.py3kcompat import urlutils
 
 
 policy_opts = [
@@ -119,11 +141,16 @@ class Rules(dict):
 
         # If the default rule isn't actually defined, do something
         # reasonably intelligent
-        if not self.default_rule or self.default_rule not in self:
+        if not self.default_rule:
             raise KeyError(key)
 
         if isinstance(self.default_rule, BaseCheck):
             return self.default_rule
+
+        # We need to check this or we can get infinite recursion
+        if self.default_rule not in self:
+            raise KeyError(key)
+
         elif isinstance(self.default_rule, six.string_types):
             return self[self.default_rule]
 
@@ -155,27 +182,31 @@ class Enforcer(object):
                   is called this will be overwritten.
     :param default_rule: Default rule to use, CONF.default_rule will
                          be used if none is specified.
+    :param use_conf: Whether to load rules from cache or config file.
     """
 
-    def __init__(self, policy_file=None, rules=None, default_rule=None):
+    def __init__(self, policy_file=None, rules=None,
+                 default_rule=None, use_conf=True):
         self.rules = Rules(rules, default_rule)
         self.default_rule = default_rule or CONF.policy_default_rule
 
         self.policy_path = None
         self.policy_file = policy_file or CONF.policy_file
+        self.use_conf = use_conf
 
-    def set_rules(self, rules, overwrite=True):
+    def set_rules(self, rules, overwrite=True, use_conf=False):
         """Create a new Rules object based on the provided dict of rules.
 
         :param rules: New rules to use. It should be an instance of dict.
         :param overwrite: Whether to overwrite current rules or update them
                           with the new rules.
+        :param use_conf: Whether to reload rules from cache or config file.
         """
 
         if not isinstance(rules, dict):
             raise TypeError(_("Rules must be an instance of dict or Rules, "
                             "got %s instead") % type(rules))
-
+        self.use_conf = use_conf
         if overwrite:
             self.rules = Rules(rules, self.default_rule)
         else:
@@ -195,15 +226,19 @@ class Enforcer(object):
         :param force_reload: Whether to overwrite current rules.
         """
 
-        if not self.policy_path:
-            self.policy_path = self._get_policy_path()
+        if force_reload:
+            self.use_conf = force_reload
 
-        reloaded, data = fileutils.read_cached_file(self.policy_path,
-                                                    force_reload=force_reload)
-        if reloaded or not self.rules:
-            rules = Rules.load_json(data, self.default_rule)
-            self.set_rules(rules)
-            LOG.debug(_("Rules successfully reloaded"))
+        if self.use_conf:
+            if not self.policy_path:
+                self.policy_path = self._get_policy_path()
+
+            reloaded, data = fileutils.read_cached_file(
+                self.policy_path, force_reload=force_reload)
+            if reloaded or not self.rules:
+                rules = Rules.load_json(data, self.default_rule)
+                self.set_rules(rules)
+                LOG.debug("Rules successfully reloaded")
 
     def _get_policy_path(self):
         """Locate the policy json data file.
@@ -249,7 +284,7 @@ class Enforcer(object):
 
         # NOTE(flaper87): Not logging target or creds to avoid
         # potential security issues.
-        LOG.debug(_("Rule %s will be now enforced") % rule)
+        LOG.debug("Rule %s will be now enforced" % rule)
 
         self.load_rules()
 
@@ -264,7 +299,7 @@ class Enforcer(object):
                 # Evaluate the rule
                 result = self.rules[rule](target, creds, self)
             except KeyError:
-                LOG.debug(_("Rule [%s] doesn't exist") % rule)
+                LOG.debug("Rule [%s] doesn't exist" % rule)
                 # If the rule doesn't exist, fail closed
                 result = False
 
@@ -472,7 +507,7 @@ def _parse_check(rule):
     try:
         kind, match = rule.split(':', 1)
     except Exception:
-        LOG.exception(_("Failed to understand rule %s") % rule)
+        LOG.exception(_LE("Failed to understand rule %s") % rule)
         # If the rule is invalid, we'll fail closed
         return FalseCheck()
 
@@ -482,7 +517,7 @@ def _parse_check(rule):
     elif None in _checks:
         return _checks[None](kind, match)
     else:
-        LOG.error(_("No handler for matches of kind %s") % kind)
+        LOG.error(_LE("No handler for matches of kind %s") % kind)
         return FalseCheck()
 
 
@@ -752,7 +787,7 @@ def _parse_text_rule(rule):
         return state.result
     except ValueError:
         # Couldn't parse the rule
-        LOG.exception(_("Failed to understand rule %r") % rule)
+        LOG.exception(_LE("Failed to understand rule %r") % rule)
 
         # Fail closed
         return FalseCheck()
@@ -825,8 +860,8 @@ class HttpCheck(Check):
         url = ('http:' + self.match) % target
         data = {'target': jsonutils.dumps(target),
                 'credentials': jsonutils.dumps(creds)}
-        post_data = urlutils.urlencode(data)
-        f = urlutils.urlopen(url, post_data)
+        post_data = urlparse.urlencode(data)
+        f = urlrequest.urlopen(url, post_data)
         return f.read() == "True"
 
 
@@ -839,6 +874,8 @@ class GenericCheck(Check):
 
             tenant:%(tenant_id)s
             role:compute:admin
+            True:%(user.enabled)s
+            'Member':%(role.name)s
         """
 
         # TODO(termie): do dict inspection via dot syntax
@@ -849,6 +886,12 @@ class GenericCheck(Check):
             # present in Target return false
             return False
 
-        if self.kind in creds:
-            return match == six.text_type(creds[self.kind])
-        return False
+        try:
+            # Try to interpret self.kind as a literal
+            leftval = ast.literal_eval(self.kind)
+        except ValueError:
+            try:
+                leftval = creds[self.kind]
+            except KeyError:
+                return False
+        return match == six.text_type(leftval)

@@ -1,4 +1,3 @@
-#
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -57,6 +56,13 @@ def import_module(import_str):
     """Import a module."""
     __import__(import_str)
     return sys.modules[import_str]
+
+
+def import_versioned_module(version, submodule=None):
+    module = 'heat.v%s' % version
+    if submodule:
+        module = '.'.join((module, submodule))
+    return import_module(module)
 
 
 def try_import(import_str, default=None):
