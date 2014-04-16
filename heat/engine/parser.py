@@ -603,8 +603,6 @@ class Stack(collections.Mapping):
             logger.debug(_('Deleting backup stack'))
             backup_stack.delete(backup=True)
 
-        self.state_set(action, stack_status, reason)
-
         # flip the template to the newstack values
         # Note we do this on success and failure, so the current
         # stack resources are stored, even if one is in a failed
@@ -612,7 +610,15 @@ class Stack(collections.Mapping):
         self.t = newstack.t
         template_outputs = self.t[self.t.OUTPUTS]
         self.outputs = self.resolve_static_data(template_outputs)
+        # Don't use state_set to do only one update query and avoid race
+        # condition with the COMPLETE status
+        self.action = action
+        self.status = stack_status
+        self.status_reason = reason
+
         self.store()
+
+        notification.send(self)
 
     def delete(self, action=DELETE, backup=False):
         '''
