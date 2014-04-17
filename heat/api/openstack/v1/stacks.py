@@ -154,6 +154,7 @@ class StackController(object):
         filter_whitelist = {
             'status': 'mixed',
             'name': 'mixed',
+            'action': 'mixed',
         }
         whitelist = {
             'limit': 'single',
