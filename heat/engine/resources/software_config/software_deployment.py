@@ -225,7 +225,12 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _check_complete(sd):
         if not sd:
             return True
-        sd._get()
+        # NOTE(dprince): when lazy loading the sd attributes
+        # we need to support multiple versions of heatclient
+        if hasattr(sd, 'get'):
+            sd.get()
+        else:
+            sd._get()
         if sd.status == SoftwareDeployment.COMPLETE:
             return True
         elif sd.status == SoftwareDeployment.FAILED:
