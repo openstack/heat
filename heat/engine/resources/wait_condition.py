@@ -91,8 +91,7 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         '''
         Return a list of the Status values for the handle signals
         '''
-        return [self.metadata[s]['Status']
-                for s in self.metadata]
+        return [v['Status'] for v in self.metadata.values()]
 
     def get_status_reason(self, status):
         '''
@@ -100,9 +99,9 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         If there is more than one handle signal matching the specified status
         then return a semicolon delimited string containing all reasons
         '''
-        return ';'.join([self.metadata[s]['Reason']
-                        for s in self.metadata
-                        if self.metadata[s]['Status'] == status])
+        return ';'.join([v['Reason']
+                         for v in self.metadata.values()
+                         if v['Status'] == status])
 
 
 WAIT_STATUSES = (
