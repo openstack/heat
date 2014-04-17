@@ -12,11 +12,9 @@
 #    under the License.
 
 from datetime import datetime
-import json
 import uuid
 
 import mock
-import six
 
 from heat.common.identifier import EventIdentifier
 from heat.common import template_format
@@ -29,83 +27,6 @@ from heat.rpc import api as rpc_api
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
-
-class EngineApiTest(HeatTestCase):
-    def test_timeout_extract(self):
-        p = {'timeout_mins': '5'}
-        args = api.extract_args(p)
-        self.assertEqual(5, args['timeout_mins'])
-
-    def test_timeout_extract_zero(self):
-        p = {'timeout_mins': '0'}
-        args = api.extract_args(p)
-        self.assertNotIn('timeout_mins', args)
-
-    def test_timeout_extract_garbage(self):
-        p = {'timeout_mins': 'wibble'}
-        args = api.extract_args(p)
-        self.assertNotIn('timeout_mins', args)
-
-    def test_timeout_extract_none(self):
-        p = {'timeout_mins': None}
-        args = api.extract_args(p)
-        self.assertNotIn('timeout_mins', args)
-
-    def test_timeout_extract_negative(self):
-        p = {'timeout_mins': '-100'}
-        error = self.assertRaises(ValueError, api.extract_args, p)
-        self.assertIn('Invalid timeout value', six.text_type(error))
-
-    def test_timeout_extract_not_present(self):
-        args = api.extract_args({})
-        self.assertNotIn('timeout_mins', args)
-
-    def test_adopt_stack_data_extract_present(self):
-        p = {'adopt_stack_data': json.dumps({'Resources': {}})}
-        args = api.extract_args(p)
-        self.assertTrue(args.get('adopt_stack_data'))
-
-    def test_invalid_adopt_stack_data(self):
-        p = {'adopt_stack_data': json.dumps("foo")}
-        error = self.assertRaises(ValueError, api.extract_args, p)
-        self.assertEqual(
-            'Unexpected adopt data "foo". Adopt data must be a dict.',
-            six.text_type(error))
-
-    def test_adopt_stack_data_extract_not_present(self):
-        args = api.extract_args({})
-        self.assertNotIn('adopt_stack_data', args)
-
-    def test_disable_rollback_extract_true(self):
-        args = api.extract_args({'disable_rollback': True})
-        self.assertIn('disable_rollback', args)
-        self.assertTrue(args.get('disable_rollback'))
-
-        args = api.extract_args({'disable_rollback': 'True'})
-        self.assertIn('disable_rollback', args)
-        self.assertTrue(args.get('disable_rollback'))
-
-        args = api.extract_args({'disable_rollback': 'true'})
-        self.assertIn('disable_rollback', args)
-        self.assertTrue(args.get('disable_rollback'))
-
-    def test_disable_rollback_extract_false(self):
-        args = api.extract_args({'disable_rollback': False})
-        self.assertIn('disable_rollback', args)
-        self.assertFalse(args.get('disable_rollback'))
-
-        args = api.extract_args({'disable_rollback': 'False'})
-        self.assertIn('disable_rollback', args)
-        self.assertFalse(args.get('disable_rollback'))
-
-        args = api.extract_args({'disable_rollback': 'false'})
-        self.assertIn('disable_rollback', args)
-        self.assertFalse(args.get('disable_rollback'))
-
-    def test_disable_rollback_extract_bad(self):
-        self.assertRaises(ValueError, api.extract_args,
-                          {'disable_rollback': 'bad'})
 
 
 class FormatTest(HeatTestCase):

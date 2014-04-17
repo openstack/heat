@@ -218,13 +218,14 @@ class StackController(object):
         """
 
         data = InstantiationData(body)
+        args = util.extract_args(data.args())
 
         result = self.rpc_client.preview_stack(req.context,
                                                data.stack_name(),
                                                data.template(),
                                                data.environment(),
                                                data.files(),
-                                               data.args())
+                                               args)
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
@@ -235,13 +236,14 @@ class StackController(object):
         Create a new stack
         """
         data = InstantiationData(body)
+        args = util.extract_args(data.args())
 
         result = self.rpc_client.create_stack(req.context,
                                               data.stack_name(),
                                               data.template(),
                                               data.environment(),
                                               data.files(),
-                                              data.args())
+                                              args)
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -303,13 +305,14 @@ class StackController(object):
         Update an existing stack with a new template and/or parameters
         """
         data = InstantiationData(body)
+        args = util.extract_args(data.args())
 
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
                                      data.environment(),
                                      data.files(),
-                                     data.args())
+                                     args)
 
         raise exc.HTTPAccepted()
 

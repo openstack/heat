@@ -464,9 +464,8 @@ class EngineService(service.Service):
         tmpl = parser.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
-        common_params = api.extract_args(args)
         env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
+        stack = parser.Stack(cnxt, stack_name, tmpl, env, **args)
 
         self._validate_deferred_auth_context(cnxt, stack)
         stack.validate()
@@ -508,11 +507,8 @@ class EngineService(service.Service):
         tmpl = parser.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
-        # Extract the common query parameters
-        common_params = api.extract_args(args)
         env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl,
-                             env, **common_params)
+        stack = parser.Stack(cnxt, stack_name, tmpl, env, **args)
 
         self._validate_deferred_auth_context(cnxt, stack)
 
@@ -563,12 +559,10 @@ class EngineService(service.Service):
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name
-        common_params = api.extract_args(args)
-        common_params.setdefault(rpc_api.PARAM_TIMEOUT,
-                                 current_stack.timeout_mins)
+        args.setdefault(rpc_api.PARAM_TIMEOUT, current_stack.timeout_mins)
         env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     env, **common_params)
+                                     env, **args)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)

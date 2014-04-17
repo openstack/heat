@@ -16,6 +16,12 @@ from functools import wraps
 from webob import exc
 
 from heat.common import identifier
+from heat.common import template_format
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.rpc import api
+
+logger = logging.getLogger(__name__)
 
 
 def policy_enforce(handler):
@@ -99,3 +105,46 @@ def get_allowed_params(params, whitelist):
             allowed_params[key] = value
 
     return allowed_params
+
+
+def extract_args(params):
+    '''
+    Extract any arguments passed as parameters through the API and return them
+    as a dictionary. This allows us to filter the passed args and do type
+    conversion where appropriate
+    '''
+    kwargs = {}
+    timeout_mins = params.get(api.PARAM_TIMEOUT)
+    if timeout_mins not in ('0', 0, None):
+        try:
+            timeout = int(timeout_mins)
+        except (ValueError, TypeError):
+            logger.exception(_('Timeout conversion failed'))
+        else:
+            if timeout > 0:
+                kwargs[api.PARAM_TIMEOUT] = timeout
+            else:
+                raise ValueError(_('Invalid timeout value %s') % timeout)
+
+    if api.PARAM_DISABLE_ROLLBACK in params:
+        disable_rollback = params.get(api.PARAM_DISABLE_ROLLBACK)
+        if str(disable_rollback).lower() == 'true':
+            kwargs[api.PARAM_DISABLE_ROLLBACK] = True
+        elif str(disable_rollback).lower() == 'false':
+            kwargs[api.PARAM_DISABLE_ROLLBACK] = False
+        else:
+            raise ValueError(_('Unexpected value for parameter'
+                               ' %(name)s : %(value)s') %
+                             dict(name=api.PARAM_DISABLE_ROLLBACK,
+                                  value=disable_rollback))
+
+    adopt_data = params.get(api.PARAM_ADOPT_STACK_DATA)
+    if adopt_data:
+        adopt_data = template_format.simple_parse(adopt_data)
+        if not isinstance(adopt_data, dict):
+            raise ValueError(
+                _('Unexpected adopt data "%s". Adopt data must be a dict.')
+                % adopt_data)
+        kwargs[api.PARAM_ADOPT_STACK_DATA] = adopt_data
+
+    return kwargs
