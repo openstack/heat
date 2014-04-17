@@ -600,7 +600,7 @@ class EngineService(service.Service):
 
         # validate overall template
         try:
-            tmpl.validate(allow_empty=False)
+            tmpl.validate()
         except Exception as ex:
             return {'Error': six.text_type(ex)}
 

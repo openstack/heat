@@ -80,8 +80,9 @@ parameters
 
 resources
     This section contains the declaration of the single resources of the
-    template. This section is mandatory and at least one resource must be
-    defined in any HOT template.
+    template. This section with at least one resource should be defined in any
+    HOT template, or the template would not really do anything when being
+    instantiated.
 
 outputs
     This section allows for specifying output parameters available to users once

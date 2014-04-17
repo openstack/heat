@@ -18,7 +18,9 @@ import functools
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import plugin_manager
+from heat.openstack.common import log as logging
 
+logger = logging.getLogger(__name__)
 
 __all__ = ['Template']
 
@@ -172,7 +174,7 @@ class Template(collections.Mapping):
     def parse(self, stack, snippet):
         return parse(self.functions(), stack, snippet)
 
-    def validate(self, allow_empty=True):
+    def validate(self):
         '''Validate the template.
 
         Validates the top-level sections of the template as well as syntax
@@ -180,7 +182,6 @@ class Template(collections.Mapping):
         code parts that are responsible for working with the respective
         sections (e.g. parameters are check by parameters schema class).
 
-        :param allow_empty: whether to allow an empty resources section
         '''
 
         # check top-level sections
@@ -190,11 +191,10 @@ class Template(collections.Mapping):
 
         # check resources
         tmpl_resources = self[self.RESOURCES]
-
-        if not allow_empty and not tmpl_resources:
-            message = _('The template is invalid. A Resources section with at '
-                        'least one resource must be defined.')
-            raise exception.StackValidationFailed(message=message)
+        if not tmpl_resources:
+            logger.warn(_('Template does not contain any resources, so '
+                          'the template would not really do anything when '
+                          'being instantiated.'))
 
         for res in tmpl_resources.values():
             try:
