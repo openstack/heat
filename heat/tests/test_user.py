@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from oslo.config import cfg
 
 from heat.common import exception
@@ -110,7 +108,6 @@ class UserTest(HeatTestCase):
         self.fc = fakes.FakeKeystoneClient(username=self.username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         utils.setup_dummy_db()
-        self.resource_id = str(uuid.uuid4())
 
     def create_user(self, t, stack, resource_name,
                     project_id='stackproject', user_id='dummy_user',
@@ -123,8 +120,13 @@ class UserTest(HeatTestCase):
         fakes.FakeKeystoneClient.create_stack_domain_project(
             stack.id).AndReturn(project_id)
 
+        rsrc = user.User(resource_name,
+                         t['Resources'][resource_name],
+                         stack)
+        rsrc._store()
+
         self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(self.resource_id).MultipleTimes().AndReturn('aabbcc')
+        short_id.get_id(rsrc.id).MultipleTimes().AndReturn('aabbcc')
 
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'create_stack_domain_user')
@@ -132,13 +134,8 @@ class UserTest(HeatTestCase):
             username=self.username, password=password,
             project_id=project_id).AndReturn(user_id)
         self.m.ReplayAll()
-
-        rsrc = user.User(resource_name,
-                         t['Resources'][resource_name],
-                         stack)
         self.assertIsNone(rsrc.validate())
-        with utils.UUIDStub(self.resource_id):
-            scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 

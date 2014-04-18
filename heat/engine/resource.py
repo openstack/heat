@@ -758,10 +758,7 @@ class Resource(object):
                          self.resource_id, self.properties,
                          self.name, self.type())
 
-        try:
-            ev.store()
-        except Exception as ex:
-            logger.error(_('DB error %s') % ex)
+        ev.store()
 
     def _store_or_update(self, action, status, reason):
         self.action = action

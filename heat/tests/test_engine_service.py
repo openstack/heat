@@ -588,6 +588,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
         self.assertEqual(stack.identifier(), result)
         self.assertEqual(3, stack.total_resources())
+        self.man.thread_group_mgr.groups[stack.id].wait()
         stack.delete()
 
     def test_stack_create_total_resources_exceeds_max(self):
