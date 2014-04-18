@@ -161,9 +161,14 @@ class StackController(object):
             'marker': 'single',
             'sort_dir': 'single',
             'sort_keys': 'multi',
+            'show_deleted': 'single',
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
+
+        if engine_api.PARAM_SHOW_DELETED in params:
+            show_del = util.extract_bool(params[engine_api.PARAM_SHOW_DELETED])
+            params[engine_api.PARAM_SHOW_DELETED] = show_del
 
         if not filter_params:
             filter_params = None
