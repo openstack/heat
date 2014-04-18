@@ -197,3 +197,13 @@ class TestExtractArgs(HeatTestCase):
     def test_disable_rollback_extract_bad(self):
         self.assertRaises(ValueError, util.extract_args,
                           {'disable_rollback': 'bad'})
+
+
+class TestExtractBool(HeatTestCase):
+    def test_extract_bool(self):
+        for value in ('True', 'true', 'TRUE', True):
+            self.assertTrue(util.extract_bool(value))
+        for value in ('False', 'false', 'FALSE', False):
+            self.assertFalse(util.extract_bool(value))
+        for value in ('foo', 't', 'f', 'yes', 'no', 'y', 'n', '1', '0', None):
+            self.assertRaises(ValueError, util.extract_bool, value)
