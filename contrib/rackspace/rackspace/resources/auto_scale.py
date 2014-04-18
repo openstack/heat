@@ -15,8 +15,6 @@
 
 import copy
 
-from heat.common import exception
-from heat.db.sqlalchemy import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -535,7 +533,7 @@ class WebHook(resource.Resource):
             key = rel_to_key.get(link['rel'])
             if key is not None:
                 url = link['href'].encode('utf-8')
-                db_api.resource_data_set(self, key, url)
+                self.data_set(key, url)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         asclient = self.stack.clients.auto_scale()
@@ -544,9 +542,10 @@ class WebHook(resource.Resource):
         asclient.replace_webhook(**args)
 
     def _resolve_attribute(self, key):
-        try:
-            return db_api.resource_data_get(self, key).decode('utf-8')
-        except exception.NotFound:
+        v = self.data().get(key)
+        if v is not None:
+            return v.decode('utf-8')
+        else:
             return None
 
     def handle_delete(self):

@@ -19,7 +19,6 @@ from Crypto.PublicKey import RSA
 import paramiko
 
 from heat.common import exception
-from heat.db.sqlalchemy import api as db_api
 from heat.engine import properties
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server
@@ -141,7 +140,6 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
         self.stack = stack
-        self._private_key = None
         self._server = None
         self._distro = None
         self._image = None
@@ -196,18 +194,13 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
     @property
     def private_key(self):
         """Return the private SSH key for the resource."""
-        if self._private_key is not None:
-            return self._private_key
-        if self.id is not None:
-            self._private_key = db_api.resource_data_get(self, 'private_key')
-            return self._private_key
+        return self.data().get('private_key')
 
     @private_key.setter
     def private_key(self, private_key):
         """Save the resource's private SSH key to the database."""
-        self._private_key = private_key
         if self.id is not None:
-            db_api.resource_data_set(self, 'private_key', private_key, True)
+            self.data_set('private_key', private_key, True)
 
     @property
     def has_userdata(self):
@@ -320,8 +313,8 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
 
     def _personality(self):
         # Generate SSH public/private keypair for the engine to use
-        if self._private_key is not None:
-            rsa = RSA.importKey(self._private_key)
+        if self.private_key is not None:
+            rsa = RSA.importKey(self.private_key)
         else:
             rsa = RSA.generate(1024)
         self.private_key = rsa.exportKey()
@@ -473,12 +466,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         if name == 'privateIPv4':
             return nova_utils.get_ip(self.server, 'private', 4)
         if name == 'admin_pass':
-            try:
-                return db_api.resource_data_get(self, self.ADMIN_PASS)
-            except exception.NotFound:
-                logger.info(_('Administrator password not'
-                              'found for server: %s') % self.name)
-                return ''
+            return self.data().get(self.ADMIN_PASS, '')
         return super(CloudServer, self)._resolve_attribute(name)
 
     def handle_create(self):
@@ -488,9 +476,9 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         #  "enable_instance_password" config option is turned off
         if (self.properties.get(self.SAVE_ADMIN_PASS) and
                 hasattr(server, 'adminPass') and server.adminPass):
-            db_api.resource_data_set(self, self.ADMIN_PASS,
-                                     server.adminPass,
-                                     redact=True)
+            self.data_set(self.ADMIN_PASS,
+                          server.adminPass,
+                          redact=True)
 
         return server
 

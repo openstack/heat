@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -582,12 +581,12 @@ class LoadBalancer(resource.Resource):
                     'pool_id': pool,
                     'address': address,
                     'protocol_port': protocol_port}})['member']
-            db_api.resource_data_set(self, member, lb_member['id'])
+            self.data_set(member, lb_member['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if self.MEMBERS in prop_diff:
             members = set(prop_diff[self.MEMBERS])
-            rd_members = db_api.resource_data_get_all(self)
+            rd_members = self.data()
             old_members = set(rd_members.keys())
             client = self.neutron()
             for member in old_members - members:
@@ -597,7 +596,7 @@ class LoadBalancer(resource.Resource):
                 except NeutronClientException as ex:
                     if ex.status_code != 404:
                         raise ex
-                db_api.resource_data_delete(self, member)
+                self.data_delete(member)
             pool = self.properties[self.POOL_ID]
             nova_client = self.nova()
             protocol_port = self.properties[self.PROTOCOL_PORT]
@@ -608,18 +607,18 @@ class LoadBalancer(resource.Resource):
                         'pool_id': pool,
                         'address': address,
                         'protocol_port': protocol_port}})['member']
-                db_api.resource_data_set(self, member, lb_member['id'])
+                self.data_set(member, lb_member['id'])
 
     def handle_delete(self):
         client = self.neutron()
         for member in self.properties.get(self.MEMBERS):
-            member_id = db_api.resource_data_get(self, member)
+            member_id = self.data().get(member)
             try:
                 client.delete_member(member_id)
             except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise ex
-            db_api.resource_data_delete(self, member)
+            self.data_delete(member)
 
 
 def resource_mapping():

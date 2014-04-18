@@ -17,7 +17,6 @@ from oslo.config import cfg
 import uuid
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -404,34 +403,22 @@ class Server(stack_user.StackUser):
 
     @property
     def access_key(self):
-        try:
-            return db_api.resource_data_get(self, 'access_key')
-        except exception.NotFound:
-            pass
+        return self.data().get('access_key')
 
     @property
     def secret_key(self):
-        try:
-            return db_api.resource_data_get(self, 'secret_key')
-        except exception.NotFound:
-            pass
+        return self.data().get('secret_key')
 
     @property
     def password(self):
-        try:
-            return db_api.resource_data_get(self, 'password')
-        except exception.NotFound:
-            pass
+        return self.data().get('password')
 
     @password.setter
     def password(self, password):
-        try:
-            if password is None:
-                db_api.resource_data_delete(self, 'password')
-            else:
-                db_api.resource_data_set(self, 'password', password, True)
-        except exception.NotFound:
-            pass
+        if password is None:
+            self.data_delete('password')
+        else:
+            self.data_set('password', password, True)
 
     @property
     def metadata(self):

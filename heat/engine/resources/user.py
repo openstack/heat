@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -191,8 +190,8 @@ class AccessKey(resource.Resource):
 
         # Store the secret key, encrypted, in the DB so we don't have lookup
         # the user every time someone requests the SecretAccessKey attribute
-        db_api.resource_data_set(self, 'secret_key', kp.secret, redact=True)
-        db_api.resource_data_set(self, 'credential_id', kp.id, redact=True)
+        self.data_set('secret_key', kp.secret, redact=True)
+        self.data_set('credential_id', kp.id, redact=True)
 
     def handle_delete(self):
         self._secret = None
@@ -219,20 +218,17 @@ class AccessKey(resource.Resource):
                 # First try to retrieve the secret from resource_data, but
                 # for backwards compatibility, fall back to requesting from
                 # keystone
-                try:
-                    self._secret = db_api.resource_data_get(self, 'secret_key')
-                except exception.NotFound:
+                self._secret = self.data().get('secret_key')
+                if self._secret is None:
                     try:
                         user_id = self._get_user().resource_id
                         kp = self.keystone().get_ec2_keypair(
                             user_id=user_id, access=self.resource_id)
                         self._secret = kp.secret
                         # Store the key in resource_data
-                        db_api.resource_data_set(self, 'secret_key',
-                                                 kp.secret, redact=True)
+                        self.data_set('secret_key', kp.secret, redact=True)
                         # And the ID of the v3 credential
-                        db_api.resource_data_set(self, 'credential_id',
-                                                 kp.id, redact=True)
+                        self.data_set('credential_id', kp.id, redact=True)
                     except Exception as ex:
                         logger.warn(
                             _('could not get secret for %(username)s '

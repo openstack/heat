@@ -19,7 +19,6 @@ import uuid
 import heatclient.exc as heat_exp
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -353,20 +352,14 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     @property
     def password(self):
-        try:
-            return db_api.resource_data_get(self, 'password')
-        except exception.NotFound:
-            pass
+        return self.data().get('password')
 
     @password.setter
     def password(self, password):
-        try:
-            if password is None:
-                db_api.resource_data_delete(self, 'password')
-            else:
-                db_api.resource_data_set(self, 'password', password, True)
-        except exception.NotFound:
-            pass
+        if password is None:
+            self.data_delete('password')
+        else:
+            self.data_set('password', password, True)
 
     def check_create_complete(self, sd):
         return self._check_complete(sd)

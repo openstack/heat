@@ -166,9 +166,7 @@ class ResourceTest(HeatTestCase):
     def test_abandon_with_resource_data(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.m.StubOutWithMock(db_api, 'resource_data_get_all')
-        db_api.resource_data_get_all(res).AndReturn({"test-key": "test-value"})
-        self.m.ReplayAll()
+        res._data = {"test-key": "test-value"}
 
         expected = {
             'action': 'INIT',
@@ -181,7 +179,6 @@ class ResourceTest(HeatTestCase):
         }
         actual = res.prepare_abandon()
         self.assertEqual(expected, actual)
-        self.m.VerifyAll()
 
     def test_state_set_invalid(self):
         tmpl = {'Type': 'Foo'}

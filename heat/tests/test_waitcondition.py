@@ -443,7 +443,7 @@ class WaitConditionHandleTest(HeatTestCase):
 
         rsrc = self.stack['WaitHandle']
         # clear the url
-        db_api.resource_data_set(rsrc, 'ec2_signed_url', None, False)
+        rsrc.data_set('ec2_signed_url', None, False)
 
         rsrc.created_time = created_time
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

@@ -14,7 +14,6 @@
 import keystoneclient.exceptions as kc_exception
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -49,19 +48,20 @@ class StackUser(resource.Resource):
             project_id=self.stack.stack_user_project_id)
 
         # Store the ID in resource data, for compatibility with SignalResponder
-        db_api.resource_data_set(self, 'user_id', user_id)
+        self.data_set('user_id', user_id)
 
     def _get_user_id(self):
-        try:
-            return db_api.resource_data_get(self, 'user_id')
-        except exception.NotFound:
+        user_id = self.data().get('user_id')
+        if user_id:
+            return user_id
+        else:
             # FIXME(shardy): This is a legacy hack for backwards compatibility
             # remove after an appropriate transitional period...
             # Assume this is a resource that was created with
             # a previous version of heat and that the resource_id
             # is the user_id
             if self.resource_id:
-                db_api.resource_data_set(self, 'user_id', self.resource_id)
+                self.data_set('user_id', self.resource_id)
                 return self.resource_id
 
     def handle_delete(self):
@@ -87,10 +87,7 @@ class StackUser(resource.Resource):
             except kc_exception.NotFound:
                 pass
         for data_key in ('credential_id', 'access_key', 'secret_key'):
-            try:
-                db_api.resource_data_delete(self, data_key)
-            except exception.NotFound:
-                pass
+            self.data_delete(data_key)
 
     def handle_suspend(self):
         user_id = self._get_user_id()
@@ -121,21 +118,17 @@ class StackUser(resource.Resource):
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
         else:
-            db_api.resource_data_set(self, 'credential_id', kp.id,
-                                     redact=True)
-            db_api.resource_data_set(self, 'access_key', kp.access,
-                                     redact=True)
-            db_api.resource_data_set(self, 'secret_key', kp.secret,
-                                     redact=True)
+            self.data_set('credential_id', kp.id, redact=True)
+            self.data_set('access_key', kp.access, redact=True)
+            self.data_set('secret_key', kp.secret, redact=True)
         return kp
 
     def _delete_keypair(self):
         # Subclasses may optionally call this to delete a keypair created
         # via _create_keypair
         user_id = self._get_user_id()
-        try:
-            credential_id = db_api.resource_data_get(self, 'credential_id')
-        except exception.NotFound:
+        credential_id = self.data().get('credential_id')
+        if not credential_id:
             return
 
         try:
@@ -147,7 +140,4 @@ class StackUser(resource.Resource):
                 user_id=user_id, credential_id=credential_id)
 
         for data_key in ('access_key', 'secret_key', 'credential_id'):
-            try:
-                db_api.resource_data_delete(self, data_key)
-            except exception.NotFound:
-                pass
+            self.data_delete(data_key)
