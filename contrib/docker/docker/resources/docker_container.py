@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
@@ -139,15 +140,33 @@ class DockerContainer(resource.Resource):
     }
 
     attributes_schema = {
-        'info': _('Container info'),
-        'network_info': _('Container network info'),
-        'network_ip': _('Container ip address'),
-        'network_gateway': _('Container ip gateway'),
-        'network_tcp_ports': _('Container TCP ports'),
-        'network_udp_ports': _('Container UDP ports'),
-        'logs': _('Container logs'),
-        'logs_head': _('Container first logs line'),
-        'logs_tail': _('Container last logs line')
+        'info': attributes.Schema(
+            _('Container info')
+        ),
+        'network_info': attributes.Schema(
+            _('Container network info')
+        ),
+        'network_ip': attributes.Schema(
+            _('Container ip address')
+        ),
+        'network_gateway': attributes.Schema(
+            _('Container ip gateway')
+        ),
+        'network_tcp_ports': attributes.Schema(
+            _('Container TCP ports')
+        ),
+        'network_udp_ports': attributes.Schema(
+            _('Container UDP ports')
+        ),
+        'logs': attributes.Schema(
+            _('Container logs')
+        ),
+        'logs_head': attributes.Schema(
+            _('Container first logs line')
+        ),
+        'logs_tail': attributes.Schema(
+            _('Container last logs line')
+        ),
     }
 
     def get_client(self):

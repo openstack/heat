@@ -13,6 +13,7 @@
 
 from six.moves.urllib import parse as urlparse
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -93,8 +94,12 @@ class S3Bucket(resource.Resource):
     }
 
     attributes_schema = {
-        'DomainName': _('The DNS name of the specified bucket.'),
-        'WebsiteURL': _('The website endpoint for the specified bucket.')
+        'DomainName': attributes.Schema(
+            _('The DNS name of the specified bucket.')
+        ),
+        'WebsiteURL': attributes.Schema(
+            _('The website endpoint for the specified bucket.')
+        ),
     }
 
     def tags_to_headers(self):

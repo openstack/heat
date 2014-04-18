@@ -14,6 +14,7 @@
 import copy
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import parser
 from heat.engine import properties
@@ -85,7 +86,9 @@ class ResourceGroup(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "refs": _("A list of resource IDs for the resources in the group")
+        "refs": attributes.Schema(
+            _("A list of resource IDs for the resources in the group")
+        ),
     }
     update_allowed_keys = ("Properties",)
 

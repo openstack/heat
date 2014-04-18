@@ -14,6 +14,7 @@
 from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
@@ -64,12 +65,24 @@ class SwiftContainer(resource.Resource):
     }
 
     attributes_schema = {
-        'DomainName': _('The host from the container URL.'),
-        'WebsiteURL': _('The URL of the container.'),
-        'RootURL': _('The parent URL of the container.'),
-        'ObjectCount': _('The number of objects stored in the container.'),
-        'BytesUsed': _('The number of bytes stored in the container.'),
-        'HeadContainer': _('A map containing all headers for the container.')
+        'DomainName': attributes.Schema(
+            _('The host from the container URL.')
+        ),
+        'WebsiteURL': attributes.Schema(
+            _('The URL of the container.')
+        ),
+        'RootURL': attributes.Schema(
+            _('The parent URL of the container.')
+        ),
+        'ObjectCount': attributes.Schema(
+            _('The number of objects stored in the container.')
+        ),
+        'BytesUsed': attributes.Schema(
+            _('The number of bytes stored in the container.')
+        ),
+        'HeadContainer': attributes.Schema(
+            _('A map containing all headers for the container.')
+        ),
     }
 
     def physical_resource_name(self):

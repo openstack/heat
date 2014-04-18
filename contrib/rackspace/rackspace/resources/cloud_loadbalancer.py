@@ -28,6 +28,7 @@ import itertools
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.engine import attributes
 from heat.engine import function
 from heat.engine import scheduler
 from heat.engine import constraints
@@ -364,8 +365,10 @@ class CloudLoadBalancer(resource.Resource):
     }
 
     attributes_schema = {
-        'PublicIp': _('Public IP address of the specified '
-                      'instance.')}
+        'PublicIp': attributes.Schema(
+            _('Public IP address of the specified instance.')
+        ),
+    }
 
     update_allowed_keys = ('Properties',)
 

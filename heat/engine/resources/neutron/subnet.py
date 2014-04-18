@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -140,18 +141,39 @@ class Subnet(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "name": _("Friendly name of the subnet."),
-        "network_id": _("Parent network of the subnet."),
-        "tenant_id": _("Tenant owning the subnet."),
-        "allocation_pools": _("Ip allocation pools and their ranges."),
-        "gateway_ip": _("Ip of the subnet's gateway."),
-        "host_routes": _("Additional routes for this subnet."),
-        "ip_version": _("Ip version for the subnet."),
-        "cidr": _("CIDR block notation for this subnet."),
-        "dns_nameservers": _("List of dns nameservers."),
-        "enable_dhcp": _("'true' if DHCP is enabled for this subnet; 'false' "
-                         "otherwise."),
-        "show": _("All attributes."),
+        "name": attributes.Schema(
+            _("Friendly name of the subnet.")
+        ),
+        "network_id": attributes.Schema(
+            _("Parent network of the subnet.")
+        ),
+        "tenant_id": attributes.Schema(
+            _("Tenant owning the subnet.")
+        ),
+        "allocation_pools": attributes.Schema(
+            _("Ip allocation pools and their ranges.")
+        ),
+        "gateway_ip": attributes.Schema(
+            _("Ip of the subnet's gateway.")
+        ),
+        "host_routes": attributes.Schema(
+            _("Additional routes for this subnet.")
+        ),
+        "ip_version": attributes.Schema(
+            _("Ip version for the subnet.")
+        ),
+        "cidr": attributes.Schema(
+            _("CIDR block notation for this subnet.")
+        ),
+        "dns_nameservers": attributes.Schema(
+            _("List of dns nameservers.")
+        ),
+        "enable_dhcp": attributes.Schema(
+            _("'true' if DHCP is enabled for this subnet; 'false' otherwise.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     update_allowed_keys = ('Properties',)

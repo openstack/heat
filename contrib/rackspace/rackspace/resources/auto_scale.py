@@ -15,6 +15,7 @@
 
 import copy
 
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -507,10 +508,12 @@ class WebHook(resource.Resource):
     update_allowed_properties = (NAME, METADATA)
 
     attributes_schema = {
-        'executeUrl': _(
-            "The url for executing the webhook (requires auth)."),
-        'capabilityUrl': _(
-            "The url for executing the webhook (doesn't require auth)."),
+        'executeUrl': attributes.Schema(
+            _("The url for executing the webhook (requires auth).")
+        ),
+        'capabilityUrl': attributes.Schema(
+            _("The url for executing the webhook (doesn't require auth).")
+        ),
     }
 
     def _get_args(self, props):

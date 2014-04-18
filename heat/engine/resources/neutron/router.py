@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
@@ -86,12 +87,24 @@ class Router(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "status": _("The status of the router."),
-        "external_gateway_info": _("Gateway network for the router."),
-        "name": _("Friendly name of the router."),
-        "admin_state_up": _("Administrative state of the router."),
-        "tenant_id": _("Tenant owning the router."),
-        "show": _("All attributes."),
+        "status": attributes.Schema(
+            _("The status of the router.")
+        ),
+        "external_gateway_info": attributes.Schema(
+            _("Gateway network for the router.")
+        ),
+        "name": attributes.Schema(
+            _("Friendly name of the router.")
+        ),
+        "admin_state_up": attributes.Schema(
+            _("Administrative state of the router.")
+        ),
+        "tenant_id": attributes.Schema(
+            _("Tenant owning the router.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     update_allowed_keys = ('Properties',)

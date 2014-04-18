@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -97,23 +98,41 @@ class HealthMonitor(neutron.NeutronResource):
     update_allowed_keys = ('Properties',)
 
     attributes_schema = {
-        'admin_state_up': _('The administrative state of this health '
-                            'monitor.'),
-        'delay': _('The minimum time in seconds between regular connections '
-                   'of the member.'),
-        'expected_codes': _('The list of HTTP status codes expected in '
-                            'response from the member to declare it healthy.'),
-        'http_method': _('The HTTP method used for requests by the monitor of '
-                         'type HTTP.'),
-        'max_retries': _('Number of permissible connection failures before '
-                         'changing the member status to INACTIVE.'),
-        'timeout': _('Maximum number of seconds for a monitor to wait for a '
-                     'connection to be established before it times out.'),
-        'type': _('One of predefined health monitor types.'),
-        'url_path': _('The HTTP path used in the HTTP request used by the '
-                      'monitor to test a member health.'),
-        'tenant_id': _('Tenant owning the health monitor.'),
-        'show': _('All attributes.'),
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of this health monitor.')
+        ),
+        'delay': attributes.Schema(
+            _('The minimum time in seconds between regular connections '
+              'of the member.')
+        ),
+        'expected_codes': attributes.Schema(
+            _('The list of HTTP status codes expected in response '
+              'from the member to declare it healthy.')
+        ),
+        'http_method': attributes.Schema(
+            _('The HTTP method used for requests by the monitor of type HTTP.')
+        ),
+        'max_retries': attributes.Schema(
+            _('Number of permissible connection failures before changing '
+              'the member status to INACTIVE.')
+        ),
+        'timeout': attributes.Schema(
+            _('Maximum number of seconds for a monitor to wait for a '
+              'connection to be established before it times out.')
+        ),
+        'type': attributes.Schema(
+            _('One of predefined health monitor types.')
+        ),
+        'url_path': attributes.Schema(
+            _('The HTTP path used in the HTTP request used by the monitor '
+              'to test a member health.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Tenant owning the health monitor.')
+        ),
+        'show': attributes.Schema(
+            _('All attributes.')
+        ),
     }
 
     def handle_create(self):
@@ -289,16 +308,32 @@ class Pool(neutron.NeutronResource):
     update_allowed_keys = ('Properties',)
 
     attributes_schema = {
-        'admin_state_up': _('The administrative state of this pool.'),
-        'name': _('Name of the pool.'),
-        'protocol': _('Protocol to balance.'),
-        'subnet_id': _('The subnet for the port on which the members '
-                       'of the pool will be connected.'),
-        'lb_method': _('The algorithm used to distribute load between the '
-                       'members of the pool.'),
-        'description': _('Description of the pool.'),
-        'tenant_id': _('Tenant owning the pool.'),
-        'vip': _('Vip associated with the pool.'),
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of this pool.')
+        ),
+        'name': attributes.Schema(
+            _('Name of the pool.')
+        ),
+        'protocol': attributes.Schema(
+            _('Protocol to balance.')
+        ),
+        'subnet_id': attributes.Schema(
+            _('The subnet for the port on which the members of the pool '
+              'will be connected.')
+        ),
+        'lb_method': attributes.Schema(
+            _('The algorithm used to distribute load between the members '
+              'of the pool.')
+        ),
+        'description': attributes.Schema(
+            _('Description of the pool.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Tenant owning the pool.')
+        ),
+        'vip': attributes.Schema(
+            _('Vip associated with the pool.')
+        ),
     }
 
     def validate(self):
@@ -491,15 +526,28 @@ class PoolMember(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': _('The administrative state of this pool '
-                            'member.'),
-        'tenant_id': _('Tenant owning the pool member.'),
-        'weight': _('Weight of the pool member in the pool.'),
-        'address': _('IP address of the pool member.'),
-        'pool_id': _('The ID of the load balancing pool.'),
-        'protocol_port': _('TCP port on which the pool member listens for'
-                           'requests or connections.'),
-        'show': _('All attributes.'),
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of this pool member.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Tenant owning the pool member.')
+        ),
+        'weight': attributes.Schema(
+            _('Weight of the pool member in the pool.')
+        ),
+        'address': attributes.Schema(
+            _('IP address of the pool member.')
+        ),
+        'pool_id': attributes.Schema(
+            _('The ID of the load balancing pool.')
+        ),
+        'protocol_port': attributes.Schema(
+            _('TCP port on which the pool member listens for requests or '
+              'connections.')
+        ),
+        'show': attributes.Schema(
+            _('All attributes.')
+        ),
     }
 
     update_allowed_keys = ('Properties',)

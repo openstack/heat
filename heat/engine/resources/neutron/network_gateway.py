@@ -15,6 +15,7 @@
 #    limitations under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -123,8 +124,12 @@ class NetworkGateway(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "default": _("A boolean value of default flag."),
-        "show": _("All attributes.")
+        "default": attributes.Schema(
+            _("A boolean value of default flag.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     update_allowed_keys = ('Properties',)

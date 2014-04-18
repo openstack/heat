@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine.clients import troveclient
 from heat.engine import constraints
 from heat.engine import properties
@@ -162,8 +163,12 @@ class OSDBInstance(resource.Resource):
     }
 
     attributes_schema = {
-        "hostname": _("Hostname of the instance"),
-        "href": _("Api endpoint reference of the instance")
+        "hostname": attributes.Schema(
+            _("Hostname of the instance")
+        ),
+        "href": attributes.Schema(
+            _("Api endpoint reference of the instance")
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

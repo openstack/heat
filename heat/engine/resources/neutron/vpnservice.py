@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -72,17 +73,32 @@ class VPNService(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': _('The administrative state of the vpn service.'),
-        'description': _('The description of the vpn service.'),
-        'name': _('The name of the vpn service.'),
-        'router_id': _('The unique identifier of the router to which the vpn '
-                       'service was inserted.'),
-        'status': _('The status of the vpn service.'),
-        'subnet_id': _('The unique identifier of the subnet in which the vpn '
-                       'service was created.'),
-        'tenant_id': _('The unique identifier of the tenant owning the vpn '
-                       'service.'),
-        'show': _('All attributes.'),
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of the vpn service.')
+        ),
+        'description': attributes.Schema(
+            _('The description of the vpn service.')
+        ),
+        'name': attributes.Schema(
+            _('The name of the vpn service.')
+        ),
+        'router_id': attributes.Schema(
+            _('The unique identifier of the router to which the vpn service '
+              'was inserted.')
+        ),
+        'status': attributes.Schema(
+            _('The status of the vpn service.')
+        ),
+        'subnet_id': attributes.Schema(
+            _('The unique identifier of the subnet in which the vpn service '
+              'was created.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('The unique identifier of the tenant owning the vpn service.')
+        ),
+        'show': attributes.Schema(
+            _('All attributes.')
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -242,34 +258,66 @@ class IPsecSiteConnection(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': _('The administrative state of the ipsec site '
-                            'connection.'),
-        'auth_mode': _('The authentication mode of the ipsec site '
-                       'connection.'),
-        'description': _('The description of the ipsec site connection.'),
-        'dpd': _('The dead peer detection protocol configuration of the ipsec '
-                 'site connection.'),
-        'ikepolicy_id': _('The unique identifier of ike policy associated '
-                          'with the ipsec site connection.'),
-        'initiator': _('The initiator of the ipsec site connection.'),
-        'ipsecpolicy_id': _('The unique identifier of ipsec policy '
-                            'associated with the ipsec site connection.'),
-        'mtu': _('The maximum transmission unit size (in bytes) of the ipsec '
-                 'site connection.'),
-        'name': _('The name of the ipsec site connection.'),
-        'peer_address': _('The remote branch router public IPv4 address or '
-                          'IPv6 address or FQDN.'),
-        'peer_cidrs': _('The remote subnet(s) in CIDR format of the ipsec '
-                        'site connection.'),
-        'peer_id': _('The remote branch router identity of the ipsec site '
-                     'connection.'),
-        'psk': _('The pre-shared key string of the ipsec site connection.'),
-        'route_mode': _('The route mode of the ipsec site connection.'),
-        'status': _('The status of the ipsec site connection.'),
-        'tenant_id': _('The unique identifier of the tenant owning the ipsec '
-                       'site connection.'),
-        'vpnservice_id': _('The unique identifier of vpn service associated '
-                           'with the ipsec site connection.')
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of the ipsec site connection.')
+        ),
+        'auth_mode': attributes.Schema(
+            _('The authentication mode of the ipsec site connection.')
+        ),
+        'description': attributes.Schema(
+            _('The description of the ipsec site connection.')
+        ),
+        'dpd': attributes.Schema(
+            _('The dead peer detection protocol configuration of the ipsec '
+              'site connection.')
+        ),
+        'ikepolicy_id': attributes.Schema(
+            _('The unique identifier of ike policy associated with the ipsec '
+              'site connection.')
+        ),
+        'initiator': attributes.Schema(
+            _('The initiator of the ipsec site connection.')
+        ),
+        'ipsecpolicy_id': attributes.Schema(
+            _('The unique identifier of ipsec policy associated with the '
+              'ipsec site connection.')
+        ),
+        'mtu': attributes.Schema(
+            _('The maximum transmission unit size (in bytes) of the ipsec '
+              'site connection.')
+        ),
+        'name': attributes.Schema(
+            _('The name of the ipsec site connection.')
+        ),
+        'peer_address': attributes.Schema(
+            _('The remote branch router public IPv4 address or IPv6 address '
+              'or FQDN.')
+        ),
+        'peer_cidrs': attributes.Schema(
+            _('The remote subnet(s) in CIDR format of the ipsec site '
+              'connection.')
+        ),
+        'peer_id': attributes.Schema(
+            _('The remote branch router identity of the ipsec site '
+              'connection.')
+        ),
+        'psk': attributes.Schema(
+            _('The pre-shared key string of the ipsec site connection.')
+        ),
+        'route_mode': attributes.Schema(
+            _('The route mode of the ipsec site connection.')
+        ),
+        'status': attributes.Schema(
+            _('The status of the ipsec site connection.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('The unique identifier of the tenant owning the ipsec site '
+              'connection.')
+        ),
+        'vpnservice_id': attributes.Schema(
+            _('The unique identifier of vpn service associated with the ipsec '
+              'site connection.')
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -395,20 +443,34 @@ class IKEPolicy(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'auth_algorithm': _('The authentication hash algorithm used by the ike'
-                            ' policy.'),
-        'description': _('The description of the ike policy.'),
-        'encryption_algorithm': _('The encryption algorithm used by the ike '
-                                  'policy.'),
-        'ike_version': _('The version of the ike policy.'),
-        'lifetime': _('The safety assessment lifetime configuration for the '
-                      'ike policy.'),
-        'name': _('The name of the ike policy.'),
-        'pfs': _('The perfect forward secrecy of the ike policy.'),
-        'phase1_negotiation_mode': _('The negotiation mode of the ike '
-                                     'policy.'),
-        'tenant_id': _('The unique identifier of the tenant owning the ike '
-                       'policy.'),
+        'auth_algorithm': attributes.Schema(
+            _('The authentication hash algorithm used by the ike policy.')
+        ),
+        'description': attributes.Schema(
+            _('The description of the ike policy.')
+        ),
+        'encryption_algorithm': attributes.Schema(
+            _('The encryption algorithm used by the ike policy.')
+        ),
+        'ike_version': attributes.Schema(
+            _('The version of the ike policy.')
+        ),
+        'lifetime': attributes.Schema(
+            _('The safety assessment lifetime configuration for the ike '
+              'policy.')
+        ),
+        'name': attributes.Schema(
+            _('The name of the ike policy.')
+        ),
+        'pfs': attributes.Schema(
+            _('The perfect forward secrecy of the ike policy.')
+        ),
+        'phase1_negotiation_mode': attributes.Schema(
+            _('The negotiation mode of the ike policy.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('The unique identifier of the tenant owning the ike policy.')
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -535,19 +597,34 @@ class IPsecPolicy(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'auth_algorithm': _('The authentication hash algorithm of the ipsec '
-                            'policy.'),
-        'description': _('The description of the ipsec policy.'),
-        'encapsulation_mode': _('The encapsulation mode of the ipsec policy.'),
-        'encryption_algorithm': _('The encryption algorithm of the ipsec '
-                                  'policy.'),
-        'lifetime': _('The safety assessment lifetime configuration of the '
-                      'ipsec policy.'),
-        'name': _('The name of the ipsec policy.'),
-        'pfs': _('The perfect forward secrecy of the ipsec policy.'),
-        'tenant_id': _('The unique identifier of the tenant owning the '
-                       'ipsec policy.'),
-        'transform_protocol': _('The transform protocol of the ipsec policy.')
+        'auth_algorithm': attributes.Schema(
+            _('The authentication hash algorithm of the ipsec policy.')
+        ),
+        'description': attributes.Schema(
+            _('The description of the ipsec policy.')
+        ),
+        'encapsulation_mode': attributes.Schema(
+            _('The encapsulation mode of the ipsec policy.')
+        ),
+        'encryption_algorithm': attributes.Schema(
+            _('The encryption algorithm of the ipsec policy.')
+        ),
+        'lifetime': attributes.Schema(
+            _('The safety assessment lifetime configuration of the ipsec '
+              'policy.')
+        ),
+        'name': attributes.Schema(
+            _('The name of the ipsec policy.')
+        ),
+        'pfs': attributes.Schema(
+            _('The perfect forward secrecy of the ipsec policy.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('The unique identifier of the tenant owning the ipsec policy.')
+        ),
+        'transform_protocol': attributes.Schema(
+            _('The transform protocol of the ipsec policy.')
+        ),
     }
 
     update_allowed_keys = ('Properties',)

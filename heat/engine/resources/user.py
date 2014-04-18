@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -153,8 +154,12 @@ class AccessKey(resource.Resource):
     }
 
     attributes_schema = {
-        'UserName': _('Username associated with the AccessKey.'),
-        'SecretAccessKey': _('Keypair secret key.'),
+        'UserName': attributes.Schema(
+            _('Username associated with the AccessKey.')
+        ),
+        'SecretAccessKey': attributes.Schema(
+            _('Keypair secret key.')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

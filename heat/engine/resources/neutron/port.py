@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
@@ -150,19 +151,43 @@ class Port(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "admin_state_up": _("The administrative state of this port."),
-        "device_id": _("Unique identifier for the device."),
-        "device_owner": _("Name of the network owning the port."),
-        "fixed_ips": _("Fixed IP addresses."),
-        "mac_address": _("MAC address of the port."),
-        "name": _("Friendly name of the port."),
-        "network_id": _("Unique identifier for the network owning the port."),
-        "security_groups": _("A list of security groups for the port."),
-        "status": _("The status of the port."),
-        "tenant_id": _("Tenant owning the port."),
-        "allowed_address_pairs": _("Additional MAC/IP address pairs allowed "
-                                   "to pass through a port."),
-        "show": _("All attributes."),
+        "admin_state_up": attributes.Schema(
+            _("The administrative state of this port.")
+        ),
+        "device_id": attributes.Schema(
+            _("Unique identifier for the device.")
+        ),
+        "device_owner": attributes.Schema(
+            _("Name of the network owning the port.")
+        ),
+        "fixed_ips": attributes.Schema(
+            _("Fixed IP addresses.")
+        ),
+        "mac_address": attributes.Schema(
+            _("MAC address of the port.")
+        ),
+        "name": attributes.Schema(
+            _("Friendly name of the port.")
+        ),
+        "network_id": attributes.Schema(
+            _("Unique identifier for the network owning the port.")
+        ),
+        "security_groups": attributes.Schema(
+            _("A list of security groups for the port.")
+        ),
+        "status": attributes.Schema(
+            _("The status of the port.")
+        ),
+        "tenant_id": attributes.Schema(
+            _("Tenant owning the port.")
+        ),
+        "allowed_address_pairs": attributes.Schema(
+            _("Additional MAC/IP address pairs allowed to pass through "
+              "a port.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     update_allowed_keys = ('Properties',)

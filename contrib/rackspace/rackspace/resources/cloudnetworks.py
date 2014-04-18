@@ -14,6 +14,7 @@
 import netaddr
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -69,8 +70,12 @@ class CloudNetwork(resource.Resource):
     }
 
     attributes_schema = {
-        "cidr": _("The CIDR for an isolated private network."),
-        "label": _("The name of the network.")
+        "cidr": attributes.Schema(
+            _("The CIDR for an isolated private network.")
+        ),
+        "label": attributes.Schema(
+            _("The name of the network.")
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

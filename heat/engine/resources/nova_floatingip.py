@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
@@ -33,8 +34,12 @@ class NovaFloatingIp(resource.Resource):
     }
 
     attributes_schema = {
-        'pool': _('Pool from which floating IP is allocated.'),
-        'ip': _('Allocated floating IP address.')
+        'pool': attributes.Schema(
+            _('Pool from which floating IP is allocated.')
+        ),
+        'ip': attributes.Schema(
+            _('Allocated floating IP address.')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

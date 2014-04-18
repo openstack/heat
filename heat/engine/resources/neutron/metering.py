@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -43,8 +44,12 @@ class MeteringLabel(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': _('Name of the metering label.'),
-        'description': _('Description of the metering label.'),
+        'name': attributes.Schema(
+            _('Name of the metering label.')
+        ),
+        'description': attributes.Schema(
+            _('Description of the metering label.')
+        ),
     }
 
     def handle_create(self):
@@ -111,12 +116,18 @@ class MeteringRule(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'direction': _('The direction in which metering rule is applied.'),
-        'excluded': _('Exclude state for cidr.'),
-        'metering_label_id': _('The metering label ID to associate with '
-                               'this metering rule..'),
-        'remote_ip_prefix': _('CIDR to be associated with this metering '
-                              'rule.'),
+        'direction': attributes.Schema(
+            _('The direction in which metering rule is applied.')
+        ),
+        'excluded': attributes.Schema(
+            _('Exclude state for cidr.')
+        ),
+        'metering_label_id': attributes.Schema(
+            _('The metering label ID to associate with this metering rule.')
+        ),
+        'remote_ip_prefix': attributes.Schema(
+            _('CIDR to be associated with this metering rule.')
+        ),
     }
 
     def handle_create(self):

@@ -299,11 +299,16 @@ class Server(stack_user.StackUser):
     }
 
     attributes_schema = {
-        'show': _('A dict of all server details as returned by the API.'),
-        'addresses': _('A dict of all network addresses with corresponding '
-                       'port_id.'),
-        'networks': _('A dict of assigned network addresses of the form: '
-                      '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
+        'show': attributes.Schema(
+            _('A dict of all server details as returned by the API.')
+        ),
+        'addresses': attributes.Schema(
+            _('A dict of all network addresses with corresponding port_id.')
+        ),
+        'networks': attributes.Schema(
+            _('A dict of assigned network addresses of the form: '
+              '{"public": [ip1, ip2...], "private": [ip3, ip4]}.')
+        ),
         'first_address': attributes.Schema(
             _('Convenience attribute to fetch the first assigned network '
               'address, or an empty string if nothing has been assigned at '
@@ -316,11 +321,17 @@ class Server(stack_user.StackUser):
                           '[<server name>, networks, <network name>, 0]}"')
             )
         ),
-        'instance_name': _('AWS compatible instance name.'),
-        'accessIPv4': _('The manually assigned alternative public IPv4 '
-                        'address of the server.'),
-        'accessIPv6': _('The manually assigned alternative public IPv6 '
-                        'address of the server.'),
+        'instance_name': attributes.Schema(
+            _('AWS compatible instance name.')
+        ),
+        'accessIPv4': attributes.Schema(
+            _('The manually assigned alternative public IPv4 address '
+              'of the server.')
+        ),
+        'accessIPv6': attributes.Schema(
+            _('The manually assigned alternative public IPv6 address '
+              'of the server.')
+        ),
     }
 
     update_allowed_keys = ('Metadata', 'Properties')
