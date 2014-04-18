@@ -60,8 +60,9 @@ class Router(neutron.NeutronResource):
                 ),
                 EXTERNAL_GATEWAY_ENABLE_SNAT: properties.Schema(
                     properties.Schema.BOOLEAN,
-                    _('Enables Source NAT on the router gateway.'),
-                    default=True,
+                    _('Enables Source NAT on the router gateway. NOTE: The '
+                      'default policy setting in Neutron restricts usage of '
+                      'this property to administrative users only.'),
                     update_allowed=True
                 ),
             },
@@ -118,6 +119,8 @@ class Router(neutron.NeutronResource):
                 self.neutron(),
                 'network',
                 gateway.pop(self.EXTERNAL_GATEWAY_NETWORK))
+            if gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT] is None:
+                del gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT]
         return props
 
     def handle_create(self):
