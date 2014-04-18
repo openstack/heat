@@ -389,6 +389,19 @@ class SqlAlchemyTest(HeatTestCase):
         st_db = db_api.stack_get_all(self.ctx)
         self.assertEqual(1, len(st_db))
 
+    def test_stack_get_all_show_deleted(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all(self.ctx)
+        self.assertEqual(3, len(st_db))
+
+        stacks[0].delete()
+        st_db = db_api.stack_get_all(self.ctx)
+        self.assertEqual(2, len(st_db))
+
+        st_db = db_api.stack_get_all(self.ctx, show_deleted=True)
+        self.assertEqual(3, len(st_db))
+
     def test_stack_get_all_with_filters(self):
         self._setup_test_stack('foo', UUID1)
         self._setup_test_stack('bar', UUID2)

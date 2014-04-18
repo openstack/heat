@@ -374,7 +374,8 @@ class EngineService(service.Service):
 
     @request_context
     def list_stacks(self, cnxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None, tenant_safe=True):
+                    sort_dir=None, filters=None, tenant_safe=True,
+                    show_deleted=False):
         """
         The list_stacks method returns attributes of all stacks.  It supports
         pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
@@ -387,9 +388,9 @@ class EngineService(service.Service):
         :param sort_dir: the direction of the sort ('asc' or 'desc')
         :param filters: a dict with attribute:value to filter the list
         :param tenant_safe: if true, scope the request by the current tenant
+        :param show_deleted: if true, show soft-deleted stacks
         :returns: a list of formatted stacks
         """
-
         def format_stack_details(stacks):
             for s in stacks:
                 try:
@@ -403,7 +404,8 @@ class EngineService(service.Service):
                     yield api.format_stack(stack)
 
         stacks = db_api.stack_get_all(cnxt, limit, sort_keys, marker,
-                                      sort_dir, filters, tenant_safe) or []
+                                      sort_dir, filters, tenant_safe,
+                                      show_deleted) or []
         return list(format_stack_details(stacks))
 
     @request_context

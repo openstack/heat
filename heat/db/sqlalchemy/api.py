@@ -341,8 +341,9 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _query_stack_get_all(context, tenant_safe=True):
-    query = soft_delete_aware_query(context, models.Stack).\
+def _query_stack_get_all(context, tenant_safe=True, show_deleted=False):
+    query = soft_delete_aware_query(context, models.Stack,
+                                    show_deleted=show_deleted).\
         filter_by(owner_id=None)
 
     if tenant_safe:
@@ -352,8 +353,10 @@ def _query_stack_get_all(context, tenant_safe=True):
 
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
-                  sort_dir=None, filters=None, tenant_safe=True):
-    query = _query_stack_get_all(context, tenant_safe)
+                  sort_dir=None, filters=None, tenant_safe=True,
+                  show_deleted=False):
+    query = _query_stack_get_all(context, tenant_safe,
+                                 show_deleted=show_deleted)
     return _filter_and_page_query(context, query, limit, sort_keys,
                                   marker, sort_dir, filters).all()
 
