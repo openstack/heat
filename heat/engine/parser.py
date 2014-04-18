@@ -397,6 +397,11 @@ class Stack(collections.Mapping):
             stack.update_and_save({'action': action,
                                    'status': status,
                                    'status_reason': reason})
+            msg = _('Stack %(action)s %(status)s (%(name)s): %(reason)s')
+            logger.info(msg % {'action': action,
+                               'status': status,
+                               'name': self.name,
+                               'reason': reason})
             notification.send(self)
 
     @property
