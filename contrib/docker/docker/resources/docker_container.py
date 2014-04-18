@@ -33,93 +33,105 @@ except ImportError:
 
 class DockerContainer(resource.Resource):
 
+    PROPERTIES = (
+        DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, ATTACH_STDIN,
+        ATTACH_STDOUT, ATTACH_STDERR, PORT_SPECS, PRIVILEGED, TTY,
+        OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS, IMAGE, VOLUMES,
+        VOLUMES_FROM,
+    ) = (
+        'docker_endpoint', 'hostname', 'user', 'memory', 'attach_stdin',
+        'attach_stdout', 'attach_stderr', 'port_specs', 'privileged', 'tty',
+        'open_stdin', 'stdin_once', 'env', 'cmd', 'dns', 'image', 'volumes',
+        'volumes_from',
+    )
+
     properties_schema = {
-        'docker_endpoint': properties.Schema(
+        DOCKER_ENDPOINT: properties.Schema(
             properties.Schema.STRING,
             _('Docker daemon endpoint (by default the local docker daemon '
               'will be used)'),
             default=None
         ),
-        'hostname': properties.Schema(
+        HOSTNAME: properties.Schema(
             properties.Schema.STRING,
             _('Hostname of the container'),
             default=''
         ),
-        'user': properties.Schema(
+        USER: properties.Schema(
             properties.Schema.STRING,
             _('Username or UID'),
             default=''
         ),
-        'memory': properties.Schema(
+        MEMORY: properties.Schema(
             properties.Schema.INTEGER,
             _('Memory limit (Bytes)'),
             default=0
         ),
-        'attach_stdin': properties.Schema(
+        ATTACH_STDIN: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Attach to the the process\' standard input'),
             default=False
         ),
-        'attach_stdout': properties.Schema(
+        ATTACH_STDOUT: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Attach to the process\' standard output'),
             default=True
         ),
-        'attach_stderr': properties.Schema(
+        ATTACH_STDERR: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Attach to the process\' standard error'),
             default=True
         ),
-        'port_specs': properties.Schema(
+        PORT_SPECS: properties.Schema(
             properties.Schema.LIST,
             _('TCP/UDP ports mapping'),
             default=None
         ),
-        'privileged': properties.Schema(
+        PRIVILEGED: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Enable extended privileges'),
             default=False
         ),
-        'tty': properties.Schema(
+        TTY: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Allocate a pseudo-tty'),
             default=False
         ),
-        'open_stdin': properties.Schema(
+        OPEN_STDIN: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Open stdin'),
             default=False
         ),
-        'stdin_once': properties.Schema(
+        STDIN_ONCE: properties.Schema(
             properties.Schema.BOOLEAN,
             _('If true, close stdin after the 1 attached client disconnects'),
             default=False
         ),
-        'env': properties.Schema(
+        ENV: properties.Schema(
             properties.Schema.LIST,
             _('Set environment variables'),
             default=None
         ),
-        'cmd': properties.Schema(
+        CMD: properties.Schema(
             properties.Schema.LIST,
             _('Command to run after spawning the container'),
             default=[]
         ),
-        'dns': properties.Schema(
+        DNS: properties.Schema(
             properties.Schema.LIST,
             _('Set custom dns servers'),
             default=None
         ),
-        'image': properties.Schema(
+        IMAGE: properties.Schema(
             properties.Schema.STRING,
             _('Image name')
         ),
-        'volumes': properties.Schema(
+        VOLUMES: properties.Schema(
             properties.Schema.MAP,
             _('Create a bind mount'),
             default={}
         ),
-        'volumes_from': properties.Schema(
+        VOLUMES_FROM: properties.Schema(
             properties.Schema.STRING,
             _('Mount all specified volumes'),
             default=''
@@ -141,7 +153,7 @@ class DockerContainer(resource.Resource):
     def get_client(self):
         client = None
         if DOCKER_INSTALLED:
-            endpoint = self.properties.get('docker_endpoint')
+            endpoint = self.properties.get(self.DOCKER_ENDPOINT)
             if endpoint:
                 client = docker.Client(endpoint)
             else:
@@ -211,18 +223,18 @@ class DockerContainer(resource.Resource):
 
     def handle_create(self):
         args = {
-            'image': self.properties['image'],
-            'command': self.properties['cmd'],
-            'hostname': self.properties['hostname'],
-            'user': self.properties['user'],
-            'stdin_open': self.properties['open_stdin'],
-            'tty': self.properties['tty'],
-            'mem_limit': self.properties['memory'],
-            'ports': self.properties['port_specs'],
-            'environment': self.properties['env'],
-            'dns': self.properties['dns'],
-            'volumes': self.properties['volumes'],
-            'volumes_from': self.properties['volumes_from'],
+            'image': self.properties[self.IMAGE],
+            'command': self.properties[self.CMD],
+            'hostname': self.properties[self.HOSTNAME],
+            'user': self.properties[self.USER],
+            'stdin_open': self.properties[self.OPEN_STDIN],
+            'tty': self.properties[self.TTY],
+            'mem_limit': self.properties[self.MEMORY],
+            'ports': self.properties[self.PORT_SPECS],
+            'environment': self.properties[self.ENV],
+            'dns': self.properties[self.DNS],
+            'volumes': self.properties[self.VOLUMES],
+            'volumes_from': self.properties[self.VOLUMES_FROM],
         }
         client = self.get_client()
         result = client.create_container(**args)
@@ -230,8 +242,8 @@ class DockerContainer(resource.Resource):
         self.resource_id_set(container_id)
 
         kwargs = {}
-        if self.properties['privileged']:
-            kwargs['privileged'] = True
+        if self.properties[self.PRIVILEGED]:
+            kwargs[self.PRIVILEGED] = True
         client.start(container_id, **kwargs)
         return container_id
 
