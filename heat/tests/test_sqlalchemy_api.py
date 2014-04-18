@@ -82,7 +82,7 @@ class MyResource(Resource):
 
     @my_secret.setter
     def my_secret(self, my_secret):
-        db_api.resource_data_set(self, 'my_secret', my_secret, True)
+        self.data_set('my_secret', my_secret, True)
 
 
 class SqlAlchemyTest(HeatTestCase):
@@ -275,7 +275,7 @@ class SqlAlchemyTest(HeatTestCase):
         self.m.ReplayAll()
         stack.create()
         rsrc = stack['WebServer']
-        db_api.resource_data_set(rsrc, 'test', 'test_data')
+        rsrc.data_set('test', 'test_data')
         self.assertEqual('test_data', db_api.resource_data_get(rsrc, 'test'))
         db_api.resource_data_delete(rsrc, 'test')
         self.assertRaises(exception.NotFound,

@@ -163,7 +163,10 @@ class Resource(object):
             self.status = resource.status
             self.status_reason = resource.status_reason
             self.id = resource.id
-            self.data = resource.data
+            try:
+                self._data = db_api.resource_data_get_all(self, resource.data)
+            except exception.NotFound:
+                self._data = {}
             self.created_time = resource.created_at
             self.updated_time = resource.updated_at
         else:
@@ -176,7 +179,7 @@ class Resource(object):
             self.status = self.COMPLETE
             self.status_reason = ''
             self.id = None
-            self.data = []
+            self._data = {}
             self.created_time = None
             self.updated_time = None
 
@@ -486,7 +489,7 @@ class Resource(object):
         # save the resource data
         if data and isinstance(data, dict):
             for key, value in data.iteritems():
-                db_api.resource_data_set(self, key, value)
+                self.data_set(key, value)
 
         # save the resource metadata
         self.metadata = metadata
@@ -929,3 +932,41 @@ class Resource(object):
             },
             'Outputs': Attributes.as_outputs(resource_name, cls)
         }
+
+    def data(self):
+        '''
+        Resource data for this resource
+
+        Use methods data_set and data_delete to modify the resource data
+        for this resource.
+
+        :returns: a dict representing the resource data for this resource.
+        '''
+        if self._data is None and self.id:
+            try:
+                self._data = db_api.resource_data_get_all(self)
+            except exception.NotFound:
+                pass
+
+        return self._data or {}
+
+    def data_set(self, key, value, redact=False):
+        '''Save resource's key/value pair to database.'''
+        db_api.resource_data_set(self, key, value, redact)
+        # force fetch all resource data from the database again
+        self._data = None
+
+    def data_delete(self, key):
+        '''
+        Remove a resource_data element associated to a resource.
+
+        :returns: True if the key existed to delete
+        '''
+        try:
+            db_api.resource_data_delete(self, key)
+        except exception.NotFound:
+            return False
+        else:
+            # force fetch all resource data from the database again
+            self._data = None
+            return True
