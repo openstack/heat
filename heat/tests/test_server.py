@@ -694,6 +694,15 @@ class ServersTest(HeatTestCase):
             disk_config=None, reservation_id=None,
             files={}, admin_pass='foo')
 
+    def test_check_maximum(self):
+        msg = 'test_check_maximum'
+        self.assertIsNone(servers.Server._check_maximum(1, 1, msg))
+        self.assertIsNone(servers.Server._check_maximum(1000, -1, msg))
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  servers.Server._check_maximum,
+                                  2, 1, msg)
+        self.assertEqual(msg, str(error))
+
     def test_server_validate(self):
         stack_name = 'srv_val'
         (t, stack) = self._setup_test_stack(stack_name)
