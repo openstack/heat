@@ -233,6 +233,14 @@ class LoadBalancer(stack_resource.StackResource):
         'SSLCertificateId', 'PolicyNames',
     )
 
+    ATTRIBUTES = (
+        CANONICAL_HOSTED_ZONE_NAME, CANONICAL_HOSTED_ZONE_NAME_ID, DNS_NAME,
+        SOURCE_SECURITY_GROUP_GROUP_NAME, SOURCE_SECURITY_GROUP_OWNER_ALIAS,
+    ) = (
+        'CanonicalHostedZoneName', 'CanonicalHostedZoneNameID', 'DNSName',
+        'SourceSecurityGroup.GroupName', 'SourceSecurityGroup.OwnerAlias',
+    )
+
     properties_schema = {
         AVAILABILITY_ZONES: properties.Schema(
             properties.Schema.LIST,
@@ -342,22 +350,22 @@ class LoadBalancer(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "CanonicalHostedZoneName": attributes.Schema(
+        CANONICAL_HOSTED_ZONE_NAME: attributes.Schema(
             _("The name of the hosted zone that is associated with the "
               "LoadBalancer.")
         ),
-        "CanonicalHostedZoneNameID": attributes.Schema(
+        CANONICAL_HOSTED_ZONE_NAME_ID: attributes.Schema(
             _("The ID of the hosted zone name that is associated with the "
               "LoadBalancer.")
         ),
-        "DNSName": attributes.Schema(
+        DNS_NAME: attributes.Schema(
             _("The DNS name for the LoadBalancer.")
         ),
-        "SourceSecurityGroup.GroupName": attributes.Schema(
+        SOURCE_SECURITY_GROUP_GROUP_NAME: attributes.Schema(
             _("The security group that you can use as part of your inbound "
               "rules for your LoadBalancer's back-end instances.")
         ),
-        "SourceSecurityGroup.OwnerAlias": attributes.Schema(
+        SOURCE_SECURITY_GROUP_OWNER_ALIAS: attributes.Schema(
             _("Owner of the source security group.")
         ),
     }
@@ -518,7 +526,7 @@ class LoadBalancer(stack_resource.StackResource):
         '''
         We don't really support any of these yet.
         '''
-        if name == 'DNSName':
+        if name == self.DNS_NAME:
             return self.get_output('PublicIp')
         elif name in self.attributes_schema:
             # Not sure if we should return anything for the other attribs

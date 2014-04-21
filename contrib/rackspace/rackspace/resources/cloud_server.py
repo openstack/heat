@@ -58,16 +58,26 @@ class CloudServer(server.Server):
             ),
         }
     )
+
+    NEW_ATTRIBUTES = (
+        DISTRO, PRIVATE_IP_V4, ADMIN_PASS_ATTR,
+    ) = (
+        'distro', 'privateIPv4', 'admin_pass',
+    )
+
+    ATTRIBUTES = copy.deepcopy(server.Server.ATTRIBUTES)
+    ATTRIBUTES += NEW_ATTRIBUTES
+
     attributes_schema = copy.deepcopy(server.Server.attributes_schema)
     attributes_schema.update(
         {
-            'distro': attributes.Schema(
+            DISTRO: attributes.Schema(
                 _('The Linux distribution on the server.')
             ),
-            'privateIPv4': attributes.Schema(
+            PRIVATE_IP_V4: attributes.Schema(
                 _('The private IPv4 address of the server.')
             ),
-            'admin_pass': attributes.Schema(
+            ADMIN_PASS_ATTR: attributes.Schema(
                 _('The administrator password for the server.')
             ),
         }
@@ -203,12 +213,12 @@ class CloudServer(server.Server):
         return True
 
     def _resolve_attribute(self, name):
-        if name == 'distro':
+        if name == self.DISTRO:
             return self.distro
-        if name == 'privateIPv4':
+        if name == self.PRIVATE_IP_V4:
             return nova_utils.get_ip(self.server, 'private', 4)
-        if name == 'admin_pass':
-            return self.data().get(self.ADMIN_PASS, '')
+        if name == self.ADMIN_PASS_ATTR:
+            return self.data().get(self.ADMIN_PASS_ATTR, '')
         return super(CloudServer, self)._resolve_attribute(name)
 
     def handle_create(self):

@@ -132,6 +132,12 @@ class AccessKey(resource.Resource):
         'Serial', 'UserName', 'Status',
     )
 
+    ATTRIBUTES = (
+        USER_NAME, SECRET_ACCESS_KEY,
+    ) = (
+        'UserName', 'SecretAccessKey',
+    )
+
     properties_schema = {
         SERIAL: properties.Schema(
             properties.Schema.INTEGER,
@@ -154,10 +160,10 @@ class AccessKey(resource.Resource):
     }
 
     attributes_schema = {
-        'UserName': attributes.Schema(
+        USER_NAME: attributes.Schema(
             _('Username associated with the AccessKey.')
         ),
-        'SecretAccessKey': attributes.Schema(
+        SECRET_ACCESS_KEY: attributes.Schema(
             _('Keypair secret key.')
         ),
     }
@@ -244,9 +250,9 @@ class AccessKey(resource.Resource):
         return self._secret or '000-000-000'
 
     def _resolve_attribute(self, name):
-        if name == 'UserName':
+        if name == self.USER_NAME:
             return self.properties[self.USER_NAME]
-        elif name == 'SecretAccessKey':
+        elif name == self.SECRET_ACCESS_KEY:
             return self._secret_accesskey()
 
     def _register_access_key(self):

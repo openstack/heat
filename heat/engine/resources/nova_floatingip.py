@@ -25,6 +25,12 @@ logger = logging.getLogger(__name__)
 class NovaFloatingIp(resource.Resource):
     PROPERTIES = (POOL,) = ('pool',)
 
+    ATTRIBUTES = (
+        POOL_ATTR, IP,
+    ) = (
+        'pool', 'ip',
+    )
+
     properties_schema = {
         POOL: properties.Schema(
             properties.Schema.STRING,
@@ -34,10 +40,10 @@ class NovaFloatingIp(resource.Resource):
     }
 
     attributes_schema = {
-        'pool': attributes.Schema(
+        POOL_ATTR: attributes.Schema(
             _('Pool from which floating IP is allocated.')
         ),
-        'ip': attributes.Schema(
+        IP: attributes.Schema(
             _('Allocated floating IP address.')
         ),
     }
@@ -76,8 +82,8 @@ class NovaFloatingIp(resource.Resource):
     def _resolve_attribute(self, key):
         floating_ip = self._get_resource()
         attributes = {
-            'pool': getattr(floating_ip, 'pool', None),
-            'ip': floating_ip.ip
+            self.POOL_ATTR: getattr(floating_ip, self.POOL_ATTR, None),
+            self.IP: floating_ip.ip
         }
         return unicode(attributes[key])
 

@@ -118,6 +118,12 @@ class CloudLoadBalancer(resource.Resource):
         'secureTrafficOnly',
     )
 
+    ATTRIBUTES = (
+        PUBLIC_IP,
+    ) = (
+        'PublicIp',
+    )
+
     _health_monitor_schema = {
         HEALTH_MONITOR_ATTEMPTS_BEFORE_DEACTIVATION: properties.Schema(
             properties.Schema.NUMBER,
@@ -365,7 +371,7 @@ class CloudLoadBalancer(resource.Resource):
     }
 
     attributes_schema = {
-        'PublicIp': attributes.Schema(
+        PUBLIC_IP: attributes.Schema(
             _('Public IP address of the specified instance.')
         ),
     }

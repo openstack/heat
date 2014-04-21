@@ -32,6 +32,14 @@ class SwiftContainer(resource.Resource):
         'X-Account-Meta'
     )
 
+    ATTRIBUTES = (
+        DOMAIN_NAME, WEBSITE_URL, ROOT_URL, OBJECT_COUNT, BYTES_USED,
+        HEAD_CONTAINER,
+    ) = (
+        'DomainName', 'WebsiteURL', 'RootURL', 'ObjectCount', 'BytesUsed',
+        'HeadContainer',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -65,22 +73,22 @@ class SwiftContainer(resource.Resource):
     }
 
     attributes_schema = {
-        'DomainName': attributes.Schema(
+        DOMAIN_NAME: attributes.Schema(
             _('The host from the container URL.')
         ),
-        'WebsiteURL': attributes.Schema(
+        WEBSITE_URL: attributes.Schema(
             _('The URL of the container.')
         ),
-        'RootURL': attributes.Schema(
+        ROOT_URL: attributes.Schema(
             _('The parent URL of the container.')
         ),
-        'ObjectCount': attributes.Schema(
+        OBJECT_COUNT: attributes.Schema(
             _('The number of objects stored in the container.')
         ),
-        'BytesUsed': attributes.Schema(
+        BYTES_USED: attributes.Schema(
             _('The number of bytes stored in the container.')
         ),
-        'HeadContainer': attributes.Schema(
+        HEAD_CONTAINER: attributes.Schema(
             _('A map containing all headers for the container.')
         ),
     }
@@ -147,26 +155,26 @@ class SwiftContainer(resource.Resource):
 
     def FnGetAtt(self, key):
         parsed = list(urlparse.urlparse(self.swift().url))
-        if key == 'DomainName':
+        if key == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
-        elif key == 'WebsiteURL':
+        elif key == self.WEBSITE_URL:
             return '%s://%s%s/%s' % (parsed[0], parsed[1], parsed[2],
                                      self.resource_id)
-        elif key == 'RootURL':
+        elif key == self.ROOT_URL:
             return '%s://%s%s' % (parsed[0], parsed[1], parsed[2])
         elif self.resource_id and key in (
-                'ObjectCount', 'BytesUsed', 'HeadContainer'):
+                self.OBJECT_COUNT, self.BYTES_USED, self.HEAD_CONTAINER):
             try:
                 headers = self.swift().head_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
                 logger.warn(_("Head container failed: %s") % ex)
                 return None
             else:
-                if key == 'ObjectCount':
+                if key == self.OBJECT_COUNT:
                     return headers['x-container-object-count']
-                elif key == 'BytesUsed':
+                elif key == self.BYTES_USED:
                     return headers['x-container-bytes-used']
-                elif key == 'HeadContainer':
+                elif key == self.HEAD_CONTAINER:
                     return headers
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,

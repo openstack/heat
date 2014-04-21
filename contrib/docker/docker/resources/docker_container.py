@@ -46,6 +46,16 @@ class DockerContainer(resource.Resource):
         'volumes_from',
     )
 
+    ATTRIBUTES = (
+        INFO, NETWORK_INFO, NETWORK_IP, NETWORK_GATEWAY,
+        NETWORK_TCP_PORTS, NETWORK_UDP_PORTS, LOGS, LOGS_HEAD,
+        LOGS_TAIL,
+    ) = (
+        'info', 'network_info', 'network_ip', 'network_gateway',
+        'network_tcp_ports', 'network_udp_ports', 'logs', 'logs_head',
+        'logs_tail',
+    )
+
     properties_schema = {
         DOCKER_ENDPOINT: properties.Schema(
             properties.Schema.STRING,
@@ -140,31 +150,31 @@ class DockerContainer(resource.Resource):
     }
 
     attributes_schema = {
-        'info': attributes.Schema(
+        INFO: attributes.Schema(
             _('Container info')
         ),
-        'network_info': attributes.Schema(
+        NETWORK_INFO: attributes.Schema(
             _('Container network info')
         ),
-        'network_ip': attributes.Schema(
+        NETWORK_IP: attributes.Schema(
             _('Container ip address')
         ),
-        'network_gateway': attributes.Schema(
+        NETWORK_GATEWAY: attributes.Schema(
             _('Container ip gateway')
         ),
-        'network_tcp_ports': attributes.Schema(
+        NETWORK_TCP_PORTS: attributes.Schema(
             _('Container TCP ports')
         ),
-        'network_udp_ports': attributes.Schema(
+        NETWORK_UDP_PORTS: attributes.Schema(
             _('Container UDP ports')
         ),
-        'logs': attributes.Schema(
+        LOGS: attributes.Schema(
             _('Container logs')
         ),
-        'logs_head': attributes.Schema(
+        LOGS_HEAD: attributes.Schema(
             _('Container first logs line')
         ),
-        'logs_tail': attributes.Schema(
+        LOGS_TAIL: attributes.Schema(
             _('Container last logs line')
         ),
     }

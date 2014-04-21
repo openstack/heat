@@ -37,6 +37,12 @@ class MarconiQueue(resource.Resource):
         'name', 'metadata',
     )
 
+    ATTRIBUTES = (
+        QUEUE_ID, HREF,
+    ) = (
+        'queue_id', 'href',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -50,10 +56,10 @@ class MarconiQueue(resource.Resource):
     }
 
     attributes_schema = {
-        "queue_id": attributes.Schema(
+        QUEUE_ID: attributes.Schema(
             _("ID of the queue.")
         ),
-        "href": attributes.Schema(
+        HREF: attributes.Schema(
             _("The resource href of the queue.")
         ),
     }
@@ -119,7 +125,7 @@ class MarconiQueue(resource.Resource):
             return '%s/queues/%s' % (api_endpoint, queue_name)
 
     def _resolve_attribute(self, name):
-        if name == 'queue_id':
+        if name == self.QUEUE_ID:
             return self.resource_id
-        elif name == 'href':
+        elif name == self.HREF:
             return self.href()

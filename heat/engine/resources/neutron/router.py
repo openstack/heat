@@ -39,6 +39,14 @@ class Router(neutron.NeutronResource):
         'network', 'enable_snat',
     )
 
+    ATTRIBUTES = (
+        STATUS, EXTERNAL_GATEWAY_INFO_ATTR, NAME_ATTR, ADMIN_STATE_UP_ATTR,
+        TENANT_ID, SHOW,
+    ) = (
+        'status', 'external_gateway_info', 'name', 'admin_state_up',
+        'tenant_id', 'show',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -87,22 +95,22 @@ class Router(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "status": attributes.Schema(
+        STATUS: attributes.Schema(
             _("The status of the router.")
         ),
-        "external_gateway_info": attributes.Schema(
+        EXTERNAL_GATEWAY_INFO_ATTR: attributes.Schema(
             _("Gateway network for the router.")
         ),
-        "name": attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _("Friendly name of the router.")
         ),
-        "admin_state_up": attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _("Administrative state of the router.")
         ),
-        "tenant_id": attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _("Tenant owning the router.")
         ),
-        "show": attributes.Schema(
+        SHOW: attributes.Schema(
             _("All attributes.")
         ),
     }

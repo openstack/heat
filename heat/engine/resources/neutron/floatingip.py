@@ -31,6 +31,14 @@ class FloatingIP(neutron.NeutronResource):
         'value_specs', 'port_id', 'fixed_ip_address',
     )
 
+    ATTRIBUTES = (
+        ROUTER_ID, TENANT_ID, FLOATING_NETWORK_ID_ATTR, FIXED_IP_ADDRESS_ATTR,
+        FLOATING_IP_ADDRESS_ATTR, PORT_ID_ATTR, SHOW,
+    ) = (
+        'router_id', 'tenant_id', 'floating_network_id', 'fixed_ip_address',
+        'floating_ip_address', 'port_id', 'show',
+    )
+
     properties_schema = {
         FLOATING_NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
@@ -63,26 +71,26 @@ class FloatingIP(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'router_id': attributes.Schema(
+        ROUTER_ID: attributes.Schema(
             _('ID of the router used as gateway, set when associated with a '
               'port.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('The tenant owning this floating IP.')
         ),
-        'floating_network_id': attributes.Schema(
+        FLOATING_NETWORK_ID_ATTR: attributes.Schema(
             _('ID of the network in which this IP is allocated.')
         ),
-        'fixed_ip_address': attributes.Schema(
+        FIXED_IP_ADDRESS_ATTR: attributes.Schema(
             _('IP address of the associated port, if specified.')
         ),
-        'floating_ip_address': attributes.Schema(
+        FLOATING_IP_ADDRESS_ATTR: attributes.Schema(
             _('The allocated address of this IP.')
         ),
-        'port_id': attributes.Schema(
+        PORT_ID_ATTR: attributes.Schema(
             _('ID of the port associated with this IP.')
         ),
-        'show': attributes.Schema(
+        SHOW: attributes.Schema(
             _('All attributes.')
         ),
     }

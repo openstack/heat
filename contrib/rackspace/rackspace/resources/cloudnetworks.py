@@ -52,6 +52,12 @@ class CloudNetwork(resource.Resource):
         "label", "cidr"
     )
 
+    ATTRIBUTES = (
+        CIDR_ATTR, LABEL_ATTR,
+    ) = (
+        'cidr', 'label',
+    )
+
     properties_schema = {
         LABEL: properties.Schema(
             properties.Schema.STRING,
@@ -70,10 +76,10 @@ class CloudNetwork(resource.Resource):
     }
 
     attributes_schema = {
-        "cidr": attributes.Schema(
+        CIDR_ATTR: attributes.Schema(
             _("The CIDR for an isolated private network.")
         ),
-        "label": attributes.Schema(
+        LABEL_ATTR: attributes.Schema(
             _("The name of the network.")
         ),
     }

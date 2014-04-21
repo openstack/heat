@@ -43,6 +43,12 @@ class Restarter(signal_responder.SignalResponder):
         'InstanceId',
     )
 
+    ATTRIBUTES = (
+        ALARM_URL,
+    ) = (
+        'AlarmUrl',
+    )
+
     properties_schema = {
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
@@ -52,7 +58,7 @@ class Restarter(signal_responder.SignalResponder):
     }
 
     attributes_schema = {
-        "AlarmUrl": attributes.Schema(
+        ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm (Heat extension).")
         ),
     }
@@ -104,7 +110,7 @@ class Restarter(signal_responder.SignalResponder):
         heat extension: "AlarmUrl" returns the url to post to the policy
         when there is an alarm.
         '''
-        if name == 'AlarmUrl' and self.resource_id is not None:
+        if name == self.ALARM_URL and self.resource_id is not None:
             return unicode(self._get_signed_url())
 
 
@@ -142,6 +148,14 @@ class Instance(resource.Resource):
         VOLUME_DEVICE, VOLUME_ID,
     ) = (
         'Device', 'VolumeId',
+    )
+
+    ATTRIBUTES = (
+        AVAILABILITY_ZONE_ATTR, PRIVATE_DNS_NAME, PUBLIC_DNS_NAME, PRIVATE_IP,
+        PUBLIC_IP,
+    ) = (
+        'AvailabilityZone', 'PrivateDnsName', 'PublicDnsName', 'PrivateIp',
+        'PublicIp',
     )
 
     properties_schema = {
@@ -299,20 +313,20 @@ class Instance(resource.Resource):
     }
 
     attributes_schema = {
-        'AvailabilityZone': attributes.Schema(
+        AVAILABILITY_ZONE_ATTR: attributes.Schema(
             _('The Availability Zone where the specified instance is '
               'launched.')
         ),
-        'PrivateDnsName': attributes.Schema(
+        PRIVATE_DNS_NAME: attributes.Schema(
             _('Private DNS name of the specified instance.')
         ),
-        'PublicDnsName': attributes.Schema(
+        PUBLIC_DNS_NAME: attributes.Schema(
             _('Public DNS name of the specified instance.')
         ),
-        'PrivateIp': attributes.Schema(
+        PRIVATE_IP: attributes.Schema(
             _('Private IP address of the specified instance.')
         ),
-        'PublicIp': attributes.Schema(
+        PUBLIC_IP: attributes.Schema(
             _('Public IP address of the specified instance.')
         ),
     }
@@ -349,10 +363,9 @@ class Instance(resource.Resource):
 
     def _resolve_attribute(self, name):
         res = None
-        if name == 'AvailabilityZone':
+        if name == self.AVAILABILITY_ZONE_ATTR:
             res = self.properties[self.AVAILABILITY_ZONE]
-        elif name in ['PublicIp', 'PrivateIp', 'PublicDnsName',
-                      'PrivateDnsName']:
+        elif name in self.ATTRIBUTES[1:]:
             res = self._ipaddress()
 
         logger.info(_('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),

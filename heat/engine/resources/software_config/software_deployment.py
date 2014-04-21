@@ -77,7 +77,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         resource.Resource.RESUME,
     )
 
-    DEPLOY_ATTRIBUTES = (
+    ATTRIBUTES = (
         STDOUT, STDERR, STATUS_CODE
     ) = (
         'deploy_stdout', 'deploy_stderr', 'deploy_status_code'
@@ -456,7 +456,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                     status = self.FAILED
                     status_reasons[out_key] = details[out_key]
 
-        for out_key in self.DEPLOY_ATTRIBUTES:
+        for out_key in self.ATTRIBUTES:
             ov[out_key] = details.get(out_key)
 
         if status == self.FAILED:
@@ -481,7 +481,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         # to find out if the key is valid
         sc = self.heat().software_configs.get(self.properties[self.CONFIG])
         output_keys = [output['name'] for output in sc.outputs]
-        if key not in output_keys and key not in self.DEPLOY_ATTRIBUTES:
+        if key not in output_keys and key not in self.ATTRIBUTES:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 
