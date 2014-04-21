@@ -607,7 +607,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                 if capacity > self.properties[self.MAX_SIZE]:
                     new_capacity = self.properties[self.MAX_SIZE]
             if self.DESIRED_CAPACITY in prop_diff:
-                if self.properties[self.DESIRED_CAPACITY]:
+                if self.properties[self.DESIRED_CAPACITY] is not None:
                     new_capacity = self.properties[self.DESIRED_CAPACITY]
 
             if new_capacity is not None:
@@ -724,7 +724,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             msg = _("The size of AutoScalingGroup can not be less than zero")
             raise exception.StackValidationFailed(message=msg)
 
-        if self.properties[self.DESIRED_CAPACITY]:
+        if self.properties[self.DESIRED_CAPACITY] is not None:
             desired_capacity = self.properties[self.DESIRED_CAPACITY]
             if desired_capacity < min_size or desired_capacity > max_size:
                 msg = _("DesiredCapacity must be between MinSize and MaxSize")

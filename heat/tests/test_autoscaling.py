@@ -172,6 +172,17 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
+    def _stub_delete(self, num):
+        self._stub_validate()
+        self.m.StubOutWithMock(instance.Instance, 'handle_delete')
+        self.m.StubOutWithMock(instance.Instance, 'check_delete_complete')
+        task = object()
+        for x in range(num):
+            instance.Instance.handle_delete().AndReturn(task)
+        instance.Instance.check_delete_complete(task).AndReturn(False)
+        instance.Instance.check_delete_complete(
+            task).MultipleTimes().AndReturn(True)
+
     def _stub_lb_reload(self, num, unset=True, nochange=False):
         expected_list = [self.dummy_instance_id] * num
         if unset:
@@ -246,6 +257,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '0'
         properties['MaxSize'] = '0'
+        properties['DesiredCapacity'] = '0'
         stack = utils.parse_stack(t, params=self.params)
         self._stub_lb_reload(0)
         self.m.ReplayAll()
@@ -638,6 +650,37 @@ class AutoScalingTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instance_names()))
         self.assertEqual(2, rsrc.properties['DesiredCapacity'])
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_desired_zero(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        stack = utils.parse_stack(t, params=self.params)
+
+        self._stub_lb_reload(1)
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual(1, len(rsrc.get_instance_names()))
+
+        # Increase min size to 2 via DesiredCapacity, should adjust
+        self._stub_lb_reload(0)
+        self._stub_meta_expected(now, 'ExactCapacity : 0')
+        self._stub_delete(1)
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Properties']['MinSize'] = '0'
+        update_snippet['Properties']['DesiredCapacity'] = '0'
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual(0, len(rsrc.get_instance_names()))
+        self.assertEqual(0, rsrc.properties['DesiredCapacity'])
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -1624,6 +1667,22 @@ class AutoScalingTest(HeatTestCase):
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
         properties['DesiredCapacity'] = '4'
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'WebServerGroup')
+
+        expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
+        self.assertEqual(expected_msg, str(e))
+
+    def test_invalid_desiredcapacity_zero(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        properties['DesiredCapacity'] = '0'
 
         stack = utils.parse_stack(t, params=self.params)
 
