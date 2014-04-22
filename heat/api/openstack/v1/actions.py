@@ -27,7 +27,7 @@ class ActionController(object):
     # Define request scope (must match what is in policy.json)
     REQUEST_SCOPE = 'actions'
 
-    ACTIONS = (SUSPEND, RESUME) = ('suspend', 'resume')
+    ACTIONS = (SUSPEND, RESUME, CHECK) = ('suspend', 'resume', 'check')
 
     def __init__(self, options):
         self.options = options
@@ -54,6 +54,8 @@ class ActionController(object):
             self.rpc_client.stack_suspend(req.context, identity)
         elif ac == self.RESUME:
             self.rpc_client.stack_resume(req.context, identity)
+        elif ac == self.CHECK:
+            self.rpc_client.stack_check(req.context, identity)
         else:
             raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
 
