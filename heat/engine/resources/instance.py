@@ -555,6 +555,12 @@ class Instance(resource.Resource):
                 new_network_ifaces.remove(iface)
                 old_network_ifaces.remove(iface)
 
+    def handle_check(self):
+        server = self.nova().servers.get(self.resource_id)
+        if not self._check_active(server):
+            raise exception.Error(_("Instance is not ACTIVE (was: %s)") %
+                                  server.status.strip())
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata_set(tmpl_diff['Metadata'])
