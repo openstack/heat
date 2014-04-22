@@ -19,6 +19,7 @@ import yaml
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import properties
@@ -103,7 +104,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
-            attributes_schema = {"Foo": "A test attribute"}
+            attributes_schema = {"Foo": attributes.Schema("A test attribute")}
             properties_schema = {
                 "Foo": {"Type": "String"},
                 "AList": {"Type": "List"},
@@ -170,7 +171,7 @@ class ProviderTemplateTest(HeatTestCase):
 
         class DummyResource(object):
             properties_schema = {}
-            attributes_schema = {"Foo": "A test attribute"}
+            attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
         env = environment.Environment()
         resource._register_class('DummyResource', DummyResource)
@@ -200,7 +201,7 @@ class ProviderTemplateTest(HeatTestCase):
 
         class DummyResource(object):
             properties_schema = {}
-            attributes_schema = {"Foo": "A test attribute"}
+            attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
         json_snippet = {
             "Type": "DummyResource",

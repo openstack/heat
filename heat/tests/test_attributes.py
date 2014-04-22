@@ -58,10 +58,10 @@ class AttributeSchemaTest(testtools.TestCase):
         self.assertEqual('Do not use this ever',
                          attrs._attributes['bar_dep'].support_status().message)
 
-    def test_from_attribute_old_schema_format(self):
+    def test_old_attribute_schema_format(self):
         s = 'Test description.'
-        self.assertEqual(type(attributes.Schema(s)),
-                         type(attributes.Schema.from_attribute(s)))
+        self.assertIsInstance(attributes.Schema.from_attribute(s),
+                              attributes.Schema)
         self.assertEqual('Test description.',
                          attributes.Schema.from_attribute(s).description)
 
@@ -75,7 +75,8 @@ class AttributeTest(common.HeatTestCase):
             "Value": '{"Fn::GetAtt": ["test_resource", "test1"]}',
             "Description": "The first test attribute"
         }
-        attr = attributes.Attribute("test1", "The first test attribute")
+        attr = attributes.Attribute(
+            "test1", attributes.Schema("The first test attribute"))
         self.assertEqual(expected, attr.as_output("test_resource"))
 
 
@@ -83,9 +84,9 @@ class AttributesTest(common.HeatTestCase):
     """Test the Attributes class."""
 
     attributes_schema = {
-        "test1": "Test attrib 1",
-        "test2": "Test attrib 2",
-        "test3": "Test attrib 3"
+        "test1": attributes.Schema("Test attrib 1"),
+        "test2": attributes.Schema("Test attrib 2"),
+        "test3": attributes.Schema("Test attrib 3"),
     }
 
     def setUp(self):
@@ -137,9 +138,9 @@ class AttributesTest(common.HeatTestCase):
         }
         MyTestResourceClass = self.m.CreateMockAnything()
         MyTestResourceClass.attributes_schema = {
-            "test1": "Test attrib 1",
-            "test2": "Test attrib 2",
-            "test3": "Test attrib 3"
+            "test1": attributes.Schema("Test attrib 1"),
+            "test2": attributes.Schema("Test attrib 2"),
+            "test3": attributes.Schema("Test attrib 3"),
         }
         self.m.ReplayAll()
         self.assertEqual(
