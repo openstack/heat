@@ -273,8 +273,8 @@ class Server(stack_user.StackUser):
             _('A UUID for the set of servers being requested.')
         ),
         CONFIG_DRIVE: properties.Schema(
-            properties.Schema.STRING,
-            _('value for config drive either boolean, or volume-id.')
+            properties.Schema.BOOLEAN,
+            _('If True, enable config drive on the server.')
         ),
         DISK_CONFIG: properties.Schema(
             properties.Schema.STRING,
