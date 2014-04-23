@@ -1399,7 +1399,14 @@ class DBAPIResourceDataTest(HeatTestCase):
         val = db_api.resource_data_get(self.resource, 'encryped_resource_key')
         self.assertEqual('test_value', val)
 
+        # get all by querying for data
         vals = db_api.resource_data_get_all(self.resource)
+        self.assertEqual(2, len(vals))
+        self.assertEqual('foo', vals.get('test_resource_key'))
+        self.assertEqual('test_value', vals.get('encryped_resource_key'))
+
+        # get all by using associated resource data
+        vals = db_api.resource_data_get_all(None, self.resource.data)
         self.assertEqual(2, len(vals))
         self.assertEqual('foo', vals.get('test_resource_key'))
         self.assertEqual('test_value', vals.get('encryped_resource_key'))
