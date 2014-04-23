@@ -71,6 +71,16 @@ resources:
 ''')
 
 
+class DummyClass(object):
+    metadata = None
+
+    def metadata_get(self):
+        return self.metadata
+
+    def metadata_set(self, metadata):
+        self.metadata = metadata
+
+
 class HOTemplateTest(HeatTestCase):
     """Test processing of HOT templates."""
 
@@ -545,10 +555,8 @@ class HOTemplateTest(HeatTestCase):
         deletion_policy_snippet = {'resource_facade': 'deletion_policy'}
         update_policy_snippet = {'resource_facade': 'update_policy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = {'DeletionPolicy': 'Retain',
                              'UpdatePolicy': {"blarg": "wibble"}}
         parent_resource.stack = parser.Stack(utils.dummy_context(),
@@ -567,10 +575,8 @@ class HOTemplateTest(HeatTestCase):
     def test_resource_facade_function(self):
         deletion_policy_snippet = {'resource_facade': 'deletion_policy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
                                              parser.Template({}))
@@ -599,10 +605,8 @@ class HOTemplateTest(HeatTestCase):
     def test_resource_facade_missing_deletion_policy(self):
         snippet = {'resource_facade': 'deletion_policy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = {}
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
@@ -733,7 +737,8 @@ class StackTest(test_parser.StackTest):
                          (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'xyz')
 
-        self.assertEqual(self.stack['AResource'].metadata['Bar'], stack_id)
+        self.assertEqual(
+            self.stack['AResource'].metadata_get()['Bar'], stack_id)
 
     def test_load_param_id(self):
         tmpl = parser.Template(hot_tpl_empty)

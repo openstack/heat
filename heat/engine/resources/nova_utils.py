@@ -236,7 +236,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         attachments.append((read_cloudinit_file('loguserdata.py'),
                            'loguserdata.py', 'x-shellscript'))
 
-    metadata = resource.metadata
+    metadata = resource.metadata_get()
     if metadata:
         attachments.append((json.dumps(metadata),
                             'cfn-init-data', 'x-cfninitdata'))

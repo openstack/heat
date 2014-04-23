@@ -455,7 +455,7 @@ class WaitConditionHandleTest(HeatTestCase):
         handle_metadata = {u'123': {u'Data': u'foo',
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
-        self.assertEqual(handle_metadata, rsrc.metadata)
+        self.assertEqual(handle_metadata, rsrc.metadata_get())
         self.m.VerifyAll()
 
     def test_metadata_update_invalid(self):

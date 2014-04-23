@@ -21,7 +21,7 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine.resource import Metadata
+from heat.engine import resource
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
@@ -106,7 +106,7 @@ class LoadBalancerTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.m.StubOutWithMock(Metadata, '__set__')
+        self.m.StubOutWithMock(resource.Resource, 'metadata_set')
         self.fkc = test_fakes.FakeKeystoneClient(
             username='test_stack.CfnLBUser')
 
@@ -141,8 +141,7 @@ class LoadBalancerTest(HeatTestCase):
             security_groups=None, availability_zone=None).AndReturn(
                 self.fc.servers.list()[1])
         if stub_meta:
-            Metadata.__set__(mox.IgnoreArg(),
-                             mox.IgnoreArg()).AndReturn(None)
+            resource.Resource.metadata_set(mox.IgnoreArg()).AndReturn(None)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])

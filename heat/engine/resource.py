@@ -65,30 +65,6 @@ class UpdateReplace(Exception):
         super(Exception, self).__init__(msg)
 
 
-class Metadata(object):
-    '''
-    A descriptor for accessing the metadata of a resource while ensuring the
-    most up-to-date data is always obtained from the database.
-    '''
-
-    def __get__(self, resource, resource_class):
-        '''Return the metadata for the owning resource.'''
-        if resource is None:
-            return None
-        if resource.id is None:
-            return resource.parsed_template('Metadata')
-        rs = db_api.resource_get(resource.stack.context, resource.id)
-        rs.refresh(attrs=['rsrc_metadata'])
-        return rs.rsrc_metadata
-
-    def __set__(self, resource, metadata):
-        '''Update the metadata for the owning resource.'''
-        if resource.id is None:
-            raise exception.ResourceNotAvailable(resource_name=resource.name)
-        rs = db_api.resource_get(resource.stack.context, resource.id)
-        rs.update_and_save({'rsrc_metadata': metadata})
-
-
 class Resource(object):
     ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
                ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
@@ -99,8 +75,6 @@ class Resource(object):
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
-
-    _metadata = Metadata()
 
     # Resource implementation set this to the subset of template keys
     # which are supported for handle_update, used by update_template_diff
@@ -207,13 +181,18 @@ class Resource(object):
             return result
         return not result
 
-    @property
-    def metadata(self):
-        return self._metadata
+    def metadata_get(self):
+        if self.id is None:
+            return self.parsed_template('Metadata')
+        rs = db_api.resource_get(self.stack.context, self.id)
+        rs.refresh(attrs=['rsrc_metadata'])
+        return rs.rsrc_metadata
 
-    @metadata.setter
-    def metadata(self, metadata):
-        self._metadata = metadata
+    def metadata_set(self, metadata):
+        if self.id is None:
+            raise exception.ResourceNotAvailable(resource_name=self.name)
+        rs = db_api.resource_get(self.stack.context, self.id)
+        rs.update_and_save({'rsrc_metadata': metadata})
 
     def type(self):
         return self.t['Type']
@@ -465,7 +444,7 @@ class Resource(object):
             'type': self.type(),
             'action': self.action,
             'status': self.status,
-            'metadata': self.metadata,
+            'metadata': self.metadata_get(),
             'resource_data': self.data()
         }
 
@@ -493,7 +472,7 @@ class Resource(object):
                 self.data_set(key, value)
 
         # save the resource metadata
-        self.metadata = metadata
+        self.metadata_set(metadata)
 
     def _get_resource_info(self, resource_data):
         if not resource_data:
@@ -743,7 +722,7 @@ class Resource(object):
 
     def _store(self):
         '''Create the resource in the database.'''
-        metadata = self.metadata
+        metadata = self.metadata_get()
         try:
             rs = {'action': self.action,
                   'status': self.status,

@@ -179,14 +179,16 @@ class MetadataRefreshTest(HeatTestCase):
 
         s1 = self.stack['S1']
         s2 = self.stack['S2']
-        files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
+        files = s1.metadata_get()[
+            'AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
         self.assertEqual((s2.CREATE, s2.COMPLETE), s2.state)
         self.assertEqual('s2-ip=1.2.3.5', cont)
 
         s1.metadata_update()
         s2.metadata_update()
-        files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
+        files = s1.metadata_get()[
+            'AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
         self.assertEqual('s2-ip=10.0.0.5', cont)
 
@@ -259,7 +261,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         def check_empty(sleep_time):
             self.assertEqual('{}', watch.FnGetAtt('Data'))
-            self.assertIsNone(inst.metadata['test'])
+            self.assertIsNone(inst.metadata_get()['test'])
 
         def update_metadata(id, data, reason):
             self.man.metadata_update(utils.dummy_context(),
@@ -283,12 +285,12 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
                          self.stack.state)
 
         self.assertEqual('{"123": "foo"}', watch.FnGetAtt('Data'))
-        self.assertEqual('{"123": "foo"}', inst.metadata['test'])
+        self.assertEqual('{"123": "foo"}', inst.metadata_get()['test'])
 
         update_metadata('456', 'blarg', 'wibble')
         self.assertEqual('{"123": "foo", "456": "blarg"}',
                          watch.FnGetAtt('Data'))
         self.assertEqual('{"123": "foo", "456": "blarg"}',
-                         inst.metadata['test'])
+                         inst.metadata_get()['test'])
 
         self.m.VerifyAll()

@@ -121,7 +121,7 @@ Resources:
         self.assertIsNone(rsrc.validate())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())
-        self.assertEqual(metadata, dict(rsrc.metadata))
+        self.assertEqual(metadata, dict(rsrc.metadata_get()))
 
     def test_security_group(self):
 

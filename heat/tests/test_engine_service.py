@@ -2221,7 +2221,7 @@ class StackServiceTest(HeatTestCase):
     @stack_context('service_metadata_test_stack')
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        pre_update_meta = self.stack['WebServer'].metadata
+        pre_update_meta = self.stack['WebServer'].metadata_get()
 
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = db_api.stack_get(self.ctx, self.stack.id)

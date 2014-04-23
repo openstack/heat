@@ -530,7 +530,7 @@ class ResourceFacade(function.Function):
         attr = function.resolve(self.args)
 
         if attr == self.METADATA:
-            return self.stack.parent_resource.metadata
+            return self.stack.parent_resource.metadata_get()
         elif attr == self.UPDATE_POLICY:
             up = self.stack.parent_resource.t.get('UpdatePolicy', {})
             return function.resolve(up)

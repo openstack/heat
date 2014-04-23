@@ -350,7 +350,7 @@ class Pool(neutron.NeutronResource):
         vip_arguments['pool_id'] = pool['id']
         vip = client.create_vip({'vip': vip_arguments})['vip']
 
-        self.metadata = {'vip': vip['id']}
+        self.metadata_set({'vip': vip['id']})
 
     def _show_resource(self):
         return self.neutron().show_pool(self.resource_id)['pool']
@@ -361,7 +361,7 @@ class Pool(neutron.NeutronResource):
             return False
         elif attributes['status'] == 'ACTIVE':
             vip_attributes = self.neutron().show_vip(
-                self.metadata['vip'])['vip']
+                self.metadata_get()['vip'])['vip']
             if vip_attributes['status'] == 'PENDING_CREATE':
                 return False
             elif vip_attributes['status'] == 'ACTIVE':
@@ -395,7 +395,7 @@ class Pool(neutron.NeutronResource):
 
     def _resolve_attribute(self, name):
         if name == 'vip':
-            return self.neutron().show_vip(self.metadata['vip'])['vip']
+            return self.neutron().show_vip(self.metadata_get()['vip'])['vip']
         return super(Pool, self)._resolve_attribute(name)
 
     def _confirm_vip_delete(self):
@@ -403,16 +403,16 @@ class Pool(neutron.NeutronResource):
         while True:
             try:
                 yield
-                client.show_vip(self.metadata['vip'])
+                client.show_vip(self.metadata_get()['vip'])
             except NeutronClientException as ex:
                 self._handle_not_found_exception(ex)
                 break
 
     def handle_delete(self):
         checkers = []
-        if self.metadata:
+        if self.metadata_get():
             try:
-                self.neutron().delete_vip(self.metadata['vip'])
+                self.neutron().delete_vip(self.metadata_get()['vip'])
             except NeutronClientException as ex:
                 self._handle_not_found_exception(ex)
             else:
