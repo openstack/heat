@@ -332,10 +332,7 @@ class VolumeTest(HeatTestCase):
         self._mock_create_server_volume_script(fva)
 
         # delete script
-        fva = FakeVolume('i-use', 'available')
-        self.m.StubOutWithMock(fva, 'get')
-        fva.get().MultipleTimes()
-        fva.status = "in-use"
+        fva = FakeVolume('in-use', 'available')
 
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
@@ -344,18 +341,6 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').AndRaise(
                 clients.novaclient.exceptions.BadRequest('Already detached'))
-
-        self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('Not found'))
-
-        self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('Not found'))
-
-        self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(
-                clients.cinderclient.exceptions.NotFound('Not found'))
 
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)

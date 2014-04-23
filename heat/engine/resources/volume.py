@@ -280,17 +280,10 @@ class VolumeDetachTask(object):
         yield
 
         try:
-            vol.get()
             while vol.status in ('in-use', 'detaching'):
                 logger.debug(_('%s - volume still in use') % str(self))
                 yield
 
-                try:
-                    server_api.delete_server_volume(self.server_id,
-                                                    self.attachment_id)
-                except (clients.novaclient.exceptions.BadRequest,
-                        clients.novaclient.exceptions.NotFound):
-                    pass
                 vol.get()
 
             logger.info(_('%(name)s - status: %(status)s') % {
