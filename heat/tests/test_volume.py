@@ -825,7 +825,7 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_volume_size_constraint(self):
+    def test_volume_size_constraint_os(self):
         t = template_format.parse(volume_template)
         t['Resources']['DataVolume']['Properties'] = {'size': '0'}
         stack = utils.parse_stack(t)
@@ -835,6 +835,18 @@ class VolumeTest(HeatTestCase):
                                   rsrc.validate)
         self.assertEqual(
             "Property error : DataVolume: size 0 is out of "
+            "range (min: 1, max: None)", str(error))
+
+    def test_volume_size_constraint_aws(self):
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['Size'] = '0'
+        stack = utils.parse_stack(t)
+        rsrc = vol.Volume(
+            'DataVolume', t['Resources']['DataVolume'], stack)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  rsrc.validate)
+        self.assertEqual(
+            "Property error : DataVolume: Size 0 is out of "
             "range (min: 1, max: None)", str(error))
 
     def test_cinder_create_from_image(self):

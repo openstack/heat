@@ -51,7 +51,10 @@ class Volume(resource.Resource):
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
-            _('The size of the volume in GB.')
+            _('The size of the volume in GB.'),
+            constraints=[
+                constraints.Range(min=1),
+            ]
         ),
         BACKUP_ID: properties.Schema(
             properties.Schema.STRING,
