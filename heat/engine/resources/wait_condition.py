@@ -72,7 +72,7 @@ class WaitConditionHandle(signal_responder.SignalResponder):
             return
 
         if self._metadata_format_ok(new_metadata):
-            rsrc_metadata = self.metadata_get()
+            rsrc_metadata = self.metadata_get(refresh=True)
             if new_metadata['UniqueId'] in rsrc_metadata:
                 logger.warning(_("Overwriting Metadata item for UniqueId %s!")
                                % new_metadata['UniqueId'])
@@ -89,14 +89,14 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         '''
         Return a list of the Status values for the handle signals
         '''
-        return [v['Status'] for v in self.metadata_get().values()]
+        return [v['Status'] for v in self.metadata_get(refresh=True).values()]
 
     def get_status_reason(self, status):
         '''
         Return a list of reasons associated with a particular status
         '''
         return [v['Reason']
-                for v in self.metadata_get().values()
+                for v in self.metadata_get(refresh=True).values()
                 if v['Status'] == status]
 
 
@@ -274,7 +274,7 @@ class WaitCondition(resource.Resource):
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]
         if key == 'Data':
-            meta = handle.metadata_get()
+            meta = handle.metadata_get(refresh=True)
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])
             logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %
