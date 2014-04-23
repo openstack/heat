@@ -208,24 +208,15 @@ class VolumeAttachTask(object):
         """Return a co-routine which runs the task."""
         logger.debug(str(self))
 
-        try:
-            vol = self.clients.cinder().volumes.get(self.volume_id)
-            vol.attach(self.server_id, self.device)
-        except clients.cinderclient.exceptions.NotFound:
-            raise exception.Error(_('%s - volume not found') % self.volume_id)
-        except clients.cinderclient.exceptions.BadRequest:
-            msg = _('Failed to attach %(vol)s to server %(srv)s') % {
-                'vol': self.volume_id, 'srv': self.server_id}
-            raise exception.Error(msg)
-
-        # NOTE(pshchelo): this relies on current behaviour of
-        # volume attachments in cinder:
-        # - only one attachment per volume
-        # - volume attachment id is the same as volume id it describes
-        self.attachment_id = vol.id
+        va = self.clients.nova().volumes.create_server_volume(
+            server_id=self.server_id,
+            volume_id=self.volume_id,
+            device=self.device)
+        self.attachment_id = va.id
         yield
 
-        while vol.status in ('available', 'attaching'):
+        vol = self.clients.cinder().volumes.get(self.volume_id)
+        while vol.status == 'available' or vol.status == 'attaching':
             logger.debug(_('%(name)s - volume status: %(status)s') % {
                          'name': str(self), 'status': vol.status})
             yield
@@ -240,40 +231,54 @@ class VolumeAttachTask(object):
 class VolumeDetachTask(object):
     """A task for detaching a volume from a Nova server."""
 
-    def __init__(self, stack, server_id, volume_id):
+    def __init__(self, stack, server_id, attachment_id):
         """
         Initialise with the stack (for obtaining the clients), and the IDs of
         the server and volume.
         """
         self.clients = stack.clients
         self.server_id = server_id
-        self.volume_id = volume_id
+        self.attachment_id = attachment_id
 
     def __str__(self):
         """Return a human-readable string description of the task."""
-        return _('Removing volume %(vol)s from Instance %(srv)s') % {
-            'vol': self.volume_id, 'srv': self.server_id}
+        return _('Removing attachment %(att)s from Instance %(srv)s') % {
+            'att': self.attachment_id, 'srv': self.server_id}
 
     def __repr__(self):
         """Return a brief string description of the task."""
         return '%s(%s -/> %s)' % (type(self).__name__,
-                                  self.volume_id,
+                                  self.attachment_id,
                                   self.server_id)
 
     def __call__(self):
         """Return a co-routine which runs the task."""
         logger.debug(str(self))
 
-        try:
-            vol = self.clients.cinder().volumes.get(self.volume_id)
-            attached_to = [att['server_id'] for att in vol.attachments]
-            if self.server_id not in attached_to:
-                msg = _('Volume %(vol)s is not attached to server %(srv)s') % {
-                    'vol': self.volume_id, 'srv': self.server_id}
-                raise exception.Error(msg)
+        server_api = self.clients.nova().volumes
 
-            vol.detach()
-            yield
+        # get reference to the volume while it is attached
+        try:
+            nova_vol = server_api.get_server_volume(self.server_id,
+                                                    self.attachment_id)
+            vol = self.clients.cinder().volumes.get(nova_vol.id)
+        except (clients.cinderclient.exceptions.NotFound,
+                clients.novaclient.exceptions.BadRequest,
+                clients.novaclient.exceptions.NotFound):
+            logger.warning(_('%s - volume not found') % str(self))
+            return
+
+        # detach the volume using volume_attachment
+        try:
+            server_api.delete_server_volume(self.server_id, self.attachment_id)
+        except (clients.novaclient.exceptions.BadRequest,
+                clients.novaclient.exceptions.NotFound) as e:
+            logger.warning(_('%(res)s - %(err)s') % {'res': str(self),
+                                                     'err': e})
+
+        yield
+
+        try:
             while vol.status in ('in-use', 'detaching'):
                 logger.debug(_('%s - volume still in use') % str(self))
                 yield
@@ -286,31 +291,25 @@ class VolumeDetachTask(object):
 
         except clients.cinderclient.exceptions.NotFound:
             logger.warning(_('%s - volume not found') % str(self))
-            return
-        except clients.cinderclient.exceptions.BadRequest:
-            msg = _('Failed to detach %(vol)s from server %(srv)s') % {
-                'vol': self.volume_id, 'srv': self.server_id}
-            raise exception.Error(msg)
 
         # The next check is needed for immediate reattachment when updating:
         # there might be some time between cinder marking volume as 'available'
         # and nova removing attachment from its own objects, so we
         # check that nova already knows that the volume is detached
-        server_api = self.clients.nova().volumes
-
-        def server_has_attachment(server_id, volume_id):
+        def server_has_attachment(server_id, attachment_id):
             try:
-                server_api.get_server_volume(server_id, volume_id)
+                server_api.get_server_volume(server_id, attachment_id)
             except clients.novaclient.exceptions.NotFound:
                 return False
             return True
 
-        while server_has_attachment(self.server_id, self.volume_id):
-            logger.info(_("Server %(srv)s still has %(vol)s attached.") %
-                        {'vol': self.volume_id, 'srv': self.server_id})
+        while server_has_attachment(self.server_id, self.attachment_id):
+            logger.info(_("Server %(srv)s still has attachment %(att)s.") %
+                        {'att': self.attachment_id, 'srv': self.server_id})
             yield
 
-        logger.info(_('%s - complete') % str(self))
+        logger.info(_("Volume %(vol)s is detached from server %(srv)s") %
+                    {'vol': vol.id, 'srv': self.server_id})
 
 
 class VolumeAttachment(resource.Resource):
@@ -367,23 +366,29 @@ class VolumeAttachment(resource.Resource):
 
     def handle_delete(self):
         server_id = self.properties[self.INSTANCE_ID]
-        volume_id = self.properties[self.VOLUME_ID]
-        detach_task = VolumeDetachTask(self.stack, server_id, volume_id)
+        detach_task = VolumeDetachTask(self.stack, server_id, self.resource_id)
         scheduler.TaskRunner(detach_task)()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         checkers = []
         if prop_diff:
+            # Even though some combinations of changed properties
+            # could be updated in UpdateReplace manner,
+            # we still first detach the old resource so that
+            # self.resource_id is not replaced prematurely
             volume_id = self.properties.get(self.VOLUME_ID)
-            server_id = self.properties.get(self.INSTANCE_ID)
-            detach_task = VolumeDetachTask(self.stack, server_id, volume_id)
-            checkers.append(scheduler.TaskRunner(detach_task))
-
             if self.VOLUME_ID in prop_diff:
                 volume_id = prop_diff.get(self.VOLUME_ID)
+
             device = self.properties.get(self.DEVICE)
             if self.DEVICE in prop_diff:
                 device = prop_diff.get(self.DEVICE)
+
+            server_id = self.properties.get(self.INSTANCE_ID)
+            detach_task = VolumeDetachTask(self.stack, server_id,
+                                           self.resource_id)
+            checkers.append(scheduler.TaskRunner(detach_task))
+
             if self.INSTANCE_ID in prop_diff:
                 server_id = prop_diff.get(self.INSTANCE_ID)
             attach_task = VolumeAttachTask(self.stack, server_id,
