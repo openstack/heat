@@ -242,19 +242,10 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
 
     @utils.stack_delete_after
-    def test_set_deletion_policy(self):
+    def test_prepare_abandon(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
-        self.stack = self.parent_resource.nested()
-        self.parent_resource.set_deletion_policy(resource.RETAIN)
-        for res in self.stack.resources.values():
-            self.assertEqual(resource.RETAIN, res.t['DeletionPolicy'])
-
-    @utils.stack_delete_after
-    def test_get_abandon_data(self):
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-        ret = self.parent_resource.get_abandon_data()
+        ret = self.parent_resource.prepare_abandon()
         # check abandoned data contains all the necessary information.
         # (no need to check stack/resource IDs, because they are
         # randomly generated uuids)

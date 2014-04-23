@@ -149,6 +149,8 @@ class Resource(object):
                                      self.attributes_schema,
                                      self._resolve_attribute)
 
+        self.abandon_in_progress = False
+
         if stack.id:
             resource = db_api.resource_get_by_name_and_stack(self.context,
                                                              name, stack.id)
@@ -451,10 +453,8 @@ class Resource(object):
         self.reparse()
         return self._do_action(action, self.properties.validate)
 
-    def set_deletion_policy(self, policy):
-        self.t['DeletionPolicy'] = policy
-
-    def get_abandon_data(self):
+    def prepare_abandon(self):
+        self.abandon_in_progress = True
         return {
             'name': self.name,
             'resource_id': self.resource_id,
@@ -673,7 +673,10 @@ class Resource(object):
         try:
             self.state_set(action, self.IN_PROGRESS)
 
-            deletion_policy = self.t.get('DeletionPolicy', DELETE)
+            if self.abandon_in_progress:
+                deletion_policy = RETAIN
+            else:
+                deletion_policy = self.t.get('DeletionPolicy', DELETE)
             handle_data = None
             if deletion_policy == DELETE:
                 if callable(getattr(self, 'handle_delete', None)):

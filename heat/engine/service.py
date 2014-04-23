@@ -748,9 +748,7 @@ class EngineService(service.Service):
 
         try:
             # Get stack details before deleting it.
-            stack_info = stack.get_abandon_data()
-            # Set deletion policy to 'Retain' for all resources in the stack.
-            stack.set_deletion_policy(resource.RETAIN)
+            stack_info = stack.prepare_abandon()
         except:
             with excutils.save_and_reraise_exception():
                 lock.release(stack.id)

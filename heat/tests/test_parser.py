@@ -1063,28 +1063,13 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'stack_details_test',
                                   parser.Template(tpl))
         self.stack.store()
-        info = self.stack.get_abandon_data()
+        info = self.stack.prepare_abandon()
         self.assertIsNone(info['action'])
         self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
         self.assertEqual(json.loads(resources), info['resources'])
         self.assertIsNone(info['status'])
         self.assertEqual(tpl, info['template'])
-
-    @utils.stack_delete_after
-    def test_set_stack_res_deletion_policy(self):
-        tpl = {'Resources':
-               {'A': {'Type': 'GenericResourceType'},
-                'B': {'Type': 'GenericResourceType'}}}
-        stack = parser.Stack(self.ctx,
-                             'stack_details_test',
-                             parser.Template(tpl))
-        stack.store()
-        stack.set_deletion_policy(resource.RETAIN)
-        self.assertEqual(resource.RETAIN,
-                         stack.resources['A'].t['DeletionPolicy'])
-        self.assertEqual(resource.RETAIN,
-                         stack.resources['B'].t['DeletionPolicy'])
 
     @utils.stack_delete_after
     def test_set_param_id(self):
