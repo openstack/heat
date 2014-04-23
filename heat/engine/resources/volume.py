@@ -50,7 +50,7 @@ class Volume(resource.Resource):
             required=True
         ),
         SIZE: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The size of the volume in GB.')
         ),
         BACKUP_ID: properties.Schema(
@@ -423,7 +423,7 @@ class CinderVolume(Volume):
             _('The availability zone in which the volume will be created.')
         ),
         SIZE: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The size of the volume in GB.'),
             constraints=[
                 constraints.Range(min=1),
