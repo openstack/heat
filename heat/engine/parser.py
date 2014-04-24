@@ -120,6 +120,12 @@ class Stack(collections.Mapping):
                                    template_resources.items())
         return self._resources
 
+    def db_resource_get(self, name):
+        if not self.id:
+            return None
+        return db_api.resource_get_by_name_and_stack(self.context,
+                                                     name, self.id)
+
     @property
     def dependencies(self):
         if self._dependencies is None:
