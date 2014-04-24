@@ -30,11 +30,19 @@ def format_resource(req, res, keys=[]):
 
         if key == engine_api.RES_ID:
             identity = identifier.ResourceIdentifier(**value)
-            yield ('links', [util.make_link(req, identity),
-                             util.make_link(req, identity.stack(), 'stack')])
+            links = [util.make_link(req, identity),
+                     util.make_link(req, identity.stack(), 'stack')]
+
+            nested_id = res.get(engine_api.RES_NESTED_STACK_ID)
+            if nested_id:
+                nested_identity = identifier.HeatIdentifier(**nested_id)
+                links.append(util.make_link(req, nested_identity, 'nested'))
+
+            yield ('links', links)
         elif (key == engine_api.RES_STACK_NAME or
               key == engine_api.RES_STACK_ID or
-              key == engine_api.RES_ACTION):
+              key == engine_api.RES_ACTION or
+              key == engine_api.RES_NESTED_STACK_ID):
             return
         elif (key == engine_api.RES_METADATA):
             return
