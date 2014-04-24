@@ -440,7 +440,7 @@ class Parameters(collections.Mapping):
                 param = key
                 break
         if param is not None:
-            template_params = self.tmpl.t[key]
+            template_params = self.tmpl.t[key] or {}
             for name, attrs in template_params.iteritems():
                 if not isinstance(attrs, dict):
                     raise exception.InvalidTemplateParameter(key=name)
