@@ -250,13 +250,14 @@ def resource_create(context, values):
 
 def resource_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Resource).\
-        filter_by(stack_id=stack_id).all()
+        filter_by(stack_id=stack_id).\
+        options(orm.joinedload("data")).all()
 
     if not results:
         raise exception.NotFound(_("no resources for stack_id %s were found")
                                  % stack_id)
 
-    return results
+    return dict((res.name, res) for res in results)
 
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):

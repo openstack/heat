@@ -1403,8 +1403,10 @@ class DBAPIResourceTest(HeatTestCase):
         ]
         [create_resource(self.ctx, self.stack, **val) for val in values]
 
-        stacks = db_api.resource_get_all_by_stack(self.ctx, self.stack.id)
-        self.assertEqual(2, len(stacks))
+        resources = db_api.resource_get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEqual(2, len(resources))
+        self.assertEqual('res1', resources.get('res1').name)
+        self.assertEqual('res2', resources.get('res2').name)
 
         self.assertRaises(exception.NotFound, db_api.resource_get_all_by_stack,
                           self.ctx, self.stack2.id)
