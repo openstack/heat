@@ -190,6 +190,7 @@ class ServiceLauncher(Launcher):
         return status, signo
 
     def wait(self, ready_callback=None):
+        systemd.notify_once()
         while True:
             self.handle_signal()
             status, signo = self._wait_for_exit_or_signal(ready_callback)
@@ -267,7 +268,7 @@ class ProcessLauncher(object):
             launcher.wait()
         except SignalExit as exc:
             signame = _signo_to_signame(exc.signo)
-            LOG.info(_LI('Caught %s, exiting'), signame)
+            LOG.info(_LI('Child caught %s, exiting'), signame)
             status = exc.code
             signo = exc.signo
         except SystemExit as exc:
@@ -382,6 +383,7 @@ class ProcessLauncher(object):
     def wait(self):
         """Loop waiting on children to die and respawning as necessary."""
 
+        systemd.notify_once()
         LOG.debug('Full set of CONF:')
         CONF.log_opt_values(LOG, std_logging.DEBUG)
 
@@ -488,7 +490,6 @@ class Services(object):
 
         """
         service.start()
-        systemd.notify_once()
         done.wait()
 
 
