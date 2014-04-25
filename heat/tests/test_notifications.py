@@ -109,7 +109,6 @@ class NotificationTest(common.HeatTestCase):
                        'stack_name': self.stack_name,
                        'state': '%s_COMPLETE' % action.upper()})]
 
-    @utils.stack_delete_after
     def test_create_stack(self):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
@@ -120,7 +119,6 @@ class NotificationTest(common.HeatTestCase):
             self.assertEqual(self.expected['create'],
                              mock_notify.call_args_list)
 
-    @utils.stack_delete_after
     def test_create_and_suspend_stack(self):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
@@ -137,7 +135,6 @@ class NotificationTest(common.HeatTestCase):
             expected = self.expected['create'] + self.expected['suspend']
             self.assertEqual(expected, mock_notify.call_args_list)
 
-    @utils.stack_delete_after
     def test_create_and_delete_stack(self):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
@@ -271,7 +268,6 @@ class ScaleNotificationTest(common.HeatTestCase):
 
         return expected
 
-    @utils.stack_delete_after
     def test_scale_success(self):
         with mock.patch('heat.engine.notification.stack.send'):
             with mock.patch('heat.openstack.common.notifier.api.notify') \
@@ -297,7 +293,6 @@ class ScaleNotificationTest(common.HeatTestCase):
                 self.assertEqual(1, len(group.get_instance_names()))
                 mock_notify.assert_has_calls(expected)
 
-    @utils.stack_delete_after
     def test_scaleup_failure(self):
         with mock.patch('heat.engine.notification.stack.send'):
             with mock.patch('heat.openstack.common.notifier.api.notify') \

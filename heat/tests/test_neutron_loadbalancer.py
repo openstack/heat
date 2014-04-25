@@ -1020,7 +1020,6 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
         neutronclient.Client.show_vip('xyz').AndReturn(
             {'vip': {'status': 'ACTIVE'}})
 
-    @utils.stack_delete_after
     def test_update_pool_with_references_to_health_monitors(self):
         self._create_pool_with_health_monitors()
 
@@ -1042,7 +1041,6 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_pool_with_empty_list_of_health_monitors(self):
         self._create_pool_with_health_monitors()
 
@@ -1065,7 +1063,6 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_pool_without_health_monitors(self):
         self._create_pool_with_health_monitors()
 

@@ -687,7 +687,6 @@ Outputs:
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
 
-    @utils.stack_delete_after
     def test_template_resource_update_template_schema(self):
         stack = self.create_stack()
         self.stack = stack

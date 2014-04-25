@@ -170,7 +170,6 @@ class CeilometerAlarmTest(HeatTestCase):
         self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
         return stack
 
-    @utils.stack_delete_after
     def test_mem_alarm_high_update_no_replace(self):
         '''
         Make sure that we can change the update-able properties
@@ -211,7 +210,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_mem_alarm_high_update_replace(self):
         '''
         Make sure that the Alarm resource IS replaced when non-update-able
@@ -236,7 +234,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_mem_alarm_suspend_resume(self):
         """
         Make sure that the Alarm resource gets disabled on suspend
@@ -262,7 +259,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_mem_alarm_high_correct_int_parameters(self):
         self.stack = self.create_stack(not_string_alarm_template)
 

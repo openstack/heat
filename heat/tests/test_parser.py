@@ -983,7 +983,6 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.stack.create()
 
-    @utils.stack_delete_after
     def test_total_resources_nested(self):
         self._setup_nested('zyzzyx')
         self.assertEqual(4, self.stack.total_resources())
@@ -994,7 +993,6 @@ class StackTest(HeatTestCase):
             4,
             self.stack['A'].nested().root_stack.total_resources())
 
-    @utils.stack_delete_after
     def test_root_stack(self):
         self._setup_nested('toor')
         self.assertEqual(self.stack, self.stack.root_stack)
@@ -1002,7 +1000,6 @@ class StackTest(HeatTestCase):
         self.assertEqual(
             self.stack, self.stack['A'].nested().root_stack)
 
-    @utils.stack_delete_after
     def test_load_parent_resource(self):
         self.stack = parser.Stack(self.ctx, 'load_parent_resource',
                                   parser.Template({}))
@@ -1036,7 +1033,6 @@ class StackTest(HeatTestCase):
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the self.stack is properly cleaned up
-    @utils.stack_delete_after
     def test_identifier(self):
         self.stack = parser.Stack(self.ctx, 'identifier_test',
                                   parser.Template({}))
@@ -1047,7 +1043,6 @@ class StackTest(HeatTestCase):
         self.assertTrue(identifier.stack_id)
         self.assertFalse(identifier.path)
 
-    @utils.stack_delete_after
     def test_get_stack_abandon_data(self):
         tpl = {'Resources':
                {'A': {'Type': 'GenericResourceType'},
@@ -1069,7 +1064,6 @@ class StackTest(HeatTestCase):
         self.assertIsNone(info['status'])
         self.assertEqual(tpl, info['template'])
 
-    @utils.stack_delete_after
     def test_set_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_arn_test',
                                   parser.Template({}))
@@ -1085,7 +1079,6 @@ class StackTest(HeatTestCase):
                          identifier.arn())
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_set_param_id_update(self):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'ResourceWithPropsType',
@@ -1116,7 +1109,6 @@ class StackTest(HeatTestCase):
 
         self.assertEqual(stack_arn, self.stack['AResource'].metadata['Bar'])
 
-    @utils.stack_delete_after
     def test_load_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_load_arn_test',
                                   parser.Template({}))
@@ -1128,7 +1120,6 @@ class StackTest(HeatTestCase):
         newstack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
         self.assertEqual(identifier.arn(), newstack.parameters['AWS::StackId'])
 
-    @utils.stack_delete_after
     def test_load_reads_tenant_id(self):
         self.ctx.tenant_id = 'foobar'
         self.stack = parser.Stack(self.ctx, 'stack_name', parser.Template({}))
@@ -1138,7 +1129,6 @@ class StackTest(HeatTestCase):
         stack = parser.Stack.load(self.ctx, stack_id=stack_id)
         self.assertEqual('foobar', stack.tenant_id)
 
-    @utils.stack_delete_after
     def test_created_time(self):
         self.stack = parser.Stack(self.ctx, 'creation_time_test',
                                   parser.Template({}))
@@ -1146,7 +1136,6 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.assertIsNotNone(self.stack.created_time)
 
-    @utils.stack_delete_after
     def test_updated_time(self):
         self.stack = parser.Stack(self.ctx, 'updated_time_test',
                                   parser.Template({}))
@@ -1160,7 +1149,6 @@ class StackTest(HeatTestCase):
         self.stack.update(newstack)
         self.assertIsNotNone(self.stack.updated_time)
 
-    @utils.stack_delete_after
     def test_access_policy_update(self):
         tmpl = {'Resources': {
                 'R1': {'Type': 'GenericResourceType'},
@@ -1195,7 +1183,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_delete(self):
         self.stack = parser.Stack(self.ctx, 'delete_test',
                                   parser.Template({}))
@@ -1211,7 +1198,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_delete_user_creds(self):
         self.stack = parser.Stack(self.ctx, 'delete_test',
                                   parser.Template({}))
@@ -1235,7 +1221,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_delete_trust(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
@@ -1258,7 +1243,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_delete_trust_backup(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
@@ -1285,7 +1269,6 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
-    @utils.stack_delete_after
     def test_delete_trust_fail(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
@@ -1313,7 +1296,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertIn('Error deleting trust', self.stack.status_reason)
 
-    @utils.stack_delete_after
     def test_suspend_resume(self):
         self.m.ReplayAll()
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -1336,7 +1318,6 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_suspend_stack_suspended_ok(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.stack = parser.Stack(self.ctx, 'suspend_test',
@@ -1359,7 +1340,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_resume_stack_resumeed_ok(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.stack = parser.Stack(self.ctx, 'suspend_test',
@@ -1386,7 +1366,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_suspend_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
@@ -1410,7 +1389,6 @@ class StackTest(HeatTestCase):
                          self.stack.status_reason)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_resume_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
@@ -1438,7 +1416,6 @@ class StackTest(HeatTestCase):
                          self.stack.status_reason)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_suspend_timeout(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
@@ -1461,7 +1438,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('Suspend timed out', self.stack.status_reason)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_resume_timeout(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
@@ -1490,7 +1466,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('Resume timed out', self.stack.status_reason)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_delete_rollback(self):
         self.stack = parser.Stack(self.ctx, 'delete_rollback_test',
                                   parser.Template({}), disable_rollback=False)
@@ -1506,7 +1481,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_delete_badaction(self):
         self.stack = parser.Stack(self.ctx, 'delete_badaction_test',
                                   parser.Template({}))
@@ -1522,7 +1496,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.FAILED),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_adopt_stack(self):
         adopt_data = '''{
         "action": "CREATE",
@@ -1562,7 +1535,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual('AResource', self.stack.output('TestOutput'))
 
-    @utils.stack_delete_after
     def test_adopt_stack_fails(self):
         adopt_data = '''{
                 "action": "CREATE",
@@ -1588,7 +1560,6 @@ class StackTest(HeatTestCase):
                     ' provided.')
         self.assertEqual(expected, self.stack.status_reason)
 
-    @utils.stack_delete_after
     def test_adopt_stack_rollback(self):
         adopt_data = '''{
                 "name": "my-test-stack-name",
@@ -1611,7 +1582,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((self.stack.ROLLBACK, self.stack.COMPLETE),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_update_badstate(self):
         self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                                   action=parser.Stack.CREATE,
@@ -1623,7 +1593,6 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
                          self.stack.state)
 
-    @utils.stack_delete_after
     def test_resource_by_refid(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
@@ -1656,7 +1625,6 @@ class StackTest(HeatTestCase):
         finally:
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
-    @utils.stack_delete_after
     def test_update_add(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
@@ -1677,7 +1645,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertIn('BResource', self.stack)
 
-    @utils.stack_delete_after
     def test_update_remove(self):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType'},
@@ -1699,7 +1666,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertNotIn('BResource', self.stack)
 
-    @utils.stack_delete_after
     def test_update_description(self):
         tmpl = {'Description': 'ATemplate',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -1722,7 +1688,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('BTemplate',
                          self.stack.t[self.stack.t.DESCRIPTION])
 
-    @utils.stack_delete_after
     def test_update_timeout(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Description': 'ATemplate',
@@ -1746,7 +1711,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual(30, self.stack.timeout_mins)
 
-    @utils.stack_delete_after
     def test_update_disable_rollback(self):
         tmpl = {'Description': 'ATemplate',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -1770,7 +1734,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual(True, self.stack.disable_rollback)
 
-    @utils.stack_delete_after
     def test_update_modify_ok_replace(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -1799,7 +1762,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_modify_param_ok_replace(self):
         tmpl = {
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -1846,7 +1808,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_modify_update_failed(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -1883,7 +1844,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_modify_replace_failed_delete(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -1918,7 +1878,6 @@ class StackTest(HeatTestCase):
         # Unset here so destroy() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
-    @utils.stack_delete_after
     def test_update_modify_replace_failed_create(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -1951,7 +1910,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_add_failed_create(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
@@ -1984,7 +1942,6 @@ class StackTest(HeatTestCase):
         self.assertIn('BResource', re_stack)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_rollback(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -2020,7 +1977,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_rollback_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -2057,7 +2013,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_rollback_add(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
@@ -2089,7 +2044,6 @@ class StackTest(HeatTestCase):
         self.assertNotIn('BResource', self.stack)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_rollback_remove(self):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType'},
@@ -2123,7 +2077,6 @@ class StackTest(HeatTestCase):
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
-    @utils.stack_delete_after
     def test_update_rollback_replace(self):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'ResourceWithPropsType',
@@ -2158,7 +2111,6 @@ class StackTest(HeatTestCase):
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
-    @utils.stack_delete_after
     def test_update_replace_by_reference(self):
         '''
         assertion:
@@ -2212,7 +2164,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('inst-007', self.stack['BResource'].properties['Foo'])
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_with_new_resources_with_reference(self):
         '''
         assertion:
@@ -2264,7 +2215,6 @@ class StackTest(HeatTestCase):
         self.assertEqual(3, len(self.stack.resources))
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_by_reference_and_rollback_1(self):
         '''
         assertion:
@@ -2325,7 +2275,6 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_by_reference_and_rollback_2(self):
         '''
         assertion:
@@ -2395,7 +2344,6 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_replace_parameters(self):
         '''
         assertion:
@@ -2553,7 +2501,6 @@ class StackTest(HeatTestCase):
         self.assertRaises(ValueError, parser.Stack, self.ctx, '#test',
                           parser.Template({}))
 
-    @utils.stack_delete_after
     def test_resource_state_get_att(self):
         tmpl = {
             'Resources': {'AResource': {'Type': 'GenericResourceType'}},
@@ -2593,7 +2540,6 @@ class StackTest(HeatTestCase):
             rsrc.state_set(action, status)
             self.assertIsNone(self.stack.output('TestOutput'))
 
-    @utils.stack_delete_after
     def test_resource_required_by(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
                               'BResource': {'Type': 'GenericResourceType',
@@ -2619,7 +2565,6 @@ class StackTest(HeatTestCase):
         for r in ['CResource', 'DResource']:
             self.assertIn(r, required_by)
 
-    @utils.stack_delete_after
     def test_resource_multi_required_by(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
                               'BResource': {'Type': 'GenericResourceType'},
@@ -2640,7 +2585,6 @@ class StackTest(HeatTestCase):
             self.assertEqual(['DResource'],
                              self.stack[r].required_by())
 
-    @utils.stack_delete_after
     def test_store_saves_owner(self):
         """
         The owner_id attribute of Store is saved to the database when stored.
@@ -2654,7 +2598,6 @@ class StackTest(HeatTestCase):
         db_stack = db_api.stack_get(self.ctx, stack_ownee.id)
         self.assertEqual(self.stack.id, db_stack.owner_id)
 
-    @utils.stack_delete_after
     def test_store_saves_creds(self):
         """
         A user_creds entry is created on first stack store
@@ -2679,7 +2622,6 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
 
-    @utils.stack_delete_after
     def test_store_saves_creds_trust(self):
         """
         A user_creds entry is created on first stack store
@@ -2713,7 +2655,6 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
 
-    @utils.stack_delete_after
     def test_load_honors_owner(self):
         """
         Loading a stack from the database will set the owner_id of the
@@ -2729,7 +2670,6 @@ class StackTest(HeatTestCase):
         saved_stack = parser.Stack.load(self.ctx, stack_id=stack_ownee.id)
         self.assertEqual(self.stack.id, saved_stack.owner_id)
 
-    @utils.stack_delete_after
     def test_requires_deferred_auth(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
                               'BResource': {'Type': 'GenericResourceType'},
@@ -2744,7 +2684,6 @@ class StackTest(HeatTestCase):
         self.stack['CResource'].requires_deferred_auth = True
         self.assertTrue(self.stack.requires_deferred_auth())
 
-    @utils.stack_delete_after
     def test_stack_user_project_id_default(self):
         self.stack = parser.Stack(self.ctx, 'user_project_none',
                                   template.Template({}))
@@ -2753,7 +2692,6 @@ class StackTest(HeatTestCase):
         db_stack = db_api.stack_get(self.ctx, self.stack.id)
         self.assertIsNone(db_stack.stack_user_project_id)
 
-    @utils.stack_delete_after
     def test_stack_user_project_id_constructor(self):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
@@ -2772,7 +2710,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_stack_user_project_id_delete_fail(self):
 
         class FakeKeystoneClientFail(FakeKeystoneClient):
@@ -2797,7 +2734,6 @@ class StackTest(HeatTestCase):
         self.assertIn('Error deleting project', self.stack.status_reason)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_stack_user_project_id_setter(self):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())

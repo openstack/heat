@@ -11,10 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import random
 import string
-import sys
 import uuid
 
 import sqlalchemy
@@ -45,32 +43,6 @@ class UUIDStub(object):
 def random_name():
     return ''.join(random.choice(string.ascii_uppercase)
                    for x in range(10))
-
-
-def stack_delete_after(test_fn):
-    """
-    Decorator which calls test class self.stack.delete()
-    to ensure tests clean up their stacks regardless of test success/failure
-    """
-    @functools.wraps(test_fn)
-    def wrapped_test(test_case, *args, **kwargs):
-        def delete_stack():
-            stack = getattr(test_case, 'stack', None)
-            if stack is not None and stack.id is not None:
-                stack.delete()
-
-        try:
-            test_fn(test_case, *args, **kwargs)
-        except:
-            exc_class, exc_val, exc_tb = sys.exc_info()
-            try:
-                delete_stack()
-            finally:
-                raise exc_class, exc_val, exc_tb
-        else:
-            delete_stack()
-
-    return wrapped_test
 
 
 def setup_dummy_db():

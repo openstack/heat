@@ -192,7 +192,6 @@ class StackResourceTest(HeatTestCase):
                           self.parent_resource._validate_nested_resources,
                           template)
 
-    @utils.stack_delete_after
     def test_create_with_template_ok(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -205,7 +204,6 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
         self.assertIsNone(self.stack.timeout_mins)
 
-    @utils.stack_delete_after
     def test_create_with_template_timeout_mins(self):
         self.assertIsNone(self.parent_stack.timeout_mins)
         self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
@@ -217,7 +215,6 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(100, self.stack.timeout_mins)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_adopt_with_template_ok(self):
         adopt_data = {
             "resources": {
@@ -240,7 +237,6 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.templ, self.stack.t.t)
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
 
-    @utils.stack_delete_after
     def test_prepare_abandon(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -256,7 +252,6 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(template_format.parse(param_template),
                          ret['template'])
 
-    @utils.stack_delete_after
     def test_create_with_template_validates(self):
         """
         Creating a stack with a template validates the created stack, so that
@@ -271,7 +266,6 @@ class StackResourceTest(HeatTestCase):
             self.parent_resource.create_with_template,
             template, {'WebServer': 'foo'})
 
-    @utils.stack_delete_after
     def test_update_with_template_validates(self):
         """Updating a stack with a template validates the created stack."""
         create_result = self.parent_resource.create_with_template(
@@ -286,7 +280,6 @@ class StackResourceTest(HeatTestCase):
             self.parent_resource.update_with_template,
             template, {'WebServer': 'foo'})
 
-    @utils.stack_delete_after
     def test_update_with_template_ok(self):
         """
         The update_with_template method updates the nested stack with the
@@ -316,7 +309,6 @@ class StackResourceTest(HeatTestCase):
             self.parent_stack.context, self.stack.id)
         self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
 
-    @utils.stack_delete_after
     def test_update_with_template_timeout_mins(self):
         self.assertIsNone(self.parent_stack.timeout_mins)
         self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
@@ -339,7 +331,6 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(200, self.stack.timeout_mins)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_with_template_files(self):
         create_result = self.parent_resource.create_with_template(
             self.simple_template, {})
@@ -357,7 +348,6 @@ class StackResourceTest(HeatTestCase):
 
         self.assertEqual({"foo": "bar"}, self.stack.t.files)
 
-    @utils.stack_delete_after
     def test_update_with_template_state_err(self):
         """
         update_with_template_state_err method should raise error when update
@@ -391,7 +381,6 @@ class StackResourceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_load_nested_ok(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -408,7 +397,6 @@ class StackResourceTest(HeatTestCase):
         self.parent_resource.nested()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_load_nested_non_exist(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -476,7 +464,6 @@ class StackResourceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_create_complete_state_err(self):
         """
         check_create_complete should raise error when create task is
@@ -525,7 +512,6 @@ class StackResourceTest(HeatTestCase):
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
 
-    @utils.stack_delete_after
     def test_suspend_complete_state_err(self):
         """
         check_suspend_complete should raise error when suspend task is
@@ -555,7 +541,6 @@ class StackResourceTest(HeatTestCase):
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
 
-    @utils.stack_delete_after
     def test_resume_complete_state_err(self):
         """
         check_resume_complete should raise error when resume task is

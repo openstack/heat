@@ -164,7 +164,6 @@ Resources:
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))
 
-    @utils.stack_delete_after
     def test_security_group_nova(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -266,7 +265,6 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_security_group_nova_bad_source_group(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -337,7 +335,6 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_security_group_nova_exception(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -467,7 +464,6 @@ Resources:
         sg = stack['the_sg']
         self.assertRaises(exception.EgressRuleNotAllowed, sg.validate)
 
-    @utils.stack_delete_after
     def test_security_group_neutron(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(
@@ -716,7 +712,6 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_security_group_neutron_exception(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(

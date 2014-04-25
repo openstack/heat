@@ -49,12 +49,10 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         self.stack = utils.parse_stack(t)
         return self.stack
 
-    @utils.stack_delete_after
     def test_resource_create_good(self):
         s = self.parse_stack()
         self.assertIsNone(scheduler.TaskRunner(s['test_me'].create)())
 
-    @utils.stack_delete_after
     def test_resource_create_failed(self):
         s = self.parse_stack()
         with patch.object(watchrule.WatchRule, 'store') as bad_store:
@@ -62,13 +60,11 @@ class CloudWatchAlarmTest(common.HeatTestCase):
             task_func = scheduler.TaskRunner(s['test_me'].create)
             self.assertRaises(exception.ResourceFailure, task_func)
 
-    @utils.stack_delete_after
     def test_resource_delete_good(self):
         s = self.parse_stack()
         self.assertIsNone(scheduler.TaskRunner(s['test_me'].create)())
         self.assertIsNone(scheduler.TaskRunner(s['test_me'].delete)())
 
-    @utils.stack_delete_after
     def test_resource_delete_notfound(self):
         # if a resource is not found, handle_delete() should not raise
         # an exception.
