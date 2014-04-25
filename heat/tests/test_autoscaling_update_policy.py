@@ -209,7 +209,6 @@ class AutoScalingGroupTest(HeatTestCase):
         self.fkc = fakes.FakeKeystoneClient(username='test_stack.CfnLBUser')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
-        utils.setup_dummy_db()
 
     def _stub_validate(self):
         self.m.StubOutWithMock(parser.Stack, 'validate')

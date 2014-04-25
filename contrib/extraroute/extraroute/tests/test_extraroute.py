@@ -67,8 +67,6 @@ class NeutronExtraRouteTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'update_router')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-        utils.setup_dummy_db()
-
         resource._register_class("OS::Neutron::ExtraRoute",
                                  extraroute.ExtraRoute)
 

@@ -50,7 +50,6 @@ class SignalTest(HeatTestCase):
 
     def setUp(self):
         super(SignalTest, self).setUp()
-        utils.setup_dummy_db()
 
         resource._register_class('SignalResourceType',
                                  generic_resource.SignalResource)
@@ -65,7 +64,6 @@ class SignalTest(HeatTestCase):
 
     def tearDown(self):
         super(SignalTest, self).tearDown()
-        utils.reset_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up

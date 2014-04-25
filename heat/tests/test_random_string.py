@@ -43,7 +43,6 @@ Resources:
 
     def setUp(self):
         super(HeatTestCase, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
     def create_stack(self, template):

@@ -375,7 +375,6 @@ class NeutronNetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_dhcp_agent_hosting_networks')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
         rsrc = net.Net('test_net', t['Resources'][resource_name], stack)
@@ -578,7 +577,6 @@ class NeutronProviderNetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
         self.m.StubOutWithMock(neutronclient.Client, 'update_network')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_provider_net(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -701,7 +699,6 @@ class NeutronSubnetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'update_subnet')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_subnet(self, t, stack, resource_name):
         rsrc = subnet.Subnet('test_subnet', t['Resources'][resource_name],
@@ -979,7 +976,6 @@ class NeutronRouterTest(HeatTestCase):
         self.m.StubOutWithMock(router.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_router(self, t, stack, resource_name):
         rsrc = router.Router('router', t['Resources'][resource_name], stack)
@@ -1577,7 +1573,6 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'update_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def test_floating_ip(self):
 
@@ -1848,7 +1843,6 @@ class NeutronPortTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def test_missing_subnet_id(self):
         clients.OpenStackClients.keystone().AndReturn(

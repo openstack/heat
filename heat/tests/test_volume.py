@@ -95,7 +95,6 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'get_server_volume')
         self.m.StubOutWithMock(nova_utils, 'get_image_id')
-        utils.setup_dummy_db()
 
     def create_volume(self, t, stack, resource_name):
         data = t['Resources'][resource_name]

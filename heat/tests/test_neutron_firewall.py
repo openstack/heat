@@ -96,7 +96,6 @@ class FirewallTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_firewall(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -227,7 +226,6 @@ class FirewallPolicyTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall_policy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall_policy')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_firewall_policy(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -357,7 +355,6 @@ class FirewallRuleTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall_rule')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_firewall_rule(self):
         clients.OpenStackClients.keystone().AndReturn(

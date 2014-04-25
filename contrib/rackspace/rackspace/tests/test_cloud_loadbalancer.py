@@ -203,7 +203,6 @@ class LoadBalancerTest(HeatTestCase):
         }
 
         lb.resource_mapping = override_resource
-        utils.setup_dummy_db()
         resource._register_class("Rackspace::Cloud::LoadBalancer",
                                  LoadBalancerWithFakeClient)
 

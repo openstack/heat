@@ -739,7 +739,6 @@ class ResolveDataTest(HeatTestCase):
         super(ResolveDataTest, self).setUp()
         self.username = 'parser_stack_test_user'
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.stack = parser.Stack(self.ctx, 'resolve_test_stack',
@@ -844,7 +843,6 @@ class StackTest(HeatTestCase):
 
         self.username = 'parser_stack_test_user'
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
         resource._register_class('GenericResourceType',

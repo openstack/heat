@@ -206,7 +206,6 @@ class HealthMonitorTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_health_monitor(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -344,7 +343,6 @@ class PoolTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_pool(self, with_vip_subnet=False):
         clients.OpenStackClients.keystone().AndReturn(
@@ -782,7 +780,6 @@ class PoolMemberTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'update_member')
         self.m.StubOutWithMock(neutronclient.Client, 'show_member')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_member(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -887,7 +884,6 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        utils.setup_dummy_db()
 
     def create_load_balancer(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -988,7 +984,6 @@ class PoolUpdateHealthMonitorsTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def _create_pool_with_health_monitors(self):
         clients.OpenStackClients.keystone().MultipleTimes().AndReturn(

@@ -68,7 +68,6 @@ class InstancesTest(HeatTestCase):
     def setUp(self):
         super(InstancesTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)

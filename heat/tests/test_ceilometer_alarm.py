@@ -131,7 +131,6 @@ class FakeCeilometerClient(object):
 class CeilometerAlarmTest(HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
-        utils.setup_dummy_db()
 
         resource._register_class('SignalResourceType',
                                  generic_resource.SignalResource)
@@ -338,7 +337,6 @@ class CombinationAlarmTest(HeatTestCase):
         super(CombinationAlarmTest, self).setUp()
         self.fc = FakeCeilometerClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'ceilometer')
-        utils.setup_dummy_db()
 
     def create_alarm(self):
         clients.OpenStackClients.ceilometer().MultipleTimes().AndReturn(

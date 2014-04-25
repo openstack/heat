@@ -80,8 +80,6 @@ class swiftTest(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-        utils.setup_dummy_db()
-
     def create_resource(self, t, stack, resource_name):
         rsrc = swift.SwiftContainer(
             'test_resource',

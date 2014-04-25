@@ -89,7 +89,6 @@ class CloudNetworkTest(HeatTestCase):
 
     def setUp(self):
         super(CloudNetworkTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class("Rackspace::Cloud::Network",
                                  cloudnetworks.CloudNetwork)
 

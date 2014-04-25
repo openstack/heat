@@ -44,7 +44,6 @@ class nokeyTest(HeatTestCase):
     def setUp(self):
         super(nokeyTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
 
     def test_nokey_create(self):
 

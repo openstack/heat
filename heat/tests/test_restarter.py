@@ -41,7 +41,6 @@ restarter_template = '''
 class RestarterTest(common.HeatTestCase):
     def setUp(self):
         super(RestarterTest, self).setUp()
-        utils.setup_dummy_db()
 
     def create_restarter(self):
         snippet = template_format.parse(restarter_template)

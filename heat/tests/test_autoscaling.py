@@ -128,7 +128,6 @@ class AutoScalingTest(HeatTestCase):
 
     def setUp(self):
         super(AutoScalingTest, self).setUp()
-        utils.setup_dummy_db()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.fc = fakes.FakeKeystoneClient()
@@ -1699,7 +1698,6 @@ class TestInstanceGroup(HeatTestCase):
 
     def setUp(self):
         super(TestInstanceGroup, self).setUp()
-        utils.setup_dummy_db()
 
         json_snippet = {'Properties':
                         {'Size': 2, 'LaunchConfigurationName': 'foo'}}

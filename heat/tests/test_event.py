@@ -41,7 +41,6 @@ class EventTest(HeatTestCase):
         super(EventTest, self).setUp()
         self.username = 'event_test_user'
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.m.ReplayAll()

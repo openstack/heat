@@ -28,7 +28,6 @@ class SoftwareConfigTest(HeatTestCase):
 
     def setUp(self):
         super(SoftwareConfigTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         self.properties = {
             'group': 'Heat::Shell',

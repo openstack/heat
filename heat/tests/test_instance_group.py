@@ -61,7 +61,6 @@ ig_template = '''
 class InstanceGroupTest(HeatTestCase):
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        utils.setup_dummy_db()
 
     def _stub_create(self, num, instance_class=instance.Instance):
         """

@@ -67,7 +67,6 @@ class MeteringLabelTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_metering_label(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -180,7 +179,6 @@ class MeteringRuleTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_metering_label_rule(self):
         clients.OpenStackClients.keystone().AndReturn(

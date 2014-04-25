@@ -26,7 +26,6 @@ class CloudConfigTest(HeatTestCase):
 
     def setUp(self):
         super(CloudConfigTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         self.properties = {
             'cloud_config': {'foo': 'bar'}

@@ -110,7 +110,6 @@ class AutoScalingTest(HeatTestCase):
     def setUp(self):
         super(AutoScalingTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         self.fc = v1fakes.FakeClient()
 

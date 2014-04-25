@@ -160,7 +160,6 @@ class InstanceGroupTest(HeatTestCase):
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
 
     def _stub_validate(self):
         self.m.StubOutWithMock(parser.Stack, 'validate')

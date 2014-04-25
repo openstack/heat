@@ -23,7 +23,6 @@ from heat.tests import utils
 class StackLockTest(HeatTestCase):
     def setUp(self):
         super(StackLockTest, self).setUp()
-        utils.setup_dummy_db()
         self.context = utils.dummy_context()
         self.stack = self.m.CreateMockAnything()
         self.stack.id = "aae01f2d-52ae-47ac-8a0d-3fde3d220fea"

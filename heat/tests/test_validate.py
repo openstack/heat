@@ -781,7 +781,6 @@ class validateTest(HeatTestCase):
         resources.initialise()
         self.fc = fakes.FakeClient()
         resources.initialise()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
     def test_validate_volumeattach_valid(self):

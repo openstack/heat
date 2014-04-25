@@ -71,7 +71,6 @@ class MarconiMessageQueueTest(HeatTestCase):
     def setUp(self):
         super(MarconiMessageQueueTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         resource._register_class("OS::Marconi::Queue",
                                  queue.MarconiQueue)

@@ -154,7 +154,6 @@ class EIPTest(HeatTestCase):
         self.m.StubOutWithMock(eip.ElasticIp, 'nova')
         self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        utils.setup_dummy_db()
 
     def tearDown(self):
         super(EIPTest, self).tearDown()
@@ -307,8 +306,6 @@ class AllocTest(HeatTestCase):
         self.m.StubOutWithMock(clients.neutronclient.Client,
                                'remove_gateway_router')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-
-        utils.setup_dummy_db()
 
     def mock_show_network(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')

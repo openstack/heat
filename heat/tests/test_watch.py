@@ -39,13 +39,11 @@ class DummyAction(object):
 class WatchRuleTest(HeatTestCase):
     stack_id = None
 
-    @classmethod
-    def setUpDatabase(cls):
-        if cls.stack_id is not None:
+    def setUpDatabase(self):
+        if self.stack_id is not None:
             return
         # Create a dummy stack in the DB as WatchRule instances
         # must be associated with a stack
-        utils.setup_dummy_db()
         ctx = utils.dummy_context()
         ctx.auth_token = 'abcd1234'
         empty_tmpl = {"template": {}}
@@ -56,7 +54,7 @@ class WatchRuleTest(HeatTestCase):
                               'Testing')
         dummy_stack.store()
 
-        cls.stack_id = dummy_stack.id
+        self.stack_id = dummy_stack.id
 
     def setUp(self):
         super(WatchRuleTest, self).setUp()

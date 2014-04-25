@@ -28,7 +28,6 @@ class MultipartMimeTest(HeatTestCase):
 
     def setUp(self):
         super(MultipartMimeTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         self.init_config()
 

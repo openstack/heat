@@ -27,6 +27,7 @@ from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
 from heat.openstack.common.fixture import mockpatch
+from heat.tests import utils
 
 
 class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
@@ -67,6 +68,8 @@ class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
             if templ_path not in cur_path:
                 tri.template_name = cur_path.replace('/etc/heat/templates',
                                                      templ_path)
+        utils.setup_dummy_db()
+        self.addCleanup(utils.reset_dummy_db)
 
     def stub_wallclock(self):
         """

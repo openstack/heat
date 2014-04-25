@@ -783,7 +783,6 @@ class StackAttributesTest(HeatTestCase):
     def setUp(self):
         super(StackAttributesTest, self).setUp()
 
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
         resource._register_class('GenericResourceType',

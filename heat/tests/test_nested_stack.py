@@ -68,7 +68,6 @@ Outputs:
     def setUp(self):
         super(NestedStackTest, self).setUp()
         self.m.StubOutWithMock(urlfetch, 'get')
-        utils.setup_dummy_db()
 
     def create_stack(self, template):
         t = template_format.parse(template)

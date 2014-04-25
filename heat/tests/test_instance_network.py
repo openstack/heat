@@ -148,7 +148,6 @@ class instancesTest(HeatTestCase):
     def setUp(self):
         super(instancesTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
 
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name

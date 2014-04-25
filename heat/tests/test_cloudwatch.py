@@ -42,7 +42,6 @@ class CloudWatchAlarmTest(common.HeatTestCase):
 
     def setUp(self):
         super(CloudWatchAlarmTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
     def parse_stack(self):

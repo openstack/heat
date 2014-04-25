@@ -198,7 +198,6 @@ class ScalingGroupTest(HeatTestCase):
 
     def setUp(self):
         super(ScalingGroupTest, self).setUp()
-        utils.setup_dummy_db()
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
@@ -350,7 +349,6 @@ class PolicyTest(HeatTestCase):
 
     def setUp(self):
         super(PolicyTest, self).setUp()
-        utils.setup_dummy_db()
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
@@ -492,7 +490,6 @@ class WebHookTest(HeatTestCase):
 
     def setUp(self):
         super(WebHookTest, self).setUp()
-        utils.setup_dummy_db()
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
