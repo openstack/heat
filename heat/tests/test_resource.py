@@ -148,15 +148,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         self.assertEqual('wibble', res.status_reason)
 
-    def test_set_deletion_policy(self):
-        tmpl = {'Type': 'Foo'}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.set_deletion_policy(resource.RETAIN)
-        self.assertEqual(resource.RETAIN, res.t['DeletionPolicy'])
-        res.set_deletion_policy(resource.DELETE)
-        self.assertEqual(resource.DELETE, res.t['DeletionPolicy'])
-
-    def test_get_abandon_data(self):
+    def test_prepare_abandon(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         expected = {
@@ -168,7 +160,7 @@ class ResourceTest(HeatTestCase):
             'status': 'COMPLETE',
             'type': 'Foo'
         }
-        actual = res.get_abandon_data()
+        actual = res.prepare_abandon()
         self.assertEqual(expected, actual)
 
     def test_abandon_with_resource_data(self):
@@ -187,7 +179,7 @@ class ResourceTest(HeatTestCase):
             'status': 'COMPLETE',
             'type': 'Foo'
         }
-        actual = res.get_abandon_data()
+        actual = res.prepare_abandon()
         self.assertEqual(expected, actual)
         self.m.VerifyAll()
 
