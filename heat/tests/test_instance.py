@@ -289,24 +289,51 @@ class InstancesTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_instance_create_delete(self):
+    def _test_instance_create_delete(self, vm_status='ACTIVE',
+                                     vm_delete_status='NotFound'):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
                                               'in_cr_del')
         instance.resource_id = 1234
+        instance.status = vm_status
 
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
+        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d1['server']['status'] = vm_status
+
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
-        get().AndRaise(instances.clients.novaclient.exceptions.NotFound(404))
-        mox.Replay(get)
+        get().AndReturn((200, d1))
+
+        d2 = copy.deepcopy(d1)
+        if vm_delete_status == 'DELETED':
+            d2['server']['status'] = vm_delete_status
+            get().AndReturn((200, d2))
+        else:
+            get().AndRaise(
+                instances.clients.novaclient.exceptions.NotFound(404))
+
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.delete)()
         self.assertIsNone(instance.resource_id)
         self.assertEqual((instance.DELETE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
+
+    def test_instance_create_delete_notfound(self):
+        self._test_instance_create_delete()
+
+    def test_instance_create_delete(self):
+        self._test_instance_create_delete(vm_delete_status='DELETED')
+
+    def test_instance_create_error_delete_notfound(self):
+        self._test_instance_create_delete(vm_status='ERROR')
+
+    def test_instance_create_error_delete(self):
+        self._test_instance_create_delete(
+            vm_status='ERROR', vm_delete_status='DELETED')
 
     def test_instance_update_metadata(self):
         return_server = self.fc.servers.list()[1]

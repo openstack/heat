@@ -592,14 +592,10 @@ class Instance(resource.Resource):
             try:
                 nova_utils.refresh_server(server)
                 if server.status == "DELETED":
-                    self.resource_id_set(None)
                     break
-                elif server.status == "ERROR":
-                    raise exception.Error(_("Deletion of server %s failed.") %
-                                          server.id)
             except clients.novaclient.exceptions.NotFound:
-                self.resource_id_set(None)
                 break
+        self.resource_id_set(None)
 
     def _detach_volumes_task(self):
         '''
