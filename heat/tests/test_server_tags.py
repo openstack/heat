@@ -204,7 +204,8 @@ class ServerTagsTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(self.fc.servers.list()[1],
                                  new_metadata).AndReturn(None)
-        self._mock_get_image_id_success('CentOS 5.2', 1)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.ReplayAll()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['Tags'] = new_tags
@@ -224,6 +225,9 @@ class ServerTagsTest(HeatTestCase):
 
         # create the launch configuration
         conf = stack['Config']
+        self.stub_KeypairConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
         self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
@@ -232,6 +236,8 @@ class ServerTagsTest(HeatTestCase):
 
         nova_tags['metering.groupname'] = utils.PhysName(stack.name,
                                                          group.name)
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -270,6 +276,10 @@ class ServerTagsTest(HeatTestCase):
 
         # create the launch configuration
         conf = stack['Config']
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
+
         self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
@@ -279,6 +289,9 @@ class ServerTagsTest(HeatTestCase):
 
         nova_tags['metering.groupname'] = group_refid
         nova_tags['AutoScalingGroupName'] = group_refid
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
 
         self.m.StubOutWithMock(group, '_cooldown_timestamp')
         group._cooldown_timestamp(mox.IgnoreArg()).AndReturn(None)

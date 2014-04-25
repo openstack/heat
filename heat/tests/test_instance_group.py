@@ -13,16 +13,12 @@
 
 import copy
 
-import mox
-
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import glance
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine.resources import instance
-from heat.engine.resources import nova_keypair
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -73,12 +69,8 @@ class InstanceGroupTest(HeatTestCase):
         """
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_KeypairConstraint_validate()
+        self.stub_ImageConstraint_validate()
 
         self.m.StubOutWithMock(instance_class, 'handle_create')
         self.m.StubOutWithMock(instance_class, 'check_create_complete')
@@ -154,21 +146,25 @@ class InstanceGroupTest(HeatTestCase):
 
         t = template_format.parse(ig_template)
         stack = utils.parse_stack(t)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+
+        self.m.ReplayAll()
 
         self.create_resource(t, stack, 'JobServerConfig')
         rsrc = stack['JobServerGroup']
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         not_found = exception.ImageNotFound(image_name='bla')
         instance.Instance.handle_create().AndRaise(not_found)
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+        self.stub_KeypairConstraint_validate()
+        self.stub_ImageConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -228,12 +224,8 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
@@ -275,12 +267,8 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate()
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
