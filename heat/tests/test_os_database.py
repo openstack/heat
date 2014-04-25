@@ -18,6 +18,8 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
+from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 from heat.engine import parser
 from heat.engine.resources import os_database
@@ -47,6 +49,21 @@ db_template = '''
   }
 
 }
+'''
+
+db_template_with_nics = '''
+heat_template_version: 2013-05-23
+description: MySQL instance running on openstack DBaaS cloud
+resources:
+  MySqlCloudDB:
+    type: OS::Trove::Instance
+    properties:
+      name: test
+      flavor: 1GB
+      size: 30
+      networks:
+        - port: someportname
+          fixed_ip: 1.2.3.4
 '''
 
 
@@ -81,7 +98,10 @@ class FakeVersion(object):
 class OSDBInstanceTest(HeatTestCase):
     def setUp(self):
         super(OSDBInstanceTest, self).setUp()
+        self.stub_keystoneclient()
         self.fc = self.m.CreateMockAnything()
+        self.nova = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
 
     def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
@@ -97,13 +117,16 @@ class OSDBInstanceTest(HeatTestCase):
             stack)
         return instance
 
-    def _stubout_create(self, instance, fake_dbinstance):
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
+    def _stubout_common_create(self):
         trove.TroveClientPlugin._create().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.fc, 'flavors')
         self.m.StubOutWithMock(trove.TroveClientPlugin, 'get_flavor_id')
         trove.TroveClientPlugin.get_flavor_id('1GB').AndReturn(1)
         self.m.StubOutWithMock(self.fc, 'instances')
         self.m.StubOutWithMock(self.fc.instances, 'create')
+
+    def _stubout_create(self, instance, fake_dbinstance):
+        self._stubout_common_create()
         users = [{"name": "testuser", "password": "pass", "host": "%",
                   "databases": [{"name": "validdb"}]}]
         databases = [{"collate": "utf8_general_ci",
@@ -115,17 +138,20 @@ class OSDBInstanceTest(HeatTestCase):
                                  restorePoint=None,
                                  availability_zone=None,
                                  datastore="SomeDStype",
-                                 datastore_version="MariaDB-5.5"
+                                 datastore_version="MariaDB-5.5",
+                                 nics=[]
                                  ).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
 
-    def _stubout_validate(self, instance):
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
+    def _stubout_validate(self, instance, neutron=None):
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'datastore_versions')
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
         self.fc.datastore_versions.list(instance.properties['datastore_type']
                                         ).AndReturn([FakeVersion()])
+        if neutron is not None:
+            self.m.StubOutWithMock(instance, 'is_using_neutron')
+            instance.is_using_neutron().AndReturn(bool(neutron))
         self.m.ReplayAll()
 
     def test_osdatabase_create(self):
@@ -143,7 +169,6 @@ class OSDBInstanceTest(HeatTestCase):
         t['Resources']['MySqlCloudDB']['Properties']['restore_point'] = "1234"
         instance = self._setup_test_clouddbinstance('dbinstance_create', t)
 
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'flavors')
         self.m.StubOutWithMock(self.fc.flavors, "list")
@@ -162,7 +187,8 @@ class OSDBInstanceTest(HeatTestCase):
                                  restorePoint={"backupRef": "1234"},
                                  availability_zone=None,
                                  datastore="SomeDStype",
-                                 datastore_version="MariaDB-5.5"
+                                 datastore_version="MariaDB-5.5",
+                                 nics=[]
                                  ).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
 
@@ -277,7 +303,6 @@ class OSDBInstanceTest(HeatTestCase):
         t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'instances')
         self.m.StubOutWithMock(self.fc.instances, 'get')
@@ -292,7 +317,6 @@ class OSDBInstanceTest(HeatTestCase):
         t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'instances')
         self.m.StubOutWithMock(self.fc.instances, 'get')
@@ -308,7 +332,6 @@ class OSDBInstanceTest(HeatTestCase):
         t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'instances')
         self.m.StubOutWithMock(self.fc.instances, 'get')
@@ -415,7 +438,6 @@ class OSDBInstanceTest(HeatTestCase):
             'datastore_type'] = 'mysql'
         t['Resources']['MySqlCloudDB']['Properties'].pop('datastore_version')
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
-        self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'datastore_versions')
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
@@ -431,4 +453,131 @@ class OSDBInstanceTest(HeatTestCase):
                         "Explicit datastore version must be provided. "
                         "Allowed versions are MariaDB-5.5, MariaDB-5.0.")
         self.assertEqual(expected_msg, six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_osdatabase_prop_validation_net_with_port_fail(self):
+        t = template_format.parse(db_template)
+        t['Resources']['MySqlCloudDB']['Properties']['networks'] = [
+            {
+                "port": "someportuuid",
+                "network": "somenetuuid"
+            }]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_validate(instance, neutron=True)
+
+        ex = self.assertRaises(
+            exception.StackValidationFailed, instance.validate)
+        self.assertEqual('Either network or port must be provided.',
+                         six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_osdatabase_prop_validation_no_net_no_port_fail(self):
+        t = template_format.parse(db_template)
+        t['Resources']['MySqlCloudDB']['Properties']['networks'] = [
+            {
+                "fixed_ip": "1.2.3.4"
+            }]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_validate(instance, neutron=True)
+
+        ex = self.assertRaises(
+            exception.StackValidationFailed, instance.validate)
+        self.assertEqual('Either network or port must be provided.',
+                         six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_osdatabase_prop_validation_nic_port_on_novanet_fails(self):
+        t = template_format.parse(db_template)
+        t['Resources']['MySqlCloudDB']['Properties']['networks'] = [
+            {
+                "port": "someportuuid",
+            }]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_validate(instance, neutron=False)
+
+        ex = self.assertRaises(
+            exception.StackValidationFailed, instance.validate)
+        self.assertEqual('Can not use port property on Nova-network.',
+                         six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_osdatabase_create_with_port(self):
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template_with_nics)
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_common_create()
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin,
+                               'find_neutron_resource')
+        neutron.NeutronClientPlugin.find_neutron_resource(
+            instance.properties, 'port', 'port').AndReturn('someportid')
+
+        self.fc.instances.create('test', 1, volume={'size': 30},
+                                 databases=[],
+                                 users=[],
+                                 restorePoint=None,
+                                 availability_zone=None,
+                                 datastore=None,
+                                 datastore_version=None,
+                                 nics=[{'port-id': 'someportid',
+                                        'v4-fixed-ip': '1.2.3.4'}]
+                                 ).AndReturn(fake_dbinstance)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_osdatabase_create_with_net_id(self):
+        net_id = '034aa4d5-0f36-4127-8481-5caa5bfc9403'
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template_with_nics)
+        t['resources']['MySqlCloudDB']['properties']['networks'] = [
+            {'network': net_id}]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_common_create()
+        self.fc.instances.create('test', 1, volume={'size': 30},
+                                 databases=[],
+                                 users=[],
+                                 restorePoint=None,
+                                 availability_zone=None,
+                                 datastore=None,
+                                 datastore_version=None,
+                                 nics=[{'net-id': net_id}]
+                                 ).AndReturn(fake_dbinstance)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
+    def test_osdatabase_create_with_net_name(self):
+
+        class FakeNet(object):
+            id = 'somenetid'
+
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template_with_nics)
+        t['resources']['MySqlCloudDB']['properties']['networks'] = [
+            {'network': 'somenetname'}]
+        instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self._stubout_common_create()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.nova)
+        self.m.StubOutWithMock(self.nova, 'networks')
+        self.m.StubOutWithMock(self.nova.networks, 'find')
+        self.nova.networks.find(label='somenetname').AndReturn(FakeNet())
+
+        self.fc.instances.create('test', 1, volume={'size': 30},
+                                 databases=[],
+                                 users=[],
+                                 restorePoint=None,
+                                 availability_zone=None,
+                                 datastore=None,
+                                 datastore_version=None,
+                                 nics=[{'net-id': 'somenetid'}]
+                                 ).AndReturn(fake_dbinstance)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
