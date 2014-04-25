@@ -237,7 +237,7 @@ class ParameterTest(testtools.TestCase):
         self.assertIn('wibble', str(err))
 
     def test_map_value(self):
-        '''Happy path for value thats already a map.'''
+        '''Happy path for value that's already a map.'''
         schema = {'Type': 'Json'}
         val = {"foo": "bar", "items": [1, 2, 3]}
         p = self.new_parameter('p', schema, val)

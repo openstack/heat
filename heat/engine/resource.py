@@ -429,7 +429,8 @@ class Resource(object):
         '''
         Default implementation of Resource.preview.
 
-        This method should be overriden by child classes for specific behavior.
+        This method should be overridden by child classes for specific
+        behavior.
         '''
         return self
 
@@ -781,7 +782,7 @@ class Resource(object):
                 logger.error(_('DB error %s') % ex)
 
         # store resource in DB on transition to CREATE_IN_PROGRESS
-        # all other transistions (other than to DELETE_COMPLETE)
+        # all other transitions (other than to DELETE_COMPLETE)
         # should be handled by the update_and_save above..
         elif (action, status) in [(self.CREATE, self.IN_PROGRESS),
                                   (self.ADOPT, self.IN_PROGRESS)]:

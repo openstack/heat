@@ -1095,7 +1095,7 @@ class EngineService(service.Service):
         for action in actions:
             self.thread_group_mgr.start(wr.stack_id, action)
 
-        # Return the watch with the state overriden to indicate success
+        # Return the watch with the state overridden to indicate success
         # We do not update the timestamps as we are not modifying the DB
         result = api.format_watch(wr)
         result[rpc_api.WATCH_STATE_VALUE] = state

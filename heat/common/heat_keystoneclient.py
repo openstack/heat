@@ -422,8 +422,8 @@ class KeystoneClientV3(object):
         # Note v3/credentials does not support filtering by access
         # because it's stored in the credential blob, so we expect
         # all resources to pass credential_id except where backwards
-        # compatibility is required (resource only has acccess stored)
-        # then we'll have to to a brute-force lookup locally
+        # compatibility is required (resource only has access stored)
+        # then we'll have to do a brute-force lookup locally
         if credential_id:
             cred = self.client.credentials.get(credential_id)
             ec2_creds = json.loads(cred.blob)

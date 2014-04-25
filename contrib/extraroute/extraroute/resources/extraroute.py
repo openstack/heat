@@ -40,7 +40,7 @@ class ExtraRoute(neutron.NeutronResource):
             required=True),
         NEXTHOP: properties.Schema(
             properties.Schema.STRING,
-            description=_('Nexthop IP adddress.'),
+            description=_('Nexthop IP address.'),
             required=True)
     }
 

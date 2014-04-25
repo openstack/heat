@@ -448,7 +448,7 @@ class HOTemplateTest(HeatTestCase):
 
     def test_prevent_parameters_access(self):
         """
-        Test that the parameters section can't be accesed using the template
+        Test that the parameters section can't be accessed using the template
         as a dictionary.
         """
         expected_description = "This can be accessed"

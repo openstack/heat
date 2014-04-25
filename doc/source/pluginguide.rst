@@ -135,8 +135,8 @@ plug-in.
         }
 
 As shown above, some properties may themselves be complex and
-reference nested schema definitions.  Following are the parameters to
-to the ``Schema`` constructor; all but the first have defaults.
+reference nested schema definitions.  Following are the parameters to the
+``Schema`` constructor; all but the first have defaults.
 
 *data_type*:
 

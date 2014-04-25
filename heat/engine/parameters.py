@@ -65,7 +65,7 @@ class Schema(constr.Schema):
         self.context = context
 
     # Schema class validates default value for lists assuming list type. For
-    # comma delimited list string supported in paramaters Schema class, the
+    # comma delimited list string supported in parameters Schema class, the
     # default value has to be parsed into a list if necessary so that
     # validation works.
     def _validate_default(self):

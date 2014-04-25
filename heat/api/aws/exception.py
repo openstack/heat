@@ -28,7 +28,7 @@ class HeatAPIException(webob.exc.HTTPError):
     '''
     Subclass webob HTTPError so we can correctly serialize the wsgi response
     into the http response body, using the format specified by the request.
-    Note this should not be used directly, instead use of of the subclasses
+    Note this should not be used directly, instead use the subclasses
     defined below which map to AWS API errors
     '''
     code = 400
