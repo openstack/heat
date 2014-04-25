@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import functools
 import json
 import math
@@ -393,18 +394,16 @@ class InstanceGroup(stack_resource.StackResource):
                        if inst.FnGetRefId() not in exclude]
             for lb in self.properties[self.LOAD_BALANCER_NAMES]:
                 lb_resource = self.stack[lb]
+                lb_defn = copy.deepcopy(lb_resource.t)
                 if 'Instances' in lb_resource.properties_schema:
-                    lb_resource.json_snippet['Properties']['Instances'] = (
-                        id_list)
+                    lb_defn['Properties']['Instances'] = id_list
                 elif 'members' in lb_resource.properties_schema:
-                    lb_resource.json_snippet['Properties']['members'] = (
-                        id_list)
+                    lb_defn['Properties']['members'] = id_list
                 else:
                     raise exception.Error(
                         _("Unsupported resource '%s' in LoadBalancerNames") %
                         (lb,))
-                resolved_snippet = self.stack.resolve_static_data(
-                    lb_resource.json_snippet)
+                resolved_snippet = self.stack.resolve_static_data(lb_defn)
                 scheduler.TaskRunner(lb_resource.update, resolved_snippet)()
 
     def FnGetRefId(self):

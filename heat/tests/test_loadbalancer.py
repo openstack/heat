@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import re
 
 import mock
@@ -190,7 +191,7 @@ class LoadBalancerTest(HeatTestCase):
                                      s)
             id_list.append(inst.FnGetRefId())
 
-        rsrc.handle_update(rsrc.json_snippet, {}, {'Instances': id_list})
+        rsrc.handle_update(copy.deepcopy(rsrc.t), {}, {'Instances': id_list})
 
         self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
         self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroup.GroupName'))
