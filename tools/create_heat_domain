@@ -15,8 +15,9 @@
 import logging
 import os
 import sys
-from keystoneclient.v3 import client
+
 import keystoneclient.exceptions as kc_exception
+from keystoneclient.v3 import client
 
 logger = logging.getLogger(__name__)
 
