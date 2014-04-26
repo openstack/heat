@@ -52,6 +52,12 @@ except ImportError:
     ceilometerclient = None
     logger.info(_('ceilometerclient not available'))
 
+try:
+    from glanceclient import client as glanceclient
+except ImportError:
+    glanceclient = None
+    logger.info(_('glanceclient not available'))
+
 _default_backend = "heat.engine.clients.OpenStackClients"
 
 cloud_opts = [
@@ -76,6 +82,7 @@ class OpenStackClients(object):
         self._trove = None
         self._ceilometer = None
         self._heat = None
+        self._glance = None
 
     @property
     def auth_token(self):
@@ -147,6 +154,31 @@ class OpenStackClients(object):
         }
         self._swift = swiftclient.Connection(**args)
         return self._swift
+
+    def glance(self):
+        if glanceclient is None:
+            return None
+        if self._glance:
+            return self._glance
+
+        con = self.context
+        endpoint_type = self._get_client_option('glance', 'endpoint_type')
+        endpoint = self.url_for(service_type='image',
+                                endpoint_type=endpoint_type)
+        args = {
+            'auth_url': con.auth_url,
+            'service_type': 'image',
+            'project_id': con.tenant,
+            'token': self.auth_token,
+            'endpoint_type': endpoint_type,
+            'ca_file': self._get_client_option('glance', 'ca_file'),
+            'cert_file': self._get_client_option('glance', 'cert_file'),
+            'key_file': self._get_client_option('glance', 'key_file'),
+            'insecure': self._get_client_option('glance', 'insecure')
+        }
+
+        self._glance = glanceclient.Client('1', endpoint, **args)
+        return self._glance
 
     def neutron(self):
         if neutronclient is None:

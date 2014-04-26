@@ -358,6 +358,9 @@ class Resource(object):
     def heat(self):
         return self.stack.clients.heat()
 
+    def glance(self):
+        return self.stack.clients.glance()
+
     def _do_action(self, action, pre_func=None, resource_data=None):
         '''
         Perform a transition to a new state via a specified action
