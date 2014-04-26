@@ -527,7 +527,8 @@ def _query_all_by_stack(context, stack_id):
 
 
 def event_get_all_by_stack(context, stack_id):
-    return _query_all_by_stack(context, stack_id).all()
+    return _query_all_by_stack(context, stack_id).order_by(
+        models.Event.id).all()
 
 
 def event_count_all_by_stack(context, stack_id):
