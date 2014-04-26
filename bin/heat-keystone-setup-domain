@@ -18,6 +18,7 @@ import sys
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client
+from oslo.config import cfg
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,27 @@ USERNAME = os.environ.get('OS_USERNAME', None)
 PASSWORD = os.environ.get('OS_PASSWORD', None)
 AUTH_URL = os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
 
-HEAT_DOMAIN_NAME = os.environ.get('HEAT_DOMAIN', 'heat')
-HEAT_DOMAIN_ADMIN = os.environ.get('HEAT_DOMAIN_ADMIN', 'heat_domain_admin')
-HEAT_DOMAIN_PASSWORD = os.environ.get('HEAT_DOMAIN_PASSWORD', None)
+opts = [
+    cfg.StrOpt('stack-user-domain-name',
+               default="heat",
+               help="Name of domain to create for stack users."),
+    cfg.StrOpt('stack-domain-admin',
+               default="heat_stack_admin",
+               help="Keystone username with roles sufficient to manage users"
+                    " and projects in the stack-user-domain"),
+    cfg.StrOpt('stack-domain-admin-password',
+               help="Password to set for stack-domain-admin"),
+]
+for opt in opts:
+    cfg.CONF.register_opt(opt, cli=True)
+cfg.CONF(sys.argv[1:], project='heat', prog='heat-keystone-setup-domain')
+
+HEAT_DOMAIN_NAME = os.environ.get(
+    'HEAT_DOMAIN', cfg.CONF.stack_user_domain_name)
+HEAT_DOMAIN_ADMIN = os.environ.get('HEAT_DOMAIN_ADMIN',
+                                   cfg.CONF.stack_domain_admin)
+HEAT_DOMAIN_PASSWORD = os.environ.get('HEAT_DOMAIN_PASSWORD',
+                                      cfg.CONF.stack_domain_admin_password)
 HEAT_DOMAIN_DESCRIPTION = 'Contains users and projects created by heat'
 
 logger.debug("USERNAME=%s" % USERNAME)
@@ -64,7 +83,8 @@ def main():
 
     # Create heat domain admin user
     if not HEAT_DOMAIN_PASSWORD:
-        logger.error("Must export HEAT_DOMAIN_PASSWORD for domain admin user")
+        logger.error("Must export HEAT_DOMAIN_PASSWORD or use"
+                     " --stack-domain-admin-password")
         sys.exit(1)
 
     try:
