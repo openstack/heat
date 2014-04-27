@@ -283,8 +283,12 @@ def stack_get_by_name(context, stack_name):
     return query.first()
 
 
-def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
-    result = model_query(context, models.Stack).get(stack_id)
+def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
+              eager_load=False):
+    query = model_query(context, models.Stack)
+    if eager_load:
+        query = query.options(orm.joinedload("raw_template"))
+    result = query.get(stack_id)
 
     deleted_ok = show_deleted or context.show_deleted
     if result is None or result.deleted_at is not None and not deleted_ok:

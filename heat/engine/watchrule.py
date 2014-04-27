@@ -256,7 +256,8 @@ class WatchRule(object):
             logger.info(_('no action for new state %s'),
                         new_state)
         else:
-            s = db_api.stack_get(self.context, self.stack_id)
+            s = db_api.stack_get(self.context, self.stack_id,
+                                 eager_load=True)
             stack = parser.Stack.load(self.context, stack=s)
             if (stack.action != stack.DELETE
                     and stack.status == stack.COMPLETE):

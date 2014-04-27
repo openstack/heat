@@ -193,7 +193,8 @@ class Stack(collections.Mapping):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id,
-                                     show_deleted=show_deleted)
+                                     show_deleted=show_deleted,
+                                     eager_load=True)
         if stack is None:
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)

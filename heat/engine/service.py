@@ -195,7 +195,8 @@ class StackWatch(object):
         # scoping otherwise we fail to retrieve the stack
         logger.debug(_("Periodic watcher task for stack %s") % sid)
         admin_context = context.get_admin_context()
-        stack = db_api.stack_get(admin_context, sid, tenant_safe=False)
+        stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
+                                 eager_load=True)
         if not stack:
             logger.error(_("Unable to retrieve stack %s for periodic task") %
                          sid)
@@ -357,7 +358,8 @@ class EngineService(service.Service):
         identity = identifier.HeatIdentifier(**stack_identity)
 
         s = db_api.stack_get(cnxt, identity.stack_id,
-                             show_deleted=show_deleted)
+                             show_deleted=show_deleted,
+                             eager_load=True)
 
         if s is None:
             raise exception.StackNotFound(stack_name=identity.stack_name)
@@ -933,7 +935,7 @@ class EngineService(service.Service):
             raise exception.PhysicalResourceNotFound(
                 resource_id=physical_resource_id)
 
-        stack = parser.Stack.load(cnxt, stack=rs.stack)
+        stack = parser.Stack.load(cnxt, stack_id=rs.stack.id)
         resource = stack[rs.name]
 
         return dict(resource.identifier())
