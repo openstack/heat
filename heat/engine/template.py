@@ -126,9 +126,10 @@ class Template(collections.Mapping):
         self.version = get_version(self.t, _template_classes.keys())
 
     @classmethod
-    def load(cls, context, template_id):
+    def load(cls, context, template_id, t=None):
         '''Retrieve a Template with the given ID from the database.'''
-        t = db_api.raw_template_get(context, template_id)
+        if t is None:
+            t = db_api.raw_template_get(context, template_id)
         return cls(t.template, template_id=template_id, files=t.files)
 
     def store(self, context=None):

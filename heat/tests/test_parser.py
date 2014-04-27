@@ -1031,7 +1031,9 @@ class StackTest(HeatTestCase):
 
         t = template.Template.load(self.ctx, stack.raw_template_id)
         self.m.StubOutWithMock(template.Template, 'load')
-        template.Template.load(self.ctx, stack.raw_template_id).AndReturn(t)
+        template.Template.load(
+            self.ctx, stack.raw_template_id, stack.raw_template
+        ).AndReturn(t)
 
         env = environment.Environment(stack.parameters)
         self.m.StubOutWithMock(environment, 'Environment')
