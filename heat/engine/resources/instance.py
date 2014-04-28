@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from oslo.config import cfg
 import six
 
@@ -208,7 +210,8 @@ class Instance(resource.Resource):
         ),
         NETWORK_INTERFACES: properties.Schema(
             properties.Schema.LIST,
-            _('Network interfaces to associate with instance.')
+            _('Network interfaces to associate with instance.'),
+            update_allowed=True
         ),
         SOURCE_DEST_CHECK: properties.Schema(
             properties.Schema.BOOLEAN,
@@ -217,7 +220,8 @@ class Instance(resource.Resource):
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Subnet ID to launch instance in.')
+            _('Subnet ID to launch instance in.'),
+            update_allowed=True
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
@@ -531,10 +535,18 @@ class Instance(resource.Resource):
         return ((vol[self.VOLUME_ID],
                  vol[self.VOLUME_DEVICE]) for vol in volumes)
 
+    def _remove_matched_ifaces(self, old_network_ifaces, new_network_ifaces):
+        # find matches and remove them from old and new ifaces
+        old_network_ifaces_copy = copy.deepcopy(old_network_ifaces)
+        for iface in old_network_ifaces_copy:
+            if iface in new_network_ifaces:
+                new_network_ifaces.remove(iface)
+                old_network_ifaces.remove(iface)
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff['Metadata']
-
+        checkers = []
         server = None
         if self.TAGS in prop_diff:
             server = self.nova().servers.get(self.resource_id)
@@ -549,11 +561,82 @@ class Instance(resource.Resource):
                 server = self.nova().servers.get(self.resource_id)
             checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
                                            flavor_id)
-            checker.start()
-            return checker
+            checkers.append(checker)
+        if self.NETWORK_INTERFACES in prop_diff:
+            new_network_ifaces = prop_diff.get(self.NETWORK_INTERFACES)
+            old_network_ifaces = self.properties.get(self.NETWORK_INTERFACES)
+            subnet_id = (
+                prop_diff.get(self.SUBNET_ID) or
+                self.properties.get(self.SUBNET_ID))
+            security_groups = self._get_security_groups()
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            # if there is entrys in old_network_ifaces and new_network_ifaces,
+            # remove the same entrys from old and new ifaces
+            if old_network_ifaces and new_network_ifaces:
+                # there are four situations:
+                # 1.old includes new, such as: old = 2,3, new = 2
+                # 2.new includes old, such as: old = 2,3, new = 1,2,3
+                # 3.has overlaps, such as: old = 2,3, new = 1,2
+                # 4.different, such as: old = 2,3, new = 1,4
+                # detach unmatched ones in old, attach unmatched ones in new
+                self._remove_matched_ifaces(old_network_ifaces,
+                                            new_network_ifaces)
+                if old_network_ifaces:
+                    old_nics = self._build_nics(old_network_ifaces)
+                    for nic in old_nics:
+                        checker = scheduler.TaskRunner(
+                            server.interface_detach,
+                            nic['port-id'])
+                        checkers.append(checker)
+                if new_network_ifaces:
+                    new_nics = self._build_nics(new_network_ifaces)
+                    for nic in new_nics:
+                        checker = scheduler.TaskRunner(
+                            server.interface_attach,
+                            nic['port-id'],
+                            None, None)
+                        checkers.append(checker)
+            # if the interfaces not come from property 'NetworkInterfaces',
+            # the situation is somewhat complex, so to detach the old ifaces,
+            # and then attach the new ones.
+            else:
+                interfaces = server.interface_list()
+                for iface in interfaces:
+                    checker = scheduler.TaskRunner(server.interface_detach,
+                                                   iface.port_id)
+                    checkers.append(checker)
+                nics = self._build_nics(new_network_ifaces,
+                                        security_groups=security_groups,
+                                        subnet_id=subnet_id)
+                # 'SubnetId' property is empty(or None) and
+                # 'NetworkInterfaces' property is empty(or None),
+                # _build_nics() will return nics = None,we should attach
+                # first free port, according to similar behavior during
+                # instance creation
+                if not nics:
+                    checker = scheduler.TaskRunner(server.interface_attach,
+                                                   None, None, None)
+                    checkers.append(checker)
+                else:
+                    for nic in nics:
+                        checker = scheduler.TaskRunner(
+                            server.interface_attach,
+                            nic['port-id'], None, None)
+                        checkers.append(checker)
 
-    def check_update_complete(self, checker):
-        return checker.step() if checker is not None else True
+        if checkers:
+            checkers[0].start()
+        return checkers
+
+    def check_update_complete(self, checkers):
+        '''Push all checkers to completion in list order.'''
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
 
     def metadata_update(self, new_metadata=None):
         '''
