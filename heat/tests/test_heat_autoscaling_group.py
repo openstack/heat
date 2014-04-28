@@ -24,7 +24,6 @@ from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_resource
-from heat.engine import template
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -427,7 +426,7 @@ class RollingUpdatesTest(HeatTestCase):
 
         def update_with_template(tmpl, env):
             # keep track of the new updates to resources _in creation order_.
-            definitions = template.Template(tmpl).resource_definitions(stack)
+            definitions = tmpl.resource_definitions(stack)
             templates = [definitions[name] for name in created_order]
             batches.append(templates)
         patcher = mock.patch.object(
