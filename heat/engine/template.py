@@ -166,6 +166,15 @@ class Template(collections.Mapping):
         '''Return a dictionary of ResourceDefinition objects.'''
         pass
 
+    @abc.abstractmethod
+    def add_resource(self, definition, name=None):
+        '''Add a resource to the template.
+
+        The resource is passed as a ResourceDefinition object. If no name is
+        specified, the name from the ResourceDefinition should be used.
+        '''
+        pass
+
     def functions(self):
         '''Return a dict of template functions keyed by name.'''
         if self.version not in self._functionmaps:

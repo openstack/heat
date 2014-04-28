@@ -619,6 +619,30 @@ Mappings:
         self.assertEqual(expected_description, tmpl['Description'])
         self.assertNotIn('Parameters', tmpl.keys())
 
+    def test_add_resource(self):
+        cfn_tpl = template_format.parse('''
+        AWSTemplateFormatVersion: 2010-09-09
+        Resources:
+          resource1:
+            Type: AWS::EC2::Instance
+            Properties:
+              property1: value1
+            Metadata:
+              foo: bar
+            DependsOn: dummy
+            DeletionPolicy: Retain
+            UpdatePolicy:
+              foo: bar
+        ''')
+        source = parser.Template(cfn_tpl)
+        empty = parser.Template(copy.deepcopy(empty_template))
+        stack = parser.Stack(self.ctx, 'test_stack', source)
+
+        for defn in source.resource_definitions(stack).values():
+            empty.add_resource(defn)
+
+        self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])
+
 
 class TemplateFnErrorTest(HeatTestCase):
     scenarios = [
