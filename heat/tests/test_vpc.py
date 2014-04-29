@@ -66,6 +66,7 @@ class VPCTestBase(HeatTestCase):
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
+        self.assertIsNone(stack.validate())
         self.assertIsNone(stack.create())
         return stack
 
