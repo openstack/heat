@@ -172,8 +172,6 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(instance, 'neutron')
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
             instance,
@@ -226,9 +224,6 @@ class instancesTest(HeatTestCase):
         instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-        nic.t = nic.stack.resolve_runtime_data(nic.t)
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(

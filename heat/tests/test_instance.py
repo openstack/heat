@@ -93,8 +93,6 @@ class InstancesTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
             self.fc.servers.create(

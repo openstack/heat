@@ -62,8 +62,6 @@ class nokeyTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
             instance,

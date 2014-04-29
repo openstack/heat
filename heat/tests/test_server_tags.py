@@ -146,8 +146,6 @@ class ServerTagsTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
             instance,
@@ -237,8 +235,6 @@ class ServerTagsTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        group.t = group.stack.resolve_runtime_data(group.t)
-
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -289,8 +285,6 @@ class ServerTagsTest(HeatTestCase):
         instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-        group.t = group.stack.resolve_runtime_data(group.t)
 
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')

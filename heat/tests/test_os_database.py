@@ -105,7 +105,6 @@ class OSDBInstanceTest(HeatTestCase):
             '%s_name' % name,
             t['Resources']['MySqlCloudDB'],
             stack)
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
         return instance
 
     def _stubout_create(self, instance, fake_dbinstance):

@@ -119,8 +119,6 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        server.t = server.stack.resolve_runtime_data(server.t)
-
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
             self.fc.servers.create(
@@ -209,7 +207,6 @@ class ServersTest(HeatTestCase):
             {'a': 1}
         server = servers.Server('create_metadata_test_server',
                                 t['Resources']['WebServer'], stack)
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         instance_meta = {'a': "1"}
         self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -398,8 +395,6 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        server.t = server.stack.resolve_runtime_data(server.t)
-
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
@@ -440,8 +435,6 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -484,8 +477,6 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        server.t = server.stack.resolve_runtime_data(server.t)
-
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
@@ -527,8 +518,6 @@ class ServersTest(HeatTestCase):
         server.heat().MultipleTimes().AndReturn(self.fc)
         server._get_deployments_metadata(
             self.fc, 5678).AndReturn({'foo': 'bar'})
-
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -599,8 +588,6 @@ class ServersTest(HeatTestCase):
         server._get_deployments_metadata(
             self.fc, 5678).AndReturn({'foo': 'bar'})
 
-        server.t = server.stack.resolve_runtime_data(server.t)
-
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
@@ -653,7 +640,6 @@ class ServersTest(HeatTestCase):
         server = servers.Server('WebServer',
                                 t['Resources']['WebServer'], stack)
         self.m.StubOutWithMock(server, 'keystone')
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.m.ReplayAll()
         deployments = server.metadata['deployments']
         self.assertEqual([], deployments)
@@ -670,7 +656,6 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -696,7 +681,6 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -1963,7 +1947,6 @@ class ServersTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['admin_user'] = 'custom_user'
         server = servers.Server('create_metadata_test_server',
                                 t['Resources']['WebServer'], stack)
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',

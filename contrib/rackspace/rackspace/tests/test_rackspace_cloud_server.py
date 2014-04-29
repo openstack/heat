@@ -155,7 +155,6 @@ class CloudServersTest(HeatTestCase):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server._private_key = rsa_key
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -671,7 +670,6 @@ class CloudServersTest(HeatTestCase):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server._private_key = rsa_key
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -761,7 +759,6 @@ class CloudServersTest(HeatTestCase):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server._private_key = rsa_key
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -816,7 +813,6 @@ class CloudServersTest(HeatTestCase):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server._private_key = rsa_key
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -906,7 +902,6 @@ class CloudServersTest(HeatTestCase):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server._private_key = rsa_key
-        server.t = server.stack.resolve_runtime_data(server.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -966,7 +961,6 @@ class CloudServersTest(HeatTestCase):
         server._run_ssh_command = mock.Mock(return_value=0)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -992,7 +986,6 @@ class CloudServersTest(HeatTestCase):
         server._run_ssh_command = mock.Mock(return_value=0)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -1018,7 +1011,6 @@ class CloudServersTest(HeatTestCase):
         server._run_ssh_command = mock.Mock(return_value=0)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -1042,7 +1034,6 @@ class CloudServersTest(HeatTestCase):
         server._run_ssh_command = mock.Mock(return_value=0)
 
         mock_nova.return_value = self.fc
-        server.t = server.stack.resolve_runtime_data(server.t)
         self.fc.servers.create = mock.Mock(return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
