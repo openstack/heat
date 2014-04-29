@@ -545,7 +545,8 @@ class Resource(object):
                                           self.name,
                                           self.context)
             after_properties.validate()
-            tmpl_diff = self.update_template_diff(after, before)
+            tmpl_diff = self.update_template_diff(function.resolve(after),
+                                                  before)
             prop_diff = self.update_template_diff_properties(after_properties,
                                                              before_properties)
             if callable(getattr(self, 'handle_update', None)):

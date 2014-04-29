@@ -146,8 +146,7 @@ class StackUpdate(object):
         # Note the new resource snippet is resolved in the context
         # of the existing stack (which is the stack being updated)
         raw_snippet = copy.deepcopy(new_res.t)
-        parsed_snippet = self.existing_stack.resolve_static_data(raw_snippet)
-        new_snippet = self.existing_stack.resolve_runtime_data(parsed_snippet)
+        new_snippet = self.existing_stack.resolve_static_data(raw_snippet)
 
         return existing_res.update(new_snippet, existing_snippet,
                                    prev_resource=prev_res)
