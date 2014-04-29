@@ -382,6 +382,16 @@ For example:
       constraints:
         - custom_constraint: nova.keypair
 
+.. _hot_spec_pseudo_parameters
+
+Pseudo Parameters
+-----------------
+
+In addition to parameters defined by a template author, Heat also creates two
+parameters for every stack that allow referential access to the stack's name
+and identifier. These parameters are named ``OS::stack_name`` for the stack
+name and ``OS::stack_id`` for the stack identifier. These values are accessible
+via the `get_param`_ intrinsic function just like user-defined parameters.
 
 .. _hot_spec_resources:
 
