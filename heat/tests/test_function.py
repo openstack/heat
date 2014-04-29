@@ -22,6 +22,9 @@ class TestFunction(function.Function):
         if len(self.args) < 2:
             raise Exception(_('Need more arguments'))
 
+    def dependencies(self, path):
+        return ['foo', 'bar']
+
     def result(self):
         return 'wibble'
 
@@ -122,3 +125,20 @@ class ValidateTest(HeatTestCase):
         snippet = {'foo': 'bar', 'blarg': self.func}
         ex = self.assertRaises(Exception, function.validate, snippet)
         self.assertEqual('Need more arguments', str(ex))
+
+
+class DependenciesTest(HeatTestCase):
+    func = TestFunction(None, 'test', None)
+
+    scenarios = [
+        ('function', dict(snippet=func)),
+        ('nested_map', dict(snippet={'wibble': func})),
+        ('nested_list', dict(snippet=['wibble', func])),
+        ('deep_nested', dict(snippet=[{'wibble': ['wibble', func]}])),
+    ]
+
+    def test_dependencies(self):
+        deps = list(function.dependencies(self.snippet))
+        self.assertIn('foo', deps)
+        self.assertIn('bar', deps)
+        self.assertEqual(2, len(deps))

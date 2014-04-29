@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import itertools
 import json
 
 import six
@@ -108,6 +109,10 @@ class ResourceRef(function.Function):
             raise exception.InvalidTemplateReference(resource=resource_name,
                                                      key=path)
 
+    def dependencies(self, path):
+        return itertools.chain(super(ResourceRef, self).dependencies(path),
+                               [self._resource(path)])
+
     def result(self):
         return self._resource().FnGetRefId()
 
@@ -163,6 +168,10 @@ class GetAtt(function.Function):
         except KeyError:
             raise exception.InvalidTemplateReference(resource=resource_name,
                                                      key=path)
+
+    def dependencies(self, path):
+        return itertools.chain(super(GetAtt, self).dependencies(path),
+                               [self._resource(path)])
 
     def result(self):
         attribute = function.resolve(self._attribute)
