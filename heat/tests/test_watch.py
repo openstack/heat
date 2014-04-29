@@ -267,7 +267,6 @@ class WatchRuleTest(HeatTestCase):
         new_state = self.wr.get_alarm_state()
         self.assertEqual('ALARM', new_state)
 
-    @utils.wr_delete_after
     def test_load(self):
         # Insert two dummy watch rules into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -307,7 +306,6 @@ class WatchRuleTest(HeatTestCase):
             self.assertEqual(datetime.timedelta(seconds=int(rule['Period'])),
                              wr.timeperiod)
 
-    @utils.wr_delete_after
     def test_store(self):
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmActions': [u'WebServerRestartPolicy'],
@@ -328,7 +326,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(watchrule.WatchRule.NODATA, dbwr.state)
         self.assertEqual(rule, dbwr.rule)
 
-    @utils.wr_delete_after
     def test_evaluate(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -386,7 +383,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(now, self.wr.last_evaluated)
         self.assertEqual([], actions)
 
-    @utils.wr_delete_after
     def test_evaluate_suspend(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -416,7 +412,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(self.wr.SUSPENDED, self.wr.state)
         self.assertEqual([], actions)
 
-    @utils.wr_delete_after
     def test_rule_actions_alarm_normal(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -444,7 +439,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual([], actions)
         self.m.VerifyAll()
 
-    @utils.wr_delete_after
     def test_rule_actions_alarm_alarm(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -479,7 +473,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(['DummyAction'], actions)
         self.m.VerifyAll()
 
-    @utils.wr_delete_after
     def test_rule_actions_alarm_two_actions(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -507,7 +500,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(['DummyAction', 'DummyAction'], actions)
         self.m.VerifyAll()
 
-    @utils.wr_delete_after
     def test_rule_actions_ok_alarm(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -548,7 +540,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(['DummyAction'], actions)
         self.m.VerifyAll()
 
-    @utils.wr_delete_after
     def test_rule_actions_nodata(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -587,7 +578,6 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(['DummyAction'], actions)
         self.m.VerifyAll()
 
-    @utils.wr_delete_after
     def test_create_watch_data(self):
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmDescription': u'test alarm',
@@ -617,7 +607,6 @@ class WatchRuleTest(HeatTestCase):
         # correctly get a list of all datapoints where watch_rule_id ==
         # watch_rule.id, so leave it as a single-datapoint test for now.
 
-    @utils.wr_delete_after
     def test_create_watch_data_suspended(self):
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmDescription': u'test alarm',
@@ -641,7 +630,6 @@ class WatchRuleTest(HeatTestCase):
         dbwr = db_api.watch_rule_get_by_name(self.ctx, 'create_data_test')
         self.assertEqual([], dbwr.watch_data)
 
-    @utils.wr_delete_after
     def test_create_watch_data_match(self):
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmDescription': u'test alarm',
@@ -663,7 +651,6 @@ class WatchRuleTest(HeatTestCase):
                                                       u'group_x'}]}}
         self.assertTrue(watchrule.rule_can_use_sample(self.wr, data))
 
-    @utils.wr_delete_after
     def test_create_watch_data_match_2(self):
         rule = {u'EvaluationPeriods': u'1',
                 u'AlarmDescription': u'test alarm',

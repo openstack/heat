@@ -2321,7 +2321,6 @@ class StackServiceTest(HeatTestCase):
         self.stack.delete()
 
     @stack_context('service_show_watch_test_stack', False)
-    @utils.wr_delete_after
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2376,7 +2375,6 @@ class StackServiceTest(HeatTestCase):
             self.assertIn(key, result[0])
 
     @stack_context('service_show_watch_metric_test_stack', False)
-    @utils.wr_delete_after
     def test_show_watch_metric(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2423,7 +2421,6 @@ class StackServiceTest(HeatTestCase):
             self.assertIn(key, result[0])
 
     @stack_context('service_show_watch_state_test_stack')
-    @utils.wr_delete_after
     def test_set_watch_state(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2485,7 +2482,6 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     @stack_context('service_show_watch_state_badstate_test_stack')
-    @utils.wr_delete_after
     def test_set_watch_state_badstate(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',

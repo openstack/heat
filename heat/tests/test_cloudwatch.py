@@ -69,7 +69,6 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         self.assertIsNone(scheduler.TaskRunner(s['test_me'].delete)())
 
     @utils.stack_delete_after
-    @utils.wr_delete_after
     def test_resource_delete_notfound(self):
         # if a resource is not found, handle_delete() should not raise
         # an exception.
