@@ -35,7 +35,17 @@ import datetime
 import functools
 import inspect
 import itertools
-import json
+import sys
+
+if sys.version_info < (2, 7):
+    # On Python <= 2.6, json module is not C boosted, so try to use
+    # simplejson module if available
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+else:
+    import json
 
 import six
 import six.moves.xmlrpc_client as xmlrpclib
