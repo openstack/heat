@@ -342,7 +342,7 @@ class Split(function.Function):
 
 class Replace(function.Function):
     '''
-    A function for performing string subsitutions.
+    A function for performing string substitutions.
 
     Takes the form::
 

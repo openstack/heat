@@ -173,7 +173,7 @@ def format_event(event):
 
 
 def format_notification_body(stack):
-    # some other posibilities here are:
+    # some other possibilities here are:
     # - template name
     # - template size
     # - resource count

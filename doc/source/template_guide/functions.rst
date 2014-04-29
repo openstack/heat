@@ -214,8 +214,8 @@ Find an replace one string with another.
 
 Parameters
 ~~~~~~~~~~
-subsitutions : map
-    A map of subsitutions.
+substitutions : map
+    A map of substitutions.
 string: String
     The string to do the substitutions in.
 

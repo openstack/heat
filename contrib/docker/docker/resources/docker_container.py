@@ -69,7 +69,7 @@ class DockerContainer(resource.Resource):
         ),
         ATTACH_STDIN: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Attach to the the process\' standard input'),
+            _('Attach to the process\' standard input'),
             default=False
         ),
         ATTACH_STDOUT: properties.Schema(

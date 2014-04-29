@@ -106,7 +106,7 @@ class NovaKeyPairTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_key_not_found(self):
-        """Test delete non-existant key."""
+        """Test delete non-existent key."""
         test_res = self._get_test_resource(self.kp_template)
         test_res.resource_id = "key_name"
         test_res.state_set(test_res.CREATE, test_res.COMPLETE)

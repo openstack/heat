@@ -294,7 +294,7 @@ class VolumeDetachTask(object):
 
         # The next check is needed for immediate reattachment when updating:
         # there might be some time between cinder marking volume as 'available'
-        # and nova removing attachment from it's own objects, so we
+        # and nova removing attachment from its own objects, so we
         # check that nova already knows that the volume is detached
         server_api = self.clients.nova().volumes
 
