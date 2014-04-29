@@ -638,7 +638,7 @@ Resources:
 
 class ResDataResource(generic_rsrc.GenericResource):
     def handle_create(self):
-        db_api.resource_data_set(self, "test", 'A secret value', True)
+        self.data_set("test", 'A secret value', True)
 
 
 class ResDataNestedStackTest(NestedStackTest):
