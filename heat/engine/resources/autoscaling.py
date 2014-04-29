@@ -245,7 +245,7 @@ class InstanceGroup(stack_resource.StackResource):
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
-                                         self.stack.resolve_runtime_data,
+                                         function.resolve,
                                          self.name,
                                          self.context)
 
@@ -284,8 +284,7 @@ class InstanceGroup(stack_resource.StackResource):
         if self.properties.get('VPCZoneIdentifier'):
             instance_definition['Properties']['SubnetId'] = \
                 self.properties['VPCZoneIdentifier'][0]
-        # resolve references within the context of this stack.
-        return self.stack.resolve_runtime_data(instance_definition)
+        return instance_definition
 
     def _get_instance_templates(self):
         """Get templates for resource instances."""
@@ -596,7 +595,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
-                                         self.stack.resolve_runtime_data,
+                                         function.resolve,
                                          self.name,
                                          self.context)
 
@@ -911,9 +910,7 @@ class AutoScalingResourceGroup(AutoScalingGroup):
     attributes_schema = {}
 
     def _get_instance_definition(self):
-        resource_definition = self.properties[self.RESOURCE]
-        # resolve references within the context of this stack.
-        return self.stack.resolve_runtime_data(resource_definition)
+        return self.properties[self.RESOURCE]
 
     def _lb_reload(self, exclude=None):
         """AutoScalingResourceGroup does not maintain load balancer
@@ -1027,7 +1024,7 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
-                                         self.stack.resolve_runtime_data,
+                                         function.resolve,
                                          self.name,
                                          self.context)
 

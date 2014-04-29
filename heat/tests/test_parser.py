@@ -20,6 +20,7 @@ import mock
 from mox import IgnoreArg
 from oslo.config import cfg
 from six.moves import xrange
+import warnings
 
 from heat.common import exception
 from heat.common import template_format
@@ -747,6 +748,24 @@ class ResolveDataTest(HeatTestCase):
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
+
+    def test_stack_resolve_runtime_data_deprecated(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             tenant_id='bar')
+
+        with warnings.catch_warnings(record=True) as ws:
+            warnings.filterwarnings('always')
+
+            # Work around http://bugs.python.org/issue4180
+            getattr(parser, '__warningregistry__', {}).clear()
+
+            test_data = {'foo': 'bar'}
+            resolved = stack.resolve_runtime_data(test_data)
+
+            self.assertTrue(ws)
+            self.assertTrue(issubclass(ws[0].category, DeprecationWarning))
+
+            self.assertEqual(test_data, resolved)
 
     def test_join_split(self):
         # join

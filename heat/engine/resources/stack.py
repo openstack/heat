@@ -16,6 +16,7 @@ from requests import exceptions
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine import function
 from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import stack_resource
@@ -98,7 +99,7 @@ class NestedStack(stack_resource.StackResource):
         # Nested stack template may be changed even if the prop_diff is empty.
         self.properties = Properties(self.properties_schema,
                                      json_snippet.get('Properties', {}),
-                                     self.stack.resolve_runtime_data,
+                                     function.resolve,
                                      self.name,
                                      self.context)
 
