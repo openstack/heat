@@ -103,7 +103,6 @@ class DBInstance(resource.Resource):
 class DBInstanceTest(HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()
-        utils.setup_dummy_db()
 
     def test_dbinstance(self):
         """test that the Template is parsable and

@@ -35,7 +35,6 @@ class StructuredConfigTestJSON(HeatTestCase):
 
     def setUp(self):
         super(StructuredConfigTestJSON, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         self.properties = {
             'config': {'foo': 'bar'}
@@ -80,7 +79,6 @@ class StructuredDeploymentDerivedTest(HeatTestCase):
 
     def setUp(self):
         super(StructuredDeploymentDerivedTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
         props = {
             'input_values': {'bar': 'baz'},

@@ -13,14 +13,12 @@
 
 from heat.common import timeutils as util
 from heat.tests.common import HeatTestCase
-from heat.tests import utils
 
 
 class ISO8601UtilityTest(HeatTestCase):
 
     def setUp(self):
         super(ISO8601UtilityTest, self).setUp()
-        utils.setup_dummy_db()
 
     def test_valid_durations(self):
         self.assertEqual(0, util.parse_isoduration('PT'))

@@ -160,7 +160,6 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         super(JsonYamlResolvedCompareTest, self).setUp()
         self.longMessage = True
         self.maxDiff = None
-        utils.setup_dummy_db()
 
     def load_template(self, file_name):
         filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),

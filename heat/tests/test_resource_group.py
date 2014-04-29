@@ -77,7 +77,6 @@ class ResourceGroupTest(common.HeatTestCase):
         common.HeatTestCase.setUp(self)
         resource._register_class("dummy.resource",
                                  ResourceWithPropsAndId)
-        utils.setup_dummy_db()
 
     def test_assemble_nested(self):
         """

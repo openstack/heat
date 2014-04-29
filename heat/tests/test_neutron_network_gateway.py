@@ -86,7 +86,6 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def prepare_create_network_gateway(self):
         clients.OpenStackClients.keystone().AndReturn(

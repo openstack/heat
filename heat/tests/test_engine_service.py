@@ -307,7 +307,6 @@ class DummyThreadGroup(object):
 class StackCreateTest(HeatTestCase):
     def setUp(self):
         super(StackCreateTest, self).setUp()
-        utils.setup_dummy_db()
 
     def test_wordpress_single_instance_stack_create(self):
         stack = get_wordpress_stack('test_stack', utils.dummy_context())
@@ -403,8 +402,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.m.StubOutWithMock(service.EngineListener, 'start')
@@ -1200,8 +1197,6 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
 
     def setUp(self):
         super(StackServiceUpdateNotSupportedTest, self).setUp()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.m.StubOutWithMock(service.EngineListener, 'start')
@@ -1239,7 +1234,6 @@ class StackServiceSuspendResumeTest(HeatTestCase):
 
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.m.StubOutWithMock(service.EngineListener, 'start')
@@ -1325,8 +1319,6 @@ class StackServiceAuthorizeTest(HeatTestCase):
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
-
-        utils.setup_dummy_db()
 
     @stack_context('service_authorize_stack_user_nocreds_test_stack')
     def test_stack_authorize_stack_user_nocreds(self):
@@ -1425,8 +1417,6 @@ class StackServiceTest(HeatTestCase):
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
-
-        utils.setup_dummy_db()
 
     @mock.patch.object(service.db_api, 'stack_get_all')
     @mock.patch.object(service.service.Service, 'start')
@@ -2683,7 +2673,6 @@ class SoftwareConfigServiceTest(HeatTestCase):
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
         self.engine = service.EngineService('a-host', 'a-topic')
-        utils.setup_dummy_db()
 
     def _create_software_config(
             self, group='Heat::Shell', name='config_mysql', config=None,

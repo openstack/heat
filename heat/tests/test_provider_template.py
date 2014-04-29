@@ -38,7 +38,6 @@ class MyCloudResource(generic_rsrc.GenericResource):
 class ProviderTemplateTest(HeatTestCase):
     def setUp(self):
         super(ProviderTemplateTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('OS::ResourceType',
                                  generic_rsrc.GenericResource)
         resource._register_class('myCloud::ResourceType',
@@ -677,7 +676,6 @@ Outputs:
 
     def setUp(self):
         super(ProviderTemplateUpdateTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
 
     def create_stack(self):

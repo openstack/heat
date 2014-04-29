@@ -101,7 +101,6 @@ class StackResourceTest(HeatTestCase):
 
     def setUp(self):
         super(StackResourceTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('some_magic_type',
                                  MyStackResource)
         resource._register_class('GenericResource',

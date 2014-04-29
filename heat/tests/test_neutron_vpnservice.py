@@ -153,7 +153,6 @@ class VPNServiceTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_vpnservice(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -308,7 +307,6 @@ class IPsecSiteConnectionTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'update_ipsec_site_connection')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_ipsec_site_connection(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -467,7 +465,6 @@ class IKEPolicyTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_ikepolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ikepolicy')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_ikepolicy(self):
         clients.OpenStackClients.keystone().AndReturn(
@@ -620,7 +617,6 @@ class IPsecPolicyTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_ipsecpolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ipsecpolicy')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        utils.setup_dummy_db()
 
     def create_ipsecpolicy(self):
         clients.OpenStackClients.keystone().AndReturn(

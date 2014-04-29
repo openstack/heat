@@ -49,7 +49,6 @@ class DockerContainerTest(HeatTestCase):
 
     def setUp(self):
         super(DockerContainerTest, self).setUp()
-        utils.setup_dummy_db()
         for res_name, res_class in docker_container.resource_mapping().items():
             resource._register_class(res_name, res_class)
 

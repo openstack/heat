@@ -35,7 +35,6 @@ class VPCTestBase(HeatTestCase):
     @skipIf(neutronclient is None, 'neutronclient unavaialble')
     def setUp(self):
         super(VPCTestBase, self).setUp()
-        utils.setup_dummy_db()
         self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'create_network')

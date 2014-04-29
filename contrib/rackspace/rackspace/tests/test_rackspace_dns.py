@@ -80,7 +80,6 @@ class RackspaceDnsTest(common.HeatTestCase):
 
     def setUp(self):
         super(RackspaceDnsTest, self).setUp()
-        utils.setup_dummy_db()
         # Test environment may not have pyrax client library installed and if
         # pyrax is not installed resource class would not be registered.
         # So register resource provider class explicitly for unit testing.

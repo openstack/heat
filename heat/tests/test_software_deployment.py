@@ -68,7 +68,6 @@ class SoftwareDeploymentTest(HeatTestCase):
 
     def setUp(self):
         super(SoftwareDeploymentTest, self).setUp()
-        utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
     def _create_stack(self, tmpl):

@@ -90,7 +90,6 @@ class OSDBInstanceTest(HeatTestCase):
     def setUp(self):
         super(OSDBInstanceTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
-        utils.setup_dummy_db()
 
     def _setup_test_clouddbinstance(self, name, parsed_t):
         stack_name = '%s_stack' % name

@@ -89,8 +89,6 @@ class SqlAlchemyTest(HeatTestCase):
     def setUp(self):
         super(SqlAlchemyTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
 
     def tearDown(self):
@@ -901,7 +899,6 @@ class DBAPIRawTemplateTest(HeatTestCase):
     def setUp(self):
         super(DBAPIRawTemplateTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
 
     def test_raw_template_create(self):
         t = template_format.parse(wp_template)
@@ -922,7 +919,6 @@ class DBAPIUserCredsTest(HeatTestCase):
     def setUp(self):
         super(DBAPIUserCredsTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
 
     def test_user_creds_create_trust(self):
         user_creds = create_user_creds(self.ctx, trust_id='test_trust_id',
@@ -972,8 +968,6 @@ class DBAPIStackTest(HeatTestCase):
     def setUp(self):
         super(DBAPIStackTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
 
@@ -1227,8 +1221,6 @@ class DBAPIResourceTest(HeatTestCase):
     def setUp(self):
         super(DBAPIResourceTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
         self.stack = create_stack(self.ctx, self.template, self.user_creds)
@@ -1313,8 +1305,6 @@ class DBAPIStackLockTest(HeatTestCase):
     def setUp(self):
         super(DBAPIStackLockTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
         self.stack = create_stack(self.ctx, self.template, self.user_creds)
@@ -1375,8 +1365,6 @@ class DBAPIResourceDataTest(HeatTestCase):
     def setUp(self):
         super(DBAPIResourceDataTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
         self.stack = create_stack(self.ctx, self.template, self.user_creds)
@@ -1428,8 +1416,6 @@ class DBAPIEventTest(HeatTestCase):
     def setUp(self):
         super(DBAPIEventTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
 
@@ -1524,8 +1510,6 @@ class DBAPIWatchRuleTest(HeatTestCase):
     def setUp(self):
         super(DBAPIWatchRuleTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
         self.stack = create_stack(self.ctx, self.template, self.user_creds)
@@ -1606,8 +1590,6 @@ class DBAPIWatchDataTest(HeatTestCase):
     def setUp(self):
         super(DBAPIWatchDataTest, self).setUp()
         self.ctx = utils.dummy_context()
-        utils.setup_dummy_db()
-        utils.reset_dummy_db()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
         self.stack = create_stack(self.ctx, self.template, self.user_creds)

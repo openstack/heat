@@ -35,7 +35,6 @@ from heat.tests import utils
 class ResourceTest(HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
-        utils.setup_dummy_db()
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
@@ -745,7 +744,6 @@ class ResourceTest(HeatTestCase):
 class ResourceAdoptTest(HeatTestCase):
     def setUp(self):
         super(ResourceAdoptTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
 
@@ -829,7 +827,6 @@ class ResourceAdoptTest(HeatTestCase):
 class ResourceDependenciesTest(HeatTestCase):
     def setUp(self):
         super(ResourceDependenciesTest, self).setUp()
-        utils.setup_dummy_db()
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
@@ -1297,7 +1294,6 @@ class MetadataTest(HeatTestCase):
             'Type': 'Foo',
             'Metadata': {'Test': 'Initial metadata'}
         }
-        utils.setup_dummy_db()
         self.stack = parser.Stack(utils.dummy_context(),
                                   'test_stack', parser.Template({}))
         self.stack.store()

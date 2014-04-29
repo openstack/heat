@@ -128,7 +128,6 @@ class ServerTagsTest(HeatTestCase):
     def setUp(self):
         super(ServerTagsTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
 
     def _setup_test_instance(self, intags=None, nova_tags=None):
         stack_name = 'tag_test'

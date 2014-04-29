@@ -40,7 +40,6 @@ class NovaKeyPairTest(HeatTestCase):
 
     def setUp(self):
         super(NovaKeyPairTest, self).setUp()
-        utils.setup_dummy_db()
         self.fake_nova = self.m.CreateMockAnything()
         self.fake_keypairs = self.m.CreateMockAnything()
         self.fake_nova.keypairs = self.fake_keypairs

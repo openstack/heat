@@ -107,7 +107,6 @@ class UserTest(HeatTestCase):
         self.username = 'test_stack-CfnUser-aabbcc'
         self.fc = fakes.FakeKeystoneClient(username=self.username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-        utils.setup_dummy_db()
 
     def create_user(self, t, stack, resource_name,
                     project_id='stackproject', user_id='dummy_user',
@@ -276,7 +275,6 @@ class UserTest(HeatTestCase):
 class AccessKeyTest(HeatTestCase):
     def setUp(self):
         super(AccessKeyTest, self).setUp()
-        utils.setup_dummy_db()
         self.username = utils.PhysName('test_stack', 'CfnUser')
         self.credential_id = 'acredential123'
         self.fc = fakes.FakeKeystoneClient(username=self.username,

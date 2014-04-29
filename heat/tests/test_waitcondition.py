@@ -98,7 +98,6 @@ class WaitConditionTest(HeatTestCase):
 
     def setUp(self):
         super(WaitConditionTest, self).setUp()
-        utils.setup_dummy_db()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
 
@@ -106,10 +105,6 @@ class WaitConditionTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
-
-    def tearDown(self):
-        super(WaitConditionTest, self).tearDown()
-        utils.reset_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -393,11 +388,6 @@ class WaitConditionHandleTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
-        utils.setup_dummy_db()
-
-    def tearDown(self):
-        super(WaitConditionHandleTest, self).tearDown()
-        utils.reset_dummy_db()
 
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
@@ -582,12 +572,10 @@ class WaitConditionUpdateTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
-        utils.setup_dummy_db()
         scheduler.ENABLE_SLEEP = False
 
     def tearDown(self):
         super(WaitConditionUpdateTest, self).tearDown()
-        utils.reset_dummy_db()
         scheduler.ENABLE_SLEEP = True
 
     # Note tests creating a stack should be decorated with @stack_delete_after

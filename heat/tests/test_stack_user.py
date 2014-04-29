@@ -40,14 +40,12 @@ class StackUserTest(HeatTestCase):
 
     def setUp(self):
         super(StackUserTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('StackUserResourceType',
                                  generic_resource.StackUserResource)
         self.fc = fakes.FakeKeystoneClient()
 
     def tearDown(self):
         super(StackUserTest, self).tearDown()
-        utils.reset_dummy_db()
 
     def _user_create(self, stack_name, project_id, user_id,
                      resource_name='user', create_project=True):

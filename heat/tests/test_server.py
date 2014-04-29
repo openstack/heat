@@ -70,7 +70,6 @@ class ServersTest(HeatTestCase):
         self.fc = fakes_v1_1.FakeClient()
         self.fkc = fakes.FakeKeystoneClient()
 
-        utils.setup_dummy_db()
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
 

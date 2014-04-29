@@ -79,7 +79,6 @@ class CloudServersTest(HeatTestCase):
     def setUp(self):
         super(CloudServersTest, self).setUp()
         self.fc = fakes.FakeClient()
-        utils.setup_dummy_db()
         # Test environment may not have pyrax client library installed and if
         # pyrax is not installed resource class would not be registered.
         # So register resource provider class explicitly for unit testing.

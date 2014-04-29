@@ -42,7 +42,6 @@ class NotificationTest(common.HeatTestCase):
 
     def setUp(self):
         super(NotificationTest, self).setUp()
-        utils.setup_dummy_db()
 
         cfg.CONF.import_opt('notification_driver',
                             'heat.openstack.common.notifier.api')
@@ -160,7 +159,6 @@ class ScaleNotificationTest(common.HeatTestCase):
 
     def setUp(self):
         super(ScaleNotificationTest, self).setUp()
-        utils.setup_dummy_db()
 
         cfg.CONF.import_opt('notification_driver',
                             'heat.openstack.common.notifier.api')

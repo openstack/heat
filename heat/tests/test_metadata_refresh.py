@@ -133,7 +133,6 @@ class MetadataRefreshTest(HeatTestCase):
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
         self.fc = fakes.FakeKeystoneClient()
-        utils.setup_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -198,7 +197,6 @@ class MetadataRefreshTest(HeatTestCase):
 class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
-        utils.setup_dummy_db()
         self.fc = fakes.FakeKeystoneClient()
 
         self.m.StubOutWithMock(service.EngineListener, 'start')

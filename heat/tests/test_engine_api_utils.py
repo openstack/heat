@@ -111,7 +111,6 @@ class EngineApiTest(HeatTestCase):
 class FormatTest(HeatTestCase):
     def setUp(self):
         super(FormatTest, self).setUp()
-        utils.setup_dummy_db()
 
         template = parser.Template({
             'Resources': {

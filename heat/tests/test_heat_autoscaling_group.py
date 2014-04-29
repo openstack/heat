@@ -46,7 +46,6 @@ class AutoScalingGroupTest(HeatTestCase):
 
     def setUp(self):
         super(AutoScalingGroupTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('ResourceWithProps',
                                  generic_resource.ResourceWithProps)
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -274,7 +273,6 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
 
     def setUp(self):
         super(HeatScalingGroupWithCFNScalingPolicyTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('ResourceWithProps',
                                  generic_resource.ResourceWithProps)
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -333,7 +331,6 @@ class ScalingPolicyTest(HeatTestCase):
 
     def setUp(self):
         super(ScalingPolicyTest, self).setUp()
-        utils.setup_dummy_db()
         resource._register_class('ResourceWithProps',
                                  generic_resource.ResourceWithProps)
         self.fc = fakes.FakeKeystoneClient()
