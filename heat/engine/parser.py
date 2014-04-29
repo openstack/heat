@@ -351,7 +351,7 @@ class Stack(collections.Mapping):
         for res in self.dependencies:
             try:
                 result = res.validate()
-            except exception.Error as ex:
+            except exception.HeatException as ex:
                 logger.exception(ex)
                 raise ex
             except Exception as ex:
