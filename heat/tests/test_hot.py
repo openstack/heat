@@ -649,7 +649,7 @@ class StackTest(test_parser.StackTest):
                          self.stack.state)
 
         snippet = {'Value': {'get_attr': ['resource2', 'who_cares']}}
-        self.assertRaises(exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.InvalidTemplateReference,
                           self.resolve, snippet)
 
     @utils.stack_delete_after

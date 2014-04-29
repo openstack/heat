@@ -85,8 +85,9 @@ class ParamRef(function.Function):
 
         try:
             return self.parameters[param_name]
-        except (KeyError, ValueError):
-            raise exception.UserParameterMissing(key=param_name)
+        except KeyError:
+            raise exception.InvalidTemplateReference(resource=param_name,
+                                                     key='unknown')
 
 
 class ResourceRef(function.Function):
@@ -98,10 +99,14 @@ class ResourceRef(function.Function):
         { "Ref" : "<resource_name>" }
     '''
 
-    def _resource(self):
+    def _resource(self, path='unknown'):
         resource_name = function.resolve(self.args)
 
-        return self.stack[resource_name]
+        try:
+            return self.stack[resource_name]
+        except KeyError:
+            raise exception.InvalidTemplateReference(resource=resource_name,
+                                                     key=path)
 
     def result(self):
         return self._resource().FnGetRefId()
@@ -150,15 +155,14 @@ class GetAtt(function.Function):
 
         return resource_name, attribute
 
-    def _resource(self):
+    def _resource(self, path='unknown'):
         resource_name = function.resolve(self._resource_name)
 
         try:
             return self.stack[resource_name]
         except KeyError:
-            raise exception.InvalidTemplateAttribute(
-                resource=resource_name,
-                key=function.resolve(self._attribute))
+            raise exception.InvalidTemplateReference(resource=resource_name,
+                                                     key=path)
 
     def result(self):
         attribute = function.resolve(self._attribute)
