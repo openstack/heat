@@ -27,7 +27,7 @@ class ParameterGroups(object):
     '''
     def __init__(self, tmpl):
         self.tmpl = tmpl
-        self.parameters = tmpl.parameters(None, {}, validate_value=False)
+        self.parameters = tmpl.parameters(None, {})
         logger.debug(self.tmpl)
         logger.debug(self.parameters)
         self.parameter_names = []

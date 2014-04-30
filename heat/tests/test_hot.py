@@ -118,7 +118,7 @@ class HOTemplateTest(HeatTestCase):
 
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
 
-        self.assertIsNone(stack.parameters._validate({}))
+        self.assertIsNone(stack.parameters._validate_user_parameters())
         self.assertIsNone(stack.parameters._validate_tmpl_parameters())
 
     def test_translate_resources_good(self):
@@ -1037,8 +1037,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_name']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
-                                                                      value)
+            param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = 'wp'
@@ -1087,7 +1088,7 @@ class HOTParamValidatorTest(HeatTestCase):
         def run_parameters(value):
             tmpl.parameters(
                 identifier.HeatIdentifier('', "stack_testit", None),
-                {'db_name': value})
+                {'db_name': value}).validate(validate_value=True)
             return True
 
         value = 'wp'
@@ -1131,8 +1132,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
-                                                                      value)
+            param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = 29999
@@ -1173,8 +1175,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['param1']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(name, schema).validate(name,
-                                                                      value)
+            param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = "1"
@@ -1199,12 +1202,10 @@ class HOTParamValidatorTest(HeatTestCase):
                     {'range': {'min': 30000, 'max': 50000},
                      'description': range_desc}]}}
 
-        schema = param['db_port']
-
+        schema = hot_param.HOTParamSchema.from_dict('db_port',
+                                                    param['db_port'])
         err = self.assertRaises(constraints.InvalidSchemaError,
-                                hot_param.HOTParamSchema.from_dict,
-                                'name',
-                                schema)
+                                schema.validate)
         self.assertIn(range_desc, str(err))
 
     def test_validate_schema_wrong_key(self):

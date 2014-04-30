@@ -29,8 +29,9 @@ class ParameterTest(testtools.TestCase):
         tmpl = template.Template({'HeatTemplateFormatVersion': '2012-12-12',
                                   'Parameters': {name: schema}})
         schema = tmpl.param_schemata()[name]
-        return parameters.Parameter(name, schema, value,
-                                    validate_value)
+        param = parameters.Parameter(name, schema, value)
+        param.validate(validate_value)
+        return param
 
     def test_new_string(self):
         p = self.new_parameter('p', {'Type': 'String'}, validate_value=False)
@@ -313,9 +314,11 @@ class ParametersTest(testtools.TestCase):
                        validate_value=True):
         tmpl.update({'HeatTemplateFormatVersion': '2012-12-12'})
         tmpl = template.Template(tmpl)
-        return tmpl.parameters(
+        params = tmpl.parameters(
             identifier.HeatIdentifier('', stack_name, stack_id),
-            user_params, validate_value)
+            user_params)
+        params.validate(validate_value)
+        return params
 
     def test_pseudo_params(self):
         stack_name = 'test_stack'
@@ -411,7 +414,7 @@ class ParametersTest(testtools.TestCase):
         params = {'Parameters': {'Foo': {'Type': 'String'},
                                  'NoAttr': 'No attribute.',
                                  'Bar': {'Type': 'Number', 'Default': '1'}}}
-        self.assertRaises(exception.InvalidTemplateParameter,
+        self.assertRaises(constr.InvalidSchemaError,
                           self.new_parameters,
                           'test',
                           params)

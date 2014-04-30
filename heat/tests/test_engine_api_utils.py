@@ -730,7 +730,8 @@ class FormatValidateParameterTest(HeatTestCase):
         t = template_format.parse(self.template % self.param)
         tmpl = parser.Template(t)
 
-        tmpl_params = parameters.Parameters(None, tmpl, validate_value=False)
+        tmpl_params = parameters.Parameters(None, tmpl)
+        tmpl_params.validate(validate_value=False)
         param = tmpl_params.params[self.param_name]
         param_formated = api.format_validate_parameter(param)
         self.assertEqual(self.expected, param_formated)
