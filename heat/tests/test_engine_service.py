@@ -3224,3 +3224,22 @@ class SnapshotServiceTest(HeatTestCase):
                                self.engine.show_snapshot, self.ctx,
                                stack.identifier(), snapshot_id)
         self.assertEqual(ex.exc_info[0], exception.NotFound)
+
+    def test_list_snapshots(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        snapshot = self.engine.stack_snapshot(
+            self.ctx, stack.identifier(), 'snap1')
+        self.assertIsNotNone(snapshot['id'])
+        self.assertEqual("IN_PROGRESS", snapshot['status'])
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+
+        snapshots = self.engine.stack_list_snapshots(
+            self.ctx, stack.identifier())
+        expected = {
+            "id": snapshot["id"],
+            "name": "snap1",
+            "status": "COMPLETE",
+            "status_reason": "Stack SNAPSHOT completed successfully",
+            "data": stack.prepare_abandon()}
+        self.assertEqual([expected], snapshots)
