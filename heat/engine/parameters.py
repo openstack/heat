@@ -220,7 +220,7 @@ class Parameter(object):
         if self.has_default():
             return self.default()
 
-        raise KeyError(_('Missing parameter %s') % self.name)
+        raise exception.UserParameterMissing(key=self.name)
 
     def hidden(self):
         '''
