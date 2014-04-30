@@ -18,6 +18,7 @@ from heat.engine import environment
 from heat.engine import plugin_manager
 from heat.engine import resources
 from heat.engine import properties
+from heat.engine import attributes
 from heat.engine import support
 from heat.openstack.common.gettextutils import _
 
@@ -50,6 +51,8 @@ class ResourcePages(Directive):
 
             self.props_schemata = properties.schemata(
                 self.resource_class.properties_schema)
+            self.attrs_schemata = attributes.schemata(
+                self.resource_class.attributes_schema)
 
             if resource_class.support_status.status == support.DEPRECATED:
                 sstatus = resource_class.support_status.to_dict()
@@ -265,20 +268,28 @@ Resources:
             self.contribute_property(prop_list, prop_key, prop)
 
     def contribute_attributes(self, parent):
-        schema = self.resource_class.attributes_schema
-        if not schema:
+        if not self.attrs_schemata:
             return
         section = self._section(parent, _('Attributes'), '%s-attrs')
         prop_list = nodes.definition_list()
         section.append(prop_list)
-        for prop_key in sorted(schema.keys()):
-            description = schema[prop_key]
+        for prop_key, prop in sorted(self.attrs_schemata.items()):
+            description = prop.description
             prop_item = nodes.definition_list_item(
                 '', nodes.term('', prop_key))
             prop_list.append(prop_item)
 
             definition = nodes.definition()
             prop_item.append(definition)
+
+            if prop.support_status.status != support.SUPPORTED:
+                sstatus = prop.support_status.to_dict()
+                msg = _('%(status)s')
+                if sstatus['message'] is not None:
+                    msg = _('%(status)s - %(message)s')
+                para = nodes.inline('', msg % sstatus)
+                warning = nodes.note('', para)
+                definition.append(warning)
 
             if description:
                 def_para = nodes.paragraph('', description)
