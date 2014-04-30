@@ -14,7 +14,6 @@
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine.clients import Clients
 from heat.engine import properties
 from heat.engine import resource
@@ -72,20 +71,15 @@ class KeyPair(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(KeyPair, self).__init__(name, json_snippet, stack)
-        self._private_key = None
         self._public_key = None
 
     @property
     def private_key(self):
         """Return the private SSH key for the resource."""
-        if (self._private_key is None and self.id and
-                self.properties[self.SAVE_PRIVATE_KEY]):
-                try:
-                    self._private_key = db_api.resource_data_get(self,
-                                                                 'private_key')
-                except exception.NotFound:
-                    pass
-        return self._private_key or ""
+        if self.properties[self.SAVE_PRIVATE_KEY]:
+            return self.data().get('private_key', '')
+        else:
+            return ''
 
     @property
     def public_key(self):
@@ -105,9 +99,9 @@ class KeyPair(resource.Resource):
                                                   public_key=pub_key)
         if (self.properties[self.SAVE_PRIVATE_KEY] and
                 hasattr(new_keypair, 'private_key')):
-            db_api.resource_data_set(self, 'private_key',
-                                     new_keypair.private_key,
-                                     True)
+            self.data_set('private_key',
+                          new_keypair.private_key,
+                          True)
         self.resource_id_set(new_keypair.id)
 
     def handle_delete(self):

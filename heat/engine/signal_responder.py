@@ -15,8 +15,6 @@ from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo.config import cfg
 from six.moves.urllib import parse as urlparse
 
-from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import stack_user
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -48,10 +46,7 @@ class SignalResponder(stack_user.StackUser):
         self._delete_signed_url()
 
     def _delete_signed_url(self):
-        try:
-            db_api.resource_data_delete(self, 'ec2_signed_url')
-        except exception.NotFound:
-            pass
+        self.data_delete('ec2_signed_url')
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
@@ -62,17 +57,14 @@ class SignalResponder(stack_user.StackUser):
 
         :param signal_type: either WAITCONDITION or SIGNAL.
         """
-        try:
-            stored = db_api.resource_data_get(self, 'ec2_signed_url')
-        except exception.NotFound:
-            stored = None
+        stored = self.data().get('ec2_signed_url')
         if stored is not None:
             return stored
 
-        try:
-            access_key = db_api.resource_data_get(self, 'access_key')
-            secret_key = db_api.resource_data_get(self, 'secret_key')
-        except exception.NotFound:
+        access_key = self.data().get('access_key')
+        secret_key = self.data().get('secret_key')
+
+        if not access_key or not secret_key:
             logger.warning(_('Cannot generate signed url, '
                              'no stored access/secret key'))
             return
@@ -105,5 +97,5 @@ class SignalResponder(stack_user.StackUser):
         url = "%s%s?%s" % (signal_url.lower(),
                            path, qs)
 
-        db_api.resource_data_set(self, 'ec2_signed_url', url)
+        self.data_set('ec2_signed_url', url)
         return url

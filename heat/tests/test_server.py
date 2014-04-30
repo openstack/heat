@@ -628,7 +628,7 @@ class ServersTest(HeatTestCase):
             'os-collect-config': {
                 'heat': {
                     'auth_url': 'http://server.test:5000/v2.0',
-                    'password': None,
+                    'password': server.password,
                     'project_id': '8888',
                     'resource_name': 'WebServer',
                     'stack_id': 'software_config_s/%s' % stack.id,

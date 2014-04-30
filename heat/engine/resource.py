@@ -466,7 +466,7 @@ class Resource(object):
             'action': self.action,
             'status': self.status,
             'metadata': self.metadata,
-            'resource_data': db_api.resource_data_get_all(self)
+            'resource_data': self.data()
         }
 
     def adopt(self, resource_data):

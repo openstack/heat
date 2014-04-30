@@ -16,7 +16,6 @@ import string
 
 from six.moves import xrange
 
-from heat.db import api as db_api
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -86,12 +85,12 @@ class RandomString(resource.Resource):
         length = self.properties.get(self.LENGTH)
         sequence = self._sequences[self.properties.get(self.SEQUENCE)]
         random_string = self._generate_random_string(sequence, length)
-        db_api.resource_data_set(self, 'value', random_string, redact=True)
+        self.data_set('value', random_string, redact=True)
         self.resource_id_set(random_string)
 
     def _resolve_attribute(self, name):
         if name == 'value':
-            return db_api.resource_data_get(self, 'value')
+            return self.data().get('value')
 
 
 def resource_mapping():
