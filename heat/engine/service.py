@@ -1245,6 +1245,20 @@ class EngineService(service.Service):
                                               stack.check)
 
     @request_context
+    def stack_restore(self, cnxt, stack_identity, snapshot_id):
+        def _stack_restore(stack, snapshot):
+            LOG.debug("restoring stack %s" % stack.name)
+            stack.restore(snapshot)
+
+        s = self._get_stack(cnxt, stack_identity)
+        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+
+        stack = parser.Stack.load(cnxt, stack=s)
+
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              _stack_restore, stack, snapshot)
+
+    @request_context
     def stack_list_snapshots(self, cnxt, stack_identity):
         s = self._get_stack(cnxt, stack_identity)
         data = db_api.snapshot_get_all(cnxt, s.id)

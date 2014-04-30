@@ -143,6 +143,12 @@ class API(wsgi.Router):
                                  action="list_snapshots",
                                  conditions={'method': 'GET'})
 
+            stack_mapper.connect("stack_snapshot_restore",
+                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
+                                 "{snapshot_id}/restore",
+                                 action="restore_snapshot",
+                                 conditions={'method': 'POST'})
+
         # Resources
         resources_resource = resources.create_resource(conf)
         stack_path = "/{tenant_id}/stacks/{stack_name}/{stack_id}"

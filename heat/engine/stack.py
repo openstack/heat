@@ -1055,6 +1055,10 @@ class Stack(collections.Mapping):
         '''
         Restore the given snapshot, invoking handle_restore on all resources.
         '''
+        if snapshot.stack_id != self.id:
+            self.state_set(self.RESTORE, self.FAILED,
+                           "Can't restore snapshot from other stack")
+            return
         self.updated_time = datetime.utcnow()
 
         tmpl = Template(snapshot.data['template'])

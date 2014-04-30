@@ -20,13 +20,13 @@ from keystoneclient import exceptions as ks_exceptions
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-from heat.engine import clients
+from heat.engine.clients import client_plugin
 
 
 LOG = logging.getLogger(__name__)
 
 
-class CinderClientPlugin(clients.client_plugin.ClientPlugin):
+class CinderClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
