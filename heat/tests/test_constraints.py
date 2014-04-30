@@ -190,22 +190,28 @@ class SchemaTest(testtools.TestCase):
                           schema=constraints.Schema('String'))
 
     def test_range_invalid_type(self):
-        self.assertRaises(constraints.InvalidSchemaError,
-                          constraints.Schema,
-                          'String',
-                          constraints=[constraints.Range(1, 10)])
+        schema = constraints.Schema('String',
+                                    constraints=[constraints.Range(1, 10)])
+        err = self.assertRaises(constraints.InvalidSchemaError,
+                                schema.validate)
+        self.assertIn('Range constraint invalid for String', str(err))
 
     def test_length_invalid_type(self):
-        self.assertRaises(constraints.InvalidSchemaError,
-                          constraints.Schema,
-                          'Integer',
-                          constraints=[constraints.Length(1, 10)])
+        schema = constraints.Schema('Integer',
+                                    constraints=[constraints.Length(1, 10)])
+        err = self.assertRaises(constraints.InvalidSchemaError,
+                                schema.validate)
+        self.assertIn('Length constraint invalid for Integer', str(err))
 
     def test_allowed_pattern_invalid_type(self):
-        self.assertRaises(constraints.InvalidSchemaError,
-                          constraints.Schema,
-                          'Integer',
-                          constraints=[constraints.AllowedPattern('[0-9]*')])
+        schema = constraints.Schema(
+            'Integer',
+            constraints=[constraints.AllowedPattern('[0-9]*')]
+        )
+        err = self.assertRaises(constraints.InvalidSchemaError,
+                                schema.validate)
+        self.assertIn('AllowedPattern constraint invalid for Integer',
+                      str(err))
 
     def test_range_vals_invalid_type(self):
         self.assertRaises(constraints.InvalidSchemaError,
@@ -218,6 +224,36 @@ class SchemaTest(testtools.TestCase):
                           constraints.Length, '1', 10)
         self.assertRaises(constraints.InvalidSchemaError,
                           constraints.Length, 1, '10')
+
+    def test_schema_validate_good(self):
+        s = constraints.Schema(constraints.Schema.STRING, 'A string',
+                               default='wibble', required=True,
+                               constraints=[constraints.Length(4, 8)])
+        self.assertIsNone(s.validate())
+
+    def test_schema_validate_fail(self):
+        s = constraints.Schema(constraints.Schema.STRING, 'A string',
+                               default='wibble', required=True,
+                               constraints=[constraints.Range(max=4)])
+        err = self.assertRaises(constraints.InvalidSchemaError, s.validate)
+        self.assertIn('Range constraint invalid for String', str(err))
+
+    def test_schema_nested_validate_good(self):
+        nested = constraints.Schema(constraints.Schema.STRING, 'A string',
+                                    default='wibble', required=True,
+                                    constraints=[constraints.Length(4, 8)])
+        s = constraints.Schema(constraints.Schema.MAP, 'A map',
+                               schema={'Foo': nested})
+        self.assertIsNone(s.validate())
+
+    def test_schema_nested_validate_fail(self):
+        nested = constraints.Schema(constraints.Schema.STRING, 'A string',
+                                    default='wibble', required=True,
+                                    constraints=[constraints.Range(max=4)])
+        s = constraints.Schema(constraints.Schema.MAP, 'A map',
+                               schema={'Foo': nested})
+        err = self.assertRaises(constraints.InvalidSchemaError, s.validate)
+        self.assertIn('Range constraint invalid for String', str(err))
 
 
 class CustomConstraintTest(testtools.TestCase):

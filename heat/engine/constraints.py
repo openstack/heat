@@ -105,7 +105,16 @@ class Schema(collections.Mapping):
             raise InvalidSchemaError(msg)
 
         self.constraints = constraints
-        for c in constraints:
+        self.default = default
+
+    def validate(self, context=None):
+        '''
+        Validates the schema.
+
+        This method checks if the schema itself is valid, and if the
+        default value - if present - complies to the schema's constraints.
+        '''
+        for c in self.constraints:
             if not self._is_valid_constraint(c):
                 err_msg = _('%(name)s constraint '
                             'invalid for %(utype)s') % dict(
@@ -113,13 +122,19 @@ class Schema(collections.Mapping):
                                 utype=self.type)
                 raise InvalidSchemaError(err_msg)
 
-        self.default = default
-        self._validate_default()
+        self._validate_default(context)
+        # validated nested schema(ta)
+        if self.schema:
+            if isinstance(self.schema, AnyIndexDict):
+                self.schema.value.validate(context)
+            else:
+                for nested_schema in self.schema.values():
+                    nested_schema.validate(context)
 
-    def _validate_default(self):
+    def _validate_default(self, context):
         if self.default is not None:
             try:
-                self.validate_constraints(self.default)
+                self.validate_constraints(self.default, context)
             except (ValueError, TypeError) as exc:
                 raise InvalidSchemaError(_('Invalid default '
                                            '%(default)s (%(exc)s)') %

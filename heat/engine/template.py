@@ -148,8 +148,7 @@ class Template(collections.Mapping):
         pass
 
     @abc.abstractmethod
-    def parameters(self, stack_identifier, user_params, validate_value=True,
-                   context=None):
+    def parameters(self, stack_identifier, user_params):
         '''Return a parameters.Parameters object for the stack.'''
         pass
 

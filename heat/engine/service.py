@@ -641,7 +641,8 @@ class EngineService(service.Service):
             except Exception as ex:
                 return {'Error': str(ex)}
 
-        tmpl_params = tmpl.parameters(None, {}, validate_value=False)
+        tmpl_params = tmpl.parameters(None, {})
+        tmpl_params.validate(validate_value=False, context=cnxt)
         is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
         params = tmpl_params.map(api.format_validate_parameter, is_real_param)
         param_groups = parameter_groups.ParameterGroups(tmpl)
