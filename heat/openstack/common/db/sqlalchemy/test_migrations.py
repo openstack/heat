@@ -27,7 +27,7 @@ import sqlalchemy.exc
 
 from heat.openstack.common.db.sqlalchemy import utils
 from heat.openstack.common.gettextutils import _LE
-from heat.openstack.common import test
+from heat.openstack.common import test as test_base
 
 LOG = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def _set_db_lock(lock_path=None, lock_prefix=None):
     return decorator
 
 
-class BaseMigrationTestCase(test.BaseTestCase):
+class BaseMigrationTestCase(test_base.BaseTestCase):
     """Base class fort testing of migration utils."""
 
     def __init__(self, *args, **kwargs):
