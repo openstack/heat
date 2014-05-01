@@ -151,7 +151,12 @@ class StackResource(resource.Resource):
             msg = _("Recursion depth exceeds %d.") % \
                 cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
-        template = parser.Template(child_template, files=self.stack.t.files)
+        if isinstance(child_template, parser.Template):
+            template = child_template
+            template.files = self.stack.t.files
+        else:
+            template = parser.Template(child_template,
+                                       files=self.stack.t.files)
         self._validate_nested_resources(template)
         self._outputs_to_attribs(template)
 
@@ -195,7 +200,12 @@ class StackResource(resource.Resource):
     def update_with_template(self, child_template, user_params,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
-        template = parser.Template(child_template, files=self.stack.t.files)
+        if isinstance(child_template, parser.Template):
+            template = child_template
+            template.files = self.stack.t.files
+        else:
+            template = parser.Template(child_template,
+                                       files=self.stack.t.files)
         nested_stack = self.nested()
         if nested_stack is None:
             raise exception.Error(_('Cannot update %s, stack not created')
