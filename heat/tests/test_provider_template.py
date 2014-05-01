@@ -398,6 +398,8 @@ class ProviderTemplateTest(HeatTestCase):
             self.assertIn(attrib, templ_resource.attributes)
         for k, v in json_snippet.get("Properties").items():
             self.assertEqual(v, templ_resource.properties[k])
+        self.assertNotIn('WordPress_Single_Instance.yaml',
+                         resources.global_env().registry._registry)
 
     def test_system_template_retrieve_by_file(self):
         # make sure that a TemplateResource defined in the global environment
