@@ -22,18 +22,19 @@ from keystoneclient.v3 import client
 logger = logging.getLogger(__name__)
 
 DEBUG = False
-USERNAME=os.environ.get('OS_USERNAME', None)
-PASSWORD=os.environ.get('OS_PASSWORD', None)
-AUTH_URL=os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
+USERNAME = os.environ.get('OS_USERNAME', None)
+PASSWORD = os.environ.get('OS_PASSWORD', None)
+AUTH_URL = os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
 
-HEAT_DOMAIN_NAME=os.environ.get('HEAT_DOMAIN', 'heat')
-HEAT_DOMAIN_ADMIN=os.environ.get('HEAT_DOMAIN_ADMIN', 'heat_domain_admin')
-HEAT_DOMAIN_PASSWORD=os.environ.get('HEAT_DOMAIN_PASSWORD', None)
-HEAT_DOMAIN_DESCRIPTION='Contains users and projects created by heat'
+HEAT_DOMAIN_NAME = os.environ.get('HEAT_DOMAIN', 'heat')
+HEAT_DOMAIN_ADMIN = os.environ.get('HEAT_DOMAIN_ADMIN', 'heat_domain_admin')
+HEAT_DOMAIN_PASSWORD = os.environ.get('HEAT_DOMAIN_PASSWORD', None)
+HEAT_DOMAIN_DESCRIPTION = 'Contains users and projects created by heat'
 
 logger.debug("USERNAME=%s" % USERNAME)
 logger.debug("PASSWORD=%s" % PASSWORD)
 logger.debug("AUTH_URL=%s" % AUTH_URL)
+
 
 def main():
     log_lvl = logging.DEBUG if DEBUG else logging.INFO
@@ -46,7 +47,7 @@ def main():
                       password=PASSWORD,
                       auth_url=AUTH_URL,
                       endpoint=AUTH_URL)
-    ret = c.authenticate()
+    c.authenticate()
 
     # Create the heat domain
     logger.info("Creating domain %s" % HEAT_DOMAIN_NAME)
@@ -76,18 +77,17 @@ def main():
         domain_admin = c.users.list(name=HEAT_DOMAIN_ADMIN)[0]
 
     # Make the user a domain admin
-    roles_list =  c.roles.list()
+    roles_list = c.roles.list()
     # FIXME(shardy): seems filtering roles by name currently doesn't work
     admin_role = [r for r in roles_list
                   if r.name == 'admin'][0]
     c.roles.grant(role=admin_role, user=domain_admin, domain=heat_domain)
 
-    print "\nPlease update your heat.conf with the following in [DEFAULT]\n"
-    print "stack_user_domain=%s" % heat_domain.id
-    print "stack_domain_admin=%s" % HEAT_DOMAIN_ADMIN
-    print "stack_domain_admin_password=%s" % HEAT_DOMAIN_PASSWORD
+    print("\nPlease update your heat.conf with the following in [DEFAULT]\n")
+    print("stack_user_domain=%s" % heat_domain.id)
+    print("stack_domain_admin=%s" % HEAT_DOMAIN_ADMIN)
+    print("stack_domain_admin_password=%s" % HEAT_DOMAIN_PASSWORD)
 
 
 if __name__ == "__main__":
     main()
-
