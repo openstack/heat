@@ -62,13 +62,12 @@ class HOTemplate(template.Template):
         else:
             default = {}
 
-        the_section = self.t.get(section, default)
+        the_section = self.t.get(section) or default
 
         # In some cases (e.g. parameters), also translate each entry of
         # a section into CFN format (case, naming, etc) so the rest of the
         # engine can cope with it.
         # This is a shortcut for now and might be changed in the future.
-
         if section == self.RESOURCES:
             return self._translate_resources(the_section)
 
@@ -132,7 +131,10 @@ class HOTemplate(template.Template):
         return cfn_outputs
 
     def param_schemata(self):
-        params = self.t.get(self.PARAMETERS, {}).iteritems()
+        parameter_section = self.t.get(self.PARAMETERS)
+        if parameter_section is None:
+            parameter_section = {}
+        params = parameter_section.iteritems()
         return dict((name, parameters.HOTParamSchema.from_dict(name, schema))
                     for name, schema in params)
 

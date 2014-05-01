@@ -897,6 +897,24 @@ class validateTest(HeatTestCase):
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
 
+    def test_validate_hot_empty_parameters_valid(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            description: test.
+            parameters:
+            resources:
+              my_instance:
+                type: AWS::EC2::Instance
+            """)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, {}))
+        self.assertEqual({}, res['Parameters'])
+
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
         self.m.StubOutWithMock(service.EngineListener, 'start')
@@ -950,6 +968,40 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
+
+    def test_validate_hot_empty_resources_valid(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            description: test.
+            resources:
+            """)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, {}))
+        expected = {"Description": "test.",
+                    "Parameters": {}}
+        self.assertEqual(expected, res)
+
+    def test_validate_hot_empty_outputs_valid(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            description: test.
+            outputs:
+            """)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, {}))
+        expected = {"Description": "test.",
+                    "Parameters": {}}
+        self.assertEqual(expected, res)
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)

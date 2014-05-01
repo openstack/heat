@@ -36,6 +36,13 @@ hot_tpl_empty = template_format.parse('''
 heat_template_version: 2013-05-23
 ''')
 
+hot_tpl_empty_sections = template_format.parse('''
+heat_template_version: 2013-05-23
+parameters:
+resources:
+outputs:
+''')
+
 hot_tpl_generic_resource = template_format.parse('''
 heat_template_version: 2013-05-23
 resources:
@@ -84,6 +91,25 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual('No description', tmpl[tmpl.DESCRIPTION])
         self.assertEqual({}, tmpl[tmpl.RESOURCES])
         self.assertEqual({}, tmpl[tmpl.OUTPUTS])
+
+    def test_defaults_for_empty_sections(self):
+        """Test default secntion's content behavior of HOT template."""
+
+        tmpl = parser.Template(hot_tpl_empty_sections)
+        # check if we get the right class
+        self.assertIsInstance(tmpl, hot_template.HOTemplate)
+        # test getting an invalid section
+        self.assertNotIn('foobar', tmpl)
+
+        # test defaults for valid sections
+        self.assertEqual('No description', tmpl[tmpl.DESCRIPTION])
+        self.assertEqual({}, tmpl[tmpl.RESOURCES])
+        self.assertEqual({}, tmpl[tmpl.OUTPUTS])
+
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+
+        self.assertIsNone(stack.parameters._validate({}))
+        self.assertIsNone(stack.parameters._validate_tmpl_parameters())
 
     def test_translate_resources_good(self):
         """Test translation of resources into internal engine format."""
