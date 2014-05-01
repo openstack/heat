@@ -46,10 +46,10 @@ class StackResource(resource.Resource):
             self.recursion_depth = 0
 
     def _outputs_to_attribs(self, json_snippet):
-        if not self.attributes and 'Outputs' in json_snippet:
+        outputs = json_snippet.get('Outputs')
+        if not self.attributes and outputs:
             self.attributes_schema = (
-                attributes.Attributes
-                .schema_from_outputs(json_snippet.get('Outputs')))
+                attributes.Attributes.schema_from_outputs(outputs))
             self.attributes = attributes.Attributes(self.name,
                                                     self.attributes_schema,
                                                     self._resolve_attribute)
@@ -153,7 +153,7 @@ class StackResource(resource.Resource):
             raise exception.RequestLimitExceeded(message=msg)
         template = parser.Template(child_template, files=self.stack.t.files)
         self._validate_nested_resources(template)
-        self._outputs_to_attribs(child_template)
+        self._outputs_to_attribs(template)
 
         if timeout_mins is None:
             timeout_mins = self.stack.timeout_mins
@@ -196,11 +196,6 @@ class StackResource(resource.Resource):
                              timeout_mins=None):
         """Update the nested stack with the new template."""
         template = parser.Template(child_template, files=self.stack.t.files)
-        # Note that there is no call to self._outputs_to_attribs here.
-        # If we have a use case for updating attributes of the resource based
-        # on updated templates we should make sure it's optional because not
-        # all subclasses want that behavior, since they may offer custom
-        # attributes.
         nested_stack = self.nested()
         if nested_stack is None:
             raise exception.Error(_('Cannot update %s, stack not created')
@@ -228,9 +223,11 @@ class StackResource(resource.Resource):
         stack.parameters.set_stack_id(nested_stack.identifier())
         stack.validate()
 
+        # Don't overwrite the attributes_schema on update for subclasses that
+        # define their own attributes_schema.
         if not hasattr(type(self), 'attributes_schema'):
             self.attributes = None
-            self._outputs_to_attribs(child_template)
+            self._outputs_to_attribs(template)
 
         updater = scheduler.TaskRunner(nested_stack.update_task, stack)
         updater.start()
