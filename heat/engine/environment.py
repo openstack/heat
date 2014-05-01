@@ -218,7 +218,10 @@ class ResourceRegistry(object):
         registry[name] = info
 
     def iterable_by(self, resource_type, resource_name=None):
-        if resource_type.endswith(('.yaml', '.template')):
+        is_templ_type = resource_type.endswith(('.yaml', '.template'))
+        if self.global_registry is not None and is_templ_type:
+            # we only support dynamic resource types in user environments
+            # not the global environment.
             # resource with a Type == a template
             # we dynamically create an entry as it has not been registered.
             if resource_type not in self._registry:
