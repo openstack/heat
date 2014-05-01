@@ -507,6 +507,14 @@ the engine will make them available next time the service starts.
 See one of the Installation Guides at http://docs.OpenStack.org/ for
 more information on configuring the orchestration service.
 
+Testing
+-------
+
+Tests can live inside the plug-in under the ``tests``
+namespace/directory. The Heat plug-in loader will implicitly not load
+anything under that directory. This is useful when your plug-in tests
+have dependencies you don't want installed in production.
+
 Putting It All Together
 -----------------------
 You can find the plugin classes in ``heat/engine/resources``.  An

@@ -15,6 +15,7 @@
 import pkgutil
 import sys
 
+import mock
 import testtools
 
 from heat.common import plugin_loader
@@ -64,3 +65,14 @@ class PluginLoaderTest(testtools.TestCase):
         self.assertIsNone(plugin_loader._import_module(importer,
                                                        'wibble',
                                                        heat.engine))
+
+    @mock.patch.object(plugin_loader, "_import_module", mock.MagicMock())
+    @mock.patch('pkgutil.walk_packages')
+    def test_load_modules_skip_test(self, mp):
+        importer = pkgutil.ImpImporter(heat.engine.__path__[0])
+
+        mp.return_value = ((importer, "hola.foo", None),
+                           (importer, "hola.tests.test_foo", None))
+        loaded = plugin_loader.load_modules(
+            heat.engine, ignore_error=True)
+        self.assertEqual(1, len(list(loaded)))
