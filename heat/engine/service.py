@@ -150,10 +150,10 @@ class ThreadGroupManager(object):
         self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
                                         func, *args, **kwargs)
 
-    def stop(self, stack_id):
+    def stop(self, stack_id, graceful=False):
         '''Stop any active threads on a stack.'''
         if stack_id in self.groups:
-            self.groups[stack_id].stop()
+            self.groups[stack_id].stop(graceful)
             del self.groups[stack_id]
 
 
@@ -296,6 +296,29 @@ class EngineService(service.Service):
         stacks = db_api.stack_get_all(admin_context, tenant_safe=False)
         for s in stacks:
             self.stack_watch.start_watch_task(s.id, admin_context)
+
+    def stop(self):
+        # Stop rpc connection at first for preventing new requests
+        logger.info(_("Attempting to stop engine service..."))
+        try:
+            self.conn.close()
+        except Exception:
+            pass
+
+        # Wait for all active threads to be finished
+        for stack_id in self.thread_group_mgr.groups.keys():
+            # Ingore dummy service task
+            if stack_id == cfg.CONF.periodic_interval:
+                continue
+            logger.info(_("Waiting stack %s processing to be finished")
+                        % stack_id)
+            # Stop threads gracefully
+            self.thread_group_mgr.stop(stack_id, True)
+            logger.info(_("Stack %s processing was finished") % stack_id)
+
+        # Terminate the engine process
+        logger.info(_("All threads were gone, terminating engine"))
+        super(EngineService, self).stop()
 
     @staticmethod
     def load_user_creds(creds_id):

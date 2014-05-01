@@ -297,7 +297,7 @@ class DummyThreadGroup(object):
         self.threads.append(callback)
         return self.pool.spawn(callback, *args, **kwargs)
 
-    def stop(self):
+    def stop(self, graceful=False):
         pass
 
     def wait(self):
@@ -2974,9 +2974,9 @@ class ThreadGroupManagerTest(HeatTestCase):
 
         thm = service.ThreadGroupManager()
         thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
-        thm.stop(stack_id)
+        thm.stop(stack_id, True)
 
-        self.tg_mock.stop.assert_called_once()
+        self.tg_mock.stop.assert_called_with(True)
         self.assertNotIn(stack_id, thm.groups)
 
     def test_tgm_add_timer(self):
