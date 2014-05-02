@@ -16,7 +16,6 @@ from Crypto.Cipher import AES
 from oslo.config import cfg
 
 from heat.openstack.common.crypto import utils
-from heat.openstack.common import log as logging
 
 
 auth_opts = [
@@ -26,8 +25,6 @@ auth_opts = [
 ]
 
 cfg.CONF.register_opts(auth_opts)
-
-logger = logging.getLogger(__name__)
 
 
 def encrypt(auth_info):

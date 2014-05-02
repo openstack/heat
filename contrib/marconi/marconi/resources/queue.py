@@ -14,12 +14,8 @@
 from heat.common import exception
 from heat.engine import properties
 from heat.engine import resource
-from heat.openstack.common import log as logging
 
 from .. import clients  # noqa
-
-
-logger = logging.getLogger(__name__)
 
 
 if clients.marconiclient is None:

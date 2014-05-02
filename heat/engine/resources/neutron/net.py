@@ -14,13 +14,10 @@
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
-from heat.openstack.common import log as logging
 
 if clients.neutronclient is not None:
     import neutronclient.common.exceptions as neutron_exp
     from neutronclient.neutron import v2_0 as neutronV20
-
-logger = logging.getLogger(__name__)
 
 
 class Net(neutron.NeutronResource):

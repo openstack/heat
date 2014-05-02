@@ -29,12 +29,9 @@ cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
 from heat.common import serializers
 from heat.common import exception
-from heat.openstack.common import log as logging
 import heat.openstack.common.rpc.common as rpc_common
 
 from heat.common import wsgi
-
-logger = logging.getLogger(__name__)
 
 
 class Fault(object):

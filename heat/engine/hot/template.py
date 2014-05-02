@@ -14,9 +14,6 @@ from heat.engine.cfn import template as cfn_template
 from heat.engine.hot import parameters
 from heat.engine import template
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common import log as logging
-
-logger = logging.getLogger(__name__)
 
 
 class HOTemplate(template.Template):

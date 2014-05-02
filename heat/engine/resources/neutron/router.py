@@ -17,13 +17,10 @@ from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
     from neutronclient.neutron import v2_0 as neutronV20
-
-logger = logging.getLogger(__name__)
 
 
 class Router(neutron.NeutronResource):
