@@ -1417,6 +1417,11 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_zero(self):
         t = template_format.parse(as_template)
+
+        # Create the scaling policy (with Cooldown=0) and scale up one
+        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
+        properties['Cooldown'] = '0'
+
         stack = utils.parse_stack(t, params=self.params)
 
         # Create initial group
@@ -1429,9 +1434,6 @@ class AutoScalingTest(HeatTestCase):
         stack['WebServerGroup'] = rsrc
         self.assertEqual(1, len(rsrc.get_instance_names()))
 
-        # Create the scaling policy (with Cooldown=0) and scale up one
-        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
-        properties['Cooldown'] = '0'
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
@@ -1473,6 +1475,12 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_none(self):
         t = template_format.parse(as_template)
+
+        # Create the scaling policy no Cooldown property, should behave the
+        # same as when Cooldown==0
+        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
+        del properties['Cooldown']
+
         stack = utils.parse_stack(t, params=self.params)
 
         # Create initial group
@@ -1485,10 +1493,6 @@ class AutoScalingTest(HeatTestCase):
         stack['WebServerGroup'] = rsrc
         self.assertEqual(1, len(rsrc.get_instance_names()))
 
-        # Create the scaling policy no Cooldown property, should behave the
-        # same as when Cooldown==0
-        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
-        del(properties['Cooldown'])
         self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
