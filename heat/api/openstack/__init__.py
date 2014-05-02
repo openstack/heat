@@ -14,6 +14,7 @@
 from heat.api.middleware.fault import FaultWrapper
 from heat.api.middleware.ssl import SSLMiddleware
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.middleware.x_forwarded_for import XForwardedForMiddleware
 from heat.api.openstack import versions
 
 
@@ -28,3 +29,7 @@ def faultwrap_filter(app, conf, **local_conf):
 
 def sslmiddleware_filter(app, conf, **local_conf):
     return SSLMiddleware(app)
+
+
+def x_forwarded_for_middleware_filter(app, conf, **local_conf):
+    return XForwardedForMiddleware(app)
