@@ -18,6 +18,7 @@ import sys
 
 from oslo.config import cfg
 import sqlalchemy
+from sqlalchemy import orm
 from sqlalchemy.orm.session import Session
 
 from heat.common import crypt
@@ -112,7 +113,8 @@ def resource_get(context, resource_id):
 def resource_get_by_name_and_stack(context, resource_name, stack_id):
     result = model_query(context, models.Resource).\
         filter_by(name=resource_name).\
-        filter_by(stack_id=stack_id).first()
+        filter_by(stack_id=stack_id).\
+        options(orm.joinedload("data")).first()
 
     return result
 
