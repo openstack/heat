@@ -397,7 +397,7 @@ class SoftwareDeploymentTest(HeatTestCase):
         sd.status = 'COMPLETE'
         self.assertTrue(self.deployment.check_resume_complete(sd))
 
-    def test_handle_signal(self):
+    def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
         sc = mock.MagicMock()
@@ -420,6 +420,36 @@ class SoftwareDeploymentTest(HeatTestCase):
             'output_values': {
                 'foo': 'bar',
                 'deploy_status_code': 0,
+                'deploy_stderr': None,
+                'deploy_stdout': None
+            },
+            'status': 'COMPLETE',
+            'status_reason': 'Outputs received'
+        }, args)
+
+    def test_handle_signal_ok_str_zero(self):
+        self._create_stack(self.template)
+        sd = mock.MagicMock()
+        sc = mock.MagicMock()
+        sc.outputs = [{'name': 'foo'},
+                      {'name': 'foo2'},
+                      {'name': 'failed',
+                       'error_output': True}]
+        sd.output_values = {}
+        sd.status = self.deployment.IN_PROGRESS
+        sd.update.return_value = None
+        self.deployments.get.return_value = sd
+        self.software_configs.get.return_value = sc
+        details = {
+            'foo': 'bar',
+            'deploy_status_code': '0'
+        }
+        self.deployment.handle_signal(details)
+        args = sd.update.call_args[1]
+        self.assertEqual({
+            'output_values': {
+                'foo': 'bar',
+                'deploy_status_code': '0',
                 'deploy_stderr': None,
                 'deploy_stdout': None
             },
