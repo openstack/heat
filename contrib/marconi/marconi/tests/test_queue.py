@@ -82,7 +82,6 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.stack.validate()
         self.stack.store()
 
-    @utils.stack_delete_after
     def test_create(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
@@ -113,7 +112,6 @@ class MarconiMessageQueueTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_create_existing_queue(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
@@ -135,7 +133,6 @@ class MarconiMessageQueueTest(HeatTestCase):
                          str(err))
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_create_failed(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
@@ -161,7 +158,6 @@ class MarconiMessageQueueTest(HeatTestCase):
                          str(err))
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_delete(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
@@ -184,7 +180,6 @@ class MarconiMessageQueueTest(HeatTestCase):
         scheduler.TaskRunner(queue.delete)()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_in_place(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
@@ -212,7 +207,6 @@ class MarconiMessageQueueTest(HeatTestCase):
         scheduler.TaskRunner(queue.update, new_queue)()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_update_replace(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)

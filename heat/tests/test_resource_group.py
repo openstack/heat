@@ -158,7 +158,6 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertIsNone(resgrp.validate())
 
-    @utils.stack_delete_after
     def test_delete(self):
         """Test basic delete."""
         resg = self._create_dummy_stack()
@@ -167,7 +166,6 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual((resg.DELETE, resg.COMPLETE), resg.nested().state)
         self.assertEqual((resg.DELETE, resg.COMPLETE), resg.state)
 
-    @utils.stack_delete_after
     def test_update(self):
         """Test basic update."""
         resg = self._create_dummy_stack()
@@ -179,7 +177,6 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
         self.assertEqual(3, len(resg.nested()))
 
-    @utils.stack_delete_after
     def test_aggregate_attribs(self):
         """
         Test attribute aggregation and that we mimic the nested resource's
@@ -190,7 +187,6 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(expected, resg.FnGetAtt('foo'))
         self.assertEqual(expected, resg.FnGetAtt('Foo'))
 
-    @utils.stack_delete_after
     def test_aggregate_refs(self):
         """
         Test resource id aggregation
@@ -199,7 +195,6 @@ class ResourceGroupTest(common.HeatTestCase):
         expected = ['ID-0', 'ID-1']
         self.assertEqual(expected, resg.FnGetAtt("refs"))
 
-    @utils.stack_delete_after
     def test_index_refs(self):
         """Tests getting ids of individual resources."""
         resg = self._create_dummy_stack()

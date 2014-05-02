@@ -619,7 +619,6 @@ class StackTest(test_parser.StackTest):
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
 
-    @utils.stack_delete_after
     def test_get_attr_multiple_rsrc_status(self):
         """Test resolution of get_attr occurrences in HOT template."""
 
@@ -646,7 +645,6 @@ class StackTest(test_parser.StackTest):
             # resource name.
             self.assertEqual({'Value': 'resource1'}, self.resolve(snippet))
 
-    @utils.stack_delete_after
     def test_get_attr_invalid(self):
         """Test resolution of get_attr occurrences in HOT template."""
 
@@ -661,7 +659,6 @@ class StackTest(test_parser.StackTest):
                           self.resolve,
                           {'Value': {'get_attr': ['resource1', 'NotThere']}})
 
-    @utils.stack_delete_after
     def test_get_attr_invalid_resource(self):
         """Test resolution of get_attr occurrences in HOT template."""
 
@@ -678,7 +675,6 @@ class StackTest(test_parser.StackTest):
         self.assertRaises(exception.InvalidTemplateReference,
                           self.resolve, snippet)
 
-    @utils.stack_delete_after
     def test_get_resource(self):
         """Test resolution of get_resource occurrences in HOT template."""
 
@@ -693,7 +689,6 @@ class StackTest(test_parser.StackTest):
         snippet = {'value': {'get_resource': 'resource1'}}
         self.assertEqual({'value': 'resource1'}, self.resolve(snippet))
 
-    @utils.stack_delete_after
     def test_set_param_id(self):
         tmpl = parser.Template(hot_tpl_empty)
         self.stack = parser.Stack(self.ctx, 'param_id_test', tmpl)
@@ -712,7 +707,6 @@ class StackTest(test_parser.StackTest):
         self.assertFalse(params.set_stack_id(None))
         self.assertTrue(params.set_stack_id(stack_id))
 
-    @utils.stack_delete_after
     def test_set_param_id_update(self):
         tmpl = template.Template(
             {'heat_template_version': '2013-05-23',
@@ -741,7 +735,6 @@ class StackTest(test_parser.StackTest):
 
         self.assertEqual(self.stack['AResource'].metadata['Bar'], stack_id)
 
-    @utils.stack_delete_after
     def test_load_param_id(self):
         tmpl = parser.Template(hot_tpl_empty)
         self.stack = parser.Stack(self.ctx, 'param_load_id_test', tmpl)
@@ -754,7 +747,6 @@ class StackTest(test_parser.StackTest):
         self.assertEqual(newstack.parameters['OS::stack_id'],
                          stack_identifier.stack_id)
 
-    @utils.stack_delete_after
     def test_update_modify_param_ok_replace(self):
         tmpl = {
             'heat_template_version': '2013-05-23',
@@ -874,7 +866,6 @@ class StackAttributesTest(HeatTestCase):
               expected={'Value': None}))
     ]
 
-    @utils.stack_delete_after
     def test_get_attr(self):
         """Test resolution of get_attr occurrences in HOT template."""
 

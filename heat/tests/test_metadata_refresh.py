@@ -163,7 +163,6 @@ class MetadataRefreshTest(HeatTestCase):
 
         return stack
 
-    @utils.stack_delete_after
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
 
@@ -244,7 +243,6 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         return stack
 
-    @utils.stack_delete_after
     def test_wait_meta(self):
         '''
         1 create stack

@@ -138,7 +138,6 @@ class WaitConditionTest(HeatTestCase):
 
         return stack
 
-    @utils.stack_delete_after
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -158,7 +157,6 @@ class WaitConditionTest(HeatTestCase):
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -179,7 +177,6 @@ class WaitConditionTest(HeatTestCase):
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -201,7 +198,6 @@ class WaitConditionTest(HeatTestCase):
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -222,7 +218,6 @@ class WaitConditionTest(HeatTestCase):
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_timeout(self):
         st = time.time()
 
@@ -254,7 +249,6 @@ class WaitConditionTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
@@ -284,7 +278,6 @@ class WaitConditionTest(HeatTestCase):
         self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_validate_handle_url_bad_stackid(self):
         self.m.ReplayAll()
 
@@ -305,7 +298,6 @@ class WaitConditionTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_validate_handle_url_bad_stackname(self):
         self.m.ReplayAll()
 
@@ -324,7 +316,6 @@ class WaitConditionTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_validate_handle_url_bad_tenant(self):
         self.m.ReplayAll()
 
@@ -343,7 +334,6 @@ class WaitConditionTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_validate_handle_url_bad_resource(self):
         self.m.ReplayAll()
 
@@ -362,7 +352,6 @@ class WaitConditionTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_validate_handle_url_bad_resource_type(self):
         self.m.ReplayAll()
         stack_id = 'STACKABCD1234'
@@ -423,7 +412,6 @@ class WaitConditionHandleTest(HeatTestCase):
 
         return stack
 
-    @utils.stack_delete_after
     def test_handle(self):
         stack_id = 'STACKABCD1234'
         stack_name = 'test_stack2'
@@ -456,7 +444,6 @@ class WaitConditionHandleTest(HeatTestCase):
                           rsrc.handle_update, {}, {}, {})
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_metadata_update(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
@@ -471,7 +458,6 @@ class WaitConditionHandleTest(HeatTestCase):
         self.assertEqual(handle_metadata, rsrc.metadata)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_metadata_update_invalid(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
@@ -515,7 +501,6 @@ class WaitConditionHandleTest(HeatTestCase):
                           new_metadata=err_metadata)
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_get_status(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
@@ -542,7 +527,6 @@ class WaitConditionHandleTest(HeatTestCase):
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
-    @utils.stack_delete_after
     def test_get_status_reason(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
@@ -614,7 +598,6 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.stack_id = stack_id
         return stack
 
-    @utils.stack_delete_after
     def test_update(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
@@ -639,7 +622,6 @@ class WaitConditionUpdateTest(HeatTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
-    @utils.stack_delete_after
     def test_handle_update(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
@@ -669,7 +651,6 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.assertEqual(5, rsrc.properties['Count'])
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-    @utils.stack_delete_after
     def test_handle_update_restored_from_db(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
@@ -709,7 +690,6 @@ class WaitConditionUpdateTest(HeatTestCase):
             metadata['UniqueId'] = metadata['UniqueId'] * 2
             rsrc.metadata_update(new_metadata=metadata)
 
-    @utils.stack_delete_after
     def test_handle_update_timeout(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
@@ -752,7 +732,6 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-    @utils.stack_delete_after
     def test_update_updatehandle(self):
         self.stack = self.create_stack(test_template_update_waitcondition)
         self.m.ReplayAll()

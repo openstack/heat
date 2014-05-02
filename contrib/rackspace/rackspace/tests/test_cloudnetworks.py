@@ -106,7 +106,6 @@ class CloudNetworkTest(HeatTestCase):
         res = self.stack['cnw']
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-    @utils.stack_delete_after
     def test_attributes(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']
@@ -116,7 +115,6 @@ class CloudNetworkTest(HeatTestCase):
         self.assertEqual(expect_label, res.FnGetAtt('label'))
         self.assertEqual(expect_cidr, res.FnGetAtt('cidr'))
 
-    @utils.stack_delete_after
     def test_create_bad_cider(self, mock_client):
         self._template['resources']['cnw']['properties']['cidr'] = "bad cidr"
         self._parse_stack()
@@ -124,7 +122,6 @@ class CloudNetworkTest(HeatTestCase):
                                 self.stack.validate)
         self.assertIn("Invalid cidr", str(exc))
 
-    @utils.stack_delete_after
     def test_delete(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']
@@ -134,13 +131,11 @@ class CloudNetworkTest(HeatTestCase):
         exc = self.assertRaises(NotFound, self.fake_cnw.get, res_id)
         self.assertIn(res_id, str(exc))
 
-    @utils.stack_delete_after
     def test_delete_not_complete(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']
         self.assertFalse(res.check_delete_complete(res.network()))
 
-    @utils.stack_delete_after
     def test_delete_not_found(self, mock_client):
         self._setup_stack(mock_client)
         self.fake_cnw.networks = []

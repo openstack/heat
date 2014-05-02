@@ -123,7 +123,6 @@ Resources:
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))
 
-    @utils.stack_delete_after
     def test_security_group(self):
 
         show_created = {'security_group': {
@@ -543,7 +542,6 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_security_group_exception(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(
@@ -759,7 +757,6 @@ Resources:
 
         self.m.VerifyAll()
 
-    @utils.stack_delete_after
     def test_security_group_validate(self):
         stack = self.create_stack(self.test_template_validate)
         sg = stack['the_sg']
