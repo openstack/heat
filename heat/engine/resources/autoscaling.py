@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import functools
 import json
 import math
 
@@ -319,11 +318,13 @@ class InstanceGroup(stack_resource.StackResource):
         Replace the instances in the group using updated launch configuration
         """
         def changing_instances(tmpl):
+            def serialize_template(t):
+                return json.dumps(function.resolve(t), sort_keys=True)
+
             instances = self.get_instances()
             # To support both HOT and CFN, need to find out what the name of
             # the resources key is.
             resources_key = self.nested().t.RESOURCES
-            serialize_template = functools.partial(json.dumps, sort_keys=True)
             current = set((i.name, serialize_template(i.t)) for i in instances)
             updated = set((k, serialize_template(v))
                           for k, v in tmpl[resources_key].items())
