@@ -2764,21 +2764,51 @@ class SoftwareConfigServiceTest(HeatTestCase):
             action, status, status_reason, stack_user_project_id)
 
     def test_list_software_deployments(self):
-        deployment = self._create_software_deployment()
+        stack_name = 'test_list_software_deployments'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        setup_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        server = stack['WebServer']
+        server_id = server.resource_id
+
+        deployment = self._create_software_deployment(
+            server_id=server_id)
         deployment_id = deployment['id']
         self.assertIsNotNone(deployment)
+
         deployments = self.engine.list_software_deployments(
             self.ctx, server_id=None)
         self.assertIsNotNone(deployments)
         deployment_ids = [x['id'] for x in deployments]
         self.assertIn(deployment_id, deployment_ids)
         self.assertIn(deployment, deployments)
+
         deployments = self.engine.list_software_deployments(
             self.ctx, server_id=str(uuid.uuid4()))
         self.assertEqual([], deployments)
 
+        deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=server.resource_id)
+        self.assertEqual([deployment], deployments)
+
+        rs = db_api.resource_get_by_physical_resource_id(self.ctx, server_id)
+        self.assertEqual(deployment['config_id'],
+                         rs.rsrc_metadata.get('deployments')[0]['id'])
+
     def test_metadata_software_deployments(self):
-        server_id = str(uuid.uuid4())
+        stack_name = 'test_list_software_deployments'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        setup_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        server = stack['WebServer']
+        server_id = server.resource_id
+
         stack_user_project_id = str(uuid.uuid4())
         d1 = self._create_software_deployment(
             config_group='mygroup',
@@ -2807,6 +2837,12 @@ class SoftwareConfigServiceTest(HeatTestCase):
         self.assertEqual('01_first', metadata[0]['name'])
         self.assertEqual('02_second', metadata[1]['name'])
         self.assertEqual('03_third', metadata[2]['name'])
+
+        # assert that metadata via metadata_software_deployments matches
+        # metadata via server resource
+        rs = db_api.resource_get_by_physical_resource_id(self.ctx, server_id)
+        self.assertEqual(metadata,
+                         rs.rsrc_metadata.get('deployments'))
 
         deployments = self.engine.metadata_software_deployments(
             self.ctx, server_id=str(uuid.uuid4()))

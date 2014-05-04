@@ -1169,6 +1169,14 @@ class EngineService(service.Service):
         result = [api.format_software_config(sd.config) for sd in all_sd_s]
         return result
 
+    def _push_metadata_software_deployments(self, cnxt, server_id):
+        rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
+        if rs:
+            deployments = self.metadata_software_deployments(cnxt, server_id)
+            md = rs.rsrc_metadata or {}
+            md['deployments'] = deployments
+            rs.update_and_save({'rsrc_metadata': md})
+
     @request_context
     def show_software_deployment(self, cnxt, deployment_id):
         sd = db_api.software_deployment_get(cnxt, deployment_id)
@@ -1188,6 +1196,7 @@ class EngineService(service.Service):
             'action': action,
             'status': status,
             'status_reason': status_reason})
+        self._push_metadata_software_deployments(cnxt, server_id)
         return api.format_software_deployment(sd)
 
     @request_context
@@ -1209,6 +1218,7 @@ class EngineService(service.Service):
             update_data['status_reason'] = status_reason
         sd = db_api.software_deployment_update(cnxt,
                                                deployment_id, update_data)
+        self._push_metadata_software_deployments(cnxt, sd.server_id)
         return api.format_software_deployment(sd)
 
     @request_context
