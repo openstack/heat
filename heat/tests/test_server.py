@@ -153,7 +153,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._create_test_server(return_server,
                                           'test_server_create')
         # this makes sure the auto increment worked on server creation
@@ -166,7 +166,7 @@ class ServersTest(HeatTestCase):
                 '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().MultipleTimes().AndReturn(interfaces)
@@ -230,7 +230,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._setup_test_server(return_server,
                                          'test_server_create_image_id',
                                          image_id='1',
@@ -245,7 +245,7 @@ class ServersTest(HeatTestCase):
                 '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().MultipleTimes().AndReturn(interfaces)
@@ -517,7 +517,7 @@ class ServersTest(HeatTestCase):
         server.keystone().MultipleTimes().AndReturn(self.fkc)
         server.heat().MultipleTimes().AndReturn(self.fc)
         server._get_deployments_metadata(
-            self.fc, 5678).AndReturn({'foo': 'bar'})
+            self.fc, '5678').AndReturn({'foo': 'bar'})
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -586,7 +586,7 @@ class ServersTest(HeatTestCase):
         server.keystone().MultipleTimes().AndReturn(self.fkc)
         server.heat().MultipleTimes().AndReturn(self.fc)
         server._get_deployments_metadata(
-            self.fc, 5678).AndReturn({'foo': 'bar'})
+            self.fc, '5678').AndReturn({'foo': 'bar'})
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -906,7 +906,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'create_delete')
-        server.resource_id = 1234
+        server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
@@ -928,7 +928,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'create_delete2')
-        server.resource_id = 1234
+        server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
@@ -1054,7 +1054,7 @@ class ServersTest(HeatTestCase):
         Server.handle_update supports changing the name.
         """
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._create_test_server(return_server,
                                           'srv_update')
         new_name = 'new_name'
@@ -1062,7 +1062,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['name'] = new_name
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).AndReturn(return_server)
+        self.fc.servers.get('5678').AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'update')
         return_server.update(new_name).AndReturn(None)
@@ -1077,7 +1077,7 @@ class ServersTest(HeatTestCase):
         the change making a resize API call against Nova.
         """
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_update')
 
@@ -1085,7 +1085,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['flavor'] = 'm1.small'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(1234).AndReturn(return_server)
+        self.fc.servers.get('1234').AndReturn(return_server)
 
         def activate_status(server):
             server.status = 'VERIFY_RESIZE'
@@ -1108,7 +1108,7 @@ class ServersTest(HeatTestCase):
         call failed, so we raise an explicit error.
         """
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_update2')
 
@@ -1116,7 +1116,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['flavor'] = 'm1.small'
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(1234).AndReturn(return_server)
+        self.fc.servers.get('1234').AndReturn(return_server)
 
         def activate_status(server):
             server.status = 'ACTIVE'
@@ -1196,7 +1196,7 @@ class ServersTest(HeatTestCase):
         # Server.handle_update supports changing the image, and makes
         # the change making a rebuild API call against Nova.
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_updimgrbld')
 
@@ -1208,7 +1208,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['image'] = new_image
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
         if 'REBUILD' == policy:
@@ -1250,7 +1250,7 @@ class ServersTest(HeatTestCase):
         # If the status after a rebuild is not REBUILD or ACTIVE, it means the
         # rebuild call failed, so we raise an explicit error.
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'srv_updrbldfail')
 
@@ -1262,7 +1262,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['image'] = new_image
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
         self.fc.servers.rebuild(
@@ -1314,7 +1314,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
                                          'sts_build')
-        server.resource_id = 1234
+        server.resource_id = '1234'
 
         # Bind fake get method which Server.check_create_complete will call
         def activate_status(server):
@@ -1347,7 +1347,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_sus2')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
         get().AndRaise(servers.clients.novaclient.exceptions.NotFound(404))
@@ -1367,7 +1367,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_suspend3')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to SUSPENDED
@@ -1388,7 +1388,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_resume1')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to SUSPENDED
@@ -1410,7 +1410,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_susp_w')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to SUSPENDED, but
@@ -1436,7 +1436,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_susp_uk')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to SUSPENDED, but
@@ -1466,7 +1466,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_res_w')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to ACTIVE, but
@@ -1512,7 +1512,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_res_nf')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.ReplayAll()
 
         # Override the get_servers_1234 handler status to ACTIVE, but
@@ -1566,7 +1566,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
                                          'srv_sts_bld')
-        server.resource_id = 1234
+        server.resource_id = '1234'
 
         check_iterations = [0]
 
@@ -1616,12 +1616,12 @@ class ServersTest(HeatTestCase):
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
-        return_server.id = 9102
+        return_server.id = '9102'
         server = self._create_test_server(return_server,
                                           'wo_ipaddr')
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
         return_server.interface_list().MultipleTimes().AndReturn([])
@@ -1919,7 +1919,7 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'srv_resolve_attr')
 
-        server.resource_id = 1234
+        server.resource_id = '1234'
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
         get().AndRaise(servers.clients.novaclient.exceptions.NotFound(404))
@@ -2147,7 +2147,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_None_networks_with_port(self):
         return_server = self.fc.servers.list()[3]
-        return_server.id = 9102
+        return_server.id = '9102'
         server = self._create_test_server(return_server, 'networks_update')
 
         new_networks = [{'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
@@ -2155,7 +2155,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = new_networks
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
         self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
@@ -2180,7 +2180,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_None_networks_with_network_id(self):
         return_server = self.fc.servers.list()[3]
-        return_server.id = 9102
+        return_server.id = '9102'
         server = self._create_test_server(return_server, 'networks_update')
 
         new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -2189,7 +2189,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = new_networks
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
         self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
@@ -2215,7 +2215,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_empty_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[3]
-        return_server.id = 9102
+        return_server.id = '9102'
         server = self._create_test_server(return_server, 'networks_update')
 
         new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -2225,7 +2225,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = new_networks
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(9102).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('9102').MultipleTimes().AndReturn(return_server)
         # to make sure, that old_networks will be None
         self.assertFalse(hasattr(server.t['Properties'], 'networks'))
 
@@ -2251,7 +2251,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._create_test_server(return_server, 'networks_update')
 
         old_networks = [
@@ -2272,7 +2272,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = new_networks
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
 
@@ -2312,7 +2312,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_networks_with_None(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._create_test_server(return_server, 'networks_update')
 
         old_networks = [
@@ -2326,7 +2326,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = None
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
 
@@ -2362,7 +2362,7 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_networks_with_empty_list(self):
         return_server = self.fc.servers.list()[1]
-        return_server.id = 5678
+        return_server.id = '5678'
         server = self._create_test_server(return_server, 'networks_update')
 
         old_networks = [
@@ -2376,7 +2376,7 @@ class ServersTest(HeatTestCase):
         update_template['Properties']['networks'] = []
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.fc.servers.get(5678).MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(return_server)
 
         self.m.StubOutWithMock(return_server, 'interface_list')
 

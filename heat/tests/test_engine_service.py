@@ -1745,7 +1745,7 @@ class StackServiceTest(HeatTestCase):
                 'metadata': {},
                 'name': u'WebServer',
                 'resource_data': {},
-                'resource_id': 9999,
+                'resource_id': '9999',
                 'status': 'COMPLETE',
                 'type': u'AWS::EC2::Instance'}}
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
@@ -1815,7 +1815,7 @@ class StackServiceTest(HeatTestCase):
                 'metadata': {},
                 'name': u'WebServer',
                 'resource_data': {},
-                'resource_id': 9999,
+                'resource_id': '9999',
                 'status': 'COMPLETE',
                 'type': u'AWS::EC2::Instance'}}
         self.m.ReplayAll()

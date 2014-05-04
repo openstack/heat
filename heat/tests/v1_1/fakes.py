@@ -77,7 +77,7 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_servers_detail(self, **kw):
         return (
             200,
-            {"servers": [{"id": 1234,
+            {"servers": [{"id": "1234",
                           "name": "sample-server",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server",
@@ -96,7 +96,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                           "accessIPv6": "",
                           "metadata": {"Server Label": "Web Head 1",
                                        "Image Version": "2.1"}},
-                         {"id": 5678,
+                         {"id": "5678",
                           "name": "sample-server2",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server2",
@@ -119,7 +119,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                                                     "OS-EXT-IPS-MAC:mac_addr":
                                                     "fa:16:3e:8c:44:cc"}]},
                           "metadata": {}},
-                         {"id": 9101,
+                         {"id": "9101",
                           "name": "hard-reboot",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "hard-reboot",
@@ -136,7 +136,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                                         "private": [{"version": 4,
                                                      "addr": "10.13.12.13"}]},
                           "metadata": {"Server Label": "DB 1"}},
-                         {"id": 9102,
+                         {"id": "9102",
                           "name": "server-with-no-ip",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "server-with-no-ip",
@@ -148,7 +148,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                           "accessIPv6": "",
                           "addresses": {"empty_net": []},
                           "metadata": {"Server Label": "DB 1"}},
-                         {"id": 9999,
+                         {"id": "9999",
                           "name": "sample-server3",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server3",

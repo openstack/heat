@@ -301,7 +301,7 @@ class AutoScalingGroupTest(HeatTestCase):
             server.status = 'VERIFY_RESIZE'
 
         return_server = self.fc.servers.list()[1]
-        return_server.id = 1234
+        return_server.id = '1234'
         return_server.get = activate_status.__get__(return_server)
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
