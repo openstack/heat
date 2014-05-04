@@ -118,6 +118,9 @@ class FaultWrapper(wsgi.Middleware):
             msg_trace = traceback.format_exc()
             message = full_message
 
+        if isinstance(ex, exception.HeatException):
+            message = ex.message
+
         if cfg.CONF.debug and not trace:
             trace = msg_trace
 

@@ -40,7 +40,8 @@ from heat.common import wsgi
 from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
 
-gettextutils.install('heat', lazy=False)
+gettextutils.enable_lazy()
+gettextutils.install('heat', lazy=True)
 
 LOG = logging.getLogger('heat.api.cloudwatch')
 
