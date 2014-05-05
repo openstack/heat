@@ -434,7 +434,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         ov = sd.output_values or {}
         status = None
         status_reasons = {}
-        if details.get(self.STATUS_CODE):
+        status_code = details.get(self.STATUS_CODE)
+        if status_code and str(status_code) != '0':
             status = self.FAILED
             status_reasons[self.STATUS_CODE] = _(
                 'Deployment exited with non-zero status code: %s'
