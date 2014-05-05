@@ -427,6 +427,8 @@ class ProviderTemplateTest(HeatTestCase):
             {'WordPress_Single_Instance.yaml':
              'WordPress_Single_Instance.yaml', 'resources': {}},
             stack.env.user_env_as_dict()["resource_registry"])
+        self.assertNotIn('WordPress_Single_Instance.yaml',
+                         resources.global_env().registry._registry)
 
     def test_persisted_unregistered_provider_templates(self):
         """
