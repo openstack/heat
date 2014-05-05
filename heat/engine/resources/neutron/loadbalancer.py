@@ -94,8 +94,6 @@ class HealthMonitor(neutron.NeutronResource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     attributes_schema = {
         'admin_state_up': _('The administrative state of this health '
                             'monitor.'),
@@ -285,8 +283,6 @@ class Pool(neutron.NeutronResource):
             update_allowed=True
         ),
     }
-
-    update_allowed_keys = ('Properties',)
 
     attributes_schema = {
         'admin_state_up': _('The administrative state of this pool.'),
@@ -502,8 +498,6 @@ class PoolMember(neutron.NeutronResource):
         'show': _('All attributes.'),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def handle_create(self):
         pool = self.properties[self.POOL_ID]
         client = self.neutron()
@@ -573,8 +567,6 @@ class LoadBalancer(resource.Resource):
             update_allowed=True
         ),
     }
-
-    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
         pool = self.properties[self.POOL_ID]

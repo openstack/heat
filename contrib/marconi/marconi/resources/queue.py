@@ -53,8 +53,6 @@ class MarconiQueue(resource.Resource):
         "href": _("The resource href of the queue.")
     }
 
-    update_allowed_keys = ('Properties',)
-
     def __init__(self, name, json_snippet, stack):
         super(MarconiQueue, self).__init__(name, json_snippet, stack)
         self.clients = clients.Clients(self.context)

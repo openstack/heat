@@ -670,16 +670,6 @@ class InstancesTest(HeatTestCase):
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 
-    def test_instance_update_replace(self):
-        return_server = self.fc.servers.list()[1]
-        instance = self._create_test_instance(return_server,
-                                              'in_update1')
-
-        update_template = copy.deepcopy(instance.t)
-        update_template['Notallowed'] = {'test': 123}
-        updater = scheduler.TaskRunner(instance.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
-
     def test_instance_update_properties(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,

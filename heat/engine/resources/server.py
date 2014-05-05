@@ -323,8 +323,6 @@ class Server(stack_user.StackUser):
                         'address of the server.'),
     }
 
-    update_allowed_keys = ('Metadata', 'Properties')
-
     # Server host name limit to 53 characters by due to typical default
     # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
     physical_resource_name_limit = 53

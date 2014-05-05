@@ -127,8 +127,6 @@ class NetworkGateway(neutron.NeutronResource):
         "show": _("All attributes.")
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _show_resource(self):
         return self.neutron().show_network_gateway(
             self.resource_id)['network_gateway']

@@ -131,8 +131,6 @@ class CloudWatchAlarm(resource.Resource):
 
     strict_dependency = False
 
-    update_allowed_keys = ('Properties',)
-
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,
                                  watch_name=self.physical_resource_name(),

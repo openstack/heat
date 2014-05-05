@@ -1263,16 +1263,6 @@ class ServersTest(HeatTestCase):
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
-    def test_server_update_attr_replace(self):
-        return_server = self.fc.servers.list()[1]
-        server = self._create_test_server(return_server,
-                                          'update_rep')
-
-        update_template = copy.deepcopy(server.t)
-        update_template['UpdatePolicy'] = {'test': 123}
-        updater = scheduler.TaskRunner(server.update, update_template)
-        self.assertRaises(resource.UpdateReplace, updater)
-
     def test_server_update_properties(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,

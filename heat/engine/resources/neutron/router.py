@@ -94,8 +94,6 @@ class Router(neutron.NeutronResource):
         "show": _("All attributes."),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def add_dependencies(self, deps):
         super(Router, self).add_dependencies(deps)
         external_gw = self.properties.get(self.EXTERNAL_GATEWAY)

@@ -60,8 +60,6 @@ class ProviderNet(net.Net):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     attributes_schema = {
         "status": _("The status of the network."),
         "subnets": _("Subnets of this network."),

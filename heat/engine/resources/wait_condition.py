@@ -182,8 +182,6 @@ class WaitCondition(resource.Resource):
                   'condition signals sent to the handle.'),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
 

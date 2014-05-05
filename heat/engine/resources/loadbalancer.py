@@ -355,8 +355,6 @@ class LoadBalancer(stack_resource.StackResource):
                                             "security group.")
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _haproxy_config(self, templ, instances):
         # initial simplifications:
         # - only one Listener

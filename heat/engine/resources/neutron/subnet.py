@@ -154,8 +154,6 @@ class Subnet(neutron.NeutronResource):
         "show": _("All attributes."),
     }
 
-    update_allowed_keys = ('Properties',)
-
     @classmethod
     def _null_gateway_ip(cls, props):
         if cls.GATEWAY_IP not in props:

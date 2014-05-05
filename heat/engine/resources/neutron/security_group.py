@@ -131,8 +131,6 @@ class SecurityGroup(neutron.NeutronResource):
         {"direction": "egress", "ethertype": "IPv6"}
     ]
 
-    update_allowed_keys = ('Properties',)
-
     def validate(self):
         super(SecurityGroup, self).validate()
         if self.properties.get(self.NAME) == 'default':

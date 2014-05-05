@@ -2462,6 +2462,35 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
 
+    def test_update_deletion_policy(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'Bar'}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        resource_id = self.stack['AResource'].id
+
+        new_tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                    'Resources': {
+                    'AResource': {'Type': 'ResourceWithPropsType',
+                                  'DeletionPolicy': 'Retain',
+                                  'Properties': {'Foo': 'Bar'}}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(new_tmpl))
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        self.assertEqual(resource_id, self.stack['AResource'].id)
+
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')

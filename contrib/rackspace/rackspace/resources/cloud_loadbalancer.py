@@ -367,8 +367,6 @@ class CloudLoadBalancer(resource.Resource):
         'PublicIp': _('Public IP address of the specified '
                       'instance.')}
 
-    update_allowed_keys = ('Properties',)
-
     def __init__(self, name, json_snippet, stack):
         super(CloudLoadBalancer, self).__init__(name, json_snippet, stack)
         self.clb = self.cloud_lb()

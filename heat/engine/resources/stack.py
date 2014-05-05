@@ -54,8 +54,6 @@ class NestedStack(stack_resource.StackResource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def child_template(self):
         try:
             template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])

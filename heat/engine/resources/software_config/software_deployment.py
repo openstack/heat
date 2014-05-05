@@ -155,8 +155,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                        "execution"),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _signal_transport_cfn(self):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.CFN_SIGNAL

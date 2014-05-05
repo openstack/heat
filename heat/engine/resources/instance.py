@@ -308,8 +308,6 @@ class Instance(resource.Resource):
                          'PublicIp': _('Public IP address of the specified '
                                        'instance.')}
 
-    update_allowed_keys = ('Metadata', 'Properties')
-
     # Server host name limit to 53 characters by due to typical default
     # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
     physical_resource_name_limit = 53

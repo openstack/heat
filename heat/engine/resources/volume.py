@@ -345,8 +345,6 @@ class VolumeAttachment(resource.Resource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def handle_create(self):
         server_id = self.properties[self.INSTANCE_ID]
         volume_id = self.properties[self.VOLUME_ID]

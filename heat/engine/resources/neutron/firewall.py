@@ -70,8 +70,6 @@ class Firewall(neutron.NeutronResource):
         'show': _('All attributes.'),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _show_resource(self):
         return self.neutron().show_firewall(self.resource_id)['firewall']
 
@@ -152,8 +150,6 @@ class FirewallPolicy(neutron.NeutronResource):
         'audited': _('Audit status of this firewall policy.'),
         'tenant_id': _('Id of the tenant owning the firewall policy.')
     }
-
-    update_allowed_keys = ('Properties',)
 
     def _show_resource(self):
         return self.neutron().show_firewall_policy(self.resource_id)[
@@ -288,8 +284,6 @@ class FirewallRule(neutron.NeutronResource):
         'position': _('Position of the rule within the firewall policy.'),
         'tenant_id': _('Id of the tenant owning the firewall.')
     }
-
-    update_allowed_keys = ('Properties',)
 
     def _show_resource(self):
         return self.neutron().show_firewall_rule(
