@@ -478,6 +478,23 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 
+    def validate(self):
+        '''
+        Validate any of the provided params
+
+        :raises StackValidationFailed: if any property failed validation.
+        '''
+        super(SoftwareDeployment, self).validate()
+        server = self.properties.get(self.SERVER)
+        if server:
+            res = self.stack.resource_by_refid(server)
+            if res:
+                if not res.user_data_software_config():
+                    raise exception.StackValidationFailed(message=_(
+                        "Resource %s's property user_data_format should be "
+                        "set to SOFTWARE_CONFIG since there are software "
+                        "deployments on it.") % server)
+
 
 def resource_mapping():
     return {

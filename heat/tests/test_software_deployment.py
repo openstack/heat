@@ -37,6 +37,27 @@ class SoftwareDeploymentTest(HeatTestCase):
         }
     }
 
+    template_with_server = {
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {
+                    'server': 'server',
+                    'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
+                    'input_values': {'foo': 'bar'},
+                }
+            },
+            'server': {
+                'Type': 'OS::Nova::Server',
+                'Properties': {
+                    'image': 'fedora-amd64',
+                    'flavor': 'm1.small',
+                    'key_name': 'heat_key'
+                }
+            }
+        }
+    }
+
     template_no_signal = {
         'Resources': {
             'deployment_mysql': {
@@ -91,6 +112,28 @@ class SoftwareDeploymentTest(HeatTestCase):
         self.deployment.heat = heat
         self.deployments = heat.return_value.software_deployments
         self.software_configs = heat.return_value.software_configs
+
+    def test_validate(self):
+        template = dict(self.template_with_server)
+        props = template['Resources']['server']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        self._create_stack(self.template_with_server)
+        sd = self.deployment
+        sd.validate()
+        server = self.stack['server']
+        self.assertTrue(server.user_data_software_config())
+
+    def test_validate_failed(self):
+        template = dict(self.template_with_server)
+        props = template['Resources']['server']['Properties']
+        props['user_data_format'] = 'RAW'
+        self._create_stack(template)
+        sd = self.deployment
+        err = self.assertRaises(exception.StackValidationFailed, sd.validate)
+        self.assertEqual("Resource server's property "
+                         "user_data_format should be set to "
+                         "SOFTWARE_CONFIG since there are "
+                         "software deployments on it.", str(err))
 
     def test_resource_mapping(self):
         self._create_stack(self.template)
