@@ -73,17 +73,15 @@ class WaitConditionHandle(signal_responder.SignalResponder):
             return
 
         if self._metadata_format_ok(new_metadata):
-            rsrc_metadata = self.metadata
+            rsrc_metadata = self.metadata_get()
             if new_metadata['UniqueId'] in rsrc_metadata:
                 logger.warning(_("Overwriting Metadata item for UniqueId %s!")
                                % new_metadata['UniqueId'])
             safe_metadata = {}
             for k in ('Data', 'Reason', 'Status'):
                 safe_metadata[k] = new_metadata[k]
-            # Note we can't update self.metadata directly, as it
-            # is a Metadata descriptor object which only supports get/set
             rsrc_metadata.update({new_metadata['UniqueId']: safe_metadata})
-            self.metadata = rsrc_metadata
+            self.metadata_set(rsrc_metadata)
         else:
             logger.error(_("Metadata failed validation for %s") % self.name)
             raise ValueError(_("Metadata format invalid"))
@@ -92,14 +90,14 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         '''
         Return a list of the Status values for the handle signals
         '''
-        return [v['Status'] for v in self.metadata.values()]
+        return [v['Status'] for v in self.metadata_get().values()]
 
     def get_status_reason(self, status):
         '''
         Return a list of reasons associated with a particular status
         '''
         return [v['Reason']
-                for v in self.metadata.values()
+                for v in self.metadata_get().values()
                 if v['Status'] == status]
 
 
@@ -270,14 +268,14 @@ class WaitCondition(resource.Resource):
             return
 
         handle = self.stack[self.resource_id]
-        handle.metadata = {}
+        handle.metadata_set({})
 
     def _resolve_attribute(self, key):
         res = {}
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]
         if key == 'Data':
-            meta = handle.metadata
+            meta = handle.metadata_get()
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])
             logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %

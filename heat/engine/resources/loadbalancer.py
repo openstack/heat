@@ -474,11 +474,11 @@ class LoadBalancer(stack_resource.StackResource):
             templ = self.get_parsed_template()
             cfg = self._haproxy_config(templ, prop_diff[self.INSTANCES])
 
-            md = self.nested()['LB_instance'].metadata
+            md = self.nested()['LB_instance'].metadata_get()
             files = md['AWS::CloudFormation::Init']['config']['files']
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
-            self.nested()['LB_instance'].metadata = md
+            self.nested()['LB_instance'].metadata_set(md)
 
     def handle_delete(self):
         return self.delete_nested()

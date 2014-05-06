@@ -184,7 +184,7 @@ class NovaUtilsUserdataTests(HeatTestCase):
     def test_build_userdata(self):
         """Tests the build_userdata function."""
         resource = self.m.CreateMockAnything()
-        resource.metadata = {}
+        resource.metadata_get().AndReturn({})
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
         cnf.heat_metadata_server_url = 'http://server.test:123'
@@ -206,7 +206,7 @@ class NovaUtilsUserdataTests(HeatTestCase):
     def test_build_userdata_without_instance_user(self):
         """Don't add a custom instance user when not requested."""
         resource = self.m.CreateMockAnything()
-        resource.metadata = {}
+        resource.metadata_get().AndReturn({})
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
         cnf.instance_user = 'config_instance_user'
@@ -222,7 +222,7 @@ class NovaUtilsUserdataTests(HeatTestCase):
     def test_build_userdata_with_instance_user(self):
         """Add the custom instance user when requested."""
         resource = self.m.CreateMockAnything()
-        resource.metadata = {}
+        resource.metadata_get().AndReturn(None)
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
         cnf.instance_user = 'config_instance_user'

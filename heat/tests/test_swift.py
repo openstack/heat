@@ -293,4 +293,4 @@ class swiftTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
-        self.assertEqual({}, rsrc.metadata)
+        self.assertEqual({}, rsrc.metadata_get())

@@ -58,7 +58,7 @@ class CooldownMixin(object):
             # If not specified, it will be None, same as cooldown == 0
             cooldown = 0
 
-        metadata = self.metadata
+        metadata = self.metadata_get()
         if metadata and cooldown != 0:
             last_adjust = metadata.keys()[0]
             if not timeutils.is_older_than(last_adjust, cooldown):
@@ -71,7 +71,7 @@ class CooldownMixin(object):
         # we could maintain event history here, but since we only need
         # the latest event for cooldown, just store that for now
         metadata = {timeutils.strtime(): reason}
-        self.metadata = metadata
+        self.metadata_set(metadata)
 
 
 class InstanceGroup(stack_resource.StackResource):

@@ -427,17 +427,15 @@ class Server(stack_user.StackUser):
         else:
             self.data_set('password', password, True)
 
-    @property
-    def metadata(self):
+    def metadata_get(self):
         if self.user_data_software_config():
             return self._build_deployments_metadata()
         else:
-            return self._metadata
+            return super(Server, self).metadata_get()
 
-    @metadata.setter
-    def metadata(self, metadata):
+    def metadata_set(self, metadata):
         if not self.user_data_software_config():
-            self._metadata = metadata
+            super(Server, self).metadata_set(metadata)
 
     def user_data_raw(self):
         return self.properties.get(self.USER_DATA_FORMAT) == self.RAW
@@ -713,7 +711,7 @@ class Server(stack_user.StackUser):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
-            self.metadata = tmpl_diff['Metadata']
+            self.metadata_set(tmpl_diff['Metadata'])
 
         checkers = []
         server = None
@@ -846,7 +844,7 @@ class Server(stack_user.StackUser):
         Refresh the metadata if new_metadata is None
         '''
         if new_metadata is None:
-            self.metadata = self.parsed_template('Metadata')
+            self.metadata_set(self.parsed_template('Metadata'))
 
     @staticmethod
     def _check_maximum(count, maximum, msg):

@@ -1024,7 +1024,7 @@ class EngineService(service.Service):
             if res.name != resource_name and res.id is not None:
                 res.metadata_update()
 
-        return resource.metadata
+        return resource.metadata_get()
 
     @request_context
     def create_watch_data(self, cnxt, watch_name, stats_data):

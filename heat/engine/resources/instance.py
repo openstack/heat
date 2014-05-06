@@ -545,7 +545,7 @@ class Instance(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
-            self.metadata = tmpl_diff['Metadata']
+            self.metadata_set(tmpl_diff['Metadata'])
         checkers = []
         server = None
         if self.TAGS in prop_diff:
@@ -643,7 +643,7 @@ class Instance(resource.Resource):
         Refresh the metadata if new_metadata is None
         '''
         if new_metadata is None:
-            self.metadata = self.parsed_template('Metadata')
+            self.metadata_set(self.parsed_template('Metadata'))
 
     def validate(self):
         '''

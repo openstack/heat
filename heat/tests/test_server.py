@@ -553,7 +553,7 @@ class ServersTest(HeatTestCase):
                 }
             },
             'deployments': {'foo': 'bar'}
-        }, server.metadata)
+        }, server.metadata_get())
 
         created_server = servers.Server('WebServer',
                                         t['Resources']['WebServer'], stack)
@@ -623,7 +623,7 @@ class ServersTest(HeatTestCase):
                 }
             },
             'deployments': {'foo': 'bar'}
-        }, server.metadata)
+        }, server.metadata_get())
 
         created_server = servers.Server('WebServer',
                                         t['Resources']['WebServer'], stack)
@@ -641,7 +641,7 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
         self.m.StubOutWithMock(server, 'keystone')
         self.m.ReplayAll()
-        deployments = server.metadata['deployments']
+        deployments = server.metadata_get()['deployments']
         self.assertEqual([], deployments)
         self.m.VerifyAll()
 
@@ -956,11 +956,11 @@ class ServersTest(HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Metadata'] = {'test': 123}
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual({'test': 123}, server.metadata)
+        self.assertEqual({'test': 123}, server.metadata_get())
 
         server.t['Metadata'] = {'test': 456}
         server.metadata_update()
-        self.assertEqual({'test': 456}, server.metadata)
+        self.assertEqual({'test': 456}, server.metadata_get())
 
     def test_server_update_nova_metadata(self):
         return_server = self.fc.servers.list()[1]

@@ -340,7 +340,7 @@ class InstancesTest(HeatTestCase):
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}
         scheduler.TaskRunner(instance.update, update_template)()
-        self.assertEqual({'test': 123}, instance.metadata)
+        self.assertEqual({'test': 123}, instance.metadata_get())
 
     def test_instance_update_instance_type(self):
         """

@@ -146,6 +146,16 @@ resource_template = template_format.parse('''{
 }''')
 
 
+class DummyClass(object):
+    metadata = None
+
+    def metadata_get(self):
+        return self.metadata
+
+    def metadata_set(self, metadata):
+        self.metadata = metadata
+
+
 class TemplateTest(HeatTestCase):
 
     def setUp(self):
@@ -530,10 +540,8 @@ Mappings:
         deletion_policy_snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
         update_policy_snippet = {'Fn::ResourceFacade': 'UpdatePolicy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = {'DeletionPolicy': 'Retain',
                              'UpdatePolicy': {"blarg": "wibble"}}
         parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
@@ -551,10 +559,8 @@ Mappings:
     def test_resource_facade_function(self):
         deletion_policy_snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
                                              parser.Template({}))
         parent_snippet = {'DeletionPolicy': {'Fn::Join': ['eta',
@@ -581,10 +587,8 @@ Mappings:
     def test_resource_facade_missing_deletion_policy(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
 
-        class DummyClass(object):
-            pass
         parent_resource = DummyClass()
-        parent_resource.metadata = {"foo": "bar"}
+        parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = {}
         parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
                                              parser.Template({}))
@@ -1126,7 +1130,8 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
 
-        self.assertEqual(stack_arn, self.stack['AResource'].metadata['Bar'])
+        self.assertEqual(
+            stack_arn, self.stack['AResource'].metadata_get()['Bar'])
 
     def test_load_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_load_arn_test',

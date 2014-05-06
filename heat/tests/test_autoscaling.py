@@ -25,7 +25,6 @@ from heat.common import template_format
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resource import Metadata
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import image
 from heat.engine.resources import instance
@@ -244,12 +243,12 @@ class AutoScalingTest(HeatTestCase):
 
         # Then set a stub to ensure the metadata update is as
         # expected based on the timestamp and data
-        self.m.StubOutWithMock(Metadata, '__set__')
+        self.m.StubOutWithMock(resource.Resource, 'metadata_set')
         expected = {timeutils.strtime(now): data}
         # Note for ScalingPolicy, we expect to get a metadata
         # update for the policy and autoscaling group, so pass nmeta=2
         for x in range(nmeta):
-            Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
+            resource.Resource.metadata_set(expected).AndReturn(None)
 
     def test_scaling_delete_empty(self):
         t = template_format.parse(as_template)
@@ -1031,7 +1030,7 @@ class AutoScalingTest(HeatTestCase):
         # Now move time on 10 seconds - Cooldown in template is 60
         # so this should not update the policy metadata, and the
         # scaling group instances should be unchanged
-        # Note we have to stub Metadata.__get__ since up_policy isn't
+        # Note we have to stub Resource.metadata_get since up_policy isn't
         # stored in the DB (because the stack hasn't really been created)
         previous_meta = {timeutils.strtime(now):
                          'PercentChangeInCapacity : -50'}
@@ -1043,9 +1042,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(timeutils, 'utcnow')
         timeutils.utcnow().MultipleTimes().AndReturn(now)
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         self.m.ReplayAll()
 
@@ -1091,13 +1089,12 @@ class AutoScalingTest(HeatTestCase):
 
         now = now + datetime.timedelta(seconds=61)
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the two instances
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
+        resource.Resource.metadata_get()
 
         # raise by 200%, should work
         self._stub_lb_reload(3, unset=False)
@@ -1141,13 +1138,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the two instances
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
+        resource.Resource.metadata_get()
         # raise by 200%, should work
 
         self._stub_lb_reload(3, unset=False)
@@ -1266,7 +1262,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         expected_meta = {'IPs': u'127.0.0.1,127.0.0.1'}
-        self.assertEqual(expected_meta, stack['MyCustomLB'].metadata)
+        self.assertEqual(expected_meta, stack['MyCustomLB'].metadata_get())
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -1337,7 +1333,7 @@ class AutoScalingTest(HeatTestCase):
         # Now move time on 10 seconds - Cooldown in template is 60
         # so this should not update the policy metadata, and the
         # scaling group instances should be unchanged
-        # Note we have to stub Metadata.__get__ since up_policy isn't
+        # Note we have to stub Resource.metadata_get since up_policy isn't
         # stored in the DB (because the stack hasn't really been created)
         previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
 
@@ -1348,9 +1344,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(timeutils, 'utcnow')
         timeutils.utcnow().MultipleTimes().AndReturn(now)
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        up_policy.metadata_get().AndReturn(previous_meta)
 
         self.m.ReplayAll()
         up_policy.signal()
@@ -1394,14 +1389,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        up_policy.metadata_get().AndReturn(previous_meta)
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the additional instance
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
 
         now = now + datetime.timedelta(seconds=61)
         self._stub_lb_reload(3, unset=False)
@@ -1453,14 +1446,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        up_policy.metadata_get().AndReturn(previous_meta)
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the additional instance
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
 
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
@@ -1513,14 +1504,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        up_policy.metadata_get().AndReturn(previous_meta)
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the additional instance
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
 
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
@@ -1578,16 +1567,13 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(Metadata, '__get__')
-
-        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
-        Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
-                         ).AndReturn(previous_meta)
+        self.m.StubOutWithMock(resource.Resource, 'metadata_get')
+        up_policy.metadata_get().AndReturn(previous_meta)
+        rsrc.metadata_get().AndReturn(previous_meta)
 
         #stub for the metadata accesses while creating the two instances
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
-        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        resource.Resource.metadata_get()
+        resource.Resource.metadata_get()
 
         now = now + datetime.timedelta(seconds=61)
 
