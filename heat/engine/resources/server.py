@@ -848,6 +848,15 @@ class Server(stack_user.StackUser):
         if new_metadata is None:
             self.metadata = self.parsed_template('Metadata')
 
+    @staticmethod
+    def _check_maximum(count, maximum, msg):
+        '''
+        Check a count against a maximum, unless maximum is -1 which indicates
+        that there is no limit
+        '''
+        if maximum != -1 and count > maximum:
+            raise exception.StackValidationFailed(message=msg)
+
     def validate(self):
         '''
         Validate any of the provided params
@@ -926,28 +935,28 @@ class Server(stack_user.StackUser):
         # than the maximum number allowed in the provider's absolute
         # limits
         if metadata is not None:
-            if len(metadata) > limits['maxServerMeta']:
-                msg = _('Instance metadata must not contain greater than %s '
-                        'entries.  This is the maximum number allowed by your '
-                        'service provider') % limits['maxServerMeta']
-                raise exception.StackValidationFailed(message=msg)
+            msg = _('Instance metadata must not contain greater than %s '
+                    'entries.  This is the maximum number allowed by your '
+                    'service provider') % limits['maxServerMeta']
+            self._check_maximum(len(metadata),
+                                limits['maxServerMeta'], msg)
 
         # verify the number of personality files and the size of each
         # personality file against the provider's absolute limits
         if personality is not None:
-            if len(personality) > limits['maxPersonality']:
-                msg = _("The personality property may not contain "
-                        "greater than %s entries.") % limits['maxPersonality']
-                raise exception.StackValidationFailed(message=msg)
+            msg = _("The personality property may not contain "
+                    "greater than %s entries.") % limits['maxPersonality']
+            self._check_maximum(len(personality),
+                                limits['maxPersonality'], msg)
 
             for path, contents in personality.items():
-                if len(bytes(contents)) > limits['maxPersonalitySize']:
-                    msg = (_("The contents of personality file \"%(path)s\" "
-                             "is larger than the maximum allowed personality "
-                             "file size (%(max_size)s bytes).") %
-                           {'path': path,
-                            'max_size': limits['maxPersonalitySize']})
-                    raise exception.StackValidationFailed(message=msg)
+                msg = (_("The contents of personality file \"%(path)s\" "
+                         "is larger than the maximum allowed personality "
+                         "file size (%(max_size)s bytes).") %
+                       {'path': path,
+                        'max_size': limits['maxPersonalitySize']})
+                self._check_maximum(len(bytes(contents)),
+                                    limits['maxPersonalitySize'], msg)
 
     def handle_delete(self):
         '''
