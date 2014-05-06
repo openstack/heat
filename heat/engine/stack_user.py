@@ -29,7 +29,6 @@ class StackUser(resource.Resource):
     # (in a project specific to the stack)
     def __init__(self, name, json_snippet, stack):
         super(StackUser, self).__init__(name, json_snippet, stack)
-        self.password = None
 
     def handle_create(self):
         self._create_user()
@@ -44,7 +43,7 @@ class StackUser(resource.Resource):
         # Create a keystone user in the stack domain project
         user_id = self.keystone().create_stack_domain_user(
             username=self.physical_resource_name(),
-            password=self.password,
+            password=getattr(self, 'password', None),
             project_id=self.stack.stack_user_project_id)
 
         # Store the ID in resource data, for compatibility with SignalResponder
