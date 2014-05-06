@@ -292,7 +292,7 @@ class SoftwareConfig(BASE, HeatBase):
     group = sqlalchemy.Column('group', sqlalchemy.String(255))
     config = sqlalchemy.Column('config', Json)
     tenant = sqlalchemy.Column(
-        'tenant', sqlalchemy.String(256), nullable=False)
+        'tenant', sqlalchemy.String(64), nullable=False)
 
 
 class SoftwareDeployment(BASE, HeatBase, StateAware):
@@ -316,6 +316,6 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
     input_values = sqlalchemy.Column('input_values', Json)
     output_values = sqlalchemy.Column('output_values', Json)
     tenant = sqlalchemy.Column(
-        'tenant', sqlalchemy.String(256), nullable=False)
+        'tenant', sqlalchemy.String(64), nullable=False)
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
