@@ -129,7 +129,8 @@ def format_stack_resource(resource, detail=True):
         api.RES_REQUIRED_BY: resource.required_by(),
     }
 
-    if hasattr(resource, 'nested') and callable(resource.nested):
+    if (hasattr(resource, 'nested') and callable(resource.nested) and
+            resource.nested()):
         res[api.RES_NESTED_STACK_ID] = dict(resource.nested().identifier())
 
     if detail:
