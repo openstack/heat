@@ -126,12 +126,7 @@ engine_opts = [
                help=_('RPC timeout for the engine liveness check that is used'
                       ' for stack locking.')),
     cfg.StrOpt('onready',
-               help=_('onready allows you to send a notification when the'
-                      ' heat processes are ready to serve.  This is either a'
-                      ' module with the notify() method or a shell command. '
-                      ' To enable notifications with systemd, one may use'
-                      ' the \'systemd-notify --ready\' shell command or'
-                      ' the \'heat.common.systemd\' notification module.'))]
+               help=_('Deprecated.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',

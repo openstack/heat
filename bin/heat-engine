@@ -35,10 +35,10 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 from oslo.config import cfg
 
 from heat.common import messaging
-from heat.common import notify
 from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
+
 from heat.rpc import api as rpc_api
 
 gettextutils.enable_lazy()
@@ -65,5 +65,4 @@ if __name__ == '__main__':
     # We create the periodic tasks here, which mean they are created
     # only in the parent process when num_engine_workers>1 is specified
     srv.create_periodic_tasks()
-    notify.startup_notify(cfg.CONF.onready)
     launcher.wait()
