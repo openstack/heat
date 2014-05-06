@@ -13,6 +13,7 @@
 
 from heat.common import exception
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import resource
@@ -145,7 +146,7 @@ class CloudWatchAlarm(resource.Resource):
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
-                                         self.stack.resolve_runtime_data,
+                                         function.resolve,
                                          self.name,
                                          self.context)
             loader = watchrule.WatchRule.load

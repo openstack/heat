@@ -20,6 +20,7 @@ import heatclient.exc as heat_exp
 
 from heat.common import exception
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.software_config import software_config as sc
@@ -369,7 +370,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.properties = properties.Properties(
                 self.properties_schema,
                 json_snippet.get('Properties', {}),
-                self.stack.resolve_runtime_data,
+                function.resolve,
                 self.name,
                 self.context)
 

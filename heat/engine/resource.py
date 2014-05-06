@@ -187,7 +187,7 @@ class Resource(object):
         self.t = self.stack.resolve_static_data(self.json_snippet)
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
-                                     self._resolve_runtime_data,
+                                     function.resolve,
                                      self.name,
                                      self.context)
 
@@ -217,9 +217,6 @@ class Resource(object):
 
     def type(self):
         return self.t['Type']
-
-    def _resolve_runtime_data(self, snippet):
-        return self.stack.resolve_runtime_data(snippet)
 
     def has_interface(self, resource_type):
         """Check to see if this resource is either mapped to resource_type
@@ -256,7 +253,7 @@ class Resource(object):
             template = self.t
         else:
             template = self.t.get(section, default)
-        return self._resolve_runtime_data(template)
+        return function.resolve(template)
 
     def update_template_diff(self, after, before):
         '''
@@ -536,12 +533,12 @@ class Resource(object):
             self.state_set(action, self.IN_PROGRESS)
             before_properties = Properties(self.properties_schema,
                                            before.get('Properties', {}),
-                                           self._resolve_runtime_data,
+                                           function.resolve,
                                            self.name,
                                            self.context)
             after_properties = Properties(self.properties_schema,
                                           after.get('Properties', {}),
-                                          self._resolve_runtime_data,
+                                          function.resolve,
                                           self.name,
                                           self.context)
             after_properties.validate()

@@ -21,6 +21,7 @@ from testtools.matchers import MatchesRegex
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parser
 from heat.engine.resources import instance
@@ -392,7 +393,7 @@ class AutoScalingGroupTest(HeatTestCase):
         # get the updated json snippet for the InstanceGroup resource in the
         # context of the current stack
         updated_grp = updated_stack['WebServerGroup']
-        updated_grp_json = current_stack.resolve_runtime_data(updated_grp.t)
+        updated_grp_json = function.resolve(updated_grp.t)
 
         # identify the template difference
         tmpl_diff = updated_grp.update_template_diff(

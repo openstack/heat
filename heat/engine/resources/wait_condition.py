@@ -16,6 +16,7 @@ import json
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
@@ -252,7 +253,7 @@ class WaitCondition(resource.Resource):
         if prop_diff:
             self.properties = properties.Properties(
                 self.properties_schema, json_snippet.get('Properties', {}),
-                self.stack.resolve_runtime_data, self.name, self.context)
+                function.resolve, self.name, self.context)
 
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]

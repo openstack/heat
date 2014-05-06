@@ -14,6 +14,7 @@
 from neutronclient.common.exceptions import NeutronClientException
 
 from heat.common import exception
+from heat.engine import function
 from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import scheduler
@@ -80,7 +81,7 @@ class NeutronResource(resource.Resource):
         '''
         p = Properties(self.properties_schema,
                        json_snippet.get('Properties', {}),
-                       self._resolve_runtime_data,
+                       function.resolve,
                        self.name,
                        self.context)
         update_props = dict((k, v) for k, v in p.items()

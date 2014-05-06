@@ -28,6 +28,7 @@ import itertools
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.engine import function
 from heat.engine import scheduler
 from heat.engine import constraints
 from heat.engine import properties
@@ -596,7 +597,7 @@ class CloudLoadBalancer(resource.Resource):
             try:
                 Properties(schema,
                            health_monitor,
-                           self.stack.resolve_runtime_data,
+                           function.resolve,
                            self.name).validate()
             except exception.StackValidationFailed as svf:
                 return {'Error': str(svf)}

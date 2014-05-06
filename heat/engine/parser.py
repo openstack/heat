@@ -15,6 +15,7 @@ import collections
 import copy
 from datetime import datetime
 import re
+import warnings
 
 from oslo.config import cfg
 import six
@@ -747,7 +748,7 @@ class Stack(collections.Mapping):
         '''
         value = self.outputs[key].get('Value', '')
         try:
-            return self.resolve_runtime_data(value)
+            return function.resolve(value)
         except Exception:
             return None
 
@@ -806,4 +807,8 @@ class Stack(collections.Mapping):
         return self.t.parse(self, snippet)
 
     def resolve_runtime_data(self, snippet):
+        """DEPRECATED. Use heat.engine.function.resolve() instead."""
+        warnings.warn('Stack.resolve_runtime_data() is deprecated. '
+                      'Use heat.engine.function.resolve() instead',
+                      DeprecationWarning)
         return function.resolve(snippet)
