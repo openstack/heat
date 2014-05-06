@@ -1048,16 +1048,13 @@ class Server(stack_user.StackUser):
         return self._check_active(server)
 
 
-class FlavorConstraint(object):
+class FlavorConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
-        nova_client = clients.Clients(context).nova()
-        try:
-            nova_utils.get_flavor_id(nova_client, value)
-        except exception.FlavorMissing:
-            return False
-        else:
-            return True
+    expected_exceptions = (exception.FlavorMissing,)
+
+    def validate_with_client(self, client, value):
+        nova_client = client.nova()
+        nova_utils.get_flavor_id(nova_client, value)
 
 
 def constraint_mapping():

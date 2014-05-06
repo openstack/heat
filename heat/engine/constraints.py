@@ -17,6 +17,7 @@ import re
 
 import six
 
+from heat.engine import clients
 from heat.engine import resources
 
 from heat.common import exception
@@ -508,3 +509,31 @@ class CustomConstraint(Constraint):
         if not constraint:
             return False
         return constraint.validate(value, context)
+
+
+class BaseCustomConstraint(object):
+    """A base class for validation using API clients.
+
+    It will provide a better error message, and reduce a bit of duplication.
+    Subclass must provide `expected_exceptions` and implement
+    `validate_with_client`.
+    """
+    expected_exceptions = ()
+
+    _error_message = None
+
+    def error(self, value):
+        if self._error_message is None:
+            return _("Error validating value %(value)r") % {"value": value}
+        return _("Error validating value %(value)r: %(message)s") % {
+            "value": value, "message": self._error_message}
+
+    def validate(self, value, context):
+        client = clients.Clients(context)
+        try:
+            self.validate_with_client(client, value)
+        except self.expected_exceptions as e:
+            self._error_message = str(e)
+            return False
+        else:
+            return True

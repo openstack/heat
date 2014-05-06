@@ -12,20 +12,17 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine.resources import nova_utils
+from heat.engine import constraints
 
 
-class ImageConstraint(object):
+class ImageConstraint(constraints.BaseCustomConstraint):
 
-    def validate(self, value, context):
-        try:
-            nova_client = clients.Clients(context).nova()
-            nova_utils.get_image_id(nova_client, value)
-        except exception.ImageNotFound:
-            return False
-        else:
-            return True
+    expected_exceptions = (exception.ImageNotFound,)
+
+    def validate_with_client(self, client, value):
+        nova_client = client.nova()
+        nova_utils.get_image_id(nova_client, value)
 
 
 def constraint_mapping():
