@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Utility for fetching a resource (e.g. a template) from a URL.
-'''
+"""Utility for fetching a resource (e.g. a template) from a URL."""
 
 from oslo.config import cfg
 import requests
@@ -35,14 +33,13 @@ class URLFetchError(exception.Error, IOError):
 
 
 def get(url, allowed_schemes=('http', 'https')):
-    '''
-    Get the data at the specifier URL.
+    """Get the data at the specified URL.
 
     The URL must use the http: or https: schemes.
     The file: scheme is also supported if you override
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
-    '''
+    """
     logger.info(_('Fetching data from %s') % url)
 
     components = urllib.parse.urlparse(url)

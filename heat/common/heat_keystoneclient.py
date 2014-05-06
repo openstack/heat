@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Keystone Client functionality for use by resources."""
+
 from collections import namedtuple
 import json
 import uuid
@@ -40,13 +42,14 @@ cfg.CONF.register_opts(keystone_opts)
 
 
 class KeystoneClientV3(object):
-    """
-    Wrap keystone client so we can encapsulate logic used in resources
+
+    """Wrap keystone client so we can encapsulate logic used in resources.
+
     Note this is intended to be initialized from a resource on a per-session
     basis, so the session context is passed in on initialization
     Also note that a copy of this is created every resource as self.keystone()
     via the code in engine/client.py, so there should not be any need to
-    directly instantiate instances of this class inside resources themselves
+    directly instantiate instances of this class inside resources themselves.
     """
 
     def __init__(self, context):
@@ -217,13 +220,14 @@ class KeystoneClientV3(object):
             return getattr(cfg.CONF.clients, option)
 
     def create_trust_context(self):
-        """
-        Create a trust using the trustor identity in the current context,
-        with the trustee as the heat service user and return a context
-        containing the new trust_id.
+        """Create a trust using the trustor identity in the current context.
+
+        The trust is created with the trustee as the heat service user.
 
         If the current context already contains a trust_id, we do nothing
         and return the current context.
+
+        Returns a context containing the new trust_id.
         """
         if self.context.trust_id:
             return self.context
@@ -248,9 +252,7 @@ class KeystoneClientV3(object):
         return trust_context
 
     def delete_trust(self, trust_id):
-        """
-        Delete the specified trust.
-        """
+        """Delete the specified trust."""
         try:
             self.client.trusts.delete(trust_id)
         except kc_exception.NotFound:
@@ -274,11 +276,13 @@ class KeystoneClientV3(object):
             return stack_user_role[0].id
 
     def create_stack_user(self, username, password=''):
-        """
-        Create a user defined as part of a stack, either via template
-        or created internally by a resource.  This user will be added to
-        the heat_stack_user_role as defined in the config
-        Returns the keystone ID of the resulting user
+        """Create a user defined as part of a stack.
+
+        The user is defined either via template or created internally by a
+        resource.  This user will be added to the heat_stack_user_role as
+        defined in the config.
+
+        Returns the keystone ID of the resulting user.
         """
         # FIXME(shardy): There's duplicated logic between here and
         # create_stack_domain user, but this function is expected to
@@ -307,12 +311,14 @@ class KeystoneClientV3(object):
         return user.id
 
     def create_stack_domain_user(self, username, project_id, password=None):
-        """
-        Create a user defined as part of a stack, either via template
-        or created internally by a resource.  This user will be added to
-        the heat_stack_user_role as defined in the config, and created in
-        the specified project (which is expected to be in the stack_domain.
-        Returns the keystone ID of the resulting user
+        """Create a domain user defined as part of a stack.
+
+        The user is defined either via template or created internally by a
+        resource.  This user will be added to the heat_stack_user_role as
+        defined in the config, and created in the specified project (which is
+        expected to be in the stack_domain).
+
+        Returns the keystone ID of the resulting user.
         """
         if not self.stack_domain_id:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
@@ -320,7 +326,6 @@ class KeystoneClientV3(object):
             logger.warning(_('Falling back to legacy non-domain user create, '
                              'configure domain in heat.conf'))
             return self.create_stack_user(username=username, password=password)
-
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
@@ -347,7 +352,7 @@ class KeystoneClientV3(object):
         return user.id
 
     def _check_stack_domain_user(self, user_id, project_id, action):
-        # Sanity check that domain/project is correct
+        """Sanity check that domain/project is correct."""
         user = self.domain_admin_client.users.get(user_id)
         if user.domain_id != self.stack_domain_id:
             raise ValueError(_('User %s in invalid domain') % action)
@@ -375,7 +380,7 @@ class KeystoneClientV3(object):
             pass
 
     def create_stack_domain_project(self, stack_id):
-        '''Creates a project in the heat stack-user domain.'''
+        """Create a project in the heat stack-user domain."""
         if not self.stack_domain_id:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
@@ -405,7 +410,7 @@ class KeystoneClientV3(object):
             pass
 
     def _find_ec2_keypair(self, access, user_id=None):
-        '''Lookup an ec2 keypair by access ID.'''
+        """Lookup an ec2 keypair by access ID."""
         # FIXME(shardy): add filtering for user_id when keystoneclient
         # extensible-crud-manager-operations bp lands
         credentials = self.client.credentials.list()
@@ -418,7 +423,7 @@ class KeystoneClientV3(object):
 
     def delete_ec2_keypair(self, credential_id=None, access=None,
                            user_id=None):
-        '''Delete credential containing ec2 keypair.'''
+        """Delete credential containing ec2 keypair."""
         if credential_id:
             try:
                 self.client.credentials.delete(credential_id)
@@ -432,7 +437,7 @@ class KeystoneClientV3(object):
             raise ValueError("Must specify either credential_id or access")
 
     def get_ec2_keypair(self, credential_id=None, access=None, user_id=None):
-        '''Get an ec2 keypair via v3/credentials, by id or access.'''
+        """Get an ec2 keypair via v3/credentials, by id or access."""
         # Note v3/credentials does not support filtering by access
         # because it's stored in the credential blob, so we expect
         # all resources to pass credential_id except where backwards
@@ -533,10 +538,13 @@ class KeystoneClientV3(object):
 
 
 class KeystoneClient(object):
-    """
+
+    """Keystone Auth Client.
+
     Delay choosing the backend client module until the client's class
     needs to be initialized.
     """
+
     def __new__(cls, context):
         if cfg.CONF.keystone_backend == _default_keystone_backend:
             return KeystoneClientV3(context)

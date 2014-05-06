@@ -62,11 +62,11 @@ def simple_parse(tmpl_str):
 
 
 def parse(tmpl_str):
-    '''
-    Takes a string and returns a dict containing the parsed structure.
+    """Takes a string and returns a dict containing the parsed structure.
+
     This includes determination of whether the string is using the
     JSON or YAML format.
-    '''
+    """
     if len(tmpl_str) > cfg.CONF.max_template_size:
         msg = (_('Template exceeds maximum allowed size (%s bytes)') %
                cfg.CONF.max_template_size)
@@ -84,9 +84,11 @@ def parse(tmpl_str):
 
 
 def convert_json_to_yaml(json_str):
-    '''Convert a string containing the AWS JSON template format
-    to an equivalent string containing the Heat YAML format.
-    '''
+    """Convert AWS JSON template format to Heat YAML format.
+
+    :param json_str: a string containing the AWS JSON template format.
+    :returns: the equivalent string containing the Heat YAML format.
+    """
 
     # Replace AWS format version with Heat format version
     json_str = re.sub('"AWSTemplateFormatVersion"\s*:\s*"[^"]+"\s*,',

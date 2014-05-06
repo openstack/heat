@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Utilities for creating short ID strings based on a random UUID. The IDs
-each comprise 12 (lower-case) alphanumeric characters.
-'''
+"""Utilities for creating short ID strings based on a random UUID.
+
+The IDs each comprise 12 (lower-case) alphanumeric characters.
+"""
 
 import base64
 import uuid
@@ -23,21 +23,21 @@ from six.moves import xrange
 
 
 def _to_byte_string(value, num_bits):
-    '''
-    Convert an integer to a big-endian string of bytes, with any padding
-    required added at the end (i.e. after the least-significant bit).
-    '''
+    """Convert an integer to a big-endian string of bytes with padding.
+
+    Padding is added at the end (i.e. after the least-significant bit) if
+    required.
+    """
     shifts = xrange(num_bits - 8, -8, -8)
     byte_at = lambda off: (value >> off if off >= 0 else value << -off) & 0xff
     return ''.join(chr(byte_at(offset)) for offset in shifts)
 
 
 def get_id(source_uuid):
-    '''
-    Derive a short (12 character) id from a random UUID.
+    """Derive a short (12 character) id from a random UUID.
 
     The supplied UUID must be a version 4 UUID object.
-    '''
+    """
     if isinstance(source_uuid, basestring):
         source_uuid = uuid.UUID(source_uuid)
     if source_uuid.version != 4:
@@ -53,7 +53,5 @@ def get_id(source_uuid):
 
 
 def generate_id():
-    '''
-    Generate a short (12 character), random id.
-    '''
+    """Generate a short (12 character), random id."""
     return get_id(uuid.uuid4())
