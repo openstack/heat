@@ -125,11 +125,7 @@ class Resource(object):
 
         self.abandon_in_progress = False
 
-        if stack.id:
-            resource = db_api.resource_get_by_name_and_stack(self.context,
-                                                             name, stack.id)
-        else:
-            resource = None
+        resource = stack.db_resource_get(name)
 
         if resource:
             self.resource_id = resource.nova_instance
