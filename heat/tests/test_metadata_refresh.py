@@ -290,7 +290,9 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         update_metadata('456', 'blarg', 'wibble')
         self.assertEqual('{"123": "foo", "456": "blarg"}',
                          watch.FnGetAtt('Data'))
-        self.assertEqual('{"123": "foo", "456": "blarg"}',
+        self.assertEqual('{"123": "foo"}',
                          inst.metadata_get()['test'])
+        self.assertEqual('{"123": "foo", "456": "blarg"}',
+                         inst.metadata_get(refresh=True)['test'])
 
         self.m.VerifyAll()

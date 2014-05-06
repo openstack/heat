@@ -141,6 +141,7 @@ class Resource(object):
                 self._data = db_api.resource_data_get_all(self, resource.data)
             except exception.NotFound:
                 self._data = {}
+            self._rsrc_metadata = resource.rsrc_metadata
             self.created_time = resource.created_at
             self.updated_time = resource.updated_at
         else:
@@ -154,6 +155,7 @@ class Resource(object):
             self.status_reason = ''
             self.id = None
             self._data = {}
+            self._rsrc_metadata = None
             self.created_time = None
             self.updated_time = None
 
@@ -181,11 +183,16 @@ class Resource(object):
             return result
         return not result
 
-    def metadata_get(self):
+    def metadata_get(self, refresh=False):
+        if refresh:
+            self._rsrc_metadata = None
         if self.id is None:
             return self.parsed_template('Metadata')
+        if self._rsrc_metadata is not None:
+            return self._rsrc_metadata
         rs = db_api.resource_get(self.stack.context, self.id)
         rs.refresh(attrs=['rsrc_metadata'])
+        self._rsrc_metadata = rs.rsrc_metadata
         return rs.rsrc_metadata
 
     def metadata_set(self, metadata):
@@ -193,6 +200,7 @@ class Resource(object):
             raise exception.ResourceNotAvailable(resource_name=self.name)
         rs = db_api.resource_get(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
+        self._rsrc_metadata = metadata
 
     def type(self):
         return self.t['Type']
@@ -441,7 +449,7 @@ class Resource(object):
             'type': self.type(),
             'action': self.action,
             'status': self.status,
-            'metadata': self.metadata_get(),
+            'metadata': self.metadata_get(refresh=True),
             'resource_data': self.data()
         }
 
@@ -733,6 +741,7 @@ class Resource(object):
             new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
             self.created_time = new_rs.created_at
+            self._rsrc_metadata = metadata
         except Exception as ex:
             logger.error(_('DB error %s') % ex)
 

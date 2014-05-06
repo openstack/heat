@@ -427,11 +427,11 @@ class Server(stack_user.StackUser):
         else:
             self.data_set('password', password, True)
 
-    def metadata_get(self):
+    def metadata_get(self, refresh=False):
         if self.user_data_software_config():
             return self._build_deployments_metadata()
         else:
-            return super(Server, self).metadata_get()
+            return super(Server, self).metadata_get(refresh)
 
     def metadata_set(self, metadata):
         if not self.user_data_software_config():
