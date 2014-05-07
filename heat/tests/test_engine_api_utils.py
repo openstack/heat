@@ -89,6 +89,28 @@ class FormatTest(HeatTestCase):
         formatted = api.format_stack_resource(res, False)
         self.assertEqual(nested_id, formatted[rpc_api.RES_NESTED_STACK_ID])
 
+    def test_format_stack_resource_with_nested_stack_none(self):
+        res = self.stack['generic1']
+        res.nested = mock.Mock()
+        res.nested.return_value = None
+
+        resource_keys = set((
+            rpc_api.RES_UPDATED_TIME,
+            rpc_api.RES_NAME,
+            rpc_api.RES_PHYSICAL_ID,
+            rpc_api.RES_METADATA,
+            rpc_api.RES_ACTION,
+            rpc_api.RES_STATUS,
+            rpc_api.RES_STATUS_DATA,
+            rpc_api.RES_TYPE,
+            rpc_api.RES_ID,
+            rpc_api.RES_STACK_ID,
+            rpc_api.RES_STACK_NAME,
+            rpc_api.RES_REQUIRED_BY))
+
+        formatted = api.format_stack_resource(res, False)
+        self.assertEqual(resource_keys, set(formatted.keys()))
+
     def test_format_stack_resource_required_by(self):
         res1 = api.format_stack_resource(self.stack['generic1'])
         res2 = api.format_stack_resource(self.stack['generic2'])
