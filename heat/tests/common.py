@@ -20,13 +20,13 @@ import time
 import fixtures
 import mox
 from oslo.config import cfg
+from oslotest import mockpatch
 import testscenarios
 import testtools
 
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
-from heat.openstack.common.fixture import mockpatch
 from heat.tests import utils
 
 

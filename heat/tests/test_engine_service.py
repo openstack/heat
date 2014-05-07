@@ -21,6 +21,7 @@ from eventlet import greenpool
 import mock
 import mox
 from oslo.config import cfg
+from oslotest import mockpatch
 
 from heat.common import exception
 from heat.common import identifier
@@ -38,7 +39,6 @@ from heat.engine.resources import nova_utils
 from heat.engine import service
 from heat.engine import stack_lock
 from heat.engine import watchrule
-from heat.openstack.common.fixture import mockpatch
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
 from heat.openstack.common import threadgroup
