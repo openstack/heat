@@ -19,6 +19,7 @@ import six
 
 from heat.common import exception
 from heat.engine import constraints as constr
+from heat.openstack.common import strutils
 
 
 PARAMETER_KEYS = (
@@ -47,9 +48,9 @@ class Schema(constr.Schema):
     # For Parameters the type name for Schema.LIST is CommaDelimitedList
     # and the type name for Schema.MAP is Json
     TYPES = (
-        STRING, NUMBER, LIST, MAP,
+        STRING, NUMBER, LIST, MAP, BOOLEAN,
     ) = (
-        'String', 'Number', 'CommaDelimitedList', 'Json',
+        'String', 'Number', 'CommaDelimitedList', 'Json', 'Boolean',
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
@@ -189,6 +190,8 @@ class Parameter(object):
             ParamClass = CommaDelimitedListParam
         elif schema.type == schema.MAP:
             ParamClass = JsonParam
+        elif schema.type == schema.BOOLEAN:
+            ParamClass = BooleanParam
         else:
             raise ValueError(_('Invalid Parameter type "%s"') % schema.type)
 
@@ -279,6 +282,20 @@ class NumberParam(Parameter):
 
     def value(self):
         return Schema.str_to_num(super(NumberParam, self).value())
+
+
+class BooleanParam(Parameter):
+    '''A template parameter of type "Boolean".'''
+
+    def _validate(self, val, context):
+        self.schema.validate_value(self.name, val, context)
+
+    def value(self):
+        if self.user_value is not None:
+            raw_value = self.user_value
+        else:
+            raw_value = self.default()
+        return strutils.bool_from_string(str(raw_value), strict=True)
 
 
 class StringParam(Parameter):

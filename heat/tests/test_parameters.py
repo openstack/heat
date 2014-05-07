@@ -298,6 +298,24 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'p', schema, val)
         self.assertIn('out of range', str(err))
 
+    def test_bool_value_true(self):
+        schema = {'Type': 'Boolean'}
+        for val in ('1', 't', 'true', 'on', 'y', 'yes', True, 1):
+            bo = self.new_parameter('bo', schema, val)
+            self.assertEqual(True, bo.value())
+
+    def test_bool_value_false(self):
+        schema = {'Type': 'Boolean'}
+        for val in ('0', 'f', 'false', 'off', 'n', 'no', False, 0):
+            bo = self.new_parameter('bo', schema, val)
+            self.assertEqual(False, bo.value())
+
+    def test_bool_value_invalid(self):
+        schema = {'Type': 'Boolean'}
+        bo = self.new_parameter('bo', schema, 'foo')
+        err = self.assertRaises(ValueError, bo.value)
+        self.assertIn("Unrecognized value 'foo'", unicode(err))
+
     def test_missing_param(self):
         '''Test missing user parameter.'''
         self.assertRaises(exception.UserParameterMissing,

@@ -39,9 +39,9 @@ class HOTParamSchema(parameters.Schema):
     # For Parameters the type name for Schema.LIST is comma_delimited_list
     # and the type name for Schema.MAP is json
     TYPES = (
-        STRING, NUMBER, LIST, MAP,
+        STRING, NUMBER, LIST, MAP, BOOLEAN,
     ) = (
-        'string', 'number', 'comma_delimited_list', 'json',
+        'string', 'number', 'comma_delimited_list', 'json', 'boolean',
     )
 
     PARAMETER_KEYS = KEYS
