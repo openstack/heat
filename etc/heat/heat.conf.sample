@@ -11,15 +11,6 @@
 
 
 #
-# Options defined in heat.api.middleware.x_forwarded_for
-#
-
-# The HTTP header that will be used as remote address. (string
-# value)
-#forward_header_name=X-Forwarded-For
-
-
-#
 # Options defined in heat.common.config
 #
 
