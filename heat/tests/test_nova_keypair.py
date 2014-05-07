@@ -83,7 +83,7 @@ class NovaKeyPairTest(HeatTestCase):
         """Test basic create."""
         key_name = "generate_no_save"
         tp_test, created_key = self._get_mock_kp_for_create(key_name)
-        self.fake_keypairs.list().AndReturn([created_key])
+        self.fake_keypairs.get(key_name).AndReturn(created_key)
         self.m.ReplayAll()
         scheduler.TaskRunner(tp_test.create)()
         self.assertEqual("", tp_test.FnGetAtt('private_key'))
@@ -136,7 +136,7 @@ class NovaKeyPairTest(HeatTestCase):
         key_name = "save_private"
         tp_test, created_key = self._get_mock_kp_for_create(key_name,
                                                             priv_saved=True)
-        self.fake_keypairs.list().AndReturn([created_key])
+        self.fake_keypairs.get(key_name).AndReturn(created_key)
         self.m.ReplayAll()
         scheduler.TaskRunner(tp_test.create)()
         self.assertEqual("private key for save_private",
@@ -158,7 +158,8 @@ class KeypairConstraintTest(HeatTestCase):
 
         key = collections.namedtuple("Key", ["name"])
         key.name = "foo"
-        client.keypairs.list().MultipleTimes().AndReturn([key])
+        client.keypairs.get('bar').AndRaise(nova_exceptions.NotFound(404))
+        client.keypairs.get(key.name).AndReturn(key)
         self.m.ReplayAll()
 
         constraint = nova_keypair.KeypairConstraint()

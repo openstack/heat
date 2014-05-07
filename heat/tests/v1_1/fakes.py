@@ -19,6 +19,7 @@ import httplib2
 from six.moves.urllib import parse as urlparse
 
 from novaclient import client as base_client
+from novaclient import exceptions as nova_exceptions
 from novaclient.v1_1 import client
 
 from heat.tests import fakes
@@ -365,6 +366,14 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {"keypairs": [{'fingerprint': 'FAKE_KEYPAIR',
                                     'name': 'test',
                                     'public_key': 'foo'}]})
+
+    def get_os_keypairs_test(self, *kw):
+        return (200, {"keypair": {'fingerprint': 'FAKE_KEYPAIR',
+                                  'name': 'test',
+                                  'public_key': 'foo'}})
+
+    def get_os_keypairs_test2(self, *kw):
+        raise nova_exceptions.NotFound(404)
 
     def get_os_availability_zone(self, *kw):
         return (200, {"availabilityZoneInfo": [{'zoneName': 'nova1'}]})

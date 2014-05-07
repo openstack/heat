@@ -15,6 +15,8 @@
 import mock
 import uuid
 
+from novaclient import exceptions as nova_exceptions
+
 from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources import nova_utils
@@ -115,7 +117,10 @@ class NovaUtilsTests(HeatTestCase):
         my_key.public_key = my_pub_key
         my_key.name = my_key_name
         self.nova_client.keypairs = self.m.CreateMockAnything()
-        self.nova_client.keypairs.list().MultipleTimes().AndReturn([my_key])
+        self.nova_client.keypairs.get(
+            my_key_name).AndReturn(my_key)
+        self.nova_client.keypairs.get(
+            'notakey').AndRaise(nova_exceptions.NotFound(404))
         self.m.ReplayAll()
         self.assertEqual(my_key, nova_utils.get_keypair(self.nova_client,
                                                         my_key_name))
