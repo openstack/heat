@@ -20,6 +20,7 @@ import os
 import subprocess
 
 import lockfile
+from oslotest import base as test_base
 from six import moves
 from six.moves.urllib import parse
 import sqlalchemy
@@ -27,7 +28,6 @@ import sqlalchemy.exc
 
 from heat.openstack.common.db.sqlalchemy import utils
 from heat.openstack.common.gettextutils import _LE
-from heat.openstack.common import test as test_base
 
 LOG = logging.getLogger(__name__)
 

@@ -18,12 +18,12 @@ import functools
 import os
 
 import fixtures
+from oslotest import base as test_base
 import six
 
 from heat.openstack.common.db.sqlalchemy import provision
 from heat.openstack.common.db.sqlalchemy import session
 from heat.openstack.common.db.sqlalchemy import utils
-from heat.openstack.common import test as test_base
 
 
 class DbFixture(fixtures.Fixture):

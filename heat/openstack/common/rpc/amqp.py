@@ -202,7 +202,7 @@ class ReplyProxy(ConnectionContext):
             LOG.warn(_('No calling threads waiting for msg_id : %(msg_id)s'
                        ', message : %(data)s'), {'msg_id': msg_id,
                                                  'data': message_data})
-            LOG.warn(_('_call_waiters: %s') % str(self._call_waiters))
+            LOG.warn(_('_call_waiters: %s') % self._call_waiters)
         else:
             waiter.put(message_data)
 
