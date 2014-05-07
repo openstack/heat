@@ -8,7 +8,6 @@ kombu>=2.4.8
 lxml>=2.3
 netaddr>=0.7.6
 oslo.config>=1.2.0
-paramiko>=1.9.0
 PasteDeploy>=1.5.0
 pbr>=0.6,!=0.7,<1.0
 posix_ipc

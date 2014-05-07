@@ -1,2 +1,1 @@
 -e git://github.com/rackspace/pyrax.git@4441a5bf900f19fdb2304a0f9ed15b43151541d8#egg=pyrax
-paramiko>=1.9.0
