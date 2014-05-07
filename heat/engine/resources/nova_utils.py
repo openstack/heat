@@ -20,6 +20,7 @@ import os
 import pkgutil
 import string
 
+from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 import six
 from six.moves.urllib import parse as urlparse
@@ -159,10 +160,10 @@ def get_keypair(nova_client, key_name):
     :returns: the keypair (name, public_key) for :key_name:
     :raises: exception.UserKeyPairMissing
     '''
-    for keypair in nova_client.keypairs.list():
-        if keypair.name == key_name:
-            return keypair
-    raise exception.UserKeyPairMissing(key_name=key_name)
+    try:
+        return nova_client.keypairs.get(key_name)
+    except nova_exceptions.NotFound:
+        raise exception.UserKeyPairMissing(key_name=key_name)
 
 
 def build_userdata(resource, userdata=None, instance_user=None,
