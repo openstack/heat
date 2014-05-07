@@ -19,6 +19,7 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+from heat.openstack.common import strutils
 from heat.rpc import api
 
 logger = logging.getLogger(__name__)
@@ -127,16 +128,8 @@ def extract_args(params):
                 raise ValueError(_('Invalid timeout value %s') % timeout)
 
     if api.PARAM_DISABLE_ROLLBACK in params:
-        disable_rollback = params.get(api.PARAM_DISABLE_ROLLBACK)
-        if str(disable_rollback).lower() == 'true':
-            kwargs[api.PARAM_DISABLE_ROLLBACK] = True
-        elif str(disable_rollback).lower() == 'false':
-            kwargs[api.PARAM_DISABLE_ROLLBACK] = False
-        else:
-            raise ValueError(_('Unexpected value for parameter'
-                               ' %(name)s : %(value)s') %
-                             dict(name=api.PARAM_DISABLE_ROLLBACK,
-                                  value=disable_rollback))
+        disable_rollback = extract_bool(params[api.PARAM_DISABLE_ROLLBACK])
+        kwargs[api.PARAM_DISABLE_ROLLBACK] = disable_rollback
 
     adopt_data = params.get(api.PARAM_ADOPT_STACK_DATA)
     if adopt_data:
@@ -148,3 +141,14 @@ def extract_args(params):
         kwargs[api.PARAM_ADOPT_STACK_DATA] = adopt_data
 
     return kwargs
+
+
+def extract_bool(subject):
+    '''
+    Convert any true/false string to its corresponding boolean value,
+    regardless of case.
+    '''
+    if str(subject).lower() not in ('true', 'false'):
+        raise ValueError(_('Unrecognized value "%(value)s, acceptable values '
+                           'are: true, false.') % {'value': subject})
+    return strutils.bool_from_string(subject, strict=True)
