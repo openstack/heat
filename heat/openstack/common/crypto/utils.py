@@ -16,9 +16,12 @@ import base64
 
 from Crypto.Hash import HMAC
 from Crypto import Random
+import six
 
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
+
+bchr = six.int2byte
 
 
 class CryptoutilsException(Exception):
@@ -64,7 +67,7 @@ class HKDF(object):
         :param salt: optional salt value (a non-secret random value)
         """
         if salt is None:
-            salt = '\x00' * self.hashfn.digest_size
+            salt = b'\x00' * self.hashfn.digest_size
 
         return HMAC.new(salt, ikm, self.hashfn).digest()
 
@@ -80,12 +83,12 @@ class HKDF(object):
         if length > self.max_okm_length:
             raise HKDFOutputLengthTooLong(length, self.max_okm_length)
 
-        N = (length + self.hashfn.digest_size - 1) / self.hashfn.digest_size
+        N = (length + self.hashfn.digest_size - 1) // self.hashfn.digest_size
 
-        okm = ""
-        tmp = ""
+        okm = b""
+        tmp = b""
         for block in range(1, N + 1):
-            tmp = HMAC.new(prk, tmp + info + chr(block), self.hashfn).digest()
+            tmp = HMAC.new(prk, tmp + info + bchr(block), self.hashfn).digest()
             okm += tmp
 
         return okm[:length]
@@ -135,8 +138,8 @@ class SymmetricCrypto(object):
             raise CipherBlockLengthTooBig(self.cipher.block_size, MAX_CB_SIZE)
         r = len(msg) % self.cipher.block_size
         padlen = self.cipher.block_size - r - 1
-        msg += '\x00' * padlen
-        msg += chr(padlen)
+        msg += b'\x00' * padlen
+        msg += bchr(padlen)
 
         enc = iv + cipher.encrypt(msg)
         if b64encode:
@@ -160,7 +163,7 @@ class SymmetricCrypto(object):
         cipher = self.cipher.new(key, self.cipher.MODE_CBC, iv)
 
         padded = cipher.decrypt(msg[self.cipher.block_size:])
-        l = ord(padded[-1]) + 1
+        l = ord(padded[-1:]) + 1
         plain = padded[:-l]
         return plain
 

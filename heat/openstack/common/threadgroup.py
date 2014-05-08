@@ -99,7 +99,7 @@ class ThreadGroup(object):
             except Exception as ex:
                 LOG.exception(ex)
 
-    def _stop_timers(self):
+    def stop_timers(self):
         for x in self.timers:
             try:
                 x.stop()
@@ -114,7 +114,7 @@ class ThreadGroup(object):
           Never kill threads.
         * In case of graceful=False, kill threads immediately.
         """
-        self._stop_timers()
+        self.stop_timers()
         if graceful:
             # In case of graceful=True, wait for all threads to be
             # finished, never kill threads

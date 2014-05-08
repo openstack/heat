@@ -549,7 +549,7 @@ class Connection(object):
                     raise
 
             log_info = {}
-            log_info['err_str'] = str(e)
+            log_info['err_str'] = e
             log_info['max_retries'] = self.max_retries
             log_info.update(params)
 
@@ -621,7 +621,7 @@ class Connection(object):
         """
 
         def _connect_error(exc):
-            log_info = {'topic': topic, 'err_str': str(exc)}
+            log_info = {'topic': topic, 'err_str': exc}
             LOG.error(_LE("Failed to declare consumer for topic '%(topic)s': "
                       "%(err_str)s") % log_info)
 
@@ -641,11 +641,11 @@ class Connection(object):
         def _error_callback(exc):
             if isinstance(exc, socket.timeout):
                 LOG.debug('Timed out waiting for RPC response: %s' %
-                          str(exc))
+                          exc)
                 raise rpc_common.Timeout()
             else:
                 LOG.exception(_LE('Failed to consume message from queue: %s') %
-                              str(exc))
+                              exc)
                 info['do_consume'] = True
 
         def _consume():
@@ -682,7 +682,7 @@ class Connection(object):
         """Send to a publisher based on the publisher class."""
 
         def _error_callback(exc):
-            log_info = {'topic': topic, 'err_str': str(exc)}
+            log_info = {'topic': topic, 'err_str': exc}
             LOG.exception(_LE("Failed to publish message to topic "
                           "'%(topic)s': %(err_str)s") % log_info)
 

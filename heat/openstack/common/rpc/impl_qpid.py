@@ -571,7 +571,7 @@ class Connection(object):
         add it to our list of consumers
         """
         def _connect_error(exc):
-            log_info = {'topic': topic, 'err_str': str(exc)}
+            log_info = {'topic': topic, 'err_str': exc}
             LOG.error(_LE("Failed to declare consumer for topic '%(topic)s': "
                       "%(err_str)s") % log_info)
 
@@ -588,11 +588,11 @@ class Connection(object):
         def _error_callback(exc):
             if isinstance(exc, qpid_exceptions.Empty):
                 LOG.debug('Timed out waiting for RPC response: %s' %
-                          str(exc))
+                          exc)
                 raise rpc_common.Timeout()
             else:
                 LOG.exception(_LE('Failed to consume message from queue: %s') %
-                              str(exc))
+                              exc)
 
         def _consume():
             nxt_receiver = self.session.next_receiver(timeout=timeout)
@@ -625,7 +625,7 @@ class Connection(object):
         """Send to a publisher based on the publisher class."""
 
         def _connect_error(exc):
-            log_info = {'topic': topic, 'err_str': str(exc)}
+            log_info = {'topic': topic, 'err_str': exc}
             LOG.exception(_LE("Failed to publish message to topic "
                           "'%(topic)s': %(err_str)s") % log_info)
 
