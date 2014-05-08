@@ -373,7 +373,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         }
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None, 'tenant_safe': True}
+                        'sort_dir': None, 'filters': None, 'tenant_safe': True,
+                        'show_deleted': False}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
@@ -398,7 +399,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
-        self.assertEqual(6, len(engine_args))
+        self.assertEqual(7, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
@@ -498,6 +499,32 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                                        filters=mock.ANY,
                                                        tenant_safe=False)
 
+    def test_global_index_show_deleted_false(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_deleted': 'False'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=True,
+                                                       show_deleted=False)
+
+    def test_global_index_show_deleted_True(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_deleted': 'True'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=True,
+                                                       show_deleted=True)
+
     @mock.patch.object(rpc, 'call')
     def test_detail(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'detail', True)
@@ -553,7 +580,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None, 'tenant_safe': True}
+                        'sort_dir': None, 'filters': None, 'tenant_safe': True,
+                        'show_deleted': False}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
