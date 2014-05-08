@@ -150,6 +150,10 @@ class ThreadGroupManager(object):
         self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
                                         func, *args, **kwargs)
 
+    def stop_timers(self, stack_id):
+        if stack_id in self.groups:
+            self.groups[stack_id].stop_timers()
+
     def stop(self, stack_id, graceful=False):
         '''Stop any active threads on a stack.'''
         if stack_id in self.groups:
@@ -708,6 +712,7 @@ class EngineService(service.Service):
 
         # Successfully acquired lock
         if acquire_result is None:
+            self.thread_group_mgr.stop_timers(stack.id)
             self.thread_group_mgr.start_with_acquired_lock(stack, lock,
                                                            stack.delete)
             return

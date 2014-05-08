@@ -680,6 +680,27 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
+    def test_stack_delete_acquired_lock_stop_timers(self):
+        stack_name = 'service_delete_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+
+        st = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
+        self.man.tg = DummyThreadGroup()
+
+        self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
+        stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
+        self.m.ReplayAll()
+
+        self.man.thread_group_mgr.add_timer(stack.id, 'test')
+        self.assertEqual(1, len(self.man.thread_group_mgr.groups[sid].timers))
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        self.assertEqual(0, len(self.man.thread_group_mgr.groups[sid].timers))
+        self.man.thread_group_mgr.groups[sid].wait()
+        self.m.VerifyAll()
+
     def test_stack_delete_current_engine_active_lock(self):
         stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
