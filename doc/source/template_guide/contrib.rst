@@ -11,6 +11,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+Contributed Heat Resource Types
+===============================
+
 Rackspace Cloud Resource Types
 ------------------------------
 
