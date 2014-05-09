@@ -7,7 +7,6 @@ mock>=1.0
 mox>=0.5.3
 oslosphinx
 oslotest
-python-glanceclient>=0.9.0
 sphinx>=1.1.2,<1.2
 testrepository>=0.0.18
 testscenarios>=0.4
