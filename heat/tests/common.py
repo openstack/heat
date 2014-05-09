@@ -30,7 +30,29 @@ from heat.engine import scheduler
 from heat.tests import utils
 
 
-class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
+TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN}
+
+
+class FakeLogMixin:
+    def setup_logging(self):
+        # Assign default logs to self.logger so we can still
+        # assert on heat logs.
+        self.logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.DEBUG))
+        base_list = set([nlog.split('.')[0]
+                         for nlog in logging.Logger.manager.loggerDict])
+        for base in base_list:
+            if base in TEST_DEFAULT_LOGLEVELS:
+                self.useFixture(fixtures.FakeLogger(
+                    level=TEST_DEFAULT_LOGLEVELS[base],
+                    name=base))
+            elif base != 'heat':
+                self.useFixture(fixtures.FakeLogger(
+                    name=base))
+
+
+class HeatTestCase(testscenarios.WithScenarios,
+                   testtools.TestCase, FakeLogMixin):
 
     TIME_STEP = 0.1
 
@@ -38,7 +60,7 @@ class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
-        self.logger = self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
+        self.setup_logging()
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',
