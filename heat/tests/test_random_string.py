@@ -42,7 +42,7 @@ Resources:
 '''
 
     def setUp(self):
-        super(HeatTestCase, self).setUp()
+        super(TestRandomString, self).setUp()
         self.ctx = utils.dummy_context()
 
     def create_stack(self, template):
