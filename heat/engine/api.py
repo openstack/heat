@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import param_utils
+from heat.common import template_format
 from heat.engine import constraints as constr
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -18,6 +20,46 @@ from heat.openstack.common import timeutils
 from heat.rpc import api
 
 logger = logging.getLogger(__name__)
+
+
+def extract_args(params):
+    '''
+    Extract any arguments passed as parameters through the API and return them
+    as a dictionary. This allows us to filter the passed args and do type
+    conversion where appropriate
+    '''
+    kwargs = {}
+    timeout_mins = params.get(api.PARAM_TIMEOUT)
+    if timeout_mins not in ('0', 0, None):
+        try:
+            timeout = int(timeout_mins)
+        except (ValueError, TypeError):
+            logger.exception(_('Timeout conversion failed'))
+        else:
+            if timeout > 0:
+                kwargs[api.PARAM_TIMEOUT] = timeout
+            else:
+                raise ValueError(_('Invalid timeout value %s') % timeout)
+
+    if api.PARAM_DISABLE_ROLLBACK in params:
+        disable_rollback = param_utils.extract_bool(
+            params[api.PARAM_DISABLE_ROLLBACK])
+        kwargs[api.PARAM_DISABLE_ROLLBACK] = disable_rollback
+
+    if api.PARAM_SHOW_DELETED in params:
+        params[api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
+            params[api.PARAM_SHOW_DELETED])
+
+    adopt_data = params.get(api.PARAM_ADOPT_STACK_DATA)
+    if adopt_data:
+        adopt_data = template_format.simple_parse(adopt_data)
+        if not isinstance(adopt_data, dict):
+            raise ValueError(
+                _('Unexpected adopt data "%s". Adopt data must be a dict.')
+                % adopt_data)
+        kwargs[api.PARAM_ADOPT_STACK_DATA] = adopt_data
+
+    return kwargs
 
 
 def format_stack_outputs(stack, outputs):

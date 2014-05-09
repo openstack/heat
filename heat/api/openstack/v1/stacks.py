@@ -21,6 +21,7 @@ from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import environment_format
 from heat.common import identifier
+from heat.common import param_utils
 from heat.common import serializers
 from heat.common import template_format
 from heat.common import urlfetch
@@ -167,8 +168,8 @@ class StackController(object):
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
 
         if engine_api.PARAM_SHOW_DELETED in params:
-            show_del = util.extract_bool(params[engine_api.PARAM_SHOW_DELETED])
-            params[engine_api.PARAM_SHOW_DELETED] = show_del
+            params[engine_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
+                params[engine_api.PARAM_SHOW_DELETED])
 
         if not filter_params:
             filter_params = None
@@ -223,14 +224,13 @@ class StackController(object):
         """
 
         data = InstantiationData(body)
-        args = util.extract_args(data.args())
 
         result = self.rpc_client.preview_stack(req.context,
                                                data.stack_name(),
                                                data.template(),
                                                data.environment(),
                                                data.files(),
-                                               args)
+                                               data.args())
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
@@ -241,14 +241,13 @@ class StackController(object):
         Create a new stack
         """
         data = InstantiationData(body)
-        args = util.extract_args(data.args())
 
         result = self.rpc_client.create_stack(req.context,
                                               data.stack_name(),
                                               data.template(),
                                               data.environment(),
                                               data.files(),
-                                              args)
+                                              data.args())
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -310,14 +309,13 @@ class StackController(object):
         Update an existing stack with a new template and/or parameters
         """
         data = InstantiationData(body)
-        args = util.extract_args(data.args())
 
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
                                      data.environment(),
                                      data.files(),
-                                     args)
+                                     data.args())
 
         raise exc.HTTPAccepted()
 
