@@ -15,12 +15,14 @@
 #    limitations under the License.
 
 from mox import IgnoreArg
+import mox
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.neutron import network_gateway
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -31,6 +33,29 @@ neutronclient = try_import('neutronclient.v2_0.client')
 neutronV20 = try_import('neutronclient.neutron.v2_0')
 
 qe = try_import('neutronclient.common.exceptions')
+
+gw_template_deprecated = '''
+{
+  'AWSTemplateFormatVersion': '2010-09-09',
+  'Description': 'Template to test Network Gateway resource',
+  'Parameters': {},
+  'Resources': {
+    'NetworkGateway': {
+      'Type': 'OS::Neutron::NetworkGateway',
+      'Properties': {
+        'name': 'NetworkGateway',
+        'devices': [{
+          'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+          'interface_name': 'breth1'}],
+        'connections': [{
+          'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+          'segmentation_type': 'vlan',
+          'segmentation_id': 10}]
+      }
+    }
+  }
+}
+'''
 
 gw_template = '''
 {
@@ -46,7 +71,7 @@ gw_template = '''
           'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
           'interface_name': 'breth1'}],
         'connections': [{
-          'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+          'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
           'segmentation_type': 'vlan',
           'segmentation_id': 10}]
       }
@@ -85,9 +110,11 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
+        self.m.StubOutWithMock(neutron.neutronV20,
+                               'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-    def prepare_create_network_gateway(self):
+    def prepare_create_network_gateway(self, resolve_neutron=True):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
         neutronclient.Client.create_network_gateway({
@@ -122,17 +149,35 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                 'port_id': u'32acc49c-899e-44ea-8177-6f4157e12eb4'
             }
         })
+        if resolve_neutron:
+            neutron.neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'network',
+                '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+            t = template_format.parse(gw_template)
+        else:
+            t = template_format.parse(gw_template_deprecated)
 
-        t = template_format.parse(gw_template)
         stack = utils.parse_stack(t)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
             t['Resources']['NetworkGateway'], stack)
         return rsrc
 
-    def test_network_gateway_create(self):
-        rsrc = self.prepare_create_network_gateway()
-
+    def _test_network_gateway_create(self, resolve_neutron=True):
+        rsrc = self.prepare_create_network_gateway(resolve_neutron)
+        if resolve_neutron:
+            neutron.neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'network',
+                '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+            neutron.neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'network',
+                '6af055d3-26f6-48dd-a597-7611d7e58d35'
+            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
         neutronclient.Client.disconnect_network_gateway(
             'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
@@ -185,8 +230,44 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
+    def test_network_gateway_create_deprecated(self):
+        self._test_network_gateway_create(resolve_neutron=False)
+
+    def test_network_gateway_create(self):
+        self._test_network_gateway_create()
+
     def test_network_gateway_update(self):
         rsrc = self.prepare_create_network_gateway()
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
 
         neutronclient.Client.update_network_gateway(
             u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
@@ -301,7 +382,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                     'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                     'interface_name': u'breth1'}],
                 'connections': [{
-                    'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                     'segmentation_type': 'vlan',
                     'segmentation_id': 10}]
             }
@@ -319,14 +400,14 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                     'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                     'interface_name': u'breth1'}],
                 'connections': [{
-                    'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
                     'segmentation_type': u'flat',
                     'segmentation_id': 0}]
             }
         }
         prop_diff = {
             'connections': [{
-                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
                 'segmentation_type': u'flat',
                 'segmentation_id': 0}]
         }

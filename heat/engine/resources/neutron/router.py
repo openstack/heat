@@ -20,7 +20,6 @@ from heat.engine import support
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
-    from neutronclient.neutron import v2_0 as neutronV20
 
 
 class Router(neutron.NeutronResource):
@@ -104,7 +103,9 @@ class Router(neutron.NeutronResource):
             external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
             for res in self.stack.itervalues():
                 if res.has_interface('OS::Neutron::Subnet'):
-                    subnet_net = res.properties.get(subnet.Subnet.NETWORK_ID)
+                    subnet_net = res.properties.get(
+                        subnet.Subnet.NETWORK) or res.properties.get(
+                            subnet.Subnet.NETWORK_ID)
                     if subnet_net == external_gw_net:
                         deps += (self, res)
 
@@ -112,10 +113,9 @@ class Router(neutron.NeutronResource):
         props = super(Router, self).prepare_properties(properties, name)
         gateway = props.get(self.EXTERNAL_GATEWAY)
         if gateway:
-            gateway['network_id'] = neutronV20.find_resourceid_by_name_or_id(
-                self.neutron(),
-                'network',
-                gateway.pop(self.EXTERNAL_GATEWAY_NETWORK))
+            self._resolve_network(
+                self.neutron(), gateway,
+                self.EXTERNAL_GATEWAY_NETWORK, 'network_id')
             if gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT] is None:
                 del gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT]
         return props
@@ -176,9 +176,9 @@ class Router(neutron.NeutronResource):
 
 class RouterInterface(neutron.NeutronResource):
     PROPERTIES = (
-        ROUTER_ID, SUBNET_ID, PORT_ID,
+        ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID,
     ) = (
-        'router_id', 'subnet_id', 'port_id',
+        'router_id', 'subnet_id', 'subnet', 'port_id',
     )
 
     properties_schema = {
@@ -189,33 +189,54 @@ class RouterInterface(neutron.NeutronResource):
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
-            _('The subnet id, either subnet_id or port_id should be '
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % SUBNET)
+        ),
+        SUBNET: properties.Schema(
+            properties.Schema.STRING,
+            _('The subnet, either subnet or port_id should be '
               'specified.')
         ),
         PORT_ID: properties.Schema(
             properties.Schema.STRING,
-            _('The port id, either subnet_id or port_id should be specified.')
+            _('The port id, either subnet or port_id should be specified.')
         ),
     }
+
+    @staticmethod
+    def _validate_depr_subnet_keys(properties, subnet_key, depr_subnet_key):
+        subnet_value = properties.get(subnet_key)
+        subnet_id_value = properties.get(depr_subnet_key)
+        if subnet_value and subnet_id_value:
+            raise exception.ResourcePropertyConflict(subnet_key,
+                                                     subnet_key)
+        if not subnet_value and not subnet_id_value:
+            return False
+        return True
 
     def validate(self):
         '''
         Validate any of the provided params
         '''
         super(RouterInterface, self).validate()
-        subnet_id = self.properties.get(self.SUBNET_ID)
+
+        prop_subnet_exists = self._validate_depr_subnet_keys(
+            self.properties, self.SUBNET, self.SUBNET_ID)
+
         port_id = self.properties.get(self.PORT_ID)
-        if subnet_id and port_id:
-            raise exception.ResourcePropertyConflict(self.SUBNET_ID,
+        if prop_subnet_exists and port_id:
+            raise exception.ResourcePropertyConflict(self.SUBNET,
                                                      self.PORT_ID)
-        if not subnet_id and not port_id:
-            msg = 'Either subnet_id or port_id must be specified.'
+        if not prop_subnet_exists and not port_id:
+            msg = 'Either subnet or port_id must be specified.'
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
-        key = self.SUBNET_ID
-        value = self.properties.get(key)
+        key = 'subnet_id'
+        value = self._resolve_subnet(
+            self.neutron(), dict(self.properties), self.SUBNET, key)
         if not value:
             key = self.PORT_ID
             value = self.properties.get(key)
@@ -250,9 +271,9 @@ class RouterGateway(neutron.NeutronResource):
     )
 
     PROPERTIES = (
-        ROUTER_ID, NETWORK_ID,
+        ROUTER_ID, NETWORK_ID, NETWORK,
     ) = (
-        'router_id', 'network_id',
+        'router_id', 'network_id', 'network'
     )
 
     properties_schema = {
@@ -263,34 +284,52 @@ class RouterGateway(neutron.NeutronResource):
         ),
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
-            _('ID of the external network for the gateway.'),
-            required=True
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % NETWORK),
+            required=False
         ),
+        NETWORK: properties.Schema(
+            properties.Schema.STRING,
+            _('external network for the gateway.'),
+            required=False
+        ),
+
     }
+
+    def validate(self):
+        super(RouterGateway, self).validate()
+        self._validate_depr_property_required(
+            self.properties, self.NETWORK, self.NETWORK_ID)
 
     def add_dependencies(self, deps):
         super(RouterGateway, self).add_dependencies(deps)
         for resource in self.stack.itervalues():
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
-            if (resource.has_interface('OS::Neutron::RouterInterface') and
-                resource.properties.get(RouterInterface.ROUTER_ID) ==
-                    self.properties.get(self.ROUTER_ID)):
-                        deps += (self, resource)
+            if resource.has_interface('OS::Neutron::RouterInterface'):
+                dep_router_id = resource.properties.get(
+                    RouterInterface.ROUTER_ID)
+                router_id = self.properties.get(self.ROUTER_ID)
+                if dep_router_id == router_id:
+                    deps += (self, resource)
             # depend on any subnet in this template with the same network_id
             # as this network_id, as the gateway implicitly creates a port
             # on that subnet
-            elif (resource.has_interface('OS::Neutron::Subnet') and
-                  resource.properties.get(subnet.Subnet.NETWORK_ID) ==
-                    self.properties.get(self.NETWORK_ID)):
-                        deps += (self, resource)
+            if resource.has_interface('OS::Neutron::Subnet'):
+                dep_network = resource.properties.get(
+                    subnet.Subnet.NETWORK) or resource.properties.get(
+                        subnet.Subnet.NETWORK_ID)
+                network = self.properties.get(
+                    self.NETWORK) or self.properties.get(self.NETWORK_ID)
+                if dep_network == network:
+                    deps += (self, resource)
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
-        network_id = neutronV20.find_resourceid_by_name_or_id(
-            self.neutron(),
-            'network',
-            self.properties.get(self.NETWORK_ID))
+        network_id = self._resolve_network(
+            self.neutron(), dict(self.properties), self.NETWORK,
+            'network_id')
         self.neutron().add_gateway_router(
             router_id,
             {'network_id': network_id})

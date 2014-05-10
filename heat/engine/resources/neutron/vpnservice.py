@@ -15,6 +15,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine import support
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
@@ -26,9 +27,11 @@ class VPNService(neutron.NeutronResource):
     """
 
     PROPERTIES = (
-        NAME, DESCRIPTION, ADMIN_STATE_UP, SUBNET_ID, ROUTER_ID,
+        NAME, DESCRIPTION, ADMIN_STATE_UP,
+        SUBNET_ID, SUBNET, ROUTER_ID,
     ) = (
-        'name', 'description', 'admin_state_up', 'subnet_id', 'router_id',
+        'name', 'description', 'admin_state_up',
+        'subnet_id', 'subnet', 'router_id',
     )
 
     properties_schema = {
@@ -50,9 +53,15 @@ class VPNService(neutron.NeutronResource):
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Unique identifier for the subnet in which the vpn service '
-              'will be created.'),
-            required=True
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % SUBNET),
+            required=False
+        ),
+        SUBNET: properties.Schema(
+            properties.Schema.STRING,
+            _('Subnet in which the vpn service will be created.'),
+            required=False
         ),
         ROUTER_ID: properties.Schema(
             properties.Schema.STRING,
@@ -81,10 +90,18 @@ class VPNService(neutron.NeutronResource):
     def _show_resource(self):
         return self.neutron().show_vpnservice(self.resource_id)['vpnservice']
 
+    def validate(self):
+        super(VPNService, self).validate()
+        self._validate_depr_property_required(
+            self.properties, self.SUBNET, self.SUBNET_ID)
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        self._resolve_subnet(
+            self.neutron(), props,
+            self.SUBNET, 'subnet_id')
         vpnservice = self.neutron().create_vpnservice({'vpnservice': props})[
             'vpnservice']
         self.resource_id_set(vpnservice['id'])

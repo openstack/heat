@@ -15,6 +15,7 @@ from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 if clients.neutronclient is not None:
@@ -26,19 +27,21 @@ logger = logging.getLogger(__name__)
 class Port(neutron.NeutronResource):
 
     PROPERTIES = (
-        NETWORK_ID, NAME, VALUE_SPECS, ADMIN_STATE_UP, FIXED_IPS,
-        MAC_ADDRESS, DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
+        NETWORK_ID, NETWORK, NAME, VALUE_SPECS,
+        ADMIN_STATE_UP, FIXED_IPS, MAC_ADDRESS,
+        DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
         DEVICE_OWNER,
     ) = (
-        'network_id', 'name', 'value_specs', 'admin_state_up', 'fixed_ips',
-        'mac_address', 'device_id', 'security_groups', 'allowed_address_pairs',
+        'network_id', 'network', 'name', 'value_specs',
+        'admin_state_up', 'fixed_ips', 'mac_address',
+        'device_id', 'security_groups', 'allowed_address_pairs',
         'device_owner',
     )
 
     _FIXED_IP_KEYS = (
-        FIXED_IP_SUBNET_ID, FIXED_IP_IP_ADDRESS,
+        FIXED_IP_SUBNET_ID, FIXED_IP_SUBNET, FIXED_IP_IP_ADDRESS,
     ) = (
-        'subnet_id', 'ip_address',
+        'subnet_id', 'subnet', 'ip_address',
     )
 
     _ALLOWED_ADDRESS_PAIR_KEYS = (
@@ -50,9 +53,16 @@ class Port(neutron.NeutronResource):
     properties_schema = {
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Network ID this port belongs to.'),
-            required=True
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % NETWORK)
         ),
+
+        NETWORK: properties.Schema(
+            properties.Schema.STRING,
+            _('Network this port belongs to.')
+        ),
+
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('A symbolic name for this port.'),
@@ -78,6 +88,12 @@ class Port(neutron.NeutronResource):
                 properties.Schema.MAP,
                 schema={
                     FIXED_IP_SUBNET_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        support_status=support.SupportStatus(
+                            support.DEPRECATED,
+                            _('Use property %s.') % FIXED_IP_SUBNET)
+                    ),
+                    FIXED_IP_SUBNET: properties.Schema(
                         properties.Schema.STRING,
                         _('Subnet in which to allocate the IP address for '
                           'this port.')
@@ -151,6 +167,11 @@ class Port(neutron.NeutronResource):
 
     update_allowed_keys = ('Properties',)
 
+    def validate(self):
+        super(Port, self).validate()
+        self._validate_depr_property_required(self.properties,
+                                              self.NETWORK, self.NETWORK_ID)
+
     def add_dependencies(self, deps):
         super(Port, self).add_dependencies(deps)
         # Depend on any Subnet in this template with the same
@@ -159,16 +180,21 @@ class Port(neutron.NeutronResource):
         # to so all subnets in a network should be created before
         # the ports in that network.
         for resource in self.stack.itervalues():
-            if (resource.has_interface('OS::Neutron::Subnet') and
-                resource.properties.get(subnet.Subnet.NETWORK_ID) ==
-                    self.properties.get(self.NETWORK_ID)):
-                        deps += (self, resource)
+            if resource.has_interface('OS::Neutron::Subnet'):
+                dep_network = resource.properties.get(
+                    subnet.Subnet.NETWORK) or resource.properties.get(
+                        subnet.Subnet.NETWORK_ID)
+                network = self.properties.get(
+                    self.NETWORK) or self.properties.get(self.NETWORK_ID)
+                if dep_network == network:
+                    deps += (self, resource)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-
+        self._resolve_network(self.neutron(),
+                              props, self.NETWORK, 'network_id')
         self._prepare_list_properties(props)
 
         if not props['fixed_ips']:
@@ -182,7 +208,10 @@ class Port(neutron.NeutronResource):
             for key, value in fixed_ip.items():
                 if value is None:
                     fixed_ip.pop(key)
-
+            if fixed_ip.get(self.FIXED_IP_SUBNET):
+                self._resolve_subnet(
+                    self.neutron(), fixed_ip,
+                    self.FIXED_IP_SUBNET, 'subnet_id')
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
         for pair in props.get(self.ALLOWED_ADDRESS_PAIRS, []):
