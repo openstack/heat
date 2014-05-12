@@ -258,7 +258,7 @@ class OSDBInstance(resource.Resource):
         try:
             instance = self.trove().instances.get(self.resource_id)
         except troveclient.exceptions.NotFound:
-            logger.debug(_("Database instance %s not found.") %
+            logger.debug("Database instance %s not found." %
                          self.resource_id)
             self.resource_id_set(None)
         else:

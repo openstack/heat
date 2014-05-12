@@ -668,7 +668,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                 return
 
         if new_capacity == capacity:
-            logger.debug(_('no change in capacity %d') % capacity)
+            logger.debug('no change in capacity %d' % capacity)
             return
 
         # send a notification before, on-error and on-success.

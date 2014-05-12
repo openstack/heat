@@ -105,9 +105,9 @@ class SwiftContainer(resource.Resource):
             if self.properties.get(key) is not None:
                 container_headers[key] = self.properties[key]
 
-        logger.debug(_('SwiftContainer create container %(container)s with '
+        logger.debug('SwiftContainer create container %(container)s with '
                      'container headers %(container_headers)s and '
-                     'account headers %(account_headers)s') % {
+                     'account headers %(account_headers)s' % {
                          'container': container,
                          'account_headers': account_headers,
                          'container_headers': container_headers})
@@ -121,7 +121,7 @@ class SwiftContainer(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug(_('SwiftContainer delete container %s') %
+        logger.debug('SwiftContainer delete container %s' %
                      self.resource_id)
         if self.resource_id is not None:
             try:

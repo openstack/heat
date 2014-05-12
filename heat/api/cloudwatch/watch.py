@@ -220,7 +220,7 @@ class WatchController(object):
         # FIXME : Don't yet handle filtering by Dimensions
         filter_result = dict((k, v) for (k, v) in parms.iteritems() if k in
                              ("MetricName", "Namespace"))
-        logger.debug(_("filter parameters : %s") % filter_result)
+        logger.debug("filter parameters : %s" % filter_result)
 
         try:
             # Engine does not currently support query by namespace/metric
@@ -324,7 +324,7 @@ class WatchController(object):
             logger.error(msg)
             return exception.HeatInvalidParameterValueError(msg)
 
-        logger.debug(_("setting %(name)s to %(state)s") % {
+        logger.debug("setting %(name)s to %(state)s" % {
                      'name': name, 'state': state_map[state]})
         try:
             self.rpc_client.set_watch_state(con, watch_name=name,

@@ -125,10 +125,10 @@ class EC2Token(wsgi.Middleware):
             last_failure = None
             for auth_uri in self._conf_get('allowed_auth_uris'):
                 try:
-                    logger.debug(_("Attempt authorize on %s") % auth_uri)
+                    logger.debug("Attempt authorize on %s" % auth_uri)
                     return self._authorize(req, auth_uri)
                 except HeatAPIException as e:
-                    logger.debug(_("Authorize failed: %s") % e.__class__)
+                    logger.debug("Authorize failed: %s" % e.__class__)
                     last_failure = e
             raise last_failure or exception.HeatAccessDeniedError()
 

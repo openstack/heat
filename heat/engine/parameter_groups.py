@@ -40,7 +40,7 @@ class ParameterGroups(object):
         Validate that a parameter belongs to only one Parameter Group
         and that each parameter name references a valid parameter.
         '''
-        logger.debug(_('Validating Parameter Groups.'))
+        logger.debug('Validating Parameter Groups.')
         logger.debug(self.parameter_names)
         if self.parameter_groups is not None:
             #Loop through groups and validate parameters

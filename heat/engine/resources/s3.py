@@ -108,8 +108,8 @@ class S3Bucket(resource.Resource):
         """Create a bucket."""
         container = self.physical_resource_name()
         headers = self.tags_to_headers()
-        logger.debug(_('S3Bucket create container %(container)s with headers '
-                     '%(headers)s') % {
+        logger.debug('S3Bucket create container %(container)s with headers '
+                     '%(headers)s' % {
                          'container': container, 'headers': headers})
         if self.properties[self.WEBSITE_CONFIGURATION] is not None:
             sc = self.properties[self.WEBSITE_CONFIGURATION]
@@ -140,7 +140,7 @@ class S3Bucket(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug(_('S3Bucket delete container %s') % self.resource_id)
+        logger.debug('S3Bucket delete container %s' % self.resource_id)
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)

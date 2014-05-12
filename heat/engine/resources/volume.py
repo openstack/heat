@@ -217,7 +217,7 @@ class VolumeAttachTask(object):
 
         vol = self.clients.cinder().volumes.get(self.volume_id)
         while vol.status == 'available' or vol.status == 'attaching':
-            logger.debug(_('%(name)s - volume status: %(status)s') % {
+            logger.debug('%(name)s - volume status: %(status)s' % {
                          'name': str(self), 'status': vol.status})
             yield
             vol.get()
@@ -280,7 +280,7 @@ class VolumeDetachTask(object):
 
         try:
             while vol.status in ('in-use', 'detaching'):
-                logger.debug(_('%s - volume still in use') % str(self))
+                logger.debug('%s - volume still in use' % str(self))
                 yield
                 vol.get()
 

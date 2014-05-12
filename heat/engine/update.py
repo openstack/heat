@@ -76,7 +76,7 @@ class StackUpdate(object):
     def _remove_backup_resource(self, prev_res):
         if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
                                   (prev_res.DELETE, prev_res.COMPLETE)):
-            logger.debug(_("Deleting backup resource %s") % prev_res.name)
+            logger.debug("Deleting backup resource %s" % prev_res.name)
             yield prev_res.destroy()
 
     @staticmethod
@@ -100,18 +100,18 @@ class StackUpdate(object):
                 # Swap in the backup resource if it is in a valid state,
                 # instead of creating a new resource
                 if prev_res.status == prev_res.COMPLETE:
-                    logger.debug(_("Swapping in backup Resource %s") %
+                    logger.debug("Swapping in backup Resource %s" %
                                  res_name)
                     self._exchange_stacks(self.existing_stack[res_name],
                                           prev_res)
                     return
 
-                logger.debug(_("Deleting backup Resource %s") % res_name)
+                logger.debug("Deleting backup Resource %s" % res_name)
                 yield prev_res.destroy()
 
         # Back up existing resource
         if res_name in self.existing_stack:
-            logger.debug(_("Backing up existing Resource %s") % res_name)
+            logger.debug("Backing up existing Resource %s" % res_name)
             existing_res = self.existing_stack[res_name]
             self.previous_stack[res_name] = existing_res
             existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)

@@ -278,7 +278,7 @@ class WaitCondition(resource.Resource):
             meta = handle.metadata_get(refresh=True)
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])
-            logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %
+            logger.debug('%(name)s.GetAtt(%(key)s) == %(res)s' %
                          {'name': self.name,
                           'key': key,
                           'res': res})

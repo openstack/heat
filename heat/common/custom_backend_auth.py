@@ -42,7 +42,7 @@ class AuthProtocol(object):
         Authenticate send downstream on success. Reject request if
         we can't authenticate.
         """
-        LOG.debug(_('Authenticating user token'))
+        LOG.debug('Authenticating user token')
         context = local.store.context
         authenticated = self.rpc_client.authenticated_to_backend(context)
         if authenticated:
