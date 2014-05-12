@@ -149,16 +149,20 @@ class FloatingIPAssociation(neutron.NeutronResource):
         FLOATINGIP_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of the floating IP to associate.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         PORT_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of an existing port with at least one IP address to '
-              'associate with this floating IP.')
+              'associate with this floating IP.'),
+            required=True,
+            update_allowed=True
         ),
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
-            _('IP address to use if the port has multiple addresses.')
+            _('IP address to use if the port has multiple addresses.'),
+            update_allowed=True
         ),
     }
 
@@ -182,6 +186,36 @@ class FloatingIPAssociation(neutron.NeutronResource):
                 {'floatingip': {'port_id': None}})
         except NeutronClientException as ex:
             self._handle_not_found_exception(ex)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            (floatingip_id, port_id) = self.resource_id.split(':')
+            neutron_client = self.neutron()
+            # if the floatingip_id is changed, disassociate the port which
+            # associated with the old floatingip_id
+            if self.FLOATINGIP_ID in prop_diff:
+                try:
+                    neutron_client.update_floatingip(
+                        floatingip_id,
+                        {'floatingip': {'port_id': None}})
+                except NeutronClientException as ex:
+                    self._handle_not_found_exception(ex)
+
+            # associate the floatingip with the new port
+            floatingip_id = (prop_diff.get(self.FLOATINGIP_ID) or
+                             floatingip_id)
+            port_id = prop_diff.get(self.PORT_ID) or port_id
+
+            fixed_ip_address = (prop_diff.get(self.FIXED_IP_ADDRESS) or
+                                self.properties.get(self.FIXED_IP_ADDRESS))
+
+            request_body = {
+                'floatingip': {
+                    'port_id': port_id,
+                    'fixed_ip_address': fixed_ip_address}}
+
+            neutron_client.update_floatingip(floatingip_id, request_body)
+            self.resource_id_set('%s:%s' % (floatingip_id, port_id))
 
 
 def resource_mapping():
