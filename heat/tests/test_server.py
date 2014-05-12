@@ -508,16 +508,12 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'keystone')
         self.m.StubOutWithMock(server, 'heat')
-        self.m.StubOutWithMock(server, '_get_deployments_metadata')
 
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server.keystone().MultipleTimes().AndReturn(self.fkc)
-        server.heat().MultipleTimes().AndReturn(self.fc)
-        server._get_deployments_metadata(
-            self.fc, '5678').AndReturn({'foo': 'bar'})
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -552,7 +548,7 @@ class ServersTest(HeatTestCase):
                     'stack_name': 'software_config_s'
                 }
             },
-            'deployments': {'foo': 'bar'}
+            'deployments': []
         }, server.metadata_get())
 
         created_server = servers.Server('WebServer',
@@ -576,17 +572,12 @@ class ServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'keystone')
-        self.m.StubOutWithMock(server, 'heat')
-        self.m.StubOutWithMock(server, '_get_deployments_metadata')
 
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
         server.keystone().MultipleTimes().AndReturn(self.fkc)
-        server.heat().MultipleTimes().AndReturn(self.fc)
-        server._get_deployments_metadata(
-            self.fc, '5678').AndReturn({'foo': 'bar'})
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -622,7 +613,7 @@ class ServersTest(HeatTestCase):
                     'user_id': '1234'
                 }
             },
-            'deployments': {'foo': 'bar'}
+            'deployments': []
         }, server.metadata_get())
 
         created_server = servers.Server('WebServer',
@@ -630,19 +621,6 @@ class ServersTest(HeatTestCase):
         self.assertEqual('1234', created_server._get_user_id())
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
 
-        self.m.VerifyAll()
-
-    def test_server_metadata_with_empty_deploy(self):
-        stack_name = 'software_config_s'
-        (t, stack) = self._setup_test_stack(stack_name)
-        props = t['Resources']['WebServer']['Properties']
-        props['user_data_format'] = 'SOFTWARE_CONFIG'
-        server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
-        self.m.StubOutWithMock(server, 'keystone')
-        self.m.ReplayAll()
-        deployments = server.metadata_get()['deployments']
-        self.assertEqual([], deployments)
         self.m.VerifyAll()
 
     @mock.patch.object(clients.OpenStackClients, 'nova')

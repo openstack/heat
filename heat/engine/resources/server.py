@@ -345,13 +345,9 @@ class Server(stack_user.StackUser):
         # This method is overridden by the derived CloudServer resource
         return self.properties.get(self.CONFIG_DRIVE)
 
-    @staticmethod
-    def _get_deployments_metadata(heatclient, server_id):
-        return heatclient.software_deployments.metadata(
-            server_id=server_id)
-
-    def _build_deployments_metadata(self):
-        meta = {}
+    def _populate_deployments_metadata(self):
+        meta = self.metadata_get(True) or {}
+        meta['deployments'] = meta.get('deployments', [])
         if self.transport_poll_server_heat():
             meta['os-collect-config'] = {'heat': {
                 'user_id': self._get_user_id(),
@@ -369,15 +365,7 @@ class Server(stack_user.StackUser):
                 'stack_name': self.stack.name,
                 'path': '%s.Metadata' % self.name}
             }
-
-        deployments = []
-        # cannot query the deployments if the nova server does
-        # not exist yet
-        if self.resource_id:
-            deployments = self._get_deployments_metadata(
-                self.heat(), self.resource_id)
-        meta['deployments'] = deployments
-        return meta
+        self.metadata_set(meta)
 
     def _register_access_key(self):
         '''
@@ -423,16 +411,6 @@ class Server(stack_user.StackUser):
         else:
             self.data_set('password', password, True)
 
-    def metadata_get(self, refresh=False):
-        if self.user_data_software_config():
-            return self._build_deployments_metadata()
-        else:
-            return super(Server, self).metadata_get(refresh)
-
-    def metadata_set(self, metadata):
-        if not self.user_data_software_config():
-            super(Server, self).metadata_set(metadata)
-
     def user_data_raw(self):
         return self.properties.get(self.USER_DATA_FORMAT) == self.RAW
 
@@ -465,6 +443,7 @@ class Server(stack_user.StackUser):
 
         if self.user_data_software_config():
             self._create_transport_credentials()
+            self._populate_deployments_metadata()
 
         if self.properties[self.ADMIN_USER]:
             instance_user = self.properties[self.ADMIN_USER]

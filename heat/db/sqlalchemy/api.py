@@ -125,7 +125,8 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                .all())
 
     for result in results:
-        if context is None or result.stack.tenant == context.tenant_id:
+        if context is None or context.tenant_id in (
+                result.stack.tenant, result.stack.stack_user_project_id):
             return result
 
     return None
