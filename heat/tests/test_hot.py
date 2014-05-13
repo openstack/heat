@@ -561,7 +561,7 @@ class HOTemplateTest(HeatTestCase):
                              'UpdatePolicy': {"blarg": "wibble"}}
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
-                                             parser.Template({}))
+                                             parser.Template(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
                              parent_resource=parent_resource)
@@ -579,7 +579,7 @@ class HOTemplateTest(HeatTestCase):
         parent_resource.metadata_set({"foo": "bar"})
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
-                                             parser.Template({}))
+                                             parser.Template(hot_tpl_empty))
         parent_snippet = {'DeletionPolicy': {'Fn::Join': ['eta',
                                                           ['R', 'in']]}}
         parent_tmpl = parent_resource.stack.t.parse(parent_resource.stack,
@@ -610,7 +610,7 @@ class HOTemplateTest(HeatTestCase):
         parent_resource.t = {}
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
-                                             parser.Template({}))
+                                             parser.Template(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
                              parent_resource=parent_resource)

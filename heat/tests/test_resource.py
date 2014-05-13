@@ -32,6 +32,9 @@ from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
+empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
+
+
 class ResourceTest(HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
@@ -44,7 +47,7 @@ class ResourceTest(HeatTestCase):
                   {u'OS::Test::GenericResource': u'GenericResourceType'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template({}), env=env,
+                                  parser.Template(empty_template), env=env,
                                   stack_id=str(uuid.uuid4()))
 
     def test_get_class_ok(self):
@@ -295,7 +298,7 @@ class ResourceTest(HeatTestCase):
         tmpl2 = {'Type': 'Foo'}
         tmpl3 = {'Type': 'Bar'}
         stack2 = parser.Stack(utils.dummy_context(), 'test_stack',
-                              parser.Template({}), stack_id=-1)
+                              parser.Template(empty_template), stack_id=-1)
         res1 = generic_rsrc.GenericResource('test_resource', tmpl1, self.stack)
         res2 = generic_rsrc.GenericResource('test_resource', tmpl2, stack2)
         res3 = generic_rsrc.GenericResource('test_resource2', tmpl3, stack2)
@@ -747,6 +750,7 @@ class ResourceAdoptTest(HeatTestCase):
     def test_adopt_resource_success(self):
         adopt_data = '{}'
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
             }
@@ -773,6 +777,7 @@ class ResourceAdoptTest(HeatTestCase):
     def test_adopt_with_resource_data_and_metadata(self):
         adopt_data = '{}'
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
             }
@@ -806,6 +811,7 @@ class ResourceAdoptTest(HeatTestCase):
                         "resources": {}
                         }'''
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
             }
@@ -834,6 +840,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_no_deps(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
             }
@@ -848,6 +855,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_ref(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -892,6 +900,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_ref_nested_dict(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -935,6 +944,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_ref_nested_deep(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -982,6 +992,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_ref_fail(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1017,6 +1028,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_getatt(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1060,6 +1072,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_getatt_nested_dict(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1103,6 +1116,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_getatt_nested_deep(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1152,6 +1166,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_getatt_fail(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1187,6 +1202,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_getatt_fail_nested_deep(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1232,6 +1248,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_dependson(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {'Type': 'GenericResourceType'},
                 'bar': {
@@ -1271,6 +1288,7 @@ class ResourceDependenciesTest(HeatTestCase):
 
     def test_dependson_fail(self):
         tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'foo': {
                     'Type': 'GenericResourceType',
@@ -1292,7 +1310,8 @@ class MetadataTest(HeatTestCase):
             'Metadata': {'Test': 'Initial metadata'}
         }
         self.stack = parser.Stack(utils.dummy_context(),
-                                  'test_stack', parser.Template({}))
+                                  'test_stack',
+                                  parser.Template(empty_template))
         self.stack.store()
         self.res = generic_rsrc.GenericResource('metadata_resource',
                                                 tmpl, self.stack)

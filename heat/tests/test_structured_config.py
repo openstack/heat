@@ -23,6 +23,7 @@ from heat.tests import utils
 class StructuredConfigTestJSON(HeatTestCase):
 
     template = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'config_mysql': {
                 'Type': 'OS::Heat::StructuredConfig',
@@ -70,6 +71,7 @@ class StructuredConfigTestJSON(HeatTestCase):
 class StructuredDeploymentDerivedTest(HeatTestCase):
 
     template = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'deploy_mysql': {
                 'Type': 'OS::Heat::StructuredDeployment'

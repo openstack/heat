@@ -28,7 +28,8 @@ from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
-ws_res_snippet = {"Type": "some_magic_type",
+ws_res_snippet = {"HeatTemplateFormatVersion": "2012-12-12",
+                  "Type": "some_magic_type",
                   "metadata": {
                       "key": "value",
                       "some": "more stuff"}}
@@ -105,7 +106,8 @@ class StackResourceTest(HeatTestCase):
                                  MyStackResource)
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        t = parser.Template({'Resources':
+        t = parser.Template({'HeatTemplateFormatVersion': '2012-12-12',
+                             'Resources':
                              {"provider_resource": ws_res_snippet}})
         self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                          t, stack_id=str(uuid.uuid4()))
@@ -172,7 +174,8 @@ class StackResourceTest(HeatTestCase):
         stack_resource = MyImplementedStackResource('test',
                                                     ws_res_snippet,
                                                     self.parent_stack)
-        stack_resource.child_template = mock.Mock(return_value={})
+        stack_resource.child_template = \
+            mock.Mock(return_value={'HeatTemplateFormatVersion': '2012-12-12'})
         stack_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
@@ -183,7 +186,8 @@ class StackResourceTest(HeatTestCase):
 
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
-        tmpl = {'Resources': [1]}
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': [1]}
         template = stack_resource.parser.Template(tmpl)
         root_resources = mock.Mock(return_value=2)
         self.parent_resource.stack.root_stack.total_resources = root_resources

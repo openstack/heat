@@ -25,8 +25,6 @@ logger = logging.getLogger(__name__)
 __all__ = ['Template']
 
 
-DEFAULT_VERSION = ('HeatTemplateFormatVersion', '2012-12-12')
-
 _template_classes = None
 
 
@@ -61,14 +59,15 @@ def get_version(template_data, available_versions):
                          isinstance(v, basestring))
 
     keys_present = version_keys & candidate_keys
-    if not keys_present:
-        return DEFAULT_VERSION
 
     if len(keys_present) > 1:
         explanation = _('Ambiguous versions (%s)') % ', '.join(keys_present)
         raise exception.InvalidTemplateVersion(explanation=explanation)
-
-    version_key = keys_present.pop()
+    try:
+        version_key = keys_present.pop()
+    except KeyError:
+        explanation = _('Template version was not provided')
+        raise exception.InvalidTemplateVersion(explanation=explanation)
     return version_key, template_data[version_key]
 
 

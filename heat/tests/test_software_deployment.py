@@ -25,6 +25,7 @@ from heat.tests import utils
 class SoftwareDeploymentTest(HeatTestCase):
 
     template = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'deployment_mysql': {
                 'Type': 'OS::Heat::SoftwareDeployment',
@@ -38,6 +39,7 @@ class SoftwareDeploymentTest(HeatTestCase):
     }
 
     template_with_server = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'deployment_mysql': {
                 'Type': 'OS::Heat::SoftwareDeployment',
@@ -59,6 +61,7 @@ class SoftwareDeploymentTest(HeatTestCase):
     }
 
     template_no_signal = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'deployment_mysql': {
                 'Type': 'OS::Heat::SoftwareDeployment',
@@ -74,6 +77,7 @@ class SoftwareDeploymentTest(HeatTestCase):
     }
 
     template_delete_suspend_resume = {
+        'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
             'deployment_mysql': {
                 'Type': 'OS::Heat::SoftwareDeployment',
