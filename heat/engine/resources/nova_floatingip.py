@@ -108,6 +108,9 @@ class NovaFloatingIpAssociation(resource.Resource):
         self.resource_id_set('%s-%s' % (fl_ip.id, fl_ip.ip))
 
     def handle_delete(self):
+        if self.resource_id is None:
+            return
+
         try:
             server = self.nova().servers.get(self.properties[self.SERVER])
             if server:

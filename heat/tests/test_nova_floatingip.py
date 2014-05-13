@@ -11,8 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as ncli_ex
 from novaclient.v1_1 import client as novaclient
 
+from heat.common import exception as heat_ex
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.nova_floatingip import NovaFloatingIp
@@ -100,7 +102,6 @@ class NovaFloatingIPTest(HeatTestCase):
                 'pool': 'public'
             })
         )
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
 
         template = template_format.parse(floating_ip_template_with_assoc)
         stack = utils.parse_stack(template)
@@ -139,8 +140,26 @@ class NovaFloatingIPTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_delete_floating_ip_assoc_successful_if_create_failed(self):
+        rsrc = self.prepare_floating_ip_assoc()
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1').AndRaise(
+            ncli_ex.BadRequest(400))
+
+        self.m.ReplayAll()
+
+        rsrc.validate()
+
+        self.assertRaises(heat_ex.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
     def test_floating_ip_assoc_create(self):
         rsrc = self.prepare_floating_ip_assoc()
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -152,7 +171,7 @@ class NovaFloatingIPTest(HeatTestCase):
 
     def test_floating_ip_assoc_delete(self):
         rsrc = self.prepare_floating_ip_assoc()
-
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
         self.novaclient.servers.get(
             '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
         self.novaclient.floating_ips.get('1').AndReturn(
