@@ -62,6 +62,6 @@ if __name__ == '__main__':
     from heat.engine import service as engine
 
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
-    launcher = service.launch(srv)
+    launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
     notify.startup_notify(cfg.CONF.onready)
     launcher.wait()
