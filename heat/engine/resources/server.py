@@ -22,6 +22,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources import glance_utils
 from heat.engine.resources.neutron import subnet
 from heat.engine.resources import nova_utils
 from heat.engine.resources.software_config import software_config as sc
@@ -480,7 +481,7 @@ class Server(stack_user.StackUser):
 
         image = self.properties.get(self.IMAGE)
         if image:
-            image = nova_utils.get_image_id(self.nova(), image)
+            image = glance_utils.get_image_id(self.glance(), image)
 
         flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
 
@@ -739,7 +740,7 @@ class Server(stack_user.StackUser):
             if image_update_policy == 'REPLACE':
                 raise resource.UpdateReplace(self.name)
             image = prop_diff[self.IMAGE]
-            image_id = nova_utils.get_image_id(self.nova(), image)
+            image_id = glance_utils.get_image_id(self.glance(), image)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
             preserve_ephemeral = (

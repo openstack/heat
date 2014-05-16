@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
+from glanceclient import exc as g_exc
 from testtools import skipIf
 
 from heat.common import exception
@@ -22,6 +21,7 @@ from heat.engine import environment
 from heat.engine.hot.template import HOTemplate
 from heat.engine import parser
 from heat.engine import resources
+from heat.engine.resources import glance_utils
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -484,7 +484,7 @@ test_template_invalid_secgroupids = '''
     }
     '''
 
-test_template_nova_client_exception = '''
+test_template_glance_client_exception = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "test.",
@@ -779,8 +779,26 @@ class validateTest(HeatTestCase):
         super(validateTest, self).setUp()
         resources.initialise()
         self.fc = fakes.FakeClient()
+        self.gc = fakes.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
+
+    def _mock_get_image_id_success(self, imageId_input, imageId):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+
+    def _mock_get_image_id_fail(self, image_id, exp):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
@@ -1310,8 +1328,7 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment(params))
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().AndReturn(self.fc)
+        self._mock_get_image_id_success('image_name', 'image_id')
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1325,8 +1342,9 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().AndReturn(self.fc)
+        self._mock_get_image_id_fail('image_name',
+                                     exception.ImageNotFound(
+                                         image_name='image_name'))
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1341,18 +1359,10 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        image_type = collections.namedtuple("Image", ("id", "name"))
+        self._mock_get_image_id_fail('image_name',
+                                     exception.PhysicalResourceNameAmbiguity(
+                                         name='image_name'))
 
-        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
-                                 name='image_name'),
-                      image_type(id='a57384f5-690f-48e1-bf46-c4291e6c887e',
-                                 name='image_name')]
-
-        self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().AndReturn(image_list)
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1367,13 +1377,7 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        image_type = collections.namedtuple("Image", ("id", "name"))
-
-        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
-                                 name='image_name')]
-
-        self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().MultipleTimes().AndReturn(image_list)
+        self._mock_get_image_id_success('image_name', 'image_id')
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -1390,13 +1394,7 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
-        image_type = collections.namedtuple("Image", ("id", "name"))
-
-        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
-                                 name='image_name')]
-
-        self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().MultipleTimes().AndReturn(image_list)
+        self._mock_get_image_id_success('image_name', 'image_id')
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -1407,16 +1405,16 @@ class validateTest(HeatTestCase):
                           resource.validate)
         self.m.VerifyAll()
 
-    def test_client_exception_from_nova_client(self):
-        t = template_format.parse(test_template_nova_client_exception)
+    def test_client_exception_from_glance_client(self):
+        t = template_format.parse(test_template_glance_client_exception)
         template = parser.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().AndRaise(
-            clients.novaclient.exceptions.ClientException(500))
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.gc.images, 'list')
+        self.gc.images.list().AndRaise(
+            g_exc.ClientException(500))
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(self.gc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)

@@ -30,7 +30,6 @@ from heat.engine import clients
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
@@ -69,55 +68,6 @@ def refresh_server(server):
                                   'exception': exc})
         else:
             raise
-
-
-def get_image_id(nova_client, image_identifier):
-    '''
-    Return an id for the specified image name or identifier.
-
-    :param nova_client: the nova client to use
-    :param image_identifier: image name or a UUID-like identifier
-    :returns: the id of the requested :image_identifier:
-    :raises: exception.ImageNotFound, exception.PhysicalResourceNameAmbiguity
-    '''
-    if uuidutils.is_uuid_like(image_identifier):
-        try:
-            image_id = nova_client.images.get(image_identifier).id
-        except clients.novaclient.exceptions.NotFound:
-            image_id = get_image_id_by_name(nova_client, image_identifier)
-    else:
-        image_id = get_image_id_by_name(nova_client, image_identifier)
-    return image_id
-
-
-def get_image_id_by_name(nova_client, image_identifier):
-    '''
-    Return an id for the specified image name or identifier.
-
-    :param nova_client: the nova client to use
-    :param image_identifier: image name or a UUID-like identifier
-    :returns: the id of the requested :image_identifier:
-    :raises: exception.ImageNotFound, exception.PhysicalResourceNameAmbiguity
-    '''
-    try:
-        image_list = nova_client.images.list()
-    except clients.novaclient.exceptions.ClientException as ex:
-        raise exception.Error(
-            message=(_("Error retrieving image list from nova: %s") % ex))
-    image_names = dict(
-        (o.id, o.name)
-        for o in image_list if o.name == image_identifier)
-    if len(image_names) == 0:
-        logger.info(_("Image %s was not found in glance") %
-                    image_identifier)
-        raise exception.ImageNotFound(image_name=image_identifier)
-    elif len(image_names) > 1:
-        logger.info(_("Multiple images %s were found in glance with name")
-                    % image_identifier)
-        raise exception.PhysicalResourceNameAmbiguity(
-            name=image_identifier)
-    image_id = image_names.popitem()[0]
-    return image_id
 
 
 def get_ip(server, net_type, ip_version):

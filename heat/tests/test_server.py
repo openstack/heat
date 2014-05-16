@@ -25,13 +25,13 @@ from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
@@ -97,7 +97,8 @@ class ServersTest(HeatTestCase):
         return (t, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
-                           override_name=False, stub_create=True):
+                           override_name=False, stub_create=True,
+                           server_rebuild=False):
         stack_name = '%s_s' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -113,6 +114,9 @@ class ServersTest(HeatTestCase):
 
         server = servers.Server(server_name,
                                 t['Resources']['WebServer'], stack)
+
+        self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1,
+                                        server_rebuild=server_rebuild)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -135,9 +139,10 @@ class ServersTest(HeatTestCase):
         return server
 
     def _create_test_server(self, return_server, name, override_name=False,
-                            stub_create=True):
+                            stub_create=True, server_rebuild=False):
         server = self._setup_test_server(return_server, name,
-                                         stub_create=stub_create)
+                                         stub_create=stub_create,
+                                         server_rebuild=server_rebuild)
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
         return server
@@ -150,6 +155,35 @@ class ServersTest(HeatTestCase):
                 self.fixed_ips = [{'ip_address': fixed_ip}]
 
         return fake_interface(port, mac, ip)
+
+    def _mock_get_image_id_success(self, imageId_input, imageId,
+                                   server_rebuild=False):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+
+        if server_rebuild:
+            glance_utils.get_image_id(g_cli_mock, 'F17-x86_64-gold').\
+                MultipleTimes().AndReturn(744)
+
+    def _mock_get_image_id_fail(self, image_id, exp):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
+
+    def _server_validate_mock(self, server):
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
 
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
@@ -209,9 +243,10 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
 
         instance_meta = {'a': "1"}
+        image_id = mox.IgnoreArg()
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
-            image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',
+            image=image_id, flavor=mox.IgnoreArg(), key_name='test',
             name=mox.IgnoreArg(), security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=instance_meta, nics=None, availability_zone=None,
@@ -223,6 +258,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', image_id)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.create)()
@@ -235,8 +271,6 @@ class ServersTest(HeatTestCase):
                                          'test_server_create_image_id',
                                          image_id='1',
                                          override_name=True)
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
 
         interfaces = [
             self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
@@ -286,8 +320,9 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_fail('Slackware',
+                                     exception.ImageNotFound(
+                                         image_name='Slackware'))
         self.m.ReplayAll()
 
         error = self.assertRaises(ValueError, server.handle_create)
@@ -307,12 +342,9 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc.client, "get_images_detail")
-        self.fc.client.get_images_detail().AndReturn((
-            200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
-                             {'id': 4, 'name': 'CentOS 5.2'}]}))
+        self._mock_get_image_id_fail('CentOS 5.2',
+                                     exception.PhysicalResourceNameAmbiguity(
+                                         name='CentOS 5.2'))
         self.m.ReplayAll()
 
         error = self.assertRaises(ValueError, server.handle_create)
@@ -332,13 +364,9 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
-        self.m.StubOutWithMock(self.fc.client, "get_images_1")
-        self.fc.client.get_images_1().AndRaise(
-            servers.clients.novaclient.exceptions.NotFound(404))
+        self._mock_get_image_id_fail('1',
+                                     exception.ImageNotFound(image_name='1'))
+
         self.m.ReplayAll()
 
         error = self.assertRaises(ValueError, server.handle_create)
@@ -394,6 +422,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -435,6 +464,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -476,6 +506,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -512,6 +543,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         server.keystone().MultipleTimes().AndReturn(self.fkc)
 
@@ -576,7 +608,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
         server.keystone().MultipleTimes().AndReturn(self.fkc)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -635,9 +667,10 @@ class ServersTest(HeatTestCase):
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         scheduler.TaskRunner(server.create)()
-        self.fc.servers.create.assert_called_once_with(
+        self.fc.servers.create(
             image=744, flavor=3, key_name='test',
             name=utils.PhysName(stack_name, server.name),
             security_groups=[],
@@ -660,9 +693,10 @@ class ServersTest(HeatTestCase):
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         scheduler.TaskRunner(server.create)()
-        self.fc.servers.create.assert_called_once_with(
+        self.fc.servers.create(
             image=744, flavor=3, key_name='test',
             name=utils.PhysName(stack_name, server.name),
             security_groups=[],
@@ -685,18 +719,15 @@ class ServersTest(HeatTestCase):
         stack_name = 'srv_val'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        # create an server with non exist image Id
         t['Resources']['WebServer']['Properties']['image'] = '1'
-        server = servers.Server('server_create_image_err',
+        server = servers.Server('server_create_image',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        clients.OpenStackClients.nova('compute').MultipleTimes().\
+            AndReturn(self.fc)
+        self._mock_get_image_id_success('1', 1)
 
         self.m.ReplayAll()
 
@@ -841,6 +872,8 @@ class ServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.StackValidationFailed,
@@ -871,6 +904,8 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         error = self.assertRaises(exception.ResourcePropertyConflict,
@@ -1016,6 +1051,7 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(new_return_server,
                                  new_meta).AndReturn(None)
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         self.m.ReplayAll()
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta
@@ -1118,6 +1154,7 @@ class ServersTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         t['Resources']['WebServer']['Properties'][
@@ -1135,6 +1172,7 @@ class ServersTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         server = servers.Server('server_server_update_flavor_replace',
@@ -1176,7 +1214,8 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         server = self._create_test_server(return_server,
-                                          'srv_updimgrbld')
+                                          'srv_updimgrbld',
+                                          server_rebuild=True)
 
         new_image = 'F17-x86_64-gold'
         # current test demonstrate updating when image_update_policy was not
@@ -1230,7 +1269,8 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         server = self._create_test_server(return_server,
-                                          'srv_updrbldfail')
+                                          'srv_updrbldfail',
+                                          server_rebuild=True)
 
         new_image = 'F17-x86_64-gold'
         # current test demonstrate updating when image_update_policy was not
@@ -1637,10 +1677,7 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._server_validate_mock(server)
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -1655,10 +1692,8 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(server, 'nova')
-        server.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._server_validate_mock(server)
+
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -1688,6 +1723,7 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourcePropertyConflict, server.validate)
@@ -1704,6 +1740,7 @@ class ServersTest(HeatTestCase):
                                 t['Resources']['WebServer'], stack)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.StackValidationFailed,
@@ -1753,6 +1790,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.StackValidationFailed,
@@ -1778,6 +1816,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
         self.assertIsNone(server.validate())
         self.m.VerifyAll()
@@ -1803,6 +1842,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -1831,6 +1871,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -1852,6 +1893,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -1873,6 +1915,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -1925,8 +1968,9 @@ class ServersTest(HeatTestCase):
         server = servers.Server('create_metadata_test_server',
                                 t['Resources']['WebServer'], stack)
         self.m.StubOutWithMock(self.fc.servers, 'create')
+        image_id = mox.IgnoreArg()
         self.fc.servers.create(
-            image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',
+            image=image_id, flavor=mox.IgnoreArg(), key_name='test',
             name=mox.IgnoreArg(), security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=mox.IgnoreArg(), nics=None, availability_zone=None,
@@ -1937,6 +1981,7 @@ class ServersTest(HeatTestCase):
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', image_id)
         self.m.StubOutWithMock(nova_utils, 'build_userdata')
         nova_utils.build_userdata(server,
                                   'wordpress',

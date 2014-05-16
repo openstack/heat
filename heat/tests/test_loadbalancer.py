@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
@@ -122,8 +123,16 @@ class LoadBalancerTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def _create_stubs(self, key_name='test', stub_meta=True):
+    def _mock_get_image_id_success(self, imageId_input, imageId):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).\
+            MultipleTimes().AndReturn(imageId)
 
+    def _create_stubs(self, key_name='test', stub_meta=True):
         self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
         stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fkc)
 
@@ -133,7 +142,8 @@ class LoadBalancerTest(HeatTestCase):
             limit=instance.Instance.physical_resource_name_limit)
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        if key_name:
+            clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,
@@ -147,8 +157,8 @@ class LoadBalancerTest(HeatTestCase):
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
     def test_loadbalancer(self):
+        self._mock_get_image_id_success(u'F20-x86_64-cfntools', 746)
         self._create_stubs()
-
         self.m.ReplayAll()
 
         t = template_format.parse(lb_template)
@@ -202,7 +212,9 @@ class LoadBalancerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_loadbalancer_nokey(self):
+        self._mock_get_image_id_success(u'F20-x86_64-cfntools', 746)
         self._create_stubs(key_name=None, stub_meta=False)
+
         self.m.ReplayAll()
 
         t = template_format.parse(lb_template_nokey)

@@ -34,6 +34,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.properties import Properties
 from heat.engine import resource as res
+from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import service
@@ -192,15 +193,30 @@ def setup_keystone_mocks(mocks, stack):
     stack.clients.keystone().MultipleTimes().AndReturn(fkc)
 
 
-def setup_mocks(mocks, stack):
+def setup_mock_for_image_constraint(mocks, imageId_input,
+                                    imageId_output=744):
+    g_cli_mock = mocks.CreateMockAnything()
+    mocks.StubOutWithMock(clients.OpenStackClients, 'glance')
+    clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        g_cli_mock)
+    mocks.StubOutWithMock(glance_utils, 'get_image_id')
+    glance_utils.get_image_id(g_cli_mock, imageId_input).\
+        MultipleTimes().AndReturn(imageId_output)
+
+
+def setup_mocks(mocks, stack, mock_image_constraint=True):
     fc = fakes.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
     mocks.StubOutWithMock(clients.OpenStackClients, 'nova')
     clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+    instance = stack['WebServer']
+    if mock_image_constraint:
+        setup_mock_for_image_constraint(mocks,
+                                        instance.t['Properties']['ImageId'])
+
     setup_keystone_mocks(mocks, stack)
 
-    instance = stack['WebServer']
     user_data = instance.properties['UserData']
     server_userdata = nova_utils.build_userdata(instance, user_data,
                                                 'ec2-user')
@@ -610,8 +626,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
         stack = get_wordpress_stack(stack_name, self.ctx)
-        setup_mocks(self.m, stack)
-
+        setup_mocks(self.m, stack, mock_image_constraint=False)
         resource = stack['WebServer']
 
         self.m.ReplayAll()
@@ -623,6 +638,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                 'KeyName': 'test',
                 'InstanceType': 'm1.large'
             })
+        setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
         stack.validate()
 
         resource.properties = Properties(

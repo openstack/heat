@@ -20,6 +20,7 @@ from heat.common import template_format
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
@@ -129,6 +130,15 @@ class ServerTagsTest(HeatTestCase):
         super(ServerTagsTest, self).setUp()
         self.fc = fakes.FakeClient()
 
+    def _mock_get_image_id_success(self, imageId_input, imageId):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+
     def _setup_test_instance(self, intags=None, nova_tags=None):
         stack_name = 'tag_test'
         t = template_format.parse(instance_template)
@@ -145,7 +155,7 @@ class ServerTagsTest(HeatTestCase):
         instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
             instance,
@@ -202,6 +212,7 @@ class ServerTagsTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(self.fc.servers.list()[1],
                                  new_metadata).AndReturn(None)
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         self.m.ReplayAll()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['Tags'] = new_tags
@@ -234,7 +245,7 @@ class ServerTagsTest(HeatTestCase):
         instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -285,7 +296,7 @@ class ServerTagsTest(HeatTestCase):
         instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
