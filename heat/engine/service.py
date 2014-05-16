@@ -1218,7 +1218,12 @@ class EngineService(service.Service):
             update_data['status_reason'] = status_reason
         sd = db_api.software_deployment_update(cnxt,
                                                deployment_id, update_data)
-        self._push_metadata_software_deployments(cnxt, sd.server_id)
+
+        # only push metadata if this update resulted in the config_id
+        # changing, since metadata is just a list of configs
+        if config_id:
+            self._push_metadata_software_deployments(cnxt, sd.server_id)
+
         return api.format_software_deployment(sd)
 
     @request_context
