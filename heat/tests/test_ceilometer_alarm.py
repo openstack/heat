@@ -325,6 +325,23 @@ class CeilometerAlarmTest(HeatTestCase):
                 'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
             self.assertIsNone(rsrc.validate())
 
+    def test_delete_alarm_not_found(self):
+        t = template_format.parse(alarm_template)
+
+        self.stack = self.create_stack(template=json.dumps(t))
+        self.m.StubOutWithMock(self.fa.alarms, 'delete')
+        self.fa.alarms.delete('foo').AndRaise(
+            alarm.ceilometerclient_exc.HTTPNotFound())
+
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
 
 @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
 class CombinationAlarmTest(HeatTestCase):
@@ -419,6 +436,18 @@ class CombinationAlarmTest(HeatTestCase):
         rsrc = self.create_alarm()
         self.m.StubOutWithMock(self.fc.alarms, 'delete')
         self.fc.alarms.delete('foo')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_delete_not_found(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'delete')
+        self.fc.alarms.delete('foo').AndRaise(
+            alarm.ceilometerclient_exc.HTTPNotFound())
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
