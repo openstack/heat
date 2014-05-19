@@ -103,7 +103,7 @@ class NovaFlavor(resource.Resource):
             self.nova().flavors.delete(self.resource_id)
         except nova_exceptions.NotFound:
             LOG.debug(
-                _('Could not find flavor %s.') % self.resource_id)
+                'Could not find flavor %s.' % self.resource_id)
 
         self.resource_id_set(None)
 

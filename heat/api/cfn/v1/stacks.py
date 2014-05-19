@@ -421,7 +421,7 @@ class StackController(object):
             msg = _("The Template must be a JSON or YAML document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
-        LOG.info('validate_template')
+        LOG.info(_('validate_template'))
 
         def format_validate_parameter(key, value):
             """

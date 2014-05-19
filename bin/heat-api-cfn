@@ -59,7 +59,8 @@ if __name__ == '__main__':
 
         port = cfg.CONF.heat_api_cfn.bind_port
         host = cfg.CONF.heat_api_cfn.bind_host
-        LOG.info('Starting Heat API on %s:%s' % (host, port))
+        LOG.info(_('Starting Heat API on %(host)s:%(port)s'),
+                 {'host': host, 'port': port})
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api_cfn, default_port=port)
         notify.startup_notify(cfg.CONF.onready)

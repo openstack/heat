@@ -168,7 +168,7 @@ class SoftwareConfig(resource.Resource):
             self.heat().software_configs.delete(self.resource_id)
         except heat_exp.HTTPNotFound:
             LOG.debug(
-                _('Software config %s is not found.') % self.resource_id)
+                'Software config %s is not found.' % self.resource_id)
 
     def _resolve_attribute(self, name):
         '''

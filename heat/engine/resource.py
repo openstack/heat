@@ -386,7 +386,7 @@ class Resource(object):
                     while not check(handle_data):
                         yield
         except Exception as ex:
-            LOG.exception('%s : %s' % (action, str(self)))
+            LOG.exception('%s : %s' % (action, str(self)))  # noqa
             failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
@@ -420,7 +420,7 @@ class Resource(object):
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info('creating %s' % str(self))
+        LOG.info(_('creating %s') % str(self))
 
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
@@ -501,7 +501,7 @@ class Resource(object):
             exc = Exception(_('Resource update already requested'))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info('updating %s' % str(self))
+        LOG.info(_('updating %s') % str(self))
 
         try:
             self.updated_time = datetime.utcnow()
