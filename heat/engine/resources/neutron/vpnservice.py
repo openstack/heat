@@ -85,8 +85,6 @@ class VPNService(neutron.NeutronResource):
         'show': _('All attributes.'),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _show_resource(self):
         return self.neutron().show_vpnservice(self.resource_id)['vpnservice']
 
@@ -272,8 +270,6 @@ class IPsecSiteConnection(neutron.NeutronResource):
                            'with the ipsec site connection.')
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _show_resource(self):
         return self.neutron().show_ipsec_site_connection(self.resource_id)[
             'ipsec_site_connection']
@@ -411,8 +407,6 @@ class IKEPolicy(neutron.NeutronResource):
                        'policy.'),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def _show_resource(self):
         return self.neutron().show_ikepolicy(self.resource_id)['ikepolicy']
 
@@ -549,8 +543,6 @@ class IPsecPolicy(neutron.NeutronResource):
                        'ipsec policy.'),
         'transform_protocol': _('The transform protocol of the ipsec policy.')
     }
-
-    update_allowed_keys = ('Properties',)
 
     def _show_resource(self):
         return self.neutron().show_ipsecpolicy(self.resource_id)['ipsecpolicy']

@@ -251,7 +251,6 @@ class Group(resource.Resource):
         # resource.
     }
 
-    update_allowed_keys = ('Properties',)
     # Everything can be changed.
     update_allowed_properties = (GROUP_CONFIGURATION, LAUNCH_CONFIGURATION)
 
@@ -413,7 +412,6 @@ class ScalingPolicy(resource.Resource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
     # Everything other than group can be changed.
     update_allowed_properties = (
         NAME, CHANGE, CHANGE_PERCENT, DESIRED_CAPACITY, COOLDOWN, TYPE, ARGS,
@@ -502,7 +500,6 @@ class WebHook(resource.Resource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
     # Everything other than policy can be changed.
     update_allowed_properties = (NAME, METADATA)
 

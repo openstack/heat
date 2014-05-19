@@ -139,8 +139,6 @@ class InstanceGroup(stack_resource.StackResource):
         ),
     }
 
-    update_allowed_keys = ('Properties', 'UpdatePolicy',)
-
     attributes_schema = {
         "InstanceList": _("A comma-delimited list of server ip addresses. "
                           "(Heat extension).")
@@ -560,8 +558,6 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             schema=rolling_update_schema)
     }
 
-    update_allowed_keys = ('Properties', 'UpdatePolicy')
-
     def handle_create(self):
         if self.properties[self.DESIRED_CAPACITY]:
             num_to_create = self.properties[self.DESIRED_CAPACITY]
@@ -904,8 +900,6 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     # Override the InstanceGroup attributes_schema; we don't want any
     # attributes.
     attributes_schema = {}
@@ -1006,8 +1000,6 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             update_allowed=True
         ),
     }
-
-    update_allowed_keys = ('Properties',)
 
     attributes_schema = {
         "AlarmUrl": _("A signed url to handle the alarm. "
@@ -1146,8 +1138,6 @@ class AutoScalingPolicy(ScalingPolicy):
             update_allowed=True
         ),
     }
-
-    update_allowed_keys = ('Properties',)
 
     attributes_schema = {
         "alarm_url": _("A signed url to handle the alarm.")

@@ -146,8 +146,6 @@ class CloudDns(resource.Resource):
         ),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def cloud_dns(self):
         return self.stack.clients.cloud_dns()
 

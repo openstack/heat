@@ -165,8 +165,6 @@ class Port(neutron.NeutronResource):
         "show": _("All attributes."),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def validate(self):
         super(Port, self).validate()
         self._validate_depr_property_required(self.properties,

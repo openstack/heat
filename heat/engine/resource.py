@@ -76,10 +76,6 @@ class Resource(object):
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
 
-    # Resource implementation set this to the subset of template keys
-    # which are supported for handle_update, used by update_template_diff
-    update_allowed_keys = ()
-
     # Resource implementation set this to the subset of resource properties
     # supported for handle_update, used by update_template_diff_properties
     update_allowed_properties = ()
@@ -242,12 +238,8 @@ class Resource(object):
         '''
         Returns the difference between the before and after json snippets. If
         something has been removed in after which exists in before we set it to
-        None. If any keys have changed which are not in update_allowed_keys,
-        raises UpdateReplace if the differing keys are not in
-        update_allowed_keys
+        None.
         '''
-        update_allowed_set = set(self.update_allowed_keys)
-
         # Create a set containing the keys in both current and update template
         template_keys = set(before.keys())
         template_keys.update(set(after.keys()))
@@ -255,9 +247,6 @@ class Resource(object):
         # Create a set of keys which differ (or are missing/added)
         changed_keys_set = set([k for k in template_keys
                                 if before.get(k) != after.get(k)])
-
-        if not changed_keys_set.issubset(update_allowed_set):
-            raise UpdateReplace(self.name)
 
         return dict((k, after.get(k)) for k in changed_keys_set)
 

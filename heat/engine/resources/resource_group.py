@@ -87,7 +87,6 @@ class ResourceGroup(stack_resource.StackResource):
     attributes_schema = {
         "refs": _("A list of resource IDs for the resources in the group")
     }
-    update_allowed_keys = ("Properties",)
 
     def validate(self):
         # validate our basic properties

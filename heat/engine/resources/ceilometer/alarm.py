@@ -150,8 +150,6 @@ class CeilometerAlarm(resource.Resource):
     }
     properties_schema.update(common_properties_schema)
 
-    update_allowed_keys = ('Properties',)
-
     def handle_create(self):
         props = actions_to_urls(self.stack, self.parsed_template('Properties'))
         props['name'] = self.physical_resource_name()
@@ -224,8 +222,6 @@ class CombinationAlarm(resource.Resource):
             update_allowed=True)
     }
     properties_schema.update(common_properties_schema)
-
-    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
         properties = actions_to_urls(self.stack,

@@ -84,8 +84,6 @@ class Net(neutron.NeutronResource):
         "show": _("All attributes."),
     }
 
-    update_allowed_keys = ('Properties',)
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
