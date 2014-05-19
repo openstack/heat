@@ -197,7 +197,7 @@ class StackWatch(object):
         # Retrieve the stored credentials & create context
         # Require tenant_safe=False to the stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
-        logger.debug(_("Periodic watcher task for stack %s") % sid)
+        logger.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
         stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
                                  eager_load=True)
@@ -290,7 +290,7 @@ class EngineService(service.Service):
         self.stack_watch = StackWatch(self.thread_group_mgr)
         self.listener = EngineListener(host, self.engine_id,
                                        self.thread_group_mgr)
-        logger.debug(_("Starting listener for engine %s") % self.engine_id)
+        logger.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
 
     def start(self):
@@ -727,7 +727,7 @@ class EngineService(service.Service):
         elif stack_lock.StackLock.engine_alive(cnxt, acquire_result):
             stop_result = remote_stop(acquire_result)
             if stop_result is None:
-                logger.debug(_("Successfully stopped remote task on engine %s")
+                logger.debug("Successfully stopped remote task on engine %s"
                              % acquire_result)
             else:
                 raise exception.StopActionFailed(stack_name=stack.name,
@@ -972,7 +972,7 @@ class EngineService(service.Service):
         Handle request to perform suspend action on a stack
         '''
         def _stack_suspend(stack):
-            logger.debug(_("suspending stack %s") % stack.name)
+            logger.debug("suspending stack %s" % stack.name)
             stack.suspend()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -987,7 +987,7 @@ class EngineService(service.Service):
         Handle request to perform a resume action on a stack
         '''
         def _stack_resume(stack):
-            logger.debug(_("resuming stack %s") % stack.name)
+            logger.debug("resuming stack %s" % stack.name)
             stack.resume()
 
         s = self._get_stack(cnxt, stack_identity)

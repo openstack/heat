@@ -488,7 +488,7 @@ class CloudLoadBalancer(resource.Resource):
 
         lb_name = (self.properties.get(self.NAME) or
                    self.physical_resource_name())
-        logger.debug(_("Creating loadbalancer: %s") % {lb_name: lb_body})
+        logger.debug("Creating loadbalancer: %s" % {lb_name: lb_body})
         loadbalancer = self.clb.create(lb_name, **lb_body)
         self.resource_id_set(str(loadbalancer.id))
 

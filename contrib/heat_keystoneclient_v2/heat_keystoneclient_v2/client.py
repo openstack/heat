@@ -165,7 +165,7 @@ class KeystoneClientV2(object):
                            if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0]
-            logger.debug(_("Adding user %(user)s to role %(role)s") % {
+            logger.debug("Adding user %(user)s to role %(role)s" % {
                          'user': user.id, 'role': role_id})
             self.client.roles.add_user_role(user.id, role_id,
                                             self.context.tenant_id)

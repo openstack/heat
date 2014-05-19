@@ -362,7 +362,7 @@ class Stack(collections.Mapping):
         dup_names = set(self.parameters.keys()) & set(self.keys())
 
         if dup_names:
-            logger.debug(_("Duplicate names %s") % dup_names)
+            logger.debug("Duplicate names %s" % dup_names)
             raise StackValidationFailed(message=_("Duplicate names %s") %
                                         dup_names)
 
@@ -515,7 +515,7 @@ class Stack(collections.Mapping):
                                                   self._backup_name(),
                                                   owner_id=self.id)
         if s is not None:
-            logger.debug(_('Loaded existing backup stack'))
+            logger.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
         elif create_if_missing:
             templ = Template.load(self.context, self.t.id)
@@ -523,7 +523,7 @@ class Stack(collections.Mapping):
             prev = type(self)(self.context, self.name, templ, self.env,
                               owner_id=self.id)
             prev.store(backup=True)
-            logger.debug(_('Created new backup stack'))
+            logger.debug('Created new backup stack')
             return prev
         else:
             return None
@@ -572,7 +572,7 @@ class Stack(collections.Mapping):
         if self.status != self.COMPLETE:
             if (action == self.ROLLBACK and
                     self.state == (self.UPDATE, self.IN_PROGRESS)):
-                logger.debug(_("Starting update rollback for %s") % self.name)
+                logger.debug("Starting update rollback for %s" % self.name)
             else:
                 self.state_set(action, self.FAILED,
                                'State invalid for %s' % action)
@@ -623,7 +623,7 @@ class Stack(collections.Mapping):
                     yield self.update_task(oldstack, action=self.ROLLBACK)
                     return
         else:
-            logger.debug(_('Deleting backup stack'))
+            logger.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
 
         # flip the template to the newstack values

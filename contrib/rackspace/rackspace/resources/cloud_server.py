@@ -113,12 +113,12 @@ class CloudServer(server.Server):
             self._managed_cloud_started_event_sent = True
 
         if 'rax_service_level_automation' not in server.metadata:
-            logger.debug(_("Managed Cloud server does not have the "
-                           "rax_service_level_automation metadata tag yet"))
+            logger.debug("Managed Cloud server does not have the "
+                         "rax_service_level_automation metadata tag yet")
             return False
 
         mc_status = server.metadata['rax_service_level_automation']
-        logger.debug(_("Managed Cloud automation status: %s") % mc_status)
+        logger.debug("Managed Cloud automation status: %s" % mc_status)
 
         if mc_status == self.MC_STATUS_IN_PROGRESS:
             return False
@@ -142,12 +142,12 @@ class CloudServer(server.Server):
             self._rack_connect_started_event_sent = True
 
         if 'rackconnect_automation_status' not in server.metadata:
-            logger.debug(_("RackConnect server does not have the "
-                           "rackconnect_automation_status metadata tag yet"))
+            logger.debug("RackConnect server does not have the "
+                         "rackconnect_automation_status metadata tag yet")
             return False
 
         rc_status = server.metadata['rackconnect_automation_status']
-        logger.debug(_("RackConnect automation status: %s") % rc_status)
+        logger.debug("RackConnect automation status: %s" % rc_status)
 
         if rc_status == self.RC_STATUS_DEPLOYING:
             return False

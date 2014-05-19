@@ -540,7 +540,7 @@ class Resource(object):
                         yield
         except UpdateReplace:
             with excutils.save_and_reraise_exception():
-                logger.debug(_("Resource %s update requires replacement") %
+                logger.debug("Resource %s update requires replacement" %
                              self.name)
         except Exception as ex:
             logger.exception(_('update %(resource)s : %(err)s') %

@@ -190,8 +190,8 @@ class ElasticIpAssociation(resource.Resource):
             server = self.nova().servers.get(self.properties[self.INSTANCE_ID])
             server.add_floating_ip(self.properties[self.EIP])
             self.resource_id_set(self.properties[self.EIP])
-            logger.debug(_('ElasticIpAssociation '
-                           '%(instance)s.add_floating_ip(%(eip)s)'),
+            logger.debug('ElasticIpAssociation '
+                         '%(instance)s.add_floating_ip(%(eip)s)',
                          {'instance': self.properties[self.INSTANCE_ID],
                           'eip': self.properties[self.EIP]})
         elif self.properties[self.ALLOCATION_ID]:

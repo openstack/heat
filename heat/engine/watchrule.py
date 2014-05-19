@@ -210,7 +210,7 @@ class WatchRule(object):
         data = 0
         for d in self.watch_data:
             if d.created_at < self.now - self.timeperiod:
-                logger.debug(_('ignoring %s') % str(d.data))
+                logger.debug('ignoring %s' % str(d.data))
                 continue
             data = data + float(d.data[self.rule['MetricName']]['Value'])
 
@@ -285,7 +285,7 @@ class WatchRule(object):
                 dims = dims[0]
             sample['resource_metadata'] = dims
             sample['resource_id'] = dims.get('InstanceId')
-            logger.debug(_('new sample:%(k)s data:%(sample)s') % {
+            logger.debug('new sample:%(k)s data:%(sample)s' % {
                          'k': k, 'sample': sample})
             clients.ceilometer().samples.create(**sample)
 
@@ -298,7 +298,7 @@ class WatchRule(object):
             return
 
         if self.state == self.SUSPENDED:
-            logger.debug(_('Ignoring metric data for %s, SUSPENDED state')
+            logger.debug('Ignoring metric data for %s, SUSPENDED state'
                          % self.name)
             return []
 
@@ -308,8 +308,8 @@ class WatchRule(object):
             # options, e.g --haproxy try to push multiple metrics when we
             # actually only care about one (the one we're alarming on)
             # so just ignore any data which doesn't contain MetricName
-            logger.debug(_('Ignoring metric data (only accept %(metric)s) '
-                         ': %(data)s') % {
+            logger.debug('Ignoring metric data (only accept %(metric)s) '
+                         ': %(data)s' % {
                              'metric': self.rule['MetricName'], 'data': data})
             return
 
@@ -318,7 +318,7 @@ class WatchRule(object):
             'watch_rule_id': self.id
         }
         wd = db_api.watch_data_create(None, watch_data)
-        logger.debug(_('new watch:%(name)s data:%(data)s')
+        logger.debug('new watch:%(name)s data:%(data)s'
                      % {'name': self.name, 'data': str(wd.data)})
 
     def state_set(self, state):
@@ -344,8 +344,8 @@ class WatchRule(object):
         if state != self.state:
             actions = self.rule_actions(state)
             if actions:
-                logger.debug(_("Overriding state %(self_state)s for watch "
-                             "%(name)s with %(state)s") % {
+                logger.debug("Overriding state %(self_state)s for watch "
+                             "%(name)s with %(state)s" % {
                                  'self_state': self.state, 'name': self.name,
                                  'state': state})
             else:

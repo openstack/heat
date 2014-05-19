@@ -253,7 +253,7 @@ class Port(neutron.NeutronResource):
 
         self._prepare_list_properties(props)
 
-        logger.debug(_('updating port with %s') % props)
+        logger.debug('updating port with %s' % props)
         self.neutron().update_port(self.resource_id, {'port': props})
 
     def check_update_complete(self, *args):

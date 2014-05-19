@@ -413,7 +413,7 @@ class LoadBalancer(stack_resource.StackResource):
         client = self.nova()
         for i in instances:
             ip = nova_utils.server_to_ipaddress(client, i) or '0.0.0.0'
-            logger.debug(_('haproxy server:%s') % ip)
+            logger.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
                                                            ip, inst_port,
                                                            check))

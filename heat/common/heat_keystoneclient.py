@@ -100,7 +100,7 @@ class KeystoneClientV3(object):
         else:
             logger.warning(_('stack_user_domain ID not set in heat.conf '
                            'falling back to using default'))
-        logger.debug(_('Using stack domain %s') % self.stack_domain_id)
+        logger.debug('Using stack domain %s' % self.stack_domain_id)
 
     @property
     def client(self):
@@ -296,7 +296,7 @@ class KeystoneClientV3(object):
                 name=self._get_username(username), password=password,
                 default_project=self.context.tenant_id)
             # Add user to heat_stack_user_role
-            logger.debug(_("Adding user %(user)s to role %(role)s") % {
+            logger.debug("Adding user %(user)s to role %(role)s" % {
                          'user': user.id, 'role': role_id})
             self.client.roles.grant(role=role_id, user=user.id,
                                     project=self.context.tenant_id)
@@ -338,7 +338,7 @@ class KeystoneClientV3(object):
                 name=self._get_username(username), password=password,
                 default_project=project_id, domain=self.stack_domain_id)
             # Add to stack user role
-            logger.debug(_("Adding user %(user)s to role %(role)s") % {
+            logger.debug("Adding user %(user)s to role %(role)s" % {
                          'user': user.id, 'role': role_id})
             self.domain_admin_client.roles.grant(role=role_id, user=user.id,
                                                  project=project_id)
