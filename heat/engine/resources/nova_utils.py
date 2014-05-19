@@ -60,7 +60,8 @@ def refresh_server(server):
                               'id': server.id,
                               'exception': exc})
     except clients.novaclient.exceptions.ClientException as exc:
-        if exc.code in (500, 503):
+        if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
+             (500, 503))):
             msg = _('Server "%(name)s" (%(id)s) received the following '
                     'exception during server.get(): %(exception)s')
             logger.warning(msg % {'name': server.name,
