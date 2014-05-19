@@ -2904,8 +2904,22 @@ class SoftwareConfigServiceTest(HeatTestCase):
         self.assertEqual(deployment_id, deployment['id'])
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
 
-    def test_update_software_deployment(self):
-        deployment = self._create_software_deployment()
+    def test_update_software_deployment_new_config(self):
+
+        server_id = str(uuid.uuid4())
+        self.m.StubOutWithMock(
+            self.engine, '_push_metadata_software_deployments')
+
+        # push on create
+        self.engine._push_metadata_software_deployments(
+            self.ctx, server_id).AndReturn(None)
+        # push on update with new config_id
+        self.engine._push_metadata_software_deployments(
+            self.ctx, server_id).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        deployment = self._create_software_deployment(server_id=server_id)
         self.assertIsNotNone(deployment)
         deployment_id = deployment['id']
         deployment_action = deployment['action']
@@ -2920,6 +2934,39 @@ class SoftwareConfigServiceTest(HeatTestCase):
         self.assertEqual(config_id, updated['config_id'])
         self.assertEqual('DEPLOY', updated['action'])
         self.assertEqual('WAITING', updated['status'])
+        self.m.VerifyAll()
+
+    def test_update_software_deployment_status(self):
+
+        server_id = str(uuid.uuid4())
+        self.m.StubOutWithMock(
+            self.engine, '_push_metadata_software_deployments')
+        # push on create
+        self.engine._push_metadata_software_deployments(
+            self.ctx, server_id).AndReturn(None)
+        # _push_metadata_software_deployments should not be called
+        # on update because config_id isn't being updated
+        self.m.ReplayAll()
+        deployment = self._create_software_deployment(server_id=server_id)
+
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        deployment_action = deployment['action']
+        self.assertEqual('INIT', deployment_action)
+        updated = self.engine.update_software_deployment(
+            self.ctx, deployment_id=deployment_id, config_id=None,
+            input_values=None, output_values={}, action='DEPLOY',
+            status='WAITING', status_reason='')
+        self.assertIsNotNone(updated)
+        self.assertEqual('DEPLOY', updated['action'])
+        self.assertEqual('WAITING', updated['status'])
+        self.m.VerifyAll()
+
+    def test_update_software_deployment_fields(self):
+
+        deployment = self._create_software_deployment()
+        deployment_id = deployment['id']
+        config_id = deployment['config_id']
 
         def check_software_deployment_updated(**kwargs):
             values = {
