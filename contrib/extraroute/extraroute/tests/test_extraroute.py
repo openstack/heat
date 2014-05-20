@@ -16,7 +16,7 @@ from testtools import skipIf
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
-from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -60,7 +60,7 @@ neutron_template = '''
 
 @skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronExtraRouteTest(HeatTestCase):
-    @skipIf(neutron.neutronV20 is None, "Missing Neutron v2_0")
+    @skipIf(neutron_utils.neutronV20 is None, "Missing Neutron v2_0")
     def setUp(self):
         super(NeutronExtraRouteTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')

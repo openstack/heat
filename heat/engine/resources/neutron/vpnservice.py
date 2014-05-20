@@ -15,6 +15,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
 if clients.neutronclient is not None:
@@ -97,7 +98,7 @@ class VPNService(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        self._resolve_subnet(
+        neutron_utils.resolve_subnet(
             self.neutron(), props,
             self.SUBNET, 'subnet_id')
         vpnservice = self.neutron().create_vpnservice({'vpnservice': props})[
