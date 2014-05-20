@@ -61,7 +61,7 @@ class Stack(collections.Mapping):
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
-                 user_creds_id=None, tenant_id=None):
+                 user_creds_id=None, tenant_id=None, validate_parameters=True):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -105,7 +105,8 @@ class Stack(collections.Mapping):
         self.env = env or environment.Environment({})
         self.parameters = self.t.parameters(self.identifier(),
                                             user_params=self.env.params)
-        self.parameters.validate(validate_value=True, context=context)
+        self.parameters.validate(validate_value=validate_parameters,
+                                 context=context)
         self._set_param_stackid()
 
         if resolve_data:
@@ -193,7 +194,8 @@ class Stack(collections.Mapping):
                     stack_user_project_id=stack.stack_user_project_id,
                     created_time=stack.created_at,
                     updated_time=stack.updated_at,
-                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant)
+                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
+                    validate_parameters=False)
 
         return stack
 
