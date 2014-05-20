@@ -59,6 +59,8 @@ class Schema(constr.Schema):
         self.implemented = implemented
         self.update_allowed = update_allowed
         self.support_status = support_status
+        # validate structural correctness of schema itself
+        self.validate()
 
     @classmethod
     def from_legacy(cls, schema_dict):

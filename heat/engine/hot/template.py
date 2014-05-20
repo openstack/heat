@@ -135,12 +135,9 @@ class HOTemplate(template.Template):
         return dict((name, parameters.HOTParamSchema.from_dict(name, schema))
                     for name, schema in params)
 
-    def parameters(self, stack_identifier, user_params, validate_value=True,
-                   context=None):
+    def parameters(self, stack_identifier, user_params):
         return parameters.HOTParameters(stack_identifier, self,
-                                        user_params=user_params,
-                                        validate_value=validate_value,
-                                        context=context)
+                                        user_params=user_params)
 
 
 def template_mapping():

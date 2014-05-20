@@ -349,8 +349,7 @@ Mappings:
         env = environment.Environment({'foo': 'bar'})
         stack = parser.Stack(self.ctx, 'test', tmpl, env)
         stack.env = environment.Environment({})
-        stack.parameters = parameters.Parameters(stack.identifier(), tmpl,
-                                                 validate_value=False)
+        stack.parameters = parameters.Parameters(stack.identifier(), tmpl)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
                           self.resolve,
