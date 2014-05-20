@@ -177,7 +177,7 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
         replace_log = 'Changing %s from %s to %s' % ('OS::Test::Dummy',
                                                      'test.yaml',
                                                      self.resource_type)
-        self.assertNotIn(replace_log, self.logger.output)
+        self.assertNotIn(replace_log, self.LOG.output)
         env_test = {u'resource_registry': {
             u'OS::Test::Dummy': self.resource_type}}
         env.load(env_test)
@@ -186,9 +186,9 @@ class EnvironmentDuplicateTest(common.HeatTestCase):
             # should return exactly the same object.
             self.assertIs(info, env.get_resource_info('OS::Test::Dummy',
                                                       'my_fip'))
-            self.assertNotIn(replace_log, self.logger.output)
+            self.assertNotIn(replace_log, self.LOG.output)
         else:
-            self.assertIn(replace_log, self.logger.output)
+            self.assertIn(replace_log, self.LOG.output)
             self.assertNotEqual(info,
                                 env.get_resource_info('OS::Test::Dummy',
                                                       'my_fip'))

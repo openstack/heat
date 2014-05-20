@@ -21,7 +21,7 @@ from heat.engine import scheduler
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class NeutronResource(resource.Resource):
@@ -136,7 +136,7 @@ class NeutronResource(resource.Resource):
         try:
             attributes = self._show_resource()
         except NeutronClientException as ex:
-            logger.warn(_("failed to fetch resource attributes: %s") % ex)
+            LOG.warn(_("failed to fetch resource attributes: %s") % ex)
             return None
         return self.handle_get_attributes(self.name, name, attributes)
 

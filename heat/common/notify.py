@@ -23,7 +23,7 @@ from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import processutils
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def startup_notify(notify_param):
@@ -35,6 +35,6 @@ def startup_notify(notify_param):
         try:
             processutils.execute(notify_param, shell=True)
         except Exception as e:
-            logger.error(_('Failed to execute onready command: %s') % e)
+            LOG.error(_('Failed to execute onready command: %s') % e)
     else:
         notifier.notify()

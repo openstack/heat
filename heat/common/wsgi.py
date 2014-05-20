@@ -164,12 +164,12 @@ cfg.CONF.register_opt(json_size_opt)
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
 
-    def __init__(self, logger, level=logging.DEBUG):
-        self.logger = logger
+    def __init__(self, LOG, level=logging.DEBUG):
+        self.LOG = LOG
         self.level = level
 
     def write(self, msg):
-        self.logger.log(self.level, msg.strip("\n"))
+        self.LOG.log(self.level, msg.strip("\n"))
 
 
 def get_bind_addr(conf, default_port=None):
@@ -252,7 +252,7 @@ class Server(object):
         """
         def kill_children(*args):
             """Kills the entire process group."""
-            self.logger.error(_('SIGTERM received'))
+            self.LOG.error(_('SIGTERM received'))
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             self.running = False
             os.killpg(0, signal.SIGTERM)
@@ -261,7 +261,7 @@ class Server(object):
             """
             Shuts down the server, but allows running requests to complete
             """
-            self.logger.error(_('SIGHUP received'))
+            self.LOG.error(_('SIGHUP received'))
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
             self.running = False
 
@@ -269,7 +269,7 @@ class Server(object):
         self.application = application
         self.sock = get_socket(conf, default_port)
 
-        self.logger = logging.getLogger('eventlet.wsgi.server')
+        self.LOG = logging.getLogger('eventlet.wsgi.server')
 
         if conf.workers == 0:
             # Useful for profiling, test, debug etc.
@@ -277,7 +277,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, application, self.sock)
             return
 
-        self.logger.info(_("Starting %d workers") % conf.workers)
+        self.LOG.info(_("Starting %d workers") % conf.workers)
         signal.signal(signal.SIGTERM, kill_children)
         signal.signal(signal.SIGHUP, hup)
         while len(self.children) < conf.workers:
@@ -288,18 +288,18 @@ class Server(object):
             try:
                 pid, status = os.wait()
                 if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                    self.logger.error(_('Removing dead child %s') % pid)
+                    self.LOG.error(_('Removing dead child %s') % pid)
                     self.children.remove(pid)
                     self.run_child()
             except OSError as err:
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
-                self.logger.info(_('Caught keyboard interrupt. Exiting.'))
+                self.LOG.info(_('Caught keyboard interrupt. Exiting.'))
                 break
         eventlet.greenio.shutdown_safe(self.sock)
         self.sock.close()
-        self.logger.debug('Exited')
+        self.LOG.debug('Exited')
 
     def wait(self):
         """Wait until all servers have completed running."""
@@ -317,10 +317,10 @@ class Server(object):
             signal.signal(signal.SIGHUP, signal.SIG_DFL)
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             self.run_server()
-            self.logger.info(_('Child %d exiting normally') % os.getpid())
+            self.LOG.info(_('Child %d exiting normally') % os.getpid())
             return
         else:
-            self.logger.info(_('Started child %s') % pid)
+            self.LOG.info(_('Started child %s') % pid)
             self.children.append(pid)
 
     def run_server(self):
@@ -334,7 +334,7 @@ class Server(object):
                                  self.application,
                                  custom_pool=self.pool,
                                  url_length_limit=URL_LENGTH_LIMIT,
-                                 log=WritableLogger(self.logger),
+                                 log=WritableLogger(self.LOG),
                                  debug=cfg.CONF.debug)
         except socket.error as err:
             if err[0] != errno.EINVAL:
@@ -343,11 +343,11 @@ class Server(object):
 
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
-        self.logger.info(_("Starting single process server"))
+        self.LOG.info(_("Starting single process server"))
         eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
-                             log=WritableLogger(self.logger))
+                             log=WritableLogger(self.LOG))
 
 
 class Middleware(object):

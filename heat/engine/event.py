@@ -19,7 +19,7 @@ from heat.db import api as db_api
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Event(object):
@@ -88,7 +88,7 @@ class Event(object):
             ev['created_at'] = self.timestamp
 
         if self.id is not None:
-            logger.warning(_('Duplicating event'))
+            LOG.warning(_('Duplicating event'))
 
         new_ev = db_api.event_create(self.context, ev)
         self.id = new_ev.id

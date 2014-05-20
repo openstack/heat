@@ -19,7 +19,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.rpc import api
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def extract_args(params):
@@ -34,7 +34,7 @@ def extract_args(params):
         try:
             timeout = int(timeout_mins)
         except (ValueError, TypeError):
-            logger.exception(_('Timeout conversion failed'))
+            LOG.exception(_('Timeout conversion failed'))
         else:
             if timeout > 0:
                 kwargs[api.PARAM_TIMEOUT] = timeout
@@ -234,7 +234,7 @@ def format_watch_data(wd):
     if len(metric) == 1:
         metric_name, metric_data = metric[0]
     else:
-        logger.error(_("Unexpected number of keys in watch_data.data!"))
+        LOG.error(_("Unexpected number of keys in watch_data.data!"))
         return
 
     result = {

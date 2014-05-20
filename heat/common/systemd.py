@@ -23,7 +23,7 @@ import socket
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def _sd_notify(msg):
@@ -37,8 +37,8 @@ def _sd_notify(msg):
         sock.sendall(msg)
         sock.close()
     else:
-        logger.warning(_('Unable to notify systemd of startup completion:'
-                         ' NOTIFY_SOCKET not set'))
+        LOG.warning(_('Unable to notify systemd of startup completion:'
+                      ' NOTIFY_SOCKET not set'))
 
 
 def notify():

@@ -35,7 +35,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.scaling import template
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 (SCALED_RESOURCE_TYPE,) = ('OS::Heat::ScaledResource',)
@@ -632,10 +632,10 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         Adjust the size of the scaling group if the cooldown permits.
         """
         if self._cooldown_inprogress():
-            logger.info(_("%(name)s NOT performing scaling adjustment, "
-                        "cooldown %(cooldown)s") % {
-                            'name': self.name,
-                            'cooldown': self.properties[self.COOLDOWN]})
+            LOG.info(_("%(name)s NOT performing scaling adjustment, "
+                       "cooldown %(cooldown)s")
+                     % {'name': self.name,
+                        'cooldown': self.properties[self.COOLDOWN]})
             return
 
         capacity = len(self.get_instances())
@@ -659,21 +659,21 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
         if new_capacity > upper:
             if upper > capacity:
-                logger.info(_('truncating growth to %s') % upper)
+                LOG.info(_('truncating growth to %s') % upper)
                 new_capacity = upper
             else:
-                logger.warn(_('can not exceed %s') % upper)
+                LOG.warn(_('can not exceed %s') % upper)
                 return
         if new_capacity < lower:
             if lower < capacity:
-                logger.info(_('truncating shrinkage to %s') % lower)
+                LOG.info(_('truncating shrinkage to %s') % lower)
                 new_capacity = lower
             else:
-                logger.warn(_('can not be less than %s') % lower)
+                LOG.warn(_('can not be less than %s') % lower)
                 return
 
         if new_capacity == capacity:
-            logger.debug('no change in capacity %d' % capacity)
+            LOG.debug('no change in capacity %d' % capacity)
             return
 
         # send a notification before, on-error and on-success.
@@ -698,7 +698,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                   })
                     notification.send(**notif)
                 except Exception:
-                    logger.exception(_('Failed sending error notification'))
+                    LOG.exception(_('Failed sending error notification'))
         else:
             notif.update({
                 'suffix': 'end',
@@ -1060,16 +1060,16 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             alarm_state = details.get('current',
                                       details.get('state', 'alarm')).lower()
 
-        logger.info(_('%(name)s Alarm, new state %(state)s') % {
-                    'name': self.name, 'state': alarm_state})
+        LOG.info(_('%(name)s Alarm, new state %(state)s')
+                 % {'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
             return
         if self._cooldown_inprogress():
-            logger.info(_("%(name)s NOT performing scaling action, "
-                        "cooldown %(cooldown)s") % {
-                            'name': self.name,
-                            'cooldown': self.properties[self.COOLDOWN]})
+            LOG.info(_("%(name)s NOT performing scaling action, "
+                       "cooldown %(cooldown)s")
+                     % {'name': self.name,
+                        'cooldown': self.properties[self.COOLDOWN]})
             return
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
@@ -1080,11 +1080,10 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                                            'alarm': self.name,
                                            'group': asgn_id})
 
-        logger.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
-                    '%(asgn_id)s by %(filter)s') % {
-                        'name': self.name, 'group': group.name,
-                        'asgn_id': asgn_id,
-                        'filter': self.properties[self.SCALING_ADJUSTMENT]})
+        LOG.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
+                   '%(asgn_id)s by %(filter)s')
+                 % {'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
+                    'filter': self.properties[self.SCALING_ADJUSTMENT]})
         adjustment_type = self._get_adjustement_type()
         group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type)
 

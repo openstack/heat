@@ -35,7 +35,7 @@ else:
     def resource_mapping():
         return {'Rackspace::Cloud::Network': CloudNetwork}
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class CloudNetwork(resource.Resource):
@@ -93,8 +93,8 @@ class CloudNetwork(resource.Resource):
             try:
                 self._network = self.cloud_networks().get(self.resource_id)
             except NotFound:
-                logger.warn(_("Could not find network %s but resource id "
-                              "is set.") % self.resource_id)
+                LOG.warn(_("Could not find network %s but resource id is set.")
+                         % self.resource_id)
         return self._network
 
     def cloud_networks(self):

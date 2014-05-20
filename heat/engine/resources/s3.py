@@ -20,7 +20,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class S3Bucket(resource.Resource):
@@ -119,9 +119,8 @@ class S3Bucket(resource.Resource):
         """Create a bucket."""
         container = self.physical_resource_name()
         headers = self.tags_to_headers()
-        logger.debug('S3Bucket create container %(container)s with headers '
-                     '%(headers)s' % {
-                         'container': container, 'headers': headers})
+        LOG.debug('S3Bucket create container %(container)s with headers '
+                  '%(headers)s' % {'container': container, 'headers': headers})
         if self.properties[self.WEBSITE_CONFIGURATION] is not None:
             sc = self.properties[self.WEBSITE_CONFIGURATION]
             index_doc = sc[self.WEBSITE_CONFIGURATION_INDEX_DOCUMENT]
@@ -151,12 +150,12 @@ class S3Bucket(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug('S3Bucket delete container %s' % self.resource_id)
+        LOG.debug('S3Bucket delete container %s' % self.resource_id)
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Delete container failed: %s") % ex)
+                LOG.warn(_("Delete container failed: %s") % ex)
 
     def FnGetRefId(self):
         return unicode(self.resource_id)

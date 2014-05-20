@@ -20,7 +20,7 @@ from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class StackUpdate(object):
@@ -76,7 +76,7 @@ class StackUpdate(object):
     def _remove_backup_resource(self, prev_res):
         if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
                                   (prev_res.DELETE, prev_res.COMPLETE)):
-            logger.debug("Deleting backup resource %s" % prev_res.name)
+            LOG.debug("Deleting backup resource %s" % prev_res.name)
             yield prev_res.destroy()
 
     @staticmethod
@@ -100,18 +100,17 @@ class StackUpdate(object):
                 # Swap in the backup resource if it is in a valid state,
                 # instead of creating a new resource
                 if prev_res.status == prev_res.COMPLETE:
-                    logger.debug("Swapping in backup Resource %s" %
-                                 res_name)
+                    LOG.debug("Swapping in backup Resource %s" % res_name)
                     self._exchange_stacks(self.existing_stack[res_name],
                                           prev_res)
                     return
 
-                logger.debug("Deleting backup Resource %s" % res_name)
+                LOG.debug("Deleting backup Resource %s" % res_name)
                 yield prev_res.destroy()
 
         # Back up existing resource
         if res_name in self.existing_stack:
-            logger.debug("Backing up existing Resource %s" % res_name)
+            LOG.debug("Backing up existing Resource %s" % res_name)
             existing_res = self.existing_stack[res_name]
             self.previous_stack[res_name] = existing_res
             existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)
@@ -131,10 +130,10 @@ class StackUpdate(object):
             except resource.UpdateReplace:
                 pass
             else:
-                logger.info(_("Resource %(res_name)s for stack %(stack_name)s"
-                            " updated") % {
-                                'res_name': res_name,
-                                'stack_name': self.existing_stack.name})
+                LOG.info(_("Resource %(res_name)s for stack %(stack_name)s "
+                           "updated")
+                         % {'res_name': res_name,
+                            'stack_name': self.existing_stack.name})
                 return
 
         yield self._create_resource(new_res)

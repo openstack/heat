@@ -29,7 +29,7 @@ from heat.openstack.common import log as logging
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class RedirectException(Exception):
@@ -112,9 +112,9 @@ class HeatException(Exception):
             exc_info = sys.exc_info()
             #kwargs doesn't match a variable in the message
             #log the issue and the kwargs
-            logger.exception(_('Exception in string format operation'))
+            LOG.exception(_('Exception in string format operation'))
             for name, value in kwargs.iteritems():
-                logger.error("%s: %s" % (name, value))
+                LOG.error("%s: %s" % (name, value))
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
                 raise exc_info[0], exc_info[1], exc_info[2]

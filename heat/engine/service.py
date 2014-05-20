@@ -50,7 +50,7 @@ cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def request_context(func):
@@ -197,13 +197,12 @@ class StackWatch(object):
         # Retrieve the stored credentials & create context
         # Require tenant_safe=False to the stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
-        logger.debug("Periodic watcher task for stack %s" % sid)
+        LOG.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
         stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
                                  eager_load=True)
         if not stack:
-            logger.error(_("Unable to retrieve stack %s for periodic task") %
-                         sid)
+            LOG.error(_("Unable to retrieve stack %s for periodic task") % sid)
             return
         stack_context = EngineService.load_user_creds(stack.user_creds_id)
 
@@ -216,8 +215,8 @@ class StackWatch(object):
         try:
             wrs = db_api.watch_rule_get_all_by_stack(stack_context, sid)
         except Exception as ex:
-            logger.warn(_('periodic_task db error watch rule removed? %(ex)s')
-                        % ex)
+            LOG.warn(_('periodic_task db error watch rule removed? %(ex)s')
+                     % ex)
             return
 
         def run_alarm_action(actions, details):
@@ -290,7 +289,7 @@ class EngineService(service.Service):
         self.stack_watch = StackWatch(self.thread_group_mgr)
         self.listener = EngineListener(host, self.engine_id,
                                        self.thread_group_mgr)
-        logger.debug("Starting listener for engine %s" % self.engine_id)
+        LOG.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
 
     def start(self):
@@ -304,7 +303,7 @@ class EngineService(service.Service):
 
     def stop(self):
         # Stop rpc connection at first for preventing new requests
-        logger.info(_("Attempting to stop engine service..."))
+        LOG.info(_("Attempting to stop engine service..."))
         try:
             self.conn.close()
         except Exception:
@@ -315,14 +314,14 @@ class EngineService(service.Service):
             # Ingore dummy service task
             if stack_id == cfg.CONF.periodic_interval:
                 continue
-            logger.info(_("Waiting stack %s processing to be finished")
-                        % stack_id)
+            LOG.info(_("Waiting stack %s processing to be finished")
+                     % stack_id)
             # Stop threads gracefully
             self.thread_group_mgr.stop(stack_id, True)
-            logger.info(_("Stack %s processing was finished") % stack_id)
+            LOG.info(_("Stack %s processing was finished") % stack_id)
 
         # Terminate the engine process
-        logger.info(_("All threads were gone, terminating engine"))
+        LOG.info(_("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
 
     @staticmethod
@@ -491,7 +490,7 @@ class EngineService(service.Service):
         :param args: Request parameters/args passed from API
         """
 
-        logger.info(_('previewing stack %s') % stack_name)
+        LOG.info(_('previewing stack %s') % stack_name)
         tmpl = parser.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -519,7 +518,7 @@ class EngineService(service.Service):
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        logger.info(_('template is %s') % template)
+        LOG.info(_('template is %s') % template)
 
         def _stack_create(stack):
             # Create/Adopt a stack, and create the periodic task if successful
@@ -533,8 +532,7 @@ class EngineService(service.Service):
                 # Schedule a periodic watcher task for this stack
                 self.stack_watch.start_watch_task(stack.id, cnxt)
             else:
-                logger.warning(_("Stack create failed, status %s") %
-                               stack.status)
+                LOG.warning(_("Stack create failed, status %s") % stack.status)
 
         tmpl = parser.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
@@ -570,7 +568,7 @@ class EngineService(service.Service):
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        logger.info(_('template is %s') % template)
+        LOG.info(_('template is %s') % template)
 
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
@@ -620,7 +618,7 @@ class EngineService(service.Service):
         :param template: Template of stack you want to create.
         :param params: Stack Input Params
         """
-        logger.info(_('validate_template'))
+        LOG.info(_('validate_template'))
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
@@ -711,7 +709,7 @@ class EngineService(service.Service):
                 return False
 
         st = self._get_stack(cnxt, stack_identity)
-        logger.info(_('Deleting stack %s') % st.name)
+        LOG.info(_('Deleting stack %s') % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
 
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
@@ -732,8 +730,8 @@ class EngineService(service.Service):
         elif stack_lock.StackLock.engine_alive(cnxt, acquire_result):
             stop_result = remote_stop(acquire_result)
             if stop_result is None:
-                logger.debug("Successfully stopped remote task on engine %s"
-                             % acquire_result)
+                LOG.debug("Successfully stopped remote task on engine %s"
+                          % acquire_result)
             else:
                 raise exception.StopActionFailed(stack_name=stack.name,
                                                  engine_id=acquire_result)
@@ -764,7 +762,7 @@ class EngineService(service.Service):
         :param stack_identity: Name of the stack you want to abandon.
         """
         st = self._get_stack(cnxt, stack_identity)
-        logger.info(_('abandoning stack %s') % st.name)
+        LOG.info(_('abandoning stack %s') % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
         acquire_result = lock.try_acquire()
@@ -896,8 +894,7 @@ class EngineService(service.Service):
 
         if cfg.CONF.heat_stack_user_role in cnxt.roles:
             if not self._authorize_stack_user(cnxt, stack, resource_name):
-                logger.warning(_("Access denied to resource %s")
-                               % resource_name)
+                LOG.warning(_("Access denied to resource %s") % resource_name)
                 raise exception.Forbidden()
 
         if resource_name not in stack:
@@ -977,7 +974,7 @@ class EngineService(service.Service):
         Handle request to perform suspend action on a stack
         '''
         def _stack_suspend(stack):
-            logger.debug("suspending stack %s" % stack.name)
+            LOG.debug("suspending stack %s" % stack.name)
             stack.suspend()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -992,7 +989,7 @@ class EngineService(service.Service):
         Handle request to perform a resume action on a stack
         '''
         def _stack_resume(stack):
-            logger.debug("resuming stack %s" % stack.name)
+            LOG.debug("resuming stack %s" % stack.name)
             stack.resume()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -1075,7 +1072,7 @@ class EngineService(service.Service):
             try:
                 wrn = [w.name for w in db_api.watch_rule_get_all(cnxt)]
             except Exception as ex:
-                logger.warn(_('show_watch (all) db error %s') % ex)
+                LOG.warn(_('show_watch (all) db error %s') % ex)
                 return
 
         wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
@@ -1098,13 +1095,13 @@ class EngineService(service.Service):
         # namespace/metric, but we will want this at some point
         # for now, the API can query all metric data and filter locally
         if metric_namespace is not None or metric_name is not None:
-            logger.error(_("Filtering by namespace/metric not yet supported"))
+            LOG.error(_("Filtering by namespace/metric not yet supported"))
             return
 
         try:
             wds = db_api.watch_data_get_all(cnxt)
         except Exception as ex:
-            logger.warn(_('show_metric (all) db error %s') % ex)
+            LOG.warn(_('show_metric (all) db error %s') % ex)
             return
 
         result = [api.format_watch_data(w) for w in wds]

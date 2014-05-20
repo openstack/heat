@@ -20,7 +20,7 @@ from heat.db import api as db_api
 from heat.engine import plugin_manager
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 __all__ = ['Template']
 
@@ -191,9 +191,9 @@ class Template(collections.Mapping):
         # check resources
         tmpl_resources = self[self.RESOURCES]
         if not tmpl_resources:
-            logger.warn(_('Template does not contain any resources, so '
-                          'the template would not really do anything when '
-                          'being instantiated.'))
+            LOG.warn(_('Template does not contain any resources, so '
+                       'the template would not really do anything when '
+                       'being instantiated.'))
 
         for res in tmpl_resources.values():
             try:

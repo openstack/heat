@@ -39,7 +39,7 @@ from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import strutils
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Stack(collections.Mapping):
@@ -175,7 +175,7 @@ class Stack(collections.Mapping):
         via the Parameters class as the StackId pseudo parameter
         '''
         if not self.parameters.set_stack_id(self.identifier()):
-            logger.warning(_("Unable to set parameters StackId identifier"))
+            LOG.warning(_("Unable to set parameters StackId identifier"))
 
     @staticmethod
     def _get_dependencies(resources):
@@ -361,7 +361,7 @@ class Stack(collections.Mapping):
         dup_names = set(self.parameters.keys()) & set(self.keys())
 
         if dup_names:
-            logger.debug("Duplicate names %s" % dup_names)
+            LOG.debug("Duplicate names %s" % dup_names)
             raise StackValidationFailed(message=_("Duplicate names %s") %
                                         dup_names)
 
@@ -369,10 +369,10 @@ class Stack(collections.Mapping):
             try:
                 result = res.validate()
             except exception.HeatException as ex:
-                logger.exception(ex)
+                LOG.exception(ex)
                 raise ex
             except Exception as ex:
-                logger.exception(ex)
+                LOG.exception(ex)
                 raise StackValidationFailed(message=strutils.safe_decode(
                                             six.text_type(ex)))
             if result:
@@ -415,10 +415,10 @@ class Stack(collections.Mapping):
                                    'status': status,
                                    'status_reason': reason})
             msg = _('Stack %(action)s %(status)s (%(name)s): %(reason)s')
-            logger.info(msg % {'action': action,
-                               'status': status,
-                               'name': self.name,
-                               'reason': reason})
+            LOG.info(msg % {'action': action,
+                            'status': status,
+                            'name': self.name,
+                            'reason': reason})
             notification.send(self)
 
     @property
@@ -514,7 +514,7 @@ class Stack(collections.Mapping):
                                                   self._backup_name(),
                                                   owner_id=self.id)
         if s is not None:
-            logger.debug('Loaded existing backup stack')
+            LOG.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
         elif create_if_missing:
             templ = Template.load(self.context, self.t.id)
@@ -522,7 +522,7 @@ class Stack(collections.Mapping):
             prev = type(self)(self.context, self.name, templ, self.env,
                               owner_id=self.id)
             prev.store(backup=True)
-            logger.debug('Created new backup stack')
+            LOG.debug('Created new backup stack')
             return prev
         else:
             return None
@@ -562,8 +562,7 @@ class Stack(collections.Mapping):
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE):
         if action not in (self.UPDATE, self.ROLLBACK):
-            logger.error(_("Unexpected action %s passed to update!") %
-                         action)
+            LOG.error(_("Unexpected action %s passed to update!") % action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -571,7 +570,7 @@ class Stack(collections.Mapping):
         if self.status != self.COMPLETE:
             if (action == self.ROLLBACK and
                     self.state == (self.UPDATE, self.IN_PROGRESS)):
-                logger.debug("Starting update rollback for %s" % self.name)
+                LOG.debug("Starting update rollback for %s" % self.name)
             else:
                 self.state_set(action, self.FAILED,
                                'State invalid for %s' % action)
@@ -622,7 +621,7 @@ class Stack(collections.Mapping):
                     yield self.update_task(oldstack, action=self.ROLLBACK)
                     return
         else:
-            logger.debug('Deleting backup stack')
+            LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
 
         # flip the template to the newstack values
@@ -651,7 +650,7 @@ class Stack(collections.Mapping):
         differently.
         '''
         if action not in (self.DELETE, self.ROLLBACK):
-            logger.error(_("Unexpected action %s passed to delete!") % action)
+            LOG.error(_("Unexpected action %s passed to delete!") % action)
             self.state_set(self.DELETE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -727,7 +726,7 @@ class Stack(collections.Mapping):
                     try:
                         self.clients.keystone().delete_trust(trust_id)
                     except Exception as ex:
-                        logger.exception(ex)
+                        LOG.exception(ex)
                         stack_status = self.FAILED
                         reason = "Error deleting trust: %s" % six.text_type(ex)
 
@@ -742,7 +741,7 @@ class Stack(collections.Mapping):
                     self.clients.keystone().delete_stack_domain_project(
                         project_id=self.stack_user_project_id)
                 except Exception as ex:
-                    logger.exception(ex)
+                    LOG.exception(ex)
                     stack_status = self.FAILED
                     reason = "Error deleting project: %s" % six.text_type(ex)
 
@@ -764,7 +763,7 @@ class Stack(collections.Mapping):
         '''
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
-            logger.info(_('%s is already suspended') % str(self))
+            LOG.info(_('%s is already suspended') % str(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -783,7 +782,7 @@ class Stack(collections.Mapping):
         '''
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
-            logger.info(_('%s is already resumed') % str(self))
+            LOG.info(_('%s is already resumed') % str(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -814,7 +813,7 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                logger.error(_('delete: %s') % ex)
+                LOG.error(_('delete: %s') % ex)
 
         for res in deps:
             if not failed:
@@ -822,7 +821,7 @@ class Stack(collections.Mapping):
                     res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
-                    logger.exception(_('create'))
+                    LOG.exception(_('create'))
                     failed = True
             else:
                 res.state_set(res.CREATE, res.FAILED,

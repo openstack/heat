@@ -35,9 +35,9 @@ TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN}
 
 class FakeLogMixin:
     def setup_logging(self):
-        # Assign default logs to self.logger so we can still
+        # Assign default logs to self.LOG so we can still
         # assert on heat logs.
-        self.logger = self.useFixture(
+        self.LOG = self.useFixture(
             fixtures.FakeLogger(level=logging.DEBUG))
         base_list = set([nlog.split('.')[0]
                          for nlog in logging.Logger.manager.loggerDict])

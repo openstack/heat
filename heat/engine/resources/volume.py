@@ -27,7 +27,7 @@ from heat.openstack.common import log as logging
 
 volume_backups = try_import('cinderclient.v1.volume_backups')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Volume(resource.Resource):
@@ -153,7 +153,7 @@ class Volume(resource.Resource):
                     vol.get()
 
                 if vol.status == 'in-use':
-                    logger.warn(_('can not delete volume when in-use'))
+                    LOG.warn(_('can not delete volume when in-use'))
                     raise exception.Error(_('Volume in use'))
 
                 vol.delete()
@@ -210,7 +210,7 @@ class VolumeAttachTask(object):
 
     def __call__(self):
         """Return a co-routine which runs the task."""
-        logger.debug(str(self))
+        LOG.debug(str(self))
 
         va = self.clients.nova().volumes.create_server_volume(
             server_id=self.server_id,
@@ -221,15 +221,15 @@ class VolumeAttachTask(object):
 
         vol = self.clients.cinder().volumes.get(self.volume_id)
         while vol.status == 'available' or vol.status == 'attaching':
-            logger.debug('%(name)s - volume status: %(status)s' % {
-                         'name': str(self), 'status': vol.status})
+            LOG.debug('%(name)s - volume status: %(status)s'
+                      % {'name': str(self), 'status': vol.status})
             yield
             vol.get()
 
         if vol.status != 'in-use':
             raise exception.Error(vol.status)
 
-        logger.info(_('%s - complete') % str(self))
+        LOG.info(_('%s - complete') % str(self))
 
 
 class VolumeDetachTask(object):
@@ -257,7 +257,7 @@ class VolumeDetachTask(object):
 
     def __call__(self):
         """Return a co-routine which runs the task."""
-        logger.debug(str(self))
+        LOG.debug(str(self))
 
         server_api = self.clients.nova().volumes
 
@@ -269,7 +269,7 @@ class VolumeDetachTask(object):
         except (clients.cinderclient.exceptions.NotFound,
                 clients.novaclient.exceptions.BadRequest,
                 clients.novaclient.exceptions.NotFound):
-            logger.warning(_('%s - volume not found') % str(self))
+            LOG.warning(_('%s - volume not found') % str(self))
             return
 
         # detach the volume using volume_attachment
@@ -277,24 +277,24 @@ class VolumeDetachTask(object):
             server_api.delete_server_volume(self.server_id, self.attachment_id)
         except (clients.novaclient.exceptions.BadRequest,
                 clients.novaclient.exceptions.NotFound) as e:
-            logger.warning(_('%(res)s - %(err)s') % {'res': str(self),
-                                                     'err': e})
+            LOG.warning(_('%(res)s - %(err)s') % {'res': str(self),
+                                                  'err': e})
 
         yield
 
         try:
             while vol.status in ('in-use', 'detaching'):
-                logger.debug('%s - volume still in use' % str(self))
+                LOG.debug('%s - volume still in use' % str(self))
                 yield
                 vol.get()
 
-            logger.info(_('%(name)s - status: %(status)s') % {
-                        'name': str(self), 'status': vol.status})
+            LOG.info(_('%(name)s - status: %(status)s')
+                     % {'name': str(self), 'status': vol.status})
             if vol.status != 'available':
                 raise exception.Error(vol.status)
 
         except clients.cinderclient.exceptions.NotFound:
-            logger.warning(_('%s - volume not found') % str(self))
+            LOG.warning(_('%s - volume not found') % str(self))
 
         # The next check is needed for immediate reattachment when updating:
         # there might be some time between cinder marking volume as 'available'
@@ -308,12 +308,12 @@ class VolumeDetachTask(object):
             return True
 
         while server_has_attachment(self.server_id, self.attachment_id):
-            logger.info(_("Server %(srv)s still has attachment %(att)s.") %
-                        {'att': self.attachment_id, 'srv': self.server_id})
+            LOG.info(_("Server %(srv)s still has attachment %(att)s.")
+                     % {'att': self.attachment_id, 'srv': self.server_id})
             yield
 
-        logger.info(_("Volume %(vol)s is detached from server %(srv)s") %
-                    {'vol': vol.id, 'srv': self.server_id})
+        LOG.info(_("Volume %(vol)s is detached from server %(srv)s")
+                 % {'vol': vol.id, 'srv': self.server_id})
 
 
 class VolumeAttachment(resource.Resource):

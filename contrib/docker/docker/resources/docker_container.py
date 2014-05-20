@@ -20,7 +20,7 @@ from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 DOCKER_INSTALLED = False
 # conditionally import so tests can work without having the dependency
@@ -329,5 +329,5 @@ def available_resource_mapping():
     if DOCKER_INSTALLED:
         return resource_mapping()
     else:
-        logger.warn(_("Docker plug-in loaded, but docker lib not installed."))
+        LOG.warn(_("Docker plug-in loaded, but docker lib not installed."))
         return {}

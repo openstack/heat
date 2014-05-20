@@ -18,7 +18,7 @@ from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class NovaFlavor(resource.Resource):
@@ -102,7 +102,7 @@ class NovaFlavor(resource.Resource):
         try:
             self.nova().flavors.delete(self.resource_id)
         except nova_exceptions.NotFound:
-            logger.debug(
+            LOG.debug(
                 _('Could not find flavor %s.') % self.resource_id)
 
         self.resource_id_set(None)

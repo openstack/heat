@@ -23,7 +23,7 @@ from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 # Whether TaskRunner._sleep actually does an eventlet sleep when called.
@@ -128,7 +128,7 @@ class TaskRunner(object):
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""
         if ENABLE_SLEEP and wait_time is not None:
-            logger.debug('%s sleeping' % str(self))
+            LOG.debug('%s sleeping' % str(self))
             eventlet.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None):
@@ -151,7 +151,7 @@ class TaskRunner(object):
         """
         assert self._runner is None, "Task already started"
 
-        logger.debug('%s starting' % str(self))
+        LOG.debug('%s starting' % str(self))
 
         if timeout is not None:
             self._timeout = Timeout(self, timeout)
@@ -163,7 +163,7 @@ class TaskRunner(object):
         else:
             self._runner = False
             self._done = True
-            logger.debug('%s done (not resumable)' % str(self))
+            LOG.debug('%s done (not resumable)' % str(self))
 
     def step(self):
         """
@@ -174,7 +174,7 @@ class TaskRunner(object):
             assert self._runner is not None, "Task not started"
 
             if self._timeout is not None and self._timeout.expired():
-                logger.info(_('%s timed out') % str(self))
+                LOG.info(_('%s timed out') % str(self))
 
                 try:
                     self._runner.throw(self._timeout)
@@ -184,13 +184,13 @@ class TaskRunner(object):
                     # Clean up in case task swallows exception without exiting
                     self.cancel()
             else:
-                logger.debug('%s running' % str(self))
+                LOG.debug('%s running' % str(self))
 
                 try:
                     next(self._runner)
                 except StopIteration:
                     self._done = True
-                    logger.debug('%s complete' % str(self))
+                    LOG.debug('%s complete' % str(self))
 
         return self._done
 
@@ -207,7 +207,7 @@ class TaskRunner(object):
     def cancel(self):
         """Cancel the task and mark it as done."""
         if not self.done():
-            logger.debug('%s cancelled' % str(self))
+            LOG.debug('%s cancelled' % str(self))
             try:
                 if self.started():
                     self._runner.close()

@@ -26,7 +26,7 @@ import types
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def _module_name(*components):
@@ -94,7 +94,7 @@ def load_modules(package, ignore_error=False):
         try:
             module = _import_module(importer, module_name, package)
         except ImportError:
-            logger.error(_('Failed to import module %s') % module_name)
+            LOG.error(_('Failed to import module %s') % module_name)
             if not ignore_error:
                 raise
         else:

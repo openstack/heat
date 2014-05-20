@@ -21,7 +21,7 @@ from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class OSDBInstance(resource.Resource):
@@ -235,9 +235,9 @@ class OSDBInstance(resource.Resource):
         except troveclient.exceptions.RequestEntityTooLarge as exc:
             msg = _("Stack %(name)s (%(id)s) received an OverLimit "
                     "response during instance.get(): %(exception)s")
-            logger.warning(msg % {'name': self.stack.name,
-                                  'id': self.stack.id,
-                                  'exception': exc})
+            LOG.warning(msg % {'name': self.stack.name,
+                               'id': self.stack.id,
+                               'exception': exc})
 
     def check_create_complete(self, instance):
         '''
@@ -253,9 +253,9 @@ class OSDBInstance(resource.Resource):
 
         msg = _("Database instance %(database)s created (flavor:%(flavor)s, "
                 "volume:%(volume)s)")
-        logger.info(msg % ({'database': self.dbinstancename,
-                            'flavor': self.flavor,
-                            'volume': self.volume}))
+        LOG.info(msg % ({'database': self.dbinstancename,
+                         'flavor': self.flavor,
+                         'volume': self.volume}))
         return True
 
     def handle_delete(self):
@@ -269,8 +269,7 @@ class OSDBInstance(resource.Resource):
         try:
             instance = self.trove().instances.get(self.resource_id)
         except troveclient.exceptions.NotFound:
-            logger.debug("Database instance %s not found." %
-                         self.resource_id)
+            LOG.debug("Database instance %s not found." % self.resource_id)
             self.resource_id_set(None)
         else:
             instance.delete()

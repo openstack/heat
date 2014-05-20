@@ -21,7 +21,7 @@ from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class SoftwareConfig(resource.Resource):
@@ -167,7 +167,7 @@ class SoftwareConfig(resource.Resource):
         try:
             self.heat().software_configs.delete(self.resource_id)
         except heat_exp.HTTPNotFound:
-            logger.debug(
+            LOG.debug(
                 _('Software config %s is not found.') % self.resource_id)
 
     def _resolve_attribute(self, name):

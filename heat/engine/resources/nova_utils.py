@@ -31,7 +31,7 @@ from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 deferred_server_statuses = ['BUILD',
@@ -55,17 +55,17 @@ def refresh_server(server):
     except clients.novaclient.exceptions.OverLimit as exc:
         msg = _("Server %(name)s (%(id)s) received an OverLimit "
                 "response during server.get(): %(exception)s")
-        logger.warning(msg % {'name': server.name,
-                              'id': server.id,
-                              'exception': exc})
+        LOG.warning(msg % {'name': server.name,
+                           'id': server.id,
+                           'exception': exc})
     except clients.novaclient.exceptions.ClientException as exc:
         if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
              (500, 503))):
             msg = _('Server "%(name)s" (%(id)s) received the following '
                     'exception during server.get(): %(exception)s')
-            logger.warning(msg % {'name': server.name,
-                                  'id': server.id,
-                                  'exception': exc})
+            LOG.warning(msg % {'name': server.name,
+                               'id': server.id,
+                               'exception': exc})
         else:
             raise
 
@@ -331,8 +331,8 @@ def server_to_ipaddress(client, server):
     try:
         server = client.servers.get(server)
     except clients.novaclient.exceptions.NotFound as ex:
-        logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
-                    'server': server, 'ex': ex})
+        LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
+                 % {'server': server, 'ex': ex})
     else:
         for n in server.networks:
             if len(server.networks[n]) > 0:

@@ -23,7 +23,7 @@ from heat.openstack.common import log as logging
 if clients.neutronclient is not None:
     import neutronclient.common.exceptions as neutron_exp
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Port(neutron.NeutronResource):
@@ -287,7 +287,7 @@ class Port(neutron.NeutronResource):
 
         self._prepare_list_properties(props)
 
-        logger.debug('updating port with %s' % props)
+        LOG.debug('updating port with %s' % props)
         self.neutron().update_port(self.resource_id, {'port': props})
 
     def check_update_complete(self, *args):

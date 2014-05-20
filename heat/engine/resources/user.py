@@ -19,7 +19,7 @@ from heat.engine import resource
 from heat.engine import stack_user
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 #
 # We are ignoring Groups as keystone does not support them.
@@ -76,22 +76,21 @@ class User(stack_user.StackUser):
             # ignore the policy (don't reject it because we previously ignored
             # and we don't want to break templates which previously worked
             if not isinstance(policy, basestring):
-                logger.warning(_("Ignoring policy %s, must be string "
-                               "resource name") % policy)
+                LOG.warning(_("Ignoring policy %s, must be string "
+                              "resource name") % policy)
                 continue
 
             try:
                 policy_rsrc = self.stack[policy]
             except KeyError:
-                logger.error(_("Policy %(policy)s does not exist in stack "
-                             "%(stack)s") % {
-                                 'policy': policy,
-                                 'stack': self.stack.name})
+                LOG.error(_("Policy %(policy)s does not exist in stack "
+                            "%(stack)s")
+                          % {'policy': policy, 'stack': self.stack.name})
                 return False
 
             if not callable(getattr(policy_rsrc, 'access_allowed', None)):
-                logger.error(_("Policy %s is not an AccessPolicy resource") %
-                             policy)
+                LOG.error(_("Policy %s is not an AccessPolicy resource")
+                          % policy)
                 return False
 
         return True
@@ -116,8 +115,8 @@ class User(stack_user.StackUser):
         policies = (self.properties[self.POLICIES] or [])
         for policy in policies:
             if not isinstance(policy, basestring):
-                logger.warning(_("Ignoring policy %s, must be string "
-                               "resource name") % policy)
+                LOG.warning(_("Ignoring policy %s, must be string "
+                              "resource name") % policy)
                 continue
             policy_rsrc = self.stack[policy]
             if not policy_rsrc.access_allowed(resource_name):
@@ -211,7 +210,7 @@ class AccessKey(resource.Resource):
 
         user = self._get_user()
         if user is None:
-            logger.warning(_('Error deleting %s - user not found') % str(self))
+            LOG.warning(_('Error deleting %s - user not found') % str(self))
             return
         user._delete_keypair()
 
@@ -221,10 +220,10 @@ class AccessKey(resource.Resource):
         '''
         if self._secret is None:
             if not self.resource_id:
-                logger.warn(_('could not get secret for %(username)s '
-                            'Error:%(msg)s') % {
-                                'username': self.properties[self.USER_NAME],
-                                'msg': "resource_id not yet set"})
+                LOG.warn(_('could not get secret for %(username)s '
+                           'Error:%(msg)s')
+                         % {'username': self.properties[self.USER_NAME],
+                            'msg': "resource_id not yet set"})
             else:
                 # First try to retrieve the secret from resource_data, but
                 # for backwards compatibility, fall back to requesting from
@@ -241,11 +240,10 @@ class AccessKey(resource.Resource):
                         # And the ID of the v3 credential
                         self.data_set('credential_id', kp.id, redact=True)
                     except Exception as ex:
-                        logger.warn(
-                            _('could not get secret for %(username)s '
-                              'Error:%(msg)s') % {
-                                  'username': self.properties[self.USER_NAME],
-                                  'msg': ex})
+                        LOG.warn(_('could not get secret for %(username)s '
+                                   'Error:%(msg)s') % {
+                                 'username': self.properties[self.USER_NAME],
+                                 'msg': ex})
 
         return self._secret or '000-000-000'
 
@@ -291,7 +289,7 @@ class AccessPolicy(resource.Resource):
         for resource in resources:
             if resource not in self.stack:
                 msg = _("AccessPolicy resource %s not in stack") % resource
-                logger.error(msg)
+                LOG.error(msg)
                 raise exception.StackValidationFailed(message=msg)
 
     def access_allowed(self, resource_name):

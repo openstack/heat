@@ -28,7 +28,7 @@ from heat.openstack.common import log as logging
 
 gettextutils.install('heat')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 opts = [
@@ -125,10 +125,10 @@ class EC2Token(wsgi.Middleware):
             last_failure = None
             for auth_uri in self._conf_get('allowed_auth_uris'):
                 try:
-                    logger.debug("Attempt authorize on %s" % auth_uri)
+                    LOG.debug("Attempt authorize on %s" % auth_uri)
                     return self._authorize(req, auth_uri)
                 except HeatAPIException as e:
-                    logger.debug("Authorize failed: %s" % e.__class__)
+                    LOG.debug("Authorize failed: %s" % e.__class__)
                     last_failure = e
             raise last_failure or exception.HeatAccessDeniedError()
 
@@ -138,14 +138,14 @@ class EC2Token(wsgi.Middleware):
         # here so that we can use both authentication methods.
         # Returning here just means the user didn't supply AWS
         # authentication and we'll let the app try native keystone next.
-        logger.info(_("Checking AWS credentials.."))
+        LOG.info(_("Checking AWS credentials.."))
 
         signature = self._get_signature(req)
         if not signature:
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
-                logger.info(_("No AWS Signature found."))
+                LOG.info(_("No AWS Signature found."))
                 raise exception.HeatIncompleteSignatureError()
 
         access = self._get_access(req)
@@ -153,14 +153,14 @@ class EC2Token(wsgi.Middleware):
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
-                logger.info(_("No AWSAccessKeyId/Authorization Credential"))
+                LOG.info(_("No AWSAccessKeyId/Authorization Credential"))
                 raise exception.HeatMissingAuthenticationTokenError()
 
-        logger.info(_("AWS credentials found, checking against keystone."))
+        LOG.info(_("AWS credentials found, checking against keystone."))
 
         if not auth_uri:
-            logger.error(_("Ec2Token authorization failed, no auth_uri "
-                         "specified in config file"))
+            LOG.error(_("Ec2Token authorization failed, no auth_uri "
+                        "specified in config file"))
             raise exception.HeatInternalFailureError(_('Service '
                                                        'misconfigured'))
         # Make a copy of args for authentication and signature verification.
@@ -184,7 +184,7 @@ class EC2Token(wsgi.Middleware):
         headers = {'Content-Type': 'application/json'}
 
         keystone_ec2_uri = self._conf_get_keystone_ec2_uri(auth_uri)
-        logger.info(_('Authenticating with %s') % keystone_ec2_uri)
+        LOG.info(_('Authenticating with %s') % keystone_ec2_uri)
         response = requests.post(keystone_ec2_uri, data=creds_json,
                                  headers=headers)
         result = response.json()
@@ -192,9 +192,9 @@ class EC2Token(wsgi.Middleware):
             token_id = result['access']['token']['id']
             tenant = result['access']['token']['tenant']['name']
             tenant_id = result['access']['token']['tenant']['id']
-            logger.info(_("AWS authentication successful."))
+            LOG.info(_("AWS authentication successful."))
         except (AttributeError, KeyError):
-            logger.info(_("AWS authentication failure."))
+            LOG.info(_("AWS authentication failure."))
             # Try to extract the reason for failure so we can return the
             # appropriate AWS error via raising an exception
             try:

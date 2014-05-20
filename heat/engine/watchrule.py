@@ -23,7 +23,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.rpc import api as rpc_api
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class WatchRule(object):
@@ -75,9 +75,8 @@ class WatchRule(object):
             try:
                 watch = db_api.watch_rule_get_by_name(context, watch_name)
             except Exception as ex:
-                logger.warn(_('WatchRule.load (%(watch_name)s) db error '
-                            '%(ex)s') % {
-                                'watch_name': watch_name, 'ex': ex})
+                LOG.warn(_('WatchRule.load (%(watch_name)s) db error '
+                           '%(ex)s') % {'watch_name': watch_name, 'ex': ex})
         if watch is None:
             raise exception.WatchRuleNotFound(watch_name=watch_name)
         else:
@@ -210,7 +209,7 @@ class WatchRule(object):
         data = 0
         for d in self.watch_data:
             if d.created_at < self.now - self.timeperiod:
-                logger.debug('ignoring %s' % str(d.data))
+                LOG.debug('ignoring %s' % str(d.data))
                 continue
             data = data + float(d.data[self.rule['MetricName']]['Value'])
 
@@ -247,14 +246,13 @@ class WatchRule(object):
         return actions
 
     def rule_actions(self, new_state):
-        logger.info(_('WATCH: stack:%(stack)s, watch_name:%(watch_name)s, '
-                      'new_state:%(new_state)s'), {'stack': self.stack_id,
-                                                   'watch_name': self.name,
-                                                   'new_state': new_state})
+        LOG.info(_('WATCH: stack:%(stack)s, watch_name:%(watch_name)s, '
+                   'new_state:%(new_state)s'), {'stack': self.stack_id,
+                                                'watch_name': self.name,
+                                                'new_state': new_state})
         actions = []
         if self.ACTION_MAP[new_state] not in self.rule:
-            logger.info(_('no action for new state %s'),
-                        new_state)
+            LOG.info(_('no action for new state %s'), new_state)
         else:
             s = db_api.stack_get(self.context, self.stack_id,
                                  eager_load=True)
@@ -264,8 +262,8 @@ class WatchRule(object):
                 for refid in self.rule[self.ACTION_MAP[new_state]]:
                     actions.append(stack.resource_by_refid(refid).signal)
             else:
-                logger.warning(_("Could not process watch state %s for stack")
-                               % new_state)
+                LOG.warning(_("Could not process watch state %s for stack")
+                            % new_state)
         return actions
 
     def _to_ceilometer(self, data):
@@ -285,8 +283,8 @@ class WatchRule(object):
                 dims = dims[0]
             sample['resource_metadata'] = dims
             sample['resource_id'] = dims.get('InstanceId')
-            logger.debug('new sample:%(k)s data:%(sample)s' % {
-                         'k': k, 'sample': sample})
+            LOG.debug('new sample:%(k)s data:%(sample)s' % {
+                      'k': k, 'sample': sample})
             clients.ceilometer().samples.create(**sample)
 
     def create_watch_data(self, data):
@@ -298,8 +296,8 @@ class WatchRule(object):
             return
 
         if self.state == self.SUSPENDED:
-            logger.debug('Ignoring metric data for %s, SUSPENDED state'
-                         % self.name)
+            LOG.debug('Ignoring metric data for %s, SUSPENDED state'
+                      % self.name)
             return []
 
         if self.rule['MetricName'] not in data:
@@ -308,9 +306,9 @@ class WatchRule(object):
             # options, e.g --haproxy try to push multiple metrics when we
             # actually only care about one (the one we're alarming on)
             # so just ignore any data which doesn't contain MetricName
-            logger.debug('Ignoring metric data (only accept %(metric)s) '
-                         ': %(data)s' % {
-                             'metric': self.rule['MetricName'], 'data': data})
+            LOG.debug('Ignoring metric data (only accept %(metric)s) '
+                      ': %(data)s' % {'metric': self.rule['MetricName'],
+                                      'data': data})
             return
 
         watch_data = {
@@ -318,8 +316,8 @@ class WatchRule(object):
             'watch_rule_id': self.id
         }
         wd = db_api.watch_data_create(None, watch_data)
-        logger.debug('new watch:%(name)s data:%(data)s'
-                     % {'name': self.name, 'data': str(wd.data)})
+        LOG.debug('new watch:%(name)s data:%(data)s'
+                  % {'name': self.name, 'data': str(wd.data)})
 
     def state_set(self, state):
         '''
@@ -344,14 +342,14 @@ class WatchRule(object):
         if state != self.state:
             actions = self.rule_actions(state)
             if actions:
-                logger.debug("Overriding state %(self_state)s for watch "
-                             "%(name)s with %(state)s" % {
-                                 'self_state': self.state, 'name': self.name,
-                                 'state': state})
+                LOG.debug("Overriding state %(self_state)s for watch "
+                          "%(name)s with %(state)s"
+                          % {'self_state': self.state, 'name': self.name,
+                             'state': state})
             else:
-                logger.warning(_("Unable to override state %(state)s for "
-                               "watch %(name)s") % {
-                                   'state': self.state, 'name': self.name})
+                LOG.warning(_("Unable to override state %(state)s for "
+                              "watch %(name)s") % {'state': self.state,
+                                                   'name': self.name})
         return actions
 
 

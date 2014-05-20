@@ -30,7 +30,7 @@ from heat.openstack.common import log as logging
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class InstantiationData(object):
@@ -94,7 +94,7 @@ class InstantiationData(object):
                 return template_data
         elif self.PARAM_TEMPLATE_URL in self.data:
             url = self.data[self.PARAM_TEMPLATE_URL]
-            logger.debug('TemplateUrl %s' % url)
+            LOG.debug('TemplateUrl %s' % url)
             try:
                 template_data = urlfetch.get(url)
             except IOError as ex:
@@ -188,7 +188,7 @@ class StackController(object):
                                                      filters=filter_params,
                                                      tenant_safe=tenant_safe)
             except AttributeError as exc:
-                logger.warning(_("Old Engine Version: %s") % exc)
+                LOG.warning(_("Old Engine Version: %s") % exc)
 
         return stacks_view.collection(req, stacks=stacks, count=count,
                                       tenant_safe=tenant_safe)
