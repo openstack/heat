@@ -21,7 +21,6 @@ which then calls into this engine.
 import eventlet
 eventlet.monkey_patch()
 
-import multiprocessing
 import os
 import sys
 
@@ -62,11 +61,7 @@ if __name__ == '__main__':
 
     from heat.engine import service as engine
 
-    num_workers = cfg.CONF.num_engine_workers
-    if num_workers == -1:
-        num_workers = multiprocessing.cpu_count()
-
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
-    launcher = service.launch(srv, workers=num_workers)
+    launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
     notify.startup_notify(cfg.CONF.onready)
     launcher.wait()
