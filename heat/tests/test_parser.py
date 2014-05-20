@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 import json
 import time
@@ -1054,7 +1055,8 @@ class StackTest(HeatTestCase):
                               created_time=IgnoreArg(),
                               updated_time=None,
                               user_creds_id=stack.user_creds_id,
-                              tenant_id='test_tenant_id')
+                              tenant_id='test_tenant_id',
+                              validate_parameters=False)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -2940,3 +2942,55 @@ class StackTest(HeatTestCase):
 
         self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
                          self.stack.state)
+
+    def test_stack_load_no_param_value_validation(self):
+        '''
+        Test stack loading with disabled parameter value validation.
+        '''
+        tmpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            flavor:
+                type: string
+                description: A flavor.
+                constraints:
+                    - custom_constraint: nova.flavor
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+
+        # Mock objects so the query for flavors in server.FlavorConstraint
+        # works for stack creation
+        fc = fakes.FakeClient()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+
+        fc.flavors = self.m.CreateMockAnything()
+        flavor = collections.namedtuple("Flavor", ["id", "name"])
+        flavor.id = "1234"
+        flavor.name = "dummy"
+        fc.flavors.list().AndReturn([flavor])
+
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'stack_with_custom_constraint',
+                                  template.Template(tmpl),
+                                  environment.Environment({'flavor': 'dummy'}))
+
+        self.stack.store()
+        self.stack.create()
+        stack_id = self.stack.id
+
+        self.m.VerifyAll()
+
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        loaded_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertEqual(stack_id, loaded_stack.parameters['OS::stack_id'])
+
+        # verify that fc.flavors.list() has not been called, i.e. verify that
+        # parameter value validation did not happen and FlavorConstraint was
+        # not invoked
+        self.m.VerifyAll()
