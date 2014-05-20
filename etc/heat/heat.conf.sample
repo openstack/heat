@@ -1,13 +1,13 @@
 [DEFAULT]
 
 #
-# Options defined in heat.api.middleware.ssl
+# Options defined in heat.common.config
 #
 
-# The HTTP Header that will be used to determine which the
-# original request protocol scheme was, even if it was removed
-# by an SSL terminator proxy. (string value)
-#secure_proxy_ssl_header=X-Forwarded-Proto
+# Name of the engine node. This can be an opaque identifier.
+# It is not necessarily a hostname, FQDN, or IP address.
+# (string value)
+#host=heat
 
 
 #
@@ -74,10 +74,10 @@
 # notification module. (string value)
 #onready=<None>
 
-# Name of the engine node. This can be an opaque identifier.
-# It is not necessarily a hostname, FQDN, or IP address.
-# (string value)
-#host=heat
+
+#
+# Options defined in heat.common.config
+#
 
 # Seconds between running periodic tasks. (integer value)
 #periodic_interval=60
@@ -125,6 +125,29 @@
 # value)
 #max_nested_stack_depth=3
 
+# Number of heat-engine processes to fork and run. (integer
+# value)
+#num_engine_workers=1
+
+
+#
+# Options defined in heat.common.wsgi
+#
+
+# Maximum raw byte size of JSON request body. Should be larger
+# than max_template_size. (integer value)
+#max_json_body_size=1048576
+
+
+#
+# Options defined in heat.api.middleware.ssl
+#
+
+# The HTTP Header that will be used to determine which the
+# original request protocol scheme was, even if it was removed
+# by an SSL terminator proxy. (string value)
+#secure_proxy_ssl_header=X-Forwarded-Proto
+
 
 #
 # Options defined in heat.common.crypt
@@ -142,15 +165,6 @@
 # Fully qualified class name to use as a keystone backend.
 # (string value)
 #keystone_backend=heat.common.heat_keystoneclient.KeystoneClientV3
-
-
-#
-# Options defined in heat.common.wsgi
-#
-
-# Maximum raw byte size of JSON request body. Should be larger
-# than max_template_size. (integer value)
-#max_json_body_size=1048576
 
 
 #
@@ -190,7 +204,7 @@
 # Options defined in heat.openstack.common.lockutils
 #
 
-# Whether to disable inter-process locks (boolean value)
+# Enables or disables inter-process locks. (boolean value)
 #disable_process_locking=false
 
 # Directory to use for lock files. (string value)
@@ -209,47 +223,48 @@
 # of default WARNING level). (boolean value)
 #verbose=false
 
-# Log output to standard error (boolean value)
+# Log output to standard error. (boolean value)
 #use_stderr=true
 
-# format string to use for log messages with context (string
+# Format string to use for log messages with context. (string
 # value)
 #logging_context_format_string=%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user_identity)s] %(instance)s%(message)s
 
-# format string to use for log messages without context
+# Format string to use for log messages without context.
 # (string value)
 #logging_default_format_string=%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [-] %(instance)s%(message)s
 
-# data to append to log format when level is DEBUG (string
+# Data to append to log format when level is DEBUG. (string
 # value)
 #logging_debug_format_suffix=%(funcName)s %(pathname)s:%(lineno)d
 
-# prefix each line of exception output with this format
+# Prefix each line of exception output with this format.
 # (string value)
 #logging_exception_prefix=%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s
 
-# list of logger=LEVEL pairs (list value)
-#default_log_levels=amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,iso8601=WARN
+# List of logger=LEVEL pairs. (list value)
+#default_log_levels=amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN
 
-# publish error events (boolean value)
+# Enables or disables publication of error events. (boolean
+# value)
 #publish_errors=false
 
-# make deprecations fatal (boolean value)
+# Enables or disables fatal status of deprecations. (boolean
+# value)
 #fatal_deprecations=false
 
-# If an instance is passed with the log message, format it
-# like this (string value)
+# The format for an instance that is passed with the log
+# message.  (string value)
 #instance_format="[instance: %(uuid)s] "
 
-# If an instance UUID is passed with the log message, format
-# it like this (string value)
+# The format for an instance UUID that is passed with the log
+# message.  (string value)
 #instance_uuid_format="[instance: %(uuid)s] "
 
-# The name of logging configuration file. It does not disable
-# existing loggers, but just appends specified logging
-# configuration to any other existing logging options. Please
-# see the Python logging module documentation for details on
-# logging configuration files. (string value)
+# The name of a logging configuration file. This file is
+# appended to any existing logging configuration files. For
+# details about logging configuration files, see the Python
+# logging module documentation. (string value)
 # Deprecated group/name - [DEFAULT]/log_config
 #log_config_append=<None>
 
@@ -261,7 +276,7 @@
 #log_format=<None>
 
 # Format string for %%(asctime)s in log records. Default:
-# %(default)s (string value)
+# %(default)s . (string value)
 #log_date_format=%Y-%m-%d %H:%M:%S
 
 # (Optional) Name of log file to output to. If no default is
@@ -270,14 +285,23 @@
 #log_file=<None>
 
 # (Optional) The base directory used for relative --log-file
-# paths (string value)
+# paths. (string value)
 # Deprecated group/name - [DEFAULT]/logdir
 #log_dir=<None>
 
-# Use syslog for logging. (boolean value)
+# Use syslog for logging. Existing syslog format is DEPRECATED
+# during I, and will chang in J to honor RFC5424. (boolean
+# value)
 #use_syslog=false
 
-# syslog facility to receive log lines (string value)
+# (Optional) Enables or disables syslog rfc5424 format for
+# logging. If enabled, prefixes the MSG part of the syslog
+# message with APP-NAME (RFC5424). The format without the APP-
+# NAME is deprecated in I, and will be removed in J. (boolean
+# value)
+#use_syslog_rfc_format=false
+
+# Syslog facility to receive log lines. (string value)
 #syslog_log_facility=LOG_USER
 
 
@@ -318,11 +342,11 @@
 # Options defined in heat.openstack.common.policy
 #
 
-# JSON file containing policy (string value)
+# The JSON file that defines policies. (string value)
 #policy_file=policy.json
 
-# Rule enforced when requested rule is not found (string
-# value)
+# Default rule. Enforced when a requested rule is not found.
+# (string value)
 #policy_default_rule=default
 
 
@@ -376,9 +400,9 @@
 # Options defined in heat.openstack.common.rpc.impl_kombu
 #
 
-# SSL version to use (valid only if SSL enabled). valid values
-# are TLSv1, SSLv23 and SSLv3. SSLv2 may be available on some
-# distributions (string value)
+# If SSL is enabled, the SSL version to use. Valid values are
+# TLSv1, SSLv23 and SSLv3. SSLv2 might be available on some
+# distributions. (string value)
 #kombu_ssl_version=
 
 # SSL key file (valid only if SSL enabled) (string value)
@@ -402,33 +426,32 @@
 # RabbitMQ HA cluster host:port pairs (list value)
 #rabbit_hosts=$rabbit_host:$rabbit_port
 
-# connect over SSL for RabbitMQ (boolean value)
+# Connect over SSL for RabbitMQ (boolean value)
 #rabbit_use_ssl=false
 
-# the RabbitMQ userid (string value)
+# The RabbitMQ userid (string value)
 #rabbit_userid=guest
 
-# the RabbitMQ password (string value)
+# The RabbitMQ password (string value)
 #rabbit_password=guest
 
-# the RabbitMQ virtual host (string value)
+# The RabbitMQ virtual host (string value)
 #rabbit_virtual_host=/
 
-# how frequently to retry connecting with RabbitMQ (integer
+# How frequently to retry connecting with RabbitMQ (integer
 # value)
 #rabbit_retry_interval=1
 
-# how long to backoff for between retries when connecting to
+# How long to backoff for between retries when connecting to
 # RabbitMQ (integer value)
 #rabbit_retry_backoff=2
 
-# maximum retries with trying to connect to RabbitMQ (the
-# default of 0 implies an infinite retry count) (integer
-# value)
+# Maximum number of RabbitMQ connection retries. Default is 0
+# (infinite retry count) (integer value)
 #rabbit_max_retries=0
 
-# use H/A queues in RabbitMQ (x-ha-policy: all).You need to
-# wipe RabbitMQ database when changing this option. (boolean
+# Use HA queues in RabbitMQ (x-ha-policy: all). If you change
+# this option, you must wipe the RabbitMQ database. (boolean
 # value)
 #rabbit_ha_queues=false
 
@@ -613,6 +636,33 @@
 #insecure=false
 
 
+[clients_glance]
+
+#
+# Options defined in heat.common.config
+#
+
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
+# Optional CA cert file to use in SSL connections. (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file. (string
+# value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key.
+# (string value)
+#key_file=<None>
+
+# If set, then the server's certificate will not be verified.
+# (boolean value)
+#insecure=false
+
+
 [clients_heat]
 
 #
@@ -638,6 +688,11 @@
 # If set, then the server's certificate will not be verified.
 # (boolean value)
 #insecure=false
+
+
+#
+# Options defined in heat.common.config
+#
 
 # Optional heat url in format like
 # http://0.0.0.0:8004/v1/%(tenant_id)s. (string value)
@@ -672,33 +727,6 @@
 
 
 [clients_neutron]
-
-#
-# Options defined in heat.common.config
-#
-
-# Type of endpoint in Identity service catalog to use for
-# communication with the OpenStack service. (string value)
-#endpoint_type=publicURL
-
-# Optional CA cert file to use in SSL connections. (string
-# value)
-#ca_file=<None>
-
-# Optional PEM-formatted certificate chain file. (string
-# value)
-#cert_file=<None>
-
-# Optional PEM-formatted file that contains the private key.
-# (string value)
-#key_file=<None>
-
-# If set, then the server's certificate will not be verified.
-# (boolean value)
-#insecure=false
-
-
-[clients_glance]
 
 #
 # Options defined in heat.common.config
@@ -1037,23 +1065,29 @@
 # Options defined in keystoneclient.middleware.auth_token
 #
 
-# Prefix to prepend at the beginning of the path (string
-# value)
+# Prefix to prepend at the beginning of the path. Deprecated,
+# use identity_uri. (string value)
 #auth_admin_prefix=
 
-# Host providing the admin Identity API endpoint (string
-# value)
+# Host providing the admin Identity API endpoint. Deprecated,
+# use identity_uri. (string value)
 #auth_host=127.0.0.1
 
-# Port of the admin Identity API endpoint (integer value)
+# Port of the admin Identity API endpoint. Deprecated, use
+# identity_uri. (integer value)
 #auth_port=35357
 
-# Protocol of the admin Identity API endpoint(http or https)
-# (string value)
+# Protocol of the admin Identity API endpoint (http or https).
+# Deprecated, use identity_uri. (string value)
 #auth_protocol=https
 
 # Complete public Identity API endpoint (string value)
 #auth_uri=<None>
+
+# Complete admin Identity API endpoint. This should specify
+# the unversioned root endpoint e.g. https://localhost:35357/
+# (string value)
+#identity_uri=<None>
 
 # API version of the admin Identity API endpoint (string
 # value)
@@ -1072,9 +1106,12 @@
 # with Identity API Server. (integer value)
 #http_request_max_retries=3
 
-# Single shared secret with the Keystone configuration used
-# for bootstrapping a Keystone installation, or otherwise
-# bypassing the normal authentication process. (string value)
+# This option is deprecated and may be removed in a future
+# release. Single shared secret with the Keystone
+# configuration used for bootstrapping a Keystone
+# installation, or otherwise bypassing the normal
+# authentication process. This option should not be used, use
+# `admin_user` and `admin_password` instead. (string value)
 #admin_token=<None>
 
 # Keystone account username (string value)
@@ -1126,7 +1163,7 @@
 # number of revocation events combined with a low cache
 # duration may significantly reduce performance. (integer
 # value)
-#revocation_cache_time=300
+#revocation_cache_time=10
 
 # (optional) if defined, indicate whether token data should be
 # authenticated or authenticated and encrypted. Acceptable
@@ -1158,6 +1195,23 @@
 # binding method that must be present in tokens. (string
 # value)
 #enforce_token_bind=permissive
+
+# If true, the revocation list will be checked for cached
+# tokens. This requires that PKI tokens are configured on the
+# Keystone server. (boolean value)
+#check_revocations_for_cached=false
+
+# Hash algorithms to use for hashing PKI tokens. This may be a
+# single algorithm or multiple. The algorithms are those
+# supported by Python standard hashlib.new(). The hashes will
+# be tried in the order given, so put the preferred one first
+# for performance. The result of the first hash will be stored
+# in the cache. This will typically be set to multiple values
+# only while migrating from a less secure algorithm to a more
+# secure one. Once all the old tokens are expired this option
+# should be set to a single value for better performance.
+# (list value)
+#hash_algorithms=md5
 
 
 [matchmaker_redis]
@@ -1221,24 +1275,5 @@
 
 # AMQP topic(s) used for OpenStack notifications (list value)
 #topics=notifications
-
-
-[ssl]
-
-#
-# Options defined in heat.openstack.common.sslutils
-#
-
-# CA certificate file to use to verify connecting clients
-# (string value)
-#ca_file=<None>
-
-# Certificate file to use when starting the server securely
-# (string value)
-#cert_file=<None>
-
-# Private key file to use when starting the server securely
-# (string value)
-#key_file=<None>
 
 
