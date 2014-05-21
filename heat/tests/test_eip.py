@@ -18,7 +18,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import parser
-from heat.engine import resource
 from heat.engine.resources import eip
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -195,9 +194,6 @@ class EIPTest(HeatTestCase):
             self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
 
             self.assertEqual('1', rsrc.FnGetAtt('AllocationId'))
-
-            self.assertRaises(resource.UpdateReplace,
-                              rsrc.handle_update, {}, {}, {})
 
             self.assertRaises(exception.InvalidTemplateAttribute,
                               rsrc.FnGetAtt, 'Foo')
@@ -488,9 +484,6 @@ class AllocTest(HeatTestCase):
             self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
 
             self.assertEqual('1', rsrc.FnGetAtt('AllocationId'))
-
-            self.assertRaises(resource.UpdateReplace,
-                              rsrc.handle_update, {}, {}, {})
 
             self.assertRaises(exception.InvalidTemplateAttribute,
                               rsrc.FnGetAtt, 'Foo')

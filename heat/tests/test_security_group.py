@@ -22,7 +22,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import parser
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.fakes import FakeKeystoneClient
@@ -258,7 +257,6 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, utils.PhysName('test_stack', 'the_sg'))
 
@@ -445,7 +443,6 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, utils.PhysName('test_stack', 'the_sg'))
 
@@ -705,7 +702,6 @@ Resources:
         stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'aaaa')
 
@@ -881,7 +877,6 @@ Resources:
         stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'aaaa')
 

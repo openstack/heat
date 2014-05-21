@@ -20,7 +20,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.neutron import net
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron.neutron import NeutronResource as qr
@@ -1862,8 +1861,6 @@ class NeutronFloatingIPTest(HeatTestCase):
                           fip.FnGetAtt, 'Foo')
 
         self.assertEqual(u'abcd1234', fip.FnGetAtt('floating_network_id'))
-        self.assertRaises(resource.UpdateReplace,
-                          fip.handle_update, {}, {}, {})
         scheduler.TaskRunner(fip.delete)()
         fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
         scheduler.TaskRunner(fip.delete)()
@@ -2078,8 +2075,6 @@ class NeutronFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         port_id = p.FnGetRefId()
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
-        self.assertRaises(resource.UpdateReplace,
-                          fipa.handle_update, {}, {}, {})
 
         scheduler.TaskRunner(fipa.delete)()
         scheduler.TaskRunner(p.delete)()

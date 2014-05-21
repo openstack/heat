@@ -439,9 +439,6 @@ class WaitConditionHandleTest(HeatTestCase):
             'fHyt3XFnHq8%2FSwYaVcHdJka1hz6jdK5mHtgbo8OOKbQ%3D'])
 
         self.assertEqual(unicode(expected_url), rsrc.FnGetRefId())
-
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
         self.m.VerifyAll()
 
     def test_metadata_update(self):

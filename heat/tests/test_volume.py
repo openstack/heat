@@ -21,7 +21,6 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import resource
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
@@ -162,9 +161,6 @@ class VolumeTest(HeatTestCase):
 
         rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
-
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
 
         fv.status = 'in-use'
         self.assertRaises(exception.ResourceFailure,
