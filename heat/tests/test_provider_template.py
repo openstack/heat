@@ -14,6 +14,7 @@
 import json
 import os
 import uuid
+import yaml
 
 from heat.common import exception
 from heat.common import template_format
@@ -729,4 +730,80 @@ Outputs:
                              stack.output('identifier'))
             self.assertNotEqual(initial_val,
                                 stack.output('value'))
+        self.m.VerifyAll()
+
+
+class ProviderTemplateAdoptTest(HeatTestCase):
+    main_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: the.yaml
+    Properties:
+      one: my_name
+
+Outputs:
+  identifier:
+    Value: {Ref: the_nested}
+  value:
+    Value: {'Fn::GetAtt': [the_nested, the_str]}
+'''
+
+    nested_tmpl = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Default: foo
+    Type: String
+Resources:
+  RealRandom:
+    Type: OS::Heat::RandomString
+    Properties:
+      salt: {Ref: one}
+Outputs:
+  the_str:
+    Value: {'Fn::GetAtt': [RealRandom, value]}
+'''
+
+    def setUp(self):
+        super(ProviderTemplateAdoptTest, self).setUp()
+        self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+
+    def _yaml_to_json(self, yaml_templ):
+        return yaml.load(yaml_templ)
+
+    def test_abandon(self):
+        t = template_format.parse(self.main_template)
+        tmpl = parser.Template(t, files={'the.yaml': self.nested_tmpl})
+        stack = parser.Stack(self.ctx, utils.random_name(), tmpl)
+        stack.store()
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+        info = stack.prepare_abandon()
+        self.assertEqual(self._yaml_to_json(self.main_template),
+                         info['template'])
+        self.assertEqual(self._yaml_to_json(self.nested_tmpl),
+                         info['resources']['the_nested']['template'])
+        self.m.VerifyAll()
+
+    def test_adopt(self):
+        data = {'resources': {u'the_nested': {
+            'resources': {u'RealRandom': {
+                'resource_data': {
+                    u'value': u'N8hE5C7ijdGn4RwnuygbAokGHnTq4cFJ'},
+                'resource_id': 'N8hE5C7ijdGn4RwnuygbAokGHnTq4cFJ'}}}}}
+
+        t = template_format.parse(self.main_template)
+        tmpl = parser.Template(t, files={'the.yaml': self.nested_tmpl})
+        stack = parser.Stack(self.ctx, utils.random_name(), tmpl,
+                             adopt_stack_data=data)
+        self.stack = stack
+        stack.store()
+        stack.adopt()
+
+        self.assertEqual(('ADOPT', 'COMPLETE'), stack.state)
+        nested_res = data['resources']['the_nested']['resources']
+        self.assertEqual(nested_res['RealRandom']['resource_data']['value'],
+                         stack.output('value'))
+
         self.m.VerifyAll()
