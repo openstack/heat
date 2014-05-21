@@ -73,6 +73,20 @@ class ResourceWithProps(GenericResource):
     properties_schema = {'Foo': {'Type': 'String'}}
 
 
+class ResourceWithResourceID(GenericResource):
+    properties_schema = {'ID': {'Type': 'String'}}
+
+    def handle_create(self):
+        super(ResourceWithResourceID, self).handle_create()
+        self.resource_id_set(self.properties.get('ID'))
+
+    def handle_delete(self):
+        self.mox_resource_id(self.resource_id)
+
+    def mox_resource_id(self, resource_id):
+        pass
+
+
 class ResourceWithComplexAttributes(GenericResource):
     attributes_schema = {'list': 'A list',
                          'flat_dict': 'A flat dictionary',
