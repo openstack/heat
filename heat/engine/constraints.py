@@ -20,6 +20,7 @@ import six
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import resources
+from heat.openstack.common import strutils
 
 
 class InvalidSchemaError(exception.Error):
@@ -161,10 +162,37 @@ class Schema(collections.Mapping):
         except ValueError:
             return float(value)
 
+    def to_schema_type(self, value):
+        """Returns the value in the schema's data type."""
+        try:
+            # We have to be backwards-compatible for Integer and Number
+            # Schema types and try to convert string representations of
+            # number into "real" number types, therefore calling
+            # str_to_num below.
+            if self.type == self.INTEGER:
+                num = Schema.str_to_num(value)
+                if isinstance(num, float):
+                    raise ValueError(_('%s is not an integer.') % num)
+                return num
+            elif self.type == self.NUMBER:
+                return Schema.str_to_num(value)
+            elif self.type == self.STRING:
+                if value and not isinstance(value, basestring):
+                    raise ValueError()
+                return str(value)
+            elif self.type == self.BOOLEAN:
+                return strutils.bool_from_string(str(value), strict=True)
+        except ValueError:
+            raise ValueError(_('Value "%(val)s" is invalid for data type '
+                               '"%(type)s".')
+                             % {'val': value, 'type': self.type})
+
+        return value
+
     def validate_constraints(self, value, context=None):
         try:
             for constraint in self.constraints:
-                constraint.validate(value, context)
+                constraint.validate(value, self, context)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
 
@@ -250,8 +278,8 @@ class Constraint(collections.Mapping):
 
         return '\n'.join(desc())
 
-    def validate(self, value, context=None):
-        if not self._is_valid(value, context):
+    def validate(self, value, schema=None, context=None):
+        if not self._is_valid(value, schema, context):
             if self.description:
                 err_msg = self.description
             else:
@@ -328,7 +356,7 @@ class Range(Constraint):
                                                           self.min,
                                                           self.max)
 
-    def _is_valid(self, value, context):
+    def _is_valid(self, value, schema, context):
         value = Schema.str_to_num(value)
 
         if self.min is not None:
@@ -392,8 +420,8 @@ class Length(Range):
                                                                    self.min,
                                                                    self.max)
 
-    def _is_valid(self, value, context):
-        return super(Length, self)._is_valid(len(value), context)
+    def _is_valid(self, value, schema, context):
+        return super(Length, self)._is_valid(len(value), schema, context)
 
 
 class AllowedValues(Constraint):
@@ -426,11 +454,15 @@ class AllowedValues(Constraint):
         allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
         return '"%s" is not an allowed value %s' % (value, allowed)
 
-    def _is_valid(self, value, context):
+    def _is_valid(self, value, schema, context):
         # For list values, check if all elements of the list are contained
         # in allowed list.
         if isinstance(value, list):
             return all(v in self.allowed for v in value)
+
+        if schema is not None:
+            _allowed = tuple(schema.to_schema_type(v) for v in self.allowed)
+            return schema.to_schema_type(value) in _allowed
 
         return value in self.allowed
 
@@ -465,7 +497,7 @@ class AllowedPattern(Constraint):
     def _err_msg(self, value):
         return '"%s" does not match pattern "%s"' % (value, self.pattern)
 
-    def _is_valid(self, value, context):
+    def _is_valid(self, value, schema, context):
         match = self.match(value)
         return match is not None and match.end() == len(value)
 
@@ -518,7 +550,7 @@ class CustomConstraint(Constraint):
         return _('"%(value)s" does not validate %(name)s') % {
             "value": value, "name": self.name}
 
-    def _is_valid(self, value, context):
+    def _is_valid(self, value, schema, context):
         constraint = self.custom_constraint
         if not constraint:
             return False

@@ -773,6 +773,36 @@ resources:
     type: OS::Nova::Server
 '''
 
+test_template_allowed_integers = '''
+heat_template_version: 2013-05-23
+
+parameters:
+  size:
+    type: number
+    constraints:
+      - allowed_values: [1, 4, 8]
+resources:
+  my_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: size }
+'''
+
+test_template_allowed_integers_str = '''
+heat_template_version: 2013-05-23
+
+parameters:
+  size:
+    type: number
+    constraints:
+      - allowed_values: ['1', '4', '8']
+resources:
+  my_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: size }
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -1322,3 +1352,63 @@ class validateTest(HeatTestCase):
 
         self.assertEqual(_('Parameters must be provided for each Parameter '
                          'Group.'), str(exc))
+
+    def test_validate_allowed_values_integer(self):
+        t = template_format.parse(test_template_allowed_integers)
+        template = parser.Template(t)
+
+        # test with size parameter provided as string
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': '4'}))
+        self.assertIsNone(stack.validate())
+
+        # test with size parameter provided as number
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': 4}))
+        self.assertIsNone(stack.validate())
+
+    def test_validate_allowed_values_integer_str(self):
+        t = template_format.parse(test_template_allowed_integers_str)
+        template = parser.Template(t)
+
+        # test with size parameter provided as string
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': '4'}))
+        self.assertIsNone(stack.validate())
+
+        # test with size parameter provided as number
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': 4}))
+        self.assertIsNone(stack.validate())
+
+    def test_validate_not_allowed_values_integer(self):
+        t = template_format.parse(test_template_allowed_integers)
+        template = parser.Template(t)
+
+        # test with size parameter provided as string
+        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
+                                self.ctx, 'test_stack', template,
+                                environment.Environment({'size': '3'}))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+
+        # test with size parameter provided as number
+        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
+                                self.ctx, 'test_stack', template,
+                                environment.Environment({'size': 3}))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+
+    def test_validate_not_allowed_values_integer_str(self):
+        t = template_format.parse(test_template_allowed_integers_str)
+        template = parser.Template(t)
+
+        # test with size parameter provided as string
+        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
+                                self.ctx, 'test_stack', template,
+                                environment.Environment({'size': '3'}))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+
+        # test with size parameter provided as number
+        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
+                                self.ctx, 'test_stack', template,
+                                environment.Environment({'size': 3}))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
