@@ -95,6 +95,10 @@ then
     source "$RC_FILE"
 fi
 
+for filename in ${HEAT_CONFIG_GENERATOR_EXCLUDED_FILES}; do
+    FILES="${FILES[@]/$filename/}"
+done
+
 for mod in ${HEAT_CONFIG_GENERATOR_EXTRA_MODULES}; do
     MODULES="$MODULES -m $mod"
 done

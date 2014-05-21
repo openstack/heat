@@ -28,19 +28,19 @@ LOG = logging.getLogger(__name__)
 
 
 class LoopingCallDone(Exception):
-    """Exception to break out and stop a LoopingCall.
+    """Exception to break out and stop a LoopingCallBase.
 
-    The poll-function passed to LoopingCall can raise this exception to
+    The poll-function passed to LoopingCallBase can raise this exception to
     break out of the loop normally. This is somewhat analogous to
     StopIteration.
 
     An optional return-value can be included as the argument to the exception;
-    this return-value will be returned by LoopingCall.wait()
+    this return-value will be returned by LoopingCallBase.wait()
 
     """
 
     def __init__(self, retvalue=True):
-        """:param retvalue: Value that LoopingCall.wait() should return."""
+        """:param retvalue: Value that LoopingCallBase.wait() should return."""
         self.retvalue = retvalue
 
 
@@ -96,11 +96,6 @@ class FixedIntervalLoopingCall(LoopingCallBase):
 
         greenthread.spawn_n(_inner)
         return self.done
-
-
-# TODO(mikal): this class name is deprecated in Havana and should be removed
-# in the I release
-LoopingCall = FixedIntervalLoopingCall
 
 
 class DynamicLoopingCall(LoopingCallBase):
