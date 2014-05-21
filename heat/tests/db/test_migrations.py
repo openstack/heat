@@ -36,7 +36,7 @@ from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
 from heat.openstack.common.db.sqlalchemy import test_migrations
 from heat.openstack.common import log as logging
-
+from heat.tests import common
 
 LOG = logging.getLogger(__name__)
 
@@ -53,7 +53,8 @@ def get_table(engine, name):
 
 
 class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
-                         test_migrations.WalkVersionsMixin):
+                         test_migrations.WalkVersionsMixin,
+                         common.FakeLogMixin):
     """Test sqlalchemy-migrate migrations."""
 
     def __init__(self, *args, **kwargs):
@@ -74,6 +75,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         os.environ["HEAT_LOCK_PATH"] = lock_dir
 
         super(TestHeatMigrations, self).setUp()
+        self.setup_logging()
 
         def clean_lock_dir():
             shutil.rmtree(lock_dir, ignore_errors=True)
