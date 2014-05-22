@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -60,14 +61,28 @@ class Firewall(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': _('Name for the firewall.'),
-        'description': _('Description of the firewall.'),
-        'admin_state_up': _('The administrative state of the firewall.'),
-        'firewall_policy_id': _('Unique identifier of the firewall policy '
-                                'used to create the firewall.'),
-        'status': _('The status of the firewall.'),
-        'tenant_id': _('Id of the tenant owning the firewall.'),
-        'show': _('All attributes.'),
+        'name': attributes.Schema(
+            _('Name for the firewall.')
+        ),
+        'description': attributes.Schema(
+            _('Description of the firewall.')
+        ),
+        'admin_state_up': attributes.Schema(
+            _('The administrative state of the firewall.')
+        ),
+        'firewall_policy_id': attributes.Schema(
+            _('Unique identifier of the firewall policy used to create '
+              'the firewall.')
+        ),
+        'status': attributes.Schema(
+            _('The status of the firewall.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Id of the tenant owning the firewall.')
+        ),
+        'show': attributes.Schema(
+            _('All attributes.')
+        ),
     }
 
     def _show_resource(self):
@@ -143,12 +158,24 @@ class FirewallPolicy(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': _('Name for the firewall policy.'),
-        'description': _('Description of the firewall policy.'),
-        'firewall_rules': _('List of firewall rules in this firewall policy.'),
-        'shared': _('Shared status of this firewall policy.'),
-        'audited': _('Audit status of this firewall policy.'),
-        'tenant_id': _('Id of the tenant owning the firewall policy.')
+        'name': attributes.Schema(
+            _('Name for the firewall policy.')
+        ),
+        'description': attributes.Schema(
+            _('Description of the firewall policy.')
+        ),
+        'firewall_rules': attributes.Schema(
+            _('List of firewall rules in this firewall policy.')
+        ),
+        'shared': attributes.Schema(
+            _('Shared status of this firewall policy.')
+        ),
+        'audited': attributes.Schema(
+            _('Audit status of this firewall policy.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Id of the tenant owning the firewall policy.')
+        ),
     }
 
     def _show_resource(self):
@@ -265,24 +292,49 @@ class FirewallRule(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': _('Name for the firewall rule.'),
-        'description': _('Description of the firewall rule.'),
-        'firewall_policy_id': _('Unique identifier of the firewall policy to '
-                                'which this firewall rule belongs.'),
-        'shared': _('Shared status of this firewall rule.'),
-        'protocol': _('Protocol value for this firewall rule.'),
-        'ip_version': _('Ip_version for this firewall rule.'),
-        'source_ip_address': _('Source ip_address for this firewall rule.'),
-        'destination_ip_address': _('Destination ip_address for this '
-                                    'firewall rule.'),
-        'source_port': _('Source port range for this firewall rule.'),
-        'destination_port': _('Destination port range for this firewall '
-                              'rule.'),
-        'action': _('Allow or deny action for this firewall rule.'),
-        'enabled': _('Indicates whether this firewall rule is enabled or '
-                     'not.'),
-        'position': _('Position of the rule within the firewall policy.'),
-        'tenant_id': _('Id of the tenant owning the firewall.')
+        'name': attributes.Schema(
+            _('Name for the firewall rule.')
+        ),
+        'description': attributes.Schema(
+            _('Description of the firewall rule.')
+        ),
+        'firewall_policy_id': attributes.Schema(
+            _('Unique identifier of the firewall policy to which this '
+              'firewall rule belongs.')
+        ),
+        'shared': attributes.Schema(
+            _('Shared status of this firewall rule.')
+        ),
+        'protocol': attributes.Schema(
+            _('Protocol value for this firewall rule.')
+        ),
+        'ip_version': attributes.Schema(
+            _('Ip_version for this firewall rule.')
+        ),
+        'source_ip_address': attributes.Schema(
+            _('Source ip_address for this firewall rule.')
+        ),
+        'destination_ip_address': attributes.Schema(
+            _('Destination ip_address for this firewall rule.')
+        ),
+        'source_port': attributes.Schema(
+            _('Source port range for this firewall rule.')
+        ),
+        'destination_port': attributes.Schema(
+            _('Destination port range for this firewall rule.')
+        ),
+        'action': attributes.Schema(
+            _('Allow or deny action for this firewall rule.')
+        ),
+        'enabled': attributes.Schema(
+            _('Indicates whether this firewall rule is enabled or not.')
+        ),
+        'position': attributes.Schema(
+            _('Position of the rule within the firewall policy.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('Id of the tenant owning the firewall.')
+        ),
     }
 
     def _show_resource(self):

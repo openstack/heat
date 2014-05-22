@@ -15,6 +15,7 @@ import json
 
 from heat.common import exception
 from heat.common import identifier
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
@@ -178,8 +179,10 @@ class WaitCondition(resource.Resource):
     }
 
     attributes_schema = {
-        'Data': _('JSON serialized dict containing data associated with wait '
-                  'condition signals sent to the handle.'),
+        'Data': attributes.Schema(
+            _('JSON serialized dict containing data associated with wait '
+              'condition signals sent to the handle.')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

@@ -14,6 +14,7 @@
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -62,8 +63,12 @@ class KeyPair(resource.Resource):
     }
 
     attributes_schema = {
-        'public_key': _('The public key.'),
-        'private_key': _('The private key if it has been saved.')
+        'public_key': attributes.Schema(
+            _('The public key.')
+        ),
+        'private_key': attributes.Schema(
+            _('The private key if it has been saved.')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

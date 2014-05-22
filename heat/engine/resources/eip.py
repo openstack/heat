@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -47,9 +48,11 @@ class ElasticIp(resource.Resource):
     }
 
     attributes_schema = {
-        'AllocationId': _('ID that AWS assigns to represent the allocation of'
-                          ' the address for use with Amazon VPC. Returned only'
-                          ' for VPC elastic IP addresses.')
+        'AllocationId': attributes.Schema(
+            _('ID that AWS assigns to represent the allocation of the address '
+              'for use with Amazon VPC. Returned only for VPC elastic IP '
+              'addresses.')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):

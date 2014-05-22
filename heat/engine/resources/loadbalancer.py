@@ -16,6 +16,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import nova_utils
@@ -341,18 +342,24 @@ class LoadBalancer(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "CanonicalHostedZoneName": _("The name of the hosted zone that is "
-                                     "associated with the LoadBalancer."),
-        "CanonicalHostedZoneNameID": _("The ID of the hosted zone name "
-                                       "that is associated with the "
-                                       "LoadBalancer."),
-        "DNSName": _("The DNS name for the LoadBalancer."),
-        "SourceSecurityGroup.GroupName": _("The security group that you can "
-                                           "use as part of your inbound "
-                                           "rules for your LoadBalancer's "
-                                           "back-end instances."),
-        "SourceSecurityGroup.OwnerAlias": _("Owner of the source "
-                                            "security group.")
+        "CanonicalHostedZoneName": attributes.Schema(
+            _("The name of the hosted zone that is associated with the "
+              "LoadBalancer.")
+        ),
+        "CanonicalHostedZoneNameID": attributes.Schema(
+            _("The ID of the hosted zone name that is associated with the "
+              "LoadBalancer.")
+        ),
+        "DNSName": attributes.Schema(
+            _("The DNS name for the LoadBalancer.")
+        ),
+        "SourceSecurityGroup.GroupName": attributes.Schema(
+            _("The security group that you can use as part of your inbound "
+              "rules for your LoadBalancer's back-end instances.")
+        ),
+        "SourceSecurityGroup.OwnerAlias": attributes.Schema(
+            _("Owner of the source security group.")
+        ),
     }
 
     def _haproxy_config(self, templ, instances):

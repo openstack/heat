@@ -19,6 +19,7 @@ import six
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -51,8 +52,9 @@ class Restarter(signal_responder.SignalResponder):
     }
 
     attributes_schema = {
-        "AlarmUrl": _("A signed url to handle the alarm "
-                      "(Heat extension).")
+        "AlarmUrl": attributes.Schema(
+            _("A signed url to handle the alarm (Heat extension).")
+        ),
     }
 
     def _find_resource(self, resource_id):
@@ -296,17 +298,24 @@ class Instance(resource.Resource):
         ),
     }
 
-    attributes_schema = {'AvailabilityZone': _('The Availability Zone where '
-                                               'the specified instance is '
-                                               'launched.'),
-                         'PrivateDnsName': _('Private DNS name of the'
-                                             ' specified instance.'),
-                         'PublicDnsName': _('Public DNS name of the specified '
-                                            'instance.'),
-                         'PrivateIp': _('Private IP address of the specified '
-                                        'instance.'),
-                         'PublicIp': _('Public IP address of the specified '
-                                       'instance.')}
+    attributes_schema = {
+        'AvailabilityZone': attributes.Schema(
+            _('The Availability Zone where the specified instance is '
+              'launched.')
+        ),
+        'PrivateDnsName': attributes.Schema(
+            _('Private DNS name of the specified instance.')
+        ),
+        'PublicDnsName': attributes.Schema(
+            _('Public DNS name of the specified instance.')
+        ),
+        'PrivateIp': attributes.Schema(
+            _('Private IP address of the specified instance.')
+        ),
+        'PublicIp': attributes.Schema(
+            _('Public IP address of the specified instance.')
+        ),
+    }
 
     # Server host name limit to 53 characters by due to typical default
     # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name

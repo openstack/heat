@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -76,12 +77,24 @@ class Net(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "status": _("The status of the network."),
-        "name": _("The name of the network."),
-        "subnets": _("Subnets of this network."),
-        "admin_state_up": _("The administrative status of the network."),
-        "tenant_id": _("The tenant owning this network."),
-        "show": _("All attributes."),
+        "status": attributes.Schema(
+            _("The status of the network.")
+        ),
+        "name": attributes.Schema(
+            _("The name of the network.")
+        ),
+        "subnets": attributes.Schema(
+            _("Subnets of this network.")
+        ),
+        "admin_state_up": attributes.Schema(
+            _("The administrative status of the network.")
+        ),
+        "tenant_id": attributes.Schema(
+            _("The tenant owning this network.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     def handle_create(self):

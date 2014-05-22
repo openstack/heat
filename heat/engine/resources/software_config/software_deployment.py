@@ -19,6 +19,7 @@ import uuid
 import heatclient.exc as heat_exp
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
@@ -149,10 +150,15 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     }
 
     attributes_schema = {
-        STDOUT: _("Captured stdout from the configuration execution."),
-        STDERR: _("Captured stderr from the configuration execution."),
-        STATUS_CODE: _("Returned status code from the configuration "
-                       "execution"),
+        STDOUT: attributes.Schema(
+            _("Captured stdout from the configuration execution.")
+        ),
+        STDERR: attributes.Schema(
+            _("Captured stderr from the configuration execution.")
+        ),
+        STATUS_CODE: attributes.Schema(
+            _("Returned status code from the configuration execution")
+        ),
     }
 
     def _signal_transport_cfn(self):

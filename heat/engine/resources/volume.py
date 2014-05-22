@@ -14,6 +14,7 @@
 import json
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -482,20 +483,39 @@ class CinderVolume(Volume):
     }
 
     attributes_schema = {
-        'availability_zone': _('The availability zone in which the volume is '
-                               ' located.'),
-        'size': _('The size of the volume in GB.'),
-        'snapshot_id': _('The snapshot the volume was created from, if any.'),
-        'display_name': _('Name of the volume.'),
-        'display_description': _('Description of the volume.'),
-        'volume_type': _('The type of the volume mapping to a backend, if '
-                         'any.'),
-        'metadata': _('Key/value pairs associated with the volume.'),
-        'source_volid': _('The volume used as source, if any.'),
-        'status': _('The current status of the volume.'),
-        'created_at': _('The timestamp indicating volume creation.'),
-        'bootable': _('Boolean indicating if the volume can be booted or '
-                      'not.'),
+        'availability_zone': attributes.Schema(
+            _('The availability zone in which the volume is located.')
+        ),
+        'size': attributes.Schema(
+            _('The size of the volume in GB.')
+        ),
+        'snapshot_id': attributes.Schema(
+            _('The snapshot the volume was created from, if any.')
+        ),
+        'display_name': attributes.Schema(
+            _('Name of the volume.')
+        ),
+        'display_description': attributes.Schema(
+            _('Description of the volume.')
+        ),
+        'volume_type': attributes.Schema(
+            _('The type of the volume mapping to a backend, if any.')
+        ),
+        'metadata': attributes.Schema(
+            _('Key/value pairs associated with the volume.')
+        ),
+        'source_volid': attributes.Schema(
+            _('The volume used as source, if any.')
+        ),
+        'status': attributes.Schema(
+            _('The current status of the volume.')
+        ),
+        'created_at': attributes.Schema(
+            _('The timestamp indicating volume creation.')
+        ),
+        'bootable': attributes.Schema(
+            _('Boolean indicating if the volume can be booted or not.')
+        ),
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']

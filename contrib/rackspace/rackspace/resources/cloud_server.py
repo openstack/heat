@@ -14,6 +14,7 @@
 import copy
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server
@@ -60,9 +61,15 @@ class CloudServer(server.Server):
     attributes_schema = copy.deepcopy(server.Server.attributes_schema)
     attributes_schema.update(
         {
-            'distro': _('The Linux distribution on the server.'),
-            'privateIPv4': _('The private IPv4 address of the server.'),
-            'admin_pass': _('The administrator password for the server.'),
+            'distro': attributes.Schema(
+                _('The Linux distribution on the server.')
+            ),
+            'privateIPv4': attributes.Schema(
+                _('The private IPv4 address of the server.')
+            ),
+            'admin_pass': attributes.Schema(
+                _('The administrator password for the server.')
+            ),
         }
     )
 

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
@@ -62,16 +63,28 @@ class FloatingIP(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'router_id': _('ID of the router used as gateway, set when associated '
-                       'with a port.'),
-        'tenant_id': _('The tenant owning this floating IP.'),
-        'floating_network_id': _('ID of the network in which this IP is '
-                                 'allocated.'),
-        'fixed_ip_address': _('IP address of the associated port, if '
-                              'specified.'),
-        'floating_ip_address': _('The allocated address of this IP.'),
-        'port_id': _('ID of the port associated with this IP.'),
-        'show': _('All attributes.')
+        'router_id': attributes.Schema(
+            _('ID of the router used as gateway, set when associated with a '
+              'port.')
+        ),
+        'tenant_id': attributes.Schema(
+            _('The tenant owning this floating IP.')
+        ),
+        'floating_network_id': attributes.Schema(
+            _('ID of the network in which this IP is allocated.')
+        ),
+        'fixed_ip_address': attributes.Schema(
+            _('IP address of the associated port, if specified.')
+        ),
+        'floating_ip_address': attributes.Schema(
+            _('The allocated address of this IP.')
+        ),
+        'port_id': attributes.Schema(
+            _('ID of the port associated with this IP.')
+        ),
+        'show': attributes.Schema(
+            _('All attributes.')
+        ),
     }
 
     def add_dependencies(self, deps):

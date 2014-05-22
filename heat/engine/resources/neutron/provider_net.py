@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -61,9 +62,15 @@ class ProviderNet(net.Net):
     }
 
     attributes_schema = {
-        "status": _("The status of the network."),
-        "subnets": _("Subnets of this network."),
-        "show": _("All attributes."),
+        "status": attributes.Schema(
+            _("The status of the network.")
+        ),
+        "subnets": attributes.Schema(
+            _("Subnets of this network.")
+        ),
+        "show": attributes.Schema(
+            _("All attributes.")
+        ),
     }
 
     def validate(self):

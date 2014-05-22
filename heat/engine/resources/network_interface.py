@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
@@ -76,8 +77,11 @@ class NetworkInterface(resource.Resource):
         ),
     }
 
-    attributes_schema = {'PrivateIpAddress': _('Private IP address of the '
-                                               'network interface.')}
+    attributes_schema = {
+        'PrivateIpAddress': attributes.Schema(
+            _('Private IP address of the network interface.')
+        ),
+    }
 
     @staticmethod
     def network_id_from_subnet_id(neutronclient, subnet_id):

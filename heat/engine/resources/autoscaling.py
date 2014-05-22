@@ -19,6 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
@@ -140,8 +141,10 @@ class InstanceGroup(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "InstanceList": _("A comma-delimited list of server ip addresses. "
-                          "(Heat extension).")
+        "InstanceList": attributes.Schema(
+            _("A comma-delimited list of server ip addresses. "
+              "(Heat extension).")
+        ),
     }
     rolling_update_schema = {
         MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.NUMBER,
@@ -1002,8 +1005,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     }
 
     attributes_schema = {
-        "AlarmUrl": _("A signed url to handle the alarm. "
-                      "(Heat extension).")
+        "AlarmUrl": attributes.Schema(
+            _("A signed url to handle the alarm. (Heat extension).")
+        ),
     }
 
     def handle_create(self):
@@ -1140,7 +1144,9 @@ class AutoScalingPolicy(ScalingPolicy):
     }
 
     attributes_schema = {
-        "alarm_url": _("A signed url to handle the alarm.")
+        "alarm_url": attributes.Schema(
+            _("A signed url to handle the alarm.")
+        ),
     }
 
     def _get_adjustement_type(self):

@@ -14,6 +14,7 @@
 import heatclient.exc as heat_exp
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -140,7 +141,9 @@ class SoftwareConfig(resource.Resource):
     }
 
     attributes_schema = {
-        "config": _("The config value of the software config.")
+        "config": attributes.Schema(
+            _("The config value of the software config.")
+        ),
     }
 
     def handle_create(self):

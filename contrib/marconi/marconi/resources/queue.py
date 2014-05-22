@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
 
@@ -49,8 +50,12 @@ class MarconiQueue(resource.Resource):
     }
 
     attributes_schema = {
-        "queue_id": _("ID of the queue."),
-        "href": _("The resource href of the queue.")
+        "queue_id": attributes.Schema(
+            _("ID of the queue.")
+        ),
+        "href": attributes.Schema(
+            _("The resource href of the queue.")
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):
