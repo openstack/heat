@@ -662,7 +662,40 @@ class Stack(collections.Mapping):
                        action)
 
         backup_stack = self._backup_stack(False)
-        if backup_stack is not None:
+        if backup_stack:
+            for key, backup_resource in backup_stack.resources.items():
+                # If UpdateReplace is failed, we must restore backup_resource
+                # to existing_stack in case of it may have dependencies in
+                # these stacks. current_resource is the resource that just
+                # created and failed, so put into the backup_stack to delete
+                # anyway.
+                backup_resource_id = backup_resource.resource_id
+                current_resource = self.resources[key]
+                current_resource_id = current_resource.resource_id
+                if backup_resource_id:
+                    child_failed = False
+                    for child in self.dependencies[current_resource]:
+                        # If child resource failed to update, current_resource
+                        # should be replaced to resolve dependencies. But this
+                        # is not fundamental solution. If there are update
+                        # failer and success resources in the children, cannot
+                        # delete the stack.
+                        if (child.status == child.FAILED and child.action ==
+                                child.CREATE):
+                            child_failed = True
+                    if (current_resource.status == current_resource.FAILED or
+                            child_failed):
+                        # Stack class owns dependencies as set of resource's
+                        # objects, so we switch members of the resource that is
+                        # needed to delete it.
+                        self.resources[key].resource_id = backup_resource_id
+                        self.resources[
+                            key].properties = backup_resource.properties
+                        backup_stack.resources[
+                            key].resource_id = current_resource_id
+                        backup_stack.resources[
+                            key].properties = current_resource.properties
+
             backup_stack.delete(backup=True)
             if backup_stack.status != backup_stack.COMPLETE:
                 errs = backup_stack.status_reason
