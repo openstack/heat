@@ -862,3 +862,12 @@ class Stack(collections.Mapping):
                       'Use heat.engine.function.resolve() instead',
                       DeprecationWarning)
         return function.resolve(snippet)
+
+    def reset_resource_attributes(self):
+        # nothing is cached if no resources exist
+        if not self._resources:
+            return
+        # a change in some resource may have side-effects in the attributes
+        # of other resources, so ensure that attributes are re-calculated
+        for res in self.resources.itervalues():
+            res.attributes.reset_resolved_values()

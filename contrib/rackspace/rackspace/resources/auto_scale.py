@@ -513,10 +513,12 @@ class WebHook(resource.Resource):
 
     attributes_schema = {
         EXECUTE_URL: attributes.Schema(
-            _("The url for executing the webhook (requires auth).")
+            _("The url for executing the webhook (requires auth)."),
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         CAPABILITY_URL: attributes.Schema(
-            _("The url for executing the webhook (doesn't require auth).")
+            _("The url for executing the webhook (doesn't require auth)."),
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 

@@ -796,6 +796,8 @@ class Resource(object):
         if new_state != old_state:
             self._add_event(action, status, reason)
 
+        self.stack.reset_resource_attributes()
+
     @property
     def state(self):
         '''Returns state, tuple of action, status.'''

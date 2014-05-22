@@ -32,10 +32,20 @@ class Schema(constr.Schema):
         'description',
     )
 
+    CACHE_MODES = (
+        CACHE_LOCAL,
+        CACHE_NONE
+    ) = (
+        'cache_local',
+        'cache_none'
+    )
+
     def __init__(self, description=None,
-                 support_status=support.SupportStatus()):
+                 support_status=support.SupportStatus(),
+                 cache_mode=CACHE_LOCAL):
         self.description = description
         self.support_status = support_status
+        self.cache_mode = cache_mode
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
@@ -104,6 +114,10 @@ class Attributes(collections.Mapping):
         self._resource_name = res_name
         self._resolver = resolver
         self._attributes = Attributes._make_attributes(schema)
+        self.reset_resolved_values()
+
+    def reset_resolved_values(self):
+        self._resolved_values = {}
 
     @staticmethod
     def _make_attributes(schema):
@@ -133,7 +147,20 @@ class Attributes(collections.Mapping):
         if key not in self:
             raise KeyError(_('%(resource)s: Invalid attribute %(key)s') %
                            dict(resource=self._resource_name, key=key))
-        return self._resolver(key)
+
+        attrib = self._attributes.get(key)
+        if attrib.schema.cache_mode == Schema.CACHE_NONE:
+            return self._resolver(key)
+
+        if key in self._resolved_values:
+            return self._resolved_values[key]
+
+        value = self._resolver(key)
+        if value is not None:
+            # only store if not None, it may resolve to an actual value
+            # on subsequent calls
+            self._resolved_values[key] = value
+        return value
 
     def __len__(self):
         return len(self._attributes)

@@ -57,7 +57,8 @@ class MarconiQueue(resource.Resource):
 
     attributes_schema = {
         QUEUE_ID: attributes.Schema(
-            _("ID of the queue.")
+            _("ID of the queue."),
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         HREF: attributes.Schema(
             _("The resource href of the queue.")

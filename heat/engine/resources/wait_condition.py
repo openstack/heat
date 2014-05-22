@@ -187,7 +187,8 @@ class WaitCondition(resource.Resource):
     attributes_schema = {
         DATA: attributes.Schema(
             _('JSON serialized dict containing data associated with wait '
-              'condition signals sent to the handle.')
+              'condition signals sent to the handle.'),
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 
