@@ -1031,6 +1031,20 @@ class PropertiesTest(testtools.TestCase):
         err = self.assertRaises(ValueError, props.get, 'foo')
         self.assertEqual('foo resolution failed!', str(err))
 
+    def test_resolve_returns_none(self):
+        schema = {'foo': {'Type': 'String', "MinLength": "5"}}
+
+        def test_resolver(prop):
+            return None
+
+        props = properties.Properties(schema,
+                                      {'foo': 'get_attr: [db, value]'},
+                                      test_resolver)
+        try:
+            self.assertIsNone(props.validate())
+        except exception.StackValidationFailed:
+            self.fail("Constraints should not have been evaluated.")
+
     def test_schema_from_params(self):
         params_snippet = {
             "DBUsername": {
