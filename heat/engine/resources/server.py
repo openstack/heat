@@ -85,6 +85,14 @@ class Server(stack_user.StackUser):
         'POLL_SERVER_CFN', 'POLL_SERVER_HEAT'
     )
 
+    ATTRIBUTES = (
+        SHOW, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS, INSTANCE_NAME,
+        ACCESSIPV4, ACCESSIPV6,
+    ) = (
+        'show', 'addresses', 'networks', 'first_address', 'instance_name',
+        'accessIPv4', 'accessIPv6',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -299,17 +307,17 @@ class Server(stack_user.StackUser):
     }
 
     attributes_schema = {
-        'show': attributes.Schema(
+        SHOW: attributes.Schema(
             _('A dict of all server details as returned by the API.')
         ),
-        'addresses': attributes.Schema(
+        ADDRESSES: attributes.Schema(
             _('A dict of all network addresses with corresponding port_id.')
         ),
-        'networks': attributes.Schema(
+        NETWORKS_ATTR: attributes.Schema(
             _('A dict of assigned network addresses of the form: '
               '{"public": [ip1, ip2...], "private": [ip3, ip4]}.')
         ),
-        'first_address': attributes.Schema(
+        FIRST_ADDRESS: attributes.Schema(
             _('Convenience attribute to fetch the first assigned network '
               'address, or an empty string if nothing has been assigned at '
               'this time. Result may not be predictable if the server has '
@@ -321,14 +329,14 @@ class Server(stack_user.StackUser):
                           '[<server name>, networks, <network name>, 0]}"')
             )
         ),
-        'instance_name': attributes.Schema(
+        INSTANCE_NAME: attributes.Schema(
             _('AWS compatible instance name.')
         ),
-        'accessIPv4': attributes.Schema(
+        ACCESSIPV4: attributes.Schema(
             _('The manually assigned alternative public IPv4 address '
               'of the server.')
         ),
-        'accessIPv6': attributes.Schema(
+        ACCESSIPV6: attributes.Schema(
             _('The manually assigned alternative public IPv6 address '
               'of the server.')
         ),
@@ -607,7 +615,7 @@ class Server(stack_user.StackUser):
         return nets
 
     def _resolve_attribute(self, name):
-        if name == 'first_address':
+        if name == self.FIRST_ADDRESS:
             return nova_utils.server_to_ipaddress(
                 self.nova(), self.resource_id) or ''
         try:
@@ -616,17 +624,17 @@ class Server(stack_user.StackUser):
             logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
                         'server': self.resource_id, 'ex': ex})
             return ''
-        if name == 'addresses':
+        if name == self.ADDRESSES:
             return self._add_port_for_address(server)
-        if name == 'networks':
+        if name == self.NETWORKS_ATTR:
             return server.networks
-        if name == 'instance_name':
+        if name == self.INSTANCE_NAME:
             return server._info.get('OS-EXT-SRV-ATTR:instance_name')
-        if name == 'accessIPv4':
+        if name == self.ACCESSIPV4:
             return server.accessIPv4
-        if name == 'accessIPv6':
+        if name == self.ACCESSIPV6:
             return server.accessIPv6
-        if name == 'show':
+        if name == self.SHOW:
             return server._info
 
     def add_dependencies(self, deps):

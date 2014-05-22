@@ -32,6 +32,14 @@ class Firewall(neutron.NeutronResource):
         'name', 'description', 'admin_state_up', 'firewall_policy_id',
     )
 
+    ATTRIBUTES = (
+        NAME_ATTR, DESCRIPTION_ATTR, ADMIN_STATE_UP_ATTR,
+        FIREWALL_POLICY_ID_ATTR, STATUS, TENANT_ID, SHOW,
+    ) = (
+        'name', 'description', 'admin_state_up',
+        'firewall_policy_id', 'status', 'tenant_id', 'show',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -61,26 +69,26 @@ class Firewall(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _('Name for the firewall.')
         ),
-        'description': attributes.Schema(
+        DESCRIPTION_ATTR: attributes.Schema(
             _('Description of the firewall.')
         ),
-        'admin_state_up': attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _('The administrative state of the firewall.')
         ),
-        'firewall_policy_id': attributes.Schema(
+        FIREWALL_POLICY_ID_ATTR: attributes.Schema(
             _('Unique identifier of the firewall policy used to create '
               'the firewall.')
         ),
-        'status': attributes.Schema(
+        STATUS: attributes.Schema(
             _('The status of the firewall.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Id of the tenant owning the firewall.')
         ),
-        'show': attributes.Schema(
+        SHOW: attributes.Schema(
             _('All attributes.')
         ),
     }
@@ -122,6 +130,14 @@ class FirewallPolicy(neutron.NeutronResource):
         'name', 'description', 'shared', 'audited', 'firewall_rules',
     )
 
+    ATTRIBUTES = (
+        NAME_ATTR, DESCRIPTION_ATTR, FIREWALL_RULES_ATTR, SHARED_ATTR,
+        AUDITED_ATTR, TENANT_ID,
+    ) = (
+        'name', 'description', 'firewall_rules', 'shared',
+        'audited', 'tenant_id',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -158,22 +174,22 @@ class FirewallPolicy(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _('Name for the firewall policy.')
         ),
-        'description': attributes.Schema(
+        DESCRIPTION_ATTR: attributes.Schema(
             _('Description of the firewall policy.')
         ),
-        'firewall_rules': attributes.Schema(
+        FIREWALL_RULES_ATTR: attributes.Schema(
             _('List of firewall rules in this firewall policy.')
         ),
-        'shared': attributes.Schema(
+        SHARED_ATTR: attributes.Schema(
             _('Shared status of this firewall policy.')
         ),
-        'audited': attributes.Schema(
+        AUDITED_ATTR: attributes.Schema(
             _('Audit status of this firewall policy.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Id of the tenant owning the firewall policy.')
         ),
     }
@@ -218,6 +234,18 @@ class FirewallRule(neutron.NeutronResource):
         'name', 'description', 'shared', 'protocol', 'ip_version',
         'source_ip_address', 'destination_ip_address', 'source_port',
         'destination_port', 'action', 'enabled',
+    )
+
+    ATTRIBUTES = (
+        NAME_ATTR, DESCRIPTION_ATTR, FIREWALL_POLICY_ID, SHARED_ATTR,
+        PROTOCOL_ATTR, IP_VERSION_ATTR, SOURCE_IP_ADDRESS_ATTR,
+        DESTINATION_IP_ADDRESS_ATTR, SOURCE_PORT_ATTR, DESTINATION_PORT_ATTR,
+        ACTION_ATTR, ENABLED_ATTR, POSITION, TENANT_ID,
+    ) = (
+        'name', 'description', 'firewall_policy_id', 'shared',
+        'protocol', 'ip_version', 'source_ip_address',
+        'destination_ip_address', 'source_port', 'destination_port',
+        'action', 'enabled', 'position', 'tenant_id',
     )
 
     properties_schema = {
@@ -292,47 +320,47 @@ class FirewallRule(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'name': attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _('Name for the firewall rule.')
         ),
-        'description': attributes.Schema(
+        DESCRIPTION_ATTR: attributes.Schema(
             _('Description of the firewall rule.')
         ),
-        'firewall_policy_id': attributes.Schema(
+        FIREWALL_POLICY_ID: attributes.Schema(
             _('Unique identifier of the firewall policy to which this '
               'firewall rule belongs.')
         ),
-        'shared': attributes.Schema(
+        SHARED_ATTR: attributes.Schema(
             _('Shared status of this firewall rule.')
         ),
-        'protocol': attributes.Schema(
+        PROTOCOL_ATTR: attributes.Schema(
             _('Protocol value for this firewall rule.')
         ),
-        'ip_version': attributes.Schema(
+        IP_VERSION_ATTR: attributes.Schema(
             _('Ip_version for this firewall rule.')
         ),
-        'source_ip_address': attributes.Schema(
+        SOURCE_IP_ADDRESS_ATTR: attributes.Schema(
             _('Source ip_address for this firewall rule.')
         ),
-        'destination_ip_address': attributes.Schema(
+        DESTINATION_IP_ADDRESS_ATTR: attributes.Schema(
             _('Destination ip_address for this firewall rule.')
         ),
-        'source_port': attributes.Schema(
+        SOURCE_PORT_ATTR: attributes.Schema(
             _('Source port range for this firewall rule.')
         ),
-        'destination_port': attributes.Schema(
+        DESTINATION_PORT_ATTR: attributes.Schema(
             _('Destination port range for this firewall rule.')
         ),
-        'action': attributes.Schema(
+        ACTION_ATTR: attributes.Schema(
             _('Allow or deny action for this firewall rule.')
         ),
-        'enabled': attributes.Schema(
+        ENABLED_ATTR: attributes.Schema(
             _('Indicates whether this firewall rule is enabled or not.')
         ),
-        'position': attributes.Schema(
+        POSITION: attributes.Schema(
             _('Position of the rule within the firewall policy.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Id of the tenant owning the firewall.')
         ),
     }

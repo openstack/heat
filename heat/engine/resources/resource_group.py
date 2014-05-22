@@ -55,6 +55,12 @@ class ResourceGroup(stack_resource.StackResource):
         'type', 'properties',
     )
 
+    ATTRIBUTES = (
+        REFS,
+    ) = (
+        'refs',
+    )
+
     properties_schema = {
         COUNT: properties.Schema(
             properties.Schema.INTEGER,
@@ -86,7 +92,7 @@ class ResourceGroup(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "refs": attributes.Schema(
+        REFS: attributes.Schema(
             _("A list of resource IDs for the resources in the group")
         ),
     }
@@ -138,7 +144,7 @@ class ResourceGroup(stack_resource.StackResource):
                     resource_method = getattr(self.nested()[str(n)], func)
                     yield resource_method(*args)
 
-            method_name, method_call = (("FnGetRefId", []) if "refs" == key
+            method_name, method_call = (("FnGetRefId", []) if self.REFS == key
                                         else ("FnGetAtt", [key]))
             return [val for val in get_aggregated_attr(method_name,
                                                        *method_call)]

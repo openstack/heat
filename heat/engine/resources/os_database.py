@@ -49,6 +49,12 @@ class OSDBInstance(resource.Resource):
         'name', 'password', 'host', 'databases',
     )
 
+    ATTRIBUTES = (
+        HOSTNAME, HREF,
+    ) = (
+        'hostname', 'href',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -163,10 +169,10 @@ class OSDBInstance(resource.Resource):
     }
 
     attributes_schema = {
-        "hostname": attributes.Schema(
+        HOSTNAME: attributes.Schema(
             _("Hostname of the instance")
         ),
-        "href": attributes.Schema(
+        HREF: attributes.Schema(
             _("Api endpoint reference of the instance")
         ),
     }
@@ -326,15 +332,15 @@ class OSDBInstance(resource.Resource):
             else:
                 for link in self.dbinstance.links:
                     if link['rel'] == 'self':
-                        self._href = link['href']
+                        self._href = link[self.HREF]
                         break
 
         return self._href
 
     def _resolve_attribute(self, name):
-        if name == 'hostname':
+        if name == self.HOSTNAME:
             return self.dbinstance.hostname
-        elif name == 'href':
+        elif name == self.HREF:
             return self.href()
 
 

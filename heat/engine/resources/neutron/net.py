@@ -31,6 +31,12 @@ class Net(neutron.NeutronResource):
         'dhcp_agent_ids',
     )
 
+    ATTRIBUTES = (
+        STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR, SHOW,
+    ) = (
+        "status", "name", "subnets", "admin_state_up", "tenant_id", "show",
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -77,22 +83,22 @@ class Net(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "status": attributes.Schema(
+        STATUS: attributes.Schema(
             _("The status of the network.")
         ),
-        "name": attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _("The name of the network.")
         ),
-        "subnets": attributes.Schema(
+        SUBNETS: attributes.Schema(
             _("Subnets of this network.")
         ),
-        "admin_state_up": attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _("The administrative status of the network.")
         ),
-        "tenant_id": attributes.Schema(
+        TENANT_ID_ATTR: attributes.Schema(
             _("The tenant owning this network.")
         ),
-        "show": attributes.Schema(
+        SHOW: attributes.Schema(
             _("All attributes.")
         ),
     }

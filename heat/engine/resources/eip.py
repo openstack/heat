@@ -32,6 +32,12 @@ class ElasticIp(resource.Resource):
         'Domain', 'InstanceId',
     )
 
+    ATTRIBUTES = (
+        ALLOCATION_ID,
+    ) = (
+        'AllocationId',
+    )
+
     properties_schema = {
         DOMAIN: properties.Schema(
             properties.Schema.STRING,
@@ -48,7 +54,7 @@ class ElasticIp(resource.Resource):
     }
 
     attributes_schema = {
-        'AllocationId': attributes.Schema(
+        ALLOCATION_ID: attributes.Schema(
             _('ID that AWS assigns to represent the allocation of the address '
               'for use with Amazon VPC. Returned only for VPC elastic IP '
               'addresses.')
@@ -144,7 +150,7 @@ class ElasticIp(resource.Resource):
         return unicode(self._ipaddress())
 
     def _resolve_attribute(self, name):
-        if name == 'AllocationId':
+        if name == self.ALLOCATION_ID:
             return unicode(self.resource_id)
 
 

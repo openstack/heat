@@ -37,6 +37,12 @@ class NetworkGateway(neutron.NeutronResource):
         'name', 'devices', 'connections',
     )
 
+    ATTRIBUTES = (
+        DEFAULT, SHOW,
+    ) = (
+        'default', 'show',
+    )
+
     _DEVICES_KEYS = (
         ID, INTERFACE_NAME,
     ) = (
@@ -124,10 +130,10 @@ class NetworkGateway(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "default": attributes.Schema(
+        DEFAULT: attributes.Schema(
             _("A boolean value of default flag.")
         ),
-        "show": attributes.Schema(
+        SHOW: attributes.Schema(
             _("All attributes.")
         ),
     }

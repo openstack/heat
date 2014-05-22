@@ -39,6 +39,16 @@ class HealthMonitor(neutron.NeutronResource):
         'http_method', 'expected_codes', 'url_path',
     )
 
+    ATTRIBUTES = (
+        ADMIN_STATE_UP_ATTR, DELAY_ATTR, EXPECTED_CODES_ATTR, HTTP_METHOD_ATTR,
+        MAX_RETRIES_ATTR, TIMEOUT_ATTR, TYPE_ATTR, URL_PATH_ATTR, TENANT_ID,
+        SHOW,
+    ) = (
+        'admin_state_up', 'delay', 'expected_codes', 'http_method',
+        'max_retries', 'timeout', 'type', 'url_path', 'tenant_id',
+        'show',
+    )
+
     properties_schema = {
         DELAY: properties.Schema(
             properties.Schema.INTEGER,
@@ -96,39 +106,39 @@ class HealthMonitor(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _('The administrative state of this health monitor.')
         ),
-        'delay': attributes.Schema(
+        DELAY_ATTR: attributes.Schema(
             _('The minimum time in seconds between regular connections '
               'of the member.')
         ),
-        'expected_codes': attributes.Schema(
+        EXPECTED_CODES_ATTR: attributes.Schema(
             _('The list of HTTP status codes expected in response '
               'from the member to declare it healthy.')
         ),
-        'http_method': attributes.Schema(
+        HTTP_METHOD_ATTR: attributes.Schema(
             _('The HTTP method used for requests by the monitor of type HTTP.')
         ),
-        'max_retries': attributes.Schema(
+        MAX_RETRIES_ATTR: attributes.Schema(
             _('Number of permissible connection failures before changing '
               'the member status to INACTIVE.')
         ),
-        'timeout': attributes.Schema(
+        TIMEOUT_ATTR: attributes.Schema(
             _('Maximum number of seconds for a monitor to wait for a '
               'connection to be established before it times out.')
         ),
-        'type': attributes.Schema(
+        TYPE_ATTR: attributes.Schema(
             _('One of predefined health monitor types.')
         ),
-        'url_path': attributes.Schema(
+        URL_PATH_ATTR: attributes.Schema(
             _('The HTTP path used in the HTTP request used by the monitor '
               'to test a member health.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Tenant owning the health monitor.')
         ),
-        'show': attributes.Schema(
+        SHOW: attributes.Schema(
             _('All attributes.')
         ),
     }
@@ -186,6 +196,14 @@ class Pool(neutron.NeutronResource):
         VIP_SESSION_PERSISTENCE_TYPE, VIP_SESSION_PERSISTENCE_COOKIE_NAME,
     ) = (
         'type', 'cookie_name',
+    )
+
+    ATTRIBUTES = (
+        ADMIN_STATE_UP_ATTR, NAME_ATTR, PROTOCOL_ATTR, SUBNET_ID_ATTR,
+        LB_METHOD_ATTR, DESCRIPTION_ATTR, TENANT_ID, VIP_ATTR,
+    ) = (
+        'admin_state_up', 'name', 'protocol', 'subnet_id',
+        'lb_method', 'description', 'tenant_id', 'vip',
     )
 
     properties_schema = {
@@ -304,30 +322,30 @@ class Pool(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _('The administrative state of this pool.')
         ),
-        'name': attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _('Name of the pool.')
         ),
-        'protocol': attributes.Schema(
+        PROTOCOL_ATTR: attributes.Schema(
             _('Protocol to balance.')
         ),
-        'subnet_id': attributes.Schema(
+        SUBNET_ID_ATTR: attributes.Schema(
             _('The subnet for the port on which the members of the pool '
               'will be connected.')
         ),
-        'lb_method': attributes.Schema(
+        LB_METHOD_ATTR: attributes.Schema(
             _('The algorithm used to distribute load between the members '
               'of the pool.')
         ),
-        'description': attributes.Schema(
+        DESCRIPTION_ATTR: attributes.Schema(
             _('Description of the pool.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Tenant owning the pool.')
         ),
-        'vip': attributes.Schema(
+        VIP_ATTR: attributes.Schema(
             _('Vip associated with the pool.')
         ),
     }
@@ -433,7 +451,7 @@ class Pool(neutron.NeutronResource):
                 client.update_pool(self.resource_id, {'pool': prop_diff})
 
     def _resolve_attribute(self, name):
-        if name == 'vip':
+        if name == self.VIP_ATTR:
             return self.neutron().show_vip(self.metadata_get()['vip'])['vip']
         return super(Pool, self)._resolve_attribute(name)
 
@@ -485,6 +503,14 @@ class PoolMember(neutron.NeutronResource):
         'pool_id', 'address', 'protocol_port', 'weight', 'admin_state_up',
     )
 
+    ATTRIBUTES = (
+        ADMIN_STATE_UP_ATTR, TENANT_ID, WEIGHT_ATTR, ADDRESS_ATTR,
+        POOL_ID_ATTR, PROTOCOL_PORT_ATTR, SHOW,
+    ) = (
+        'admin_state_up', 'tenant_id', 'weight', 'address',
+        'pool_id', 'protocol_port', 'show',
+    )
+
     properties_schema = {
         POOL_ID: properties.Schema(
             properties.Schema.STRING,
@@ -522,26 +548,26 @@ class PoolMember(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        'admin_state_up': attributes.Schema(
+        ADMIN_STATE_UP_ATTR: attributes.Schema(
             _('The administrative state of this pool member.')
         ),
-        'tenant_id': attributes.Schema(
+        TENANT_ID: attributes.Schema(
             _('Tenant owning the pool member.')
         ),
-        'weight': attributes.Schema(
+        WEIGHT_ATTR: attributes.Schema(
             _('Weight of the pool member in the pool.')
         ),
-        'address': attributes.Schema(
+        ADDRESS_ATTR: attributes.Schema(
             _('IP address of the pool member.')
         ),
-        'pool_id': attributes.Schema(
+        POOL_ID_ATTR: attributes.Schema(
             _('The ID of the load balancing pool.')
         ),
-        'protocol_port': attributes.Schema(
+        PROTOCOL_PORT_ATTR: attributes.Schema(
             _('TCP port on which the pool member listens for requests or '
               'connections.')
         ),
-        'show': attributes.Schema(
+        SHOW: attributes.Schema(
             _('All attributes.')
         ),
     }

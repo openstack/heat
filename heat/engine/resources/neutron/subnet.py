@@ -46,6 +46,16 @@ class Subnet(neutron.NeutronResource):
         'destination', 'nexthop',
     )
 
+    ATTRIBUTES = (
+        NAME_ATTR, NETWORK_ID_ATTR, TENANT_ID_ATTR, ALLOCATION_POOLS_ATTR,
+        GATEWAY_IP_ATTR, HOST_ROUTES_ATTR, IP_VERSION_ATTR, CIDR_ATTR,
+        DNS_NAMESERVERS_ATTR, ENABLE_DHCP_ATTR, SHOW,
+    ) = (
+        'name', 'network_id', 'tenant_id', 'allocation_pools',
+        'gateway_ip', 'host_routes', 'ip_version', 'cidr',
+        'dns_nameservers', 'enable_dhcp', 'show',
+    )
+
     properties_schema = {
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
@@ -141,37 +151,37 @@ class Subnet(neutron.NeutronResource):
     }
 
     attributes_schema = {
-        "name": attributes.Schema(
+        NAME_ATTR: attributes.Schema(
             _("Friendly name of the subnet.")
         ),
-        "network_id": attributes.Schema(
+        NETWORK_ID_ATTR: attributes.Schema(
             _("Parent network of the subnet.")
         ),
-        "tenant_id": attributes.Schema(
+        TENANT_ID_ATTR: attributes.Schema(
             _("Tenant owning the subnet.")
         ),
-        "allocation_pools": attributes.Schema(
+        ALLOCATION_POOLS_ATTR: attributes.Schema(
             _("Ip allocation pools and their ranges.")
         ),
-        "gateway_ip": attributes.Schema(
+        GATEWAY_IP_ATTR: attributes.Schema(
             _("Ip of the subnet's gateway.")
         ),
-        "host_routes": attributes.Schema(
+        HOST_ROUTES_ATTR: attributes.Schema(
             _("Additional routes for this subnet.")
         ),
-        "ip_version": attributes.Schema(
+        IP_VERSION_ATTR: attributes.Schema(
             _("Ip version for the subnet.")
         ),
-        "cidr": attributes.Schema(
+        CIDR_ATTR: attributes.Schema(
             _("CIDR block notation for this subnet.")
         ),
-        "dns_nameservers": attributes.Schema(
+        DNS_NAMESERVERS_ATTR: attributes.Schema(
             _("List of dns nameservers.")
         ),
-        "enable_dhcp": attributes.Schema(
+        ENABLE_DHCP_ATTR: attributes.Schema(
             _("'true' if DHCP is enabled for this subnet; 'false' otherwise.")
         ),
-        "show": attributes.Schema(
+        SHOW: attributes.Schema(
             _("All attributes.")
         ),
     }

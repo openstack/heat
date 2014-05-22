@@ -482,6 +482,12 @@ class WebHook(resource.Resource):
         'policy', 'name', 'metadata',
     )
 
+    ATTRIBUTES = (
+        EXECUTE_URL, CAPABILITY_URL,
+    ) = (
+        'executeUrl', 'capabilityUrl',
+    )
+
     properties_schema = {
         POLICY: properties.Schema(
             properties.Schema.STRING,
@@ -505,10 +511,10 @@ class WebHook(resource.Resource):
     update_allowed_properties = (NAME, METADATA)
 
     attributes_schema = {
-        'executeUrl': attributes.Schema(
+        EXECUTE_URL: attributes.Schema(
             _("The url for executing the webhook (requires auth).")
         ),
-        'capabilityUrl': attributes.Schema(
+        CAPABILITY_URL: attributes.Schema(
             _("The url for executing the webhook (doesn't require auth).")
         ),
     }

@@ -150,6 +150,12 @@ class WaitCondition(resource.Resource):
         'Handle', 'Timeout', 'Count',
     )
 
+    ATTRIBUTES = (
+        DATA,
+    ) = (
+        'Data',
+    )
+
     properties_schema = {
         HANDLE: properties.Schema(
             properties.Schema.STRING,
@@ -179,7 +185,7 @@ class WaitCondition(resource.Resource):
     }
 
     attributes_schema = {
-        'Data': attributes.Schema(
+        DATA: attributes.Schema(
             _('JSON serialized dict containing data associated with wait '
               'condition signals sent to the handle.')
         ),
@@ -275,7 +281,7 @@ class WaitCondition(resource.Resource):
         res = {}
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]
-        if key == 'Data':
+        if key == self.DATA:
             meta = handle.metadata_get(refresh=True)
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])

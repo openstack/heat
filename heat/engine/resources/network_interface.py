@@ -34,6 +34,12 @@ class NetworkInterface(resource.Resource):
         'Key', 'Value',
     )
 
+    ATTRIBUTES = (
+        PRIVATE_IP_ADDRESS_ATTR,
+    ) = (
+        'PrivateIpAddress',
+    )
+
     properties_schema = {
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -78,7 +84,7 @@ class NetworkInterface(resource.Resource):
     }
 
     attributes_schema = {
-        'PrivateIpAddress': attributes.Schema(
+        PRIVATE_IP_ADDRESS: attributes.Schema(
             _('Private IP address of the network interface.')
         ),
     }
@@ -142,7 +148,7 @@ class NetworkInterface(resource.Resource):
         return self.fixed_ip_address
 
     def _resolve_attribute(self, name):
-        if name == 'PrivateIpAddress':
+        if name == self.PRIVATE_IP_ADDRESS:
             return self._get_fixed_ip_address()
 
 

@@ -424,6 +424,16 @@ class CinderVolume(Volume):
         'source_volid',
     )
 
+    ATTRIBUTES = (
+        AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME,
+        DISPLAY_DESCRIPTION, VOLUME_TYPE_ATTR, METADATA_ATTR,
+        SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE,
+    ) = (
+        'availability_zone', 'size', 'snapshot_id', 'display_name',
+        'display_description', 'volume_type', 'metadata',
+        'source_volid', 'status', 'created_at', 'bootable',
+    )
+
     properties_schema = {
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
@@ -483,37 +493,37 @@ class CinderVolume(Volume):
     }
 
     attributes_schema = {
-        'availability_zone': attributes.Schema(
+        AVAILABILITY_ZONE_ATTR: attributes.Schema(
             _('The availability zone in which the volume is located.')
         ),
-        'size': attributes.Schema(
+        SIZE_ATTR: attributes.Schema(
             _('The size of the volume in GB.')
         ),
-        'snapshot_id': attributes.Schema(
+        SNAPSHOT_ID_ATTR: attributes.Schema(
             _('The snapshot the volume was created from, if any.')
         ),
-        'display_name': attributes.Schema(
+        DISPLAY_NAME: attributes.Schema(
             _('Name of the volume.')
         ),
-        'display_description': attributes.Schema(
+        DISPLAY_DESCRIPTION: attributes.Schema(
             _('Description of the volume.')
         ),
-        'volume_type': attributes.Schema(
+        VOLUME_TYPE_ATTR: attributes.Schema(
             _('The type of the volume mapping to a backend, if any.')
         ),
-        'metadata': attributes.Schema(
+        METADATA_ATTR: attributes.Schema(
             _('Key/value pairs associated with the volume.')
         ),
-        'source_volid': attributes.Schema(
+        SOURCE_VOLID_ATTR: attributes.Schema(
             _('The volume used as source, if any.')
         ),
-        'status': attributes.Schema(
+        STATUS: attributes.Schema(
             _('The current status of the volume.')
         ),
-        'created_at': attributes.Schema(
+        CREATED_AT: attributes.Schema(
             _('The timestamp indicating volume creation.')
         ),
-        'bootable': attributes.Schema(
+        BOOTABLE: attributes.Schema(
             _('Boolean indicating if the volume can be booted or not.')
         ),
     }

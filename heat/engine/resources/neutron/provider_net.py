@@ -27,6 +27,13 @@ class ProviderNet(net.Net):
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
     )
+
+    ATTRIBUTES = (
+        STATUS, SUBNETS, SHOW,
+    ) = (
+        'status', 'subnets', 'show',
+    )
+
     properties_schema = {
         NAME: net.Net.properties_schema[NAME],
         PROVIDER_NETWORK_TYPE: properties.Schema(
@@ -62,13 +69,13 @@ class ProviderNet(net.Net):
     }
 
     attributes_schema = {
-        "status": attributes.Schema(
+        STATUS: attributes.Schema(
             _("The status of the network.")
         ),
-        "subnets": attributes.Schema(
+        SUBNETS: attributes.Schema(
             _("Subnets of this network.")
         ),
-        "show": attributes.Schema(
+        SHOW: attributes.Schema(
             _("All attributes.")
         ),
     }

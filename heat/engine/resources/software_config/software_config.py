@@ -58,6 +58,12 @@ class SoftwareConfig(resource.Resource):
         'name', 'description', 'type', 'default', 'error_output'
     )
 
+    ATTRIBUTES = (
+        CONFIG_ATTR,
+    ) = (
+        'config',
+    )
+
     input_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -141,7 +147,7 @@ class SoftwareConfig(resource.Resource):
     }
 
     attributes_schema = {
-        "config": attributes.Schema(
+        CONFIG_ATTR: attributes.Schema(
             _("The config value of the software config.")
         ),
     }
@@ -169,7 +175,7 @@ class SoftwareConfig(resource.Resource):
         "config" returns the config value of the software config. If the
          software config does not exist, returns an empty string.
         '''
-        if name == self.CONFIG and self.resource_id:
+        if name == self.CONFIG_ATTR and self.resource_id:
             try:
                 return self.get_software_config(self.heat(), self.resource_id)
             except exception.SoftwareConfigMissing:

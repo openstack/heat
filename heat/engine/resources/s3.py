@@ -45,6 +45,12 @@ class S3Bucket(resource.Resource):
         'Key', 'Value',
     )
 
+    ATTRIBUTES = (
+        DOMAIN_NAME, WEBSITE_URL,
+    ) = (
+        'DomainName', 'WebsiteURL',
+    )
+
     properties_schema = {
         ACCESS_CONTROL: properties.Schema(
             properties.Schema.STRING,
@@ -94,10 +100,10 @@ class S3Bucket(resource.Resource):
     }
 
     attributes_schema = {
-        'DomainName': attributes.Schema(
+        DOMAIN_NAME: attributes.Schema(
             _('The DNS name of the specified bucket.')
         ),
-        'WebsiteURL': attributes.Schema(
+        WEBSITE_URL: attributes.Schema(
             _('The website endpoint for the specified bucket.')
         ),
     }
@@ -158,9 +164,9 @@ class S3Bucket(resource.Resource):
     def _resolve_attribute(self, name):
         url = self.swift().get_auth()[0]
         parsed = list(urlparse.urlparse(url))
-        if name == 'DomainName':
+        if name == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
-        elif name == 'WebsiteURL':
+        elif name == self.WEBSITE_URL:
             return '%s://%s%s/%s' % (parsed[0], parsed[1], parsed[2],
                                      self.resource_id)
 

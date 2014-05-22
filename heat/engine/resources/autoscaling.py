@@ -99,6 +99,12 @@ class InstanceGroup(stack_resource.StackResource):
 
     _UPDATE_POLICY_SCHEMA_KEYS = (ROLLING_UPDATE,) = ('RollingUpdate',)
 
+    ATTRIBUTES = (
+        INSTANCE_LIST,
+    ) = (
+        'InstanceList',
+    )
+
     properties_schema = {
         AVAILABILITY_ZONES: properties.Schema(
             properties.Schema.LIST,
@@ -141,7 +147,7 @@ class InstanceGroup(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "InstanceList": attributes.Schema(
+        INSTANCE_LIST: attributes.Schema(
             _("A comma-delimited list of server ip addresses. "
               "(Heat extension).")
         ),
@@ -422,7 +428,7 @@ class InstanceGroup(stack_resource.StackResource):
         heat extension: "InstanceList" returns comma delimited list of server
         ip addresses.
         '''
-        if name == 'InstanceList':
+        if name == self.INSTANCE_LIST:
             return u','.join(inst.FnGetAtt('PublicIp')
                              for inst in self.get_instances()) or None
 
@@ -974,6 +980,12 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
         'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
 
+    ATTRIBUTES = (
+        ALARM_URL,
+    ) = (
+        'AlarmUrl',
+    )
+
     properties_schema = {
         AUTO_SCALING_GROUP_NAME: properties.Schema(
             properties.Schema.STRING,
@@ -1005,7 +1017,7 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     }
 
     attributes_schema = {
-        "AlarmUrl": attributes.Schema(
+        ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm. (Heat extension).")
         ),
     }
@@ -1085,7 +1097,7 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         heat extension: "AlarmUrl" returns the url to post to the policy
         when there is an alarm.
         '''
-        if name == 'AlarmUrl' and self.resource_id is not None:
+        if name == self.ALARM_URL and self.resource_id is not None:
             return unicode(self._get_signed_url())
 
     def FnGetRefId(self):
@@ -1112,6 +1124,12 @@ class AutoScalingPolicy(ScalingPolicy):
 
     EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
         'exact_capacity', 'change_in_capacity', 'percent_change_in_capacity')
+
+    ATTRIBUTES = (
+        ALARM_URL,
+    ) = (
+        'alarm_url',
+    )
 
     properties_schema = {
         AUTO_SCALING_GROUP_NAME: properties.Schema(
@@ -1144,7 +1162,7 @@ class AutoScalingPolicy(ScalingPolicy):
     }
 
     attributes_schema = {
-        "alarm_url": attributes.Schema(
+        ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm.")
         ),
     }
@@ -1154,7 +1172,7 @@ class AutoScalingPolicy(ScalingPolicy):
         return ''.join([t.capitalize() for t in adjustment_type.split('_')])
 
     def _resolve_attribute(self, name):
-        if name == 'alarm_url' and self.resource_id is not None:
+        if name == self.ALARM_URL and self.resource_id is not None:
             return unicode(self._get_signed_url())
 
     def FnGetRefId(self):

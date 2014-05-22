@@ -42,6 +42,12 @@ class KeyPair(resource.Resource):
         'name', 'save_private_key', 'public_key',
     )
 
+    ATTRIBUTES = (
+        PUBLIC_KEY_ATTR, PRIVATE_KEY,
+    ) = (
+        'public_key', 'private_key',
+    )
+
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -63,10 +69,10 @@ class KeyPair(resource.Resource):
     }
 
     attributes_schema = {
-        'public_key': attributes.Schema(
+        PUBLIC_KEY: attributes.Schema(
             _('The public key.')
         ),
-        'private_key': attributes.Schema(
+        PRIVATE_KEY: attributes.Schema(
             _('The private key if it has been saved.')
         ),
     }
