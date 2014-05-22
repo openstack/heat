@@ -20,6 +20,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
 if clients.neutronclient is not None:
@@ -175,7 +176,7 @@ class NetworkGateway(neutron.NeutronResource):
             {'network_gateway': props})['network_gateway']
 
         for connection in connections:
-            self._resolve_network(
+            neutron_utils.resolve_network(
                 self.neutron(), connection, self.NETWORK, 'network_id')
             if self.NETWORK in connection.keys():
                 connection.pop(self.NETWORK)
@@ -193,7 +194,7 @@ class NetworkGateway(neutron.NeutronResource):
         connections = self.properties[self.CONNECTIONS]
         for connection in connections:
             try:
-                self._resolve_network(
+                neutron_utils.resolve_network(
                     self.neutron(), connection, self.NETWORK, 'network_id')
                 if self.NETWORK in connection.keys():
                     connection.pop(self.NETWORK)
@@ -229,7 +230,7 @@ class NetworkGateway(neutron.NeutronResource):
         if self.CONNECTIONS in prop_diff:
             for connection in self.properties[self.CONNECTIONS]:
                 try:
-                    self._resolve_network(
+                    neutron_utils.resolve_network(
                         self.neutron(), connection, self.NETWORK, 'network_id')
                     if self.NETWORK in connection.keys():
                         connection.pop(self.NETWORK)
@@ -239,7 +240,7 @@ class NetworkGateway(neutron.NeutronResource):
                 except NeutronClientException as ex:
                     self._handle_not_found_exception(ex)
             for connection in connections:
-                self._resolve_network(
+                neutron_utils.resolve_network(
                     self.neutron(), connection, self.NETWORK, 'network_id')
                 if self.NETWORK in connection.keys():
                     connection.pop(self.NETWORK)

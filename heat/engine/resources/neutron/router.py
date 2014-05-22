@@ -16,6 +16,7 @@ from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
 
@@ -132,7 +133,7 @@ class Router(neutron.NeutronResource):
         props = super(Router, self).prepare_properties(properties, name)
         gateway = props.get(self.EXTERNAL_GATEWAY)
         if gateway:
-            self._resolve_network(
+            neutron_utils.resolve_network(
                 self.neutron(), gateway,
                 self.EXTERNAL_GATEWAY_NETWORK, 'network_id')
             if gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT] is None:
@@ -254,7 +255,7 @@ class RouterInterface(neutron.NeutronResource):
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
         key = 'subnet_id'
-        value = self._resolve_subnet(
+        value = neutron_utils.resolve_subnet(
             self.neutron(), dict(self.properties), self.SUBNET, key)
         if not value:
             key = self.PORT_ID
@@ -346,7 +347,7 @@ class RouterGateway(neutron.NeutronResource):
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
-        network_id = self._resolve_network(
+        network_id = neutron_utils.resolve_network(
             self.neutron(), dict(self.properties), self.NETWORK,
             'network_id')
         self.neutron().add_gateway_router(

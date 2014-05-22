@@ -20,7 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.neutron import loadbalancer
-from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -362,7 +362,7 @@ class PoolTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disassociate_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
-        self.m.StubOutWithMock(neutron.neutronV20,
+        self.m.StubOutWithMock(neutron_utils.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
@@ -392,12 +392,12 @@ class PoolTest(HeatTestCase):
         stvippsn['vip']['subnet_id'] = 'sub123'
 
         if resolve_neutron and with_vip_subnet:
-            neutron.neutronV20.find_resourceid_by_name_or_id(
+            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
             ).AndReturn('sub123')
-            neutron.neutronV20.find_resourceid_by_name_or_id(
+            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub9999'
@@ -407,7 +407,7 @@ class PoolTest(HeatTestCase):
                                             ).AndReturn({'vip': {'id': 'xyz'}})
 
         elif resolve_neutron and not with_vip_subnet:
-            neutron.neutronV20.find_resourceid_by_name_or_id(
+            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
@@ -446,7 +446,7 @@ class PoolTest(HeatTestCase):
     def test_create_pending(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -485,7 +485,7 @@ class PoolTest(HeatTestCase):
     def test_create_failed_unexpected_status(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -523,7 +523,7 @@ class PoolTest(HeatTestCase):
     def test_create_failed_unexpected_vip_status(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -563,7 +563,7 @@ class PoolTest(HeatTestCase):
     def test_create_failed(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -592,7 +592,7 @@ class PoolTest(HeatTestCase):
     def test_create_with_session_persistence(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -654,7 +654,7 @@ class PoolTest(HeatTestCase):
     def test_properties_are_prepared_for_session_persistence(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -804,7 +804,7 @@ class PoolTest(HeatTestCase):
     def test_update_monitors(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'

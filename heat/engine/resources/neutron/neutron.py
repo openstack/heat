@@ -12,7 +12,6 @@
 #    under the License.
 
 from neutronclient.common.exceptions import NeutronClientException
-from neutronclient.neutron import v2_0 as neutronV20
 
 from heat.common import exception
 from heat.engine import function
@@ -66,27 +65,6 @@ class NeutronResource(resource.Resource):
                         ) % {'prop_key': prop_key,
                              'depr_prop_key': depr_prop_key}
                 raise exception.StackValidationFailed(message=msg)
-
-    @staticmethod
-    def _find_neutron_resource(neutron_client, props, key, key_type):
-        return neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, key_type, props.get(key))
-
-    @staticmethod
-    def _resolve_network(neutron_client, props, net_key, net_id_key):
-        if props.get(net_key):
-            props[net_id_key] = NeutronResource._find_neutron_resource(
-                neutron_client, props, net_key, 'network')
-            props.pop(net_key)
-        return props[net_id_key]
-
-    @staticmethod
-    def _resolve_subnet(neutron_client, props, subnet_key, subnet_id_key):
-        if props.get(subnet_key):
-            props[subnet_id_key] = NeutronResource._find_neutron_resource(
-                neutron_client, props, subnet_key, 'subnet')
-            props.pop(subnet_key)
-        return props[subnet_id_key]
 
     @staticmethod
     def prepare_properties(properties, name):

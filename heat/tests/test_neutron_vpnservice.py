@@ -20,7 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.neutron import vpnservice
-from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -174,7 +174,7 @@ class VPNServiceTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
-        self.m.StubOutWithMock(neutron.neutronV20,
+        self.m.StubOutWithMock(neutron_utils.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
@@ -182,7 +182,7 @@ class VPNServiceTest(HeatTestCase):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
         if resolve_neutron:
-            neutron.neutronV20.find_resourceid_by_name_or_id(
+            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
@@ -214,7 +214,7 @@ class VPNServiceTest(HeatTestCase):
     def test_create_failed(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        neutron.neutronV20.find_resourceid_by_name_or_id(
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
