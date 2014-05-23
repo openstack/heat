@@ -191,6 +191,8 @@ class ScalingGroupTest(HeatTestCase):
                             key_name: my-key
                             metadata:
                                 server: metadata
+                            personality:
+                                /tmp/testfile: "dGVzdCBjb250ZW50"
                             networks:
                                 - uuid: "00000000-0000-0000-0000-000000000000"
                                 - uuid: "11111111-1111-1111-1111-111111111111"
@@ -234,7 +236,9 @@ class ScalingGroupTest(HeatTestCase):
                 'name': 'My Group',
                 'networks': [{'uuid': '00000000-0000-0000-0000-000000000000'},
                              {'uuid': '11111111-1111-1111-1111-111111111111'}],
-                'personality': None,
+                'personality': [{
+                        'path': u'/tmp/testfile',
+                        'contents': u'dGVzdCBjb250ZW50'}],
                 'server_name': u'autoscaled-server'},
             self.fake_auto_scale.groups['0'].kwargs)
 
