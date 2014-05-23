@@ -17,10 +17,9 @@ import re
 
 import six
 
+from heat.common import exception
 from heat.engine import clients
 from heat.engine import resources
-
-from heat.common import exception
 
 
 class InvalidSchemaError(exception.Error):

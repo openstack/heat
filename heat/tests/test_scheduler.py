@@ -11,14 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
-
 import contextlib
+
 import eventlet
+import mox
 
 from heat.engine import dependencies
 from heat.engine import scheduler
-
 from heat.tests.common import HeatTestCase
 
 

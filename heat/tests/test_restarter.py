@@ -16,7 +16,6 @@ import mock
 from heat.common import template_format
 from heat.engine.resources import instance
 from heat.engine import scheduler
-
 from heat.tests import common
 from heat.tests import utils
 

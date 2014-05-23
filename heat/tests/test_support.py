@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.engine import support
-
 from heat.tests.common import HeatTestCase
 
 

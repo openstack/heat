@@ -13,9 +13,8 @@
 
 import copy
 
-from heat.tests.common import HeatTestCase
-
 from heat.engine import function
+from heat.tests.common import HeatTestCase
 
 
 class TestFunction(function.Function):

@@ -16,7 +16,6 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources import image
 from heat.engine.resources import nova_utils
-
 from heat.tests.common import HeatTestCase
 
 

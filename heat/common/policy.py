@@ -20,7 +20,6 @@
 from oslo.config import cfg
 
 from heat.common import exception
-
 from heat.openstack.common import policy
 
 

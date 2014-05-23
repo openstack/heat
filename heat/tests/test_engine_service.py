@@ -27,7 +27,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
-import heat.db.api as db_api
+from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import dependencies
 from heat.engine import environment
@@ -42,7 +42,7 @@ from heat.engine import watchrule
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
 from heat.openstack.common import threadgroup
-import heat.rpc.api as engine_api
+from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc

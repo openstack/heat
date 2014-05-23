@@ -21,7 +21,7 @@ from oslo.config import cfg
 
 from heat.common import identifier
 from heat.common import template_format
-import heat.db.api as db_api
+from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource

@@ -28,9 +28,8 @@ import tempfile
 import uuid
 
 from migrate.versioning import repository
-import sqlalchemy
-
 from six.moves.urllib import parse as urlparse
+import sqlalchemy
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration

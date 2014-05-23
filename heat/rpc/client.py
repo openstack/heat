@@ -17,9 +17,8 @@
 Client side of the heat engine RPC API.
 """
 
-from heat.rpc import api
-
 import heat.openstack.common.rpc.proxy
+from heat.rpc import api
 
 
 class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):

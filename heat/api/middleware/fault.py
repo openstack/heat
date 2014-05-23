@@ -25,13 +25,14 @@ import traceback
 from oslo.config import cfg
 import webob
 
-cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
-from heat.common import serializers
 from heat.common import exception
-import heat.openstack.common.rpc.common as rpc_common
-
+from heat.common import serializers
 from heat.common import wsgi
+from heat.openstack.common.rpc import common as rpc_common
+
+
+cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
 
 class Fault(object):

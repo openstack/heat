@@ -11,11 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import webob
 
 from heat.api.middleware import ssl
-from oslo.config import cfg
-
 from heat.tests.common import HeatTestCase
 
 

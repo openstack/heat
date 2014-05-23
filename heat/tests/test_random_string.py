@@ -18,7 +18,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources.random_string import RandomString
-
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

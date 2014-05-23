@@ -18,15 +18,12 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-
 from heat.db import api as db_api
-
 from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_user
-
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import generic_resource

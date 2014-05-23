@@ -14,8 +14,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from mox import IgnoreArg
 import mox
+from mox import IgnoreArg
 from testtools import skipIf
 
 from heat.common import exception

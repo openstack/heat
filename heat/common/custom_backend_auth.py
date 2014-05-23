@@ -20,11 +20,11 @@ Middleware for authenticating against custom backends.
 
 import logging
 
+import webob.exc
+
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import local
 from heat.rpc import client as rpc_client
-import webob.exc
-
 
 LOG = logging.getLogger(__name__)
 

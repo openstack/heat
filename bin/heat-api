@@ -30,17 +30,15 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat', lazy=False)
-
 from oslo.config import cfg
 
 from heat.common import config
-from heat.common import wsgi
 from heat.common import notify
-
+from heat.common import wsgi
+from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
+
+gettextutils.install('heat', lazy=False)
 
 LOG = logging.getLogger('heat.api')
 

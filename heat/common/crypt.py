@@ -12,6 +12,7 @@
 #    under the License.
 
 import base64
+
 from Crypto.Cipher import AES
 from oslo.config import cfg
 

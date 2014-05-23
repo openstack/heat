@@ -12,9 +12,9 @@
 #    under the License.
 
 import copy
+import uuid
 
 from oslo.config import cfg
-import uuid
 
 from heat.common import exception
 from heat.engine import attributes

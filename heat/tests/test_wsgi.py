@@ -16,6 +16,7 @@
 
 
 import json
+
 from oslo.config import cfg
 import stubout
 import webob

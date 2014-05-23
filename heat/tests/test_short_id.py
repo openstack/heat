@@ -11,11 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
 
 import testtools
 
 from heat.common import short_id
-import uuid
 
 
 class ShortIdTest(testtools.TestCase):
