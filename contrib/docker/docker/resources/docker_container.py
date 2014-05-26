@@ -14,6 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
@@ -185,7 +187,7 @@ class DockerContainer(resource.Resource):
     def _parse_networkinfo_ports(self, networkinfo):
         tcp = []
         udp = []
-        for port, info in networkinfo['Ports'].iteritems():
+        for port, info in six.iteritems(networkinfo['Ports']):
             p = port.split('/')
             if not info or len(p) != 2 or 'HostPort' not in info[0]:
                 continue

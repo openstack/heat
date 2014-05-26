@@ -13,6 +13,7 @@
 
 import copy
 import mock
+import six
 
 from heat.common import exception as heat_ex
 from heat.common import template_format
@@ -73,7 +74,7 @@ class NovaFloatingIPTest(HeatTestCase):
 
     def _make_obj(self, **kwargs):
         mock = self.m.CreateMockAnything()
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             setattr(mock, k, v)
         return mock
 

@@ -1357,7 +1357,7 @@ class FakeVolume(object):
     def __init__(self, initial_status, final_status, **attrs):
         self.status = initial_status
         self.final_status = final_status
-        for key, value in attrs.iteritems():
+        for key, value in six.iteritems(attrs):
             setattr(self, key, value)
 
     def get(self):
@@ -1381,7 +1381,7 @@ class FakeLatencyVolume(object):
             raise exception.Error('life_cycle should not be an empty tuple.')
         self.life_cycle = iter(life_cycle)
         self.status = next(self.life_cycle)
-        for key, value in attrs.iteritems():
+        for key, value in six.iteritems(attrs):
             setattr(self, key, value)
 
     def get(self):

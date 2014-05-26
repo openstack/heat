@@ -16,6 +16,7 @@ import itertools
 import os.path
 
 from oslo.config import cfg
+import six
 
 from heat.common import environment_format
 from heat.common import exception
@@ -328,7 +329,7 @@ class ResourceRegistry(object):
                     cls.get_class().support_status.status ==
                     support_status.encode())
 
-        return [name for name, cls in self._registry.iteritems()
+        return [name for name, cls in six.iteritems(self._registry)
                 if is_resource(name) and status_matches(cls)]
 
 
@@ -360,7 +361,7 @@ class Environment(object):
         if 'parameters' in env:
             self.params = env['parameters']
         else:
-            self.params = dict((k, v) for (k, v) in env.iteritems()
+            self.params = dict((k, v) for (k, v) in six.iteritems(env)
                                if k != RESOURCE_REGISTRY)
         self.constraints = {}
 

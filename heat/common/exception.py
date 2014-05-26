@@ -113,7 +113,7 @@ class HeatException(Exception):
             #kwargs doesn't match a variable in the message
             #log the issue and the kwargs
             LOG.exception(_('Exception in string format operation'))
-            for name, value in kwargs.iteritems():
+            for name, value in six.iteritems(kwargs):
                 LOG.error("%s: %s" % (name, value))  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:

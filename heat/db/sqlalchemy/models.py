@@ -17,6 +17,7 @@ SQLAlchemy models for heat data.
 import uuid
 
 from oslo.db.sqlalchemy import models
+import six
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref
@@ -69,7 +70,7 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
             if not session:
                 session = get_session()
         session.begin()
-        for k, v in values.iteritems():
+        for k, v in six.iteritems(values):
             setattr(self, k, v)
         session.commit()
 

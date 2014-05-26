@@ -237,7 +237,8 @@ class Property(object):
         if not isinstance(value, collections.Mapping):
             raise TypeError(_('"%s" is not a map') % value)
 
-        return dict(self._get_children(value.iteritems(), validate=validate))
+        return dict(self._get_children(six.iteritems(value),
+                                       validate=validate))
 
     def _get_list(self, value, validate=False):
         if value is None:
@@ -451,7 +452,7 @@ class Properties(collections.Mapping):
             return {}, {}
 
         param_prop_defs = [param_prop_def_items(n, s)
-                           for n, s in schemata(schema).iteritems()
+                           for n, s in six.iteritems(schemata(schema))
                            if s.implemented]
         param_items, prop_items = zip(*param_prop_defs)
         return dict(param_items), dict(prop_items)

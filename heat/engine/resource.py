@@ -314,7 +314,7 @@ class Resource(object):
         update_allowed_properties, raises UpdateReplace.
         '''
         update_allowed_set = set(self.update_allowed_properties)
-        for (psk, psv) in self.properties.props.iteritems():
+        for (psk, psv) in six.iteritems(self.properties.props):
             if psv.update_allowed():
                 update_allowed_set.add(psk)
 
@@ -557,7 +557,7 @@ class Resource(object):
 
         # save the resource data
         if data and isinstance(data, dict):
-            for key, value in data.iteritems():
+            for key, value in six.iteritems(data):
                 self.data_set(key, value)
 
         # save the resource metadata

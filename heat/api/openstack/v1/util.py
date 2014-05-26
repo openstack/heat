@@ -13,6 +13,7 @@
 
 from functools import wraps
 
+import six
 from webob import exc
 
 from heat.common import identifier
@@ -85,7 +86,7 @@ def get_allowed_params(params, whitelist):
     '''
     allowed_params = {}
 
-    for key, get_type in whitelist.iteritems():
+    for key, get_type in six.iteritems(whitelist):
         value = None
         if get_type == 'single':
             value = params.get(key)

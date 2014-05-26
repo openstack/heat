@@ -13,6 +13,7 @@
 #    under the License.
 
 import collections
+import six
 
 from heat.engine import function
 from heat.engine import parameters
@@ -60,7 +61,7 @@ class CfnTemplate(template.Template):
     def param_schemata(self):
         params = self.t.get(self.PARAMETERS) or {}
         return dict((name, parameters.Schema.from_dict(name, schema))
-                    for name, schema in params.iteritems())
+                    for name, schema in six.iteritems(params))
 
     def parameters(self, stack_identifier, user_params):
         return parameters.Parameters(stack_identifier, self,

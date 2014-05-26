@@ -3011,7 +3011,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
             values.update(kwargs)
             updated = self.engine.update_software_deployment(
                 self.ctx, deployment_id, **values)
-            for key, value in kwargs.iteritems():
+            for key, value in six.iteritems(kwargs):
                 self.assertEqual(value, updated[key])
 
         check_software_deployment_updated(config_id=config_id)

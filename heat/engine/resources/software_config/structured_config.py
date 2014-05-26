@@ -15,6 +15,7 @@
 
 import collections
 import functools
+import six
 
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config as sc
@@ -110,11 +111,11 @@ class StructuredDeployment(sd.SoftwareDeployment):
 
         if isinstance(snippet, collections.Mapping):
             if len(snippet) == 1:
-                fn_name, args = next(snippet.iteritems())
+                fn_name, args = next(six.iteritems(snippet))
                 if fn_name == input_key:
                     if isinstance(args, basestring):
                         return inputs.get(args)
-            return dict((k, parse(v)) for k, v in snippet.iteritems())
+            return dict((k, parse(v)) for k, v in six.iteritems(snippet))
         elif (not isinstance(snippet, basestring) and
               isinstance(snippet, collections.Iterable)):
             return [parse(v) for v in snippet]

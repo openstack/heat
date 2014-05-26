@@ -419,7 +419,8 @@ class Parameters(collections.Mapping):
         self.user_params = user_params
 
         schemata = self.tmpl.param_schemata()
-        user_parameters = (user_parameter(si) for si in schemata.iteritems())
+        user_parameters = (user_parameter(si) for si in
+                           six.iteritems(schemata))
         pseudo_parameters = self._pseudo_parameters(stack_identifier)
 
         self.params = dict((p.name,
@@ -461,7 +462,7 @@ class Parameters(collections.Mapping):
         optional filter function) and return the resulting dictionary.
         '''
         return dict((n, func(p))
-                    for n, p in self.params.iteritems() if filter_func(p))
+                    for n, p in six.iteritems(self.params) if filter_func(p))
 
     def set_stack_id(self, stack_identifier):
         '''
@@ -487,7 +488,7 @@ class Parameters(collections.Mapping):
                 break
         if param is not None:
             template_params = self.tmpl.t[key] or {}
-            for name, attrs in template_params.iteritems():
+            for name, attrs in six.iteritems(template_params):
                 if not isinstance(attrs, dict):
                     raise exception.InvalidTemplateParameter(key=name)
 

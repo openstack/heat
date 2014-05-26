@@ -14,6 +14,7 @@
 import copy
 
 from migrate.versioning import util as migrate_util
+import six
 from sqlalchemy.orm import sessionmaker
 
 from heat.db.sqlalchemy import models
@@ -32,7 +33,7 @@ def upgrade(migrate_engine):
                 and 'parameters' in raw_template.template):
 
             template = copy.deepcopy(raw_template.template)
-            for parameter, schema in template['parameters'].iteritems():
+            for parameter, schema in six.iteritems(template['parameters']):
                 changed = False
 
                 def _commit_schema(parameter, schema):

@@ -425,7 +425,7 @@ class Replace(function.Function):
 
             return string.replace(placeholder, unicode(value))
 
-        return reduce(replace, mapping.iteritems(), template)
+        return reduce(replace, six.iteritems(mapping), template)
 
 
 class Base64(function.Function):

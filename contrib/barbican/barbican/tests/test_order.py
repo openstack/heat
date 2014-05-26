@@ -62,7 +62,7 @@ class TestOrder(HeatTestCase):
         self.patcher_client.stop()
 
     def _register_resources(self):
-        for res_name, res_class in order.resource_mapping().iteritems():
+        for res_name, res_class in six.iteritems(order.resource_mapping()):
             resource._register_class(res_name, res_class)
 
     def _create_resource(self, name, snippet, stack):

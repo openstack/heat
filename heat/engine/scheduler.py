@@ -18,6 +18,7 @@ from time import time as wallclock
 import types
 
 import eventlet
+import six
 
 from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
@@ -365,7 +366,7 @@ class DependencyTaskGroup(object):
         Iterate over all subtasks that are ready to start - i.e. all their
         dependencies have been satisfied but they have not yet been started.
         """
-        for k, n in self._graph.iteritems():
+        for k, n in six.iteritems(self._graph):
             if not n:
                 runner = self._runners[k]
                 if not runner.started():
@@ -377,7 +378,7 @@ class DependencyTaskGroup(object):
         been started but have not yet completed.
         """
         running = lambda (k, r): k in self._graph and r.started()
-        return itertools.ifilter(running, self._runners.iteritems())
+        return itertools.ifilter(running, six.iteritems(self._runners))
 
 
 class PollingTaskGroup(object):
@@ -409,7 +410,7 @@ class PollingTaskGroup(object):
         """Return a list containing the keyword args for each subtask."""
         keygroups = (itertools.izip(itertools.repeat(name),
                                     arglist)
-                     for name, arglist in kwarg_lists.iteritems())
+                     for name, arglist in six.iteritems(kwarg_lists))
         return [dict(kwargs) for kwargs in itertools.izip(*keygroups)]
 
     @classmethod

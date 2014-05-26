@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import resource
@@ -184,7 +186,7 @@ class StackUpdate(object):
             for e in existing_deps.graph(reverse=True).edges():
                 yield e
             # Don't cleanup old resources until after they have been replaced
-            for name, res in self.existing_stack.iteritems():
+            for name, res in six.iteritems(self.existing_stack):
                 if name in self.new_stack:
                     yield (res, self.new_stack[name])
 

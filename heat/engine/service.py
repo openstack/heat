@@ -993,7 +993,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s)
 
         return [api.format_stack_resource(resource)
-                for name, resource in stack.iteritems()
+                for name, resource in six.iteritems(stack)
                 if resource_name is None or name == resource_name]
 
     @request_context

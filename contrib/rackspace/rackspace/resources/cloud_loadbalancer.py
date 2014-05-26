@@ -14,6 +14,8 @@
 import copy
 import itertools
 
+import six
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -411,7 +413,8 @@ class CloudLoadBalancer(resource.Resource):
         metadata = None
         if self.METADATA in self.properties.data:
             metadata = [{'key': k, 'value': v}
-                        for k, v in self.properties[self.METADATA].iteritems()]
+                        for k, v
+                        in six.iteritems(self.properties[self.METADATA])]
 
         return (session_persistence, connection_logging, metadata)
 
@@ -579,7 +582,7 @@ class CloudLoadBalancer(resource.Resource):
         These are values that may be initialized to None.
         """
         return dict((key, value)
-                    for (key, value) in property_dict.iteritems()
+                    for (key, value) in six.iteritems(property_dict)
                     if value)
 
     def validate(self):

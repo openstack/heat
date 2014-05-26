@@ -249,13 +249,13 @@ class LoadBalancerTest(HeatTestCase):
         return (rsrc, fake_loadbalancer)
 
     def _set_template(self, templ, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             templ['Resources'][self._get_first_resource_name(templ)][
                 'Properties'][k] = v
         return templ
 
     def _set_expected(self, expected, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             expected[k] = v
         return expected
 

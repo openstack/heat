@@ -17,6 +17,7 @@ import itertools
 import sys
 
 from oslo.config import cfg
+import six
 
 from heat.common import plugin_loader
 from heat.openstack.common import log
@@ -111,4 +112,5 @@ class PluginMapping(object):
         Mappings are returned as a list of (key, value) tuples.
         '''
         mod_dicts = plugin_manager.map_to_modules(self.load_from_module)
-        return itertools.chain.from_iterable(d.iteritems() for d in mod_dicts)
+        return itertools.chain.from_iterable(six.iteritems(d) for d
+                                             in mod_dicts)

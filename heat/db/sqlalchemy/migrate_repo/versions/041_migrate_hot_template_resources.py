@@ -13,6 +13,7 @@
 import copy
 
 from migrate.versioning import util as migrate_util
+import six
 from sqlalchemy.orm import sessionmaker
 
 from heat.db.sqlalchemy import models
@@ -38,8 +39,8 @@ def upgrade(migrate_engine):
     def _translate(section, translate_map):
         changed = False
 
-        for name, details in section.iteritems():
-            for old_key, new_key in translate_map.iteritems():
+        for name, details in six.iteritems(section):
+            for old_key, new_key in six.iteritems(translate_map):
                 if old_key in details:
                     details[new_key] = details[old_key]
                     del details[old_key]

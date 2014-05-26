@@ -11,6 +11,7 @@
 #    under the License.
 
 import collections
+import six
 
 from heat.engine.cfn import template as cfn_template
 from heat.engine import function
@@ -107,10 +108,10 @@ class HOTemplate(template.Template):
 
         cfn_resources = {}
 
-        for resource_name, attrs in resources.iteritems():
+        for resource_name, attrs in six.iteritems(resources):
             cfn_resource = {}
 
-            for attr, attr_value in attrs.iteritems():
+            for attr, attr_value in six.iteritems(attrs):
                 cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
                                            _('"%s" is not a valid keyword '
                                              'inside a resource definition'))
@@ -127,10 +128,10 @@ class HOTemplate(template.Template):
 
         cfn_outputs = {}
 
-        for output_name, attrs in outputs.iteritems():
+        for output_name, attrs in six.iteritems(outputs):
             cfn_output = {}
 
-            for attr, attr_value in attrs.iteritems():
+            for attr, attr_value in six.iteritems(attrs):
                 cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
                                            _('"%s" is not a valid keyword '
                                              'inside an output definition'))
@@ -144,7 +145,7 @@ class HOTemplate(template.Template):
         parameter_section = self.t.get(self.PARAMETERS)
         if parameter_section is None:
             parameter_section = {}
-        params = parameter_section.iteritems()
+        params = six.iteritems(parameter_section)
         return dict((name, parameters.HOTParamSchema.from_dict(name, schema))
                     for name, schema in params)
 

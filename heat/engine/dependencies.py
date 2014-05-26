@@ -14,6 +14,7 @@
 import collections
 import itertools
 
+import six
 from six.moves import xrange
 
 from heat.common import exception
@@ -120,7 +121,7 @@ class Graph(collections.defaultdict):
                 for rqd in node:
                     yield (rqr, rqd)
         return itertools.chain.from_iterable(outgoing_edges(*i)
-                                             for i in self.iteritems())
+                                             for i in six.iteritems(self))
 
     def __delitem__(self, key):
         '''Delete the node given by the specified key from the graph.'''
@@ -135,7 +136,7 @@ class Graph(collections.defaultdict):
 
     def __str__(self):
         '''Convert the graph to a human-readable string.'''
-        pairs = ('%s: %s' % (str(k), str(v)) for k, v in self.iteritems())
+        pairs = ('%s: %s' % (str(k), str(v)) for k, v in six.iteritems(self))
         return '{%s}' % ', '.join(pairs)
 
     @staticmethod
@@ -146,7 +147,7 @@ class Graph(collections.defaultdict):
         This is a destructive operation for the graph.
         '''
         for iteration in xrange(len(graph)):
-            for key, node in graph.iteritems():
+            for key, node in six.iteritems(graph):
                 if not node:
                     yield key
                     del graph[key]

@@ -15,6 +15,7 @@ import abc
 import collections
 import copy
 import functools
+import six
 from stevedore import extension
 
 from heat.common import exception
@@ -57,7 +58,7 @@ class TemplatePluginManager(object):
 
 def get_version(template_data, available_versions):
     version_keys = set(key for key, version in available_versions)
-    candidate_keys = set(k for k, v in template_data.iteritems() if
+    candidate_keys = set(k for k, v in six.iteritems(template_data) if
                          isinstance(v, basestring))
 
     keys_present = version_keys & candidate_keys
@@ -244,11 +245,11 @@ def parse(functions, stack, snippet):
 
     if isinstance(snippet, collections.Mapping):
         if len(snippet) == 1:
-            fn_name, args = next(snippet.iteritems())
+            fn_name, args = next(six.iteritems(snippet))
             Func = functions.get(fn_name)
             if Func is not None:
                 return Func(stack, fn_name, recurse(args))
-        return dict((k, recurse(v)) for k, v in snippet.iteritems())
+        return dict((k, recurse(v)) for k, v in six.iteritems(snippet))
     elif (not isinstance(snippet, basestring) and
           isinstance(snippet, collections.Iterable)):
         return [recurse(v) for v in snippet]
