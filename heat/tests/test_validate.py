@@ -22,7 +22,6 @@ from heat.engine import environment
 from heat.engine.hot.template import HOTemplate
 from heat.engine import parser
 from heat.engine import resources
-from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -808,6 +807,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
+        self.m.VerifyAll()
 
     def test_validate_with_environment(self):
         test_template = test_template_ref % 'WikiDatabase'
@@ -815,8 +815,6 @@ class validateTest(HeatTestCase):
                                               'My::Instance')
         t = template_format.parse(test_template)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -825,6 +823,7 @@ class validateTest(HeatTestCase):
         params = {'resource_registry': {'My::Instance': 'AWS::EC2::Instance'}}
         res = dict(engine.validate_template(None, t, params))
         self.assertEqual('test.', res['Description'])
+        self.m.VerifyAll()
 
     def test_validate_hot_valid(self):
         t = template_format.parse(
@@ -842,6 +841,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
+        self.m.VerifyAll()
 
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
@@ -853,6 +853,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
+        self.m.VerifyAll()
 
     def test_validate_findinmap_valid(self):
         t = template_format.parse(test_template_findinmap_valid)
@@ -864,6 +865,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
+        self.m.VerifyAll()
 
     def test_validate_findinmap_invalid(self):
         t = template_format.parse(test_template_findinmap_invalid)
@@ -875,6 +877,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
+        self.m.VerifyAll()
 
     def test_validate_parameters(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
@@ -896,6 +899,7 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
+        self.m.VerifyAll()
 
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
@@ -914,6 +918,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({}, res['Parameters'])
+        self.m.VerifyAll()
 
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
@@ -932,6 +937,7 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
+        self.m.VerifyAll()
 
     def test_validate_hot_no_parameter_label(self):
         t = template_format.parse(test_template_hot_no_parameter_label)
@@ -950,6 +956,7 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, parameters)
+        self.m.VerifyAll()
 
     def test_validate_cfn_parameter_label(self):
         t = template_format.parse(test_template_cfn_parameter_label)
@@ -968,6 +975,7 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
+        self.m.VerifyAll()
 
     def test_validate_hot_empty_resources_valid(self):
         t = template_format.parse(
@@ -985,6 +993,7 @@ class validateTest(HeatTestCase):
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
+        self.m.VerifyAll()
 
     def test_validate_hot_empty_outputs_valid(self):
         t = template_format.parse(
@@ -1002,6 +1011,7 @@ class validateTest(HeatTestCase):
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
+        self.m.VerifyAll()
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)
@@ -1012,6 +1022,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Unknown Property UnknownProperty'}, res)
+        self.m.VerifyAll()
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
@@ -1024,6 +1035,7 @@ class validateTest(HeatTestCase):
         self.assertEqual({'Error': 'Resources must contain Resource. '
                           'Found a [string] instead'},
                          res)
+        self.m.VerifyAll()
 
     def test_invalid_section_cfn(self):
         t = template_format.parse(
@@ -1039,8 +1051,6 @@ class validateTest(HeatTestCase):
             }
             """)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1049,6 +1059,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t))
         self.assertEqual({'Error': 'The template section is invalid: Output'},
                          res)
+        self.m.VerifyAll()
 
     def test_invalid_section_hot(self):
         t = template_format.parse(
@@ -1060,8 +1071,6 @@ class validateTest(HeatTestCase):
             output:
             """)
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(service.EngineListener, 'start')
         service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
@@ -1070,6 +1079,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t))
         self.assertEqual({'Error': 'The template section is invalid: output'},
                          res)
+        self.m.VerifyAll()
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)
@@ -1082,6 +1092,7 @@ class validateTest(HeatTestCase):
         self.assertEqual(
             {'Error': 'Property SourceDestCheck not implemented yet'},
             res)
+        self.m.VerifyAll()
 
     def test_invalid_deletion_policy(self):
         t = template_format.parse(test_template_invalid_deletion_policy)
@@ -1092,6 +1103,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Invalid DeletionPolicy Destroy'}, res)
+        self.m.VerifyAll()
 
     def test_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_snapshot_deletion_policy)
@@ -1103,6 +1115,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
             {'Error': 'Snapshot DeletionPolicy not supported'}, res)
+        self.m.VerifyAll()
 
     @skipIf(try_import('cinderclient.v1.volume_backups') is None,
             'unable to import volume_backups')
@@ -1115,6 +1128,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
+        self.m.VerifyAll()
 
     def test_validate_template_without_resources(self):
         hot_tpl = template_format.parse('''
@@ -1129,6 +1143,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, hot_tpl, {}))
         expected = {'Description': 'No description', 'Parameters': {}}
         self.assertEqual(expected, res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_type(self):
         hot_tpl = template_format.parse('''
@@ -1154,6 +1169,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Type" is not a valid keyword '
                                    'inside a resource definition\''}, res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_properties(self):
         hot_tpl = template_format.parse('''
@@ -1179,6 +1195,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Properties" is not a valid keyword '
                                    'inside a resource definition\''}, res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_matadata(self):
         hot_tpl = template_format.parse('''
@@ -1204,6 +1221,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Metadata" is not a valid keyword '
                                    'inside a resource definition\''}, res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_depends_on(self):
         hot_tpl = template_format.parse('''
@@ -1229,6 +1247,7 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
                                    'inside a resource definition\''}, res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_deletion_polciy(self):
         hot_tpl = template_format.parse('''
@@ -1255,6 +1274,7 @@ class validateTest(HeatTestCase):
         self.assertEqual({'Error': 'u\'"DeletionPolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)
+        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_update_policy(self):
         hot_tpl = template_format.parse('''
@@ -1281,6 +1301,7 @@ class validateTest(HeatTestCase):
         self.assertEqual({'Error': 'u\'"UpdatePolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)
+        self.m.VerifyAll()
 
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
@@ -1289,14 +1310,13 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment(params))
 
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
         self.assertRaises(exception.StackValidationFailed, resource.validate)
+        self.m.VerifyAll()
 
     def test_unregistered_image(self):
         t = template_format.parse(test_template_image)
@@ -1362,6 +1382,7 @@ class validateTest(HeatTestCase):
         resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
+        self.m.VerifyAll()
 
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
@@ -1384,6 +1405,7 @@ class validateTest(HeatTestCase):
         resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
+        self.m.VerifyAll()
 
     def test_client_exception_from_nova_client(self):
         t = template_format.parse(test_template_nova_client_exception)
