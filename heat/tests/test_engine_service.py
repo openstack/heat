@@ -309,6 +309,9 @@ class DummyThreadGroup(object):
                   *args, **kwargs):
         self.threads.append(callback)
 
+    def stop_timers(self):
+        pass
+
     def add_thread(self, callback, *args, **kwargs):
         self.threads.append(callback)
         return self.pool.spawn(callback, *args, **kwargs)
@@ -419,11 +422,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
+        self.man.create_periodic_tasks()
 
     def _test_stack_create(self, stack_name):
         params = {'foo': 'bar'}
@@ -1232,10 +1232,6 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
     def setUp(self):
         super(StackServiceUpdateNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
 
     def test_stack_update_during(self):
@@ -1269,11 +1265,8 @@ class StackServiceSuspendResumeTest(HeatTestCase):
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
+        self.man.create_periodic_tasks()
 
     def test_stack_suspend(self):
         stack_name = 'service_suspend_test_stack'
@@ -1345,11 +1338,8 @@ class StackServiceAuthorizeTest(HeatTestCase):
         super(StackServiceAuthorizeTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         self.eng = service.EngineService('a-host', 'a-topic')
+        self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
@@ -1442,36 +1432,29 @@ class StackServiceTest(HeatTestCase):
         super(StackServiceTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         self.eng = service.EngineService('a-host', 'a-topic')
+        self.eng.create_periodic_tasks()
+        self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
 
+    @mock.patch.object(service.StackWatch, 'start_watch_task')
     @mock.patch.object(service.db_api, 'stack_get_all')
     @mock.patch.object(service.service.Service, 'start')
-    def test_start_gets_all_stacks(self, mock_super_start, mock_stack_get_all):
-        mock_stack_get_all.return_value = []
-
-        self.eng.start()
-        mock_stack_get_all.assert_called_once_with(mock.ANY, tenant_safe=False)
-
-    @mock.patch.object(service.db_api, 'stack_get_all')
-    @mock.patch.object(service.service.Service, 'start')
-    def test_start_watches_all_stacks(self, mock_super_start, mock_get_all):
+    def test_start_watches_all_stacks(self, mock_super_start, mock_get_all,
+                                      start_watch_task):
         s1 = mock.Mock(id=1)
         s2 = mock.Mock(id=2)
         mock_get_all.return_value = [s1, s2]
-        mock_watch = mock.Mock()
-        self.eng.stack_watch.start_watch_task = mock_watch
+        start_watch_task.return_value = None
 
-        self.eng.start()
-        calls = mock_watch.call_args_list
-        self.assertEqual(2, mock_watch.call_count)
+        self.eng.thread_group_mgr = None
+        self.eng.create_periodic_tasks()
+
+        mock_get_all.assert_called_once_with(mock.ANY, tenant_safe=False)
+        calls = start_watch_task.call_args_list
+        self.assertEqual(2, start_watch_task.call_count)
         self.assertIn(mock.call(1, mock.ANY), calls)
         self.assertIn(mock.call(2, mock.ANY), calls)
 
@@ -2633,10 +2616,6 @@ class SoftwareConfigServiceTest(HeatTestCase):
     def setUp(self):
         super(SoftwareConfigServiceTest, self).setUp()
         self.ctx = utils.dummy_context()
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
         self.engine = service.EngineService('a-host', 'a-topic')
 
     def _create_software_config(

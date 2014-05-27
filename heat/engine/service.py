@@ -13,6 +13,7 @@
 
 import functools
 import json
+import os
 
 from oslo.config import cfg
 import six
@@ -101,7 +102,7 @@ class ThreadGroupManager(object):
         :param cnxt: RPC context
         :param stack: Stack to be operated on
         :type stack: heat.engine.parser.Stack
-        :param engine_id: The UUID of the engine acquiring the lock
+        :param engine_id: The UUID of the engine/worker acquiring the lock
         :param func: Callable to be invoked in sub-thread
         :type func: function or instancemethod
         :param args: Args to be passed to func
@@ -278,23 +279,38 @@ class EngineService(service.Service):
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__(host, topic)
         resources.initialise()
+        self.host = host
 
-        self.engine_id = stack_lock.StackLock.generate_engine_id()
-        self.thread_group_mgr = ThreadGroupManager()
+        # The following are initialized here, but assigned in start() which
+        # happens after the fork when spawning multiple worker processes
+        self.stack_watch = None
+        self.listener = None
+        self.engine_id = None
+        self.thread_group_mgr = None
+
+    def create_periodic_tasks(self):
+        LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())
+        # Note with multiple workers, the parent process hasn't called start()
+        # so we need to create a ThreadGroupManager here for the periodic tasks
+        if self.thread_group_mgr is None:
+            self.thread_group_mgr = ThreadGroupManager()
         self.stack_watch = StackWatch(self.thread_group_mgr)
-        self.listener = EngineListener(host, self.engine_id,
-                                       self.thread_group_mgr)
-        LOG.debug("Starting listener for engine %s" % self.engine_id)
-        self.listener.start()
-
-    def start(self):
-        super(EngineService, self).start()
 
         # Create a periodic_watcher_task per-stack
         admin_context = context.get_admin_context()
         stacks = db_api.stack_get_all(admin_context, tenant_safe=False)
         for s in stacks:
             self.stack_watch.start_watch_task(s.id, admin_context)
+
+    def start(self):
+        self.thread_group_mgr = ThreadGroupManager()
+        self.engine_id = stack_lock.StackLock.generate_engine_id()
+        self.listener = EngineListener(self.host, self.engine_id,
+                                       self.thread_group_mgr)
+        LOG.debug("Starting listener for engine %s pid=%s, ppid=%s" %
+                  (self.engine_id, os.getpid(), os.getppid()))
+        self.listener.start()
+        super(EngineService, self).start()
 
     def stop(self):
         # Stop rpc connection at first for preventing new requests
@@ -524,8 +540,9 @@ class EngineService(service.Service):
 
             if (stack.action in (stack.CREATE, stack.ADOPT)
                     and stack.status == stack.COMPLETE):
-                # Schedule a periodic watcher task for this stack
-                self.stack_watch.start_watch_task(stack.id, cnxt)
+                if self.stack_watch:
+                    # Schedule a periodic watcher task for this stack
+                    self.stack_watch.start_watch_task(stack.id, cnxt)
             else:
                 LOG.warning(_("Stack create failed, status %s") % stack.status)
 

@@ -817,31 +817,19 @@ class validateTest(HeatTestCase):
 
     def test_validate_ref_valid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
-        self.m.VerifyAll()
 
     def test_validate_with_environment(self):
         test_template = test_template_ref % 'WikiDatabase'
         test_template = test_template.replace('AWS::EC2::Instance',
                                               'My::Instance')
         t = template_format.parse(test_template)
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         params = {'resource_registry': {'My::Instance': 'AWS::EC2::Instance'}}
         res = dict(engine.validate_template(None, t, params))
         self.assertEqual('test.', res['Description'])
-        self.m.VerifyAll()
 
     def test_validate_hot_valid(self):
         t = template_format.parse(
@@ -852,58 +840,30 @@ class validateTest(HeatTestCase):
               my_instance:
                 type: AWS::EC2::Instance
             """)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
-        self.m.VerifyAll()
 
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
-        self.m.VerifyAll()
 
     def test_validate_findinmap_valid(self):
         t = template_format.parse(test_template_findinmap_valid)
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual('test.', res['Description'])
-        self.m.VerifyAll()
 
     def test_validate_findinmap_invalid(self):
         t = template_format.parse(test_template_findinmap_invalid)
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
-        self.m.VerifyAll()
 
     def test_validate_parameters(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
-
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         # Note: the assertion below does not expect a CFN dict of the parameter
@@ -917,7 +877,6 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
-        self.m.VerifyAll()
 
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
@@ -929,21 +888,12 @@ class validateTest(HeatTestCase):
               my_instance:
                 type: AWS::EC2::Instance
             """)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({}, res['Parameters'])
-        self.m.VerifyAll()
 
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
@@ -955,14 +905,9 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
-        self.m.VerifyAll()
 
     def test_validate_hot_no_parameter_label(self):
         t = template_format.parse(test_template_hot_no_parameter_label)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
@@ -974,14 +919,9 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, parameters)
-        self.m.VerifyAll()
 
     def test_validate_cfn_parameter_label(self):
         t = template_format.parse(test_template_cfn_parameter_label)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         parameters = res['Parameters']
@@ -993,7 +933,6 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
-        self.m.VerifyAll()
 
     def test_validate_hot_empty_resources_valid(self):
         t = template_format.parse(
@@ -1002,16 +941,11 @@ class validateTest(HeatTestCase):
             description: test.
             resources:
             """)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
-        self.m.VerifyAll()
 
     def test_validate_hot_empty_outputs_valid(self):
         t = template_format.parse(
@@ -1020,40 +954,25 @@ class validateTest(HeatTestCase):
             description: test.
             outputs:
             """)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         expected = {"Description": "test.",
                     "Parameters": {}}
         self.assertEqual(expected, res)
-        self.m.VerifyAll()
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Unknown Property UnknownProperty'}, res)
-        self.m.VerifyAll()
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Resources must contain Resource. '
                           'Found a [string] instead'},
                          res)
-        self.m.VerifyAll()
 
     def test_invalid_section_cfn(self):
         t = template_format.parse(
@@ -1069,15 +988,10 @@ class validateTest(HeatTestCase):
             }
             """)
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual({'Error': 'The template section is invalid: Output'},
                          res)
-        self.m.VerifyAll()
 
     def test_invalid_section_hot(self):
         t = template_format.parse(
@@ -1089,79 +1003,49 @@ class validateTest(HeatTestCase):
             output:
             """)
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual({'Error': 'The template section is invalid: output'},
                          res)
-        self.m.VerifyAll()
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
             {'Error': 'Property SourceDestCheck not implemented yet'},
             res)
-        self.m.VerifyAll()
 
     def test_invalid_deletion_policy(self):
         t = template_format.parse(test_template_invalid_deletion_policy)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Invalid DeletionPolicy Destroy'}, res)
-        self.m.VerifyAll()
 
     def test_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_snapshot_deletion_policy)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
             {'Error': 'Snapshot DeletionPolicy not supported'}, res)
-        self.m.VerifyAll()
 
     @skipIf(try_import('cinderclient.v1.volume_backups') is None,
             'unable to import volume_backups')
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
-        self.m.VerifyAll()
 
     def test_validate_template_without_resources(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         expected = {'Description': 'No description', 'Parameters': {}}
         self.assertEqual(expected, res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_type(self):
         hot_tpl = template_format.parse('''
@@ -1179,15 +1063,10 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Type" is not a valid keyword '
                                    'inside a resource definition\''}, res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_properties(self):
         hot_tpl = template_format.parse('''
@@ -1205,15 +1084,10 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Properties" is not a valid keyword '
                                    'inside a resource definition\''}, res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_matadata(self):
         hot_tpl = template_format.parse('''
@@ -1231,15 +1105,10 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"Metadata" is not a valid keyword '
                                    'inside a resource definition\''}, res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_depends_on(self):
         hot_tpl = template_format.parse('''
@@ -1257,15 +1126,10 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
                                    'inside a resource definition\''}, res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_deletion_polciy(self):
         hot_tpl = template_format.parse('''
@@ -1283,16 +1147,11 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"DeletionPolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)
-        self.m.VerifyAll()
 
     def test_validate_template_with_invalid_resource_update_policy(self):
         hot_tpl = template_format.parse('''
@@ -1310,16 +1169,11 @@ class validateTest(HeatTestCase):
               foo: bar
         ''')
 
-        self.m.StubOutWithMock(service.EngineListener, 'start')
-        service.EngineListener.start().AndReturn(None)
-        self.m.ReplayAll()
-
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, hot_tpl, {}))
         self.assertEqual({'Error': 'u\'"UpdatePolicy" is not a valid '
                                    'keyword inside a resource definition\''},
                          res)
-        self.m.VerifyAll()
 
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
