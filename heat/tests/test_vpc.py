@@ -17,7 +17,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import parser
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -364,8 +363,6 @@ Resources:
         stack = self.create_stack(self.test_template)
         vpc = stack['the_vpc']
         self.assertResourceState(vpc, 'aaaa')
-        self.assertRaises(resource.UpdateReplace,
-                          vpc.handle_update, {}, {}, {})
 
         scheduler.TaskRunner(vpc.delete)()
         self.m.VerifyAll()
@@ -409,8 +406,6 @@ Resources:
         subnet = stack['the_subnet']
         self.assertResourceState(subnet, 'cccc')
 
-        self.assertRaises(resource.UpdateReplace,
-                          subnet.handle_update, {}, {}, {})
         self.assertRaises(
             exception.InvalidTemplateAttribute,
             subnet.FnGetAtt,
@@ -610,10 +605,6 @@ Resources:
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
             self.assertEqual('10.0.0.100', rsrc.FnGetAtt('PrivateIpAddress'))
-
-            self.assertRaises(resource.UpdateReplace,
-                              rsrc.handle_update, {}, {}, {})
-
         finally:
             scheduler.TaskRunner(stack.delete)()
 
@@ -640,10 +631,6 @@ Resources:
             self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
-
-            self.assertRaises(resource.UpdateReplace,
-                              rsrc.handle_update, {}, {}, {})
-
         finally:
             stack.delete()
 
@@ -752,13 +739,9 @@ Resources:
 
         gateway = stack['the_gateway']
         self.assertResourceState(gateway, gateway.physical_resource_name())
-        self.assertRaises(resource.UpdateReplace, gateway.handle_update,
-                          {}, {}, {})
 
         attachment = stack['the_attachment']
         self.assertResourceState(attachment, 'the_attachment')
-        self.assertRaises(resource.UpdateReplace,
-                          attachment.handle_update, {}, {}, {})
 
         route_table = stack['the_route_table']
         self.assertEqual(list(attachment._vpc_route_tables()), [route_table])
@@ -810,15 +793,9 @@ Resources:
 
         route_table = stack['the_route_table']
         self.assertResourceState(route_table, 'ffff')
-        self.assertRaises(
-            resource.UpdateReplace,
-            route_table.handle_update, {}, {}, {})
 
         association = stack['the_association']
         self.assertResourceState(association, 'the_association')
-        self.assertRaises(
-            resource.UpdateReplace,
-            association.handle_update, {}, {}, {})
 
         scheduler.TaskRunner(association.delete)()
         scheduler.TaskRunner(route_table.delete)()

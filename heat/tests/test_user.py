@@ -17,7 +17,6 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine import resource
 from heat.engine.resources import user
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -150,8 +149,6 @@ class UserTest(HeatTestCase):
                           rsrc.FnGetAtt, 'Foo')
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
 
         self.assertIsNone(rsrc.handle_suspend())
         self.assertIsNone(rsrc.handle_resume())
@@ -312,8 +309,6 @@ class AccessKeyTest(HeatTestCase):
         rsrc = self.create_access_key(t, stack, 'HostKeys')
 
         self.m.VerifyAll()
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
         self.assertEqual(self.fc.access,
                          rsrc.resource_id)
 
@@ -423,17 +418,6 @@ class AccessPolicyTest(HeatTestCase):
         stack = utils.parse_stack(t)
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)
-
-    def test_accesspolicy_update(self):
-        t = template_format.parse(user_policy_template)
-        resource_name = 'WebServerAccessPolicy'
-        stack = utils.parse_stack(t)
-
-        rsrc = user.AccessPolicy(resource_name,
-                                 t['Resources'][resource_name],
-                                 stack)
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
 
     def test_accesspolicy_access_allowed(self):
         t = template_format.parse(user_policy_template)

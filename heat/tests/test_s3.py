@@ -17,7 +17,6 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import resource
 from heat.engine.resources import s3
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
@@ -113,9 +112,6 @@ class s3Test(HeatTestCase):
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
-
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
 
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()

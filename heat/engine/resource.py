@@ -880,7 +880,8 @@ class Resource(object):
             raise failure
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
-        raise UpdateReplace(self.name)
+        if prop_diff:
+            raise UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
         '''
