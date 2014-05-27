@@ -35,7 +35,6 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import stack_lock
 from heat.engine import watchrule
-from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common.rpc import common as rpc_common
@@ -109,8 +108,8 @@ class ThreadGroupManager(object):
         :param kwargs: Keyword-args to be passed to func.
         """
         lock = stack_lock.StackLock(cnxt, stack, engine_id)
-        lock.acquire()
-        self.start_with_acquired_lock(stack, lock, func, *args, **kwargs)
+        with lock.thread_lock(stack.id):
+            self.start_with_acquired_lock(stack, lock, func, *args, **kwargs)
 
     def start_with_acquired_lock(self, stack, lock, func, *args, **kwargs):
         """
@@ -133,12 +132,8 @@ class ThreadGroupManager(object):
             """
             lock.release(*args)
 
-        try:
-            th = self.start(stack.id, func, *args, **kwargs)
-            th.link(release, stack.id)
-        except:
-            with excutils.save_and_reraise_exception():
-                lock.release(stack.id)
+        th = self.start(stack.id, func, *args, **kwargs)
+        th.link(release, stack.id)
 
     def add_timer(self, stack_id, func, *args, **kwargs):
         """
@@ -713,17 +708,17 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=st)
 
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
-        acquire_result = lock.try_acquire()
+        with lock.try_thread_lock(stack.id) as acquire_result:
 
-        # Successfully acquired lock
-        if acquire_result is None:
-            self.thread_group_mgr.stop_timers(stack.id)
-            self.thread_group_mgr.start_with_acquired_lock(stack, lock,
-                                                           stack.delete)
-            return
+            # Successfully acquired lock
+            if acquire_result is None:
+                self.thread_group_mgr.stop_timers(stack.id)
+                self.thread_group_mgr.start_with_acquired_lock(stack, lock,
+                                                               stack.delete)
+                return
 
         # Current engine has the lock
-        elif acquire_result == self.engine_id:
+        if acquire_result == self.engine_id:
             self.thread_group_mgr.stop(stack.id)
 
         # Another active engine has the lock
@@ -765,27 +760,13 @@ class EngineService(service.Service):
         LOG.info(_('abandoning stack %s') % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
-        acquire_result = lock.try_acquire()
-
-        # If an action is in progress, 'try_acquire' returns engine UUID. If
-        # the returned engine is alive, then throw ActionInProgress exception
-        if (acquire_result and
-                (acquire_result == self.engine_id or
-                 stack_lock.StackLock.engine_alive(cnxt, acquire_result))):
-            raise exception.ActionInProgress(stack_name=stack.name,
-                                             action=stack.action)
-
-        try:
+        with lock.thread_lock(stack.id):
             # Get stack details before deleting it.
             stack_info = stack.prepare_abandon()
-        except:
-            with excutils.save_and_reraise_exception():
-                lock.release(stack.id)
-
-        self.thread_group_mgr.start_with_acquired_lock(stack,
-                                                       lock,
-                                                       stack.delete)
-        return stack_info
+            self.thread_group_mgr.start_with_acquired_lock(stack,
+                                                           lock,
+                                                           stack.delete)
+            return stack_info
 
     def list_resource_types(self, cnxt, support_status=None):
         """
