@@ -658,9 +658,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
-
-        self.man.tg = DummyThreadGroup()
-
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
@@ -687,7 +684,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         st = db_api.stack_get(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-        self.man.tg = DummyThreadGroup()
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
         stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
@@ -705,7 +701,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         st = db_api.stack_get(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=st).MultipleTimes().AndReturn(stack)
-        self.man.tg = DummyThreadGroup()
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
         stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
