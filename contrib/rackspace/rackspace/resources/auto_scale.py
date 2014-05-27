@@ -223,7 +223,8 @@ class Group(resource.Resource):
                       'this group.')
                 ),
             },
-            required=True
+            required=True,
+            update_allowed=True
         ),
         LAUNCH_CONFIGURATION: properties.Schema(
             properties.Schema.MAP,
@@ -245,15 +246,13 @@ class Group(resource.Resource):
                     ]
                 ),
             },
-            required=True
+            required=True,
+            update_allowed=True
         ),
         # We don't allow scaling policies to be specified here, despite the
         # fact that the API supports it. Users should use the ScalingPolicy
         # resource.
     }
-
-    # Everything can be changed.
-    update_allowed_properties = (GROUP_CONFIGURATION, LAUNCH_CONFIGURATION)
 
     def _get_group_config_args(self, groupconf):
         """Get the groupConfiguration-related pyrax arguments."""
@@ -375,27 +374,32 @@ class ScalingPolicy(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('Name of this scaling policy.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         CHANGE: properties.Schema(
             properties.Schema.NUMBER,
             _('Amount to add to or remove from current number of instances. '
-              'Incompatible with changePercent and desiredCapacity.')
+              'Incompatible with changePercent and desiredCapacity.'),
+            update_allowed=True
         ),
         CHANGE_PERCENT: properties.Schema(
             properties.Schema.NUMBER,
             _('Percentage-based change to add or remove from current number '
-              'of instances. Incompatible with change and desiredCapacity.')
+              'of instances. Incompatible with change and desiredCapacity.'),
+            update_allowed=True
         ),
         DESIRED_CAPACITY: properties.Schema(
             properties.Schema.NUMBER,
             _('Absolute number to set the number of instances to. '
-              'Incompatible with change and changePercent.')
+              'Incompatible with change and changePercent.'),
+            update_allowed=True
         ),
         COOLDOWN: properties.Schema(
             properties.Schema.NUMBER,
             _('Number of seconds after a policy execution during which '
-              'further executions are disabled.')
+              'further executions are disabled.'),
+            update_allowed=True
         ),
         TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -405,18 +409,15 @@ class ScalingPolicy(resource.Resource):
             constraints=[
                 constraints.AllowedValues(['webhook', 'schedule',
                                            'cloud_monitoring']),
-            ]
+            ],
+            update_allowed=True
         ),
         ARGS: properties.Schema(
             properties.Schema.MAP,
-            _('Type-specific arguments for the policy.')
+            _('Type-specific arguments for the policy.'),
+            update_allowed=True
         ),
     }
-
-    # Everything other than group can be changed.
-    update_allowed_properties = (
-        NAME, CHANGE, CHANGE_PERCENT, DESIRED_CAPACITY, COOLDOWN, TYPE, ARGS,
-    )
 
     def _get_args(self, properties):
         """Get pyrax-style create arguments for scaling policies."""
@@ -499,16 +500,15 @@ class WebHook(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('The name of this webhook.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,
-            _('Arbitrary key/value metadata for this webhook.')
+            _('Arbitrary key/value metadata for this webhook.'),
+            update_allowed=True
         ),
     }
-
-    # Everything other than policy can be changed.
-    update_allowed_properties = (NAME, METADATA)
 
     attributes_schema = {
         EXECUTE_URL: attributes.Schema(
