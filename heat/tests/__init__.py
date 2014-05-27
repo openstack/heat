@@ -13,5 +13,16 @@
 
 # See http://code.google.com/p/python-nose/issues/detail?id=373
 # The code below enables nosetests to work with i18n _() blocks
-import __builtin__
-setattr(__builtin__, '_', lambda x: x)
+from heat.openstack.common import gettextutils
+
+
+def fake_translate_msgid(msgid, domain, desired_locale=None):
+    return msgid
+
+gettextutils.enable_lazy()
+gettextutils.install('heat', lazy=True)
+
+#To ensure messages don't really get translated while running tests.
+#As there are lots of places where matching is expected when comparing
+#exception message(translated) with raw message.
+gettextutils._translate_msgid = fake_translate_msgid
