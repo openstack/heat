@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import stack_lock
@@ -179,3 +181,52 @@ class StackLockTest(HeatTestCase):
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
+
+    def test_thread_lock_context_mgr_exception(self):
+        db_api.stack_lock_create = mock.Mock(return_value=None)
+        db_api.stack_lock_release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        try:
+            with slock.thread_lock(self.stack.id):
+                db_api.stack_lock_create.assert_called_once()
+                raise Exception
+        except:
+            db_api.stack_lock_release.assert_called_once()
+
+    def test_thread_lock_context_mgr_no_exception(self):
+        db_api.stack_lock_create = mock.Mock(return_value=None)
+        db_api.stack_lock_release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        with slock.thread_lock(self.stack.id):
+            db_api.stack_lock_create.assert_called_once()
+        assert not db_api.stack_lock_release.called
+
+    def test_try_thread_lock_context_mgr_exception(self):
+        db_api.stack_lock_create = mock.Mock(return_value=None)
+        db_api.stack_lock_release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        try:
+            with slock.try_thread_lock(self.stack.id):
+                db_api.stack_lock_create.assert_called_once()
+                raise Exception
+        except:
+            db_api.stack_lock_release.assert_called_once()
+
+    def test_try_thread_lock_context_mgr_no_exception(self):
+        db_api.stack_lock_create = mock.Mock(return_value=None)
+        db_api.stack_lock_release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        with slock.try_thread_lock(self.stack.id):
+            db_api.stack_lock_create.assert_called_once()
+        assert not db_api.stack_lock_release.called
+
+    def test_try_thread_lock_context_mgr_existing_lock(self):
+        db_api.stack_lock_create = mock.Mock(return_value=1234)
+        db_api.stack_lock_release = mock.Mock(return_value=None)
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        try:
+            with slock.try_thread_lock(self.stack.id):
+                db_api.stack_lock_create.assert_called_once()
+                raise Exception
+        except:
+            assert not db_api.stack_lock_release.called
