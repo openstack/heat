@@ -14,6 +14,7 @@
 import copy
 import uuid
 
+from glanceclient import exc as glance_exceptions
 import mox
 from neutronclient.v2_0 import client as neutronclient
 
@@ -23,12 +24,12 @@ from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -77,6 +78,23 @@ class InstancesTest(HeatTestCase):
                              stack_id=str(uuid.uuid4()))
         return (t, stack)
 
+    def _mock_get_image_id_success(self, imageId_input, imageId):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+
+    def _mock_get_image_id_fail(self, image_id, exp):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
+
     def _setup_test_instance(self, return_server, name, image_id=None,
                              stub_create=True):
         stack_name = '%s_s' % name
@@ -87,6 +105,8 @@ class InstancesTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
         instance = instances.Instance(name, t['Resources']['WebServer'], stack)
+
+        self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
@@ -136,8 +156,6 @@ class InstancesTest(HeatTestCase):
         instance = self._setup_test_instance(return_server,
                                              'in_create_imgid',
                                              image_id='1')
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
@@ -162,8 +180,9 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        g_cli_moc = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(g_cli_moc)
         self.m.ReplayAll()
 
         self.assertRaises(ValueError, instance.handle_create)
@@ -179,12 +198,10 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(self.fc.client, "get_images_detail")
-        self.fc.client.get_images_detail().AndReturn((
-            200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
-                             {'id': 4, 'name': 'CentOS 5.2'}]}))
+        self._mock_get_image_id_fail('CentOS 5.2',
+                                     exception.PhysicalResourceNameAmbiguity(
+                                         name='CentOS 5.2'))
+
         self.m.ReplayAll()
 
         self.assertRaises(ValueError, instance.handle_create)
@@ -200,13 +217,8 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').AndReturn(True)
-        self.m.StubOutWithMock(self.fc.client, "get_images_1")
-        self.fc.client.get_images_1().AndRaise(
-            instances.clients.novaclient.exceptions.NotFound(404))
+        self._mock_get_image_id_fail('1', glance_exceptions.NotFound(404))
+
         self.m.ReplayAll()
 
         self.assertRaises(ValueError, instance.handle_create)
@@ -270,16 +282,14 @@ class InstancesTest(HeatTestCase):
         stack_name = 'test_instance_validate_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        # create an instance with non exist image Id
         t['Resources']['WebServer']['Properties']['ImageId'] = '1'
-        instance = instances.Instance('instance_create_image_err',
+        instance = instances.Instance('instance_create_image',
                                       t['Resources']['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
-        uuidutils.is_uuid_like('1').MultipleTimes().AndReturn(True)
+        self._mock_get_image_id_success('1', 1)
         self.m.ReplayAll()
 
         self.assertIsNone(instance.validate())

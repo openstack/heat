@@ -13,7 +13,7 @@
 
 from heat.common import exception
 from heat.engine import constraints
-from heat.engine.resources import nova_utils
+from heat.engine.resources import glance_utils
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):
@@ -21,8 +21,8 @@ class ImageConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.ImageNotFound,)
 
     def validate_with_client(self, client, value):
-        nova_client = client.nova()
-        nova_utils.get_image_id(nova_client, value)
+        glance_client = client.glance()
+        glance_utils.get_image_id(glance_client, value)
 
 
 def constraint_mapping():

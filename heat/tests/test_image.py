@@ -14,21 +14,21 @@ import mock
 
 from heat.common import exception
 from heat.engine import clients
+from heat.engine.resources import glance_utils
 from heat.engine.resources import image
-from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
 
 
 class ImageConstraintTest(HeatTestCase):
 
-    @mock.patch.object(nova_utils, 'get_image_id')
+    @mock.patch.object(glance_utils, 'get_image_id')
     def test_validation(self, mock_get_image):
         with mock.patch.object(clients, "OpenStackClients"):
             constraint = image.ImageConstraint()
             mock_get_image.return_value = "id1"
             self.assertTrue(constraint.validate("foo", None))
 
-    @mock.patch.object(nova_utils, 'get_image_id')
+    @mock.patch.object(glance_utils, 'get_image_id')
     def test_validation_error(self, mock_get_image):
         with mock.patch.object(clients, "OpenStackClients"):
             constraint = image.ImageConstraint()

@@ -24,6 +24,7 @@ from heat.engine import clients
 from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parser
+from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
@@ -210,6 +211,19 @@ class AutoScalingGroupTest(HeatTestCase):
         self.fkc = fakes.FakeKeystoneClient(username='test_stack.CfnLBUser')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
+
+    def _mock_get_image_id_success(self, imageId_input, imageId,
+                                   update_image=None):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+        if update_image:
+            glance_utils.get_image_id(g_cli_mock, update_image).\
+                MultipleTimes().AndReturn(imageId)
 
     def _stub_validate(self):
         self.m.StubOutWithMock(parser.Stack, 'validate')
@@ -426,11 +440,16 @@ class AutoScalingGroupTest(HeatTestCase):
                                  num_creates_expected_on_updt,
                                  num_deletes_expected_on_updt,
                                  num_reloads_expected_on_updt,
-                                 update_replace):
+                                 update_replace,
+                                 update_image_id=None):
 
         # setup stack from the initial template
         tmpl = template_format.parse(init_template)
         stack = utils.parse_stack(tmpl)
+
+        self._mock_get_image_id_success('F20-x86_64-cfntools',
+                                        'image_id')
+
         stack.validate()
 
         # test stack create
@@ -483,7 +502,6 @@ class AutoScalingGroupTest(HeatTestCase):
         new_updt_pol = new_grp_tmpl['UpdatePolicy']['AutoScalingRollingUpdate']
         new_batch_sz = int(new_updt_pol['MaxBatchSize'])
         self.assertNotEqual(new_batch_sz, init_batch_sz)
-        self._stub_validate()
         if update_replace:
             self._stub_grp_replace(size, size, num_reloads_expected_on_updt)
         else:
@@ -491,6 +509,10 @@ class AutoScalingGroupTest(HeatTestCase):
                                   num_deletes_expected_on_updt,
                                   num_reloads_expected_on_updt)
         self.stub_wallclock()
+        self._mock_get_image_id_success('F20-x86_64-cfntools', 'image_id',
+                                        update_image=update_image_id)
+
+        stack.validate()
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.m.VerifyAll()
@@ -555,7 +577,8 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '1'
         policy['MaxBatchSize'] = '3'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
+        update_image = 'F17-x86_64-cfntools'
+        config['Properties']['ImageId'] = update_image
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -563,7 +586,8 @@ class AutoScalingGroupTest(HeatTestCase):
                                       num_creates_expected_on_updt=0,
                                       num_deletes_expected_on_updt=0,
                                       num_reloads_expected_on_updt=9,
-                                      update_replace=True)
+                                      update_replace=True,
+                                      update_image_id=update_image)
 
     def test_autoscaling_group_update_replace_with_adjusted_capacity(self):
         """
@@ -576,7 +600,8 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '8'
         policy['MaxBatchSize'] = '4'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
+        update_image = 'F17-x86_64-cfntools'
+        config['Properties']['ImageId'] = update_image
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -584,7 +609,8 @@ class AutoScalingGroupTest(HeatTestCase):
                                       num_creates_expected_on_updt=2,
                                       num_deletes_expected_on_updt=2,
                                       num_reloads_expected_on_updt=7,
-                                      update_replace=True)
+                                      update_replace=True,
+                                      update_image_id=update_image)
 
     def test_autoscaling_group_update_replace_huge_batch_size(self):
         """
@@ -596,7 +622,8 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MinInstancesInService'] = '0'
         policy['MaxBatchSize'] = '20'
         config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
+        update_image = 'F17-x86_64-cfntools'
+        config['Properties']['ImageId'] = update_image
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
                                       json.dumps(updt_template),
@@ -604,7 +631,8 @@ class AutoScalingGroupTest(HeatTestCase):
                                       num_creates_expected_on_updt=0,
                                       num_deletes_expected_on_updt=0,
                                       num_reloads_expected_on_updt=3,
-                                      update_replace=True)
+                                      update_replace=True,
+                                      update_image_id=update_image)
 
     def test_autoscaling_group_update_replace_huge_min_in_service(self):
         """
@@ -617,6 +645,7 @@ class AutoScalingGroupTest(HeatTestCase):
         policy['MaxBatchSize'] = '1'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['LaunchConfig']
+        update_image = 'F17-x86_64-cfntools'
         config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
 
         self.update_autoscaling_group(asg_tmpl_with_updt_policy,
@@ -625,7 +654,8 @@ class AutoScalingGroupTest(HeatTestCase):
                                       num_creates_expected_on_updt=1,
                                       num_deletes_expected_on_updt=1,
                                       num_reloads_expected_on_updt=12,
-                                      update_replace=True)
+                                      update_replace=True,
+                                      update_image_id=update_image)
 
     def test_autoscaling_group_update_no_replace(self):
         """
@@ -683,6 +713,7 @@ class AutoScalingGroupTest(HeatTestCase):
         # test stack create
         size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_grp_create(size)
+        self._mock_get_image_id_success('F20-x86_64-cfntools', 'image_id')
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
@@ -735,6 +766,7 @@ class AutoScalingGroupTest(HeatTestCase):
         # test stack create
         size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_grp_create(size)
+        self._mock_get_image_id_success('F20-x86_64-cfntools', 'image_id')
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()

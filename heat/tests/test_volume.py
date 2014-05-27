@@ -21,9 +21,9 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.engine.resources import instance
-from heat.engine.resources import nova_utils
 from heat.engine.resources import volume as vol
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
@@ -93,7 +93,6 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'get_server_volume')
-        self.m.StubOutWithMock(nova_utils, 'get_image_id')
 
     def create_volume(self, t, stack, resource_name):
         data = t['Resources'][resource_name]
@@ -848,20 +847,22 @@ class VolumeTest(HeatTestCase):
     def test_cinder_create_from_image(self):
         fv = FakeVolumeWithStateTransition('downloading', 'available')
         stack_name = 'test_volume_stack'
-
+        image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
-        clients.OpenStackClients.nova("compute").MultipleTimes().AndReturn(
-            self.fc)
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        nova_utils.get_image_id(
-            self.fc, '46988116-6703-4623-9dbc-2bc6d284021b'
-        ).MultipleTimes().AndReturn('46988116-6703-4623-9dbc-2bc6d284021b')
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, image_id).MultipleTimes().\
+            AndReturn(image_id)
+
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
             display_description='ImageVolumeDescription',
             display_name='ImageVolume',
-            imageRef='46988116-6703-4623-9dbc-2bc6d284021b').AndReturn(fv)
+            imageRef=image_id).AndReturn(fv)
 
         self.m.ReplayAll()
 
@@ -871,7 +872,7 @@ class VolumeTest(HeatTestCase):
             'name': 'ImageVolume',
             'description': 'ImageVolumeDescription',
             'availability_zone': 'nova',
-            'image': '46988116-6703-4623-9dbc-2bc6d284021b',
+            'image': image_id,
         }
         stack = utils.parse_stack(t, stack_name=stack_name)
 

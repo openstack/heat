@@ -33,42 +33,6 @@ class NovaUtilsTests(HeatTestCase):
         super(NovaUtilsTests, self).setUp()
         self.nova_client = self.m.CreateMockAnything()
 
-    def test_get_image_id(self):
-        """Tests the get_image_id function."""
-        my_image = self.m.CreateMockAnything()
-        img_id = str(uuid.uuid4())
-        img_name = 'myfakeimage'
-        my_image.id = img_id
-        my_image.name = img_name
-        self.nova_client.images = self.m.CreateMockAnything()
-        self.nova_client.images.get(img_id).AndReturn(my_image)
-        self.nova_client.images.list().MultipleTimes().AndReturn([my_image])
-        self.m.ReplayAll()
-        self.assertEqual(img_id, nova_utils.get_image_id(self.nova_client,
-                                                         img_id))
-        self.assertEqual(img_id, nova_utils.get_image_id(self.nova_client,
-                                                         'myfakeimage'))
-        self.assertRaises(exception.ImageNotFound, nova_utils.get_image_id,
-                          self.nova_client, 'noimage')
-        self.m.VerifyAll()
-
-    def test_get_image_id_by_name_in_uuid(self):
-        """Tests the get_image_id function by name in uuid."""
-        my_image = self.m.CreateMockAnything()
-        img_id = str(uuid.uuid4())
-        img_name = str(uuid.uuid4())
-        my_image.id = img_id
-        my_image.name = img_name
-        self.nova_client.images = self.m.CreateMockAnything()
-        self.nova_client.images.get(img_name).AndRaise(
-            clients.novaclient.exceptions.NotFound(404))
-        self.nova_client.images.list().MultipleTimes().AndReturn([my_image])
-        self.m.ReplayAll()
-
-        self.assertEqual(img_id, nova_utils.get_image_id(self.nova_client,
-                                                         img_name))
-        self.m.VerifyAll()
-
     def test_get_ip(self):
         my_image = self.m.CreateMockAnything()
         my_image.addresses = {

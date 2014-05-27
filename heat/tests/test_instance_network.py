@@ -17,6 +17,7 @@ from heat.common import template_format
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine.resources import nova_utils
@@ -149,6 +150,15 @@ class instancesTest(HeatTestCase):
         super(instancesTest, self).setUp()
         self.fc = fakes.FakeClient()
 
+    def _mock_get_image_id_success(self, imageId_input, imageId):
+        g_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
+        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+            g_cli_mock)
+        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+            AndReturn(imageId)
+
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name
         t = template_format.parse(wp_template)
@@ -159,8 +169,8 @@ class instancesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=str(uuid.uuid4()))
-
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+        image_id = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['ImageId'] = image_id
         instance = instances.Instance('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
 
@@ -168,6 +178,8 @@ class instancesTest(HeatTestCase):
         instance.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+
+        self._mock_get_image_id_success(image_id, 1)
 
         self.m.StubOutWithMock(instance, 'neutron')
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
@@ -207,8 +219,8 @@ class instancesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=str(uuid.uuid4()))
-
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+        image_id = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['ImageId'] = image_id
 
         nic = network_interfaces.NetworkInterface('%s_nic' % name,
                                                   t['Resources']['nic1'],
@@ -217,6 +229,7 @@ class instancesTest(HeatTestCase):
         instance = instances.Instance('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
 
+        self._mock_get_image_id_success(image_id, 1)
         self.m.StubOutWithMock(nic, 'neutron')
         nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
