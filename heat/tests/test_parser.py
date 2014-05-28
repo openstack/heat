@@ -1812,9 +1812,6 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1883,7 +1880,6 @@ class StackTest(HeatTestCase):
                          self.stack.state)
 
         res = self.stack['AResource']
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
 
         tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1927,10 +1923,6 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
-
         # make the update fail deleting the existing resource
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
         generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
@@ -1962,10 +1954,6 @@ class StackTest(HeatTestCase):
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
-
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail creating
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
@@ -2008,10 +1996,6 @@ class StackTest(HeatTestCase):
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
-
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail creating
         self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
@@ -2071,10 +2055,6 @@ class StackTest(HeatTestCase):
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
-
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail creating
         self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
@@ -2164,10 +2144,6 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2),
                                      disable_rollback=False)
 
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
-
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
@@ -2200,10 +2176,6 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2),
                                      disable_rollback=False)
-
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)
@@ -2357,10 +2329,6 @@ class StackTest(HeatTestCase):
         self.assertEqual('AResource',
                          self.stack['BResource'].properties['Foo'])
 
-        # Calls to GenericResource.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
-
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'FnGetRefId')
         generic_rsrc.ResourceWithProps.FnGetRefId().AndReturn(
             'AResource')
@@ -2470,10 +2438,6 @@ class StackTest(HeatTestCase):
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'FnGetRefId')
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
 
-        # Calls to ResourceWithProps.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
-
         generic_rsrc.ResourceWithProps.FnGetRefId().MultipleTimes().AndReturn(
             'AResource')
 
@@ -2540,10 +2504,6 @@ class StackTest(HeatTestCase):
                          self.stack['BResource'].properties['Foo'])
 
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-
-        # Calls to ResourceWithProps.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
 
         # mock to make the replace fail when creating the second
         # replacement resource

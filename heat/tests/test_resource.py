@@ -227,7 +227,6 @@ class ResourceTest(HeatTestCase):
     def test_updated_time(self):
         tmpl = {'Type': 'GenericResourceType'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Type',)
         res._store()
         stored_time = res.updated_time
 
@@ -253,7 +252,6 @@ class ResourceTest(HeatTestCase):
     def test_updated_time_changes_only_on_update_calls(self):
         tmpl = {'Type': 'GenericResourceType'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Type',)
         res._store()
         self.assertIsNone(res.updated_time)
 
@@ -334,7 +332,6 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': {'foo': 456}}, diff)
 
@@ -342,7 +339,6 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': {'foo': 123}}, diff)
 
@@ -350,7 +346,6 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': None}, diff)
 
@@ -476,7 +471,6 @@ class ResourceTest(HeatTestCase):
     def test_update_ok(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -496,7 +490,6 @@ class ResourceTest(HeatTestCase):
     def test_update_replace_with_resource_name(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -519,7 +512,6 @@ class ResourceTest(HeatTestCase):
     def test_update_replace_without_resource_name(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -542,7 +534,6 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithRequiredProps('test_resource',
                                                      tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -556,7 +547,6 @@ class ResourceTest(HeatTestCase):
     def test_update_fail_prop_typo(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -570,7 +560,6 @@ class ResourceTest(HeatTestCase):
     def test_update_not_implemented(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -590,7 +579,6 @@ class ResourceTest(HeatTestCase):
     def test_suspend_resume_ok(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
