@@ -28,7 +28,7 @@ import six
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class JSONResponseSerializer(object):
@@ -40,7 +40,7 @@ class JSONResponseSerializer(object):
             return obj
 
         response = json.dumps(data, default=sanitizer)
-        logger.debug("JSON response : %s" % response)
+        LOG.debug("JSON response : %s" % response)
         return response
 
     def default(self, response, result):

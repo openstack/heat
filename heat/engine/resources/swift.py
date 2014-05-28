@@ -20,7 +20,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class SwiftContainer(resource.Resource):
@@ -126,12 +126,12 @@ class SwiftContainer(resource.Resource):
             if self.properties.get(key) is not None:
                 container_headers[key] = self.properties[key]
 
-        logger.debug('SwiftContainer create container %(container)s with '
-                     'container headers %(container_headers)s and '
-                     'account headers %(account_headers)s' % {
-                         'container': container,
-                         'account_headers': account_headers,
-                         'container_headers': container_headers})
+        LOG.debug('SwiftContainer create container %(container)s with '
+                  'container headers %(container_headers)s and '
+                  'account headers %(account_headers)s'
+                  % {'container': container,
+                     'account_headers': account_headers,
+                     'container_headers': container_headers})
 
         self.swift().put_container(container, container_headers)
 
@@ -142,13 +142,12 @@ class SwiftContainer(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug('SwiftContainer delete container %s' %
-                     self.resource_id)
+        LOG.debug('SwiftContainer delete container %s' % self.resource_id)
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Delete container failed: %s") % ex)
+                LOG.warn(_("Delete container failed: %s") % ex)
 
     def FnGetRefId(self):
         return unicode(self.resource_id)
@@ -167,7 +166,7 @@ class SwiftContainer(resource.Resource):
             try:
                 headers = self.swift().head_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn(_("Head container failed: %s") % ex)
+                LOG.warn(_("Head container failed: %s") % ex)
                 return None
             else:
                 if key == self.OBJECT_COUNT:

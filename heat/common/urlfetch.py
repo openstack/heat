@@ -25,7 +25,7 @@ from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class URLFetchError(exception.Error, IOError):
@@ -40,7 +40,7 @@ def get(url, allowed_schemes=('http', 'https')):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     """
-    logger.info(_('Fetching data from %s') % url)
+    LOG.info(_('Fetching data from %s') % url)
 
     components = urllib.parse.urlparse(url)
 

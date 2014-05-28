@@ -25,7 +25,7 @@ from heat.openstack.common.rpc import common as rpc_common
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class WatchController(object):
@@ -211,7 +211,7 @@ class WatchController(object):
                         # Filter criteria not met, return None
                         return
                 except KeyError:
-                    logger.warning(_("Invalid filter key %s, ignoring") % f)
+                    LOG.warning(_("Invalid filter key %s, ignoring") % f)
 
             return result
 
@@ -220,7 +220,7 @@ class WatchController(object):
         # FIXME : Don't yet handle filtering by Dimensions
         filter_result = dict((k, v) for (k, v) in parms.iteritems() if k in
                              ("MetricName", "Namespace"))
-        logger.debug("filter parameters : %s" % filter_result)
+        LOG.debug("filter parameters : %s" % filter_result)
 
         try:
             # Engine does not currently support query by namespace/metric
@@ -266,7 +266,7 @@ class WatchController(object):
         # need to process (each dict) for dimensions
         metric_data = api_utils.extract_param_list(parms, prefix='MetricData')
         if not len(metric_data):
-            logger.error(_("Request does not contain required MetricData"))
+            LOG.error(_("Request does not contain required MetricData"))
             return exception.HeatMissingParameterError("MetricData list")
 
         watch_name = None
@@ -321,11 +321,11 @@ class WatchController(object):
                     'expecting one of %(expect)s') % {
                         'state': state,
                         'expect': state_map.keys()}
-            logger.error(msg)
+            LOG.error(msg)
             return exception.HeatInvalidParameterValueError(msg)
 
-        logger.debug("setting %(name)s to %(state)s" % {
-                     'name': name, 'state': state_map[state]})
+        LOG.debug("setting %(name)s to %(state)s" % {
+                  'name': name, 'state': state_map[state]})
         try:
             self.rpc_client.set_watch_state(con, watch_name=name,
                                             state=state_map[state])

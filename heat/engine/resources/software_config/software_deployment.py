@@ -28,7 +28,7 @@ from heat.engine.resources.software_config import software_config as sc
 from heat.engine import signal_responder
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class SoftwareDeployment(signal_responder.SignalResponder):
@@ -240,7 +240,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         elif sd.status == SoftwareDeployment.FAILED:
             message = _("Deployment to server "
                         "failed: %s") % sd.status_reason
-            logger.error(message)
+            LOG.error(message)
             exc = exception.Error(message)
             raise exc
 

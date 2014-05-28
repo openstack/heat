@@ -25,7 +25,7 @@ from heat.common import wsgi
 from heat.openstack.common import log as logging
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class VersionNegotiationFilter(wsgi.Middleware):
@@ -48,7 +48,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         msg = ("Processing request: %(method)s %(path)s Accept: "
                "%(accept)s" % {'method': req.method,
                                'path': req.path, 'accept': req.accept})
-        logger.debug(msg)
+        LOG.debug(msg)
 
         # If the request is for /versions, just return the versions container
         if req.path_info_peek() in ("versions", ""):
@@ -60,19 +60,19 @@ class VersionNegotiationFilter(wsgi.Middleware):
             minor_version = req.environ['api.minor_version']
 
             if (major_version == 1 and minor_version == 0):
-                logger.debug("Matched versioned URI. "
-                             "Version: %(major_version)d.%(minor_version)d"
-                             % {'major_version': major_version,
-                                'minor_version': minor_version})
+                LOG.debug("Matched versioned URI. "
+                          "Version: %(major_version)d.%(minor_version)d"
+                          % {'major_version': major_version,
+                             'minor_version': minor_version})
                 # Strip the version from the path
                 req.path_info_pop()
                 return None
             else:
-                logger.debug("Unknown version in versioned URI: "
-                             "%(major_version)d.%(minor_version)d. "
-                             "Returning version choices."
-                             % {'major_version': major_version,
-                                'minor_version': minor_version})
+                LOG.debug("Unknown version in versioned URI: "
+                          "%(major_version)d.%(minor_version)d. "
+                          "Returning version choices."
+                          % {'major_version': major_version,
+                             'minor_version': minor_version})
                 return self.versions_app
 
         accept = str(req.accept)
@@ -84,22 +84,22 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 major_version = req.environ['api.major_version']
                 minor_version = req.environ['api.minor_version']
                 if (major_version == 1 and minor_version == 0):
-                    logger.debug("Matched versioned media type. Version: "
-                                 "%(major_version)d.%(minor_version)d"
-                                 % {'major_version': major_version,
-                                    'minor_version': minor_version})
+                    LOG.debug("Matched versioned media type. Version: "
+                              "%(major_version)d.%(minor_version)d"
+                              % {'major_version': major_version,
+                                 'minor_version': minor_version})
                     return None
                 else:
-                    logger.debug("Unknown version in accept header: "
-                                 "%(major_version)d.%(minor_version)d..."
-                                 "returning version choices."
-                                 % {'major_version': major_version,
-                                     'minor_version': minor_version})
+                    LOG.debug("Unknown version in accept header: "
+                              "%(major_version)d.%(minor_version)d..."
+                              "returning version choices."
+                              % {'major_version': major_version,
+                                  'minor_version': minor_version})
                     return self.versions_app
         else:
             if req.accept not in ('*/*', ''):
-                logger.debug("Unknown accept header: %s..."
-                             "returning HTTP not found.", req.accept)
+                LOG.debug("Unknown accept header: %s..."
+                          "returning HTTP not found.", req.accept)
             return webob.exc.HTTPNotFound()
         return None
 

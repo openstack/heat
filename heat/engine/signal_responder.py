@@ -20,7 +20,7 @@ from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 SIGNAL_TYPES = (
     WAITCONDITION, SIGNAL
@@ -65,8 +65,8 @@ class SignalResponder(stack_user.StackUser):
         secret_key = self.data().get('secret_key')
 
         if not access_key or not secret_key:
-            logger.warning(_('Cannot generate signed url, '
-                             'no stored access/secret key'))
+            LOG.warning(_('Cannot generate signed url, '
+                          'no stored access/secret key'))
             return
 
         waitcond_url = cfg.CONF.heat_waitcondition_server_url

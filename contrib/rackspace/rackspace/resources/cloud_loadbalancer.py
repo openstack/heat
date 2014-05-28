@@ -35,7 +35,7 @@ except ImportError:
 
     PYRAX_INSTALLED = False
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class LoadbalancerBuildError(exception.HeatException):
@@ -493,7 +493,7 @@ class CloudLoadBalancer(resource.Resource):
 
         lb_name = (self.properties.get(self.NAME) or
                    self.physical_resource_name())
-        logger.debug("Creating loadbalancer: %s" % {lb_name: lb_body})
+        LOG.debug("Creating loadbalancer: %s" % {lb_name: lb_body})
         loadbalancer = self.clb.create(lb_name, **lb_body)
         self.resource_id_set(str(loadbalancer.id))
 
@@ -621,8 +621,8 @@ class CloudLoadBalancer(resource.Resource):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
         function = attribute_function[key]
-        logger.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
-                    {'name': self.name, 'key': key, 'function': function})
+        LOG.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
+                 {'name': self.name, 'key': key, 'function': function})
         return unicode(function)
 
 

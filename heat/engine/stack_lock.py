@@ -24,7 +24,7 @@ from heat.openstack.common.rpc import proxy
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class StackLock(object):
@@ -66,45 +66,45 @@ class StackLock(object):
         lock_engine_id = db_api.stack_lock_create(self.stack.id,
                                                   self.engine_id)
         if lock_engine_id is None:
-            logger.debug("Engine %(engine)s acquired lock on stack "
-                         "%(stack)s" % {'engine': self.engine_id,
-                                        'stack': self.stack.id})
+            LOG.debug("Engine %(engine)s acquired lock on stack "
+                      "%(stack)s" % {'engine': self.engine_id,
+                                     'stack': self.stack.id})
             return
 
         if lock_engine_id == self.engine_id or \
            self.engine_alive(self.context, lock_engine_id):
-            logger.debug("Lock on stack %(stack)s is owned by engine "
-                         "%(engine)s" % {'stack': self.stack.id,
-                                         'engine': lock_engine_id})
+            LOG.debug("Lock on stack %(stack)s is owned by engine "
+                      "%(engine)s" % {'stack': self.stack.id,
+                                      'engine': lock_engine_id})
             raise exception.ActionInProgress(stack_name=self.stack.name,
                                              action=self.stack.action)
         else:
-            logger.info(_("Stale lock detected on stack %(stack)s.  Engine "
-                          "%(engine)s will attempt to steal the lock")
-                        % {'stack': self.stack.id, 'engine': self.engine_id})
+            LOG.info(_("Stale lock detected on stack %(stack)s.  Engine "
+                       "%(engine)s will attempt to steal the lock")
+                     % {'stack': self.stack.id, 'engine': self.engine_id})
 
             result = db_api.stack_lock_steal(self.stack.id, lock_engine_id,
                                              self.engine_id)
 
             if result is None:
-                logger.info(_("Engine %(engine)s successfully stole the lock "
-                              "on stack %(stack)s")
-                            % {'engine': self.engine_id,
-                               'stack': self.stack.id})
+                LOG.info(_("Engine %(engine)s successfully stole the lock "
+                           "on stack %(stack)s")
+                         % {'engine': self.engine_id,
+                            'stack': self.stack.id})
                 return
             elif result is True:
                 if retry:
-                    logger.info(_("The lock on stack %(stack)s was released "
-                                  "while engine %(engine)s was stealing it. "
-                                  "Trying again") % {'stack': self.stack.id,
-                                                     'engine': self.engine_id})
+                    LOG.info(_("The lock on stack %(stack)s was released "
+                               "while engine %(engine)s was stealing it. "
+                               "Trying again") % {'stack': self.stack.id,
+                                                  'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
-                logger.info(_("Failed to steal lock on stack %(stack)s. "
-                              "Engine %(engine)s stole the lock first")
-                            % {'stack': self.stack.id,
-                               'engine': new_lock_engine_id})
+                LOG.info(_("Failed to steal lock on stack %(stack)s. "
+                           "Engine %(engine)s stole the lock first")
+                         % {'stack': self.stack.id,
+                            'engine': new_lock_engine_id})
 
             raise exception.ActionInProgress(
                 stack_name=self.stack.name, action=self.stack.action)
@@ -114,9 +114,8 @@ class StackLock(object):
         # Only the engine that owns the lock will be releasing it.
         result = db_api.stack_lock_release(stack_id, self.engine_id)
         if result is True:
-            logger.warning(_("Lock was already released on stack %s!")
-                           % stack_id)
+            LOG.warning(_("Lock was already released on stack %s!") % stack_id)
         else:
-            logger.debug("Engine %(engine)s released lock on stack "
-                         "%(stack)s" % {'engine': self.engine_id,
-                                        'stack': stack_id})
+            LOG.debug("Engine %(engine)s released lock on stack "
+                      "%(stack)s" % {'engine': self.engine_id,
+                                     'stack': stack_id})

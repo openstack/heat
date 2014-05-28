@@ -24,7 +24,7 @@ from heat.engine import scheduler
 from heat.engine import signal_responder
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class WaitConditionHandle(signal_responder.SignalResponder):
@@ -76,15 +76,15 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         if self._metadata_format_ok(new_metadata):
             rsrc_metadata = self.metadata_get(refresh=True)
             if new_metadata['UniqueId'] in rsrc_metadata:
-                logger.warning(_("Overwriting Metadata item for UniqueId %s!")
-                               % new_metadata['UniqueId'])
+                LOG.warning(_("Overwriting Metadata item for UniqueId %s!")
+                            % new_metadata['UniqueId'])
             safe_metadata = {}
             for k in ('Data', 'Reason', 'Status'):
                 safe_metadata[k] = new_metadata[k]
             rsrc_metadata.update({new_metadata['UniqueId']: safe_metadata})
             self.metadata_set(rsrc_metadata)
         else:
-            logger.error(_("Metadata failed validation for %s") % self.name)
+            LOG.error(_("Metadata failed validation for %s") % self.name)
             raise ValueError(_("Metadata format invalid"))
 
     def get_status(self):
@@ -225,20 +225,20 @@ class WaitCondition(resource.Resource):
                 yield
             except scheduler.Timeout:
                 timeout = WaitConditionTimeout(self, handle)
-                logger.info(_('%(name)s Timed out (%(timeout)s)') % {
-                            'name': str(self), 'timeout': str(timeout)})
+                LOG.info(_('%(name)s Timed out (%(timeout)s)')
+                         % {'name': str(self), 'timeout': str(timeout)})
                 raise timeout
 
             handle_status = handle.get_status()
 
             if any(s != STATUS_SUCCESS for s in handle_status):
                 failure = WaitConditionFailure(self, handle)
-                logger.info(_('%(name)s Failed (%(failure)s)') % {
-                            'name': str(self), 'failure': str(failure)})
+                LOG.info(_('%(name)s Failed (%(failure)s)')
+                         % {'name': str(self), 'failure': str(failure)})
                 raise failure
 
             if len(handle_status) >= self.properties[self.COUNT]:
-                logger.info(_("%s Succeeded") % str(self))
+                LOG.info(_("%s Succeeded") % str(self))
                 return
 
     def handle_create(self):
@@ -285,10 +285,10 @@ class WaitCondition(resource.Resource):
             meta = handle.metadata_get(refresh=True)
             # Note, can't use a dict generator on python 2.6, hence:
             res = dict([(k, meta[k]['Data']) for k in meta])
-            logger.debug('%(name)s.GetAtt(%(key)s) == %(res)s' %
-                         {'name': self.name,
-                          'key': key,
-                          'res': res})
+            LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
+                      % {'name': self.name,
+                         'key': key,
+                         'res': res})
 
             return unicode(json.dumps(res))
 

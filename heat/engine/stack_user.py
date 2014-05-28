@@ -19,7 +19,7 @@ from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class StackUser(resource.Resource):
@@ -80,7 +80,7 @@ class StackUser(resource.Resource):
             # compatibility with resources created before the migration
             # to stack_user.StackUser domain users.  After an appropriate
             # transitional period, this should be removed.
-            logger.warning(_('Reverting to legacy user delete path'))
+            LOG.warning(_('Reverting to legacy user delete path'))
             try:
                 self.keystone().delete_stack_user(user_id)
             except kc_exception.NotFound:

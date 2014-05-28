@@ -35,7 +35,7 @@ from heat.openstack.common import uuidutils
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Server(stack_user.StackUser):
@@ -622,8 +622,8 @@ class Server(stack_user.StackUser):
         try:
             server = self.nova().servers.get(self.resource_id)
         except clients.novaclient.exceptions.NotFound as ex:
-            logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
-                        'server': self.resource_id, 'ex': ex})
+            LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
+                     % {'server': self.resource_id, 'ex': ex})
             return ''
         if name == self.ADDRESSES:
             return self._add_port_for_address(server)
@@ -901,14 +901,14 @@ class Server(stack_user.StackUser):
                                    server=self.name)
                 raise exception.StackValidationFailed(message=msg)
             elif network.get(self.NETWORK_UUID):
-                logger.info(_('For the server "%(server)s" the "%(uuid)s" '
-                              'property is set to network "%(network)s". '
-                              '"%(uuid)s" property is deprecated. Use '
-                              '"%(id)s"  property instead.'
-                              '') % dict(uuid=self.NETWORK_UUID,
-                                         id=self.NETWORK_ID,
-                                         network=network[self.NETWORK_ID],
-                                         server=self.name))
+                LOG.info(_('For the server "%(server)s" the "%(uuid)s" '
+                           'property is set to network "%(network)s". '
+                           '"%(uuid)s" property is deprecated. Use '
+                           '"%(id)s"  property instead.')
+                         % dict(uuid=self.NETWORK_UUID,
+                                id=self.NETWORK_ID,
+                                network=network[self.NETWORK_ID],
+                                server=self.name))
 
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties.get(self.METADATA)
@@ -986,7 +986,7 @@ class Server(stack_user.StackUser):
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:
-            logger.debug('suspending server %s' % self.resource_id)
+            LOG.debug('suspending server %s' % self.resource_id)
             # We want the server.suspend to happen after the volume
             # detachement has finished, so pass both tasks and the server
             suspend_runner = scheduler.TaskRunner(server.suspend)
@@ -1003,9 +1003,8 @@ class Server(stack_user.StackUser):
                 return True
 
             nova_utils.refresh_server(server)
-            logger.debug('%(name)s check_suspend_complete status '
-                         '= %(status)s' % {
-                             'name': self.name, 'status': server.status})
+            LOG.debug('%(name)s check_suspend_complete status = %(status)s'
+                      % {'name': self.name, 'status': server.status})
             if server.status in list(nova_utils.deferred_server_statuses +
                                      ['ACTIVE']):
                 return server.status == 'SUSPENDED'
@@ -1032,7 +1031,7 @@ class Server(stack_user.StackUser):
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:
-            logger.debug('resuming server %s' % self.resource_id)
+            LOG.debug('resuming server %s' % self.resource_id)
             server.resume()
             return server
 

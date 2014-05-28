@@ -30,7 +30,7 @@ except ImportError:
 
     PYRAX_INSTALLED = False
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class CloudDns(resource.Resource):
@@ -153,7 +153,7 @@ class CloudDns(resource.Resource):
         """Create a Rackspace CloudDns Instance."""
         # There is no check_create_complete as the pyrax create for DNS is
         # synchronous.
-        logger.debug("CloudDns handle_create called.")
+        LOG.debug("CloudDns handle_create called.")
         args = dict((k, v) for k, v in self.properties.items())
         for rec in args[self.RECORDS] or {}:
             # only pop the priority for the correct types
@@ -165,7 +165,7 @@ class CloudDns(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update a Rackspace CloudDns Instance."""
-        logger.debug("CloudDns handle_update called.")
+        LOG.debug("CloudDns handle_update called.")
         if not self.resource_id:
             raise exception.Error(_('Update called on a non-existent domain'))
         if prop_diff:
@@ -188,7 +188,7 @@ class CloudDns(resource.Resource):
 
     def handle_delete(self):
         """Delete a Rackspace CloudDns Instance."""
-        logger.debug("CloudDns handle_delete called.")
+        LOG.debug("CloudDns handle_delete called.")
         if self.resource_id:
             try:
                 dom = self.cloud_dns().get(self.resource_id)

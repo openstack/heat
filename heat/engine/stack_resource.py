@@ -22,7 +22,7 @@ from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class StackResource(resource.Resource):
@@ -103,7 +103,7 @@ class StackResource(resource.Resource):
             params = self.child_params()
         except NotImplementedError:
             not_implemented_msg = _("Preview of '%s' not yet implemented")
-            logger.warning(not_implemented_msg % self.__class__.__name__)
+            LOG.warning(not_implemented_msg % self.__class__.__name__)
             return self
 
         self._validate_nested_resources(template)
@@ -240,7 +240,7 @@ class StackResource(resource.Resource):
         try:
             stack = self.nested()
         except exception.NotFound:
-            logger.info(_("Stack not found to delete"))
+            LOG.info(_("Stack not found to delete"))
         else:
             if stack is not None:
                 delete_task = scheduler.TaskRunner(stack.delete)

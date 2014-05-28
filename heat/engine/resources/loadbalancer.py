@@ -24,7 +24,7 @@ from heat.engine import stack_resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 lb_template_default = r'''
 {
@@ -426,7 +426,7 @@ class LoadBalancer(stack_resource.StackResource):
         client = self.nova()
         for i in instances:
             ip = nova_utils.server_to_ipaddress(client, i) or '0.0.0.0'
-            logger.debug('haproxy server:%s' % ip)
+            LOG.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
                                                            ip, inst_port,
                                                            check))
@@ -437,8 +437,8 @@ class LoadBalancer(stack_resource.StackResource):
     def get_parsed_template(self):
         if cfg.CONF.loadbalancer_template:
             with open(cfg.CONF.loadbalancer_template) as templ_fd:
-                logger.info(_('Using custom loadbalancer template %s')
-                            % cfg.CONF.loadbalancer_template)
+                LOG.info(_('Using custom loadbalancer template %s')
+                         % cfg.CONF.loadbalancer_template)
                 contents = templ_fd.read()
         else:
             contents = lb_template_default

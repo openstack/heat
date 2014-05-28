@@ -21,42 +21,42 @@ from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 try:
     from swiftclient import client as swiftclient
 except ImportError:
     swiftclient = None
-    logger.info(_('swiftclient not available'))
+    LOG.info(_('swiftclient not available'))
 try:
     from neutronclient.v2_0 import client as neutronclient
 except ImportError:
     neutronclient = None
-    logger.info(_('neutronclient not available'))
+    LOG.info(_('neutronclient not available'))
 try:
     from cinderclient import client as cinderclient
 except ImportError:
     cinderclient = None
-    logger.info(_('cinderclient not available'))
+    LOG.info(_('cinderclient not available'))
 
 try:
     from troveclient import client as troveclient
 except ImportError:
     troveclient = None
-    logger.info(_('troveclient not available'))
+    LOG.info(_('troveclient not available'))
 
 try:
     from ceilometerclient import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
-    logger.info(_('ceilometerclient not available'))
+    LOG.info(_('ceilometerclient not available'))
 
 try:
     from glanceclient import client as glanceclient
 except ImportError:
     glanceclient = None
-    logger.info(_('glanceclient not available'))
+    LOG.info(_('glanceclient not available'))
 
 _default_backend = "heat.engine.clients.OpenStackClients"
 
@@ -188,7 +188,7 @@ class OpenStackClients(object):
 
         con = self.context
         if self.auth_token is None:
-            logger.error(_("Neutron connection failed, no auth_token!"))
+            LOG.error(_("Neutron connection failed, no auth_token!"))
             return None
 
         endpoint_type = self._get_client_option('neutron', 'endpoint_type')

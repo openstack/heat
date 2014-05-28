@@ -17,7 +17,7 @@ from heat.engine import stack_user
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class GenericResource(resource.Resource):
@@ -29,27 +29,27 @@ class GenericResource(resource.Resource):
                          'Foo': 'Another generic attribute'}
 
     def handle_create(self):
-        logger.warning(_('Creating generic resource (Type "%s")') %
-                       self.type())
+        LOG.warning(_('Creating generic resource (Type "%s")') %
+                    self.type())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        logger.warning(_('Updating generic resource (Type "%s")') %
-                       self.type())
+        LOG.warning(_('Updating generic resource (Type "%s")') %
+                    self.type())
 
     def handle_delete(self):
-        logger.warning(_('Deleting generic resource (Type "%s")') %
-                       self.type())
+        LOG.warning(_('Deleting generic resource (Type "%s")') %
+                    self.type())
 
     def _resolve_attribute(self, name):
         return self.name
 
     def handle_suspend(self):
-        logger.warning(_('Suspending generic resource (Type "%s")') %
-                       self.type())
+        LOG.warning(_('Suspending generic resource (Type "%s")') %
+                    self.type())
 
     def handle_resume(self):
-        logger.warning(_('Resuming generic resource (Type "%s")') %
-                       self.type())
+        LOG.warning(_('Resuming generic resource (Type "%s")') %
+                    self.type())
 
 
 class ResWithComplexPropsAndAttrs(GenericResource):
@@ -129,8 +129,8 @@ class SignalResource(signal_responder.SignalResponder):
             msg = _('Cannot signal resource during %s') % self.action
             raise Exception(msg)
 
-        logger.warning(_('Signaled resource (Type "%(type)s") %(details)s')
-                       % {'type': self.type(), 'details': details})
+        LOG.warning(_('Signaled resource (Type "%(type)s") %(details)s')
+                    % {'type': self.type(), 'details': details})
 
     def _resolve_attribute(self, name):
         if name == 'AlarmUrl' and self.resource_id is not None:

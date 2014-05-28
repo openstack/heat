@@ -259,7 +259,7 @@ class ResourceExceptionHandlingTest(HeatTestCase):
                                  None)
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
-        self.assertNotIn(str(e), self.logger.output)
+        self.assertNotIn(str(e), self.LOG.output)
 
 
 class JSONRequestDeserializerTest(HeatTestCase):

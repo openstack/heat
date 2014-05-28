@@ -34,7 +34,7 @@ from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Restarter(signal_responder.SignalResponder):
@@ -88,22 +88,21 @@ class Restarter(signal_responder.SignalResponder):
         else:
             alarm_state = details.get('state', 'alarm').lower()
 
-        logger.info(_('%(name)s Alarm, new state %(state)s') % {
-                    'name': self.name, 'state': alarm_state})
+        LOG.info(_('%(name)s Alarm, new state %(state)s')
+                 % {'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
             return
 
         victim = self._find_resource(self.properties[self.INSTANCE_ID])
         if victim is None:
-            logger.info(_('%(name)s Alarm, can not find instance '
-                        '%(instance)s') % {
-                            'name': self.name,
-                            'instance': self.properties[self.INSTANCE_ID]})
+            LOG.info(_('%(name)s Alarm, can not find instance %(instance)s')
+                     % {'name': self.name,
+                        'instance': self.properties[self.INSTANCE_ID]})
             return
 
-        logger.info(_('%(name)s Alarm, restarting resource: %(victim)s') % {
-                    'name': self.name, 'victim': victim.name})
+        LOG.info(_('%(name)s Alarm, restarting resource: %(victim)s')
+                 % {'name': self.name, 'victim': victim.name})
         self.stack.restart_resource(victim.name)
 
     def _resolve_attribute(self, name):
@@ -367,10 +366,8 @@ class Instance(resource.Resource):
         elif name in self.ATTRIBUTES[1:]:
             res = self._ipaddress()
 
-        logger.info(_('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
-                    {'name': self.name,
-                     'attname': name,
-                     'res': res})
+        LOG.info(_('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
+                 {'name': self.name, 'attname': name, 'res': res})
         return unicode(res) if res else None
 
     def _build_nics(self, network_interfaces,
@@ -752,7 +749,7 @@ class Instance(resource.Resource):
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:
-            logger.debug("suspending instance %s" % self.resource_id)
+            LOG.debug("suspending instance %s" % self.resource_id)
             # We want the server.suspend to happen after the volume
             # detachement has finished, so pass both tasks and the server
             suspend_runner = scheduler.TaskRunner(server.suspend)
@@ -774,10 +771,9 @@ class Instance(resource.Resource):
                     return True
 
                 nova_utils.refresh_server(server)
-                logger.debug("%(name)s check_suspend_complete "
-                             "status = %(status)s",
-                             {'name': self.name,
-                              'status': server.status})
+                LOG.debug("%(name)s check_suspend_complete "
+                          "status = %(status)s",
+                          {'name': self.name, 'status': server.status})
                 if server.status in list(nova_utils.deferred_server_statuses +
                                          ['ACTIVE']):
                     return server.status == 'SUSPENDED'
@@ -808,7 +804,7 @@ class Instance(resource.Resource):
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:
-            logger.debug("resuming instance %s" % self.resource_id)
+            LOG.debug("resuming instance %s" % self.resource_id)
             server.resume()
             return server, scheduler.TaskRunner(self._attach_volumes_task())
 

@@ -15,7 +15,7 @@ from heat.common.exception import StackValidationFailed
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 PARAMETER_GROUPS = 'parameter_groups'
 PARAMETERS = 'parameters'
@@ -28,8 +28,8 @@ class ParameterGroups(object):
     def __init__(self, tmpl):
         self.tmpl = tmpl
         self.parameters = tmpl.parameters(None, {})
-        logger.debug(self.tmpl)
-        logger.debug(self.parameters)
+        LOG.debug(self.tmpl)
+        LOG.debug(self.parameters)
         self.parameter_names = []
         if self.parameters:
             self.parameter_names = [param for param in self.parameters]
@@ -40,8 +40,8 @@ class ParameterGroups(object):
         Validate that a parameter belongs to only one Parameter Group
         and that each parameter name references a valid parameter.
         '''
-        logger.debug('Validating Parameter Groups.')
-        logger.debug(self.parameter_names)
+        LOG.debug('Validating Parameter Groups.')
+        LOG.debug(self.parameter_names)
         if self.parameter_groups is not None:
             #Loop through groups and validate parameters
             grouped_parameters = []

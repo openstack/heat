@@ -16,13 +16,13 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 try:
     from marconiclient.queues.v1 import client as marconiclient
 except ImportError:
     marconiclient = None
-    logger.info(_('marconiclient not available'))
+    LOG.info(_('marconiclient not available'))
 
 
 class Clients(clients.OpenStackClients):
@@ -39,7 +39,7 @@ class Clients(clients.OpenStackClients):
 
         con = self.context
         if self.auth_token is None:
-            logger.error(_("Marconi connection failed, no auth_token!"))
+            LOG.error(_("Marconi connection failed, no auth_token!"))
             return None
 
         opts = {

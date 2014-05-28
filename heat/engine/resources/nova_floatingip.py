@@ -19,7 +19,7 @@ from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class NovaFloatingIp(resource.Resource):
@@ -67,7 +67,7 @@ class NovaFloatingIp(resource.Resource):
                 if pool is None:
                     msg = _('Could not allocate floating IP. Probably there '
                             'is no default floating IP pool is configured.')
-                    logger.error(msg)
+                    LOG.error(msg)
 
         self.resource_id_set(floating_ip.id)
         self._floating_ip = floating_ip
