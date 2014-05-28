@@ -180,11 +180,18 @@ class ParameterTest(testtools.TestCase):
         p = self.new_parameter('p', schema, '3')
         self.assertEqual(3, p.value())
 
-    def test_number_float_good(self):
+    def test_number_float_good_string(self):
         schema = {'Type': 'Number',
                   'MinValue': '3.0',
                   'MaxValue': '4.0'}
         p = self.new_parameter('p', schema, '3.5')
+        self.assertEqual(3.5, p.value())
+
+    def test_number_float_good_number(self):
+        schema = {'Type': 'Number',
+                  'MinValue': '3.0',
+                  'MaxValue': '4.0'}
+        p = self.new_parameter('p', schema, 3.5)
         self.assertEqual(3.5, p.value())
 
     def test_number_low(self):

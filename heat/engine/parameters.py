@@ -278,10 +278,7 @@ class NumberParam(Parameter):
         self.schema.validate_value(self.name, val, context)
 
     def value(self):
-        try:
-            return int(self)
-        except ValueError:
-            return float(self)
+        return Schema.str_to_num(super(NumberParam, self).value())
 
 
 class StringParam(Parameter):
