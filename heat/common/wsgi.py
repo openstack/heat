@@ -62,11 +62,11 @@ api_opts = [
                help=_("Number of backlog requests "
                       "to configure the socket with."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('cert_file', default=None,
+    cfg.StrOpt('cert_file',
                help=_("Location of the SSL certificate file "
                       "to use for SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('key_file', default=None,
+    cfg.StrOpt('key_file',
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
@@ -96,11 +96,11 @@ api_cfn_opts = [
                help=_("Number of backlog requests "
                       "to configure the socket with."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('cert_file', default=None,
+    cfg.StrOpt('cert_file',
                help=_("Location of the SSL certificate file "
                       "to use for SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('key_file', default=None,
+    cfg.StrOpt('key_file',
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
@@ -130,11 +130,11 @@ api_cw_opts = [
                help=_("Number of backlog requests "
                       "to configure the socket with."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('cert_file', default=None,
+    cfg.StrOpt('cert_file',
                help=_("Location of the SSL certificate file "
                       "to use for SSL mode."),
                deprecated_group='DEFAULT'),
-    cfg.StrOpt('key_file', default=None,
+    cfg.StrOpt('key_file',
                help=_("Location of the SSL key file to use "
                       "for enabling SSL mode."),
                deprecated_group='DEFAULT'),
