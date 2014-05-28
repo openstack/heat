@@ -719,7 +719,11 @@ def log_exception(err, exc_info):
 
 def translate_exception(exc, locale):
     """Translates all translatable elements of the given exception."""
-    exc.message = gettextutils.translate(six.text_type(exc), locale)
+    if isinstance(exc, exception.HeatException):
+        exc.message = gettextutils.translate(exc.message, locale)
+    else:
+        exc.message = gettextutils.translate(six.text_type(exc), locale)
+
     if isinstance(exc, webob.exc.HTTPError):
         # If the explanation is not a Message, that means that the
         # explanation is the default, generic and not translatable explanation
