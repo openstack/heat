@@ -282,8 +282,9 @@ class Group(resource.Resource):
             disk_config=server_args.get(
                 self.LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG),
             metadata=server_args.get(self.GROUP_CONFIGURATION_METADATA),
-            personality=server_args.get(
-                self.LAUNCH_CONFIG_ARGS_SERVER_PERSONALITY),
+            personality=[
+                {'path': k, 'contents': v} for k, v in server_args.get(
+                    self.LAUNCH_CONFIG_ARGS_SERVER_PERSONALITY).items()],
             networks=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_NETWORKS),
             load_balancers=lbs,
             key_name=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_KEY_NAME),
