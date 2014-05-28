@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import attributes
 from heat.engine import resource
 from heat.engine import signal_responder
 from heat.engine import stack_user
@@ -25,8 +26,8 @@ class GenericResource(resource.Resource):
     Dummy resource for use in tests
     '''
     properties_schema = {}
-    attributes_schema = {'foo': 'A generic attribute',
-                         'Foo': 'Another generic attribute'}
+    attributes_schema = {'foo': attributes.Schema('A generic attribute'),
+                         'Foo': attributes.Schema('Another generic attribute')}
 
     def handle_create(self):
         LOG.warning(_('Creating generic resource (Type "%s")') %
@@ -58,9 +59,9 @@ class ResWithComplexPropsAndAttrs(GenericResource):
                          'a_list': {'Type': 'List'},
                          'a_map': {'Type': 'Map'}}
 
-    attributes_schema = {'list': 'A list',
-                         'map': 'A map',
-                         'string': 'A string'}
+    attributes_schema = {'list': attributes.Schema('A list'),
+                         'map': attributes.Schema('A map'),
+                         'string': attributes.Schema('A string')}
 
     def _resolve_attribute(self, name):
         try:
@@ -88,11 +89,12 @@ class ResourceWithResourceID(GenericResource):
 
 
 class ResourceWithComplexAttributes(GenericResource):
-    attributes_schema = {'list': 'A list',
-                         'flat_dict': 'A flat dictionary',
-                         'nested_dict': 'A nested dictionary',
-                         'none': 'A None'
-                         }
+    attributes_schema = {
+        'list': attributes.Schema('A list'),
+        'flat_dict': attributes.Schema('A flat dictionary'),
+        'nested_dict': attributes.Schema('A nested dictionary'),
+        'none': attributes.Schema('A None')
+    }
 
     list = ['foo', 'bar']
     flat_dict = {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'}
@@ -118,7 +120,7 @@ class ResourceWithRequiredProps(GenericResource):
 
 class SignalResource(signal_responder.SignalResponder):
     properties_schema = {}
-    attributes_schema = {'AlarmUrl': 'Get a signed webhook'}
+    attributes_schema = {'AlarmUrl': attributes.Schema('Get a signed webhook')}
 
     def handle_create(self):
         super(SignalResource, self).handle_create()

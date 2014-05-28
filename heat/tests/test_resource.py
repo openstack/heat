@@ -20,6 +20,7 @@ import six
 
 from heat.common import exception
 from heat.db import api as db_api
+from heat.engine import attributes
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
@@ -677,8 +678,8 @@ class ResourceTest(HeatTestCase):
             }
 
             attributes_schema = {
-                'output1': 'output1_desc',
-                'output2': 'output2_desc'
+                'output1': attributes.Schema('output1_desc'),
+                'output2': attributes.Schema('output2_desc')
             }
 
         expected_template = {

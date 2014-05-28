@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import warnings
 
 from heat.engine import constraints as constr
 from heat.engine import support
@@ -50,9 +51,10 @@ class Schema(constr.Schema):
         """
         if isinstance(schema_dict, cls):
             return schema_dict
-        # it's necessary for supporting old attribute schema format,
-        # where value is not Schema object
-        return cls(description=schema_dict)
+        warnings.warn('<name>: <description> schema definition is deprecated. '
+                      'Use <name>: attributes.Schema(<description>) instead.',
+                      DeprecationWarning)
+        return cls(schema_dict)
 
 
 def schemata(schema):
@@ -123,7 +125,7 @@ class Attributes(collections.Mapping):
     @staticmethod
     def schema_from_outputs(json_snippet):
         if json_snippet:
-            return dict((k, v.get("Description"))
+            return dict((k, Schema(v.get("Description")))
                         for k, v in json_snippet.items())
         return {}
 
