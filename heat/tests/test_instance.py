@@ -520,6 +520,46 @@ class InstancesTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_instance_create_with_stack_scheduler_hints(self):
+        return_server = self.fc.servers.list()[1]
+        instances.cfg.CONF.set_override('stack_scheduler_hints', True)
+        # Unroll _create_test_instance, to enable check
+        # for addition of heat ids (stack id, resource name)
+        stack_name = 'test_instance_create_with_stack_scheduler_hints'
+        (t, stack) = self._get_test_template(stack_name)
+        resource_defns = t.resource_definitions(stack)
+        instance = instances.Instance('in_create_with_sched_hints',
+                                      resource_defns['WebServer'], stack)
+        bdm = {"vdb": "9ef5496e-7426-446a-bbc8-01f84d9c9972:snap::True"}
+        self._mock_get_image_id_success('CentOS 5.2', 1)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_SnapshotConstraint_validate()
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name=utils.PhysName(
+                stack_name,
+                instance.name,
+                limit=instance.physical_resource_name_limit),
+            security_groups=None,
+            userdata=mox.IgnoreArg(),
+            scheduler_hints={'heat_root_stack_id': stack.root_stack.id,
+                             'heat_stack_id': stack.id,
+                             'heat_stack_name': stack.name,
+                             'heat_path_in_stack': [(None, stack.name)],
+                             'heat_resource_name': instance.name,
+                             'foo': ['spam', 'ham', 'baz'], 'bar': 'eggs'},
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=bdm).AndReturn(
+                return_server)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(instance.create)()
+        self.assertTrue(instance.id > 0)
+        self.m.VerifyAll()
+
     def test_instance_validate(self):
         stack_name = 'test_instance_validate_stack'
         (tmpl, stack) = self._setup_test_stack(stack_name)
