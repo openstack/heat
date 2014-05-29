@@ -136,7 +136,7 @@ class StackResourceTest(HeatTestCase):
         self.stack = self.parent_resource.nested()
         self.assertEqual({"foo": "bar"}, self.stack.t.files)
 
-    @mock.patch.object(stack_resource.environment, 'Environment')
+    @mock.patch.object(stack_resource.StackResource, '_nested_environment')
     @mock.patch.object(stack_resource.parser, 'Template')
     @mock.patch.object(stack_resource.parser, 'Stack')
     def test_preview_with_implemented_child_resource(self, mock_stack_class,
@@ -488,7 +488,7 @@ class StackResourceTest(HeatTestCase):
         parser.Template(self.templ, files={}).AndReturn(templ)
 
         self.m.StubOutWithMock(environment, 'Environment')
-        environment.Environment({"KeyName": "test"}).AndReturn(env)
+        environment.Environment().AndReturn(env)
 
         self.m.StubOutWithMock(parser, 'Stack')
         parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
