@@ -209,7 +209,7 @@ class OpenStackClients(object):
 
     def cinder(self):
         if cinderclient is None:
-            return self.nova('volume')
+            return None
         if self._cinder:
             return self._cinder
 
