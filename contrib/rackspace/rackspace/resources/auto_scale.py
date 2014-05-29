@@ -273,6 +273,11 @@ class Group(resource.Resource):
             for lb in lbs:
                 lbid = int(lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_ID])
                 lb[self.LAUNCH_CONFIG_ARGS_LOAD_BALANCER_ID] = lbid
+        personality = server_args.get(
+            self.LAUNCH_CONFIG_ARGS_SERVER_PERSONALITY)
+        if personality:
+            personality = [{'path': k, 'contents': v} for k, v in
+                           personality.items()]
         return dict(
             launch_config_type=launchconf[self.LAUNCH_CONFIG_TYPE],
             server_name=server_args[self.GROUP_CONFIGURATION_NAME],
@@ -281,9 +286,7 @@ class Group(resource.Resource):
             disk_config=server_args.get(
                 self.LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG),
             metadata=server_args.get(self.GROUP_CONFIGURATION_METADATA),
-            personality=[
-                {'path': k, 'contents': v} for k, v in server_args.get(
-                    self.LAUNCH_CONFIG_ARGS_SERVER_PERSONALITY).items()],
+            personality=personality,
             networks=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_NETWORKS),
             load_balancers=lbs,
             key_name=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_KEY_NAME),
