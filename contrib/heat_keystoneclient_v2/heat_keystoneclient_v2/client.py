@@ -109,8 +109,8 @@ class KeystoneClientV2(object):
             # Ensure the v2 API we're using is not impacted by keystone
             # bug #1239303, otherwise we can't trust the user_id
             if self.context.trustor_user_id != client.auth_ref.user_id:
-                LOG.error("Trust impersonation failed, bug #1239303 "
-                          "suspected, you may need a newer keystone")
+                LOG.error(_("Trust impersonation failed, bug #1239303 "
+                            "suspected, you may need a newer keystone"))
                 raise exception.AuthorizationFailure()
 
         return client

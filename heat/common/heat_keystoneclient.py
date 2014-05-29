@@ -119,7 +119,7 @@ class KeystoneClientV3(object):
             if c.authenticate():
                 self._admin_client = c
             else:
-                LOG.error("Admin client authentication failed")
+                LOG.error(_("Admin client authentication failed"))
                 raise exception.AuthorizationFailure()
         return self._admin_client
 
@@ -135,7 +135,7 @@ class KeystoneClientV3(object):
             if c.authenticate(domain_id=self.stack_domain_id):
                 self._domain_admin_client = c
             else:
-                LOG.error("Domain admin client authentication failed")
+                LOG.error(_("Domain admin client authentication failed"))
                 raise exception.AuthorizationFailure()
         return self._domain_admin_client
 
@@ -178,7 +178,7 @@ class KeystoneClientV3(object):
             self.context.auth_url = kwargs.get('auth_url')
             # Sanity check that impersonation is effective
             if self.context.trustor_user_id != client.auth_ref.user_id:
-                LOG.error("Trust impersonation failed")
+                LOG.error(_("Trust impersonation failed"))
                 raise exception.AuthorizationFailure()
 
         return client
