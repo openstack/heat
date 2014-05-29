@@ -13,12 +13,16 @@
 
 """Client Libraries for Rackspace Resources."""
 
+import urlparse
+
 from oslo.config import cfg
 
 from heat.common import exception
 from heat.engine import clients
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+
+from glanceclient import client as glanceclient
 
 LOG = logging.getLogger(__name__)
 
@@ -118,6 +122,33 @@ class Clients(clients.OpenStackClients):
         # returns a wrapper over the upstream python-swiftclient so we
         # unwrap here and things just work
         return self._get_client("object_store").connection
+
+    def glance(self):
+        if "image" not in self._clients:
+            con = self.context
+            endpoint_type = self._get_client_option('glance', 'endpoint_type')
+            endpoint = self.url_for(service_type='image',
+                                    endpoint_type=endpoint_type,
+                                    region_name=cfg.CONF.region_name)
+            # Rackspace service catalog includes a tenant scoped glance
+            # endpoint so we have to munge the url a bit
+            glance_url = urlparse.urlparse(endpoint)
+            # remove the tenant and following from the url
+            endpoint = "%s://%s" % (glance_url.scheme, glance_url.hostname)
+            args = {
+                'auth_url': con.auth_url,
+                'service_type': 'image',
+                'project_id': con.tenant,
+                'token': self.auth_token,
+                'endpoint_type': endpoint_type,
+                'ca_file': self._get_client_option('glance', 'ca_file'),
+                'cert_file': self._get_client_option('glance', 'cert_file'),
+                'key_file': self._get_client_option('glance', 'key_file'),
+                'insecure': self._get_client_option('glance', 'insecure')
+            }
+            client = glanceclient.Client('2', endpoint, **args)
+            self._clients["image"] = client
+        return self._clients["image"]
 
     def __authenticate(self):
         """Create an authenticated client context."""
