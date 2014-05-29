@@ -149,7 +149,7 @@ default value defined as nested elements.
 
   parameters:
     <param name>:
-      type: <string | number | json | comma_delimited_list>
+      type: <string | number | json | comma_delimited_list | boolean>
       label: <human-readable name of the parameter>
       description: <description of the parameter>
       default: <default value for parameter>
@@ -162,7 +162,7 @@ param name
 
 type
     This attribute specifies the type of parameter. Currently supported types
-    are *string*, *number*, *comma_delimited_list* or *json*.
+    are *string*, *number*, *comma_delimited_list*, *json*, or *boolean*.
 
 label
     This *optional* attribute allows for giving a human readable name of the
