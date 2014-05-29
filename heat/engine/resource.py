@@ -27,6 +27,7 @@ from heat.engine import resources
 from heat.engine import support
 # import class to avoid name collisions and ugly aliasing
 from heat.engine.attributes import Attributes
+from heat.engine import environment
 from heat.engine.properties import Properties
 
 from heat.openstack.common import log as logging
@@ -132,9 +133,32 @@ class Resource(object):
             # Call is already for a subclass, so pass it through
             return super(Resource, cls).__new__(cls)
 
-        # Select the correct subclass to instantiate
-        ResourceClass = stack.env.get_class(json.get('Type'),
-                                            resource_name=name)
+        from heat.engine.resources import template_resource
+        # Select the correct subclass to instantiate.
+
+        # Note: If the current stack is an implementation of
+        # a resource type (a TemplateResource mapped in the environment)
+        # then don't infinitely recurse by creating a child stack
+        # of the same type. Instead get the next match which will get
+        # us closer to a concrete class.
+        def get_ancestor_template_resources():
+            """Return an ancestory list (TemplateResources only)."""
+            parent = stack.parent_resource
+            while parent is not None:
+                if isinstance(parent, template_resource.TemplateResource):
+                    yield parent.template_name
+                parent = parent.stack.parent_resource
+
+        ancestor_list = set(get_ancestor_template_resources())
+
+        def accept_class(res_info):
+            if not isinstance(res_info, environment.TemplateResourceInfo):
+                return True
+            return res_info.template_name not in ancestor_list
+
+        ResourceClass = stack.env.registry.get_class(json.get('Type'),
+                                                     resource_name=name,
+                                                     accept_fn=accept_class)
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
