@@ -352,12 +352,12 @@ class Server(stack_user.StackUser):
         if self.user_data_software_config():
             self._register_access_key()
 
-    def physical_resource_name(self):
+    def _server_name(self):
         name = self.properties.get(self.NAME)
         if name:
             return name
 
-        return super(Server, self).physical_resource_name()
+        return self.physical_resource_name()
 
     def _config_drive(self):
         # This method is overridden by the derived CloudServer resource
@@ -502,7 +502,7 @@ class Server(stack_user.StackUser):
         server = None
         try:
             server = self.nova().servers.create(
-                name=self.physical_resource_name(),
+                name=self._server_name(),
                 image=image,
                 flavor=flavor_id,
                 key_name=key_name,
