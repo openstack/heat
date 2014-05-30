@@ -103,7 +103,7 @@ class ResourceGroup(stack_resource.StackResource):
         # make sure the nested resource is valid
         test_tmpl = self._assemble_nested(1, include_all=True)
         val_templ = parser.Template(test_tmpl)
-        res_def = val_templ["Resources"]["0"]
+        res_def = val_templ.resource_definitions(self.stack)["0"]
         res_class = self.stack.env.get_class(res_def['Type'])
         res_inst = res_class("%s:resource_def" % self.name, res_def,
                              self.stack)

@@ -26,6 +26,7 @@ from heat.engine import event
 from heat.engine import function
 from heat.engine.properties import Properties
 from heat.engine import resources
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import excutils
@@ -106,14 +107,17 @@ class Resource(object):
                                             resource_name=name)
         return ResourceClass(name, json, stack)
 
-    def __init__(self, name, json_snippet, stack):
+    def __init__(self, name, definition, stack):
         if '/' in name:
             raise ValueError(_('Resource name may not contain "/"'))
 
         self.stack = stack
         self.context = stack.context
         self.name = name
-        self.json_snippet = json_snippet
+        if isinstance(definition, rsrc_defn.ResourceDefinition):
+            self.t = definition
+        else:
+            self.t = self.stack.resolve_static_data(definition)
         self.reparse()
         self.attributes = Attributes(self.name,
                                      self.attributes_schema,
@@ -152,7 +156,6 @@ class Resource(object):
             self.updated_time = None
 
     def reparse(self):
-        self.t = self.stack.resolve_static_data(self.json_snippet)
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
                                      function.resolve,
@@ -312,7 +315,7 @@ class Resource(object):
                 self._add_dependencies(deps, '%s[%d]' % (path, index), item)
 
     def add_dependencies(self, deps):
-        self._add_dependencies(deps, self.name, self.json_snippet)
+        self._add_dependencies(deps, self.name, copy.deepcopy(dict(self.t)))
         deps += (self, None)
 
     def required_by(self):
@@ -538,7 +541,7 @@ class Resource(object):
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
         else:
-            self.json_snippet = copy.deepcopy(after)
+            self.t = after
             self.reparse()
             self.state_set(action, self.COMPLETE)
 
