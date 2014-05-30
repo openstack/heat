@@ -8,7 +8,7 @@ kombu>=2.4.8
 argparse
 lxml>=2.3
 netaddr>=0.7.6
-six>=1.5.2
+six>=1.6.0
 sqlalchemy-migrate>=0.8.2,!=0.8.4
 python-novaclient>=2.17.0
 PasteDeploy>=1.5.0
