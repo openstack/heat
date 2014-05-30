@@ -57,13 +57,13 @@ def call(args):
                 ls.write(x)
     except OSError as ex:
         if ex.errno == errno.ENOEXEC:
-            LOG.error(_('Userdata empty or not executable: %s'), ex)
+            LOG.error('Userdata empty or not executable: %s', ex)
             return os.EX_OK
         else:
-            LOG.error(_('OS error running userdata: %s'), ex)
+            LOG.error('OS error running userdata: %s', ex)
             return os.EX_OSERR
     except Exception as ex:
-        LOG.error(_('Unknown error running userdata: %s'), ex)
+        LOG.error('Unknown error running userdata: %s', ex)
         return os.EX_SOFTWARE
     return p.returncode
 
@@ -72,16 +72,16 @@ def main():
 
     if not chk_ci_version():
         # pre 0.6.0 - user data executed via cloudinit, not this helper
-        LOG.error(_('Unable to log provisioning, need a newer version of'
-                    ' cloud-init'))
+        LOG.error('Unable to log provisioning, need a newer version of'
+                  ' cloud-init')
         return -1
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
     os.chmod(userdata_path, 0o700)
 
-    LOG.info(_('Provision began: %s'), datetime.datetime.now())
+    LOG.info('Provision began: %s', datetime.datetime.now())
     returncode = call([userdata_path])
-    LOG.info(_('Provision done: %s'), datetime.datetime.now())
+    LOG.info('Provision done: %s', datetime.datetime.now())
     if returncode:
         return returncode
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     code = main()
     if code:
-        LOG.error(_('Provision failed with exit code %s'), code)
+        LOG.error('Provision failed with exit code %s', code)
         sys.exit(code)
 
     provision_log = os.path.join(VAR_PATH, 'provision-finished')
