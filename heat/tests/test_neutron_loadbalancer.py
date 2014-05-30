@@ -985,8 +985,7 @@ class LoadBalancerTest(HeatTestCase):
     def create_load_balancer(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        clients.OpenStackClients.nova("compute").MultipleTimes().AndReturn(
-            self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         neutronclient.Client.create_member({
             'member': {
                 'pool_id': 'pool123', 'protocol_port': 8080,

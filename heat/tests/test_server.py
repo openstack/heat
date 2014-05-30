@@ -746,8 +746,6 @@ class ServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        clients.OpenStackClients.nova('compute').MultipleTimes().\
-            AndReturn(self.fc)
         self._mock_get_image_id_success('1', 1)
 
         self.m.ReplayAll()

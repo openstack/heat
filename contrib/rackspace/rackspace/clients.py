@@ -74,16 +74,9 @@ class Clients(clients.OpenStackClients):
         """Rackspace cloud dns client."""
         return self._get_client("dns")
 
-    def nova(self, service_type="compute"):
-        """Rackspace cloudservers client.
-
-        Specifying the service type is to
-        maintain compatibility with clients.OpenStackClients. It is not
-        actually a valid option to change within pyrax.
-        """
-        if service_type is not "compute":
-            raise ValueError(_("service_type should be compute."))
-        return self._get_client(service_type)
+    def nova(self):
+        """Rackspace cloudservers client."""
+        return self._get_client("compute")
 
     def cloud_networks(self):
         """Rackspace cloud networks client."""
