@@ -16,6 +16,7 @@ import mock
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -48,7 +49,8 @@ class TestSecret(HeatTestCase):
         self._register_resources()
         self.stack = utils.parse_stack(template_format.parse(stack_template))
         self.stack.validate()
-        self.res_template = self.stack.t['resources']['secret']
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        self.res_template = resource_defns['secret']
         self.res = self._create_resource('foo', self.res_template, self.stack)
 
     def tearDown(self):
@@ -93,9 +95,15 @@ class TestSecret(HeatTestCase):
 
     def test_create_secret_with_plain_text(self):
         content_type = 'text/plain'
-        self.res_template['Properties']['payload'] = 'foobar'
-        self.res_template['Properties']['payload_content_type'] = content_type
-        res = self._create_resource('secret', self.res_template, self.stack)
+        props = {
+            'name': 'secret',
+            'payload': 'foobar',
+            'payload_content_type': content_type,
+        }
+        defn = rsrc_defn.ResourceDefinition('secret',
+                                            'OS::Barbican::Secret',
+                                            props)
+        res = self._create_resource(defn.name, defn, self.stack)
 
         args = self.barbican.secrets.store.call_args[1]
         self.assertEqual('foobar', args[res.PAYLOAD])
@@ -103,31 +111,45 @@ class TestSecret(HeatTestCase):
 
     def test_create_secret_with_octet_stream(self):
         content_type = 'application/octet-stream'
-        self.res_template['Properties']['payload'] = 'foobar'
-        self.res_template['Properties']['payload_content_type'] = content_type
-        res = self._create_resource('secret', self.res_template, self.stack)
+        props = {
+            'name': 'secret',
+            'payload': 'foobar',
+            'payload_content_type': content_type,
+        }
+        defn = rsrc_defn.ResourceDefinition('secret',
+                                            'OS::Barbican::Secret',
+                                            props)
+        res = self._create_resource(defn.name, defn, self.stack)
 
         args = self.barbican.secrets.store.call_args[1]
         self.assertEqual('foobar', args[res.PAYLOAD])
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
     def test_create_secret_other_content_types_not_allowed(self):
-        self.res_template['Properties']['payload_content_type'] = 'not/allowed'
+        props = {
+            'name': 'secret',
+            'payload_content_type': 'not/allowed',
+        }
+        defn = rsrc_defn.ResourceDefinition('secret',
+                                            'OS::Barbican::Secret',
+                                            props)
         self.assertRaises(exception.ResourceFailure,
-                          self._create_resource, 'secret', self.res_template,
+                          self._create_resource, defn.name, defn,
                           self.stack)
 
     def test_validate_payload_and_content_type(self):
-        self.res_template['Properties'] = {}
-        self.res_template['Properties']['payload_content_type'] = 'text/plain'
-        res = self._create_resource('nopayload', self.res_template, self.stack)
+        props = {'payload_content_type': 'text/plain'}
+        defn = rsrc_defn.ResourceDefinition('nopayload',
+                                            'OS::Barbican::Secret',
+                                            props)
+        res = self._create_resource(defn.name, defn, self.stack)
         exc = self.assertRaises(exception.StackValidationFailed, res.validate)
         self.assertIn('payload', str(exc))
         self.assertIn('payload_content_type', str(exc))
 
-        self.res_template['Properties'] = {}
-        self.res_template['Properties']['payload'] = 'foo'
-        res = self._create_resource('notype', self.res_template, self.stack)
+        defn = rsrc_defn.ResourceDefinition('notype', 'OS::Barbican::Secret',
+                                            {'payload': 'foo'})
+        res = self._create_resource(defn.name, defn, self.stack)
         exc = self.assertRaises(exception.StackValidationFailed, res.validate)
         self.assertIn('payload', str(exc))
         self.assertIn('payload_content_type', str(exc))

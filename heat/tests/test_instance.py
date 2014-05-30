@@ -76,7 +76,7 @@ class InstancesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment({'KeyName': 'test'}),
                              stack_id=str(uuid.uuid4()))
-        return (t, stack)
+        return (template, stack)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
@@ -95,16 +95,22 @@ class InstancesTest(HeatTestCase):
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
 
+    def _get_test_template(self, stack_name, image_id=None):
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        tmpl.t['Resources']['WebServer']['Properties']['ImageId'] = \
+            image_id or 'CentOS 5.2'
+        tmpl.t['Resources']['WebServer']['Properties']['InstanceType'] = \
+            '256 MB Server'
+
+        return tmpl, stack
+
     def _setup_test_instance(self, return_server, name, image_id=None,
                              stub_create=True):
         stack_name = '%s_s' % name
-        (t, stack) = self._setup_test_stack(stack_name)
-
-        t['Resources']['WebServer']['Properties']['ImageId'] = \
-            image_id or 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['InstanceType'] = \
-            '256 MB Server'
-        instance = instances.Instance(name, t['Resources']['WebServer'], stack)
+        tmpl, stack = self._get_test_template(stack_name, image_id)
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance(name, resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
@@ -173,12 +179,13 @@ class InstancesTest(HeatTestCase):
 
     def test_instance_create_image_name_err(self):
         stack_name = 'test_instance_create_image_name_err_stack'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an instance with non exist image name
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'Slackware'
+        tmpl.t['Resources']['WebServer']['Properties']['ImageId'] = 'Slackware'
+        resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('instance_create_image_err',
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         g_cli_moc = self.m.CreateMockAnything()
         self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
@@ -191,12 +198,14 @@ class InstancesTest(HeatTestCase):
 
     def test_instance_create_duplicate_image_name_err(self):
         stack_name = 'test_instance_create_image_name_err_stack'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an instance with a non unique image name
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['ImageId'] = 'CentOS 5.2'
+        resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('instance_create_image_err',
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('CentOS 5.2',
                                      exception.PhysicalResourceNameAmbiguity(
@@ -210,12 +219,13 @@ class InstancesTest(HeatTestCase):
 
     def test_instance_create_image_id_err(self):
         stack_name = 'test_instance_create_image_id_err_stack'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an instance with non exist image Id
-        t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        tmpl.t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('instance_create_image_err',
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('1', glance_exceptions.NotFound(404))
 
@@ -280,11 +290,12 @@ class InstancesTest(HeatTestCase):
 
     def test_instance_validate(self):
         stack_name = 'test_instance_validate_stack'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        tmpl.t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance('instance_create_image',
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -347,9 +358,10 @@ class InstancesTest(HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'ud_md')
 
-        update_template = copy.deepcopy(instance.t)
-        update_template['Metadata'] = {'test': 123}
-        scheduler.TaskRunner(instance.update, update_template)()
+        ud_tmpl = self._get_test_template('update_stack')[0]
+        ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
+        resource_defns = ud_tmpl.resource_definitions(instance.stack)
+        scheduler.TaskRunner(instance.update, resource_defns['WebServer'])()
         self.assertEqual({'test': 123}, instance.metadata_get())
 
     def test_instance_update_instance_type(self):

@@ -160,9 +160,10 @@ class NeutronNetworkGatewayTest(HeatTestCase):
             t = template_format.parse(gw_template_deprecated)
 
         stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
-            t['Resources']['NetworkGateway'], stack)
+            resource_defns['NetworkGateway'], stack)
         return rsrc
 
     def _test_network_gateway_create(self, resolve_neutron=True):
@@ -459,8 +460,9 @@ class NeutronNetworkGatewayTest(HeatTestCase):
 
         t = template_format.parse(gw_template)
         stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = network_gateway.NetworkGateway(
-            'network_gateway', t['Resources']['NetworkGateway'], stack)
+            'network_gateway', resource_defns['NetworkGateway'], stack)
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
@@ -477,9 +479,10 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         del t['Resources']['NetworkGateway']['Properties'][
             'connections'][0]['segmentation_id']
         stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
-            t['Resources']['NetworkGateway'], stack)
+            resource_defns['NetworkGateway'], stack)
 
         self.m.ReplayAll()
 
@@ -497,9 +500,10 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         t['Resources']['NetworkGateway']['Properties'][
             'connections'][0]['segmentation_type'] = 'flat'
         stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
-            t['Resources']['NetworkGateway'], stack)
+            resource_defns['NetworkGateway'], stack)
 
         self.m.ReplayAll()
 

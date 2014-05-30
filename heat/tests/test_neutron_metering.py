@@ -79,8 +79,9 @@ class MeteringLabelTest(HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return metering.MeteringLabel(
-            'label', snippet['Resources']['label'], stack)
+            'label', resource_defns['label'], stack)
 
     def test_create(self):
         rsrc = self.create_metering_label()
@@ -101,8 +102,9 @@ class MeteringLabelTest(HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = metering.MeteringLabel(
-            'label', snippet['Resources']['label'], stack)
+            'label', resource_defns['label'], stack)
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
@@ -193,8 +195,9 @@ class MeteringRuleTest(HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return metering.MeteringRule(
-            'rule', snippet['Resources']['rule'], stack)
+            'rule', resource_defns['rule'], stack)
 
     def test_create(self):
         rsrc = self.create_metering_label_rule()
@@ -217,8 +220,9 @@ class MeteringRuleTest(HeatTestCase):
 
         snippet = template_format.parse(metering_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = metering.MeteringRule(
-            'rule', snippet['Resources']['rule'], stack)
+            'rule', resource_defns['rule'], stack)
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(

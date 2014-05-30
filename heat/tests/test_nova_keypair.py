@@ -56,8 +56,8 @@ class NovaKeyPairTest(HeatTestCase):
 
     def _get_test_resource(self, template):
         stack = utils.parse_stack(template)
-        snippet = stack.t['Resources']['kp']
-        kp_res = nova_keypair.KeyPair('kp', snippet, stack)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = nova_keypair.KeyPair('kp', definition, stack)
         self.m.StubOutWithMock(kp_res, "nova")
         kp_res.nova().MultipleTimes().AndReturn(self.fake_nova)
         return kp_res

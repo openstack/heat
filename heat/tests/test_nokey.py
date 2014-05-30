@@ -55,8 +55,9 @@ class nokeyTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
+        resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('create_instance_name',
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)

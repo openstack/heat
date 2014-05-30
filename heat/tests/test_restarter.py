@@ -44,8 +44,9 @@ class RestarterTest(common.HeatTestCase):
     def create_restarter(self):
         snippet = template_format.parse(restarter_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         restarter = instance.Restarter(
-            'restarter', snippet['Resources']['restarter'], stack)
+            'restarter', resource_defns['restarter'], stack)
         restarter.handle_create = mock.Mock(return_value=None)
         return restarter
 

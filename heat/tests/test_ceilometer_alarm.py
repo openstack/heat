@@ -280,8 +280,9 @@ class CeilometerAlarmTest(HeatTestCase):
             snippet['Resources']['MEMAlarmHigh']['Properties'][p] = '60a'
             stack = utils.parse_stack(snippet)
 
+            resource_defns = stack.t.resource_definitions(stack)
             rsrc = alarm.CeilometerAlarm(
-                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+                'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             error = self.assertRaises(exception.StackValidationFailed,
                                       rsrc.validate)
             self.assertEqual(
@@ -294,8 +295,9 @@ class CeilometerAlarmTest(HeatTestCase):
             snippet['Resources']['MEMAlarmHigh']['Properties'][p] = [60]
             stack = utils.parse_stack(snippet)
 
+            resource_defns = stack.t.resource_definitions(stack)
             rsrc = alarm.CeilometerAlarm(
-                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+                'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             error = self.assertRaises(exception.StackValidationFailed,
                                       rsrc.validate)
             self.assertEqual(
@@ -307,8 +309,9 @@ class CeilometerAlarmTest(HeatTestCase):
         snippet['Resources']['MEMAlarmHigh']['Properties'].pop('meter_name')
         stack = utils.parse_stack(snippet)
 
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = alarm.CeilometerAlarm(
-            'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+            'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
         error = self.assertRaises(exception.StackValidationFailed,
                                   rsrc.validate)
         self.assertEqual(
@@ -321,8 +324,9 @@ class CeilometerAlarmTest(HeatTestCase):
             snippet['Resources']['MEMAlarmHigh']['Properties'].pop(p)
             stack = utils.parse_stack(snippet)
 
+            resource_defns = stack.t.resource_definitions(stack)
             rsrc = alarm.CeilometerAlarm(
-                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+                'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             self.assertIsNone(rsrc.validate())
 
     def test_delete_alarm_not_found(self):
@@ -364,8 +368,9 @@ class CombinationAlarmTest(HeatTestCase):
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return alarm.CombinationAlarm(
-            'CombinAlarm', snippet['Resources']['CombinAlarm'], stack)
+            'CombinAlarm', resource_defns['CombinAlarm'], stack)
 
     def test_create(self):
         rsrc = self.create_alarm()
@@ -380,8 +385,9 @@ class CombinationAlarmTest(HeatTestCase):
         snippet = template_format.parse(combination_alarm_template)
         snippet['Resources']['CombinAlarm']['Properties']['alarm_ids'] = []
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = alarm.CombinationAlarm(
-            'CombinAlarm', snippet['Resources']['CombinAlarm'], stack)
+            'CombinAlarm', resource_defns['CombinAlarm'], stack)
         error = self.assertRaises(exception.StackValidationFailed,
                                   rsrc.validate)
         self.assertEqual(

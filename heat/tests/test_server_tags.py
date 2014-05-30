@@ -148,8 +148,9 @@ class ServerTagsTest(HeatTestCase):
                              stack_id=str(uuid.uuid4()))
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
+        resource_defns = template.resource_definitions(stack)
         instance = instances.Instance(stack_name,
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)

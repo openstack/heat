@@ -30,6 +30,7 @@ from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.openstack.common import timeutils
@@ -1690,11 +1691,13 @@ class TestInstanceGroup(HeatTestCase):
     def setUp(self):
         super(TestInstanceGroup, self).setUp()
 
-        json_snippet = {'Properties':
-                        {'Size': 2, 'LaunchConfigurationName': 'foo'}}
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
-        self.instance_group = asc.InstanceGroup('ig', json_snippet, stack)
+
+        defn = rsrc_defn.ResourceDefinition('ig', 'OS::Heat::InstanceGroup',
+                                            {'Size': 2,
+                                             'LaunchConfigurationName': 'foo'})
+        self.instance_group = asc.InstanceGroup('ig', defn, stack)
 
     def test_child_template(self):
         self.instance_group._create_template = mock.Mock(return_value='tpl')

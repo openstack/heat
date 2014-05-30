@@ -54,8 +54,9 @@ class CloudWatchAlarmTest(HeatTestCase):
         super(CloudWatchAlarmTest, self).setUp()
 
     def create_alarm(self, t, stack, resource_name):
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = cloud_watch.CloudWatchAlarm(resource_name,
-                                           t['Resources'][resource_name],
+                                           resource_defns[resource_name],
                                            stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()

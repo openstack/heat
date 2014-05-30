@@ -171,8 +171,9 @@ class instancesTest(HeatTestCase):
                              stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
+        resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('%s_name' % name,
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
@@ -222,12 +223,13 @@ class instancesTest(HeatTestCase):
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
 
+        resource_defns = stack.t.resource_definitions(stack)
         nic = network_interfaces.NetworkInterface('%s_nic' % name,
-                                                  t['Resources']['nic1'],
+                                                  resource_defns['nic1'],
                                                   stack)
 
         instance = instances.Instance('%s_name' % name,
-                                      t['Resources']['WebServer'], stack)
+                                      resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_success(image_id, 1)
         self.m.StubOutWithMock(nic, 'neutron')

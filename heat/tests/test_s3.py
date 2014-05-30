@@ -77,8 +77,9 @@ class s3Test(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
     def create_resource(self, t, stack, resource_name):
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = s3.S3Bucket('test_resource',
-                           t['Resources'][resource_name],
+                           resource_defns[resource_name],
                            stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

@@ -106,7 +106,7 @@ class RackspaceDnsTest(common.HeatTestCase):
 
         instance = cloud_dns.CloudDns(
             '%s_name' % name,
-            t['Resources']['domain'],
+            template.resource_definitions(stack)['domain'],
             stack)
         return instance
 

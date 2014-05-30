@@ -215,9 +215,10 @@ class LoadBalancerTest(HeatTestCase):
                                  .__getattribute__(name))
         return super(LoadBalancerTest, self).__getattribute__(name)
 
-    def _mock_create(self, t, stack, resource_name, lb_name, lb_body):
+    def _mock_create(self, tmpl, stack, resource_name, lb_name, lb_body):
+        resource_defns = tmpl.resource_definitions(stack)
         rsrc = LoadBalancerWithFakeClient(resource_name,
-                                          t['Resources'][resource_name],
+                                          resource_defns[resource_name],
                                           stack)
         self.m.StubOutWithMock(rsrc.clb, 'create')
         fake_loadbalancer = FakeLoadBalancer(name=lb_name)
@@ -231,7 +232,7 @@ class LoadBalancerTest(HeatTestCase):
         t = template_format.parse(json.dumps(lb_template))
         s = utils.parse_stack(t, stack_name=utils.random_name())
 
-        rsrc, fake_loadbalancer = self._mock_create(t, s,
+        rsrc, fake_loadbalancer = self._mock_create(s.t, s,
                                                     self.
                                                     _get_first_resource_name(
                                                         lb_template),

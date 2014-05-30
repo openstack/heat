@@ -80,9 +80,10 @@ class swiftTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
     def create_resource(self, t, stack, resource_name):
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = swift.SwiftContainer(
             'test_resource',
-            t['Resources'][resource_name],
+            resource_defns[resource_name],
             stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -93,9 +94,10 @@ class swiftTest(HeatTestCase):
         t = template_format.parse(swift_template)
         t['Resources']['SwiftContainer']['Properties']['name'] = 'the_name'
         stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = swift.SwiftContainer(
             'test_resource',
-            t['Resources']['SwiftContainer'],
+            resource_defns['SwiftContainer'],
             stack)
 
         self.assertEqual('the_name', rsrc.physical_resource_name())

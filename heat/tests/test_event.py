@@ -17,6 +17,7 @@ from heat.db import api as db_api
 from heat.engine import event
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
@@ -145,11 +146,12 @@ class EventTest(HeatTestCase):
         self.assertIsNone(e.identifier())
 
     def test_badprop(self):
-        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
-                'Type': 'ResourceWithRequiredProps',
-                'Properties': {'Foo': False}}
         rname = 'bad_resource'
-        res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
+        defn = rsrc_defn.ResourceDefinition(rname,
+                                            'ResourceWithRequiredProps',
+                                            {'Foo': False})
+
+        res = generic_rsrc.ResourceWithRequiredProps(rname, defn, self.stack)
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', res.properties, res.name, res.type())
         self.assertIn('Error', e.resource_properties)

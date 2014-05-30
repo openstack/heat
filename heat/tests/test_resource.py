@@ -21,10 +21,12 @@ import six
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import attributes
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
 from heat.openstack.common.gettextutils import _
@@ -60,13 +62,15 @@ class ResourceTest(HeatTestCase):
                           'NoExistResourceType')
 
     def test_resource_new_ok(self):
-        snippet = {'Type': 'GenericResourceType'}
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
         res = resource.Resource('aresource', snippet, self.stack)
         self.assertIsInstance(res, generic_rsrc.GenericResource)
         self.assertEqual("INIT", res.action)
 
     def test_resource_new_stack_not_stored(self):
-        snippet = {'Type': 'GenericResourceType'}
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
         self.stack.id = None
         db_method = 'resource_get_by_name_and_stack'
         with mock.patch.object(db_api, db_method) as resource_get:
@@ -75,44 +79,27 @@ class ResourceTest(HeatTestCase):
             self.assertIs(False, resource_get.called)
 
     def test_resource_new_err(self):
-        snippet = {'Type': 'NoExistResourceType'}
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'NoExistResourceType')
         self.assertRaises(exception.StackValidationFailed,
                           resource.Resource, 'aresource', snippet, self.stack)
 
     def test_resource_non_type(self):
-        snippet = {'Type': ''}
         resource_name = 'aresource'
+        snippet = rsrc_defn.ResourceDefinition(resource_name, '')
         ex = self.assertRaises(exception.StackValidationFailed,
                                resource.Resource, resource_name,
                                snippet, self.stack)
         self.assertIn(_('Resource "%s" has no type') % resource_name, str(ex))
 
-    def test_resource_wrong_type(self):
-        snippet = {'Type': {}}
-        resource_name = 'aresource'
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               resource.Resource, resource_name,
-                               snippet, self.stack)
-        self.assertIn(_('Resource "%s" type is not a string') % resource_name,
-                      str(ex))
-
-    def test_resource_missed_type(self):
-        snippet = {'not-a-Type': 'GenericResourceType'}
-        resource_name = 'aresource'
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               resource.Resource, resource_name,
-                               snippet, self.stack)
-        self.assertIn(_('Non-empty resource type is required '
-                        'for resource "%s"') % resource_name, str(ex))
-
     def test_state_defaults(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_res_def', 'Foo')
         res = generic_rsrc.GenericResource('test_res_def', tmpl, self.stack)
         self.assertEqual((res.INIT, res.COMPLETE), res.state)
         self.assertEqual('', res.status_reason)
 
     def test_resource_str_repr_stack_id_resource_id(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_res_str_repr', 'Foo')
         res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
                                            self.stack)
         res.stack.id = "123"
@@ -123,7 +110,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected, observed)
 
     def test_resource_str_repr_stack_id_no_resource_id(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_res_str_repr', 'Foo')
         res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
                                            self.stack)
         res.stack.id = "123"
@@ -134,7 +121,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected, observed)
 
     def test_resource_str_repr_no_stack_id(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_res_str_repr', 'Foo')
         res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
                                            self.stack)
         res.stack.id = None
@@ -143,7 +130,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected, observed)
 
     def test_state_set(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.state_set(res.CREATE, res.COMPLETE, 'wibble')
         self.assertEqual(res.CREATE, res.action)
@@ -152,7 +139,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual('wibble', res.status_reason)
 
     def test_prepare_abandon(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         expected = {
             'action': 'INIT',
@@ -167,7 +154,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected, actual)
 
     def test_abandon_with_resource_data(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res._data = {"test-key": "test-value"}
 
@@ -184,14 +171,14 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected, actual)
 
     def test_state_set_invalid(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertRaises(ValueError, res.state_set, 'foo', 'bla')
         self.assertRaises(ValueError, res.state_set, 'foo', res.COMPLETE)
         self.assertRaises(ValueError, res.state_set, res.CREATE, 'bla')
 
     def test_state_del_stack(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         self.stack.action = self.stack.DELETE
         self.stack.status = self.stack.IN_PROGRESS
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
@@ -199,39 +186,43 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(res.COMPLETE, res.status)
 
     def test_type(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual('Foo', res.type())
 
     def test_has_interface_direct_match(self):
-        tmpl = {'Type': 'GenericResourceType'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertTrue(res.has_interface('GenericResourceType'))
 
     def test_has_interface_no_match(self):
-        tmpl = {'Type': 'GenericResourceType'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertFalse(res.has_interface('LookingForAnotherType'))
 
     def test_has_interface_mapping(self):
-        tmpl = {'Type': 'OS::Test::GenericResource'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'OS::Test::GenericResource')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertTrue(res.has_interface('GenericResourceType'))
 
     def test_created_time(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_new', tmpl, self.stack)
         self.assertIsNone(res.created_time)
         res._store()
         self.assertIsNotNone(res.created_time)
 
     def test_updated_time(self):
-        tmpl = {'Type': 'GenericResourceType'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res._store()
         stored_time = res.updated_time
 
-        utmpl = {'Type': 'Foo'}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         scheduler.TaskRunner(res.update, utmpl)()
         self.assertIsNotNone(res.updated_time)
         self.assertNotEqual(res.updated_time, stored_time)
@@ -243,7 +234,8 @@ class ResourceTest(HeatTestCase):
 
         resource._register_class('TestResource', TestResource)
 
-        tmpl = {'Type': 'TestResource'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'TestResource')
         res = TestResource('test_resource', tmpl, self.stack)
 
         utmpl = {'Type': 'TestResource', 'Properties': {'a_string': 'foo'}}
@@ -251,7 +243,8 @@ class ResourceTest(HeatTestCase):
             resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 
     def test_updated_time_changes_only_on_update_calls(self):
-        tmpl = {'Type': 'GenericResourceType'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res._store()
         self.assertIsNone(res.updated_time)
@@ -260,7 +253,7 @@ class ResourceTest(HeatTestCase):
         self.assertIsNone(res.updated_time)
 
     def test_store_or_update(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
         res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
         self.assertIsNotNone(res.id)
@@ -282,34 +275,37 @@ class ResourceTest(HeatTestCase):
         self.assertEqual('test_update', db_res.status_reason)
 
     def test_parsed_template(self):
-        tmpl = {
-            'Type': 'Foo',
-            'foo': {'Fn::Join': [' ', ['bar', 'baz', 'quux']]}
-        }
+        join_func = cfn_funcs.Join(None,
+                                   'Fn::Join', [' ', ['bar', 'baz', 'quux']])
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            metadata={'foo': join_func})
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
 
         parsed_tmpl = res.parsed_template()
         self.assertEqual('Foo', parsed_tmpl['Type'])
-        self.assertEqual('bar baz quux', parsed_tmpl['foo'])
+        self.assertEqual('bar baz quux', parsed_tmpl['Metadata']['foo'])
 
-        self.assertEqual('bar baz quux', res.parsed_template('foo'))
-        self.assertEqual('bar baz quux', res.parsed_template('foo', 'bar'))
+        self.assertEqual({'foo': 'bar baz quux'},
+                         res.parsed_template('Metadata'))
+        self.assertEqual({'foo': 'bar baz quux'},
+                         res.parsed_template('Metadata', {'foo': 'bar'}))
 
     def test_parsed_template_default(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual({}, res.parsed_template('foo'))
-        self.assertEqual('bar', res.parsed_template('foo', 'bar'))
+        self.assertEqual({}, res.parsed_template('Metadata'))
+        self.assertEqual({'foo': 'bar'},
+                         res.parsed_template('Metadata', {'foo': 'bar'}))
 
     def test_metadata_default(self):
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual({}, res.metadata_get())
 
     def test_equals_different_stacks(self):
-        tmpl1 = {'Type': 'Foo'}
-        tmpl2 = {'Type': 'Foo'}
-        tmpl3 = {'Type': 'Bar'}
+        tmpl1 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        tmpl2 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        tmpl3 = rsrc_defn.ResourceDefinition('test_resource2', 'Bar')
         stack2 = parser.Stack(utils.dummy_context(), 'test_stack',
                               parser.Template(empty_template), stack_id=-1)
         res1 = generic_rsrc.GenericResource('test_resource', tmpl1, self.stack)
@@ -320,8 +316,8 @@ class ResourceTest(HeatTestCase):
         self.assertNotEqual(res1, res3)
 
     def test_equals_names(self):
-        tmpl1 = {'Type': 'Foo'}
-        tmpl2 = {'Type': 'Foo'}
+        tmpl1 = rsrc_defn.ResourceDefinition('test_resource1', 'Foo')
+        tmpl2 = rsrc_defn.ResourceDefinition('test_resource2', 'Foo')
         res1 = generic_rsrc.GenericResource('test_resource1',
                                             tmpl1, self.stack)
         res2 = generic_rsrc.GenericResource('test_resource2', tmpl2,
@@ -330,29 +326,33 @@ class ResourceTest(HeatTestCase):
         self.assertNotEqual(res1, res2)
 
     def test_update_template_diff_changed_modified(self):
-        tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
-        update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            metadata={'foo': 123})
+        update_snippet = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                                      metadata={'foo': 456})
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': {'foo': 456}}, diff)
 
     def test_update_template_diff_changed_add(self):
-        tmpl = {'Type': 'Foo'}
-        update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        update_snippet = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                                      metadata={'foo': 123})
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': {'foo': 123}}, diff)
 
     def test_update_template_diff_changed_remove(self):
-        tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
-        update_snippet = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            metadata={'foo': 123})
+        update_snippet = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual({'Metadata': None}, diff)
 
     def test_update_template_diff_properties_none(self):
         before_props = {}
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         after_props = {}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         diff = res.update_template_diff_properties(after_props, before_props)
@@ -360,7 +360,7 @@ class ResourceTest(HeatTestCase):
 
     def test_update_template_diff_properties_added(self):
         before_props = {}
-        tmpl = {'Type': 'Foo'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         after_props = {'Foo': '123'}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
@@ -369,9 +369,10 @@ class ResourceTest(HeatTestCase):
 
     def test_update_template_diff_properties_removed_no_default_value(self):
         before_props = {'Foo': '123'}
-        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            before_props)
         # Here should be used real property to get default value
-        new_t = {'Type': 'Foo'}
+        new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
         after_props = new_res.properties
 
@@ -382,11 +383,12 @@ class ResourceTest(HeatTestCase):
 
     def test_update_template_diff_properties_removed_with_default_value(self):
         before_props = {'Foo': '123'}
-        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            before_props)
         generic_rsrc.ResourceWithProps.properties_schema = \
             {'Foo': {'Type': 'String', 'Default': '567'}}
         # Here should be used real property to get default value
-        new_t = {'Type': 'Foo'}
+        new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
         after_props = new_res.properties
 
@@ -397,7 +399,8 @@ class ResourceTest(HeatTestCase):
 
     def test_update_template_diff_properties_changed(self):
         before_props = {'Foo': '123'}
-        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            before_props)
         after_props = {'Foo': '456'}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
@@ -406,7 +409,8 @@ class ResourceTest(HeatTestCase):
 
     def test_update_template_diff_properties_notallowed(self):
         before_props = {'Foo': '123'}
-        tmpl = {'Type': 'Foo', 'Properties': before_props}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            before_props)
         after_props = {'Bar': '456'}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
@@ -415,14 +419,15 @@ class ResourceTest(HeatTestCase):
                           after_props, before_props)
 
     def test_resource(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
     def test_create_fail_missing_req_prop(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {}}
         rname = 'test_resource'
+        tmpl = rsrc_defn.ResourceDefinition(rname, 'Foo', {})
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
@@ -432,8 +437,9 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_prop_typo(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'abc'}}
         rname = 'test_resource'
+        tmpl = rsrc_defn.ResourceDefinition(rname, 'GenericResourceType',
+                                            {'Food': 'abc'})
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
         estr = 'StackValidationFailed: Unknown Property Food'
@@ -443,9 +449,12 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_metadata_parse_error(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {},
-                'Metadata': {"Fn::GetAtt": ["ResourceA", "abc"]}}
         rname = 'test_resource'
+        get_att = cfn_funcs.GetAtt(self.stack, 'Fn::GetAtt',
+                                   ["ResourceA", "abc"])
+        tmpl = rsrc_defn.ResourceDefinition(rname, 'GenericResourceType',
+                                            properties={},
+                                            metadata={'foo': get_att})
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
         create = scheduler.TaskRunner(res.create)
@@ -453,8 +462,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_resource_after_destroy(self):
-        tmpl = {'Type': 'GenericResourceType'}
         rname = 'test_res_id_none'
+        tmpl = rsrc_defn.ResourceDefinition(rname, 'GenericResourceType')
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
         res.id = 'test_res_id'
         (res.action, res.status) = (res.INIT, res.DELETE)
@@ -465,18 +474,23 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
     def test_preview(self):
-        tmpl = {'Type': 'GenericResourceType'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType')
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         self.assertEqual(res, res.preview())
 
     def test_update_ok(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Foo': 'xyz'})
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
@@ -489,13 +503,17 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_replace_with_resource_name(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Foo': 'xyz'})
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
@@ -511,13 +529,17 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_replace_without_resource_name(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Foo': 'xyz'})
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
@@ -532,40 +554,52 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithRequiredProps('test_resource',
                                                      tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {})
 
         updater = scheduler.TaskRunner(res.update, utmpl)
         self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_fail_prop_typo(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'xyz'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Food': 'xyz'})
 
         updater = scheduler.TaskRunner(res.update, utmpl)
         self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_not_implemented(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Foo': 'xyz'})
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
@@ -578,7 +612,9 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_suspend_resume_ok(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -589,7 +625,9 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.RESUME, res.COMPLETE), res.state)
 
     def test_suspend_fail_inprogress(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -607,7 +645,9 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, suspend)
 
     def test_resume_fail_not_suspend_complete(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -621,7 +661,9 @@ class ResourceTest(HeatTestCase):
             self.assertRaises(exception.ResourceFailure, resume)
 
     def test_suspend_fail_exception(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -636,7 +678,9 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.SUSPEND, res.FAILED), res.state)
 
     def test_resume_fail_exception(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
@@ -1293,16 +1337,17 @@ class ResourceDependenciesTest(HeatTestCase):
 class MetadataTest(HeatTestCase):
     def setUp(self):
         super(MetadataTest, self).setUp()
-        tmpl = {
-            'Type': 'Foo',
-            'Metadata': {'Test': 'Initial metadata'}
-        }
         self.stack = parser.Stack(utils.dummy_context(),
                                   'test_stack',
                                   parser.Template(empty_template))
         self.stack.store()
+
+        metadata = {'Test': 'Initial metadata'}
+        tmpl = rsrc_defn.ResourceDefinition('metadata_resource', 'Foo',
+                                            metadata=metadata)
         self.res = generic_rsrc.GenericResource('metadata_resource',
                                                 tmpl, self.stack)
+
         scheduler.TaskRunner(self.res.create)()
         self.addCleanup(self.stack.delete)
 
