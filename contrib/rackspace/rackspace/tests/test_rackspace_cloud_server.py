@@ -111,7 +111,6 @@ class CloudServersTest(HeatTestCase):
         server = cloud_server.CloudServer(server_name,
                                           t['Resources']['WebServer'], stack)
 
-        server.t = server.stack.resolve_runtime_data(server.t)
         self._stub_server_validate(server, image_id or 'CentOS 5.2', 1)
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
