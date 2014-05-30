@@ -12,7 +12,6 @@
 #    under the License.
 
 import base64
-import copy
 from datetime import datetime
 
 import six
@@ -283,39 +282,9 @@ class Resource(object):
                                    str(self.stack))
         return '%s "%s"' % (self.__class__.__name__, self.name)
 
-    def _add_dependencies(self, deps, path, fragment):
-        if isinstance(fragment, dict):
-            for key, value in fragment.items():
-                if key in ('DependsOn', 'Ref', 'Fn::GetAtt', 'get_attr',
-                           'get_resource'):
-                    if key in ('Fn::GetAtt', 'get_attr'):
-                        res_name = value[0]
-                        res_list = [res_name]
-                    elif key == 'DependsOn' and isinstance(value, list):
-                        res_list = value
-                    else:
-                        res_list = [value]
-
-                    for res in res_list:
-                        try:
-                            target = self.stack[res]
-                        except KeyError:
-                            if (key != 'Ref' or
-                                    res not in self.stack.parameters):
-                                raise exception.InvalidTemplateReference(
-                                    resource=res,
-                                    key=path)
-                        else:
-                            if key == 'DependsOn' or target.strict_dependency:
-                                deps += (self, target)
-                else:
-                    self._add_dependencies(deps, '%s.%s' % (path, key), value)
-        elif isinstance(fragment, list):
-            for index, item in enumerate(fragment):
-                self._add_dependencies(deps, '%s[%d]' % (path, index), item)
-
     def add_dependencies(self, deps):
-        self._add_dependencies(deps, self.name, copy.deepcopy(dict(self.t)))
+        for dep in self.t.dependencies(self.stack):
+            deps += (self, dep)
         deps += (self, None)
 
     def required_by(self):
