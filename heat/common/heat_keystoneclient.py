@@ -362,11 +362,18 @@ class KeystoneClientV3(object):
             logger.warning(_('Falling back to legacy non-domain user delete, '
                              'configure domain in heat.conf'))
             return self.delete_stack_user(user_id)
-        self._check_stack_domain_user(user_id, project_id, 'delete')
-        self.domain_admin_client.users.delete(user_id)
+
+        try:
+            self._check_stack_domain_user(user_id, project_id, 'delete')
+            self.domain_admin_client.users.delete(user_id)
+        except kc_exception.NotFound:
+            pass
 
     def delete_stack_user(self, user_id):
-        self.client.users.delete(user=user_id)
+        try:
+            self.client.users.delete(user=user_id)
+        except kc_exception.NotFound:
+            pass
 
     def create_stack_domain_project(self, stack_id):
         '''Creates a project in the heat stack-user domain.'''
@@ -393,7 +400,10 @@ class KeystoneClientV3(object):
             logger.warning(_('Falling back to legacy non-domain project, '
                              'configure domain in heat.conf'))
             return
-        self.domain_admin_client.projects.delete(project=project_id)
+        try:
+            self.domain_admin_client.projects.delete(project=project_id)
+        except kc_exception.NotFound:
+            pass
 
     def _find_ec2_keypair(self, access, user_id=None):
         '''Lookup an ec2 keypair by access ID.'''
@@ -411,10 +421,14 @@ class KeystoneClientV3(object):
                            user_id=None):
         '''Delete credential containing ec2 keypair.'''
         if credential_id:
-            self.client.credentials.delete(credential_id)
+            try:
+                self.client.credentials.delete(credential_id)
+            except kc_exception.NotFound:
+                pass
         elif access:
             cred = self._find_ec2_keypair(access=access, user_id=user_id)
-            self.client.credentials.delete(cred.id)
+            if cred:
+                self.client.credentials.delete(cred.id)
         else:
             raise ValueError("Must specify either credential_id or access")
 

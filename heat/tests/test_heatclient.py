@@ -279,9 +279,15 @@ class KeystoneClientTest(HeatTestCase):
         mock_user.default_project_id = 'aproject'
         self.mock_admin_client.users.get('duser123').AndReturn(mock_user)
         self.mock_admin_client.users.delete('duser123').AndReturn(None)
+        self.mock_admin_client.users.get('duser123').AndRaise(
+            kc_exception.NotFound)
+
         self.m.ReplayAll()
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user(user_id='duser123',
+                                                project_id='aproject')
+        # Second delete will raise ignored NotFound
         heat_ks_client.delete_stack_domain_user(user_id='duser123',
                                                 project_id='aproject')
 
@@ -358,8 +364,13 @@ class KeystoneClientTest(HeatTestCase):
         # mock keystone client delete function
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         self.mock_ks_v3_client.users.delete(user='atestuser').AndReturn(None)
+        self.mock_ks_v3_client.users.delete(user='atestuser').AndRaise(
+            kc_exception.NotFound)
+
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_user('atestuser')
+        # Second delete will raise ignored NotFound
         heat_ks_client.delete_stack_user('atestuser')
 
     def test_init_v3_token(self):
@@ -671,6 +682,7 @@ class KeystoneClientTest(HeatTestCase):
         mock_user.domain_id = domain_id
         mock_user.default_project_id = project_id
         self.mock_admin_client.users.get(user_id).AndReturn(mock_user)
+        return mock_user
 
     def test_enable_stack_domain_user(self):
         """Test enabling a stack domain user."""
@@ -808,13 +820,21 @@ class KeystoneClientTest(HeatTestCase):
 
         # mock keystone client functions
         self._stub_domain_admin_client()
-        self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
+        user = self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
         self.mock_admin_client.credentials = self.m.CreateMockAnything()
         self.mock_admin_client.credentials.delete(
             'acredentialid').AndReturn(None)
+
+        self.mock_admin_client.users.get('duser123').AndReturn(user)
+        self.mock_admin_client.credentials.delete(
+            'acredentialid').AndRaise(kc_exception.NotFound)
         self.m.ReplayAll()
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user_keypair(
+            user_id='duser123', project_id='aproject',
+            credential_id='acredentialid')
+        # Second delete will raise ignored NotFound
         heat_ks_client.delete_stack_domain_user_keypair(
             user_id='duser123', project_id='aproject',
             credential_id='acredentialid')
@@ -1078,8 +1098,13 @@ class KeystoneClientTest(HeatTestCase):
         # mock keystone client delete function
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
         self.mock_ks_v3_client.credentials.delete(credential_id)
+        self.mock_ks_v3_client.credentials.delete(credential_id).AndRaise(
+            kc_exception.NotFound)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertIsNone(heat_ks_client.delete_ec2_keypair(
+                          credential_id=credential_id))
+        # Second delete will raise ignored NotFound
         self.assertIsNone(heat_ks_client.delete_ec2_keypair(
                           credential_id=credential_id))
 
@@ -1153,11 +1178,15 @@ class KeystoneClientTest(HeatTestCase):
         self._stub_domain_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         self.mock_admin_client.projects.delete(project='aprojectid')
+        self.mock_admin_client.projects.delete(project='aprojectid').AndRaise(
+            kc_exception.NotFound)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
+        # Second delete will raise ignored NotFound
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
 
     def test_delete_stack_domain_project_legacy_fallback(self):
