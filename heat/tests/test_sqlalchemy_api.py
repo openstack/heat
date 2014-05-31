@@ -1221,6 +1221,11 @@ class DBAPIStackTest(HeatTestCase):
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
 
+    def test_stack_status_reason_truncate(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds,
+                             status_reason='a' * 1024)
+        self.assertEqual('a' * 255, stack.status_reason)
+
 
 class DBAPIResourceTest(HeatTestCase):
     def setUp(self):
@@ -1306,6 +1311,12 @@ class DBAPIResourceTest(HeatTestCase):
 
         self.assertRaises(exception.NotFound, db_api.resource_get_all_by_stack,
                           self.ctx, self.stack2.id)
+
+    def test_resource_status_reason_truncate(self):
+        res = create_resource(self.ctx, self.stack,
+                              status_reason='a' * 1024)
+        ret_res = db_api.resource_get(self.ctx, res.id)
+        self.assertEqual('a' * 255, ret_res.status_reason)
 
 
 class DBAPIStackLockTest(HeatTestCase):
@@ -1510,6 +1521,11 @@ class DBAPIEventTest(HeatTestCase):
 
         self.assertEqual(1, db_api.event_count_all_by_stack(self.ctx,
                                                             self.stack2.id))
+
+    def test_event_resource_status_reason_truncate(self):
+        event = create_event(self.ctx, resource_status_reason='a' * 1024)
+        ret_event = db_api.event_get(self.ctx, event.id)
+        self.assertEqual('a' * 255, ret_event.resource_status_reason)
 
 
 class DBAPIWatchRuleTest(HeatTestCase):
