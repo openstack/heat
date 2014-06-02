@@ -37,7 +37,7 @@ class RequestContext(context.RequestContext):
                  tenant_id=None, auth_url=None, roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
-                 request_id=None, **kwargs):
+                 request_id=None, auth_token_info=None, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
@@ -57,6 +57,7 @@ class RequestContext(context.RequestContext):
         self.password = password
         self.aws_creds = aws_creds
         self.tenant_id = tenant_id
+        self.auth_token_info = auth_token_info
         self.auth_url = auth_url
         self.roles = roles or []
         if overwrite or not hasattr(local.store, 'context'):
@@ -90,6 +91,7 @@ class RequestContext(context.RequestContext):
                 'tenant_id': self.tenant_id,
                 'trust_id': self.trust_id,
                 'trustor_user_id': self.trustor_user_id,
+                'auth_token_info': self.auth_token_info,
                 'auth_url': self.auth_url,
                 'roles': self.roles,
                 'is_admin': self.is_admin,
@@ -128,6 +130,7 @@ class ContextMiddleware(wsgi.Middleware):
         construct an appropriate context from it.
         """
         headers = req.headers
+        environ = req.environ
 
         try:
             username = None
@@ -148,6 +151,7 @@ class ContextMiddleware(wsgi.Middleware):
             roles = headers.get('X-Roles')
             if roles is not None:
                 roles = roles.split(',')
+            token_info = environ.get('keystone.token_info')
 
         except Exception:
             raise exception.NotAuthenticated()
@@ -158,7 +162,9 @@ class ContextMiddleware(wsgi.Middleware):
                                         username=username,
                                         user_id=user_id,
                                         password=password,
-                                        auth_url=auth_url, roles=roles)
+                                        auth_url=auth_url,
+                                        roles=roles,
+                                        auth_token_info=token_info)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
