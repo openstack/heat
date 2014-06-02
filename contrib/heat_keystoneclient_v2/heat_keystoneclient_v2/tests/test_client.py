@@ -58,6 +58,7 @@ class KeystoneClientTest(HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
+                region=None,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         elif method == 'password':
@@ -70,6 +71,7 @@ class KeystoneClientTest(HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
+                region=None,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         if method == 'trust':
@@ -81,6 +83,7 @@ class KeystoneClientTest(HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
+                region=None,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate(trust_id='atrust123',
                                              tenant_id='test_tenant_id'
