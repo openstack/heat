@@ -216,13 +216,20 @@ class Parameter(object):
         '''
         self.schema.validate(context)
 
-        if validate_value:
+        if not validate_value:
+            return
+
+        try:
             if self.has_default():
                 self._validate(self.default(), context)
             if self.user_value is not None:
                 self._validate(self.user_value, context)
             elif not self.has_default():
                 raise exception.UserParameterMissing(key=self.name)
+        except exception.StackValidationFailed as ex:
+            msg = _("Parameter '%(name)s' is invalid: %(exp)s") % dict(
+                name=self.name, exp=six.text_type(ex))
+            raise exception.StackValidationFailed(message=msg)
 
     def value(self):
         '''Get the parameter value, optionally sanitising it for output.'''
