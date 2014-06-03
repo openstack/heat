@@ -654,15 +654,10 @@ Resources:
         self.m.VerifyAll()
 
     def test_network_interface_error(self):
-        real_exception = self.assertRaises(
-            exception.InvalidTemplateReference,
+        self.assertRaises(
+            exception.StackValidationFailed,
             self.create_stack,
             self.test_template_error)
-        expected_exception = exception.InvalidTemplateReference(
-            resource='INVALID-REF-IN-TEMPLATE',
-            key='the_nic.Properties.GroupSet[0]')
-
-        self.assertEqual(str(expected_exception), str(real_exception))
 
 
 class InternetGatewayTest(VPCTestBase):

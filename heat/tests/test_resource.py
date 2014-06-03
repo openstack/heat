@@ -993,9 +993,8 @@ class ResourceDependenciesTest(HeatTestCase):
             }
         })
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
-        ex = self.assertRaises(exception.InvalidTemplateReference,
-                               stack.validate)
-        self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
+        self.assertRaises(exception.StackValidationFailed,
+                          stack.validate)
 
     def test_hot_ref_fail(self):
         tmpl = template.Template({
