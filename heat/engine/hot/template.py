@@ -10,10 +10,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from heat.engine.cfn import template as cfn_template
+from heat.engine import function
 from heat.engine.hot import parameters
+from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.openstack.common.gettextutils import _
+
+
+_RESOURCE_KEYS = (
+    RES_TYPE, RES_PROPERTIES, RES_METADATA, RES_DEPENDS_ON,
+    RES_DELETION_POLICY, RES_UPDATE_POLICY,
+) = (
+    'type', 'properties', 'metadata', 'depends_on',
+    'deletion_policy', 'update_policy',
+)
 
 
 class HOTemplate(template.Template):
@@ -138,6 +151,71 @@ class HOTemplate(template.Template):
     def parameters(self, stack_identifier, user_params):
         return parameters.HOTParameters(stack_identifier, self,
                                         user_params=user_params)
+
+    def resource_definitions(self, stack):
+        allowed_keys = set(_RESOURCE_KEYS)
+
+        def rsrc_defn_item(name, snippet):
+            data = self.parse(stack, snippet)
+
+            def get_check_type(key, valid_types, typename, default=None):
+                if key in data:
+                    field = data[key]
+                    if not isinstance(field, valid_types):
+                        args = {'name': name, 'key': key, 'typename': typename}
+                        msg = _('Resource %(name)s %(key)s type'
+                                'must be %(typename)s') % args
+                        raise TypeError(msg)
+                    return field
+                else:
+                    return default
+
+            resource_type = get_check_type(RES_TYPE, basestring, 'string')
+            if resource_type is None:
+                args = {'name': name, 'type_key': RES_TYPE}
+                msg = _('Resource %(name)s is missing "%(type_key)s"') % args
+                raise KeyError(msg)
+
+            properties = get_check_type(RES_PROPERTIES,
+                                        (collections.Mapping,
+                                         function.Function),
+                                        'object')
+
+            metadata = get_check_type(RES_METADATA,
+                                      (collections.Mapping,
+                                       function.Function),
+                                      'object')
+
+            depends = get_check_type(RES_DEPENDS_ON,
+                                     collections.Sequence,
+                                     'list or string',
+                                     default=[])
+            if isinstance(depends, basestring):
+                depends = [depends]
+
+            deletion_policy = get_check_type(RES_DELETION_POLICY,
+                                             basestring,
+                                             'string')
+
+            update_policy = get_check_type(RES_UPDATE_POLICY,
+                                           (collections.Mapping,
+                                            function.Function),
+                                           'object')
+
+            for key in data:
+                if key not in allowed_keys:
+                    raise ValueError(_('"%s" is not a valid keyword '
+                                       'inside a resource definition') % key)
+
+            defn = rsrc_defn.ResourceDefinition(name, resource_type,
+                                                properties, metadata,
+                                                depends,
+                                                deletion_policy,
+                                                update_policy)
+            return name, defn
+
+        resources = self.t.get(self.RESOURCES, {}).items()
+        return dict(rsrc_defn_item(name, data) for name, data in resources)
 
 
 def template_mapping():

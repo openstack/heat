@@ -161,6 +161,11 @@ class Template(collections.Mapping):
         '''Return a parameters.Parameters object for the stack.'''
         pass
 
+    @abc.abstractmethod
+    def resource_definitions(self, stack):
+        '''Return a dictionary of ResourceDefinition objects.'''
+        pass
+
     def functions(self):
         '''Return a dict of template functions keyed by name.'''
         if self.version not in self._functionmaps:
