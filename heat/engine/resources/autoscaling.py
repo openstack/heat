@@ -295,7 +295,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def _get_instance_templates(self):
         """Get templates for resource instances."""
-        return [(instance.name, instance.t)
+        return [(instance.name, dict(instance.t))
                 for instance in self.get_instances()]
 
     def _create_template(self, num_instances, num_replace=0):
