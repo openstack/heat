@@ -819,8 +819,8 @@ class validateTest(HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -828,8 +828,8 @@ class validateTest(HeatTestCase):
 
     def _mock_get_image_id_fail(self, image_id, exp):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
@@ -1267,8 +1267,8 @@ class validateTest(HeatTestCase):
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1284,8 +1284,8 @@ class validateTest(HeatTestCase):
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1301,8 +1301,8 @@ class validateTest(HeatTestCase):
         self.m.StubOutWithMock(self.gc.images, 'list')
         self.gc.images.list().AndRaise(
             g_exc.ClientException(500))
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(self.gc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(self.gc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)

@@ -152,8 +152,8 @@ class instancesTest(HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -177,8 +177,8 @@ class instancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
 
@@ -237,8 +237,8 @@ class instancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
 
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(

@@ -24,15 +24,7 @@ except ImportError:
 
 class Clients(heat_clients.OpenStackClients):
 
-    def __init__(self, context):
-        super(Clients, self).__init__(context)
-        self._barbican = None
-
-    def barbican(self):
-        if self._barbican:
-            return self._barbican
-
-        keystone_client = self.keystone().client
+    def _barbican(self):
+        keystone_client = self.client('keystone').client
         auth_plugin = auth.KeystoneAuthV2(keystone=keystone_client)
-        self._barbican = barbican_client.Client(auth_plugin=auth_plugin)
-        return self._barbican
+        return barbican_client.Client(auth_plugin=auth_plugin)

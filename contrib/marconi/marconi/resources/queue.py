@@ -70,7 +70,7 @@ class MarconiQueue(resource.Resource):
         self.clients = clients.Clients(self.context)
 
     def marconi(self):
-        return self.clients.marconi()
+        return self.clients.client('marconi')
 
     def physical_resource_name(self):
         return self.properties[self.NAME]

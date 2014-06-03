@@ -216,8 +216,8 @@ class SignalTest(HeatTestCase):
             def delete_stack_user(self, name):
                 raise kc_exceptions.NotFound()
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
+        clients.OpenStackClients._keystone().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -313,8 +313,8 @@ class SignalTest(HeatTestCase):
         # test isolated from keystoneclient. The unset stubs is done so that we
         # do not have to mock out all of the deleting that the
         # stack_delete_after decorator will do during cleanup.
-        self.m.StubOutWithMock(self.stack.clients, 'keystone')
-        self.stack.clients.keystone().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.stack.clients, '_keystone')
+        self.stack.clients._keystone().AndReturn(self.fc)
 
         self.m.ReplayAll()
 

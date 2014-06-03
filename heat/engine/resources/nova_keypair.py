@@ -138,7 +138,7 @@ class KeypairConstraint(constraints.BaseCustomConstraint):
             # Don't validate empty key, which can happen when you use a KeyPair
             # resource
             return True
-        nova_client = client.nova()
+        nova_client = client.client('nova')
         nova_utils.get_keypair(nova_client, value)
 
 

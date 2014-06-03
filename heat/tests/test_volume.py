@@ -100,8 +100,8 @@ class VolumeTest(HeatTestCase):
         super(VolumeTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'cinder')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_cinder')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'create')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'get')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
@@ -144,7 +144,7 @@ class VolumeTest(HeatTestCase):
         return rsrc
 
     def _mock_create_volume(self, fv, stack_name, size=1):
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -168,7 +168,7 @@ class VolumeTest(HeatTestCase):
                                           device=u'/dev/vdc',
                                           update=False):
         if not update:
-            clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+            clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create_server_volume(
             device=device, server_id=server, volume_id=volume).AndReturn(fva)
         self.cinder_fc.volumes.get(volume).AndReturn(fva)
@@ -211,7 +211,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
@@ -219,7 +219,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(image.ImageConstraint, "validate")
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
@@ -764,7 +764,7 @@ class VolumeTest(HeatTestCase):
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
@@ -793,7 +793,7 @@ class VolumeTest(HeatTestCase):
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
@@ -824,7 +824,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
 
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
@@ -896,11 +896,11 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolumeWithStateTransition('downloading', 'available')
         stack_name = 'test_volume_stack'
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).MultipleTimes().\
@@ -939,7 +939,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
 
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -976,7 +976,7 @@ class VolumeTest(HeatTestCase):
                         created_at='2013-02-25T02:40:21.000000')
         stack_name = 'test_volume_stack'
 
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -1263,7 +1263,7 @@ class VolumeTest(HeatTestCase):
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
@@ -1311,7 +1311,7 @@ class VolumeTest(HeatTestCase):
             'display_description': update_description
         }
 
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+        clients.OpenStackClients._cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
             availability_zone=None,

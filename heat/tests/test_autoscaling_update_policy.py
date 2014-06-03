@@ -213,8 +213,8 @@ class AutoScalingGroupTest(HeatTestCase):
     def _mock_get_image_id_success(self, imageId_input, imageId,
                                    update_image=None):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
 
@@ -253,7 +253,7 @@ class AutoScalingGroupTest(HeatTestCase):
         """
         self._stub_validate()
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
 
@@ -262,7 +262,7 @@ class AutoScalingGroupTest(HeatTestCase):
 
         cookie = object()
 
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         # for load balancer setup
         if setup_lb:
             self._stub_lb_create()
@@ -289,13 +289,13 @@ class AutoScalingGroupTest(HeatTestCase):
         notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
 
         # for instances in the group
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(instance.Instance, 'destroy')
 
         if num_reloads_expected_on_updt > 1:
-            clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+            clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
 
         cookie = object()
         for i in range(num_creates_expected_on_updt):

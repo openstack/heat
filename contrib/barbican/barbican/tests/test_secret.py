@@ -42,9 +42,9 @@ class TestSecret(HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
-        self.patcher_client = mock.patch.object(secret.clients, 'Clients')
+        self.patcher_client = mock.patch.object(secret.Secret, 'barbican')
         mock_client = self.patcher_client.start()
-        self.barbican = mock_client.return_value.barbican.return_value
+        self.barbican = mock_client.return_value
 
         self._register_resources()
         self.stack = utils.parse_stack(template_format.parse(stack_template))
@@ -86,7 +86,7 @@ class TestSecret(HeatTestCase):
     def test_attributes_handles_exceptions(self):
         secret.clients.barbican_client.HTTPClientError = Exception
         some_error = secret.clients.barbican_client.HTTPClientError('boom')
-        secret.clients.Clients().barbican.side_effect = some_error
+        secret.Secret.barbican.side_effect = some_error
 
         self.assertEqual('', self.res.FnGetAtt('status'))
 

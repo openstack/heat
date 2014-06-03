@@ -2381,8 +2381,8 @@ class NeutronPortTest(HeatTestCase):
 class NetworkConstraintTest(HeatTestCase):
 
     def test_validate(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, 'neutron')
-        clients.OpenStackClients.neutron().MultipleTimes().AndReturn(None)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_neutron')
+        clients.OpenStackClients._neutron().MultipleTimes().AndReturn(None)
         self.m.StubOutWithMock(net.neutronV20, 'find_resourceid_by_name_or_id')
         net.neutronV20.find_resourceid_by_name_or_id(
             None, 'network', 'foo'

@@ -21,6 +21,7 @@ from novaclient import shell as novashell
 from oslo.config import cfg
 from swiftclient import client as swiftclient
 from troveclient import client as troveclient
+import warnings
 
 from heat.common import heat_keystoneclient as hkc
 from heat.openstack.common.gettextutils import _
@@ -48,28 +49,40 @@ class OpenStackClients(object):
         self.context = context
         self._clients = {}
 
+    def client(self, name):
+        if name in self._clients:
+            return self._clients[name]
+        method_name = '_%s' % name
+        if callable(getattr(self, method_name, None)):
+            client = getattr(self, method_name)()
+            self._clients[name] = client
+            return client
+
     @property
     def auth_token(self):
         # Always use the auth_token from the keystone() client, as
         # this may be refreshed if the context contains credentials
         # which allow reissuing of a new token before the context
         # auth_token expiry (e.g trust_id or username/password)
-        return self.keystone().auth_token
+        return self.client('keystone').auth_token
 
     def keystone(self):
-        if 'keystone' in self._clients:
-            return self._clients['keystone']
+        warnings.warn('keystone() is deprecated. '
+                      'Replace with calls to client("keystone")')
+        return self.client('keystone')
 
-        self._clients['keystone'] = hkc.KeystoneClient(self.context)
-        return self._clients['keystone']
+    def _keystone(self):
+        return hkc.KeystoneClient(self.context)
 
     def url_for(self, **kwargs):
-        return self.keystone().url_for(**kwargs)
+        return self.client('keystone').url_for(**kwargs)
 
     def nova(self):
-        if 'nova' in self._clients:
-            return self._clients['nova']
+        warnings.warn('nova() is deprecated. '
+                      'Replace with calls to client("nova")')
+        return self.client('nova')
 
+    def _nova(self):
         con = self.context
         computeshell = novashell.OpenStackComputeShell()
         extensions = computeshell._discover_extensions("1.1")
@@ -96,12 +109,14 @@ class OpenStackClients(object):
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
 
-        self._clients['nova'] = client
         return client
 
     def swift(self):
-        if 'swift' in self._clients:
-            return self._clients['swift']
+        warnings.warn('swift() is deprecated. '
+                      'Replace with calls to client("swift")')
+        return self.client('swift')
+
+    def _swift(self):
 
         con = self.context
         endpoint_type = self._get_client_option('swift', 'endpoint_type')
@@ -118,12 +133,14 @@ class OpenStackClients(object):
             'cacert': self._get_client_option('swift', 'ca_file'),
             'insecure': self._get_client_option('swift', 'insecure')
         }
-        self._clients['swift'] = swiftclient.Connection(**args)
-        return self._clients['swift']
+        return swiftclient.Connection(**args)
 
     def glance(self):
-        if 'glance' in self._clients:
-            return self._clients['glance']
+        warnings.warn('glance() is deprecated. '
+                      'Replace with calls to client("glance")')
+        return self.client('glance')
+
+    def _glance(self):
 
         con = self.context
         endpoint_type = self._get_client_option('glance', 'endpoint_type')
@@ -141,12 +158,14 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('glance', 'insecure')
         }
 
-        self._clients['glance'] = glanceclient.Client('1', endpoint, **args)
-        return self._clients['glance']
+        return glanceclient.Client('1', endpoint, **args)
 
     def neutron(self):
-        if 'neutron' in self._clients:
-            return self._clients['neutron']
+        warnings.warn('neutron() is deprecated. '
+                      'Replace with calls to client("neutron")')
+        return self.client('neutron')
+
+    def _neutron(self):
 
         con = self.context
         if self.auth_token is None:
@@ -165,13 +184,14 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('neutron', 'insecure')
         }
 
-        self._clients['neutron'] = neutronclient.Client(**args)
-
-        return self._clients['neutron']
+        return neutronclient.Client(**args)
 
     def cinder(self):
-        if 'cinder' in self._clients:
-            return self._clients['cinder']
+        warnings.warn('cinder() is deprecated. '
+                      'Replace with calls to client("cinder")')
+        return self.client('cinder')
+
+    def _cinder(self):
 
         con = self.context
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
@@ -186,22 +206,25 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('cinder', 'insecure')
         }
 
-        self._clients['cinder'] = cinderclient.Client('1', **args)
+        client = cinderclient.Client('1', **args)
         management_url = self.url_for(service_type='volume',
                                       endpoint_type=endpoint_type)
-        self._clients['cinder'].client.auth_token = self.auth_token
-        self._clients['cinder'].client.management_url = management_url
+        client.client.auth_token = self.auth_token
+        client.client.management_url = management_url
 
-        return self._clients['cinder']
+        return client
 
-    def trove(self, service_type="database"):
-        if 'trove' in self._clients:
-            return self._clients['trove']
+    def trove(self):
+        warnings.warn('trove() is deprecated. '
+                      'Replace with calls to client("trove")')
+        return self.client('trove')
+
+    def _trove(self):
 
         con = self.context
         endpoint_type = self._get_client_option('trove', 'endpoint_type')
         args = {
-            'service_type': service_type,
+            'service_type': 'database',
             'auth_url': con.auth_url,
             'proxy_token': con.auth_token,
             'username': None,
@@ -211,17 +234,20 @@ class OpenStackClients(object):
             'endpoint_type': endpoint_type
         }
 
-        self._clients['trove'] = troveclient.Client('1.0', **args)
-        management_url = self.url_for(service_type=service_type,
+        client = troveclient.Client('1.0', **args)
+        management_url = self.url_for(service_type='database',
                                       endpoint_type=endpoint_type)
-        self._clients['trove'].client.auth_token = con.auth_token
-        self._clients['trove'].client.management_url = management_url
+        client.client.auth_token = con.auth_token
+        client.client.management_url = management_url
 
-        return self._clients['trove']
+        return client
 
     def ceilometer(self):
-        if 'ceilometer' in self._clients:
-            return self._clients['ceilometer']
+        warnings.warn('ceilometer() is deprecated. '
+                      'Replace with calls to client("ceilometer")')
+        return self.client('ceilometer')
+
+    def _ceilometer(self):
 
         con = self.context
         endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
@@ -239,10 +265,7 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('ceilometer', 'insecure')
         }
 
-        client = ceilometerclient.Client('2', endpoint, **args)
-
-        self._clients['ceilometer'] = client
-        return self._clients['ceilometer']
+        return ceilometerclient.Client('2', endpoint, **args)
 
     def _get_client_option(self, client, option):
         try:
@@ -262,8 +285,11 @@ class OpenStackClients(object):
         return heat_url
 
     def heat(self):
-        if 'heat' in self._clients:
-            return self._clients['heat']
+        warnings.warn('heat() is deprecated. '
+                      'Replace with calls to client("heat")')
+        return self.client('heat')
+
+    def _heat(self):
 
         con = self.context
         endpoint_type = self._get_client_option('heat', 'endpoint_type')
@@ -282,9 +308,7 @@ class OpenStackClients(object):
         if not endpoint:
             endpoint = self.url_for(service_type='orchestration',
                                     endpoint_type=endpoint_type)
-        self._clients['heat'] = heatclient.Client('1', endpoint, **args)
-
-        return self._clients['heat']
+        return heatclient.Client('1', endpoint, **args)
 
 
 class ClientBackend(object):

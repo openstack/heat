@@ -115,7 +115,7 @@ class HeatTestCase(testscenarios.WithScenarios,
         return mockfixture.mock
 
     def stub_keystoneclient(self, **kwargs):
-        client = self.patchobject(clients.OpenStackClients, "keystone")
+        client = self.patchobject(clients.OpenStackClients, "_keystone")
         fkc = fakes.FakeKeystoneClient(**kwargs)
         client.return_value = fkc
         return fkc

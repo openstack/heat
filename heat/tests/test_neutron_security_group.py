@@ -18,7 +18,6 @@ from novaclient.v1_1 import security_groups as nova_sg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -86,7 +85,6 @@ Resources:
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')

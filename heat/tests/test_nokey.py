@@ -62,8 +62,8 @@ class nokeyTest(HeatTestCase):
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, 'CentOS 5.2').MultipleTimes().\

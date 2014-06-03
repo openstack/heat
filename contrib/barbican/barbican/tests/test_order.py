@@ -52,9 +52,9 @@ class TestOrder(HeatTestCase):
         self.props = tmpl['resources']['order']['properties']
         self._register_resources()
 
-        self.patcher_client = mock.patch.object(order.clients, 'Clients')
+        self.patcher_client = mock.patch.object(order.Order, 'barbican')
         mock_client = self.patcher_client.start()
-        self.barbican = mock_client.return_value.barbican.return_value
+        self.barbican = mock_client.return_value
 
     def tearDown(self):
         super(TestOrder, self).tearDown()
