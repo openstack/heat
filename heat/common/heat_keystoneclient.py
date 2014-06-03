@@ -14,6 +14,7 @@
 """Keystone Client functionality for use by resources."""
 
 from collections import namedtuple
+import copy
 import json
 import uuid
 
@@ -152,6 +153,22 @@ class KeystoneClientV3(object):
             kwargs.update(self._service_admin_creds())
             kwargs['trust_id'] = self.context.trust_id
             kwargs.pop('project_name')
+        elif self.context.auth_token_info is not None:
+            # The auth_ref version must be set according to the token version
+            if 'access' in self.context.auth_token_info:
+                kwargs['auth_ref'] = copy.deepcopy(
+                    self.context.auth_token_info['access'])
+                kwargs['auth_ref']['version'] = 'v2.0'
+                kwargs['auth_ref']['token']['id'] = self.context.auth_token
+            elif 'token' in self.context.auth_token_info:
+                kwargs['auth_ref'] = copy.deepcopy(
+                    self.context.auth_token_info['token'])
+                kwargs['auth_ref']['version'] = 'v3'
+                kwargs['auth_ref']['auth_token'] = self.context.auth_token
+            else:
+                LOG.error(_('Unknown version in auth_token_info'))
+                raise exception.AuthorizationFailure(
+                    _('Unknown token version'))
         elif self.context.auth_token is not None:
             kwargs['token'] = self.context.auth_token
             kwargs['project_id'] = self.context.tenant_id
@@ -165,7 +182,12 @@ class KeystoneClientV3(object):
             raise exception.AuthorizationFailure()
         kwargs.update(self._ssl_options())
         client = kc_v3.Client(**kwargs)
-        client.authenticate()
+
+        # If auth_ref has already be specified via auth_token_info, don't
+        # authenticate as we want to reuse, rather than request a new token
+        if 'auth_ref' not in kwargs:
+            client.authenticate()
+
         # If we are authenticating with a trust set the context auth_token
         # with the trust scoped token
         if 'trust_id' in kwargs:
