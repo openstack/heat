@@ -1717,6 +1717,27 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('tpl', rsrc.child_template())
         rsrc._create_template.assert_called_once_with(3)
 
+    def test_launch_config_get_ref_by_id(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=self.params)
+        rsrc = stack['LaunchConfig']
+        self.stub_ImageConstraint_validate()
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        # use physical_resource_name when rsrc.id is not None
+        self.assertIsNotNone(rsrc.id)
+        expected = '%s-%s-%s' % (rsrc.stack.name,
+                                 rsrc.name,
+                                 short_id.get_id(rsrc.id))
+        self.assertEqual(expected, rsrc.FnGetRefId())
+
+        # otherwise use parent method
+        rsrc.id = None
+        self.assertIsNone(rsrc.resource_id)
+        self.assertEqual('LaunchConfig', rsrc.FnGetRefId())
+
 
 class TestInstanceGroup(HeatTestCase):
     params = {'KeyName': 'test', 'ImageId': 'foo'}
