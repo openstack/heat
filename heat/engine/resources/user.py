@@ -109,7 +109,7 @@ class User(stack_user.StackUser):
         self.resource_id_set(self._get_user_id())
 
     def FnGetRefId(self):
-        return unicode(self.physical_resource_name())
+        return self.physical_resource_name_or_FnGetRefId()
 
     def access_allowed(self, resource_name):
         policies = (self.properties[self.POLICIES] or [])

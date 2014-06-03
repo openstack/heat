@@ -454,7 +454,7 @@ class InstanceGroup(stack_resource.StackResource):
                 scheduler.TaskRunner(lb_resource.update, lb_defn)()
 
     def FnGetRefId(self):
-        return self.physical_resource_name()
+        return self.physical_resource_name_or_FnGetRefId()
 
     def _resolve_attribute(self, name):
         '''
@@ -831,11 +831,7 @@ class LaunchConfiguration(resource.Resource):
             raise resource.UpdateReplace(self.name)
 
     def FnGetRefId(self):
-        res_name = self.physical_resource_name()
-        if res_name is not None:
-            return unicode(res_name)
-        else:
-            return super(LaunchConfiguration, self).FnGetRefId()
+        return self.physical_resource_name_or_FnGetRefId()
 
 
 class AutoScalingResourceGroup(AutoScalingGroup):
