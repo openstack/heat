@@ -46,15 +46,7 @@ class OpenStackClients(object):
     '''
     def __init__(self, context):
         self.context = context
-        self._nova = None
-        self._keystone = None
-        self._swift = None
-        self._neutron = None
-        self._cinder = None
-        self._trove = None
-        self._ceilometer = None
-        self._heat = None
-        self._glance = None
+        self._clients = {}
 
     @property
     def auth_token(self):
@@ -63,18 +55,18 @@ class OpenStackClients(object):
         return self.context.auth_token or self.keystone().auth_token
 
     def keystone(self):
-        if self._keystone:
-            return self._keystone
+        if 'keystone' in self._clients:
+            return self._clients['keystone']
 
-        self._keystone = hkc.KeystoneClient(self.context)
-        return self._keystone
+        self._clients['keystone'] = hkc.KeystoneClient(self.context)
+        return self._clients['keystone']
 
     def url_for(self, **kwargs):
         return self.keystone().url_for(**kwargs)
 
     def nova(self):
-        if self._nova:
-            return self._nova
+        if 'nova' in self._clients:
+            return self._clients['nova']
 
         con = self.context
         computeshell = novashell.OpenStackComputeShell()
@@ -100,12 +92,12 @@ class OpenStackClients(object):
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
 
-        self._nova = client
+        self._clients['nova'] = client
         return client
 
     def swift(self):
-        if self._swift:
-            return self._swift
+        if 'swift' in self._clients:
+            return self._clients['swift']
 
         con = self.context
         endpoint_type = self._get_client_option('swift', 'endpoint_type')
@@ -122,12 +114,12 @@ class OpenStackClients(object):
             'cacert': self._get_client_option('swift', 'ca_file'),
             'insecure': self._get_client_option('swift', 'insecure')
         }
-        self._swift = swiftclient.Connection(**args)
-        return self._swift
+        self._clients['swift'] = swiftclient.Connection(**args)
+        return self._clients['swift']
 
     def glance(self):
-        if self._glance:
-            return self._glance
+        if 'glance' in self._clients:
+            return self._clients['glance']
 
         con = self.context
         endpoint_type = self._get_client_option('glance', 'endpoint_type')
@@ -145,12 +137,12 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('glance', 'insecure')
         }
 
-        self._glance = glanceclient.Client('1', endpoint, **args)
-        return self._glance
+        self._clients['glance'] = glanceclient.Client('1', endpoint, **args)
+        return self._clients['glance']
 
     def neutron(self):
-        if self._neutron:
-            return self._neutron
+        if 'neutron' in self._clients:
+            return self._clients['neutron']
 
         con = self.context
         if self.auth_token is None:
@@ -169,13 +161,13 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('neutron', 'insecure')
         }
 
-        self._neutron = neutronclient.Client(**args)
+        self._clients['neutron'] = neutronclient.Client(**args)
 
-        return self._neutron
+        return self._clients['neutron']
 
     def cinder(self):
-        if self._cinder:
-            return self._cinder
+        if 'cinder' in self._clients:
+            return self._clients['cinder']
 
         con = self.context
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
@@ -190,17 +182,17 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('cinder', 'insecure')
         }
 
-        self._cinder = cinderclient.Client('1', **args)
+        self._clients['cinder'] = cinderclient.Client('1', **args)
         management_url = self.url_for(service_type='volume',
                                       endpoint_type=endpoint_type)
-        self._cinder.client.auth_token = self.auth_token
-        self._cinder.client.management_url = management_url
+        self._clients['cinder'].client.auth_token = self.auth_token
+        self._clients['cinder'].client.management_url = management_url
 
-        return self._cinder
+        return self._clients['cinder']
 
     def trove(self, service_type="database"):
-        if self._trove:
-            return self._trove
+        if 'trove' in self._clients:
+            return self._clients['trove']
 
         con = self.context
         endpoint_type = self._get_client_option('trove', 'endpoint_type')
@@ -215,17 +207,17 @@ class OpenStackClients(object):
             'endpoint_type': endpoint_type
         }
 
-        self._trove = troveclient.Client('1.0', **args)
+        self._clients['trove'] = troveclient.Client('1.0', **args)
         management_url = self.url_for(service_type=service_type,
                                       endpoint_type=endpoint_type)
-        self._trove.client.auth_token = con.auth_token
-        self._trove.client.management_url = management_url
+        self._clients['trove'].client.auth_token = con.auth_token
+        self._clients['trove'].client.management_url = management_url
 
-        return self._trove
+        return self._clients['trove']
 
     def ceilometer(self):
-        if self._ceilometer:
-            return self._ceilometer
+        if 'ceilometer' in self._clients:
+            return self._clients['ceilometer']
 
         con = self.context
         endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
@@ -245,8 +237,8 @@ class OpenStackClients(object):
 
         client = ceilometerclient.Client('2', endpoint, **args)
 
-        self._ceilometer = client
-        return self._ceilometer
+        self._clients['ceilometer'] = client
+        return self._clients['ceilometer']
 
     def _get_client_option(self, client, option):
         try:
@@ -266,8 +258,8 @@ class OpenStackClients(object):
         return heat_url
 
     def heat(self):
-        if self._heat:
-            return self._heat
+        if 'heat' in self._clients:
+            return self._clients['heat']
 
         con = self.context
         endpoint_type = self._get_client_option('heat', 'endpoint_type')
@@ -286,9 +278,9 @@ class OpenStackClients(object):
         if not endpoint:
             endpoint = self.url_for(service_type='orchestration',
                                     endpoint_type=endpoint_type)
-        self._heat = heatclient.Client('1', endpoint, **args)
+        self._clients['heat'] = heatclient.Client('1', endpoint, **args)
 
-        return self._heat
+        return self._clients['heat']
 
 
 class ClientBackend(object):

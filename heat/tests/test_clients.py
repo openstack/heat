@@ -55,7 +55,7 @@ class ClientsTest(HeatTestCase):
         obj.heat()
         self.assertEqual('url_from_keystone', mock_call.call_args[0][1])
         obj._get_heat_url.return_value = "url_from_config"
-        obj._heat = None
+        del(obj._clients['heat'])
         obj.heat()
         self.assertEqual('url_from_config', mock_call.call_args[0][1])
 
