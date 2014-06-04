@@ -13,7 +13,6 @@
 
 from glanceclient import exc as glance_exceptions
 import mock
-from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
@@ -25,7 +24,6 @@ from heat.engine import parser
 from heat.engine import resources
 from heat.engine.resources import glance_utils
 from heat.engine import service
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -1064,8 +1062,6 @@ class validateTest(HeatTestCase):
         self.assertEqual(
             {'Error': '"Snapshot" deletion policy not supported'}, res)
 
-    @skipIf(try_import('cinderclient.v1.volume_backups') is None,
-            'unable to import volume_backups')
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
         engine = service.EngineService('a', 't')
