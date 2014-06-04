@@ -15,7 +15,6 @@ from ceilometerclient import client as ceilometerclient
 from heatclient import client as heatclient
 from oslo.config import cfg
 from stevedore import extension
-from troveclient import client as troveclient
 import warnings
 
 from heat.common import heat_keystoneclient as hkc
@@ -119,29 +118,6 @@ class OpenStackClients(object):
         warnings.warn('trove() is deprecated. '
                       'Replace with calls to client("trove")')
         return self.client('trove')
-
-    def _trove(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('trove', 'endpoint_type')
-        args = {
-            'service_type': 'database',
-            'auth_url': con.auth_url,
-            'proxy_token': con.auth_token,
-            'username': None,
-            'password': None,
-            'cacert': self._get_client_option('trove', 'ca_file'),
-            'insecure': self._get_client_option('trove', 'insecure'),
-            'endpoint_type': endpoint_type
-        }
-
-        client = troveclient.Client('1.0', **args)
-        management_url = self.url_for(service_type='database',
-                                      endpoint_type=endpoint_type)
-        client.client.auth_token = con.auth_token
-        client.client.management_url = management_url
-
-        return client
 
     def ceilometer(self):
         warnings.warn('ceilometer() is deprecated. '

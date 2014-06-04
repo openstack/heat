@@ -15,7 +15,6 @@ from troveclient.openstack.common.apiclient import exceptions as troveexc
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine.clients import troveclient
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -265,7 +264,7 @@ class OSDBInstance(resource.Resource):
     def _refresh_instance(self, instance):
         try:
             instance.get()
-        except troveclient.exceptions.RequestEntityTooLarge as exc:
+        except troveexc.RequestEntityTooLarge as exc:
             msg = _("Stack %(name)s (%(id)s) received an OverLimit "
                     "response during instance.get(): %(exception)s")
             LOG.warning(msg % {'name': self.stack.name,

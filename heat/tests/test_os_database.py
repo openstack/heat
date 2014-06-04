@@ -11,13 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from troveclient.openstack.common.apiclient import exceptions as troveexc
 import uuid
 
 import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients import troveclient
 from heat.engine import parser
 from heat.engine.resources import os_database
 from heat.engine import scheduler
@@ -181,7 +181,7 @@ class OSDBInstanceTest(HeatTestCase):
         # Simulate an OverLimit exception
         self.m.StubOutWithMock(fake_dbinstance, 'get')
         fake_dbinstance.get().AndRaise(
-            troveclient.exceptions.RequestEntityTooLarge)
+            troveexc.RequestEntityTooLarge)
 
         self.m.ReplayAll()
 
@@ -211,7 +211,7 @@ class OSDBInstanceTest(HeatTestCase):
         fake_dbinstance.delete().AndReturn(None)
         self.m.StubOutWithMock(fake_dbinstance, 'get')
         fake_dbinstance.get().AndReturn(None)
-        fake_dbinstance.get().AndRaise(troveclient.exceptions.NotFound(404))
+        fake_dbinstance.get().AndRaise(troveexc.NotFound(404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
@@ -232,9 +232,9 @@ class OSDBInstanceTest(HeatTestCase):
         # Simulate an OverLimit exception
         self.m.StubOutWithMock(fake_dbinstance, 'get')
         fake_dbinstance.get().AndRaise(
-            troveclient.exceptions.RequestEntityTooLarge)
+            troveexc.RequestEntityTooLarge)
         fake_dbinstance.get().AndReturn(None)
-        fake_dbinstance.get().AndRaise(troveclient.exceptions.NotFound(404))
+        fake_dbinstance.get().AndRaise(troveexc.NotFound(404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
@@ -262,7 +262,7 @@ class OSDBInstanceTest(HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.m.StubOutWithMock(self.fc.instances, 'get')
         self.fc.instances.get(12345).AndRaise(
-            troveclient.exceptions.NotFound(404))
+            troveexc.NotFound(404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
