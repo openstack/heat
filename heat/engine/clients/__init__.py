@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heatclient import client as heatclient
 from oslo.config import cfg
 from stevedore import extension
 import warnings
@@ -123,48 +122,10 @@ class OpenStackClients(object):
                       'Replace with calls to client("ceilometer")')
         return self.client('ceilometer')
 
-    def _get_client_option(self, client, option):
-        try:
-            group_name = 'clients_' + client
-            cfg.CONF.import_opt(option, 'heat.common.config',
-                                group=group_name)
-            return getattr(getattr(cfg.CONF, group_name), option)
-        except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
-            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-            return getattr(cfg.CONF.clients, option)
-
-    def _get_heat_url(self):
-        heat_url = self._get_client_option('heat', 'url')
-        if heat_url:
-            tenant_id = self.context.tenant_id
-            heat_url = heat_url % {'tenant_id': tenant_id}
-        return heat_url
-
     def heat(self):
         warnings.warn('heat() is deprecated. '
                       'Replace with calls to client("heat")')
         return self.client('heat')
-
-    def _heat(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('heat', 'endpoint_type')
-        args = {
-            'auth_url': con.auth_url,
-            'token': self.auth_token,
-            'username': None,
-            'password': None,
-            'ca_file': self._get_client_option('heat', 'ca_file'),
-            'cert_file': self._get_client_option('heat', 'cert_file'),
-            'key_file': self._get_client_option('heat', 'key_file'),
-            'insecure': self._get_client_option('heat', 'insecure')
-        }
-
-        endpoint = self._get_heat_url()
-        if not endpoint:
-            endpoint = self.url_for(service_type='orchestration',
-                                    endpoint_type=endpoint_type)
-        return heatclient.Client('1', endpoint, **args)
 
 
 class ClientBackend(object):
