@@ -15,13 +15,11 @@ import os
 
 import mock
 import six
-import testtools
 import yaml
 
 from heat.common import config
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -190,8 +188,6 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         for key in stack1:
             self.assertEqual(stack1[key].t, stack2[key].t)
 
-    @testtools.skipIf(clients.neutronclient is None,
-                      'neutronclient unavailable')
     def test_neutron_resolved(self):
         self.compare_stacks('Neutron.template', 'Neutron.yaml', {})
 

@@ -14,7 +14,6 @@
 from ceilometerclient import client as ceilometerclient
 from cinderclient import client as cinderclient
 from heatclient import client as heatclient
-from neutronclient.v2_0 import client as neutronclient
 from oslo.config import cfg
 from stevedore import extension
 from troveclient import client as troveclient
@@ -111,27 +110,6 @@ class OpenStackClients(object):
         warnings.warn('neutron() is deprecated. '
                       'Replace with calls to client("neutron")')
         return self.client('neutron')
-
-    def _neutron(self):
-
-        con = self.context
-        if self.auth_token is None:
-            LOG.error(_("Neutron connection failed, no auth_token!"))
-            return None
-
-        endpoint_type = self._get_client_option('neutron', 'endpoint_type')
-        args = {
-            'auth_url': con.auth_url,
-            'service_type': 'network',
-            'token': self.auth_token,
-            'endpoint_url': self.url_for(service_type='network',
-                                         endpoint_type=endpoint_type),
-            'endpoint_type': endpoint_type,
-            'ca_cert': self._get_client_option('neutron', 'ca_file'),
-            'insecure': self._get_client_option('neutron', 'insecure')
-        }
-
-        return neutronclient.Client(**args)
 
     def cinder(self):
         warnings.warn('cinder() is deprecated. '

@@ -11,14 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.vpc import VPC
 
-if clients.neutronclient is not None:
-    from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.common.exceptions import NeutronClientException
 
 
 class RouteTable(resource.Resource):
@@ -176,9 +174,6 @@ class SubnetRouteTableAssociation(resource.Resource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'AWS::EC2::RouteTable': RouteTable,
         'AWS::EC2::SubnetRouteTableAssociation': SubnetRouteTableAssociation,

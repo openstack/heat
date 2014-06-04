@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.vpc import VPC
@@ -118,9 +117,6 @@ class Subnet(resource.Resource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'AWS::EC2::Subnet': Subnet,
     }

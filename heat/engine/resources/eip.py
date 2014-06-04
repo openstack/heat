@@ -15,7 +15,6 @@ from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -23,6 +22,8 @@ from heat.engine.resources.vpc import VPC
 from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+
+from neutronclient.common.exceptions import NeutronClientException
 
 LOG = logging.getLogger(__name__)
 
@@ -69,11 +70,10 @@ class ElasticIp(resource.Resource):
 
     def _ipaddress(self):
         if self.ipaddress is None and self.resource_id is not None:
-            if self.properties[self.DOMAIN] and clients.neutronclient:
-                ne = clients.neutronclient.exceptions.NeutronClientException
+            if self.properties[self.DOMAIN]:
                 try:
                     ips = self.neutron().show_floatingip(self.resource_id)
-                except ne as e:
+                except NeutronClientException as e:
                     if e.status_code == 404:
                         LOG.warn(_("Floating IPs not found: %s") % e)
                 else:
@@ -90,7 +90,7 @@ class ElasticIp(resource.Resource):
     def handle_create(self):
         """Allocate a floating IP for the current tenant."""
         ips = None
-        if self.properties[self.DOMAIN] and clients.neutronclient:
+        if self.properties[self.DOMAIN]:
             from heat.engine.resources.internet_gateway import InternetGateway
 
             ext_net = InternetGateway.get_external_network_id(self.neutron())
@@ -101,10 +101,6 @@ class ElasticIp(resource.Resource):
             self.resource_id_set(ips['id'])
             LOG.info(_('ElasticIp create %s') % str(ips))
         else:
-            if self.properties[self.DOMAIN]:
-                raise exception.Error(_('Domain property can not be set on '
-                                      'resource %s without Neutron available')
-                                      % self.name)
             try:
                 ips = self.nova().floating_ips.create()
             except nova_exceptions.NotFound:
@@ -135,11 +131,10 @@ class ElasticIp(resource.Resource):
 
         """De-allocate a floating IP."""
         if self.resource_id is not None:
-            if self.properties[self.DOMAIN] and clients.neutronclient:
-                ne = clients.neutronclient.exceptions.NeutronClientException
+            if self.properties[self.DOMAIN]:
                 try:
                     self.neutron().delete_floatingip(self.resource_id)
-                except ne as e:
+                except NeutronClientException as e:
                     if e.status_code != 404:
                         raise e
             else:
@@ -205,7 +200,6 @@ class ElasticIpAssociation(resource.Resource):
                       {'instance': self.properties[self.INSTANCE_ID],
                        'eip': self.properties[self.EIP]})
         elif self.properties[self.ALLOCATION_ID]:
-            assert clients.neutronclient, "Neutron required for VPC operations"
             port_id = None
             port_rsrc = None
             if self.properties[self.NETWORK_INTERFACE_ID]:
@@ -252,11 +246,10 @@ class ElasticIpAssociation(resource.Resource):
                 pass
         elif self.properties[self.ALLOCATION_ID]:
             float_id = self.properties[self.ALLOCATION_ID]
-            ne = clients.neutronclient.exceptions.NeutronClientException
             try:
                 self.neutron().update_floatingip(
                     float_id, {'floatingip': {'port_id': None}})
-            except ne as e:
+            except NeutronClientException as e:
                 if e.status_code != 404:
                     raise e
 

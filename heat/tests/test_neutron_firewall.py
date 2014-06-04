@@ -13,17 +13,15 @@
 
 import copy
 
-from testtools import skipIf
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import firewall
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-neutronclient = try_import('neutronclient.v2_0.client')
 
 firewall_template = '''
 {
@@ -84,7 +82,6 @@ firewall_rule_template = '''
 '''
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class FirewallTest(HeatTestCase):
 
     def setUp(self):
@@ -212,7 +209,6 @@ class FirewallTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class FirewallPolicyTest(HeatTestCase):
 
     def setUp(self):
@@ -339,7 +335,6 @@ class FirewallPolicyTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class FirewallRuleTest(HeatTestCase):
 
     def setUp(self):

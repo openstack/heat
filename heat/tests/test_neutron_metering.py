@@ -11,17 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from testtools import skipIf
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import metering
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-neutronclient = try_import('neutronclient.v2_0.client')
 
 metering_template = '''
 {
@@ -50,7 +48,6 @@ metering_template = '''
 '''
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class MeteringLabelTest(HeatTestCase):
 
     def setUp(self):
@@ -160,7 +157,6 @@ class MeteringLabelTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class MeteringRuleTest(HeatTestCase):
 
     def setUp(self):

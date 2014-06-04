@@ -16,7 +16,8 @@
 
 import mox
 from mox import IgnoreArg
-from testtools import skipIf
+from neutronclient.common import exceptions as qe
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
@@ -24,14 +25,9 @@ from heat.engine.resources.neutron import network_gateway
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-neutronclient = try_import('neutronclient.v2_0.client')
-neutronV20 = try_import('neutronclient.neutron.v2_0')
-
-qe = try_import('neutronclient.common.exceptions')
 
 gw_template_deprecated = '''
 {
@@ -96,9 +92,7 @@ sng = {
 }
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronNetworkGatewayTest(HeatTestCase):
-    @skipIf(neutronV20 is None, 'Missing Neutron v2_0')
     def setUp(self):
         super(NeutronNetworkGatewayTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_network_gateway')
