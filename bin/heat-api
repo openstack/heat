@@ -46,11 +46,6 @@ LOG = logging.getLogger('heat.api')
 if __name__ == '__main__':
     try:
         cfg.CONF(project='heat', prog='heat-api')
-        cfg.CONF.default_log_levels = ['amqplib=WARN',
-                                       'qpid.messaging=INFO',
-                                       'keystone=INFO',
-                                       'eventlet.wsgi.server=WARN',
-                                       ]
         logging.setup('heat')
 
         app = config.load_paste_app()
