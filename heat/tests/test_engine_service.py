@@ -31,7 +31,7 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.db import api as db_api
-from heat.engine import clients
+from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import dependencies
 from heat.engine import environment
@@ -204,8 +204,8 @@ def setup_keystone_mocks(mocks, stack):
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
     g_cli_mock = mocks.CreateMockAnything()
-    mocks.StubOutWithMock(clients.OpenStackClients, '_glance')
-    clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+    mocks.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+    glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
         g_cli_mock)
     mocks.StubOutWithMock(glance_utils, 'get_image_id')
     glance_utils.get_image_id(g_cli_mock, imageId_input).\

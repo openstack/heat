@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient.common.exceptions import HTTPNotFound
+from glanceclient import exc as glance_exceptions
 import mock
 import six
 
@@ -190,5 +190,5 @@ class GlanceImageTest(HeatTestCase):
         self.my_image.resource_id = image_id
         self.images.delete.return_value = None
         self.assertIsNone(self.my_image.handle_delete())
-        self.images.delete.side_effect = HTTPNotFound(404)
+        self.images.delete.side_effect = glance_exceptions.HTTPNotFound(404)
         self.assertIsNone(self.my_image.handle_delete())

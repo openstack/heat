@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient.common import exceptions as glance_exceptions
+from glanceclient import exc as glance_exceptions
 
 from heat.engine import constraints
 from heat.engine import properties

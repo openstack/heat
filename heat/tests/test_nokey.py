@@ -12,7 +12,7 @@
 #    under the License.
 
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
@@ -63,8 +63,8 @@ class nokeyTest(HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, 'CentOS 5.2').MultipleTimes().\

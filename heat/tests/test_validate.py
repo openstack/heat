@@ -11,13 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc as g_exc
+from glanceclient import exc as glance_exceptions
 import mock
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.hot.template import HOTemplate
@@ -820,8 +820,8 @@ class validateTest(HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -829,8 +829,8 @@ class validateTest(HeatTestCase):
 
     def _mock_get_image_id_fail(self, image_id, exp):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
@@ -1301,9 +1301,9 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(self.gc.images, 'list')
         self.gc.images.list().AndRaise(
-            g_exc.ClientException(500))
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(self.gc)
+            glance_exceptions.ClientException(500))
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(self.gc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)

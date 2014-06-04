@@ -20,7 +20,7 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
@@ -81,8 +81,8 @@ class InstancesTest(HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -90,8 +90,8 @@ class InstancesTest(HeatTestCase):
 
     def _mock_get_image_id_fail(self, image_id, exp):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
-        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
