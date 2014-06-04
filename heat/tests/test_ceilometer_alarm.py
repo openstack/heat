@@ -14,25 +14,23 @@
 import copy
 import json
 
+from ceilometerclient import exc as ceilometerclient_exc
 import mox
 from oslo.config import cfg
-import testtools
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import ceilometer
 from heat.engine import parser
 from heat.engine.properties import schemata
 from heat.engine import resource
 from heat.engine.resources.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource
 from heat.tests import utils
 
-ceilometerclient = try_import('ceilometerclient.v2')
 
 alarm_template = '''
 {
@@ -126,7 +124,6 @@ class FakeCeilometerClient(object):
     alarms = FakeCeilometerAlarms()
 
 
-@testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
 class CeilometerAlarmTest(HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
@@ -336,7 +333,7 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stack = self.create_stack(template=json.dumps(t))
         self.m.StubOutWithMock(self.fa.alarms, 'delete')
         self.fa.alarms.delete('foo').AndRaise(
-            alarm.ceilometerclient_exc.HTTPNotFound())
+            ceilometerclient_exc.HTTPNotFound())
 
         self.m.ReplayAll()
         self.stack.create()
@@ -348,16 +345,15 @@ class CeilometerAlarmTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
 class CombinationAlarmTest(HeatTestCase):
 
     def setUp(self):
         super(CombinationAlarmTest, self).setUp()
         self.fc = FakeCeilometerClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_ceilometer')
+        self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
 
     def create_alarm(self):
-        clients.OpenStackClients._ceilometer().AndReturn(
+        ceilometer.CeilometerClientPlugin._create().AndReturn(
             self.fc)
         self.m.StubOutWithMock(self.fc.alarms, 'create')
         self.fc.alarms.create(
@@ -454,7 +450,7 @@ class CombinationAlarmTest(HeatTestCase):
         rsrc = self.create_alarm()
         self.m.StubOutWithMock(self.fc.alarms, 'delete')
         self.fc.alarms.delete('foo').AndRaise(
-            alarm.ceilometerclient_exc.HTTPNotFound())
+            ceilometerclient_exc.HTTPNotFound())
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()

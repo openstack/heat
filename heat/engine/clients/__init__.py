@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ceilometerclient import client as ceilometerclient
 from heatclient import client as heatclient
 from oslo.config import cfg
 from stevedore import extension
@@ -123,26 +122,6 @@ class OpenStackClients(object):
         warnings.warn('ceilometer() is deprecated. '
                       'Replace with calls to client("ceilometer")')
         return self.client('ceilometer')
-
-    def _ceilometer(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
-        endpoint = self.url_for(service_type='metering',
-                                endpoint_type=endpoint_type)
-        args = {
-            'auth_url': con.auth_url,
-            'service_type': 'metering',
-            'project_id': con.tenant,
-            'token': lambda: self.auth_token,
-            'endpoint_type': endpoint_type,
-            'ca_file': self._get_client_option('ceilometer', 'ca_file'),
-            'cert_file': self._get_client_option('ceilometer', 'cert_file'),
-            'key_file': self._get_client_option('ceilometer', 'key_file'),
-            'insecure': self._get_client_option('ceilometer', 'insecure')
-        }
-
-        return ceilometerclient.Client('2', endpoint, **args)
 
     def _get_client_option(self, client, option):
         try:
