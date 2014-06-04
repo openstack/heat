@@ -12,10 +12,10 @@
 #    under the License.
 
 from six.moves.urllib import parse as urlparse
+from swiftclient import exceptions as swift_exceptions
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
@@ -146,7 +146,7 @@ class SwiftContainer(resource.Resource):
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
-            except clients.swiftclient.ClientException as ex:
+            except swift_exceptions.ClientException as ex:
                 LOG.warn(_("Delete container failed: %s") % ex)
 
     def FnGetRefId(self):
@@ -165,7 +165,7 @@ class SwiftContainer(resource.Resource):
                 self.OBJECT_COUNT, self.BYTES_USED, self.HEAD_CONTAINER):
             try:
                 headers = self.swift().head_container(self.resource_id)
-            except clients.swiftclient.ClientException as ex:
+            except swift_exceptions.ClientException as ex:
                 LOG.warn(_("Head container failed: %s") % ex)
                 return None
             else:
@@ -181,9 +181,6 @@ class SwiftContainer(resource.Resource):
 
 
 def resource_mapping():
-    if clients.swiftclient is None:
-        return {}
-
     return {
         'OS::Swift::Container': SwiftContainer,
     }
