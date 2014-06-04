@@ -156,7 +156,7 @@ class Schema(constr.Schema):
                                               'false')).lower() == 'true',
                    label=schema_dict.get(LABEL))
 
-    def validate_value(self, name, value, context=None):
+    def validate_value(self, value, context=None):
         super(Schema, self).validate_constraints(value, context)
 
     def __getitem__(self, key):
@@ -289,7 +289,7 @@ class NumberParam(Parameter):
             Schema.str_to_num(val)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(self.name, val, context)
+        self.schema.validate_value(val, context)
 
     def value(self):
         return Schema.str_to_num(super(NumberParam, self).value())
@@ -303,7 +303,7 @@ class BooleanParam(Parameter):
             strutils.bool_from_string(val, strict=True)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
-        self.schema.validate_value(self.name, val, context)
+        self.schema.validate_value(val, context)
 
     def value(self):
         if self.user_value is not None:
@@ -317,7 +317,7 @@ class StringParam(Parameter):
     '''A template parameter of type "String".'''
 
     def _validate(self, val, context):
-        self.schema.validate_value(self.name, val, context)
+        self.schema.validate_value(val, context)
 
 
 class CommaDelimitedListParam(Parameter, collections.Sequence):
@@ -352,7 +352,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
 
     def _validate(self, val, context):
         parsed = self.parse(val)
-        self.schema.validate_value(self.name, parsed, context)
+        self.schema.validate_value(parsed, context)
 
 
 class JsonParam(Parameter, collections.Mapping):
@@ -388,7 +388,7 @@ class JsonParam(Parameter, collections.Mapping):
 
     def _validate(self, val, context):
         val = self.parse(val)
-        self.schema.validate_value(self.name, val, context)
+        self.schema.validate_value(val, context)
 
 
 class Parameters(collections.Mapping):
