@@ -513,7 +513,7 @@ class EngineService(service.Service):
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        LOG.info(_('template is %s') % template)
+        LOG.info(_('Creating stack %s') % stack_name)
 
         def _stack_create(stack):
             # Create/Adopt a stack, and create the periodic task if successful
@@ -563,10 +563,9 @@ class EngineService(service.Service):
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        LOG.info(_('template is %s') % template)
-
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
+        LOG.info(_('Updating stack %s') % db_stack.name)
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
