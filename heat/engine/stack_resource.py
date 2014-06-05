@@ -111,7 +111,7 @@ class StackResource(resource.Resource):
         nested = parser.Stack(self.context,
                               name,
                               template,
-                              environment.Environment(params),
+                              self._nested_environment(params),
                               disable_rollback=True,
                               parent_resource=self,
                               owner_id=self.stack.id)
@@ -124,6 +124,23 @@ class StackResource(resource.Resource):
         if (total_resources > cfg.CONF.max_resources_per_stack):
             message = exception.StackResourceLimitExceeded.msg_fmt
             raise exception.RequestLimitExceeded(message=message)
+
+    def _nested_environment(self, user_params):
+        """Build a sensible environment for the nested stack.
+
+        This is built from the user_params and the parent stack's registry
+        so we can use user-defined resources within nested stacks.
+        """
+        nested_env = environment.Environment()
+        nested_env.registry = self.stack.env.registry
+        user_env = {environment.PARAMETERS: {}}
+        if user_params is not None:
+            if environment.PARAMETERS not in user_params:
+                user_env[environment.PARAMETERS] = user_params
+            else:
+                user_env.update(user_params)
+        nested_env.load(user_env)
+        return nested_env
 
     def create_with_template(self, child_template, user_params,
                              timeout_mins=None, adopt_data=None):
@@ -146,7 +163,7 @@ class StackResource(resource.Resource):
         nested = parser.Stack(self.context,
                               self.physical_resource_name(),
                               template,
-                              environment.Environment(user_params),
+                              self._nested_environment(user_params),
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
                               parent_resource=self,
@@ -203,7 +220,7 @@ class StackResource(resource.Resource):
         stack = parser.Stack(self.context,
                              self.physical_resource_name(),
                              template,
-                             environment.Environment(user_params),
+                             self._nested_environment(user_params),
                              timeout_mins=timeout_mins,
                              disable_rollback=True,
                              parent_resource=self,
