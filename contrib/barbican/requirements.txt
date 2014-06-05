@@ -1,0 +1,1 @@
+python-barbicanclient>=2.0.0
