@@ -1,0 +1,180 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import mock
+
+from heat.common import exception
+from heat.common import template_format
+from heat.engine import resource
+from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
+from heat.tests import utils
+
+from ..resources import order  # noqa
+
+
+stack_template = '''
+heat_template_version: 2013-05-23
+description: Test template
+resources:
+  order:
+    type: OS::Barbican::Order
+    properties:
+      name: foobar-order
+      algorithm: aes
+      bit_length: 256
+      mode: cbc
+'''
+
+
+class TestOrder(HeatTestCase):
+
+    def setUp(self):
+        super(TestOrder, self).setUp()
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
+        self.stack = utils.parse_stack(template_format.parse(stack_template))
+
+        self.res_template = self.stack.t['resources']['order']
+        self.props = self.res_template['Properties']
+        self._register_resources()
+
+        self.patcher_client = mock.patch.object(order.clients, 'Clients')
+        mock_client = self.patcher_client.start()
+        self.barbican = mock_client.return_value.barbican.return_value
+
+    def tearDown(self):
+        super(TestOrder, self).tearDown()
+        self.patcher_client.stop()
+
+    def _register_resources(self):
+        for res_name, res_class in order.resource_mapping().iteritems():
+            resource._register_class(res_name, res_class)
+
+    def _create_resource(self, name, snippet, stack):
+        res = order.Order(name, snippet, stack)
+        res.check_create_complete = mock.Mock(return_value=True)
+        self.barbican.orders.create.return_value = name
+        scheduler.TaskRunner(res.create)()
+        return res
+
+    def test_create_order(self):
+        res = self._create_resource('foo', self.res_template, self.stack)
+        expected_state = (res.CREATE, res.COMPLETE)
+        self.assertEqual(expected_state, res.state)
+        args = self.barbican.orders.create.call_args[1]
+        self.assertEqual('foobar-order', args['name'])
+        self.assertEqual('aes', args['algorithm'])
+        self.assertEqual('cbc', args['mode'])
+        self.assertEqual(256, args['bit_length'])
+
+    def test_attributes(self):
+        mock_order = mock.Mock()
+        mock_order.status = 'test-status'
+        mock_order.order_ref = 'test-order-ref'
+        mock_order.secret_ref = 'test-secret-ref'
+
+        self.barbican.orders.get.return_value = mock_order
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        self.assertEqual('test-order-ref', res.FnGetAtt('order_ref'))
+        self.assertEqual('test-secret-ref', res.FnGetAtt('secret_ref'))
+
+    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    def test_attributes_handle_exceptions(self):
+        mock_order = mock.Mock()
+        self.barbican.orders.get.return_value = mock_order
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        order.clients.barbican_client.HTTPClientError = Exception
+        not_found_exc = order.clients.barbican_client.HTTPClientError('boom')
+        self.barbican.orders.get.side_effect = not_found_exc
+
+        self.assertEqual('', res.FnGetAtt('order_ref'))
+
+    def test_create_order_sets_resource_id(self):
+        self.barbican.orders.create.return_value = 'foo'
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        self.assertEqual('foo', res.resource_id)
+
+    def test_create_order_defaults_to_octet_stream(self):
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        args = self.barbican.orders.create.call_args[1]
+        self.assertEqual('application/octet-stream',
+                         args[res.PAYLOAD_CONTENT_TYPE])
+
+    def test_create_order_with_octet_stream(self):
+        content_type = 'application/octet-stream'
+        self.props['payload_content_type'] = content_type
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        args = self.barbican.orders.create.call_args[1]
+        self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
+
+    def test_create_order_other_content_types_now_allowed(self):
+        self.props['payload_content_type'] = 'not/allowed'
+        res = order.Order('order', self.res_template, self.stack)
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.create))
+
+    def test_delete_order(self):
+        self.barbican.orders.create.return_value = 'foo'
+        res = self._create_resource('foo', self.res_template, self.stack)
+        self.assertEqual('foo', res.resource_id)
+
+        scheduler.TaskRunner(res.delete)()
+        self.assertIsNone(res.resource_id)
+        self.barbican.orders.delete.assert_called_once_with('foo')
+
+    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    def test_handle_delete_ignores_not_found_errors(self):
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        order.clients.barbican_client.HTTPClientError = Exception
+        exc = order.clients.barbican_client.HTTPClientError('Not Found. Nope.')
+        self.barbican.orders.delete.side_effect = exc
+        scheduler.TaskRunner(res.delete)()
+        self.assertTrue(self.barbican.orders.delete.called)
+
+    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    def test_handle_delete_raises_resource_failure_on_error(self):
+        res = self._create_resource('foo', self.res_template, self.stack)
+
+        order.clients.barbican_client.HTTPClientError = Exception
+        exc = order.clients.barbican_client.HTTPClientError('Boom.')
+        self.barbican.orders.delete.side_effect = exc
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.delete))
+        self.assertIn('Boom.', str(exc))
+
+    def test_check_create_complete(self):
+        res = order.Order('foo', self.res_template, self.stack)
+
+        mock_active = mock.Mock(status='ACTIVE')
+        self.barbican.orders.get.return_value = mock_active
+        self.assertTrue(res.check_create_complete('foo'))
+
+        mock_not_active = mock.Mock(status='PENDING')
+        self.barbican.orders.get.return_value = mock_not_active
+        self.assertFalse(res.check_create_complete('foo'))
+
+        mock_not_active = mock.Mock(status='ERROR', error_reason='foo',
+                                    error_status_code=500)
+        self.barbican.orders.get.return_value = mock_not_active
+        exc = self.assertRaises(exception.Error,
+                                res.check_create_complete, 'foo')
+        self.assertIn('foo', str(exc))
+        self.assertIn('500', str(exc))
