@@ -135,7 +135,8 @@ class Schema(constr.Schema):
             param.STRING: cls.STRING,
             param.NUMBER: cls.NUMBER,
             param.LIST: cls.LIST,
-            param.MAP: cls.MAP
+            param.MAP: cls.MAP,
+            param.BOOLEAN: cls.BOOLEAN
         }
 
         # make update_allowed true by default on TemplateResources
