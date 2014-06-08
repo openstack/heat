@@ -239,13 +239,16 @@ Resources:
 
         sub_schema = None
         if prop.schema and prop.type == properties.Schema.MAP:
-            para = nodes.emphasis('', _('Map properties:'))
+            para = nodes.paragraph()
+            emph = nodes.emphasis('', _('Map properties:'))
+            para.append(emph)
             definition.append(para)
             sub_schema = prop.schema
 
         elif prop.schema and prop.type == properties.Schema.LIST:
-            para = nodes.emphasis(
-                '', _('List contents:'))
+            para = nodes.paragraph()
+            emph = nodes.emphasis('', _('List contents:'))
+            para.append(emph)
             definition.append(para)
             sub_schema = prop.schema
 
