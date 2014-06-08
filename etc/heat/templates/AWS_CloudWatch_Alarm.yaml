@@ -73,14 +73,14 @@ Resources:
       threshold:
         Ref: Threshold
       alarm_actions:
-        "Fn::Split": [",", {Ref: AlarmActions}]
+        Ref: AlarmActions
       ok_actions:
-        "Fn::Split": [",", {Ref: OKActions}]
+        Ref: OKActions
       insufficient_data_actions:
-        "Fn::Split": [",", {Ref: InsufficientDataActions}]
+        Ref: InsufficientDataActions
       statistic:
         "Fn::FindInMap": [StatisticMap, {Ref: Statistic}, Ceilometer]
       comparison_operator:
         "Fn::FindInMap": [ComparisonOperatorMap, {Ref: ComparisonOperator}, Ceilometer]
       matching_metadata:
-        "Fn::MemberListToMap": [Name, Value, {"Fn::Split": [",", {Ref: Dimensions}]}]
+        "Fn::MemberListToMap": [Name, Value, {Ref: Dimensions}]

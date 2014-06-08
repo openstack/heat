@@ -224,6 +224,12 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'p', schema, '2')
         self.assertIn('wibble', str(err))
 
+    def test_list_value_list_default_empty(self):
+        schema = {'Type': 'CommaDelimitedList'}
+        schema['Default'] = ''
+        p = self.new_parameter('p', schema)
+        self.assertEqual([''], p.value())
+
     def test_list_value_list_good(self):
         schema = {'Type': 'CommaDelimitedList',
                   'AllowedValues': ['foo', 'bar', 'baz']}

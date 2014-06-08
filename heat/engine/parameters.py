@@ -316,9 +316,8 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         # only parse when value is not already a list
         if isinstance(value, list):
             return value
-
         try:
-            if value:
+            if value is not None:
                 return value.split(',')
         except (KeyError, AttributeError) as err:
             message = _('Value must be a comma-delimited list string: %s')
