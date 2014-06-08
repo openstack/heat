@@ -25,7 +25,7 @@ import testscenarios
 import testtools
 
 from heat.common import messaging
-from heat.engine import clients
+from heat.engine.clients.os import keystone
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
@@ -115,7 +115,7 @@ class HeatTestCase(testscenarios.WithScenarios,
         return mockfixture.mock
 
     def stub_keystoneclient(self, **kwargs):
-        client = self.patchobject(clients.OpenStackClients, "_keystone")
+        client = self.patchobject(keystone.KeystoneClientPlugin, "_create")
         fkc = fakes.FakeKeystoneClient(**kwargs)
         client.return_value = fkc
         return fkc

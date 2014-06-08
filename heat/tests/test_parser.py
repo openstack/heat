@@ -31,7 +31,7 @@ import heat.db.api as db_api
 import heat.engine.cfn.functions
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_t
-from heat.engine import clients
+from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
@@ -956,7 +956,8 @@ class StackTest(HeatTestCase):
 
         self.m.ReplayAll()
         stack = parser.Stack(ctx, 'test_stack', self.tmpl)
-        self.assertEqual('abcd1234', stack.clients.auth_token)
+        self.assertEqual('abcd1234',
+                         stack.clients.client('keystone').auth_token)
 
         self.m.VerifyAll()
 
@@ -1345,8 +1346,8 @@ class StackTest(HeatTestCase):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
-        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -1371,8 +1372,8 @@ class StackTest(HeatTestCase):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
-        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -3030,8 +3031,8 @@ class StackTest(HeatTestCase):
         """
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
-        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
             FakeKeystoneClient())
         self.m.ReplayAll()
 
@@ -3189,8 +3190,8 @@ class StackTest(HeatTestCase):
             def delete_stack_domain_project(self, project_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
-        clients.OpenStackClients._keystone().AndReturn(
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 

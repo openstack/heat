@@ -19,7 +19,7 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine import clients
+from heat.engine.clients.os import keystone
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -214,8 +214,8 @@ class SignalTest(HeatTestCase):
             def delete_stack_user(self, name):
                 raise kc_exceptions.NotFound()
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
-        clients.OpenStackClients._keystone().AndReturn(
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -309,8 +309,8 @@ class SignalTest(HeatTestCase):
 
         # Since we unset the stubs above we must re-stub keystone to keep the
         # test isolated from keystoneclient.
-        self.m.StubOutWithMock(self.stack.clients, '_keystone')
-        self.stack.clients._keystone().AndReturn(self.fc)
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().AndReturn(self.fc)
 
         self.m.ReplayAll()
 

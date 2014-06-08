@@ -32,6 +32,7 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import dependencies
 from heat.engine import environment
@@ -197,8 +198,8 @@ def get_stack(stack_name, ctx, template):
 
 def setup_keystone_mocks(mocks, stack):
     fkc = test_fakes.FakeKeystoneClient()
-    mocks.StubOutWithMock(stack.clients, '_keystone')
-    stack.clients._keystone().MultipleTimes().AndReturn(fkc)
+    mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+    keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(fkc)
 
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
