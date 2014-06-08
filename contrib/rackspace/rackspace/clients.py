@@ -31,12 +31,6 @@ try:
 except ImportError:
     LOG.info(_('pyrax not available'))
 
-cloud_opts = [
-    cfg.StrOpt('region_name',
-               help=_('Region for connecting to services.'))
-]
-cfg.CONF.register_opts(cloud_opts)
-
 
 class Clients(clients.OpenStackClients):
 
@@ -50,7 +44,8 @@ class Clients(clients.OpenStackClients):
         if not self.pyrax:
             self.__authenticate()
         if name not in self._clients:
-            client = self.pyrax.get_client(name, cfg.CONF.region_name)
+            client = self.pyrax.get_client(
+                name, cfg.CONF.region_name_for_services)
             self._clients[name] = client
         return self._clients[name]
 
@@ -84,12 +79,15 @@ class Clients(clients.OpenStackClients):
             # need special handling now since the contextual
             # pyrax doesn't handle "networks" not being in
             # the catalog
-            ep = pyrax._get_service_endpoint(self.pyrax, "compute",
-                                             region=cfg.CONF.region_name)
+            ep = pyrax._get_service_endpoint(
+                self.pyrax,
+                "compute",
+                region=cfg.CONF.region_name_for_services)
             cls = pyrax._client_classes['compute:network']
-            self._clients["networks"] = cls(self.pyrax,
-                                            region_name=cfg.CONF.region_name,
-                                            management_url=ep)
+            self._clients["networks"] = cls(
+                self.pyrax,
+                region_name=cfg.CONF.region_name_for_services,
+                management_url=ep)
         return self._clients["networks"]
 
     def trove(self):
@@ -102,8 +100,9 @@ class Clients(clients.OpenStackClients):
         """
         if "trove" not in self._clients:
             super(Clients, self).trove(service_type='rax:database')
-            management_url = self.url_for(service_type='rax:database',
-                                          region_name=cfg.CONF.region_name)
+            management_url = self.url_for(
+                service_type='rax:database',
+                region_name=cfg.CONF.region_name_for_services)
             self._clients['trove'].client.management_url = management_url
         return self._clients['trove']
 
@@ -111,8 +110,9 @@ class Clients(clients.OpenStackClients):
         """Override the region for the cinder client."""
         if "cinder" not in self._clients:
             super(Clients, self).cinder()
-            management_url = self.url_for(service_type='volume',
-                                          region_name=cfg.CONF.region_name)
+            management_url = self.url_for(
+                service_type='volume',
+                region_name=cfg.CONF.region_name_for_services)
             self._clients['cinder'].client.management_url = management_url
         return self._clients['cinder']
 
@@ -127,9 +127,10 @@ class Clients(clients.OpenStackClients):
         if "image" not in self._clients:
             con = self.context
             endpoint_type = self._get_client_option('glance', 'endpoint_type')
-            endpoint = self.url_for(service_type='image',
-                                    endpoint_type=endpoint_type,
-                                    region_name=cfg.CONF.region_name)
+            endpoint = self.url_for(
+                service_type='image',
+                endpoint_type=endpoint_type,
+                region_name=cfg.CONF.region_name_for_services)
             # Rackspace service catalog includes a tenant scoped glance
             # endpoint so we have to munge the url a bit
             glance_url = urlparse.urlparse(endpoint)
