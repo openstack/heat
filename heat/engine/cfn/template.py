@@ -128,6 +128,25 @@ class CfnTemplate(template.Template):
         resources = self.t.get(self.RESOURCES, {}).items()
         return dict(rsrc_defn_item(name, data) for name, data in resources)
 
+    def add_resource(self, definition, name=None):
+        if name is None:
+            name = definition.name
+        hot_tmpl = definition.render_hot()
+
+        HOT_TO_CFN_ATTRS = {'type': RES_TYPE,
+                            'properties': RES_PROPERTIES,
+                            'metadata': RES_METADATA,
+                            'depends_on': RES_DEPENDS_ON,
+                            'deletion_policy': RES_DELETION_POLICY,
+                            'update_policy': RES_UPDATE_POLICY}
+
+        cfn_tmpl = dict((HOT_TO_CFN_ATTRS[k], v) for k, v in hot_tmpl.items())
+
+        if len(cfn_tmpl.get(RES_DEPENDS_ON, [])) == 1:
+            cfn_tmpl[RES_DEPENDS_ON] = cfn_tmpl[RES_DEPENDS_ON][0]
+
+        self.t.setdefault(self.RESOURCES, {})[name] = cfn_tmpl
+
 
 def template_mapping():
     return {

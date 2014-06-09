@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import six
 
 from heat.common import exception
@@ -615,6 +616,31 @@ class HOTemplateTest(HeatTestCase):
                              parser.Template(hot_tpl_empty),
                              parent_resource=parent_resource)
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
+
+    def test_add_resource(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: AWS::EC2::Instance
+            properties:
+              property1: value1
+            metadata:
+              foo: bar
+            depends_on:
+              - dummy
+            deletion_policy: Retain
+            update_policy:
+              foo: bar
+        ''')
+        source = parser.Template(hot_tpl)
+        empty = parser.Template(copy.deepcopy(hot_tpl_empty))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', source)
+
+        for defn in source.resource_definitions(stack).values():
+            empty.add_resource(defn)
+
+        self.assertEqual(hot_tpl['resources'], empty.t['resources'])
 
 
 class StackTest(test_parser.StackTest):

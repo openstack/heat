@@ -217,6 +217,12 @@ class HOTemplate(template.Template):
         resources = self.t.get(self.RESOURCES, {}).items()
         return dict(rsrc_defn_item(name, data) for name, data in resources)
 
+    def add_resource(self, definition, name=None):
+        if name is None:
+            name = definition.name
+
+        self.t.setdefault(self.RESOURCES, {})[name] = definition.render_hot()
+
 
 def template_mapping():
     return {
