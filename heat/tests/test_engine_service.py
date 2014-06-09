@@ -1216,21 +1216,16 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertEqual('Missing required credential: X-Auth-Key', str(ex))
 
 
-class StackServiceUpdateNotSupportedTest(HeatTestCase):
+class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):
 
     scenarios = [
         ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
         ('suspend_complete', dict(action='SUSPEND', status='COMPLETE')),
         ('suspend_failed', dict(action='SUSPEND', status='FAILED')),
-        ('create_in_progress', dict(action='CREATE', status='IN_PROGRESS')),
-        ('delete_in_progress', dict(action='DELETE', status='IN_PROGRESS')),
-        ('update_in_progress', dict(action='UPDATE', status='IN_PROGRESS')),
-        ('rb_in_progress', dict(action='ROLLBACK', status='IN_PROGRESS')),
-        ('resume_in_progress', dict(action='RESUME', status='IN_PROGRESS')),
     ]
 
     def setUp(self):
-        super(StackServiceUpdateNotSupportedTest, self).setUp()
+        super(StackServiceUpdateSuspendedNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
 
         self.m.StubOutWithMock(service.EngineListener, 'start')
@@ -1238,7 +1233,7 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
         self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
 
-    def test_stack_update_during(self):
+    def test_stack_update_suspended(self):
         stack_name = '%s-%s' % (self.action, self.status)
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
