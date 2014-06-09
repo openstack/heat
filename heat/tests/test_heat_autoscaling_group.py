@@ -24,6 +24,7 @@ from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_resource
+from heat.engine import template
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -417,15 +418,17 @@ class RollingUpdatesTest(HeatTestCase):
         return stack
 
     def test_rolling_update(self):
-        rsrc = self.create_stack(self.parsed)['my-group']
+        stack = self.create_stack(self.parsed)
+        rsrc = stack['my-group']
         created_order = sorted(
             rsrc.nested().resources,
             key=lambda name: rsrc.nested().resources[name].created_time)
         batches = []
 
-        def update_with_template(template, env):
+        def update_with_template(tmpl, env):
             # keep track of the new updates to resources _in creation order_.
-            templates = [template['resources'][name] for name in created_order]
+            definitions = template.Template(tmpl).resource_definitions(stack)
+            templates = [definitions[name] for name in created_order]
             batches.append(templates)
         patcher = mock.patch.object(
             stack_resource.StackResource, 'update_with_template',
@@ -437,25 +440,14 @@ class RollingUpdatesTest(HeatTestCase):
 
         scheduler.TaskRunner(rsrc.update, update_snippet)()
 
+        props_schema = generic_resource.ResourceWithProps.properties_schema
+
+        def get_foos(defns):
+            return [d.properties(props_schema)['Foo'] for d in defns]
+
         # first batch has 2 new resources
-        self.assertEqual([
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'hello'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'hello'},
-             'type': 'ResourceWithProps'}],
-            batches[0])
+        self.assertEqual(['Hi', 'Hi', 'hello', 'hello'],
+                         get_foos(batches[0]))
         # second batch has all new resources.
-        self.assertEqual([
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'},
-            {'properties': {'Foo': 'Hi'},
-             'type': 'ResourceWithProps'}],
-            batches[1])
+        self.assertEqual(['Hi', 'Hi', 'Hi', 'Hi'],
+                         get_foos(batches[1]))

@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import json
 import math
 
 import six
@@ -24,9 +23,11 @@ from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import autoscaling as notification
+from heat.engine import parser
 from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import signal_responder
 from heat.engine import stack_resource
@@ -283,19 +284,23 @@ class InstanceGroup(stack_resource.StackResource):
         return self.delete_nested()
 
     def _get_instance_definition(self):
-        conf_name = self.properties[self.LAUNCH_CONFIGURATION_NAME]
-        conf = self.stack.resource_by_refid(conf_name)
-        instance_definition = function.resolve(conf.t)
-        instance_definition['Type'] = SCALED_RESOURCE_TYPE
-        instance_definition['Properties']['Tags'] = self._tags()
-        if self.properties.get('VPCZoneIdentifier'):
-            instance_definition['Properties']['SubnetId'] = \
-                self.properties['VPCZoneIdentifier'][0]
-        return instance_definition
+        conf_refid = self.properties[self.LAUNCH_CONFIGURATION_NAME]
+        conf = self.stack.resource_by_refid(conf_refid)
+
+        props = function.resolve(conf.properties.data)
+        props['Tags'] = self._tags()
+        vpc_zone_ids = self.properties.get(AutoScalingGroup.VPCZONE_IDENTIFIER)
+        if vpc_zone_ids:
+            props['SubnetId'] = vpc_zone_ids[0]
+
+        return rsrc_defn.ResourceDefinition(None,
+                                            SCALED_RESOURCE_TYPE,
+                                            props,
+                                            conf.t.metadata())
 
     def _get_instance_templates(self):
         """Get templates for resource instances."""
-        return [(instance.name, dict(instance.t))
+        return [(instance.name, instance.t)
                 for instance in self.get_instances()]
 
     def _create_template(self, num_instances, num_replace=0):
@@ -309,7 +314,7 @@ class InstanceGroup(stack_resource.StackResource):
         templates = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
         return {"HeatTemplateFormatVersion": "2012-12-12",
-                "Resources": dict(templates)}
+                "Resources": dict((n, dict(d)) for n, d in templates)}
 
     def _try_rolling_update(self, prop_diff):
         if (self.update_policy[self.ROLLING_UPDATE] and
@@ -325,16 +330,10 @@ class InstanceGroup(stack_resource.StackResource):
         Replace the instances in the group using updated launch configuration
         """
         def changing_instances(tmpl):
-            def serialize_template(t):
-                return json.dumps(function.resolve(t), sort_keys=True)
-
+            tmpl = parser.Template(tmpl)
             instances = self.get_instances()
-            # To support both HOT and CFN, need to find out what the name of
-            # the resources key is.
-            resources_key = self.nested().t.RESOURCES
-            current = set((i.name, serialize_template(i.t)) for i in instances)
-            updated = set((k, serialize_template(v))
-                          for k, v in tmpl[resources_key].items())
+            current = set((i.name, i.t) for i in instances)
+            updated = set(tmpl.resource_definitions(self.nested()).items())
             # includes instances to be updated and deleted
             affected = set(k for k, v in current ^ updated)
             return set(i.FnGetRefId() for i in instances if i.name in affected)
@@ -914,7 +913,11 @@ class AutoScalingResourceGroup(AutoScalingGroup):
     attributes_schema = {}
 
     def _get_instance_definition(self):
-        return self.properties[self.RESOURCE]
+        rsrc = self.properties[self.RESOURCE]
+        return rsrc_defn.ResourceDefinition(None,
+                                            rsrc['type'],
+                                            rsrc.get('properties'),
+                                            rsrc.get('metadata'))
 
     def _lb_reload(self, exclude=None):
         """AutoScalingResourceGroup does not maintain load balancer
@@ -930,15 +933,11 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                           policy[self.MAX_BATCH_SIZE],
                           policy[self.PAUSE_TIME])
 
-    def _get_instance_templates(self):
-        """
-        Get templates for resource instances in HOT format.
+    def _create_template(self, *args, **kwargs):
+        """Create a template in the HOT format for the nested stack."""
+        tpl = super(AutoScalingResourceGroup, self)._create_template(
+            *args, **kwargs)
 
-        AutoScalingResourceGroup uses HOT as template format for scaled
-        resources. Templates for existing resources use CFN syntax and
-        have to be converted to HOT since those templates get used for
-        generating scaled resource templates.
-        """
         CFN_TO_HOT_ATTRS = {'Type': 'type',
                             'Properties': 'properties',
                             'Metadata': 'metadata',
@@ -955,16 +954,10 @@ class AutoScalingResourceGroup(AutoScalingGroup):
 
             return hot_template
 
-        return [(instance.name, to_hot(instance.t))
-                for instance in self.get_instances()]
-
-    def _create_template(self, *args, **kwargs):
-        """Use a HOT format for the template in the nested stack."""
-        tpl = super(AutoScalingResourceGroup, self)._create_template(
-            *args, **kwargs)
         tpl.pop('HeatTemplateFormatVersion', None)
         tpl['heat_template_version'] = '2013-05-23'
-        tpl['resources'] = tpl.pop('Resources')
+        rsrcs = tpl.pop('Resources')
+        tpl['resources'] = dict((n, to_hot(t)) for n, t in rsrcs.items())
         return tpl
 
 
