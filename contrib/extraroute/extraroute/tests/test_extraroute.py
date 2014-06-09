@@ -74,7 +74,7 @@ class NeutronExtraRouteTest(HeatTestCase):
         t['Resources'][resource_name]['Properties'] = properties
         rsrc = extraroute.ExtraRoute(
             resource_name,
-            t['Resources'][resource_name],
+            stack.t.resource_definitions(stack)[resource_name],
             stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

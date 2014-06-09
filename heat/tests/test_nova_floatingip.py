@@ -27,10 +27,10 @@ from heat.tests import utils
 floating_ip_template = '''
 {
     "heat_template_version": "2013-05-23",
-    "Resources": {
+    "resources": {
         "MyFloatingIP": {
-            "Type": "OS::Nova::FloatingIP",
-            "Properties": {
+            "type": "OS::Nova::FloatingIP",
+            "properties": {
                 "pool": "public"
             }
         }
@@ -41,10 +41,10 @@ floating_ip_template = '''
 floating_ip_template_with_assoc = '''
 {
     "heat_template_version": "2013-05-23",
-    "Resources": {
+    "resources": {
         "MyFloatingIPAssociation": {
-            "Type": "OS::Nova::FloatingIPAssociation",
-            "Properties": {
+            "type": "OS::Nova::FloatingIPAssociation",
+            "properties": {
                 "server_id": "67dc62f9-efde-4c8b-94af-013e00f5dc57",
                 "floating_ip": "1"
             }
@@ -87,7 +87,7 @@ class NovaFloatingIPTest(HeatTestCase):
 
         template = template_format.parse(floating_ip_template)
         stack = utils.parse_stack(template)
-        floating_ip = template['Resources']['MyFloatingIP']
+        floating_ip = stack.t.resource_definitions(stack)['MyFloatingIP']
 
         return NovaFloatingIp('MyFloatingIP', floating_ip, stack)
 
@@ -105,7 +105,8 @@ class NovaFloatingIPTest(HeatTestCase):
 
         template = template_format.parse(floating_ip_template_with_assoc)
         stack = utils.parse_stack(template)
-        floating_ip_assoc = template['Resources']['MyFloatingIPAssociation']
+        resource_defns = stack.t.resource_definitions(stack)
+        floating_ip_assoc = resource_defns['MyFloatingIPAssociation']
 
         return NovaFloatingIpAssociation('MyFloatingIPAssociation',
                                          floating_ip_assoc, stack)

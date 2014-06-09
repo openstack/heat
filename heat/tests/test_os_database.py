@@ -103,7 +103,7 @@ class OSDBInstanceTest(HeatTestCase):
 
         instance = os_database.OSDBInstance(
             '%s_name' % name,
-            t['Resources']['MySqlCloudDB'],
+            template.resource_definitions(stack)['MySqlCloudDB'],
             stack)
         return instance
 

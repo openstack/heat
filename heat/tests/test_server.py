@@ -94,26 +94,33 @@ class ServersTest(HeatTestCase):
                              environment.Environment({'key_name': 'test'}),
                              stack_id=str(uuid.uuid4()),
                              stack_user_project_id='8888')
-        return (t, stack)
+        return (template, stack)
+
+    def _get_test_template(self, stack_name, server_name=None,
+                           image_id=None):
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        tmpl.t['Resources']['WebServer']['Properties']['image'] = \
+            image_id or 'CentOS 5.2'
+        tmpl.t['Resources']['WebServer']['Properties']['flavor'] = \
+            '256 MB Server'
+
+        if server_name is not None:
+            tmpl.t['Resources']['WebServer']['Properties']['name'] = \
+                server_name
+
+        return tmpl, stack
 
     def _setup_test_server(self, return_server, name, image_id=None,
                            override_name=False, stub_create=True,
                            server_rebuild=False):
         stack_name = '%s_s' % name
-        (t, stack) = self._setup_test_stack(stack_name)
-
-        t['Resources']['WebServer']['Properties']['image'] = \
-            image_id or 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['flavor'] = \
-            '256 MB Server'
-
-        server_name = '%s' % name
-        if override_name:
-            t['Resources']['WebServer']['Properties']['name'] = \
-                server_name
-
-        server = servers.Server(server_name,
-                                t['Resources']['WebServer'], stack)
+        server_name = str(name) if override_name else None
+        tmpl, stack = self._get_test_template(stack_name, server_name,
+                                              image_id)
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server(str(name), resource_defns['WebServer'],
+                                stack)
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1,
                                         server_rebuild=server_rebuild)
@@ -235,12 +242,13 @@ class ServersTest(HeatTestCase):
     def test_server_create_metadata(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'create_metadata_test_stack'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['metadata'] = \
+        tmpl['Resources']['WebServer']['Properties']['metadata'] = \
             {'a': 1}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('create_metadata_test_server',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         instance_meta = {'a': "1"}
         image_id = mox.IgnoreArg()
@@ -313,12 +321,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_create_image_name_err(self):
         stack_name = 'img_name_err'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image name
-        t['Resources']['WebServer']['Properties']['image'] = 'Slackware'
+        tmpl['Resources']['WebServer']['Properties']['image'] = 'Slackware'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
                                      exception.ImageNotFound(
@@ -335,12 +344,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_create_duplicate_image_name_err(self):
         stack_name = 'img_dup_err'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an server with a non unique image name
-        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        tmpl['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('CentOS 5.2',
                                      exception.PhysicalResourceNameAmbiguity(
@@ -357,12 +367,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_create_image_id_err(self):
         stack_name = 'img_id_err'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image Id
-        t['Resources']['WebServer']['Properties']['image'] = '1'
+        tmpl['Resources']['WebServer']['Properties']['image'] = '1'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('1',
                                      exception.ImageNotFound(image_name='1'))
@@ -410,13 +421,14 @@ class ServersTest(HeatTestCase):
     def test_server_create_raw_userdata(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
             'RAW'
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -443,15 +455,16 @@ class ServersTest(HeatTestCase):
     def test_server_create_raw_config_userdata(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
             'RAW'
-        t['Resources']['WebServer']['Properties']['user_data'] = \
+        tmpl['Resources']['WebServer']['Properties']['user_data'] = \
             '8c813873-f6ee-4809-8eec-959ef39acb55'
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'heat')
@@ -485,15 +498,16 @@ class ServersTest(HeatTestCase):
     def test_server_create_raw_config_userdata_None(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         sc_id = '8c813873-f6ee-4809-8eec-959ef39acb55'
-        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
             'RAW'
-        t['Resources']['WebServer']['Properties']['user_data'] = sc_id
+        tmpl['Resources']['WebServer']['Properties']['user_data'] = sc_id
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'heat')
@@ -527,14 +541,15 @@ class ServersTest(HeatTestCase):
     def test_server_create_software_config(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
             'SOFTWARE_CONFIG'
 
         stack.stack_user_project_id = '8888'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'keystone')
@@ -583,8 +598,9 @@ class ServersTest(HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
+        resource_defns = tmpl.resource_definitions(stack)
         created_server = servers.Server('WebServer',
-                                        t['Resources']['WebServer'], stack)
+                                        resource_defns['WebServer'], stack)
         self.assertEqual('4567', created_server.access_key)
         self.assertTrue(stack.access_allowed('4567', 'WebServer'))
 
@@ -593,14 +609,15 @@ class ServersTest(HeatTestCase):
     def test_server_create_software_config_poll_heat(self):
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        props = t['Resources']['WebServer']['Properties']
+        props = tmpl.t['Resources']['WebServer']['Properties']
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         props['software_config_transport'] = 'POLL_SERVER_HEAT'
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         self.m.StubOutWithMock(server, 'keystone')
@@ -648,8 +665,9 @@ class ServersTest(HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
+        resource_defns = tmpl.resource_definitions(stack)
         created_server = servers.Server('WebServer',
-                                        t['Resources']['WebServer'], stack)
+                                        resource_defns['WebServer'], stack)
         self.assertEqual('1234', created_server._get_user_id())
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
 
@@ -660,10 +678,11 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.adminPass = 'autogenerated'
         stack_name = 'admin_pass_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -685,11 +704,12 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.adminPass = 'foo'
         stack_name = 'admin_pass_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['admin_pass'] = 'foo'
+        tmpl.t['Resources']['WebServer']['Properties']['admin_pass'] = 'foo'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -717,11 +737,12 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate(self):
         stack_name = 'srv_val'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['image'] = '1'
+        tmpl.t['Resources']['WebServer']['Properties']['image'] = '1'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -737,10 +758,10 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_with_bootable_vol(self):
         stack_name = 'srv_val_bootvol'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         # create an server with bootable volume
-        web_server = t['Resources']['WebServer']
+        web_server = tmpl.t['Resources']['WebServer']
         del web_server['Properties']['image']
 
         def create_server(device_name, mock_nova=True):
@@ -750,8 +771,9 @@ class ServersTest(HeatTestCase):
                 "volume_id": "5d7e27da-6703-4f7e-9f94-1f67abef734c",
                 "delete_on_termination": False
             }]
+            resource_defns = tmpl.resource_definitions(stack)
             server = servers.Server('server_with_bootable_volume',
-                                    web_server, stack)
+                                    resource_defns['WebServer'], stack)
             if mock_nova:
                 self.m.StubOutWithMock(server, 'nova')
                 server.nova().MultipleTimes().AndReturn(self.fc)
@@ -801,8 +823,9 @@ class ServersTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              stack_id=str(uuid.uuid4()))
 
+        resource_defns = template.resource_definitions(stack)
         server = servers.Server('server_validate_test',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -817,15 +840,16 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_with_invalid_ssh_key(self):
         stack_name = 'srv_val_test'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        web_server = t['Resources']['WebServer']
+        web_server = tmpl['Resources']['WebServer']
 
         # Make the ssh key have an invalid name
         web_server['Properties']['key_name'] = 'test2'
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_test',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -839,36 +863,19 @@ class ServersTest(HeatTestCase):
             str(error))
         self.m.VerifyAll()
 
-    def test_server_validate_delete_policy(self):
-        stack_name = 'srv_val_delpol'
-        (t, stack) = self._setup_test_stack(stack_name)
-
-        # create an server with non exist image Id
-        t['Resources']['WebServer']['DeletionPolicy'] = 'SelfDestruct'
-        server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
-
-        self.m.ReplayAll()
-
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               server.validate)
-        self.assertEqual('Invalid DeletionPolicy SelfDestruct',
-                         str(ex))
-
-        self.m.VerifyAll()
-
     def test_server_validate_with_networks(self):
         stack_name = 'srv_net'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         network_name = 'public'
         # create an server with 'uuid' and 'network' properties
-        t['Resources']['WebServer']['Properties']['networks'] = (
+        tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'uuid': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
               'network': network_name}])
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_with_networks',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -890,15 +897,16 @@ class ServersTest(HeatTestCase):
         # Test that if network 'ports' are assigned security groups are
         # not, because they'll be ignored
         stack_name = 'srv_net_secgroups'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['networks'] = [
+        tmpl['Resources']['WebServer']['Properties']['networks'] = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
-        t['Resources']['WebServer']['Properties']['security_groups'] = \
+        tmpl['Resources']['WebServer']['Properties']['security_groups'] = \
             ['my_security_group']
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_net_security_groups',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -966,12 +974,16 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'md_update')
 
-        update_template = copy.deepcopy(server.t)
-        update_template['Metadata'] = {'test': 123}
-        scheduler.TaskRunner(server.update, update_template)()
+        ud_tmpl = self._get_test_template('update_stack')[0]
+        ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 123}
+        resource_defns = ud_tmpl.resource_definitions(server.stack)
+        scheduler.TaskRunner(server.update, resource_defns['WebServer'])()
         self.assertEqual({'test': 123}, server.metadata_get())
 
-        server.t['Metadata'] = {'test': 456}
+        ud_tmpl.t['Resources']['WebServer']['Metadata'] = {'test': 456}
+        server.t = ud_tmpl.resource_definitions(server.stack)['WebServer']
+
+        self.assertEqual({'test': 123}, server.metadata_get())
         server.metadata_update()
         self.assertEqual({'test': 456}, server.metadata_get())
 
@@ -1151,16 +1163,17 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_server_flavor_replace(self):
         stack_name = 'update_flvrep'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
-        t['Resources']['WebServer']['Properties'][
+        tmpl['Resources']['WebServer']['Properties'][
             'flavor_update_policy'] = 'REPLACE'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_server_update_flavor_replace',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.smigish'
@@ -1169,14 +1182,15 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_server_flavor_policy_update(self):
         stack_name = 'update_flvpol'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_server_update_flavor_replace',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         update_template = copy.deepcopy(server.t)
         # confirm that when flavor_update_policy is changed during
@@ -1189,12 +1203,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_update_image_replace(self):
         stack_name = 'update_imgrep'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties'][
+        tmpl.t['Resources']['WebServer']['Properties'][
             'image_update_policy'] = 'REPLACE'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_update_image_replace',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
         image_id = self.getUniqueString()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -1670,12 +1685,14 @@ class ServersTest(HeatTestCase):
 
     def test_validate_block_device_mapping_volume_size_valid_int(self):
         stack_name = 'val_vsize_valid'
-        t, stack = self._setup_test_stack(stack_name)
+        tmpl, stack = self._setup_test_stack(stack_name)
         bdm = [{'device_name': 'vda', 'volume_id': '1234',
                 'volume_size': 10}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self._server_validate_mock(server)
         self.m.ReplayAll()
@@ -1685,12 +1702,14 @@ class ServersTest(HeatTestCase):
 
     def test_validate_block_device_mapping_volume_size_valid_str(self):
         stack_name = 'val_vsize_valid'
-        t, stack = self._setup_test_stack(stack_name)
+        tmpl, stack = self._setup_test_stack(stack_name)
         bdm = [{'device_name': 'vda', 'volume_id': '1234',
                 'volume_size': '10'}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self._server_validate_mock(server)
 
@@ -1701,12 +1720,14 @@ class ServersTest(HeatTestCase):
 
     def test_validate_block_device_mapping_volume_size_invalid_str(self):
         stack_name = 'val_vsize_invalid'
-        t, stack = self._setup_test_stack(stack_name)
+        tmpl, stack = self._setup_test_stack(stack_name)
         bdm = [{'device_name': 'vda', 'volume_id': '1234',
                 'volume_size': '10a'}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
@@ -1714,13 +1735,15 @@ class ServersTest(HeatTestCase):
 
     def test_validate_conflict_block_device_mapping_props(self):
         stack_name = 'val_blkdev1'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         bdm = [{'device_name': 'vdb', 'snapshot_id': '1234',
                 'volume_id': '1234'}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
@@ -1731,13 +1754,15 @@ class ServersTest(HeatTestCase):
 
     def test_validate_insufficient_block_device_mapping_props(self):
         stack_name = 'val_blkdev2'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
         bdm = [{'device_name': 'vdb', 'volume_size': 1,
                 'delete_on_termination': True}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
@@ -1753,13 +1778,15 @@ class ServersTest(HeatTestCase):
 
     def test_validate_without_image_or_bootable_volume(self):
         stack_name = 'val_imgvol'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        del t['Resources']['WebServer']['Properties']['image']
+        del tmpl['Resources']['WebServer']['Properties']['image']
         bdm = [{'device_name': 'vdb', 'volume_id': '1234'}]
-        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
@@ -1774,14 +1801,15 @@ class ServersTest(HeatTestCase):
 
     def test_validate_metadata_too_many(self):
         stack_name = 'srv_val_metadata'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
-                                                                 'b': 2,
-                                                                 'c': 3,
-                                                                 'd': 4}
+        tmpl.t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
+                                                                      'b': 2,
+                                                                      'c': 3,
+                                                                      'd': 4}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1801,13 +1829,14 @@ class ServersTest(HeatTestCase):
 
     def test_validate_metadata_okay(self):
         stack_name = 'srv_val_metadata'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
-                                                                 'b': 2,
-                                                                 'c': 3}
+        tmpl.t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
+                                                                      'b': 2,
+                                                                      'c': 3}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1823,17 +1852,18 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_too_many_personality(self):
         stack_name = 'srv_val'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['personality'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
             {"/fake/path1": "fake contents1",
              "/fake/path2": "fake_contents2",
              "/fake/path3": "fake_contents3",
              "/fake/path4": "fake_contents4",
              "/fake/path5": "fake_contents5",
              "/fake/path6": "fake_contents6"}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1853,16 +1883,17 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_personality_okay(self):
         stack_name = 'srv_val'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['personality'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
             {"/fake/path1": "fake contents1",
              "/fake/path2": "fake_contents2",
              "/fake/path3": "fake_contents3",
              "/fake/path4": "fake_contents4",
              "/fake/path5": "fake_contents5"}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1879,12 +1910,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_personality_file_size_okay(self):
         stack_name = 'srv_val'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['personality'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
             {"/fake/path1": "a" * 10240}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1901,12 +1933,13 @@ class ServersTest(HeatTestCase):
 
     def test_server_validate_personality_file_size_too_big(self):
         stack_name = 'srv_val'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['personality'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
             {"/fake/path1": "a" * 10241}
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(self.fc.limits, 'get')
         self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
@@ -1962,11 +1995,13 @@ class ServersTest(HeatTestCase):
         """
         return_server = self.fc.servers.list()[1]
         stack_name = 'stack_with_custom_admin_user_server'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['admin_user'] = 'custom_user'
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['admin_user'] = 'custom_user'
+        resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('create_metadata_test_server',
-                                t['Resources']['WebServer'], stack)
+                                resource_defns['WebServer'], stack)
         self.m.StubOutWithMock(self.fc.servers, 'create')
         image_id = mox.IgnoreArg()
         self.fc.servers.create(

@@ -108,8 +108,9 @@ class FirewallTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return firewall.Firewall(
-            'firewall', snippet['Resources']['firewall'], stack)
+            'firewall', resource_defns['firewall'], stack)
 
     def test_create(self):
         rsrc = self.create_firewall()
@@ -130,8 +131,9 @@ class FirewallTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = firewall.Firewall(
-            'firewall', snippet['Resources']['firewall'], stack)
+            'firewall', resource_defns['firewall'], stack)
 
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
@@ -238,8 +240,9 @@ class FirewallPolicyTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_policy_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return firewall.FirewallPolicy(
-            'firewall_policy', snippet['Resources']['firewall_policy'], stack)
+            'firewall_policy', resource_defns['firewall_policy'], stack)
 
     def test_create(self):
         rsrc = self.create_firewall_policy()
@@ -260,8 +263,9 @@ class FirewallPolicyTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_policy_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = firewall.FirewallPolicy(
-            'firewall_policy', snippet['Resources']['firewall_policy'], stack)
+            'firewall_policy', resource_defns['firewall_policy'], stack)
 
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
@@ -368,8 +372,9 @@ class FirewallRuleTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_rule_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         return firewall.FirewallRule(
-            'firewall_rule', snippet['Resources']['firewall_rule'], stack)
+            'firewall_rule', resource_defns['firewall_rule'], stack)
 
     def test_create(self):
         rsrc = self.create_firewall_rule()
@@ -391,8 +396,9 @@ class FirewallRuleTest(HeatTestCase):
 
         snippet = template_format.parse(firewall_rule_template)
         stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = firewall.FirewallRule(
-            'firewall_rule', snippet['Resources']['firewall_rule'], stack)
+            'firewall_rule', resource_defns['firewall_rule'], stack)
 
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))

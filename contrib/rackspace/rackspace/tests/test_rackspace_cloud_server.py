@@ -91,25 +91,27 @@ class CloudServersTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment({'key_name': 'test'}),
                              stack_id=uuidutils.generate_uuid())
-        return (t, stack)
+        return (template, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
                            override_name=False, stub_create=True, exit_code=0):
         stack_name = '%s_s' % name
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['image'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['image'] = \
             image_id or 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['flavor'] = \
+        tmpl.t['Resources']['WebServer']['Properties']['flavor'] = \
             '256 MB Server'
 
         server_name = '%s' % name
         if override_name:
-            t['Resources']['WebServer']['Properties']['name'] = \
+            tmpl.t['Resources']['WebServer']['Properties']['name'] = \
                 server_name
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer(server_name,
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'],
+                                          stack)
 
         self._stub_server_validate(server, image_id or 'CentOS 5.2', 1)
         if stub_create:
@@ -333,9 +335,10 @@ class CloudServersTest(HeatTestCase):
         stack_name = 'admin_pass_s'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['save_admin_pass'] = True
+        t.t['Resources']['WebServer']['Properties']['save_admin_pass'] = True
+        resource_defns = t.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -356,9 +359,10 @@ class CloudServersTest(HeatTestCase):
         stack_name = 'admin_pass_s'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['save_admin_pass'] = False
+        t.t['Resources']['WebServer']['Properties']['save_admin_pass'] = False
+        resource_defns = t.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -379,9 +383,10 @@ class CloudServersTest(HeatTestCase):
         stack_name = 'admin_pass_s'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        t['Resources']['WebServer']['Properties']['save_admin_pass'] = None
+        t.t['Resources']['WebServer']['Properties']['save_admin_pass'] = None
+        resource_defns = t.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -399,10 +404,11 @@ class CloudServersTest(HeatTestCase):
         self._mock_metadata_os_distro()
         return_server = self.fc.servers.list()[1]
         stack_name = 'admin_pass_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
 
         mock_nova.return_value = self.fc
         self.fc.servers.create = mock.Mock(return_value=return_server)
@@ -416,20 +422,22 @@ class CloudServersTest(HeatTestCase):
     def test_server_handles_server_without_password(self, mock_data_get):
         mock_data_get.return_value = {}
         stack_name = 'admin_pass_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
         self.assertEqual('', server.FnGetAtt('admin_pass'))
 
     @mock.patch.object(resource.Resource, 'data')
     def test_server_has_admin_pass_attribute_available(self, mock_data_get):
         mock_data_get.return_value = {'admin_pass': 'foo'}
         stack_name = 'admin_pass_s'
-        (t, stack) = self._setup_test_stack(stack_name)
+        (tmpl, stack) = self._setup_test_stack(stack_name)
 
+        resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
         self.assertEqual('foo', server.FnGetAtt('admin_pass'))
 
     @mock.patch.object(clients.OpenStackClients, 'nova')
@@ -437,12 +445,13 @@ class CloudServersTest(HeatTestCase):
                                   mock_nova):
         return_server = self.fc.servers.list()[1]
         stack_name = 'no_user_data'
-        (t, stack) = self._setup_test_stack(stack_name)
-        properties = t['Resources']['WebServer']['Properties']
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        properties = tmpl.t['Resources']['WebServer']['Properties']
         properties['user_data'] = user_data
         properties['config_drive'] = config_drive
+        resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer('WebServer',
-                                          t['Resources']['WebServer'], stack)
+                                          resource_defns['WebServer'], stack)
         mock_nova.return_value = self.fc
         mock_servers_create = mock.Mock(return_value=return_server)
         self.fc.servers.create = mock_servers_create

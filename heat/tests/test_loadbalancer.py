@@ -115,8 +115,9 @@ class LoadBalancerTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
     def create_loadbalancer(self, t, stack, resource_name):
+        resource_defns = stack.t.resource_definitions(stack)
         rsrc = lb.LoadBalancer(resource_name,
-                               t['Resources'][resource_name],
+                               resource_defns[resource_name],
                                stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
@@ -193,9 +194,10 @@ class LoadBalancerTest(HeatTestCase):
         self.assertRegexpMatches(ha_cfg, 'timeout check 5s')
 
         id_list = []
+        resource_defns = s.t.resource_definitions(s)
         for inst_name in ['WikiServerOne1', 'WikiServerOne2']:
             inst = instance.Instance(inst_name,
-                                     s.t['Resources']['WikiServerOne'],
+                                     resource_defns['WikiServerOne'],
                                      s)
             id_list.append(inst.FnGetRefId())
 
@@ -242,8 +244,9 @@ class LoadBalancerTest(HeatTestCase):
         s = utils.parse_stack(t)
         s.store()
 
+        resource_defns = s.t.resource_definitions(s)
         rsrc = lb.LoadBalancer('LoadBalancer',
-                               t['Resources']['LoadBalancer'],
+                               resource_defns['LoadBalancer'],
                                s)
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 
@@ -254,8 +257,8 @@ class LoadBalancerTest(HeatTestCase):
         stack = utils.parse_stack(template)
 
         resource_name = 'LoadBalancer'
-        lb_json = template['Resources'][resource_name]
-        return lb.LoadBalancer(resource_name, lb_json, stack)
+        lb_defn = stack.t.resource_definitions(stack)[resource_name]
+        return lb.LoadBalancer(resource_name, lb_defn, stack)
 
     def test_child_params_without_key_name(self):
         rsrc = self.setup_loadbalancer(False)

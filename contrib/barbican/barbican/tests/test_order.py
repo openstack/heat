@@ -16,6 +16,7 @@ import mock
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -43,10 +44,12 @@ class TestOrder(HeatTestCase):
         super(TestOrder, self).setUp()
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
-        self.stack = utils.parse_stack(template_format.parse(stack_template))
+        tmpl = template_format.parse(stack_template)
+        self.stack = utils.parse_stack(tmpl)
 
-        self.res_template = self.stack.t['resources']['order']
-        self.props = self.res_template['Properties']
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        self.res_template = resource_defns['order']
+        self.props = tmpl['resources']['order']['properties']
         self._register_resources()
 
         self.patcher_client = mock.patch.object(order.clients, 'Clients')
@@ -118,14 +121,18 @@ class TestOrder(HeatTestCase):
     def test_create_order_with_octet_stream(self):
         content_type = 'application/octet-stream'
         self.props['payload_content_type'] = content_type
-        res = self._create_resource('foo', self.res_template, self.stack)
+        defn = rsrc_defn.ResourceDefinition('foo', 'OS::Barbican::Order',
+                                            self.props)
+        res = self._create_resource(defn.name, defn, self.stack)
 
         args = self.barbican.orders.create.call_args[1]
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
     def test_create_order_other_content_types_now_allowed(self):
         self.props['payload_content_type'] = 'not/allowed'
-        res = order.Order('order', self.res_template, self.stack)
+        defn = rsrc_defn.ResourceDefinition('order', 'OS::Barbican::Order',
+                                            self.props)
+        res = order.Order(defn.name, defn, self.stack)
 
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(res.create))
