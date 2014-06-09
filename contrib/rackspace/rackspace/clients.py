@@ -18,140 +18,37 @@ import urlparse
 from oslo.config import cfg
 
 from heat.common import exception
-from heat.engine import clients
+from heat.engine.clients import client_plugin
+from heat.engine.clients.os import cinder
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
+from heat.engine.clients.os import trove
+
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-from glanceclient import client as glanceclient
+from glanceclient import client as gc
+from troveclient import client as tc
 
 LOG = logging.getLogger(__name__)
 
 try:
     import pyrax
 except ImportError:
-    LOG.info(_('pyrax not available'))
+    pyrax = None
 
 
-class Clients(clients.OpenStackClients):
+class RackspaceClientPlugin(client_plugin.ClientPlugin):
 
-    """Convenience class to create and cache client instances."""
-
-    def __init__(self, context):
-        super(Clients, self).__init__(context)
-        self.pyrax = None
+    pyrax = None
 
     def _get_client(self, name):
-        if not self.pyrax:
-            self.__authenticate()
-        if name not in self._clients:
-            client = self.pyrax.get_client(
-                name, cfg.CONF.region_name_for_services)
-            self._clients[name] = client
-        return self._clients[name]
+        if self.pyrax is None:
+            self._authenticate()
+        return self.pyrax.get_client(
+            name, cfg.CONF.region_name_for_services)
 
-    def auto_scale(self):
-        """Rackspace Auto Scale client."""
-        return self._get_client("autoscale")
-
-    def cloud_lb(self):
-        """Rackspace cloud loadbalancer client."""
-        return self._get_client("load_balancer")
-
-    def cloud_dns(self):
-        """Rackspace cloud dns client."""
-        return self._get_client("dns")
-
-    def nova(self):
-        """Rackspace cloudservers client."""
-        return self._get_client("compute")
-
-    def cloud_networks(self):
-        """
-        Rackspace cloud networks client.
-
-        Though pyrax "fixed" the network client bugs that were introduced
-        in 1.8, it still doesn't work for contexts because of caching of the
-        nova client.
-        """
-        if "networks" not in self._clients:
-            if not self.pyrax:
-                self.__authenticate()
-            # need special handling now since the contextual
-            # pyrax doesn't handle "networks" not being in
-            # the catalog
-            ep = pyrax._get_service_endpoint(
-                self.pyrax,
-                "compute",
-                region=cfg.CONF.region_name_for_services)
-            cls = pyrax._client_classes['compute:network']
-            self._clients["networks"] = cls(
-                self.pyrax,
-                region_name=cfg.CONF.region_name_for_services,
-                management_url=ep)
-        return self._clients["networks"]
-
-    def trove(self):
-        """
-        Rackspace trove client.
-
-        Since the pyrax module uses its own client implementation for Cloud
-        Databases, we have to skip pyrax on this one and override the super
-        management url to be region-aware.
-        """
-        if "trove" not in self._clients:
-            super(Clients, self).trove(service_type='rax:database')
-            management_url = self.url_for(
-                service_type='rax:database',
-                region_name=cfg.CONF.region_name_for_services)
-            self._clients['trove'].client.management_url = management_url
-        return self._clients['trove']
-
-    def cinder(self):
-        """Override the region for the cinder client."""
-        if "cinder" not in self._clients:
-            super(Clients, self).cinder()
-            management_url = self.url_for(
-                service_type='volume',
-                region_name=cfg.CONF.region_name_for_services)
-            self._clients['cinder'].client.management_url = management_url
-        return self._clients['cinder']
-
-    def swift(self):
-        # Rackspace doesn't include object-store in the default catalog
-        # for "reasons". The pyrax client takes care of this, but it
-        # returns a wrapper over the upstream python-swiftclient so we
-        # unwrap here and things just work
-        return self._get_client("object_store").connection
-
-    def glance(self):
-        if "image" not in self._clients:
-            con = self.context
-            endpoint_type = self._get_client_option('glance', 'endpoint_type')
-            endpoint = self.url_for(
-                service_type='image',
-                endpoint_type=endpoint_type,
-                region_name=cfg.CONF.region_name_for_services)
-            # Rackspace service catalog includes a tenant scoped glance
-            # endpoint so we have to munge the url a bit
-            glance_url = urlparse.urlparse(endpoint)
-            # remove the tenant and following from the url
-            endpoint = "%s://%s" % (glance_url.scheme, glance_url.hostname)
-            args = {
-                'auth_url': con.auth_url,
-                'service_type': 'image',
-                'project_id': con.tenant,
-                'token': self.auth_token,
-                'endpoint_type': endpoint_type,
-                'ca_file': self._get_client_option('glance', 'ca_file'),
-                'cert_file': self._get_client_option('glance', 'cert_file'),
-                'key_file': self._get_client_option('glance', 'key_file'),
-                'insecure': self._get_client_option('glance', 'insecure')
-            }
-            client = glanceclient.Client('2', endpoint, **args)
-            self._clients["image"] = client
-        return self._clients["image"]
-
-    def __authenticate(self):
+    def _authenticate(self):
         """Create an authenticated client context."""
         self.pyrax = pyrax.create_context("rackspace")
         self.pyrax.auth_endpoint = self.context.auth_url
@@ -167,3 +64,145 @@ class Clients(clients.OpenStackClients):
             raise exception.AuthorizationFailure()
         LOG.info(_("User %s authenticated successfully."),
                  self.context.username)
+
+
+class RackspaceAutoScaleClient(RackspaceClientPlugin):
+
+    def _create(self):
+        """Rackspace Auto Scale client."""
+        return self._get_client("autoscale")
+
+
+class RackspaceCloudLBClient(RackspaceClientPlugin):
+
+    def _create(self):
+        """Rackspace cloud loadbalancer client."""
+        return self._get_client("load_balancer")
+
+
+class RackspaceCloudDNSClient(RackspaceClientPlugin):
+
+    def _create(self):
+        """Rackspace cloud dns client."""
+        return self._get_client("dns")
+
+
+class RackspaceNovaClient(nova.NovaClientPlugin,
+                          RackspaceClientPlugin):
+
+    def _create(self):
+        """Rackspace cloudservers client."""
+        client = self._get_client("compute")
+        if not client:
+            client = super(RackspaceNovaClient, self)._create()
+        return client
+
+
+class RackspaceCloudNetworksClient(RackspaceClientPlugin):
+
+    def _create(self):
+        """
+        Rackspace cloud networks client.
+
+        Though pyrax "fixed" the network client bugs that were introduced
+        in 1.8, it still doesn't work for contexts because of caching of the
+        nova client.
+        """
+        if not self.pyrax:
+            self._authenticate()
+        # need special handling now since the contextual
+        # pyrax doesn't handle "networks" not being in
+        # the catalog
+        ep = pyrax._get_service_endpoint(
+            self.pyrax, "compute", region=cfg.CONF.region_name_for_services)
+        cls = pyrax._client_classes['compute:network']
+        client = cls(self.pyrax,
+                     region_name=cfg.CONF.region_name_for_services,
+                     management_url=ep)
+        return client
+
+
+class RackspaceTroveClient(trove.TroveClientPlugin):
+    """
+    Rackspace trove client.
+
+    Since the pyrax module uses its own client implementation for Cloud
+    Databases, we have to skip pyrax on this one and override the super
+    implementation to account for custom service type and regionalized
+    management url.
+    """
+
+    def _create(self):
+        service_type = "rax:database"
+        con = self.context
+        endpoint_type = self._get_client_option('trove', 'endpoint_type')
+        args = {
+            'service_type': service_type,
+            'auth_url': con.auth_url,
+            'proxy_token': con.auth_token,
+            'username': None,
+            'password': None,
+            'cacert': self._get_client_option('trove', 'ca_file'),
+            'insecure': self._get_client_option('trove', 'insecure'),
+            'endpoint_type': endpoint_type
+        }
+
+        client = tc.Client('1.0', **args)
+        region = cfg.CONF.region_name_for_services
+        management_url = self.url_for(service_type=service_type,
+                                      endpoint_type=endpoint_type,
+                                      region_name=region)
+        client.client.auth_token = con.auth_token
+        client.client.management_url = management_url
+
+        return client
+
+
+class RackspaceCinderClient(cinder.CinderClientPlugin):
+
+    def _create(self):
+        """Override the region for the cinder client."""
+        client = super(RackspaceCinderClient, self)._create()
+        management_url = self.url_for(
+            service_type='volume',
+            region_name=cfg.CONF.region_name_for_services)
+        client.client.management_url = management_url
+        return client
+
+
+class RackspaceSwiftClient(RackspaceClientPlugin):
+
+    def _create(self):
+        # Rackspace doesn't include object-store in the default catalog
+        # for "reasons". The pyrax client takes care of this, but it
+        # returns a wrapper over the upstream python-swiftclient so we
+        # unwrap here and things just work
+        return self._get_client("object_store").connection
+
+
+class RackspaceGlanceClient(glance.GlanceClientPlugin):
+
+    def _create(self):
+        con = self.context
+        endpoint_type = self._get_client_option('glance', 'endpoint_type')
+        endpoint = self.url_for(
+            service_type='image',
+            endpoint_type=endpoint_type,
+            region_name=cfg.CONF.region_name_for_services)
+        # Rackspace service catalog includes a tenant scoped glance
+        # endpoint so we have to munge the url a bit
+        glance_url = urlparse.urlparse(endpoint)
+        # remove the tenant and following from the url
+        endpoint = "%s://%s" % (glance_url.scheme, glance_url.hostname)
+        args = {
+            'auth_url': con.auth_url,
+            'service_type': 'image',
+            'project_id': con.tenant,
+            'token': self.auth_token,
+            'endpoint_type': endpoint_type,
+            'ca_file': self._get_client_option('glance', 'ca_file'),
+            'cert_file': self._get_client_option('glance', 'cert_file'),
+            'key_file': self._get_client_option('glance', 'key_file'),
+            'insecure': self._get_client_option('glance', 'insecure')
+        }
+        return gc.Client('2', endpoint, **args)

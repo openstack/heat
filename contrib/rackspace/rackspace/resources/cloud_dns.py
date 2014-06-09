@@ -147,7 +147,7 @@ class CloudDns(resource.Resource):
     }
 
     def cloud_dns(self):
-        return self.stack.clients.cloud_dns()
+        return self.client('cloud_dns')
 
     def handle_create(self):
         """Create a Rackspace CloudDns Instance."""

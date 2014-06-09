@@ -306,13 +306,13 @@ class Group(resource.Resource):
 
         The resource_id is set to the resulting group's ID.
         """
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         group = asclient.create(**self._get_create_args())
         self.resource_id_set(str(group.id))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update the group configuration and the launch configuration."""
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         if self.GROUP_CONFIGURATION in prop_diff:
             args = self._get_group_config_args(
                 prop_diff[self.GROUP_CONFIGURATION])
@@ -332,7 +332,7 @@ class Group(resource.Resource):
         """
         if self.resource_id is None:
             return
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         args = self._get_group_config_args(
             self.properties[self.GROUP_CONFIGURATION])
         args['min_entities'] = 0
@@ -347,13 +347,16 @@ class Group(resource.Resource):
         if self.resource_id is None:
             return True
         try:
-            self.stack.clients.auto_scale().delete(self.resource_id)
+            self.auto_scale().delete(self.resource_id)
         except Forbidden:
             return False
         except NotFound:
             return True
         else:
             return True
+
+    def auto_scale(self):
+        return self.client('auto_scale')
 
 
 class ScalingPolicy(resource.Resource):
@@ -447,7 +450,7 @@ class ScalingPolicy(resource.Resource):
 
         The resource ID is initialized to {group_id}:{policy_id}.
         """
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         args = self._get_args(self.properties)
         policy = asclient.add_policy(**args)
         resource_id = '%s:%s' % (self.properties[self.GROUP], policy.id)
@@ -457,14 +460,14 @@ class ScalingPolicy(resource.Resource):
         return self.resource_id.split(':', 1)[1]
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         args = self._get_args(tmpl_diff['Properties'])
         args['policy'] = self._get_policy_id()
         asclient.replace_policy(**args)
 
     def handle_delete(self):
         """Delete the policy if it exists."""
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         if self.resource_id is None:
             return
         policy_id = self._get_policy_id()
@@ -472,6 +475,9 @@ class ScalingPolicy(resource.Resource):
             asclient.delete_policy(self.properties[self.GROUP], policy_id)
         except NotFound:
             pass
+
+    def auto_scale(self):
+        return self.client('auto_scale')
 
 
 class WebHook(resource.Resource):
@@ -534,7 +540,7 @@ class WebHook(resource.Resource):
             metadata=props.get(self.METADATA))
 
     def handle_create(self):
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         args = self._get_args(self.properties)
         webhook = asclient.add_webhook(**args)
         self.resource_id_set(webhook.id)
@@ -548,7 +554,7 @@ class WebHook(resource.Resource):
                 self.data_set(key, url)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         args = self._get_args(json_snippet['Properties'])
         args['webhook'] = self.resource_id
         asclient.replace_webhook(**args)
@@ -563,12 +569,15 @@ class WebHook(resource.Resource):
     def handle_delete(self):
         if self.resource_id is None:
             return
-        asclient = self.stack.clients.auto_scale()
+        asclient = self.auto_scale()
         group_id, policy_id = self.properties[self.POLICY].split(':', 1)
         try:
             asclient.delete_webhook(group_id, policy_id, self.resource_id)
         except NotFound:
             pass
+
+    def auto_scale(self):
+        return self.client('auto_scale')
 
 
 def resource_mapping():

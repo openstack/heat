@@ -23,7 +23,7 @@ from heat.common import template_format
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources import cloud_loadbalancer as lb  # noqa
@@ -155,7 +155,7 @@ def override_resource():
     }
 
 
-class LoadBalancerTest(HeatTestCase):
+class LoadBalancerTest(common.HeatTestCase):
 
     def setUp(self):
         super(LoadBalancerTest, self).setUp()

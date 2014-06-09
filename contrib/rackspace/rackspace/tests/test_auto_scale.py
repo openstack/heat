@@ -16,11 +16,10 @@ import itertools
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources import auto_scale  # noqa
@@ -165,7 +164,7 @@ class FakeAutoScale(object):
         webhook.kwargs['metadata'] = metadata
 
 
-class ScalingGroupTest(HeatTestCase):
+class ScalingGroupTest(common.HeatTestCase):
 
     group_template = template_format.parse('''
     HeatTemplateFormatVersion: "2012-12-12"
@@ -204,8 +203,8 @@ class ScalingGroupTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patchobject(clients.OpenStackClients, 'auto_scale',
-                         return_value=self.fake_auto_scale, create=True)
+        self.patchobject(auto_scale.Group, 'auto_scale',
+                         return_value=self.fake_auto_scale)
 
     def _setup_test_stack(self):
         self.stack = utils.parse_stack(self.group_template)
@@ -382,7 +381,7 @@ Resources:
             if count < 3:
                 raise auto_scale.Forbidden("Not empty!")
 
-        self.patchobject(self.fake_auto_scale, 'delete', new=delete)
+        self.patchobject(self.fake_auto_scale, 'delete', side_effect=delete)
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
         # It really called delete until it succeeded:
@@ -398,14 +397,14 @@ Resources:
         def delete(group_id):
             1 / 0
 
-        self.patchobject(self.fake_auto_scale, 'delete', new=delete)
+        self.patchobject(self.fake_auto_scale, 'delete', side_effect=delete)
         resource = self.stack['my_group']
         err = self.assertRaises(
             exception.ResourceFailure, scheduler.TaskRunner(resource.delete))
         self.assertIsInstance(err.exc, ZeroDivisionError)
 
 
-class PolicyTest(HeatTestCase):
+class PolicyTest(common.HeatTestCase):
     policy_template = template_format.parse('''
     HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
@@ -426,8 +425,8 @@ class PolicyTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patchobject(clients.OpenStackClients, 'auto_scale',
-                         return_value=self.fake_auto_scale, create=True)
+        self.patchobject(auto_scale.ScalingPolicy, 'auto_scale',
+                         return_value=self.fake_auto_scale)
 
     def _setup_test_stack(self, template):
         self.stack = utils.parse_stack(template)
@@ -550,7 +549,7 @@ class PolicyTest(HeatTestCase):
         self.assertEqual({}, self.fake_auto_scale.policies)
 
 
-class WebHookTest(HeatTestCase):
+class WebHookTest(common.HeatTestCase):
     webhook_template = template_format.parse('''
     HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
@@ -570,8 +569,8 @@ class WebHookTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patchobject(clients.OpenStackClients, 'auto_scale',
-                         return_value=self.fake_auto_scale, create=True)
+        self.patchobject(auto_scale.WebHook, 'auto_scale',
+                         return_value=self.fake_auto_scale)
 
     def _setup_test_stack(self, template):
         self.stack = utils.parse_stack(template)

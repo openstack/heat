@@ -98,7 +98,7 @@ class CloudNetwork(resource.Resource):
         return self._network
 
     def cloud_networks(self):
-        return self.stack.clients.cloud_networks()
+        return self.client('cloud_networks')
 
     def handle_create(self):
         cnw = self.cloud_networks().create(label=self.properties[self.LABEL],

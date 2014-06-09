@@ -387,7 +387,7 @@ class CloudLoadBalancer(resource.Resource):
         self.clb = self.cloud_lb()
 
     def cloud_lb(self):
-        return self.stack.clients.cloud_lb()
+        return self.client('cloud_lb')
 
     def _setup_properties(self, properties, function):
         """Use defined schema properties as kwargs for loadbalancer objects."""

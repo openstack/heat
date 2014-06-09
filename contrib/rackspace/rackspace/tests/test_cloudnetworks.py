@@ -20,7 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources import cloudnetworks  # noqa
@@ -75,7 +75,7 @@ class FakeClient(object):
 
 
 @mock.patch.object(cloudnetworks.CloudNetwork, "cloud_networks")
-class CloudNetworkTest(HeatTestCase):
+class CloudNetworkTest(common.HeatTestCase):
 
     _template = template_format.parse("""
     heat_template_version: 2013-05-23
