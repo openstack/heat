@@ -12,7 +12,7 @@ function check_file() {
 
     # We don't care about comment lines.
     grep -v '^#' $f > ${f}.unsorted
-    sort -i -f ${f}.unsorted > ${f}.sorted
+    sort -d -i -f ${f}.unsorted > ${f}.sorted
     diff -c ${f}.unsorted ${f}.sorted
     rc=$?
     rm -f ${f}.sorted ${f}.unsorted
