@@ -87,11 +87,11 @@ class Server(stack_user.StackUser):
     )
 
     ATTRIBUTES = (
-        SHOW, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS, INSTANCE_NAME,
-        ACCESSIPV4, ACCESSIPV6,
+        NAME_ATTR, SHOW, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
+        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6,
     ) = (
-        'show', 'addresses', 'networks', 'first_address', 'instance_name',
-        'accessIPv4', 'accessIPv6',
+        'name', 'show', 'addresses', 'networks', 'first_address',
+        'instance_name', 'accessIPv4', 'accessIPv6',
     )
 
     properties_schema = {
@@ -308,6 +308,9 @@ class Server(stack_user.StackUser):
     }
 
     attributes_schema = {
+        NAME_ATTR: attributes.Schema(
+            _('Name of the server.')
+        ),
         SHOW: attributes.Schema(
             _('A dict of all server details as returned by the API.')
         ),
@@ -625,6 +628,8 @@ class Server(stack_user.StackUser):
             LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
                      % {'server': self.resource_id, 'ex': ex})
             return ''
+        if name == self.NAME_ATTR:
+            return self._server_name()
         if name == self.ADDRESSES:
             return self._add_port_for_address(server)
         if name == self.NETWORKS_ATTR:
