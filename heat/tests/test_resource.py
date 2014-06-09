@@ -686,7 +686,7 @@ class ResourceTest(HeatTestCase):
             'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'name': {'Type': 'String'},
-                'bool': {'Type': 'String',
+                'bool': {'Type': 'Boolean',
                          'AllowedValues': ['True', 'true', 'False', 'false']},
                 'implemented': {
                     'Type': 'String',

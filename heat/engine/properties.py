@@ -365,7 +365,7 @@ class Properties(collections.Mapping):
             schema.INTEGER: parameters.Schema.NUMBER,
             schema.STRING: parameters.Schema.STRING,
             schema.NUMBER: parameters.Schema.NUMBER,
-            schema.BOOLEAN: parameters.Schema.STRING,
+            schema.BOOLEAN: parameters.Schema.BOOLEAN,
             schema.MAP: parameters.Schema.MAP,
             schema.LIST: parameters.Schema.LIST,
         }
