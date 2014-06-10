@@ -2028,6 +2028,7 @@ class NeutronFloatingIPTest(HeatTestCase):
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
+        # create as
         neutronclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {
@@ -2037,7 +2038,50 @@ class NeutronFloatingIPTest(HeatTestCase):
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-
+        # update as with port_id
+        neutronclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {
+                'floatingip': {
+                    'port_id': u'2146dfbf-ba77-4083-8e86-d052f671ece5',
+                    'fixed_ip_address': None}}
+        ).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        # update as with floatingip_id
+        neutronclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'floatingip': {
+                'port_id': None
+            }}).AndReturn(None)
+        neutronclient.Client.update_floatingip(
+            '2146dfbf-ba77-4083-8e86-d052f671ece5',
+            {
+                'floatingip': {
+                    'port_id': u'2146dfbf-ba77-4083-8e86-d052f671ece5',
+                    'fixed_ip_address': None}}
+        ).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "2146dfbf-ba77-4083-8e86-d052f671ece5"
+        }})
+        # update as with both
+        neutronclient.Client.update_floatingip(
+            '2146dfbf-ba77-4083-8e86-d052f671ece5',
+            {'floatingip': {
+                'port_id': None
+            }}).AndReturn(None)
+        neutronclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {
+                'floatingip': {
+                    'port_id': u'ade6fcac-7d47-416e-a3d7-ad12efe445c1',
+                    'fixed_ip_address': None}}
+        ).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        # delete as
         neutronclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'floatingip': {
@@ -2093,6 +2137,32 @@ class NeutronFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         port_id = p.FnGetRefId()
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
+
+        # test update FloatingIpAssociation with port_id
+        update_snippet = copy.deepcopy(fipa.parsed_template())
+        update_port_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
+        update_snippet['Properties']['port_id'] = update_port_id
+
+        scheduler.TaskRunner(fipa.update, update_snippet)()
+        self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
+
+        # test update FloatingIpAssociation with floatingip_id
+        update_snippet = copy.deepcopy(fipa.parsed_template())
+        update_flip_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
+        update_snippet['Properties']['floatingip_id'] = update_flip_id
+
+        scheduler.TaskRunner(fipa.update, update_snippet)()
+        self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
+
+        # test update FloatingIpAssociation with port_id and floatingip_id
+        update_snippet = copy.deepcopy(fipa.parsed_template())
+        update_flip_id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        update_port_id = 'ade6fcac-7d47-416e-a3d7-ad12efe445c1'
+        update_snippet['Properties']['floatingip_id'] = update_flip_id
+        update_snippet['Properties']['port_id'] = update_port_id
+
+        scheduler.TaskRunner(fipa.update, update_snippet)()
+        self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
 
         scheduler.TaskRunner(fipa.delete)()
         scheduler.TaskRunner(p.delete)()
