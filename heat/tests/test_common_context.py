@@ -30,6 +30,7 @@ class TestRequestContext(HeatTestCase):
         self.ctx = {'username': 'mick',
                     'trustor_user_id': None,
                     'auth_token': '123',
+                    'auth_token_info': {'123info': 'woop'},
                     'is_admin': False,
                     'user': 'mick',
                     'password': 'foo',
@@ -45,17 +46,19 @@ class TestRequestContext(HeatTestCase):
         super(TestRequestContext, self).setUp()
 
     def test_request_context_init(self):
-        ctx = context.RequestContext(auth_token=self.ctx.get('auth_token'),
-                                     username=self.ctx.get('username'),
-                                     password=self.ctx.get('password'),
-                                     aws_creds=self.ctx.get('aws_creds'),
-                                     tenant=self.ctx.get('tenant'),
-                                     tenant_id=self.ctx.get('tenant_id'),
-                                     user_id=self.ctx.get('user_id'),
-                                     auth_url=self.ctx.get('auth_url'),
-                                     roles=self.ctx.get('roles'),
-                                     show_deleted=self.ctx.get('show_deleted'),
-                                     is_admin=self.ctx.get('is_admin'))
+        ctx = context.RequestContext(
+            auth_token=self.ctx.get('auth_token'),
+            username=self.ctx.get('username'),
+            password=self.ctx.get('password'),
+            aws_creds=self.ctx.get('aws_creds'),
+            tenant=self.ctx.get('tenant'),
+            tenant_id=self.ctx.get('tenant_id'),
+            user_id=self.ctx.get('user_id'),
+            auth_url=self.ctx.get('auth_url'),
+            roles=self.ctx.get('roles'),
+            show_deleted=self.ctx.get('show_deleted'),
+            is_admin=self.ctx.get('is_admin'),
+            auth_token_info=self.ctx.get('auth_token_info'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
         self.assertEqual(self.ctx, ctx_dict)
@@ -105,10 +108,12 @@ class RequestContextMiddlewareTest(HeatTestCase):
     scenarios = [(
         'empty_headers',
         dict(
+            environ=None,
             headers={},
             expected_exception=None,
             context_dict={
                 'auth_token': None,
+                'auth_token_info': None,
                 'auth_url': None,
                 'aws_creds': None,
                 'is_admin': False,
@@ -126,6 +131,7 @@ class RequestContextMiddlewareTest(HeatTestCase):
     ), (
         'username_password',
         dict(
+            environ=None,
             headers={
                 'X-Auth-User': 'my_username',
                 'X-Auth-Key': 'my_password',
@@ -157,6 +163,7 @@ class RequestContextMiddlewareTest(HeatTestCase):
     ), (
         'aws_creds',
         dict(
+            environ=None,
             headers={
                 'X-Auth-EC2-Creds': '{"ec2Credentials": {}}',
                 'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
@@ -184,8 +191,39 @@ class RequestContextMiddlewareTest(HeatTestCase):
                 'username': None
             })
     ), (
+        'token_creds',
+        dict(
+            environ={'keystone.token_info': {'info': 123}},
+            headers={
+                'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'X-Auth-Token': 'atoken2',
+                'X-Tenant-Name': 'my_tenant2',
+                'X-Tenant-Id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'X-Auth-Url': 'http://192.0.2.1:5000/v1',
+                'X-Roles': 'role1,role2,role3',
+            },
+            expected_exception=None,
+            context_dict={
+                'auth_token': 'atoken2',
+                'auth_token_info': {'info': 123},
+                'auth_url': 'http://192.0.2.1:5000/v1',
+                'aws_creds': None,
+                'is_admin': False,
+                'password': None,
+                'roles': ['role1', 'role2', 'role3'],
+                'show_deleted': False,
+                'tenant': 'my_tenant2',
+                'tenant_id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'trust_id': None,
+                'trustor_user_id': None,
+                'user': None,
+                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'username': None
+            })
+    ), (
         'malformed_roles',
         dict(
+            environ=None,
             headers={
                 'X-Roles': [],
             },
@@ -208,7 +246,8 @@ class RequestContextMiddlewareTest(HeatTestCase):
     def test_context_middleware(self):
 
         middleware = context.ContextMiddleware(None, None)
-        request = webob.Request.blank('/stacks', headers=self.headers)
+        request = webob.Request.blank('/stacks', headers=self.headers,
+                                      environ=self.environ)
         if self.expected_exception:
             self.assertRaises(
                 self.expected_exception, middleware.process_request, request)
