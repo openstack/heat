@@ -19,9 +19,9 @@ import six
 @six.add_metaclass(abc.ABCMeta)
 class ClientPlugin():
 
-    def __init__(self, clients):
-        self.context = clients.context
-        self.clients = clients
+    def __init__(self, context):
+        self.context = context
+        self.clients = context.clients
         self._client = None
 
     def client(self):

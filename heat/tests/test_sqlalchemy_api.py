@@ -98,7 +98,7 @@ class SqlAlchemyTest(HeatTestCase):
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
+        glance.GlanceClientPlugin._create().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -122,7 +122,7 @@ class SqlAlchemyTest(HeatTestCase):
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         mocks.StubOutWithMock(fc.servers, 'create')

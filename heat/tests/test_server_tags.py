@@ -131,11 +131,13 @@ class ServerTagsTest(HeatTestCase):
         super(ServerTagsTest, self).setUp()
         self.fc = fakes.FakeClient()
 
-    def _mock_get_image_id_success(self, imageId_input, imageId):
+    def _mock_get_image_id_success(self, imageId_input, imageId,
+                                   mock_create=True):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
-            g_cli_mock)
+        if mock_create:
+            self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+            glance.GlanceClientPlugin._create().AndReturn(
+                g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
             AndReturn(imageId)
@@ -154,7 +156,7 @@ class ServerTagsTest(HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(
@@ -204,13 +206,11 @@ class ServerTagsTest(HeatTestCase):
 
         new_tags = [{'Key': 'Food', 'Value': 'yuk'}]
         new_metadata = dict((tm['Key'], tm['Value']) for tm in new_tags)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(self.fc.servers.list()[1],
                                  new_metadata).AndReturn(None)
-        self._mock_get_image_id_success('CentOS 5.2', 1)
+        self._mock_get_image_id_success('CentOS 5.2', 1, False)
         self.m.ReplayAll()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['Tags'] = new_tags
@@ -240,7 +240,7 @@ class ServerTagsTest(HeatTestCase):
                                                          group.name)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -289,7 +289,7 @@ class ServerTagsTest(HeatTestCase):
         group._cooldown_timestamp(mox.IgnoreArg()).AndReturn(None)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
         self.m.StubOutWithMock(self.fc.servers, 'create')
