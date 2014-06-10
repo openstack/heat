@@ -161,6 +161,13 @@ json_size_opt = cfg.IntOpt('max_json_body_size',
 cfg.CONF.register_opt(json_size_opt)
 
 
+def list_opts():
+    yield None, [json_size_opt]
+    yield 'heat_api', api_opts
+    yield 'heat_api_cfn', api_cfn_opts
+    yield 'heat_api_cloudwatch', api_cw_opts
+
+
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
 
