@@ -3089,6 +3089,9 @@ class StackTest(HeatTestCase):
                          self.stack.state)
 
         self.assertIsNone(self.stack.output('Resource_attr'))
+        self.assertEqual('The Referenced Attribute (AResource Bar) is '
+                         'incorrect.',
+                         self.stack.outputs['Resource_attr']['error_msg'])
 
         self.stack.delete()
 

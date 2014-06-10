@@ -800,7 +800,8 @@ class Stack(collections.Mapping):
         value = self.outputs[key].get('Value', '')
         try:
             return function.resolve(value)
-        except Exception:
+        except Exception as ex:
+            self.outputs[key]['error_msg'] = six.text_type(ex)
             return None
 
     def restart_resource(self, resource_name):
