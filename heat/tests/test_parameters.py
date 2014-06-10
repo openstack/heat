@@ -328,6 +328,15 @@ class ParameterTest(testtools.TestCase):
                           self.new_parameter, 'p',
                           {'Type': 'String'})
 
+    def test_param_name_in_error_message(self):
+        schema = {'Type': 'String',
+                  'AllowedPattern': '[a-z]*'}
+        err = self.assertRaises(exception.StackValidationFailed,
+                                self.new_parameter, 'testparam', schema, '234')
+        expected = 'Parameter \'testparam\' is invalid: '\
+            '"234" does not match pattern "[a-z]*"'
+        self.assertEqual(expected, unicode(err))
+
 
 params_schema = json.loads('''{
   "Parameters" : {
