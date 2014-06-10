@@ -23,7 +23,6 @@ from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import autoscaling as notification
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import resource
@@ -303,7 +302,9 @@ class InstanceGroup(stack_resource.StackResource):
         return [(instance.name, instance.t)
                 for instance in self.get_instances()]
 
-    def _create_template(self, num_instances, num_replace=0):
+    def _create_template(self, num_instances, num_replace=0,
+                         template_version=('HeatTemplateFormatVersion',
+                                           '2012-12-12')):
         """
         Create a template to represent autoscaled instances.
 
@@ -311,10 +312,10 @@ class InstanceGroup(stack_resource.StackResource):
         """
         instance_definition = self._get_instance_definition()
         old_resources = self._get_instance_templates()
-        templates = template.resource_templates(
+        definitions = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
-        return {"HeatTemplateFormatVersion": "2012-12-12",
-                "Resources": dict((n, dict(d)) for n, d in templates)}
+
+        return template.make_template(definitions, version=template_version)
 
     def _try_rolling_update(self, prop_diff):
         if (self.update_policy[self.ROLLING_UPDATE] and
@@ -330,7 +331,6 @@ class InstanceGroup(stack_resource.StackResource):
         Replace the instances in the group using updated launch configuration
         """
         def changing_instances(tmpl):
-            tmpl = parser.Template(tmpl)
             instances = self.get_instances()
             current = set((i.name, i.t) for i in instances)
             updated = set(tmpl.resource_definitions(self.nested()).items())
@@ -933,32 +933,13 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                           policy[self.MAX_BATCH_SIZE],
                           policy[self.PAUSE_TIME])
 
-    def _create_template(self, *args, **kwargs):
+    def _create_template(self, num_instances, num_replace=0,
+                         template_version=('heat_template_version',
+                                           '2013-05-23')):
         """Create a template in the HOT format for the nested stack."""
-        tpl = super(AutoScalingResourceGroup, self)._create_template(
-            *args, **kwargs)
-
-        CFN_TO_HOT_ATTRS = {'Type': 'type',
-                            'Properties': 'properties',
-                            'Metadata': 'metadata',
-                            'DependsOn': 'depends_on',
-                            'DeletionPolicy': 'deletion_policy',
-                            'UpdatePolicy': 'update_policy'}
-
-        def to_hot(template):
-            hot_template = {}
-
-            for attr, attr_value in template.iteritems():
-                hot_attr = CFN_TO_HOT_ATTRS.get(attr, attr)
-                hot_template[hot_attr] = attr_value
-
-            return hot_template
-
-        tpl.pop('HeatTemplateFormatVersion', None)
-        tpl['heat_template_version'] = '2013-05-23'
-        rsrcs = tpl.pop('Resources')
-        tpl['resources'] = dict((n, to_hot(t)) for n, t in rsrcs.items())
-        return tpl
+        return super(AutoScalingResourceGroup,
+                     self)._create_template(num_instances, num_replace,
+                                            template_version=template_version)
 
 
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
