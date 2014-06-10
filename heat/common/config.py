@@ -55,7 +55,6 @@ service_opts = [
                help='Instance connection to CFN/CW API validate certs if SSL '
                     'is used.'),
     cfg.StrOpt('region_name_for_services',
-               default=None,
                help='Default region name used to get services endpoints.'),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",

@@ -33,7 +33,6 @@ LOG = logging.getLogger(__name__)
 
 opts = [
     cfg.StrOpt('auth_uri',
-               default=None,
                help=_("Authentication Endpoint URI.")),
     cfg.BoolOpt('multi_cloud',
                 default=False,
