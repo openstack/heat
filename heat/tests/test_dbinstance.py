@@ -12,7 +12,10 @@
 #    under the License.
 
 from heat.common import template_format
+from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import parser
+from heat.engine import properties
 from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -52,51 +55,94 @@ class DBInstance(resource.Resource):
     to verify the schema of the new TemplateResource.
     """
     properties_schema = {
-        'DBSnapshotIdentifier': {'Type': 'String',
-                                 'Implemented': False},
-        'AllocatedStorage': {'Type': 'String',
-                             'Required': True},
-        'AvailabilityZone': {'Type': 'String',
-                             'Implemented': False},
-        'BackupRetentionPeriod': {'Type': 'String',
-                                  'Implemented': False},
-        'DBInstanceClass': {'Type': 'String',
-                            'Required': True},
-        'DBName': {'Type': 'String',
-                   'Required': False},
-        'DBParameterGroupName': {'Type': 'String',
-                                 'Implemented': False},
-        'DBSecurityGroups': {'Type': 'List',
-                             'Required': False, 'Default': []},
-        'DBSubnetGroupName': {'Type': 'String',
-                              'Implemented': False},
-        'Engine': {'Type': 'String',
-                   'AllowedValues': ['MySQL'],
-                   'Required': True},
-        'EngineVersion': {'Type': 'String',
-                          'Implemented': False},
-        'LicenseModel': {'Type': 'String',
-                         'Implemented': False},
-        'MasterUsername': {'Type': 'String',
-                           'Required': True},
-        'MasterUserPassword': {'Type': 'String',
-                               'Required': True},
-        'Port': {'Type': 'String',
-                 'Default': '3306',
-                 'Required': False},
-        'PreferredBackupWindow': {'Type': 'String',
-                                  'Implemented': False},
-        'PreferredMaintenanceWindow': {'Type': 'String',
-                                       'Implemented': False},
-        'MultiAZ': {'Type': 'Boolean',
-                    'Implemented': False},
+        'DBSnapshotIdentifier': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'AllocatedStorage': properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        'AvailabilityZone': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'BackupRetentionPeriod': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'DBInstanceClass': properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        'DBName': properties.Schema(
+            properties.Schema.STRING,
+            required=False
+        ),
+        'DBParameterGroupName': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'DBSecurityGroups': properties.Schema(
+            properties.Schema.LIST,
+            required=False,
+            default=[]
+        ),
+        'DBSubnetGroupName': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'Engine': properties.Schema(
+            properties.Schema.STRING,
+            constraints=[
+                constraints.AllowedValues(['MySQL']),
+            ],
+            required=True
+        ),
+        'EngineVersion': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'LicenseModel': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'MasterUsername': properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        'MasterUserPassword': properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        'Port': properties.Schema(
+            properties.Schema.STRING,
+            required=False,
+            default='3306'
+        ),
+        'PreferredBackupWindow': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'PreferredMaintenanceWindow': properties.Schema(
+            properties.Schema.STRING,
+            implemented=False
+        ),
+        'MultiAZ': properties.Schema(
+            properties.Schema.BOOLEAN,
+            implemented=False
+        ),
     }
 
     # We only support a couple of the attributes right now
     attributes_schema = {
-        "Endpoint.Address": "Connection endpoint for the database.",
-        "Endpoint.Port": ("The port number on which the database accepts "
-                          "connections.")
+        "Endpoint.Address": attributes.Schema(
+            "Connection endpoint for the database."
+        ),
+        "Endpoint.Port": attributes.Schema(
+            ("The port number on which the database accepts "
+             "connections.")
+        ),
     }
 
 
