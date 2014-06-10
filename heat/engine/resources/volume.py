@@ -52,7 +52,9 @@ class Volume(resource.Resource):
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
-            _('The size of the volume in GB.'),
+            _('The size of the volume in GB. '
+              'On update only increase in size is supported.'),
+            update_allowed=True,
             constraints=[
                 constraints.Range(min=1),
             ]
@@ -179,6 +181,99 @@ class Volume(resource.Resource):
 
     def check_delete_complete(self, delete_task):
         return delete_task.step()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        checkers = []
+        if self.SIZE in prop_diff:
+            new_size = prop_diff[self.SIZE]
+            vol = self.cinder().volumes.get(self.resource_id)
+
+            if new_size < vol.size:
+                raise exception.NotSupported(feature=_("Shrinking volume"))
+
+            elif new_size > vol.size:
+                if vol.attachments:
+                    #NOTE(pshchelo):
+                    # this relies on current behaviour of cinder attachments,
+                    # i.e. volume attachments is a list with len<=1,
+                    # so the volume can be attached only to single instance,
+                    # and id of attachment is the same as id of the volume
+                    # it describes, so detach/attach the same volume
+                    # will not change volume attachment id.
+                    server_id = vol.attachments[0]['server_id']
+                    device = vol.attachments[0]['device']
+                    attachment_id = vol.attachments[0]['id']
+                    detach_task = VolumeDetachTask(self.stack, server_id,
+                                                   attachment_id)
+                    checkers.append(scheduler.TaskRunner(detach_task))
+                    extend_task = VolumeExtendTask(self.stack, vol.id,
+                                                   new_size)
+                    checkers.append(scheduler.TaskRunner(extend_task))
+                    attach_task = VolumeAttachTask(self.stack, server_id,
+                                                   vol.id, device)
+                    checkers.append(scheduler.TaskRunner(attach_task))
+
+                else:
+                    extend_task = VolumeExtendTask(self.stack, vol.id,
+                                                   new_size)
+                    checkers.append(scheduler.TaskRunner(extend_task))
+
+        if checkers:
+            checkers[0].start()
+        return checkers
+
+    def check_update_complete(self, checkers):
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
+
+
+class VolumeExtendTask(object):
+    """A task to resize volume using Cinder API."""
+
+    def __init__(self, stack, volume_id, size):
+        self.clients = stack.clients
+        self.volume_id = volume_id
+        self.size = size
+
+    def __str__(self):
+        return _("Resizing volume %(vol)s to size %(size)i") % {
+            'vol': self.volume_id, 'size': self.size}
+
+    def __repr__(self):
+        return "%s(%s +-> %i)" % (type(self).__name__, self.volume_id,
+                                  self.size)
+
+    def __call__(self):
+        LOG.debug(str(self))
+
+        cinder = self.clients.cinder().volumes
+        vol = cinder.get(self.volume_id)
+
+        try:
+            cinder.extend(self.volume_id, self.size)
+        except clients.cinderclient.exceptions.ClientException as ex:
+            raise exception.Error(_(
+                "Failed to extend volume %(vol)s - %(err)s") % {
+                    'vol': vol.id, 'err': str(ex)})
+
+        yield
+
+        vol.get()
+        while vol.status == 'extending':
+            LOG.debug("Volume %s is being extended" % self.volume_id)
+            yield
+            vol.get()
+
+        if vol.status != 'available':
+            raise exception.Error(_("Resize failed: Volume %(vol)s is in "
+                                    "%(status)s state.") % {
+                                        'vol': vol.id, 'status': vol.status})
+
+        LOG.info(_('%s - complete') % str(self))
 
 
 class VolumeAttachTask(object):
@@ -441,7 +536,9 @@ class CinderVolume(Volume):
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
-            _('The size of the volume in GB.'),
+            _('The size of the volume in GB. '
+              'On update only increase in size is supported.'),
+            update_allowed=True,
             constraints=[
                 constraints.Range(min=1),
             ]
