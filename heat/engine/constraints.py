@@ -18,7 +18,6 @@ import re
 import six
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import resources
 from heat.openstack.common import strutils
 
@@ -575,9 +574,8 @@ class BaseCustomConstraint(object):
             "value": value, "message": self._error_message}
 
     def validate(self, value, context):
-        client = clients.Clients(context)
         try:
-            self.validate_with_client(client, value)
+            self.validate_with_client(context.clients, value)
         except self.expected_exceptions as e:
             self._error_message = str(e)
             return False
