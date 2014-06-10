@@ -122,6 +122,9 @@ class CloudLoadBalancer(resource.Resource):
         'PublicIp',
     )
 
+    ALGORITHMS = ["LEAST_CONNECTIONS", "RANDOM", "ROUND_ROBIN",
+                  "WEIGHTED_LEAST_CONNECTIONS", "WEIGHTED_ROUND_ROBIN"]
+
     _health_monitor_schema = {
         HEALTH_MONITOR_ATTEMPTS_BEFORE_DEACTIVATION: properties.Schema(
             properties.Schema.NUMBER,
@@ -249,7 +252,10 @@ class CloudLoadBalancer(resource.Resource):
             properties.Schema.BOOLEAN
         ),
         ALGORITHM: properties.Schema(
-            properties.Schema.STRING
+            properties.Schema.STRING,
+            constraints=[
+                constraints.AllowedValues(ALGORITHMS)
+            ]
         ),
         CONNECTION_LOGGING: properties.Schema(
             properties.Schema.BOOLEAN
