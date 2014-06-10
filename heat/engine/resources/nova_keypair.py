@@ -73,7 +73,8 @@ class KeyPair(resource.Resource):
             _('The public key.')
         ),
         PRIVATE_KEY: attributes.Schema(
-            _('The private key if it has been saved.')
+            _('The private key if it has been saved.'),
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 

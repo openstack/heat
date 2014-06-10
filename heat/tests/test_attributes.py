@@ -86,7 +86,9 @@ class AttributesTest(common.HeatTestCase):
     attributes_schema = {
         "test1": attributes.Schema("Test attrib 1"),
         "test2": attributes.Schema("Test attrib 2"),
-        "test3": attributes.Schema("Test attrib 3"),
+        "test3": attributes.Schema(
+            "Test attrib 3",
+            cache_mode=attributes.Schema.CACHE_NONE)
     }
 
     def setUp(self):
@@ -147,3 +149,28 @@ class AttributesTest(common.HeatTestCase):
             expected,
             attributes.Attributes.as_outputs("test_resource",
                                              MyTestResourceClass))
+
+    def test_caching_local(self):
+        value = 'value1'
+        test_resolver = lambda x: value
+        self.m.ReplayAll()
+        attribs = attributes.Attributes('test resource',
+                                        self.attributes_schema,
+                                        test_resolver)
+        self.assertEqual("value1", attribs['test1'])
+        value = 'value1 changed'
+        self.assertEqual("value1", attribs['test1'])
+
+        attribs.reset_resolved_values()
+        self.assertEqual("value1 changed", attribs['test1'])
+
+    def test_caching_none(self):
+        value = 'value3'
+        test_resolver = lambda x: value
+        self.m.ReplayAll()
+        attribs = attributes.Attributes('test resource',
+                                        self.attributes_schema,
+                                        test_resolver)
+        self.assertEqual("value3", attribs['test3'])
+        value = 'value3 changed'
+        self.assertEqual("value3 changed", attribs['test3'])

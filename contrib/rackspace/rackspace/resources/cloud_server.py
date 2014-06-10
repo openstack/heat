@@ -79,7 +79,8 @@ class CloudServer(server.Server):
                 _('The private IPv4 address of the server.')
             ),
             ADMIN_PASS_ATTR: attributes.Schema(
-                _('The administrator password for the server.')
+                _('The administrator password for the server.'),
+                cache_mode=attributes.Schema.CACHE_NONE
             ),
         }
     )
