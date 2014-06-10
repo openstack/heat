@@ -301,6 +301,9 @@ def format_validate_parameter(param):
         elif isinstance(c, constr.AllowedPattern):
             res[api.PARAM_ALLOWED_PATTERN] = c.pattern
 
+        elif isinstance(c, constr.CustomConstraint):
+            res[api.PARAM_CUSTOM_CONSTRAINT] = c.name
+
         if c.description:
             constraint_description.append(c.description)
 

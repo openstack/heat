@@ -722,6 +722,26 @@ class FormatValidateParameterTest(HeatTestCase):
                   'Label': 'KeyName'
               })
          ),
+        ('constraint_custom_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Public Network",
+                        "constraints": [
+                            { "custom_constraint": "neutron.network" }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Public Network',
+                  'NoEcho': 'false',
+                  'Label': 'KeyName',
+                  'CustomConstraint': 'neutron.network'
+              })
+         )
     ]
 
     def test_format_validate_parameter(self):
