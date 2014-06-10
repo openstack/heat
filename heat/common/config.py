@@ -56,9 +56,16 @@ service_opts = [
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
                help='Keystone role for heat template-defined users.'),
-    cfg.StrOpt('stack_user_domain',
+    cfg.StrOpt('stack_user_domain_id',
+               deprecated_opts=[cfg.DeprecatedOpt('stack_user_domain',
+                                                  group=None)],
                help='Keystone domain ID which contains heat template-defined '
-                    'users.'),
+                    'users. If this option is set, stack_user_domain_name '
+                    'option will be ignored.'),
+    cfg.StrOpt('stack_user_domain_name',
+               help='Keystone domain name which contains heat '
+                    'template-defined users. If `stack_user_domain_id` option '
+                    'is set, this option is ignored.'),
     cfg.StrOpt('stack_domain_admin',
                help='Keystone username, a user with roles sufficient to '
                     'manage users and projects in the stack_user_domain.'),

@@ -16,6 +16,7 @@ import uuid
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
+from keystoneclient.v3 import domains as kc_v3_domains
 from oslo.config import cfg
 
 from heat.common import exception
@@ -36,6 +37,8 @@ class KeystoneClientTest(HeatTestCase):
 
         self.mock_admin_client = self.m.CreateMock(kc_v3.Client)
         self.mock_ks_v3_client = self.m.CreateMock(kc_v3.Client)
+        self.mock_ks_v3_client_domain_mngr = self.m.CreateMock(
+            kc_v3_domains.DomainManager)
         self.m.StubOutWithMock(kc_v3, "Client")
 
         dummy_url = 'http://server.test:5000/v2.0'
@@ -47,10 +50,13 @@ class KeystoneClientTest(HeatTestCase):
                               group='keystone_authtoken')
         cfg.CONF.set_override('admin_tenant_name', 'service',
                               group='keystone_authtoken')
-        cfg.CONF.set_override('stack_user_domain', 'adomain123')
+        cfg.CONF.set_override('stack_user_domain_id', 'adomain123')
         cfg.CONF.set_override('stack_domain_admin', 'adminuser123')
         cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret')
         self.addCleanup(self.m.VerifyAll)
+
+    def _clear_domain_override(self):
+        cfg.CONF.clear_override('stack_user_domain_id')
 
     def _stub_admin_client(self, auth_ok=True):
         kc_v3.Client(
@@ -63,6 +69,7 @@ class KeystoneClientTest(HeatTestCase):
             password='verybadpass',
             project_name='service',
             username='heat').AndReturn(self.mock_admin_client)
+        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
         self.mock_admin_client.authenticate().AndReturn(auth_ok)
         if auth_ok:
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
@@ -79,6 +86,7 @@ class KeystoneClientTest(HeatTestCase):
             password='adminsecret',
             user_domain_id='adomain123',
             username='adminuser123').AndReturn(self.mock_admin_client)
+        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
         self.mock_admin_client.authenticate(
             domain_id='adomain123').AndReturn(auth_ok)
         if auth_ok:
@@ -218,7 +226,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_create_stack_domain_user_legacy_fallback(self):
         """Test creating a stack domain user, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -293,7 +301,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_delete_stack_domain_user_legacy_fallback(self):
         """Test deleting a stack domain user, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -469,7 +477,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test error path when config lacks domain config."""
 
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
         cfg.CONF.clear_override('stack_domain_admin')
         cfg.CONF.clear_override('stack_domain_admin_password')
 
@@ -492,9 +500,10 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         err = self.assertRaises(exception.Error,
                                 heat_keystoneclient.KeystoneClient, ctx)
-        exp_msg = ('heat.conf misconfigured, cannot specify stack_user_domain '
-                   'without stack_domain_admin and '
-                   'stack_domain_admin_password')
+        exp_msg = ('heat.conf misconfigured, cannot specify '
+                   '"stack_user_domain_id" or "stack_user_domain_name" '
+                   'without "stack_domain_admin" and '
+                   '"stack_domain_admin_password"')
         self.assertIn(exp_msg, str(err))
 
     def test_init_admin_client(self):
@@ -705,7 +714,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_enable_stack_domain_user_legacy_fallback(self):
         """Test enabling a stack domain user, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -770,7 +779,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_disable_stack_domain_user_legacy_fallback(self):
         """Test enabling a stack domain user, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -842,7 +851,7 @@ class KeystoneClientTest(HeatTestCase):
             credential_id='acredentialid')
 
     def test_delete_stack_domain_user_keypair_legacy_fallback(self):
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -972,7 +981,7 @@ class KeystoneClientTest(HeatTestCase):
     def test_create_stack_domain_user_keypair_legacy_fallback(self):
 
         """Test creating ec2 credentials for domain user, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         self._stubs_v3()
 
@@ -1165,7 +1174,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_create_stack_domain_project_legacy_fallback(self):
         """Test the create_stack_domain_project function, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1194,7 +1203,7 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_delete_stack_domain_project_legacy_fallback(self):
         """Test the delete_stack_domain_project function, fallback path."""
-        cfg.CONF.clear_override('stack_user_domain')
+        self._clear_domain_override()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1255,3 +1264,98 @@ class KeystoneClientTest(HeatTestCase):
         }
         service_url = 'http://regionone.example.com:1234/v1'
         self._test_url_for(service_url, kwargs)
+
+
+class KeystoneClientTestDomainName(KeystoneClientTest):
+    def setUp(self):
+        cfg.CONF.set_override('stack_user_domain_name', 'adomain123')
+        super(KeystoneClientTestDomainName, self).setUp()
+        cfg.CONF.clear_override('stack_user_domain_id')
+
+    def _clear_domain_override(self):
+        cfg.CONF.clear_override('stack_user_domain_name')
+
+    def _stub_domain_admin_client_domain_get(self):
+        self.mock_ks_v3_client_domain_mngr.get('adomain123').AndReturn(
+            kc_v3_domains.Domain(
+                self.mock_ks_v3_client_domain_mngr,
+                {'id': 'adomain123'},
+                loaded=True))
+
+    def _stub_domain_admin_client(self, auth_ok=True):
+        kc_v3.Client(
+            auth_url='http://server.test:5000/v3',
+            cacert=None,
+            cert=None,
+            endpoint='http://server.test:5000/v3',
+            insecure=False,
+            key=None,
+            password='adminsecret',
+            user_domain_name='adomain123',
+            username='adminuser123').AndReturn(self.mock_admin_client)
+        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
+        self.mock_admin_client.authenticate(
+            domain_name='adomain123').AndReturn(auth_ok)
+        if auth_ok:
+            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
+            self.mock_admin_client.auth_ref.user_id = '1234'
+
+    def test_enable_stack_domain_user_error_project(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_enable_stack_domain_user_error_project()
+
+    def test_delete_stack_domain_user_keypair(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user_keypair()
+
+    def test_delete_stack_domain_user_error_project(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user_error_project()
+
+    def test_delete_stack_domain_user_keypair_error_project(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user_keypair_error_project()
+
+    def test_delete_stack_domain_user(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user()
+
+    def test_enable_stack_domain_user(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_enable_stack_domain_user()
+
+    def test_delete_stack_domain_user_error_domain(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user_error_domain()
+
+    def test_disable_stack_domain_user_error_project(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_disable_stack_domain_user_error_project()
+
+    def test_enable_stack_domain_user_error_domain(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_enable_stack_domain_user_error_domain()
+
+    def test_delete_stack_domain_user_keypair_error_domain(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_delete_stack_domain_user_keypair_error_domain()
+
+    def test_disable_stack_domain_user(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_disable_stack_domain_user()
+
+    def test_disable_stack_domain_user_error_domain(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_disable_stack_domain_user_error_domain()

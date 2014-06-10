@@ -107,8 +107,15 @@
 #heat_stack_user_role=heat_stack_user
 
 # Keystone domain ID which contains heat template-defined
-# users. (string value)
-#stack_user_domain=<None>
+# users. If this option is set, stack_user_domain_name option
+# will be ignored. (string value)
+# Deprecated group/name - [DEFAULT]/stack_user_domain
+#stack_user_domain_id=<None>
+
+# Keystone domain name which contains heat template-defined
+# users. If `stack_user_domain_id` option is set, this option
+# is ignored. (string value)
+#stack_user_domain_name=<None>
 
 # Keystone username, a user with roles sufficient to manage
 # users and projects in the stack_user_domain. (string value)
