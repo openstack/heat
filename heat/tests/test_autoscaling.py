@@ -624,7 +624,7 @@ class AutoScalingTest(HeatTestCase):
 
         # Increase min size to 2, should trigger an ExactCapacity adjust
         self._stub_lb_reload(2)
-        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
         self.m.ReplayAll()
 
