@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
@@ -21,10 +19,6 @@ from heat.openstack.common import context
 from heat.openstack.common import importutils
 from heat.openstack.common import local
 from heat.openstack.common.middleware import request_id
-
-
-def generate_request_id():
-    return 'req-' + str(uuid.uuid4())
 
 
 class RequestContext(context.RequestContext):
