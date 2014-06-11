@@ -60,5 +60,8 @@ if __name__ == '__main__':
 
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
+    # We create the periodic tasks here, which mean they are created
+    # only in the parent process when num_engine_workers>1 is specified
+    srv.create_periodic_tasks()
     notify.startup_notify(cfg.CONF.onready)
     launcher.wait()
