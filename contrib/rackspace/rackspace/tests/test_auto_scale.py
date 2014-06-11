@@ -245,6 +245,68 @@ class ScalingGroupTest(HeatTestCase):
         resource = self.stack['my_group']
         self.assertEqual('0', resource.FnGetRefId())
 
+    def test_group_create_no_personality(self):
+
+        template = template_format.parse('''
+HeatTemplateFormatVersion: "2012-12-12"
+Description: "Rackspace Auto Scale"
+Parameters: {}
+Resources:
+    my_group:
+        Type: Rackspace::AutoScale::Group
+        Properties:
+            groupConfiguration:
+                name: "My Group"
+                cooldown: 60
+                minEntities: 1
+                maxEntities: 25
+                metadata:
+                    group: metadata
+            launchConfiguration:
+                type: "launch_server"
+                args:
+                    server:
+                        name: autoscaled-server
+                        flavorRef: flavor-ref
+                        imageRef: image-ref
+                        key_name: my-key
+                        metadata:
+                            server: metadata
+                        networks:
+                            - uuid: "00000000-0000-0000-0000-000000000000"
+                            - uuid: "11111111-1111-1111-1111-111111111111"
+''')
+
+        self.stack = utils.parse_stack(template)
+        self.stack.create()
+        self.assertEqual(
+            ('CREATE', 'COMPLETE'), self.stack.state,
+            self.stack.status_reason)
+
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
+        self.assertEqual(
+            {
+                'cooldown': 60,
+                'disk_config': None,
+                'flavor': 'flavor-ref',
+                'image': 'image-ref',
+                'launch_config_type': 'launch_server',
+                'load_balancers': None,
+                'key_name': "my-key",
+                'max_entities': 25,
+                'group_metadata': {'group': 'metadata'},
+                'metadata': {'server': 'metadata'},
+                'min_entities': 1,
+                'name': 'My Group',
+                'networks': [{'uuid': '00000000-0000-0000-0000-000000000000'},
+                             {'uuid': '11111111-1111-1111-1111-111111111111'}],
+                'personality': None,
+                'server_name': u'autoscaled-server'},
+            self.fake_auto_scale.groups['0'].kwargs)
+
+        resource = self.stack['my_group']
+        self.assertEqual('0', resource.FnGetRefId())
+
     def test_update_group_config(self):
         """
         Updating the groupConfiguration section in a template results in a
