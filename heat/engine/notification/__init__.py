@@ -13,22 +13,31 @@
 
 from oslo.config import cfg
 
+from heat.common import messaging
 from heat.openstack.common import log
-from heat.openstack.common.notifier import api as notifier_api
 
 LOG = log.getLogger(__name__)
 SERVICE = 'orchestration'
+INFO = 'INFO'
+ERROR = 'ERROR'
+
+notifier_opts = [
+    cfg.StrOpt('default_notification_level',
+               default=INFO,
+               help='Default notification level for outgoing notifications'),
+    cfg.StrOpt('default_publisher_id',
+               help='Default publisher_id for outgoing notifications'),
+    cfg.MultiStrOpt('list_notifier_drivers',
+                    help='List of drivers to send notifications (DEPRECATED)')
+]
 CONF = cfg.CONF
-CONF.import_opt('default_notification_level',
-                'heat.openstack.common.notifier.api')
-CONF.import_opt('default_publisher_id',
-                'heat.openstack.common.notifier.api')
+CONF.register_opts(notifier_opts)
 
 
 def _get_default_publisher():
     publisher_id = CONF.default_publisher_id
     if publisher_id is None:
-        publisher_id = notifier_api.publisher_id(SERVICE)
+        publisher_id = "%s.%s" % (SERVICE, CONF.host)
     return publisher_id
 
 
@@ -37,7 +46,7 @@ def get_default_level():
 
 
 def notify(context, event_type, level, body):
+    client = messaging.get_notifier(_get_default_publisher())
 
-    notifier_api.notify(context, _get_default_publisher(),
-                        "%s.%s" % (SERVICE, event_type),
-                        level, body)
+    method = getattr(client, level.lower())
+    method(context, "%s.%s" % (SERVICE, event_type), body)

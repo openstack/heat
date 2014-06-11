@@ -17,6 +17,7 @@ import json
 import os
 
 from oslo.config import cfg
+from oslo import messaging
 import six
 import warnings
 import webob
@@ -24,6 +25,7 @@ import webob
 from heat.common import context
 from heat.common import exception
 from heat.common import identifier
+from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
 from heat.engine import api
 from heat.engine import attributes
@@ -39,9 +41,7 @@ from heat.engine import stack_lock
 from heat.engine import watchrule
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common.rpc import common as rpc_common
-from heat.openstack.common.rpc import proxy
-from heat.openstack.common.rpc import service
+from heat.openstack.common import service
 from heat.openstack.common import threadgroup
 from heat.openstack.common import timeutils
 from heat.openstack.common import uuidutils
@@ -62,7 +62,7 @@ def request_context(func):
         try:
             return func(self, ctx, *args, **kwargs)
         except exception.HeatException:
-            raise rpc_common.ClientException()
+            raise messaging.rpc.dispatcher.ExpectedException()
     return wrapped
 
 
@@ -259,10 +259,16 @@ class EngineListener(service.Service):
     engines to communicate with each other for multi-engine support.
     '''
     def __init__(self, host, engine_id, thread_group_mgr):
-        super(EngineListener, self).__init__(host, engine_id)
-
+        super(EngineListener, self).__init__()
         self.thread_group_mgr = thread_group_mgr
         self.engine_id = engine_id
+
+    def start(self):
+        super(EngineListener, self).start()
+        self.target = messaging.Target(
+            server=cfg.CONF.host, topic=self.engine_id)
+        server = rpc_messaging.get_rpc_server(self.target, self)
+        server.start()
 
     def listening(self, ctxt):
         '''
@@ -291,9 +297,10 @@ class EngineService(service.Service):
     RPC_API_VERSION = '1.1'
 
     def __init__(self, host, topic, manager=None):
-        super(EngineService, self).__init__(host, topic)
+        super(EngineService, self).__init__()
         resources.initialise()
         self.host = host
+        self.topic = topic
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
@@ -301,6 +308,7 @@ class EngineService(service.Service):
         self.listener = None
         self.engine_id = None
         self.thread_group_mgr = None
+        self.target = None
 
         if cfg.CONF.instance_user:
             warnings.warn('The "instance_user" option in heat.conf is '
@@ -322,13 +330,21 @@ class EngineService(service.Service):
             self.stack_watch.start_watch_task(s.id, admin_context)
 
     def start(self):
-        self.thread_group_mgr = ThreadGroupManager()
         self.engine_id = stack_lock.StackLock.generate_engine_id()
+        self.thread_group_mgr = ThreadGroupManager()
         self.listener = EngineListener(self.host, self.engine_id,
                                        self.thread_group_mgr)
-        LOG.debug("Starting listener for engine %s pid=%s, ppid=%s" %
-                  (self.engine_id, os.getpid(), os.getppid()))
+        LOG.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
+        target = messaging.Target(
+            version=self.RPC_API_VERSION, server=cfg.CONF.host,
+            topic=self.topic)
+        self.target = target
+        server = rpc_messaging.get_rpc_server(target, self)
+        server.start()
+        self._client = rpc_messaging.get_rpc_client(
+            version=self.RPC_API_VERSION)
+
         super(EngineService, self).start()
 
     def stop(self):
@@ -702,12 +718,16 @@ class EngineService(service.Service):
         :param stack_identity: Name of the stack you want to delete.
         """
         def remote_stop(lock_engine_id):
-            rpc = proxy.RpcProxy(lock_engine_id, "1.0")
-            msg = rpc.make_msg("stop_stack", stack_identity=stack_identity)
             timeout = cfg.CONF.engine_life_check_timeout
+            self.cctxt = self._client.prepare(
+                version='1.0',
+                timeout=timeout,
+                topic=lock_engine_id)
             try:
-                rpc.call(cnxt, msg, topic=lock_engine_id, timeout=timeout)
-            except rpc_common.Timeout:
+                self.cctxt.call(cnxt,
+                                'stop_stack',
+                                stack_identity=stack_identity)
+            except messaging.MessagingTimeout:
                 return False
 
         st = self._get_stack(cnxt, stack_identity)

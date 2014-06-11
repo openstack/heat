@@ -14,9 +14,10 @@
 from oslo.config import cfg
 import six
 
+from oslo.messaging._drivers import common as rpc_common
+
 import heat.api.middleware.fault as fault
 from heat.common import exception as heat_exc
-from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 
 
@@ -77,8 +78,8 @@ class FaultMiddlewareTest(HeatTestCase):
         error = heat_exc.StackNotFound(stack_name='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
-        remote_error = rpc_common.deserialize_remote_exception(cfg.CONF,
-                                                               serialized)
+        remote_error = rpc_common.deserialize_remote_exception(
+            serialized, ["heat.common.exception"])
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
         expected_message, expected_traceback = six.text_type(remote_error).\
@@ -123,14 +124,12 @@ class FaultMiddlewareTest(HeatTestCase):
     def test_should_not_ignore_parent_classes_even_for_remote_ones(self):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)
-        cfg.CONF.set_override('allowed_rpc_exception_modules',
-                              ['heat.tests.test_fault_middleware'])
 
         error = StackNotFoundChild(stack_name='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
-        remote_error = rpc_common.deserialize_remote_exception(cfg.CONF,
-                                                               serialized)
+        remote_error = rpc_common.deserialize_remote_exception(
+            serialized, ["heat.tests.test_fault_middleware"])
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)

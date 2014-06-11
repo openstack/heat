@@ -15,6 +15,7 @@ import json
 
 import mock
 from oslo.config import cfg
+from oslo.messaging._drivers import common as rpc_common
 import webob.exc
 
 import heat.api.middleware.fault as fault
@@ -31,8 +32,6 @@ from heat.common import identifier
 from heat.common import policy
 from heat.common import urlfetch
 from heat.common.wsgi import Request
-from heat.openstack.common import rpc
-from heat.openstack.common.rpc import common as rpc_common
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.tests.common import HeatTestCase
@@ -54,8 +53,8 @@ def to_remote_error(error):
     """
     exc_info = (type(error), error, None)
     serialized = rpc_common.serialize_remote_exception(exc_info)
-    remote_error = rpc_common.deserialize_remote_exception(cfg.CONF,
-                                                           serialized)
+    remote_error = rpc_common.deserialize_remote_exception(
+        serialized, ["heat.common.exception"])
     return remote_error
 
 
@@ -326,7 +325,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/stacks')
@@ -375,14 +374,10 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
                         'show_deleted': False}
-        mock_call.assert_called_once_with(req.context, self.topic,
-                                          {'namespace': None,
-                                           'method': 'list_stacks',
-                                           'args': default_args,
-                                           'version': self.api_version},
-                                          None)
+        mock_call.assert_called_once_with(
+            req.context, ('list_stacks', default_args))
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
@@ -398,7 +393,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[2]['args']
+        engine_args = rpc_call_args[1][1]
         self.assertEqual(7, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
@@ -408,7 +403,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
@@ -423,7 +418,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
-        engine_args = rpc_call_args[2]['args']
+        engine_args = rpc_call_args[1][1]
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
@@ -525,7 +520,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                                        tenant_safe=True,
                                                        show_deleted=True)
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_detail(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'detail', True)
         req = self._get('/stacks/detail')
@@ -582,14 +577,10 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
                         'show_deleted': False}
-        mock_call.assert_called_once_with(req.context, self.topic,
-                                          {'namespace': None,
-                                           'method': 'list_stacks',
-                                           'args': default_args,
-                                           'version': self.api_version},
-                                          None)
+        mock_call.assert_called_once_with(
+            req.context, ('list_stacks', default_args))
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_rmt_aterr(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/stacks')
@@ -602,12 +593,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
-        mock_call.assert_called_once_with(req.context, self.topic,
-                                          {'namespace': None,
-                                           'method': 'list_stacks',
-                                           'args': mock.ANY,
-                                           'version': self.api_version},
-                                          None)
+        mock_call.assert_called_once_with(
+            req.context, ('list_stacks', mock.ANY))
 
     def test_index_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -621,7 +608,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', str(resp))
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_rmt_interr(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         req = self._get('/stacks')
@@ -634,12 +621,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(500, resp.json['code'])
         self.assertEqual('Exception', resp.json['error']['type'])
-        mock_call.assert_called_once_with(req.context, self.topic,
-                                          {'namespace': None,
-                                           'method': 'list_stacks',
-                                           'args': mock.ANY,
-                                           'version': self.api_version},
-                                          None)
+        mock_call.assert_called_once_with(
+            req.context, ('list_stacks', mock.ANY))
 
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -653,18 +636,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/stacks', json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': identity.stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndReturn(dict(identity))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': identity.stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
         response = self.controller.create(req,
@@ -691,18 +673,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/stacks', json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': identity.stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {'my.yaml': 'This is the file contents.'},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndReturn(dict(identity))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': identity.stack_name,
+             'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {'my.yaml': 'This is the file contents.'},
+              'args': {'timeout_mins': 30}})
+        ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
         result = self.controller.create(req,
@@ -729,40 +710,37 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         unknown_parameter = heat_exc.UnknownUserParameter(key='a')
         missing_parameter = heat_exc.UserParameterMissing(key='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(AttributeError()))
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(unknown_parameter))
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(missing_parameter))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(AttributeError()))
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(unknown_parameter))
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(missing_parameter))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.create,
@@ -799,18 +777,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._post('/stacks', json.dumps(body))
 
         error = heat_exc.StackExists(stack_name='s')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -853,18 +830,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._post('/stacks', json.dumps(body))
 
         error = heat_exc.StackValidationFailed(message='')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'create_stack',
-                  'args': {'stack_name': stack_name,
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -897,7 +873,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
         self.assertIsNotNone(resp.json['error']['traceback'])
 
-    @mock.patch.object(rpc, 'call')
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     @mock.patch.object(stacks.stacks_view, 'format_stack')
     def test_preview_stack(self, mock_format, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'preview', True)
@@ -916,13 +892,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s' % identity)
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'identify_stack',
-                  'args': {'stack_name': identity.stack_name},
-                  'version': self.api_version},
-                 None).AndReturn(identity)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('identify_stack', {'stack_name': identity.stack_name})
+        ).AndReturn(identity)
 
         self.m.ReplayAll()
 
@@ -956,13 +930,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             'stack_name': stack_name})
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'identify_stack',
-                  'args': {'stack_name': stack_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -995,13 +967,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/resources' % identity)
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'identify_stack',
-                  'args': {'stack_name': identity.stack_name},
-                  'version': self.api_version},
-                 None).AndReturn(identity)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('identify_stack', {'stack_name': identity.stack_name})
+        ).AndReturn(identity)
 
         self.m.ReplayAll()
 
@@ -1022,13 +992,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             'stack_name': stack_name})
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'identify_stack',
-                  'args': {'stack_name': stack_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1091,13 +1059,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 u'capabilities': [],
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'show_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('show_stack', {'stack_identity': dict(identity)})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         response = self.controller.show(req,
@@ -1134,13 +1100,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'show_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('show_stack', {'stack_identity': dict(identity)})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1191,13 +1155,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
         template = {u'Foo': u'bar'}
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'get_template',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndReturn(template)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('get_template', {'stack_identity': dict(identity)})
+        ).AndReturn(template)
         self.m.ReplayAll()
 
         response = self.controller.template(req, tenant_id=identity.tenant,
@@ -1230,13 +1192,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'get_template',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('get_template', {'stack_identity': dict(identity)})
+        ).AndRaise(to_remote_error(error))
 
         self.m.ReplayAll()
 
@@ -1263,18 +1223,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
                         json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'update_stack',
-                  'args': {'stack_identity': dict(identity),
-                           'template': template,
-                           'params': {'parameters': parameters,
-                                      'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndReturn(dict(identity))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPAccepted,
@@ -1299,18 +1258,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                         json.dumps(body))
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'update_stack',
-                  'args': {'stack_identity': dict(identity),
-                           'template': template,
-                           'params': {u'parameters': parameters,
-                                      u'resource_registry': {}},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('update_stack',
+             {'stack_identity': dict(identity),
+              'template': template,
+              'params': {u'parameters': parameters,
+                         u'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30}})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1353,14 +1311,12 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Engine returns None when delete successful
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'delete_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndReturn(None)
+        rpc_client.EngineClient.call(
+            req.context,
+            ('delete_stack', {'stack_identity': dict(identity)})
+        ).AndReturn(None)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNoContent,
@@ -1390,15 +1346,13 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._abandon('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Engine returns json data on abandon completion
         expected = {"name": "test", "id": "123"}
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'abandon_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndReturn(expected)
+        rpc_client.EngineClient.call(
+            req.context,
+            ('abandon_stack', {'stack_identity': dict(identity)})
+        ).AndReturn(expected)
         self.m.ReplayAll()
 
         ret = self.controller.abandon(req,
@@ -1430,14 +1384,12 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Engine returns None when delete successful
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'delete_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        rpc_client.EngineClient.call(
+            req.context,
+            ('delete_stack', {'stack_identity': dict(identity)})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1468,15 +1420,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             ]
         }
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'validate_template',
-                  'args': {'template': template,
-                           'params': {'parameters': {},
-                                      'resource_registry': {}}},
-                  'version': self.api_version},
-                 None).AndReturn(engine_response)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('validate_template',
+             {'template': template,
+              'params': {'parameters': {},
+                         'resource_registry': {}}})
+        ).AndReturn(engine_response)
         self.m.ReplayAll()
 
         response = self.controller.validate_template(req,
@@ -1492,15 +1443,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/validate', json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'validate_template',
-                  'args': {'template': template,
-                           'params': {'parameters': {},
-                                      'resource_registry': {}}},
-                  'version': self.api_version},
-                 None).AndReturn({'Error': 'fubar'})
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('validate_template',
+             {'template': template,
+              'params': {'parameters': {},
+                         'resource_registry': {}}})
+        ).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPBadRequest,
@@ -1531,13 +1481,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'AWS::EC2::EIP',
                            'AWS::EC2::EIPAssociation']
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_resource_types',
-                  'args': {'support_status': None},
-                  'version': '1.1'},
-                 None).AndReturn(engine_response)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context, ('list_resource_types', {'support_status': None}),
+            version="1.1"
+        ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
                                                        tenant_id=self.tenant)
@@ -1549,13 +1497,13 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/resource_types')
 
         error = heat_exc.ResourceTypeNotFound(type_name='')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_resource_types',
-                  'args': {'support_status': None},
-                  'version': '1.1'},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_resource_types',
+             {'support_status': None},
+             ), version="1.1"
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1590,13 +1538,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 'Foo': {'description': 'Another generic attribute'},
             },
         }
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'resource_schema',
-                  'args': {'type_name': type_name},
-                  'version': self.api_version},
-                 None).AndReturn(engine_response)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('resource_schema', {'type_name': type_name})
+        ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.resource_schema(req,
                                                    tenant_id=self.tenant,
@@ -1610,13 +1556,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         type_name = 'BogusResourceType'
 
         error = heat_exc.ResourceTypeNotFound(type_name='BogusResourceType')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'resource_schema',
-                  'args': {'type_name': type_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('resource_schema', {'type_name': type_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1645,13 +1589,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         engine_response = {'Type': 'TEST_TYPE'}
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'generate_template',
-                  'args': {'type_name': 'TEST_TYPE'},
-                  'version': self.api_version},
-                 None).AndReturn(engine_response)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('generate_template', {'type_name': 'TEST_TYPE'})
+        ).AndReturn(engine_response)
         self.m.ReplayAll()
         self.controller.generate_template(req, tenant_id=self.tenant,
                                           type_name='TEST_TYPE')
@@ -1662,13 +1604,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/resource_types/NOT_FOUND/template')
 
         error = heat_exc.ResourceTypeNotFound(type_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'generate_template',
-                  'args': {'type_name': 'NOT_FOUND'},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('generate_template', {'type_name': 'NOT_FOUND'})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.generate_template,
@@ -1749,13 +1689,11 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stack_resources',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.index(req, tenant_id=self.tenant,
@@ -1787,13 +1725,11 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() + '/resources')
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stack_resources',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1849,14 +1785,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
             u'resource_type': u'AWS::EC2::Instance',
             u'metadata': {u'ensureRunning': u'true'}
         }
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.show(req, tenant_id=self.tenant,
@@ -1913,14 +1847,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
             u'metadata': {u'ensureRunning': u'true'},
             u'nested_stack_id': dict(nested_stack_identity)
         }
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.show(req, tenant_id=self.tenant,
@@ -1948,14 +1880,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1980,14 +1910,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2012,14 +1940,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.ResourceNotAvailable(resource_name='')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2077,14 +2003,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
             u'resource_type': u'AWS::EC2::Instance',
             u'metadata': {u'ensureRunning': u'true'}
         }
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.metadata(req, tenant_id=self.tenant,
@@ -2108,14 +2032,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(res_identity._tenant_path() + '/metadata')
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2140,14 +2062,12 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         req = self._get(res_identity._tenant_path() + '/metadata')
 
         error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'describe_stack_resource',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2188,15 +2108,13 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'resource_signal',
-                  'args': {'stack_identity': stack_identity,
-                           'resource_name': res_name,
-                           'details': 'Signal content'},
-                  'version': self.api_version},
-                 None)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('resource_signal',
+             {'stack_identity': stack_identity,
+              'resource_name': res_name,
+              'details': 'Signal content'}))
         self.m.ReplayAll()
 
         result = self.controller.signal(req, tenant_id=self.tenant,
@@ -2275,13 +2193,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.index(req, tenant_id=self.tenant,
@@ -2345,13 +2261,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.index(req, tenant_id=self.tenant,
@@ -2388,13 +2302,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() + '/events')
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2451,13 +2363,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -2518,13 +2428,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         result = self.controller.show(req, tenant_id=self.tenant,
@@ -2592,13 +2500,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -2638,13 +2544,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -2666,13 +2570,11 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                         '/resources/' + res_name + '/events/' + event_id)
 
         error = heat_exc.StackNotFound(stack_name='a')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_events', {'stack_identity': stack_identity})
+        ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -3142,13 +3044,11 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'stack_suspend',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(None)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('stack_suspend', {'stack_identity': stack_identity})
+        ).AndReturn(None)
         self.m.ReplayAll()
 
         result = self.controller.action(req, tenant_id=self.tenant,
@@ -3166,13 +3066,11 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'stack_resume',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndReturn(None)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('stack_resume', {'stack_identity': stack_identity})
+        ).AndReturn(None)
         self.m.ReplayAll()
 
         result = self.controller.action(req, tenant_id=self.tenant,
@@ -3241,13 +3139,11 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'stack_suspend',
-                  'args': {'stack_identity': stack_identity},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(AttributeError()))
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('stack_suspend', {'stack_identity': stack_identity})
+        ).AndRaise(to_remote_error(AttributeError()))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,

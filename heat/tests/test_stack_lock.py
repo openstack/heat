@@ -13,11 +13,11 @@
 
 import mock
 
+from oslo import messaging
+
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import stack_lock
-from heat.openstack.common.rpc import common as rpc_common
-from heat.openstack.common.rpc import proxy
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -34,8 +34,8 @@ class StackLockTest(HeatTestCase):
 
     def test_successful_acquire_new_lock(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn(None)
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -45,8 +45,8 @@ class StackLockTest(HeatTestCase):
 
     def test_failed_acquire_existing_lock_current_engine(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn(self.engine_id)
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn(self.engine_id)
 
         self.m.ReplayAll()
 
@@ -56,14 +56,12 @@ class StackLockTest(HeatTestCase):
 
     def test_successful_acquire_existing_lock_engine_dead(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        self.m.StubOutWithMock(proxy.RpcProxy, "call")
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
@@ -77,14 +75,12 @@ class StackLockTest(HeatTestCase):
 
     def test_failed_acquire_existing_lock_engine_alive(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        self.m.StubOutWithMock(proxy.RpcProxy, "call")
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndReturn(True)
+        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndReturn(True)
 
         self.m.ReplayAll()
 
@@ -94,19 +90,17 @@ class StackLockTest(HeatTestCase):
 
     def test_failed_acquire_existing_lock_engine_dead(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        self.m.StubOutWithMock(proxy.RpcProxy, "call")
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).\
-            AndReturn("fake-engine-id2")
+        db_api.stack_lock_steal(
+            self.stack.id, "fake-engine-id",
+            self.engine_id).AndReturn("fake-engine-id2")
 
         self.m.ReplayAll()
 
@@ -116,31 +110,25 @@ class StackLockTest(HeatTestCase):
 
     def test_successful_acquire_with_retry(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        self.m.StubOutWithMock(proxy.RpcProxy, "call")
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).\
-            AndReturn(True)
+        db_api.stack_lock_steal(
+            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
 
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).\
-            AndReturn(None)
+        db_api.stack_lock_steal(
+            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -150,31 +138,25 @@ class StackLockTest(HeatTestCase):
 
     def test_failed_acquire_one_retry_only(self):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        self.m.StubOutWithMock(proxy.RpcProxy, "call")
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).\
-            AndReturn(True)
+        db_api.stack_lock_steal(
+            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
 
-        db_api.stack_lock_create(self.stack.id, self.engine_id).\
-            AndReturn("fake-engine-id")
+        db_api.stack_lock_create(
+            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        topic = self.stack.id
-        rpc = proxy.RpcProxy(topic, "1.0")
-        rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
+        messaging.rpc.client._CallContext.call(
+            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).\
-            AndReturn(True)
+        db_api.stack_lock_steal(
+            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
 
         self.m.ReplayAll()
 

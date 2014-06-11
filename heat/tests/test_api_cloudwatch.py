@@ -19,8 +19,8 @@ from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
 from heat.common import policy
 from heat.common.wsgi import Request
-from heat.openstack.common import rpc
 from heat.rpc import api as engine_api
+from heat.rpc import client as rpc_client
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -131,13 +131,11 @@ class WatchControllerTest(HeatTestCase):
                         u'name': u'HttpFailureAlarm',
                         u'updated_time': u'2012-08-30T14:10:46Z'}]
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'args': {'watch_name': watch_name},
-                  'method': 'show_watch',
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('show_watch', {'watch_name': watch_name})
+        ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -225,16 +223,15 @@ class WatchControllerTest(HeatTestCase):
                         u'metric_name': u'ServiceFailure3',
                         u'data': {u'Units': u'Counter', u'Value': 1}}]
 
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Current engine implementation means we filter in the API
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'args': {'metric_namespace': None, 'metric_name': None},
-                  'method': 'show_watch_metric',
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('show_watch_metric',
+             {'metric_namespace': None, 'metric_name': None})
+        ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -305,17 +302,15 @@ class WatchControllerTest(HeatTestCase):
                         u'metric_name': u'ServiceFailure3',
                         u'data': {u'Units': u'Counter', u'Value': 1}}]
 
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Current engine implementation means we filter in the API
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
-        rpc.call(dummy_req.context, self.topic, {'args':
-                 {'metric_namespace': None,
-                  'metric_name': None},
-                 'namespace': None,
-                 'method': 'show_watch_metric',
-                 'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('show_watch_metric',
+             {'metric_namespace': None, 'metric_name': None})
+        ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -365,16 +360,15 @@ class WatchControllerTest(HeatTestCase):
                         u'metric_name': u'ServiceFailure3',
                         u'data': {u'Units': u'Counter', u'Value': 1}}]
 
-        self.m.StubOutWithMock(rpc, 'call')
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         # Current engine implementation means we filter in the API
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
-        rpc.call(dummy_req.context, self.topic,
-                 {'args': {'metric_namespace': None, 'metric_name': None},
-                  'namespace': None,
-                  'method': 'show_watch_metric',
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('show_watch_metric',
+             {'metric_namespace': None, 'metric_name': None})
+        ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -429,20 +423,16 @@ class WatchControllerTest(HeatTestCase):
         # Stub out the RPC call to verify the engine call parameters
         engine_resp = {}
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'args':
-                  {'stats_data':
-                      {'Namespace': u'system/linux',
-                       u'ServiceFailure':
-                       {'Value': u'1',
-                        'Unit': u'Count',
-                        'Dimensions': []}},
-                   'watch_name': u'HttpFailureAlarm'},
-                  'namespace': None,
-                  'method': 'create_watch_data',
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('create_watch_data',
+             {'watch_name': u'HttpFailureAlarm',
+              'stats_data': {
+                  'Namespace': u'system/linux',
+                  'ServiceFailure': {
+                      'Value': u'1', 'Unit': u'Count', 'Dimensions': []}}})
+        ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -469,15 +459,13 @@ class WatchControllerTest(HeatTestCase):
             # of the response at present we pass nothing back from the stub
             engine_resp = {}
 
-            self.m.StubOutWithMock(rpc, 'call')
-            rpc.call(dummy_req.context, self.topic,
-                     {'args':
-                      {'state': state_map[state],
-                       'watch_name': u'HttpFailureAlarm'},
-                      'namespace': None,
-                      'method': 'set_watch_state',
-                      'version': self.api_version},
-                     None).AndReturn(engine_resp)
+            self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+            rpc_client.EngineClient.call(
+                dummy_req.context,
+                ('set_watch_state',
+                 {'state': state_map[state],
+                  'watch_name': u'HttpFailureAlarm'})
+            ).AndReturn(engine_resp)
 
             self.m.ReplayAll()
 
