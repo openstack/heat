@@ -724,17 +724,24 @@ class Stack(collections.Mapping):
             if self.user_creds_id:
                 user_creds = db_api.user_creds_get(self.user_creds_id)
                 # If we created a trust, delete it
-                trust_id = user_creds.get('trust_id')
-                if trust_id:
-                    try:
-                        self.clients.keystone().delete_trust(trust_id)
-                    except Exception as ex:
-                        LOG.exception(ex)
-                        stack_status = self.FAILED
-                        reason = "Error deleting trust: %s" % six.text_type(ex)
+                if user_creds is not None:
+                    trust_id = user_creds.get('trust_id')
+                    if trust_id:
+                        try:
+                            self.clients.keystone().delete_trust(trust_id)
+                        except Exception as ex:
+                            LOG.exception(ex)
+                            stack_status = self.FAILED
+                            reason = ("Error deleting trust: %s" %
+                                      six.text_type(ex))
 
                 # Delete the stored credentials
-                db_api.user_creds_delete(self.context, self.user_creds_id)
+                try:
+                    db_api.user_creds_delete(self.context, self.user_creds_id)
+                except exception.NotFound:
+                    LOG.info(_("Tried to delete user_creds that do not exist "
+                               "(stack=%(stack)s user_creds_id=%(uc)s)") %
+                             {'stack': self.id, 'uc': self.user_creds_id})
                 self.user_creds_id = None
                 self.store()
 

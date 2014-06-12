@@ -1285,6 +1285,35 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
 
+    def test_delete_user_creds_gone_missing(self):
+        '''It may happen that user_creds were deleted when a delete
+           operation was stopped. We should be resilient to this and still
+           complete the delete operation.
+           '''
+        self.stack = parser.Stack(self.ctx, 'delete_test',
+                                  self.tmpl)
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+        self.assertIsNotNone(db_s.user_creds_id)
+        user_creds_id = db_s.user_creds_id
+        db_creds = db_api.user_creds_get(db_s.user_creds_id)
+        self.assertIsNotNone(db_creds)
+
+        db_api.user_creds_delete(self.ctx, user_creds_id)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNone(db_s)
+        db_creds = db_api.user_creds_get(user_creds_id)
+        self.assertIsNone(db_creds)
+        del_db_s = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
+        self.assertIsNone(del_db_s.user_creds_id)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
     def test_delete_trust(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
