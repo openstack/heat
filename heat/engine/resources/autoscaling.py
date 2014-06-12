@@ -407,17 +407,25 @@ class InstanceGroup(stack_resource.StackResource):
                        if inst.FnGetRefId() not in exclude]
             for lb in self.properties[self.LOAD_BALANCER_NAMES]:
                 lb_resource = self.stack[lb]
-                lb_defn = copy.deepcopy(lb_resource.t)
+
+                props = copy.copy(lb_resource.properties.data)
                 if 'Instances' in lb_resource.properties_schema:
-                    lb_defn['Properties']['Instances'] = id_list
+                    props['Instances'] = id_list
                 elif 'members' in lb_resource.properties_schema:
-                    lb_defn['Properties']['members'] = id_list
+                    props['members'] = id_list
                 else:
                     raise exception.Error(
                         _("Unsupported resource '%s' in LoadBalancerNames") %
                         (lb,))
-                resolved_snippet = self.stack.resolve_static_data(lb_defn)
-                scheduler.TaskRunner(lb_resource.update, resolved_snippet)()
+
+                lb_defn = rsrc_defn.ResourceDefinition(
+                    lb_resource.name,
+                    lb_resource.type(),
+                    props,
+                    lb_resource.t.get('Metadata'),
+                    deletion_policy=lb_resource.t.get('DeletionPolicy'))
+
+                scheduler.TaskRunner(lb_resource.update, lb_defn)()
 
     def FnGetRefId(self):
         return self.physical_resource_name()
