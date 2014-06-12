@@ -21,7 +21,6 @@ import webob
 
 from heat.common import context
 from heat.common import exception
-from heat.common import heat_keystoneclient as hkc
 from heat.common import identifier
 from heat.db import api as db_api
 from heat.engine import api
@@ -195,12 +194,13 @@ class StackWatch(object):
         # scoping otherwise we fail to retrieve the stack
         LOG.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
-        stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
-                                 eager_load=True)
-        if not stack:
+        db_stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
+                                    eager_load=True)
+        if not db_stack:
             LOG.error(_("Unable to retrieve stack %s for periodic task") % sid)
             return
-        stack_context = EngineService.load_user_creds(stack.user_creds_id)
+        stack = parser.Stack.load(admin_context, stack=db_stack,
+                                  use_stored_context=True)
 
         # recurse into any nested stacks.
         children = db_api.stack_get_all_by_owner_id(admin_context, sid)
@@ -209,26 +209,24 @@ class StackWatch(object):
 
         # Get all watchrules for this stack and evaluate them
         try:
-            wrs = db_api.watch_rule_get_all_by_stack(stack_context, sid)
+            wrs = db_api.watch_rule_get_all_by_stack(admin_context, sid)
         except Exception as ex:
             LOG.warn(_('periodic_task db error watch rule removed? %(ex)s')
                      % ex)
             return
 
-        def run_alarm_action(actions, details):
+        def run_alarm_action(stack, actions, details):
             for action in actions:
                 action(details=details)
-
-            stk = parser.Stack.load(stack_context, stack=stack)
-            for res in stk.itervalues():
+            for res in stack.itervalues():
                 res.metadata_update()
 
         for wr in wrs:
-            rule = watchrule.WatchRule.load(stack_context, watch=wr)
+            rule = watchrule.WatchRule.load(stack.context, watch=wr)
             actions = rule.evaluate()
             if actions:
-                self.thread_group_mgr.start(sid, run_alarm_action, actions,
-                                            rule.get_details())
+                self.thread_group_mgr.start(sid, run_alarm_action, stack,
+                                            actions, rule.get_details())
 
     def periodic_watcher_task(self, sid):
         """
@@ -334,16 +332,6 @@ class EngineService(service.Service):
         # Terminate the engine process
         LOG.info(_("All threads were gone, terminating engine"))
         super(EngineService, self).stop()
-
-    @staticmethod
-    def load_user_creds(creds_id):
-        user_creds = db_api.user_creds_get(creds_id)
-        stored_context = context.RequestContext.from_dict(user_creds)
-        # heat_keystoneclient populates the context with an auth_token
-        # either via the stored user/password or trust_id, depending
-        # on how deferred_auth_method is configured in the conf file
-        hkc.KeystoneClient(stored_context)
-        return stored_context
 
     @request_context
     def identify_stack(self, cnxt, stack_name):
@@ -894,8 +882,7 @@ class EngineService(service.Service):
         # but this happens because the keystone user associated with the
         # signal doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
-        stack_context = self.load_user_creds(s.user_creds_id)
-        stack = parser.Stack.load(stack_context, stack=s)
+        stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
 
         if resource_name not in stack:
             raise exception.ResourceNotFound(resource_name=resource_name,
@@ -997,8 +984,8 @@ class EngineService(service.Service):
         # but this happens because the keystone user associated with the
         # WaitCondition doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
-        stack_context = self.load_user_creds(s.user_creds_id)
-        refresh_stack = parser.Stack.load(stack_context, stack=s)
+        refresh_stack = parser.Stack.load(cnxt, stack=s,
+                                          use_stored_context=True)
 
         # Refresh the metadata for all other resources, since we expect
         # resource_name to be a WaitCondition resource, and other

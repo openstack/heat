@@ -2122,10 +2122,6 @@ class StackServiceTest(HeatTestCase):
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
-        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
-        service.EngineService.load_user_creds(
-            mox.IgnoreArg()).AndReturn(self.ctx)
-
         self.m.StubOutWithMock(res.Resource, 'signal')
         res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
         self.m.ReplayAll()
@@ -2152,10 +2148,6 @@ class StackServiceTest(HeatTestCase):
         s = db_api.stack_get(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
-
-        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
-        service.EngineService.load_user_creds(
-            mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
         ex = self.assertRaises(rpc_common.ClientException,
@@ -2178,9 +2170,6 @@ class StackServiceTest(HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
         self.m.StubOutWithMock(instances.Instance, 'metadata_update')
         instances.Instance.metadata_update(new_metadata=test_metadata)
-        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
-        service.EngineService.load_user_creds(
-            mox.IgnoreArg()).AndReturn(self.ctx)
         self.m.ReplayAll()
 
         result = self.eng.metadata_update(self.ctx,
