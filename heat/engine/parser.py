@@ -60,7 +60,8 @@ class Stack(collections.Mapping):
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
-                 user_creds_id=None, tenant_id=None, validate_parameters=True):
+                 user_creds_id=None, tenant_id=None, validate_parameters=True,
+                 use_stored_context=False):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -77,7 +78,6 @@ class Stack(collections.Mapping):
         self.id = stack_id
         self.owner_id = owner_id
         self.context = context
-        self.clients = Clients(context)
         self.t = tmpl
         self.name = stack_name
         self.action = action
@@ -95,6 +95,11 @@ class Stack(collections.Mapping):
         self.updated_time = updated_time
         self.user_creds_id = user_creds_id
 
+        if use_stored_context:
+            self.context = self.stored_context()
+
+        self.clients = Clients(self.context)
+
         # This will use the provided tenant ID when loading the stack
         # from the DB or get it from the context for new stacks.
         self.tenant_id = tenant_id or self.context.tenant_id
@@ -105,7 +110,7 @@ class Stack(collections.Mapping):
         self.parameters = self.t.parameters(self.identifier(),
                                             user_params=self.env.params)
         self.parameters.validate(validate_value=validate_parameters,
-                                 context=context)
+                                 context=self.context)
         self._set_param_stackid()
 
         if resolve_data:
@@ -191,7 +196,7 @@ class Stack(collections.Mapping):
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, parent_resource=None,
-             show_deleted=True):
+             show_deleted=True, use_stored_context=False):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id,
@@ -201,7 +206,8 @@ class Stack(collections.Mapping):
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
 
-        return cls._from_db(context, stack, parent_resource=parent_resource)
+        return cls._from_db(context, stack, parent_resource=parent_resource,
+                            use_stored_context=use_stored_context)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -214,7 +220,8 @@ class Stack(collections.Mapping):
             yield cls._from_db(context, stack, resolve_data=resolve_data)
 
     @classmethod
-    def _from_db(cls, context, stack, parent_resource=None, resolve_data=True):
+    def _from_db(cls, context, stack, parent_resource=None, resolve_data=True,
+                 use_stored_context=False):
         template = Template.load(
             context, stack.raw_template_id, stack.raw_template)
         env = environment.Environment(stack.parameters)
@@ -226,7 +233,8 @@ class Stack(collections.Mapping):
                    created_time=stack.created_at,
                    updated_time=stack.updated_at,
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
-                   validate_parameters=False)
+                   validate_parameters=False,
+                   use_stored_context=use_stored_context)
 
     def store(self, backup=False):
         '''
