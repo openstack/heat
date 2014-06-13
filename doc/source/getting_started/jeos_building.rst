@@ -60,6 +60,24 @@ This means that the resulting heat templates only need to modify configuration
 files. This will speed stack launch time and reduce the risk of a transient
 package download failure causing the stack launch to fail.
 
+To create an image that contains hooks needed for SoftwareConfig and SoftwareDeployment,
+you can follow the steps bellow to build a fedora based image::
+
+    git clone https://git.openstack.org/openstack/diskimage-builder.git
+    git clone https://git.openstack.org/openstack/tripleo-image-elements.git
+    git clone https://git.openstack.org/openstack/heat-templates.git
+    export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
+    diskimage-builder/bin/disk-image-create vm \
+        fedora selinux-permissive \
+        heat-config \
+        os-collect-config \
+        os-refresh-config \
+        os-apply-config \
+        heat-config-cfn-init \
+        heat-config-puppet \
+        heat-config-script \
+        -o fedora-software-config.qcow2
+
 Building an image with Oz
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Another approach to building a heat-cfntools enabled image is to use Oz wrapped in a convenience script.
