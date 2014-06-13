@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from novaclient import exceptions as ncli_ex
 from novaclient.v1_1 import client as novaclient
 
@@ -191,5 +193,119 @@ class NovaFloatingIPTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_floating_ip_assoc_update_server_id(self):
+        rsrc = self.prepare_floating_ip_assoc()
+        # for create
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        # for update
+        self.novaclient.servers.get(
+            '2146dfbf-ba77-4083-8e86-d052f671ece5').AndReturn('server')
+        self.novaclient.floating_ips.get('1').AndReturn(
+            self._make_obj(**{
+                'id': '1',
+                'ip': '11.0.0.1',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.add_floating_ip('server', '11.0.0.1')
+
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        # update with the new server_id
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
+        update_snippet['Properties']['server_id'] = update_server_id
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_floating_ip_assoc_update_fl_ip(self):
+        rsrc = self.prepare_floating_ip_assoc()
+        # for create
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        # mock for delete the old association
+        self.novaclient.servers.get(
+            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
+        self.novaclient.floating_ips.get('1').AndReturn(
+            self._make_obj(**{
+                'id': '1',
+                'ip': '11.0.0.1',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
+        # mock for new association
+        self.novaclient.servers.get(
+            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
+        self.novaclient.floating_ips.get('2').AndReturn(
+            self._make_obj(**{
+                'id': '2',
+                'ip': '11.0.0.2',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.add_floating_ip('server', '11.0.0.2')
+
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        # update with the new floatingip
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_flip_id = '2'
+        update_snippet['Properties']['floating_ip'] = update_flip_id
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_floating_ip_assoc_update_both(self):
+        rsrc = self.prepare_floating_ip_assoc()
+        # for create
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        # mock for delete the old association
+        self.novaclient.servers.get(
+            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
+        self.novaclient.floating_ips.get('1').AndReturn(
+            self._make_obj(**{
+                'id': '1',
+                'ip': '11.0.0.1',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
+        # mock for new association
+        self.novaclient.servers.get(
+            '2146dfbf-ba77-4083-8e86-d052f671ece5').AndReturn('new_server')
+        self.novaclient.floating_ips.get('2').AndReturn(
+            self._make_obj(**{
+                'id': '2',
+                'ip': '11.0.0.2',
+                'pool': 'public'
+            })
+        )
+        self.novaclient.servers.add_floating_ip('new_server', '11.0.0.2')
+
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        # update with the new floatingip
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_flip_id = '2'
+        update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
+        update_snippet['Properties']['floating_ip'] = update_flip_id
+        update_snippet['Properties']['server_id'] = update_server_id
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
