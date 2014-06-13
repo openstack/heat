@@ -1014,7 +1014,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_name']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            param_schema = hot_param.HOTParamSchema.from_dict(schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = 'wp'
@@ -1063,7 +1065,7 @@ class HOTParamValidatorTest(HeatTestCase):
         def run_parameters(value):
             tmpl.parameters(
                 identifier.HeatIdentifier('', "stack_testit", None),
-                {'db_name': value})
+                {'db_name': value}).validate(validate_value=True)
             return True
 
         value = 'wp'
@@ -1103,7 +1105,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            param_schema = hot_param.HOTParamSchema.from_dict(schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = 29999
@@ -1144,7 +1148,9 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['param1']
 
         def v(value):
-            hot_param.HOTParamSchema.from_dict(schema).validate(name, value)
+            param_schema = hot_param.HOTParamSchema.from_dict(schema)
+            param_schema.validate()
+            param_schema.validate_value(name, value)
             return True
 
         value = "1"
@@ -1169,10 +1175,9 @@ class HOTParamValidatorTest(HeatTestCase):
                     {'range': {'min': 30000, 'max': 50000},
                      'description': range_desc}]}}
 
-        schema = param['db_port']
-
+        schema = hot_param.HOTParamSchema.from_dict(param['db_port'])
         err = self.assertRaises(constraints.InvalidSchemaError,
-                                hot_param.HOTParamSchema.from_dict, schema)
+                                schema.validate)
         self.assertIn(range_desc, str(err))
 
     def test_validate_schema_wrong_key(self):
