@@ -25,6 +25,7 @@ from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
@@ -277,11 +278,10 @@ Outputs:
         rsrc = stack['the_nested']
 
         original_nested_id = rsrc.resource_id
-        t = template_format.parse(self.test_template)
-        new_res = copy.deepcopy(t['Resources']['the_nested'])
-        new_res['Properties']['TemplateURL'] = (
-            'https://server.test/new.template')
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
         updater = rsrc.handle_update(new_res, {}, prop_diff)
         updater.run_to_completion()
         self.assertIs(True, rsrc.check_update_complete(updater))
@@ -332,11 +332,10 @@ Outputs:
 
         rsrc = stack['the_nested']
 
-        t = template_format.parse(self.test_template)
-        new_res = copy.deepcopy(t['Resources']['the_nested'])
-        new_res['Properties']['TemplateURL'] = (
-            'https://server.test/new.template')
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
         updater = rsrc.handle_update(new_res, {}, prop_diff)
         updater.run_to_completion()
         self.assertIs(True, rsrc.check_update_complete(updater))
@@ -373,11 +372,10 @@ Outputs:
 
         rsrc = stack['the_nested']
 
-        t = template_format.parse(self.test_template)
-        new_res = copy.deepcopy(t['Resources']['the_nested'])
-        new_res['Properties']['TemplateURL'] = (
-            'https://server.test/new.template')
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                rsrc.handle_update, new_res, {}, prop_diff)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,

@@ -26,6 +26,7 @@ from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.tests.common import HeatTestCase
@@ -198,7 +199,12 @@ class LoadBalancerTest(HeatTestCase):
                                      s)
             id_list.append(inst.FnGetRefId())
 
-        rsrc.handle_update(copy.deepcopy(rsrc.t), {}, {'Instances': id_list})
+        prop_diff = {'Instances': id_list}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                   props)
+        rsrc.handle_update(update_defn, {}, prop_diff)
 
         self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
         self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroup.GroupName'))
@@ -206,7 +212,7 @@ class LoadBalancerTest(HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
 
-        self.assertIsNone(rsrc.handle_update({}, {}, {}))
+        self.assertIsNone(rsrc.handle_update(rsrc.t, {}, {}))
 
         self.m.VerifyAll()
 

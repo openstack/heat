@@ -640,14 +640,12 @@ class WaitConditionUpdateTest(HeatTestCase):
                          'Status': 'SUCCESS', 'UniqueId': '1'}
         self._metadata_update(wait_condition_handle, test_metadata, 5)
 
-        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
-                          "Properties": {
-                              "Handle": {"Ref": "WaitHandle"},
-                              "Timeout": "5",
-                              "Count": "5"}}
         prop_diff = {"Count": 5}
-        parsed_snippet = self.stack.resolve_static_data(update_snippet)
-        updater = rsrc.handle_update(parsed_snippet, {}, prop_diff)
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                   props)
+        updater = rsrc.handle_update(update_defn, {}, prop_diff)
         updater.run_to_completion()
 
         self.assertEqual(5, rsrc.properties['Count'])
@@ -674,14 +672,12 @@ class WaitConditionUpdateTest(HeatTestCase):
         rsrc = self.stack['WaitForTheHandle']
 
         self._metadata_update(wait_condition_handle, test_metadata, 3)
-        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
-                          "Properties": {
-                              "Handle": {"Ref": "WaitHandle"},
-                              "Timeout": "5",
-                              "Count": "5"}}
         prop_diff = {"Count": 5}
-        parsed_snippet = self.stack.resolve_static_data(update_snippet)
-        updater = rsrc.handle_update(parsed_snippet, {}, prop_diff)
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                   props)
+        updater = rsrc.handle_update(update_defn, {}, prop_diff)
         updater.run_to_completion()
 
         self.assertEqual(5, rsrc.properties['Count'])
@@ -719,14 +715,12 @@ class WaitConditionUpdateTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
-                          "Properties": {
-                              "Handle": {"Ref": "WaitHandle"},
-                              "Timeout": "5",
-                              "Count": "5"}}
         prop_diff = {"Count": 5}
-        parsed_snippet = self.stack.resolve_static_data(update_snippet)
-        updater = rsrc.handle_update(parsed_snippet, {}, prop_diff)
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                   props)
+        updater = rsrc.handle_update(update_defn, {}, prop_diff)
         self.assertEqual(5, rsrc.properties['Count'])
         ex = self.assertRaises(wc.WaitConditionTimeout,
                                updater.run_to_completion)

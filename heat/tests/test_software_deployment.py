@@ -12,11 +12,14 @@
 #    under the License.
 
 from heatclient.exc import HTTPNotFound
+
+import copy
 import mock
 
 from heat.common import exception
 from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
+from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -371,18 +374,16 @@ class SoftwareDeploymentTest(HeatTestCase):
 
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
+        rsrc = self.stack['deployment_mysql']
 
         self.deployments.get.return_value = sd
         sd.update.return_value = None
         self.deployment.resource_id = sd.id
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
         prop_diff = {'config': config_id}
-        snippet = {
-            'Properties': {
-                'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-                'config': config_id,
-            }
-        }
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         self.deployment.handle_update(
             json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff)
