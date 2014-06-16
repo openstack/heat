@@ -17,6 +17,7 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
@@ -26,6 +27,7 @@ from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
@@ -558,8 +560,10 @@ class HOTemplateTest(HeatTestCase):
 
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
-        parent_resource.t = {'DeletionPolicy': 'Retain',
-                             'UpdatePolicy': {"blarg": "wibble"}}
+        parent_resource.t = rsrc_defn.ResourceDefinition(
+            'parent', 'SomeType',
+            deletion_policy=rsrc_defn.ResourceDefinition.RETAIN,
+            update_policy={"blarg": "wibble"})
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
                                              parser.Template(hot_tpl_empty))
@@ -581,11 +585,11 @@ class HOTemplateTest(HeatTestCase):
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
                                              parser.Template(hot_tpl_empty))
-        parent_snippet = {'DeletionPolicy': {'Fn::Join': ['eta',
-                                                          ['R', 'in']]}}
-        parent_tmpl = parent_resource.stack.t.parse(parent_resource.stack,
-                                                    parent_snippet)
-        parent_resource.t = parent_tmpl
+        del_policy = cfn_funcs.Join(parent_resource.stack,
+                                    'Fn::Join', ['eta', ['R', 'in']])
+        parent_resource.t = rsrc_defn.ResourceDefinition(
+            'parent', 'SomeType',
+            deletion_policy=del_policy)
 
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
@@ -608,7 +612,7 @@ class HOTemplateTest(HeatTestCase):
 
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
-        parent_resource.t = {}
+        parent_resource.t = rsrc_defn.ResourceDefinition('parent', 'SomeType')
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
                                              parser.Template(hot_tpl_empty))
