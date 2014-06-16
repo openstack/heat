@@ -281,13 +281,16 @@ class Stack(collections.Mapping):
         '''Insert the given resource into the stack.'''
         template = resource.stack.t
         resource.stack = self
-        resource.t = resource.t.reparse(self, template)
+        definition = resource.t.reparse(self, template)
+        resource.t = definition
         resource.reparse()
         self.resources[resource.name] = resource
+        self.t.add_resource(definition)
 
     def remove_resource(self, resource_name):
         '''Remove the resource with the specified name.'''
         del self.resources[resource_name]
+        self.t.remove_resource(resource_name)
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
@@ -627,13 +630,11 @@ class Stack(collections.Mapping):
             LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
 
-        # flip the template to the newstack values
-        # Note we do this on success and failure, so the current
-        # stack resources are stored, even if one is in a failed
-        # state (otherwise we won't remove them on delete)
-        self.t = newstack.t
-        template_outputs = self.t[self.t.OUTPUTS]
-        self.outputs = self.resolve_static_data(template_outputs)
+            # flip the template to the newstack values
+            self.t = newstack.t
+            template_outputs = self.t[self.t.OUTPUTS]
+            self.outputs = self.resolve_static_data(template_outputs)
+
         # Don't use state_set to do only one update query and avoid race
         # condition with the COMPLETE status
         self.action = action

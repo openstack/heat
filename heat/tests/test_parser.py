@@ -901,7 +901,7 @@ class StackTest(HeatTestCase):
         super(StackTest, self).setUp()
 
         self.username = 'parser_stack_test_user'
-        self.tmpl = parser.Template(empty_template)
+        self.tmpl = parser.Template(copy.deepcopy(empty_template))
 
         self.ctx = utils.dummy_context()
 
