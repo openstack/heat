@@ -20,9 +20,10 @@ from keystoneclient import exceptions as kc_exceptions
 import mock
 from mox import IgnoreArg
 from oslo.config import cfg
-from six.moves import xrange
+import six
 import warnings
 
+from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -55,7 +56,7 @@ class ParserTest(HeatTestCase):
     def test_list(self):
         raw = ['foo', 'bar', 'baz']
         parsed = join(raw)
-        for i in xrange(len(raw)):
+        for i in six.moves.xrange(len(raw)):
             self.assertEqual(raw[i], parsed[i])
         self.assertIsNot(raw, parsed)
 
@@ -70,7 +71,7 @@ class ParserTest(HeatTestCase):
         raw = {'foo': ['bar', 'baz'], 'blarg': 'wibble'}
         parsed = join(raw)
         self.assertEqual(raw['blarg'], parsed['blarg'])
-        for i in xrange(len(raw['foo'])):
+        for i in six.moves.xrange(len(raw['foo'])):
             self.assertEqual(raw['foo'][i], parsed['foo'][i])
         self.assertIsNot(raw, parsed)
         self.assertIsNot(raw['foo'], parsed['foo'])
@@ -78,7 +79,7 @@ class ParserTest(HeatTestCase):
     def test_list_dict(self):
         raw = [{'foo': 'bar', 'blarg': 'wibble'}, 'baz', 'quux']
         parsed = join(raw)
-        for i in xrange(1, len(raw)):
+        for i in six.moves.xrange(1, len(raw)):
             self.assertEqual(raw[i], parsed[i])
         for k in raw[0]:
             self.assertEqual(raw[0][k], parsed[0][k])
@@ -97,7 +98,7 @@ class ParserTest(HeatTestCase):
         raw = [{'Fn::Join': [' ', ['foo', 'bar', 'baz']]}, 'blarg', 'wibble']
         parsed = join(raw)
         self.assertEqual('foo bar baz', parsed[0])
-        for i in xrange(1, len(raw)):
+        for i in six.moves.xrange(1, len(raw)):
             self.assertEqual(raw[i], parsed[i])
         self.assertIsNot(raw, parsed)
 
@@ -2920,6 +2921,12 @@ class StackTest(HeatTestCase):
         self.assertIsNone(user_creds.get('trust_id'))
         self.assertIsNone(user_creds.get('trustor_user_id'))
 
+        # Check the stored_context is as expected
+        expected_context = context.RequestContext.from_dict(self.ctx.to_dict())
+        expected_context.auth_token = None
+        stored_context = self.stack.stored_context().to_dict()
+        self.assertEqual(expected_context.to_dict(), stored_context)
+
         # Store again, ID should not change
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
@@ -2953,9 +2960,25 @@ class StackTest(HeatTestCase):
         self.assertEqual('atrust', user_creds.get('trust_id'))
         self.assertEqual('auser123', user_creds.get('trustor_user_id'))
 
+        # Check the stored_context is as expected
+        expected_context = context.RequestContext(
+            trust_id='atrust', trustor_user_id='auser123',
+            request_id=self.ctx.request_id, is_admin=False).to_dict()
+        stored_context = self.stack.stored_context().to_dict()
+        self.assertEqual(expected_context, stored_context)
+
         # Store again, ID should not change
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
+
+    def test_stored_context_err(self):
+        """
+        Test stored_context error path.
+        """
+        self.stack = parser.Stack(self.ctx, 'creds_stack', self.tmpl)
+        ex = self.assertRaises(exception.Error, self.stack.stored_context)
+        expected_err = 'Attempt to use stored_context with no user_creds'
+        self.assertEqual(expected_err, six.text_type(ex))
 
     def test_load_honors_owner(self):
         """

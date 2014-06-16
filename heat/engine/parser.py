@@ -20,6 +20,7 @@ import warnings
 from oslo.config import cfg
 import six
 
+from heat.common import context as common_context
 from heat.common import exception
 from heat.common.exception import StackValidationFailed
 from heat.common import identifier
@@ -112,6 +113,21 @@ class Stack(collections.Mapping):
             self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
+
+    def stored_context(self):
+        if self.user_creds_id:
+            creds = db_api.user_creds_get(self.user_creds_id)
+            # Maintain request_id from self.context so we retain tracability
+            # in situations where servicing a request requires switching from
+            # the request context to the stored context
+            creds['request_id'] = self.context.request_id
+            # We don't store roles in the user_creds table, so disable the
+            # policy check for admin by setting is_admin=False.
+            creds['is_admin'] = False
+            return common_context.RequestContext.from_dict(creds)
+        else:
+            msg = _("Attempt to use stored_context with no user_creds")
+            raise exception.Error(msg)
 
     @property
     def resources(self):
