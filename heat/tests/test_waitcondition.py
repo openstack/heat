@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import datetime
 import json
 import time
@@ -26,6 +27,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import wait_condition as wc
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -611,8 +613,11 @@ class WaitConditionUpdateTest(HeatTestCase):
                          'Status': 'SUCCESS', 'UniqueId': '1'}
         self._metadata_update(wait_condition_handle, test_metadata, 5)
 
-        update_snippet = rsrc.parsed_template()
-        update_snippet['Properties']['Count'] = '5'
+        uprops = copy.copy(rsrc.properties.data)
+        uprops['Count'] = '5'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      uprops)
 
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         updater()

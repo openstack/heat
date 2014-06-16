@@ -25,6 +25,7 @@ from heat.engine import parser
 from heat.engine.properties import schemata
 from heat.engine import resource
 from heat.engine.resources.ceilometer import alarm
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.openstack.common.importutils import try_import
@@ -193,18 +194,23 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stack.create()
         rsrc = self.stack['MEMAlarmHigh']
 
-        snippet = copy.deepcopy(rsrc.parsed_template())
-        snippet['Properties']['comparison_operator'] = 'lt'
-        snippet['Properties']['description'] = 'fruity'
-        snippet['Properties']['evaluation_periods'] = '2'
-        snippet['Properties']['period'] = '90'
-        snippet['Properties']['enabled'] = 'true'
-        snippet['Properties']['repeat_actions'] = True
-        snippet['Properties']['statistic'] = 'max'
-        snippet['Properties']['threshold'] = '39'
-        snippet['Properties']['insufficient_data_actions'] = []
-        snippet['Properties']['alarm_actions'] = []
-        snippet['Properties']['ok_actions'] = ['signal_handler']
+        props = copy.copy(rsrc.properties.data)
+        props.update({
+            'comparison_operator': 'lt',
+            'description': 'fruity',
+            'evaluation_periods': '2',
+            'period': '90',
+            'enabled': 'true',
+            'repeat_actions': True,
+            'statistic': 'max',
+            'threshold': '39',
+            'insufficient_data_actions': [],
+            'alarm_actions': [],
+            'ok_actions': ['signal_handler'],
+        })
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               props)
 
         scheduler.TaskRunner(rsrc.update, snippet)()
 
@@ -226,8 +232,11 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stack.create()
         rsrc = self.stack['MEMAlarmHigh']
 
-        snippet = copy.deepcopy(rsrc.parsed_template())
-        snippet['Properties']['meter_name'] = 'temp'
+        props = copy.copy(rsrc.properties.data)
+        props['meter_name'] = 'temp'
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               props)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(resource.UpdateReplace, updater)

@@ -18,6 +18,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -315,8 +316,11 @@ Resources:
         self._setup_test_stack()
 
         resource = self.stack['my_group']
-        new_template = copy.deepcopy(resource.parsed_template())
-        new_template['Properties']['groupConfiguration']['minEntities'] = 5
+        uprops = copy.deepcopy(dict(resource.properties.data))
+        uprops['groupConfiguration']['minEntities'] = 5
+        new_template = rsrc_defn.ResourceDefinition(resource.name,
+                                                    resource.type(),
+                                                    uprops)
         scheduler.TaskRunner(resource.update, new_template)()
 
         self.assertEqual(1, len(self.fake_auto_scale.groups))
@@ -331,9 +335,13 @@ Resources:
         self._setup_test_stack()
 
         resource = self.stack['my_group']
-        new_template = copy.deepcopy(resource.parsed_template())
-        lcargs = new_template['Properties']['launchConfiguration']['args']
+        uprops = copy.deepcopy(dict(resource.properties.data))
+        lcargs = uprops['launchConfiguration']['args']
         lcargs['loadBalancers'] = [{'loadBalancerId': '1', 'port': 80}]
+        new_template = rsrc_defn.ResourceDefinition(resource.name,
+                                                    resource.type(),
+                                                    uprops)
+
         scheduler.TaskRunner(resource.update, new_template)()
 
         self.assertEqual(1, len(self.fake_auto_scale.groups))
@@ -505,9 +513,12 @@ class PolicyTest(HeatTestCase):
         """
         self._setup_test_stack(self.policy_template)
         resource = self.stack['my_policy']
-        template = copy.deepcopy(resource.parsed_template())
-        template['Properties']['changePercent'] = 50
-        del template['Properties']['change']
+        uprops = copy.deepcopy(dict(resource.properties.data))
+        uprops['changePercent'] = 50
+        del uprops['change']
+        template = rsrc_defn.ResourceDefinition(resource.name,
+                                                resource.type(),
+                                                uprops)
 
         scheduler.TaskRunner(resource.update, template)()
         self.assertEqual(
@@ -595,9 +606,12 @@ class WebHookTest(HeatTestCase):
     def test_update(self):
         self._setup_test_stack(self.webhook_template)
         resource = self.stack['my_webhook']
-        template = copy.deepcopy(resource.parsed_template())
-        template['Properties']['metadata']['a'] = 'different!'
-        template['Properties']['name'] = 'newhook'
+        uprops = copy.deepcopy(dict(resource.properties.data))
+        uprops['metadata']['a'] = 'different!'
+        uprops['name'] = 'newhook'
+        template = rsrc_defn.ResourceDefinition(resource.name,
+                                                resource.type(),
+                                                uprops)
 
         scheduler.TaskRunner(resource.update, template)()
         self.assertEqual(

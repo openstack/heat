@@ -17,6 +17,7 @@ import copy
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine.resources import cloud_watch
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import watchrule
 from heat.tests.common import HeatTestCase
@@ -81,13 +82,18 @@ class CloudWatchAlarmTest(HeatTestCase):
 
         self.m.ReplayAll()
         rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
-        snippet = copy.deepcopy(rsrc.parsed_template())
-        snippet['Properties']['ComparisonOperator'] = 'LessThanThreshold'
-        snippet['Properties']['AlarmDescription'] = 'fruity'
-        snippet['Properties']['EvaluationPeriods'] = '2'
-        snippet['Properties']['Period'] = '90'
-        snippet['Properties']['Statistic'] = 'Maximum'
-        snippet['Properties']['Threshold'] = '39'
+        props = copy.copy(rsrc.properties.data)
+        props.update({
+            'ComparisonOperator': 'LessThanThreshold',
+            'AlarmDescription': 'fruity',
+            'EvaluationPeriods': '2',
+            'Period': '90',
+            'Statistic': 'Maximum',
+            'Threshold': '39',
+        })
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               props)
 
         scheduler.TaskRunner(rsrc.update, snippet)()
 
@@ -112,8 +118,11 @@ class CloudWatchAlarmTest(HeatTestCase):
 
         self.m.ReplayAll()
         rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
-        snippet = copy.deepcopy(rsrc.parsed_template())
-        snippet['Properties']['MetricName'] = 'temp'
+        props = copy.copy(rsrc.properties.data)
+        props['MetricName'] = 'temp'
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               props)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(resource.UpdateReplace, updater)
