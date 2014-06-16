@@ -15,9 +15,11 @@
 import collections
 import itertools
 import json
+import six
 from heat.engine import constraints as constr
 
 from heat.common import exception
+from heat.openstack.common import strutils
 
 
 PARAMETER_KEYS = (
@@ -251,7 +253,7 @@ class Parameter(object):
         if self.hidden():
             return '******'
         else:
-            return str(value)
+            return strutils.safe_encode(six.text_type(value))
 
 
 class NumberParam(Parameter):
