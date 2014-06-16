@@ -153,17 +153,16 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def _stub_validate(self):
-        self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate().MultipleTimes()
-
-    def _stub_create(self, num):
-        self._stub_validate()
+    def _stub_create(self, num, with_error=None):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(image.ImageConstraint, "validate")
         image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        if with_error:
+            instance.Instance.handle_create().AndRaise(
+                exception.Error(with_error))
+            return
         cookie = object()
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
@@ -172,7 +171,9 @@ class AutoScalingTest(HeatTestCase):
             cookie).MultipleTimes().AndReturn(True)
 
     def _stub_delete(self, num):
-        self._stub_validate()
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'handle_delete')
         self.m.StubOutWithMock(instance.Instance, 'check_delete_complete')
         task = object()
@@ -297,6 +298,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_scale_notification(adjust=-1, groupname=rsrc.FnGetRefId(),
                                       start_capacity=1, end_capacity=0)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1')
+        self._stub_delete(1)
         self.m.ReplayAll()
         rsrc.adjust(-1)
         self.assertEqual([], rsrc.get_instance_names())
@@ -548,7 +550,6 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
 
-        self._stub_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         instance.Instance.handle_create().AndRaise(Exception)
@@ -882,7 +883,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce to 1
         self._stub_lb_reload(1)
-        self._stub_validate()
+        self._stub_delete(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : -2')
         self._stub_scale_notification(adjust=-2, groupname=rsrc.FnGetRefId(),
                                       start_capacity=3, end_capacity=1)
@@ -902,7 +903,7 @@ class AutoScalingTest(HeatTestCase):
 
         # set to 2
         self._stub_lb_reload(2)
-        self._stub_validate()
+        self._stub_delete(1)
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_scale_notification(adjust=2, groupname=rsrc.FnGetRefId(),
                                       adjust_type='ExactCapacity',
@@ -928,13 +929,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.UnsetStubs()
 
         # Scale up one 1 instance with resource failure
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        instance.Instance.handle_create().AndRaise(exception.Error('Bang'))
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self._stub_create(1, with_error='Bang')
         self._stub_lb_reload(1, unset=False, nochange=True)
-        self._stub_validate()
         self._stub_scale_notification(adjust=1,
                                       groupname=rsrc.FnGetRefId(),
                                       start_capacity=1,
@@ -972,7 +968,7 @@ class AutoScalingTest(HeatTestCase):
 
         # lower below the min
         self._stub_lb_reload(1)
-        self._stub_validate()
+        self._stub_delete(4)
         self._stub_meta_expected(now, 'ChangeInCapacity : -5')
         self.m.ReplayAll()
         rsrc.adjust(-5)
@@ -1006,7 +1002,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(lowest)
         adjust = 'PercentChangeInCapacity : %d' % decrease
         self._stub_meta_expected(now, adjust)
-        self._stub_validate()
+        self._stub_delete(2 - lowest)
         self.m.ReplayAll()
         rsrc.adjust(decrease, 'PercentChangeInCapacity')
         self.assertEqual(lowest, len(rsrc.get_instance_names()))
@@ -1050,7 +1046,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce by 50%
         self._stub_lb_reload(1)
-        self._stub_validate()
+        self._stub_delete(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -1101,7 +1097,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce by 50%
         self._stub_lb_reload(1)
-        self._stub_validate()
+        self._stub_delete(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -1155,7 +1151,7 @@ class AutoScalingTest(HeatTestCase):
         # reduce by 50%
         self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
-        self._stub_validate()
+        self._stub_delete(1)
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
         self.assertEqual(1, len(rsrc.get_instance_names()))
@@ -1314,7 +1310,7 @@ class AutoScalingTest(HeatTestCase):
 
         # Scale down one
         self._stub_lb_reload(1)
-        self._stub_validate()
+        self._stub_delete(1)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1', 2)
 
         self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
