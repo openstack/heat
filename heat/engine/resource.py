@@ -340,8 +340,8 @@ class Resource(object):
     def keystone(self):
         return self.stack.clients.keystone()
 
-    def nova(self, service_type='compute'):
-        return self.stack.clients.nova(service_type)
+    def nova(self):
+        return self.stack.clients.nova()
 
     def swift(self):
         return self.stack.clients.swift()

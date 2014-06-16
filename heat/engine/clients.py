@@ -46,7 +46,7 @@ class OpenStackClients(object):
     '''
     def __init__(self, context):
         self.context = context
-        self._nova = {}
+        self._nova = None
         self._keystone = None
         self._swift = None
         self._neutron = None
@@ -72,9 +72,9 @@ class OpenStackClients(object):
     def url_for(self, **kwargs):
         return self.keystone().url_for(**kwargs)
 
-    def nova(self, service_type='compute'):
-        if service_type in self._nova:
-            return self._nova[service_type]
+    def nova(self):
+        if self._nova:
+            return self._nova
 
         con = self.context
         computeshell = novashell.OpenStackComputeShell()
@@ -84,7 +84,7 @@ class OpenStackClients(object):
         args = {
             'project_id': con.tenant,
             'auth_url': con.auth_url,
-            'service_type': service_type,
+            'service_type': 'compute',
             'username': None,
             'api_key': None,
             'extensions': extensions,
@@ -95,12 +95,12 @@ class OpenStackClients(object):
 
         client = novaclient.Client(1.1, **args)
 
-        management_url = self.url_for(service_type=service_type,
+        management_url = self.url_for(service_type='compute',
                                       endpoint_type=endpoint_type)
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
 
-        self._nova[service_type] = client
+        self._nova = client
         return client
 
     def swift(self):
