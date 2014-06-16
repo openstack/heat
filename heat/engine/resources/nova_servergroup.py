@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient import exceptions as nova_exceptions
-
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -59,8 +57,8 @@ class ServerGroup(resource.Resource):
         if self.resource_id:
             try:
                 self.nova().server_groups.delete(self.resource_id)
-            except nova_exceptions.NotFound:
-                pass
+            except Exception as e:
+                self.client_plugin('nova').ignore_not_found(e)
             self.resource_id_set(None)
 
     def physical_resource_name(self):

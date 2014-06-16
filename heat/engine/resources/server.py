@@ -14,7 +14,6 @@
 import copy
 import uuid
 
-from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 
 from heat.common import exception
@@ -349,6 +348,8 @@ class Server(stack_user.StackUser):
     # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
     physical_resource_name_limit = 53
 
+    default_client_name = 'nova'
+
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
         if self.user_data_software_config():
@@ -626,9 +627,9 @@ class Server(stack_user.StackUser):
                 self.nova(), self.resource_id) or ''
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound as ex:
-            LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
-                     % {'server': self.resource_id, 'ex': ex})
+        except Exception as e:
+            self.client_plugin().ignore_not_found(e)
+            LOG.warn(_('Instance (%s) not found') % self.resource_id)
             return ''
         if name == self.NAME_ATTR:
             return self._server_name()
@@ -975,11 +976,12 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
-            return
-        deleter = scheduler.TaskRunner(nova_utils.delete_server, server)
-        deleter.start()
-        return deleter
+        except Exception as e:
+            self.client_plugin().ignore_not_found(e)
+        else:
+            deleter = scheduler.TaskRunner(nova_utils.delete_server, server)
+            deleter.start()
+            return deleter
 
     def check_delete_complete(self, deleter):
         if deleter is None or deleter.step():
@@ -999,9 +1001,12 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
-            raise exception.NotFound(_('Failed to find server %s') %
-                                     self.resource_id)
+        except Exception as e:
+            if self.client_plugin().is_not_found(e):
+                raise exception.NotFound(_('Failed to find server %s') %
+                                         self.resource_id)
+            else:
+                raise
         else:
             LOG.debug('suspending server %s' % self.resource_id)
             # We want the server.suspend to happen after the volume
@@ -1044,9 +1049,12 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
-            raise exception.NotFound(_('Failed to find server %s') %
-                                     self.resource_id)
+        except Exception as e:
+            if self.client_plugin().is_not_found(e):
+                raise exception.NotFound(_('Failed to find server %s') %
+                                         self.resource_id)
+            else:
+                raise
         else:
             LOG.debug('resuming server %s' % self.resource_id)
             server.resume()

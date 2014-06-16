@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient import exceptions as nova_exceptions
-
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -81,8 +79,9 @@ class ElasticIp(resource.Resource):
             else:
                 try:
                     ips = self.nova().floating_ips.get(self.resource_id)
-                except nova_exceptions.NotFound as ex:
-                    LOG.warn(_("Floating IPs not found: %s") % ex)
+                except Exception as e:
+                    self.client_plugin('nova').ignore_not_found(e)
+                    LOG.warn(_("Floating IPs not found"))
                 else:
                     self.ipaddress = ips.ip
         return self.ipaddress or ''
@@ -103,11 +102,12 @@ class ElasticIp(resource.Resource):
         else:
             try:
                 ips = self.nova().floating_ips.create()
-            except nova_exceptions.NotFound:
+            except Exception as e:
                 with excutils.save_and_reraise_exception():
-                    msg = _("No default floating IP pool configured. "
-                            "Set 'default_floating_pool' in nova.conf.")
-                    LOG.error(msg)
+                    if self.client_plugin('nova').is_not_found(e):
+                        msg = _("No default floating IP pool configured. "
+                                "Set 'default_floating_pool' in nova.conf.")
+                        LOG.error(msg)
 
             if ips:
                 self.ipaddress = ips.ip
@@ -126,8 +126,8 @@ class ElasticIp(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self._ipaddress())
-            except nova_exceptions.NotFound:
-                pass
+            except Exception as e:
+                self.client_plugin('nova').ignore_not_found(e)
 
         """De-allocate a floating IP."""
         if self.resource_id is not None:
@@ -140,8 +140,8 @@ class ElasticIp(resource.Resource):
             else:
                 try:
                     self.nova().floating_ips.delete(self.resource_id)
-                except nova_exceptions.NotFound:
-                    pass
+                except Exception as e:
+                    self.client_plugin('nova').ignore_not_found(e)
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
@@ -242,8 +242,8 @@ class ElasticIpAssociation(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self.properties[self.EIP])
-            except nova_exceptions.NotFound:
-                pass
+            except Exception as e:
+                self.client_plugin('nova').ignore_not_found(e)
         elif self.properties[self.ALLOCATION_ID]:
             float_id = self.properties[self.ALLOCATION_ID]
             try:

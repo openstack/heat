@@ -11,14 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient import exceptions as nova_exceptions
-
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common import log as logging
-
-LOG = logging.getLogger(__name__)
 
 
 class NovaFlavor(resource.Resource):
@@ -120,9 +115,8 @@ class NovaFlavor(resource.Resource):
 
         try:
             self.nova().flavors.delete(self.resource_id)
-        except nova_exceptions.NotFound:
-            LOG.debug(
-                'Could not find flavor %s.' % self.resource_id)
+        except Exception as e:
+            self.client_plugin('nova').ignore_not_found(e)
 
         self.resource_id_set(None)
 

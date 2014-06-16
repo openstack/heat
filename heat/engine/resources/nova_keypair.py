@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient import exceptions as nova_exceptions
-
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -78,6 +76,8 @@ class KeyPair(resource.Resource):
         ),
     }
 
+    default_client_name = 'nova'
+
     def __init__(self, name, json_snippet, stack):
         super(KeyPair, self).__init__(name, json_snippet, stack)
         self._public_key = None
@@ -117,8 +117,8 @@ class KeyPair(resource.Resource):
         if self.resource_id:
             try:
                 self.nova().keypairs.delete(self.resource_id)
-            except nova_exceptions.NotFound:
-                pass
+            except Exception as e:
+                self.client_plugin().ignore_not_found(e)
 
     def _resolve_attribute(self, key):
         attr_fn = {'private_key': self.private_key,

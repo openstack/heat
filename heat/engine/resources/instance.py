@@ -12,7 +12,7 @@
 #    under the License.
 
 import copy
-from novaclient import exceptions as nova_exceptions
+
 from oslo.config import cfg
 import six
 
@@ -332,6 +332,8 @@ class Instance(resource.Resource):
     # Server host name limit to 53 characters by due to typical default
     # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
     physical_resource_name_limit = 53
+
+    default_client_name = 'nova'
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
@@ -685,7 +687,9 @@ class Instance(resource.Resource):
             return
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
+        except Exception as e:
+            self.client_plugin().ignore_not_found(e)
+            self.resource_id_set(None)
             return
         deleters = (
             scheduler.TaskRunner(self._detach_volumes_task()),
@@ -716,9 +720,10 @@ class Instance(resource.Resource):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
-            raise exception.NotFound(_('Failed to find instance %s') %
-                                     self.resource_id)
+        except Exception as e:
+            if self.client_plugin().is_not_found(e):
+                raise exception.NotFound(_('Failed to find instance %s') %
+                                         self.resource_id)
         else:
             LOG.debug("suspending instance %s" % self.resource_id)
             # We want the server.suspend to happen after the volume
@@ -771,9 +776,10 @@ class Instance(resource.Resource):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except nova_exceptions.NotFound:
-            raise exception.NotFound(_('Failed to find instance %s') %
-                                     self.resource_id)
+        except Exception as e:
+            if self.client_plugin().is_not_found(e):
+                raise exception.NotFound(_('Failed to find instance %s') %
+                                         self.resource_id)
         else:
             LOG.debug("resuming instance %s" % self.resource_id)
             server.resume()
