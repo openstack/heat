@@ -12,11 +12,14 @@
 #    under the License.
 
 from swiftclient import client as sc
+from swiftclient import exceptions
 
 from heat.engine.clients import client_plugin
 
 
 class SwiftClientPlugin(client_plugin.ClientPlugin):
+
+    exceptions_module = exceptions
 
     def _create(self):
 
@@ -36,3 +39,14 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option('swift', 'insecure')
         }
         return sc.Connection(**args)
+
+    def is_client_exception(self, ex):
+        return isinstance(ex, exceptions.ClientException)
+
+    def is_not_found(self, ex):
+        return (isinstance(ex, exceptions.ClientException) and
+                ex.http_status == 404)
+
+    def is_over_limit(self, ex):
+        return (isinstance(ex, exceptions.ClientException) and
+                ex.http_status == 413)

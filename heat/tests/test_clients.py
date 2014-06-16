@@ -11,6 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from ceilometerclient import exc as ceil_exc
+from cinderclient import exceptions as cinder_exc
+from glanceclient import exc as glance_exc
+from heatclient import exc as heat_exc
+from keystoneclient import exceptions as keystone_exc
+from neutronclient.common import exceptions as neutron_exc
+from swiftclient import exceptions as swift_exc
+from troveclient.client import exceptions as trove_exc
+
 from heatclient import client as heatclient
 import mock
 from oslo.config import cfg
@@ -19,6 +28,7 @@ from testtools.testcase import skip
 from heat.engine import clients
 from heat.engine.clients import client_plugin
 from heat.tests.common import HeatTestCase
+from heat.tests.v1_1 import fakes
 
 
 class ClientsTest(HeatTestCase):
@@ -214,3 +224,272 @@ class TestClientPluginsInitialise(HeatTestCase):
             self.assertEqual(c, plugin.clients)
             self.assertEqual(con, plugin.context)
             self.assertIsNone(plugin._client)
+
+
+class TestIsNotFound(HeatTestCase):
+
+    scenarios = [
+        ('ceilometer_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='ceilometer',
+            exception=lambda: ceil_exc.HTTPNotFound(details='gone'),
+        )),
+        ('ceilometer_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='ceilometer',
+            exception=lambda: Exception()
+        )),
+        ('ceilometer_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='ceilometer',
+            exception=lambda: ceil_exc.HTTPOverLimit(details='over'),
+        )),
+        ('cinder_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='cinder',
+            exception=lambda: cinder_exc.NotFound(code=404),
+        )),
+        ('cinder_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='cinder',
+            exception=lambda: Exception()
+        )),
+        ('cinder_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='cinder',
+            exception=lambda: cinder_exc.OverLimit(code=413),
+        )),
+        ('glance_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='glance',
+            exception=lambda: glance_exc.HTTPNotFound(details='gone'),
+        )),
+        ('glance_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='glance',
+            exception=lambda: Exception()
+        )),
+        ('glance_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='glance',
+            exception=lambda: glance_exc.HTTPOverLimit(details='over'),
+        )),
+        ('heat_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='heat',
+            exception=lambda: heat_exc.HTTPNotFound(message='gone'),
+        )),
+        ('heat_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='heat',
+            exception=lambda: Exception()
+        )),
+        ('heat_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='heat',
+            exception=lambda: heat_exc.HTTPOverLimit(message='over'),
+        )),
+        ('keystone_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='keystone',
+            exception=lambda: keystone_exc.NotFound(details='gone'),
+        )),
+        ('keystone_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='keystone',
+            exception=lambda: Exception()
+        )),
+        ('keystone_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='keystone',
+            exception=lambda: keystone_exc.RequestEntityTooLarge(
+                details='over'),
+        )),
+        ('neutron_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='neutron',
+            exception=lambda: neutron_exc.NotFound,
+        )),
+        ('neutron_network_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='neutron',
+            exception=lambda: neutron_exc.NetworkNotFoundClient(),
+        )),
+        ('neutron_port_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='neutron',
+            exception=lambda: neutron_exc.PortNotFoundClient(),
+        )),
+        ('neutron_status_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='neutron',
+            exception=lambda: neutron_exc.NeutronClientException(
+                status_code=404),
+        )),
+        ('neutron_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='neutron',
+            exception=lambda: Exception()
+        )),
+        ('neutron_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='neutron',
+            exception=lambda: neutron_exc.NeutronClientException(
+                status_code=413),
+        )),
+        ('nova_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='nova',
+            exception=lambda: fakes.fake_exception(),
+        )),
+        ('nova_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='nova',
+            exception=lambda: Exception()
+        )),
+        ('nova_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='nova',
+            exception=lambda: fakes.fake_exception(413),
+        )),
+        ('swift_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='swift',
+            exception=lambda: swift_exc.ClientException(
+                msg='gone', http_status=404),
+        )),
+        ('swift_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='swift',
+            exception=lambda: Exception()
+        )),
+        ('swift_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='swift',
+            exception=lambda: swift_exc.ClientException(
+                msg='ouch', http_status=413),
+        )),
+        ('trove_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='trove',
+            exception=lambda: trove_exc.NotFound(message='gone'),
+        )),
+        ('trove_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            plugin='trove',
+            exception=lambda: Exception()
+        )),
+        ('trove_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            plugin='trove',
+            exception=lambda: trove_exc.RequestEntityTooLarge(
+                message='over'),
+        )),
+    ]
+
+    def test_is_not_found(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        client_plugin = c.client_plugin(self.plugin)
+        try:
+            raise self.exception()
+        except Exception as e:
+            if self.is_not_found != client_plugin.is_not_found(e):
+                raise
+
+    def test_ignore_not_found(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        client_plugin = c.client_plugin(self.plugin)
+        try:
+            exp = self.exception()
+            exp_class = exp.__class__
+            raise exp
+        except Exception as e:
+            if self.is_not_found:
+                client_plugin.ignore_not_found(e)
+            else:
+                self.assertRaises(exp_class,
+                                  client_plugin.ignore_not_found,
+                                  e)
+
+    def test_is_over_limit(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        client_plugin = c.client_plugin(self.plugin)
+        try:
+            raise self.exception()
+        except Exception as e:
+            if self.is_over_limit != client_plugin.is_over_limit(e):
+                raise
+
+    def test_is_client_exception(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        client_plugin = c.client_plugin(self.plugin)
+        try:
+            raise self.exception()
+        except Exception as e:
+            ice = self.is_client_exception
+            if ice != client_plugin.is_client_exception(e):
+                raise

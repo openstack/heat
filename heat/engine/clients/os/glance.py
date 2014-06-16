@@ -26,6 +26,8 @@ LOG = logging.getLogger(__name__)
 
 class GlanceClientPlugin(client_plugin.ClientPlugin):
 
+    exceptions_module = exc
+
     def _create(self):
 
         con = self.context
@@ -45,6 +47,12 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         }
 
         return gc.Client('1', endpoint, **args)
+
+    def is_not_found(self, ex):
+        return isinstance(ex, exc.HTTPNotFound)
+
+    def is_over_limit(self, ex):
+        return isinstance(ex, exc.HTTPOverLimit)
 
     def get_image_id(self, image_identifier):
         '''

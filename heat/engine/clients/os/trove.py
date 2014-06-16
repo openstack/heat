@@ -12,11 +12,14 @@
 #    under the License.
 
 from troveclient import client as tc
+from troveclient.client import exceptions
 
 from heat.engine.clients import client_plugin
 
 
 class TroveClientPlugin(client_plugin.ClientPlugin):
+
+    exceptions_module = exceptions
 
     def _create(self):
 
@@ -40,3 +43,9 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         client.client.management_url = management_url
 
         return client
+
+    def is_not_found(self, ex):
+        return isinstance(ex, exceptions.NotFound)
+
+    def is_over_limit(self, ex):
+        return isinstance(ex, exceptions.RequestEntityTooLarge)
