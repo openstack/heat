@@ -24,7 +24,6 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
-from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -172,10 +171,8 @@ class InstanceGroup(stack_resource.StackResource):
         UpdatePolicy.
         """
         super(InstanceGroup, self).__init__(name, json_snippet, stack)
-        self.update_policy = Properties(self.update_policy_schema,
-                                        self.t.get('UpdatePolicy', {}),
-                                        parent_name=self.name,
-                                        context=self.context)
+        self.update_policy = self.t.update_policy(self.update_policy_schema,
+                                                  self.context)
 
     def validate(self):
         """
@@ -243,11 +240,9 @@ class InstanceGroup(stack_resource.StackResource):
         if tmpl_diff:
             # parse update policy
             if 'UpdatePolicy' in tmpl_diff:
-                self.update_policy = Properties(
-                    self.update_policy_schema,
-                    json_snippet.get('UpdatePolicy', {}),
-                    parent_name=self.name,
-                    context=self.context)
+                up = json_snippet.update_policy(self.update_policy_schema,
+                                                self.context)
+                self.update_policy = up
 
         if prop_diff:
             self.properties = json_snippet.properties(self.properties_schema,
@@ -596,11 +591,9 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if tmpl_diff:
             # parse update policy
             if 'UpdatePolicy' in tmpl_diff:
-                self.update_policy = Properties(
-                    self.update_policy_schema,
-                    json_snippet.get('UpdatePolicy', {}),
-                    parent_name=self.name,
-                    context=self.context)
+                up = json_snippet.update_policy(self.update_policy_schema,
+                                                self.context)
+                self.update_policy = up
 
         if prop_diff:
             self.properties = json_snippet.properties(self.properties_schema,
