@@ -17,7 +17,6 @@ import json
 import sys
 import uuid
 
-from eventlet import greenpool
 import mock
 import mox
 from oslo.config import cfg
@@ -300,10 +299,15 @@ def stack_context(stack_name, create_res=True):
     return stack_delete
 
 
+class DummyThread(object):
+
+    def link(self, callback, *args):
+        pass
+
+
 class DummyThreadGroup(object):
     def __init__(self):
         self.threads = []
-        self.pool = greenpool.GreenPool(10)
 
     def add_timer(self, interval, callback, initial_delay=None,
                   *args, **kwargs):
@@ -314,7 +318,7 @@ class DummyThreadGroup(object):
 
     def add_thread(self, callback, *args, **kwargs):
         self.threads.append(callback)
-        return self.pool.spawn(callback, *args, **kwargs)
+        return DummyThread()
 
     def stop(self, graceful=False):
         pass
@@ -733,7 +737,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
     def test_stack_delete_other_engine_active_lock_failed(self):
