@@ -165,6 +165,11 @@ class ParameterTest(testtools.TestCase):
         p = self.new_parameter('p', schema, 'bar')
         self.assertEqual('bar', p.value())
 
+    def test_string_value_unicode(self):
+        schema = {'Type': 'String'}
+        p = self.new_parameter('p', schema, u'test\u2665')
+        self.assertEqual(u'test\u2665', p.value())
+
     def test_string_value_list_bad(self):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
@@ -409,13 +414,17 @@ class ParametersTest(testtools.TestCase):
 
     def test_map_str(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},
-                                   'Bar': {'Type': 'Number'}}}
+                                   'Bar': {'Type': 'Number'},
+                                   'Uni': {'Type': 'String'}}}
         stack_name = 'test_params'
         params = self.new_parameters(stack_name, template,
-                                     {'Foo': 'foo', 'Bar': '42'})
+                                     {'Foo': 'foo',
+                                      'Bar': '42',
+                                      'Uni': u'test\u2665'})
 
         expected = {'Foo': 'foo',
                     'Bar': '42',
+                    'Uni': 'test\xe2\x99\xa5',
                     'AWS::Region': 'ap-southeast-1',
                     'AWS::StackId':
                     'arn:openstack:heat:::stacks/{0}/{1}'.format(
