@@ -17,7 +17,6 @@ from heat.common import exception
 from heat.common import identifier
 from heat.engine import attributes
 from heat.engine import constraints
-from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
@@ -257,9 +256,8 @@ class WaitCondition(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.properties = properties.Properties(
-                self.properties_schema, json_snippet.get('Properties', {}),
-                function.resolve, self.name, self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]

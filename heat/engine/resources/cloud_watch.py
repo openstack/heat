@@ -13,9 +13,7 @@
 
 from heat.common import exception
 from heat.engine import constraints
-from heat.engine import function
 from heat.engine import properties
-from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import watchrule
 
@@ -142,11 +140,8 @@ class CloudWatchAlarm(resource.Resource):
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
         if prop_diff:
-            self.properties = Properties(self.properties_schema,
-                                         json_snippet.get('Properties', {}),
-                                         function.resolve,
-                                         self.name,
-                                         self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
             loader = watchrule.WatchRule.load
             wr = loader(self.context,
                         watch_name=self.physical_resource_name())

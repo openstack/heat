@@ -16,9 +16,7 @@ from requests import exceptions
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
-from heat.engine import function
 from heat.engine import properties
-from heat.engine.properties import Properties
 from heat.engine import stack_resource
 
 
@@ -95,11 +93,8 @@ class NestedStack(stack_resource.StackResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # Nested stack template may be changed even if the prop_diff is empty.
-        self.properties = Properties(self.properties_schema,
-                                     json_snippet.get('Properties', {}),
-                                     function.resolve,
-                                     self.name,
-                                     self.context)
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
 
         try:
             template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])
