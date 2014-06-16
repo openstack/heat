@@ -183,6 +183,42 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_delete_complete(
             task).MultipleTimes().AndReturn(True)
 
+    def _stub_suspend(self, cookies=[], with_error=None):
+        self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
+        self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        if with_error:
+            instance.Instance.handle_suspend().AndRaise(
+                exception.Error(with_error))
+            return
+        inst_cookies = cookies or [(object(), object(), object())]
+        for cookie in inst_cookies:
+            instance.Instance.handle_suspend().InAnyOrder().AndReturn(cookie)
+            instance.Instance.check_suspend_complete(
+                cookie).InAnyOrder().AndReturn(False)
+            instance.Instance.check_suspend_complete(
+                cookie).InAnyOrder().AndReturn(True)
+
+    def _stub_resume(self, cookies=[], with_error=None):
+        self.m.StubOutWithMock(instance.Instance, 'handle_resume')
+        self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        if with_error:
+            instance.Instance.handle_resume().AndRaise(
+                exception.Error(with_error))
+            return
+        inst_cookies = cookies or [(object(), object(), object())]
+        for cookie in inst_cookies:
+            instance.Instance.handle_resume().InAnyOrder().AndReturn(cookie)
+            instance.Instance.check_resume_complete(
+                cookie).InAnyOrder().AndReturn(False)
+            instance.Instance.check_resume_complete(
+                cookie).InAnyOrder().AndReturn(True)
+
     def _stub_lb_reload(self, num, unset=True, nochange=False):
         expected_list = [self.dummy_instance_id] * num
         if unset:
@@ -348,12 +384,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
-        self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
-        inst_cookie = (object(), object(), object())
-        instance.Instance.handle_suspend().AndReturn(inst_cookie)
-        instance.Instance.check_suspend_complete(inst_cookie).AndReturn(False)
-        instance.Instance.check_suspend_complete(inst_cookie).AndReturn(True)
+        self._stub_suspend()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.suspend)()
@@ -380,12 +411,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_resume')
-        self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
-        inst_cookie = (object(), object(), object())
-        instance.Instance.handle_resume().AndReturn(inst_cookie)
-        instance.Instance.check_resume_complete(inst_cookie).AndReturn(False)
-        instance.Instance.check_resume_complete(inst_cookie).AndReturn(True)
+        self._stub_resume()
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
@@ -418,16 +444,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
-        self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
-        inst_cookie1 = ('foo1', 'foo2', 'foo3')
-        inst_cookie2 = ('bar1', 'bar2', 'bar3')
-        instance.Instance.handle_suspend().InAnyOrder().AndReturn(inst_cookie1)
-        instance.Instance.handle_suspend().InAnyOrder().AndReturn(inst_cookie2)
-        instance.Instance.check_suspend_complete(inst_cookie1).InAnyOrder(
-        ).AndReturn(True)
-        instance.Instance.check_suspend_complete(inst_cookie2).InAnyOrder(
-        ).AndReturn(True)
+        self._stub_suspend(cookies=[('foo1', 'foo2', 'foo3'),
+                                    ('bar1', 'bar2', 'bar3')])
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.suspend)()
@@ -456,16 +474,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_resume')
-        self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
-        inst_cookie1 = ('foo1', 'foo2', 'foo3')
-        inst_cookie2 = ('bar1', 'bar2', 'bar3')
-        instance.Instance.handle_resume().InAnyOrder().AndReturn(inst_cookie1)
-        instance.Instance.handle_resume().InAnyOrder().AndReturn(inst_cookie2)
-        instance.Instance.check_resume_complete(inst_cookie1).InAnyOrder(
-        ).AndReturn(True)
-        instance.Instance.check_resume_complete(inst_cookie2).InAnyOrder(
-        ).AndReturn(True)
+        self._stub_resume(cookies=[('foo1', 'foo2', 'foo3'),
+                                   ('bar1', 'bar2', 'bar3')])
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
@@ -496,15 +506,13 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
-        self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
-        instance.Instance.handle_suspend().AndRaise(Exception('oops'))
+        self._stub_suspend(with_error='oops')
         self.m.ReplayAll()
 
         sus_task = scheduler.TaskRunner(rsrc.suspend)
         self.assertRaises(exception.ResourceFailure, sus_task, ())
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
-        self.assertEqual('Error: Resource SUSPEND failed: Exception: oops',
+        self.assertEqual('Error: Resource SUSPEND failed: Error: oops',
                          rsrc.status_reason)
 
         rsrc.delete()
@@ -528,9 +536,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_resume')
-        self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
-        instance.Instance.handle_resume().AndRaise(Exception('oops'))
+        self._stub_resume(with_error='oops')
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
@@ -540,7 +546,7 @@ class AutoScalingTest(HeatTestCase):
         sus_task = scheduler.TaskRunner(rsrc.resume)
         self.assertRaises(exception.ResourceFailure, sus_task, ())
         self.assertEqual((rsrc.RESUME, rsrc.FAILED), rsrc.state)
-        self.assertEqual('Error: Resource RESUME failed: Exception: oops',
+        self.assertEqual('Error: Resource RESUME failed: Error: oops',
                          rsrc.status_reason)
 
         rsrc.delete()
