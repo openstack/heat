@@ -202,8 +202,11 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['Size'] = '5'
+        props = copy.copy(rsrc.properties.data)
+        props['Size'] = 5
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         tmpl_diff = {'Properties': {'Size': '5'}}
         prop_diff = {'Size': '5'}
         self.assertIsNone(rsrc.handle_update(update_snippet, tmpl_diff,
