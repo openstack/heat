@@ -181,11 +181,8 @@ class Resource(object):
             self.updated_time = None
 
     def reparse(self):
-        self.properties = Properties(self.properties_schema,
-                                     self.t.get('Properties', {}),
-                                     function.resolve,
-                                     self.name,
-                                     self.context)
+        self.properties = self.t.properties(self.properties_schema,
+                                            self.context)
 
     def __eq__(self, other):
         '''Allow == comparison of two resources.'''
@@ -527,11 +524,8 @@ class Resource(object):
                                            function.resolve,
                                            self.name,
                                            self.context)
-            after_properties = Properties(self.properties_schema,
-                                          after.get('Properties', {}),
-                                          function.resolve,
-                                          self.name,
-                                          self.context)
+            after_properties = after.properties(self.properties_schema,
+                                                self.context)
             after_properties.validate()
             tmpl_diff = self.update_template_diff(function.resolve(after),
                                                   before)

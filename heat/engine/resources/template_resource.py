@@ -22,7 +22,6 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import function
 from heat.engine import properties
 from heat.engine import stack_resource
 from heat.engine import template
@@ -77,9 +76,9 @@ class TemplateResource(stack_resource.StackResource):
         self.attributes_schema = {}
         super(TemplateResource, self).__init__(name, json_snippet, stack)
         if self.validation_exception is None:
-            self._generate_schema(self.t.get('Properties', {}))
+            self._generate_schema(self.t)
 
-    def _generate_schema(self, props):
+    def _generate_schema(self, definition):
         self._parsed_nested = None
         try:
             tmpl = template.Template(self.child_template())
@@ -94,10 +93,7 @@ class TemplateResource(stack_resource.StackResource):
         self.attributes_schema = (attributes.Attributes
                                   .schema_from_outputs(tmpl[tmpl.OUTPUTS]))
 
-        self.properties = properties.Properties(self.properties_schema,
-                                                props,
-                                                function.resolve,
-                                                self.name,
+        self.properties = definition.properties(self.properties_schema,
                                                 self.context)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
@@ -141,7 +137,7 @@ class TemplateResource(stack_resource.StackResource):
         return self._parsed_nested
 
     def implementation_signature(self):
-        self._generate_schema(self.t.get('Properties', {}))
+        self._generate_schema(self.t)
         schema_names = ([prop for prop in self.properties_schema] +
                         [at for at in self.attributes_schema])
         schema_hash = hashlib.sha1(';'.join(schema_names))
@@ -252,7 +248,7 @@ class TemplateResource(stack_resource.StackResource):
                                          self.child_params())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        self._generate_schema(json_snippet.get('Properties', {}))
+        self._generate_schema(json_snippet)
         return self.update_with_template(self.child_template(),
                                          self.child_params())
 

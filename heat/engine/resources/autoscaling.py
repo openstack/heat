@@ -250,11 +250,8 @@ class InstanceGroup(stack_resource.StackResource):
                     context=self.context)
 
         if prop_diff:
-            self.properties = Properties(self.properties_schema,
-                                         json_snippet.get('Properties', {}),
-                                         function.resolve,
-                                         self.name,
-                                         self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
             # Replace instances first if launch configuration has changed
             self._try_rolling_update(prop_diff)
@@ -606,11 +603,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                     context=self.context)
 
         if prop_diff:
-            self.properties = Properties(self.properties_schema,
-                                         json_snippet.get('Properties', {}),
-                                         function.resolve,
-                                         self.name,
-                                         self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
             # Replace instances first if launch configuration has changed
             self._try_rolling_update(prop_diff)
@@ -1014,11 +1008,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         values during any subsequent adjustment.
         """
         if prop_diff:
-            self.properties = Properties(self.properties_schema,
-                                         json_snippet.get('Properties', {}),
-                                         function.resolve,
-                                         self.name,
-                                         self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
     def _get_adjustement_type(self):
         return self.properties[self.ADJUSTMENT_TYPE]

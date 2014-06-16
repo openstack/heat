@@ -21,7 +21,6 @@ import heatclient.exc as heat_exp
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
-from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.software_config import software_config as sc
@@ -371,12 +370,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.properties = properties.Properties(
-                self.properties_schema,
-                json_snippet.get('Properties', {}),
-                function.resolve,
-                self.name,
-                self.context)
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
 
         return self._handle_action(self.UPDATE)
 
