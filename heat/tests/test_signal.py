@@ -105,13 +105,10 @@ class SignalTest(HeatTestCase):
     def test_resource_data(self):
         self.stack = self.create_stack(stack_name='resource_data_test',
                                        stub=False)
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            fakes.FakeKeystoneClient(
-                access='anaccesskey',
-                secret='verysecret',
-                credential_id='mycredential'))
+        self.stub_keystoneclient(
+            access='anaccesskey',
+            secret='verysecret',
+            credential_id='mycredential')
         self.m.ReplayAll()
 
         self.stack.create()
@@ -132,11 +129,7 @@ class SignalTest(HeatTestCase):
     def test_get_user_id(self):
         self.stack = self.create_stack(stack_name='resource_data_test',
                                        stub=False)
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            fakes.FakeKeystoneClient(
-                access='anaccesskey', secret='verysecret'))
+        self.stub_keystoneclient(access='anaccesskey', secret='verysecret')
         self.m.ReplayAll()
 
         self.stack.create()

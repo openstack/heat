@@ -21,7 +21,6 @@ from heat.engine import parser
 from heat.engine.resources import eip
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes as fakec
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -305,7 +304,7 @@ class AllocTest(HeatTestCase):
         self.m.StubOutWithMock(clients.neutronclient.Client, 'list_routers')
         self.m.StubOutWithMock(clients.neutronclient.Client,
                                'remove_gateway_router')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def mock_show_network(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
@@ -468,10 +467,6 @@ class AllocTest(HeatTestCase):
             "routers": []
         })
 
-    def mock_keystone(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakec.FakeKeystoneClient())
-
     def test_neutron_eip(self):
         eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
@@ -500,7 +495,6 @@ class AllocTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_allocationid(self):
-        self.mock_keystone()
         self.mock_create_gateway_attachment()
         self.mock_show_network()
         self.mock_router_for_vpc()
@@ -529,7 +523,6 @@ class AllocTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_allocationid_with_instance(self):
-        self.mock_keystone()
         self.mock_show_network()
 
         self.mock_create_floatingip()

@@ -28,9 +28,7 @@ from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.engine import stack_user
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes as test_fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -109,8 +107,7 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(resource.Resource, 'metadata_set')
-        self.fkc = test_fakes.FakeKeystoneClient(
-            username='test_stack.CfnLBUser')
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
@@ -135,9 +132,6 @@ class LoadBalancerTest(HeatTestCase):
             MultipleTimes().AndReturn(imageId)
 
     def _create_stubs(self, key_name='test', stub_meta=True):
-        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
-        stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fkc)
-
         server_name = utils.PhysName(
             utils.PhysName('test_stack', 'LoadBalancer'),
             'LB_instance',

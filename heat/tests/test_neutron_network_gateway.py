@@ -20,14 +20,12 @@ from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine.resources.neutron import network_gateway
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 neutronclient = try_import('neutronclient.v2_0.client')
@@ -113,11 +111,9 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
         self.m.StubOutWithMock(neutron_utils.neutronV20,
                                'find_resourceid_by_name_or_id')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def prepare_create_network_gateway(self, resolve_neutron=True):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_network_gateway({
             'network_gateway': {
                 'name': u'NetworkGateway',
@@ -445,8 +441,6 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_network_gatway_create_failed(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_network_gateway({
             'network_gateway': {
                 'name': u'NetworkGateway',

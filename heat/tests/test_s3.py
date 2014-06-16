@@ -16,12 +16,10 @@ from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine.resources import s3
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 swiftclient = try_import('swiftclient.client')
@@ -74,7 +72,7 @@ class s3Test(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'put_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def create_resource(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -86,8 +84,6 @@ class s3Test(HeatTestCase):
         return rsrc
 
     def test_attributes(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -118,8 +114,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
@@ -138,8 +132,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_tags(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
@@ -158,8 +150,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read_write(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -178,8 +168,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_authenticated_read(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -197,8 +185,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_website(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -216,8 +202,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_exception(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -235,9 +219,6 @@ class s3Test(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_retain(self):
-
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         # first run, with retain policy
         swiftclient.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),

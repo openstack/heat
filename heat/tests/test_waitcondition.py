@@ -30,7 +30,6 @@ from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 test_template_waitcondition = '''
@@ -105,8 +104,7 @@ class WaitConditionTest(HeatTestCase):
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -129,10 +127,6 @@ class WaitConditionTest(HeatTestCase):
             stack.store()
 
         if stub:
-            self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-            wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
-                self.fc)
-
             id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                                stack.id, '', 'WaitHandle')
             self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
@@ -377,8 +371,7 @@ class WaitConditionHandleTest(HeatTestCase):
         super(WaitConditionHandleTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
 
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
@@ -399,10 +392,6 @@ class WaitConditionHandleTest(HeatTestCase):
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-
-        # Stub keystone() with fake client
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
 
         id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                            stack.id, '', 'WaitHandle')
@@ -521,11 +510,6 @@ class WaitConditionHandleTest(HeatTestCase):
         rsrc.metadata_update(new_metadata=test_metadata)
         self.assertEqual(['SUCCESS', 'SUCCESS'], rsrc.get_status())
 
-        # re-stub keystone() with fake client or stack delete fails
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
-        self.m.ReplayAll()
-
     def test_get_status_reason(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
@@ -553,8 +537,7 @@ class WaitConditionUpdateTest(HeatTestCase):
         super(WaitConditionUpdateTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
         scheduler.ENABLE_SLEEP = False
 
     def tearDown(self):
@@ -577,10 +560,6 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.stack_id = stack_id
         with utils.UUIDStub(self.stack_id):
             stack.store()
-
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
-            self.fc)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn([])

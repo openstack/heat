@@ -24,7 +24,6 @@ from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests.fakes import FakeKeystoneClient
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -129,7 +128,7 @@ Resources:
         super(SecurityGroupTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'create')
@@ -463,8 +462,6 @@ Resources:
 
     def test_security_group_neutron(self):
         #create script
-        clients.OpenStackClients.keystone().AndReturn(
-            FakeKeystoneClient())
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
             'security_group': {
@@ -710,8 +707,6 @@ Resources:
 
     def test_security_group_neutron_exception(self):
         #create script
-        clients.OpenStackClients.keystone().AndReturn(
-            FakeKeystoneClient())
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
             'security_group': {
