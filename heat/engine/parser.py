@@ -88,7 +88,6 @@ class Stack(collections.Mapping):
         self._resources = None
         self._dependencies = None
         self._access_allowed_handlers = {}
-        self._db_resources = None
         self.adopt_stack_data = adopt_stack_data
         self.stack_user_project_id = stack_user_project_id
         self.created_time = created_time
@@ -116,24 +115,12 @@ class Stack(collections.Mapping):
     @property
     def resources(self):
         if self._resources is None:
-            self._resources = dict((name, resource.Resource(name, data, self))
-                                   for (name, data) in
-                                   self.t.resource_definitions(self).items())
-            # There is no need to continue storing the db resources
-            # after resource creation
-            self._db_resources = None
+            definitions = self.t.resource_definitions(self)
+            rsrcs = resource.Resource.load_all_from_stack(self.context,
+                                                          self,
+                                                          definitions)
+            self._resources = dict((res.name, res) for res in rsrcs)
         return self._resources
-
-    def db_resource_get(self, name):
-        if not self.id:
-            return None
-        if self._db_resources is None:
-            try:
-                self._db_resources = db_api.resource_get_all_by_stack(
-                    self.context, self.id)
-            except exception.NotFound:
-                return None
-        return self._db_resources.get(name)
 
     @property
     def dependencies(self):
