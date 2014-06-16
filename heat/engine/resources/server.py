@@ -838,7 +838,7 @@ class Server(stack_user.StackUser):
         Refresh the metadata if new_metadata is None
         '''
         if new_metadata is None:
-            self.metadata_set(self.parsed_template('Metadata'))
+            self.metadata_set(self.t.metadata())
 
     @staticmethod
     def _check_maximum(count, maximum, msg):
