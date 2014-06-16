@@ -326,7 +326,7 @@ class ServersTest(HeatTestCase):
         # create an server with non exist image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'Slackware'
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
+        server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('Slackware',
@@ -336,7 +336,7 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image Error validating value '
+            'WebServer: image Error validating value '
             '\'Slackware\': The Image (Slackware) could not be found.',
             str(error))
 
@@ -349,7 +349,7 @@ class ServersTest(HeatTestCase):
         # create an server with a non unique image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
+        server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('CentOS 5.2',
@@ -359,7 +359,7 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image Multiple physical resources were '
+            'WebServer: image Multiple physical resources were '
             'found with name (CentOS 5.2).',
             str(error))
 
@@ -372,7 +372,7 @@ class ServersTest(HeatTestCase):
         # create an server with non exist image Id
         tmpl['Resources']['WebServer']['Properties']['image'] = '1'
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
+        server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_fail('1',
@@ -382,7 +382,7 @@ class ServersTest(HeatTestCase):
 
         error = self.assertRaises(ValueError, server.handle_create)
         self.assertEqual(
-            'server_create_image_err: image Error validating value \'1\': '
+            'WebServer: image Error validating value \'1\': '
             'The Image (1) could not be found.',
             str(error))
 
@@ -846,7 +846,7 @@ class ServersTest(HeatTestCase):
         web_server['Properties']['key_name'] = 'test2'
 
         resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_validate_test',
+        server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
@@ -856,7 +856,7 @@ class ServersTest(HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   server.validate)
         self.assertEqual(
-            'Property error : server_validate_test: key_name Error validating '
+            'Property error : WebServer: key_name Error validating '
             'value \'test2\': The Key (test2) could not be found.',
             str(error))
         self.m.VerifyAll()
