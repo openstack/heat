@@ -187,8 +187,8 @@ class Stack(collections.Mapping):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id=None, stack=None, resolve_data=True,
-             parent_resource=None, show_deleted=True):
+    def load(cls, context, stack_id=None, stack=None, parent_resource=None,
+             show_deleted=True):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id,
@@ -198,8 +198,17 @@ class Stack(collections.Mapping):
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
 
-        return cls._from_db(context, stack, parent_resource=parent_resource,
-                            resolve_data=resolve_data)
+        return cls._from_db(context, stack, parent_resource=parent_resource)
+
+    @classmethod
+    def load_all(cls, context, limit=None, marker=None, sort_keys=None,
+                 sort_dir=None, filters=None, tenant_safe=True,
+                 show_deleted=False, resolve_data=True):
+        stacks = db_api.stack_get_all(context, limit, sort_keys, marker,
+                                      sort_dir, filters, tenant_safe,
+                                      show_deleted) or []
+        for stack in stacks:
+            yield cls._from_db(context, stack, resolve_data=resolve_data)
 
     @classmethod
     def _from_db(cls, context, stack, parent_resource=None, resolve_data=True):

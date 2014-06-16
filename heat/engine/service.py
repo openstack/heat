@@ -398,15 +398,12 @@ class EngineService(service.Service):
             to show all
         """
         if stack_identity is not None:
-            stacks = [self._get_stack(cnxt, stack_identity, show_deleted=True)]
+            db_stack = self._get_stack(cnxt, stack_identity, show_deleted=True)
+            stacks = [parser.Stack.load(cnxt, stack=db_stack)]
         else:
-            stacks = db_api.stack_get_all(cnxt) or []
+            stacks = parser.Stack.load_all(cnxt)
 
-        def format_stack_detail(s):
-            stack = parser.Stack.load(cnxt, stack=s)
-            return api.format_stack(stack)
-
-        return [format_stack_detail(s) for s in stacks]
+        return [api.format_stack(stack) for stack in stacks]
 
     def get_revision(self, cnxt):
         return cfg.CONF.revision['heat_revision']
@@ -430,22 +427,10 @@ class EngineService(service.Service):
         :param show_deleted: if true, show soft-deleted stacks
         :returns: a list of formatted stacks
         """
-        def format_stack_details(stacks):
-            for s in stacks:
-                try:
-                    stack = parser.Stack.load(cnxt, stack=s,
-                                              resolve_data=False)
-                except exception.NotFound:
-                    # The stack may have been deleted between listing
-                    # and formatting
-                    pass
-                else:
-                    yield api.format_stack(stack)
-
-        stacks = db_api.stack_get_all(cnxt, limit, sort_keys, marker,
-                                      sort_dir, filters, tenant_safe,
-                                      show_deleted) or []
-        return list(format_stack_details(stacks))
+        stacks = parser.Stack.load_all(cnxt, limit, sort_keys, marker,
+                                       sort_dir, filters, tenant_safe,
+                                       show_deleted, resolve_data=False)
+        return [api.format_stack(stack) for stack in stacks]
 
     @request_context
     def count_stacks(self, cnxt, filters=None, tenant_safe=True):
