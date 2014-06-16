@@ -21,6 +21,7 @@ from heat.common import template_format
 from heat.engine import clients
 from heat.engine.resources.nova_floatingip import NovaFloatingIp
 from heat.engine.resources.nova_floatingip import NovaFloatingIpAssociation
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -218,9 +219,11 @@ class NovaFloatingIPTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # update with the new server_id
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        props = copy.deepcopy(rsrc.properties.data)
         update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
-        update_snippet['Properties']['server_id'] = update_server_id
+        props['server_id'] = update_server_id
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
@@ -259,9 +262,10 @@ class NovaFloatingIPTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # update with the new floatingip
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_flip_id = '2'
-        update_snippet['Properties']['floating_ip'] = update_flip_id
+        props = copy.deepcopy(rsrc.properties.data)
+        props['floating_ip'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
@@ -300,11 +304,12 @@ class NovaFloatingIPTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # update with the new floatingip
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_flip_id = '2'
+        props = copy.deepcopy(rsrc.properties.data)
         update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
-        update_snippet['Properties']['floating_ip'] = update_flip_id
-        update_snippet['Properties']['server_id'] = update_server_id
+        props['server_id'] = update_server_id
+        props['floating_ip'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 

@@ -16,6 +16,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -202,9 +203,10 @@ class MarconiMessageQueueTest(HeatTestCase):
         t = template_format.parse(wp_template)
         new_queue = t['Resources']['MyQueue2']
         new_queue['Properties']['metadata'] = {'key1': 'value'}
+        resource_defns = template.Template(t).resource_definitions(self.stack)
 
         scheduler.TaskRunner(queue.create)()
-        scheduler.TaskRunner(queue.update, new_queue)()
+        scheduler.TaskRunner(queue.update, resource_defns['MyQueue2'])()
         self.m.VerifyAll()
 
     def test_update_replace(self):
@@ -223,7 +225,8 @@ class MarconiMessageQueueTest(HeatTestCase):
 
         t = template_format.parse(wp_template)
         t['Resources']['MyQueue2']['Properties']['name'] = 'new_queue'
-        new_queue = t['Resources']['MyQueue2']
+        resource_defns = template.Template(t).resource_definitions(self.stack)
+        new_queue = resource_defns['MyQueue2']
 
         scheduler.TaskRunner(queue.create)()
         err = self.assertRaises(resource.UpdateReplace,

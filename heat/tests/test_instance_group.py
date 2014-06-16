@@ -23,6 +23,7 @@ from heat.engine import resources
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_keypair
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -281,8 +282,11 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['Size'] = '2'
+        props = copy.copy(rsrc.properties.data)
+        props['Size'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         self.assertRaises(exception.ResourceFailure, updater)
 
@@ -310,8 +314,11 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['AvailabilityZones'] = ['wibble']
+        props = copy.copy(rsrc.properties.data)
+        props['AvailabilityZones'] = ['wibble']
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         self.assertRaises(resource.UpdateReplace, updater)
 

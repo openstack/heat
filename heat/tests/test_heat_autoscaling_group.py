@@ -22,6 +22,7 @@ from heat.common import short_id
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
 from heat.openstack.common import timeutils
@@ -82,8 +83,11 @@ class AutoScalingGroupTest(HeatTestCase):
         self.assertEqual(1, len(resources))
 
         # Reduce the min size to 0, should complete without adjusting
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['min_size'] = 0
+        props = copy.copy(rsrc.properties.data)
+        props['min_size'] = 0
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(resources, rsrc.get_instances())
 
@@ -132,8 +136,11 @@ class AutoScalingGroupTest(HeatTestCase):
         self.assertEqual(1, len(resources))
 
         # Reduce the max size to 2, should complete without adjusting
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['max_size'] = 2
+        props = copy.copy(rsrc.properties.data)
+        props['max_size'] = 2
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(resources, rsrc.get_instances())
         self.assertEqual(2, rsrc.properties['max_size'])
@@ -146,8 +153,11 @@ class AutoScalingGroupTest(HeatTestCase):
         rsrc = self.create_stack(self.parsed)['my-group']
         self.assertEqual(1, len(rsrc.get_instances()))
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['min_size'] = 2
+        props = copy.copy(rsrc.properties.data)
+        props['min_size'] = 2
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instances()))
         self.assertEqual(2, rsrc.properties['min_size'])
@@ -159,8 +169,11 @@ class AutoScalingGroupTest(HeatTestCase):
         rsrc = self.create_stack(self.parsed)['my-group']
         self.assertEqual(1, len(rsrc.get_instances()))
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['desired_capacity'] = 2
+        props = copy.copy(rsrc.properties.data)
+        props['desired_capacity'] = 2
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instances()))
         self.assertEqual(2, rsrc.properties['desired_capacity'])
@@ -172,8 +185,11 @@ class AutoScalingGroupTest(HeatTestCase):
         resources = rsrc.get_instances()
         self.assertEqual(2, len(resources))
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties'].pop('desired_capacity')
+        props = copy.copy(rsrc.properties.data)
+        props.pop('desired_capacity')
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(resources, rsrc.get_instances())
         self.assertIsNone(rsrc.properties['desired_capacity'])
@@ -429,14 +445,18 @@ class RollingUpdatesTest(HeatTestCase):
             definitions = tmpl.resource_definitions(stack)
             templates = [definitions[name] for name in created_order]
             batches.append(templates)
+
         patcher = mock.patch.object(
             stack_resource.StackResource, 'update_with_template',
             side_effect=update_with_template, wraps=rsrc.update_with_template)
         patcher.start()
         self.addCleanup(patcher.stop)
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['resource']['properties']['Foo'] = 'Hi'
 
+        props = copy.deepcopy(rsrc.properties.data)
+        props['resource']['properties']['Foo'] = 'Hi'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
 
         props_schema = generic_resource.ResourceWithProps.properties_schema

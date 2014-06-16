@@ -284,8 +284,11 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(1, len(instance_names))
 
         # Reduce the min size to 0, should complete without adjusting
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['MinSize'] = '0'
+        props = copy.copy(rsrc.properties.data)
+        props['MinSize'] = '0'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(instance_names, rsrc.get_instance_names())
 
@@ -314,8 +317,11 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
         self.assertEqual(1, len(rsrc.get_instance_names()))
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['AvailabilityZones'] = ['foo']
+        props = copy.copy(rsrc.properties.data)
+        props['AvailabilityZones'] = ['foo']
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -584,8 +590,11 @@ class AutoScalingTest(HeatTestCase):
         instance_names = rsrc.get_instance_names()
 
         # Reduce the max size to 2, should complete without adjusting
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['MaxSize'] = '2'
+        props = copy.copy(rsrc.properties.data)
+        props['MaxSize'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(instance_names, rsrc.get_instance_names())
         self.assertEqual(2, rsrc.properties['MaxSize'])
@@ -614,8 +623,11 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['MinSize'] = '2'
+        props = copy.copy(rsrc.properties.data)
+        props['MinSize'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instance_names()))
         self.assertEqual(2, rsrc.properties['MinSize'])
@@ -644,8 +656,11 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['DesiredCapacity'] = '2'
+        props = copy.copy(rsrc.properties.data)
+        props['DesiredCapacity'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(2, len(rsrc.get_instance_names()))
         self.assertEqual(2, rsrc.properties['DesiredCapacity'])
@@ -674,9 +689,12 @@ class AutoScalingTest(HeatTestCase):
         self._stub_delete(1)
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['MinSize'] = '0'
-        update_snippet['Properties']['DesiredCapacity'] = '0'
+        props = copy.copy(rsrc.properties.data)
+        props['MinSize'] = '0'
+        props['DesiredCapacity'] = '0'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(0, len(rsrc.get_instance_names()))
         self.assertEqual(0, rsrc.properties['DesiredCapacity'])
@@ -701,8 +719,11 @@ class AutoScalingTest(HeatTestCase):
 
         # Remove DesiredCapacity from the updated template, which should
         # have no effect, it's an optional parameter
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        del(update_snippet['Properties']['DesiredCapacity'])
+        props = copy.copy(rsrc.properties.data)
+        del props['DesiredCapacity']
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(instance_names, rsrc.get_instance_names())
         self.assertIsNone(rsrc.properties['DesiredCapacity'])
@@ -726,8 +747,12 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
         self.assertEqual(1, len(rsrc.get_instance_names()))
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['Cooldown'] = '61'
+
+        props = copy.copy(rsrc.properties.data)
+        props['Cooldown'] = '61'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(61, rsrc.properties['Cooldown'])
 
@@ -771,8 +796,11 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
         self.assertEqual(1, len(rsrc.get_instance_names()))
-        update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['Cooldown'] = '61'
+        props = copy.copy(rsrc.properties.data)
+        props['Cooldown'] = '61'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
 
         rsrc.delete()
@@ -1557,8 +1585,11 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(2, len(rsrc.get_instance_names()))
 
         # Update scaling policy
-        update_snippet = copy.deepcopy(up_policy.parsed_template())
-        update_snippet['Properties']['ScalingAdjustment'] = '2'
+        props = copy.copy(up_policy.properties.data)
+        props['ScalingAdjustment'] = '2'
+        update_snippet = rsrc_defn.ResourceDefinition(up_policy.name,
+                                                      up_policy.type(),
+                                                      props)
         scheduler.TaskRunner(up_policy.update, update_snippet)()
         self.assertEqual(2, up_policy.properties['ScalingAdjustment'])
 

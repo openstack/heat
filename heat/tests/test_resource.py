@@ -238,7 +238,8 @@ class ResourceTest(HeatTestCase):
                                             'TestResource')
         res = TestResource('test_resource', tmpl, self.stack)
 
-        utmpl = {'Type': 'TestResource', 'Properties': {'a_string': 'foo'}}
+        utmpl = rsrc_defn.ResourceDefinition('test_resource', 'TestResource',
+                                             {'a_string': 'foo'})
         self.assertRaises(
             resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 

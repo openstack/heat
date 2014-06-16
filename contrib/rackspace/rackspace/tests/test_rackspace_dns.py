@@ -11,13 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import uuid
 
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -224,12 +224,17 @@ class RackspaceDnsTest(common.HeatTestCase):
             updateRecords,
             **update_args)
 
-        ut = copy.deepcopy(instance.parsed_template())
-        ut['Properties']['emailAddress'] = 'updatedEmail@example.com'
-        ut['Properties']['ttl'] = 5555
-        ut['Properties']['comment'] = 'updated comment'
+        uprops = dict(instance.properties)
+        uprops.update({
+            'emailAddress': 'updatedEmail@example.com',
+            'ttl': 5555,
+            'comment': 'updated comment',
+        })
         if updateRecords:
-                ut['Properties']['records'] = updateRecords
+            uprops['records'] = updateRecords
+        ut = rsrc_defn.ResourceDefinition(instance.name,
+                                          instance.type(),
+                                          uprops)
 
         scheduler.TaskRunner(instance.update, ut)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)

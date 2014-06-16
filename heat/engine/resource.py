@@ -496,6 +496,8 @@ class Resource(object):
         '''
         action = self.UPDATE
 
+        assert isinstance(after, rsrc_defn.ResourceDefinition)
+
         (cur_class_def, cur_ver) = self.implementation_signature()
         prev_ver = cur_ver
         if prev_resource is not None:

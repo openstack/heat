@@ -26,7 +26,9 @@ from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import volume as vol
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import template
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -520,11 +522,14 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        after = copy.deepcopy(t)['Resources']['MountPoint']
+        after_t = copy.deepcopy(t)
+        after = after_t['Resources']['MountPoint']
         after['Properties']['VolumeId'] = 'vol-123'
         after['Properties']['InstanceId'] = 'WikiDatabase'
         after['Properties']['Device'] = '/dev/vdd'
-        scheduler.TaskRunner(rsrc.update, after)()
+        after_defs = template.Template(after_t).resource_definitions(stack)
+
+        scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
@@ -586,10 +591,13 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        after = copy.deepcopy(t)['Resources']['MountPoint']
+        after_t = copy.deepcopy(t)
+        after = after_t['Resources']['MountPoint']
         after['Properties']['VolumeId'] = 'vol-456'
         after['Properties']['InstanceId'] = 'WikiDatabase'
-        scheduler.TaskRunner(rsrc.update, after)()
+        after_defs = template.Template(after_t).resource_definitions(stack)
+
+        scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(fv2a.id, rsrc.resource_id)
@@ -634,11 +642,14 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        after = copy.deepcopy(t)['Resources']['MountPoint']
+        after_t = copy.deepcopy(t)
+        after = after_t['Resources']['MountPoint']
         after['Properties']['VolumeId'] = 'vol-123'
         after['Properties']['InstanceId'] = 'WikiDatabase2'
         #after['Properties']['Device'] = '/dev/vdd'
-        scheduler.TaskRunner(rsrc.update, after)()
+        after_defs = template.Template(after_t).resource_definitions(stack)
+
+        scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
@@ -1051,8 +1062,9 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 1
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 1
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
@@ -1084,8 +1096,9 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 2
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         self.assertIsNone(update_task())
@@ -1115,8 +1128,9 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 2
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         self.assertRaises(exception.ResourceFailure, update_task)
@@ -1146,8 +1160,9 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 2
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
@@ -1206,8 +1221,9 @@ class VolumeTest(HeatTestCase):
         self.assertEqual('available', fv.status)
         self.create_attachment(t, stack, 'MountPoint')
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 2
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         self.assertIsNone(update_task())
@@ -1247,8 +1263,9 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('available', fv.status)
 
-        after = copy.deepcopy(t)['Resources']['DataVolume']
-        after['Properties']['Size'] = 2
+        props = copy.deepcopy(rsrc.properties.data)
+        props['Size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         self.assertIsNone(update_task())

@@ -26,6 +26,7 @@ from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import provider_net
 from heat.engine.resources.neutron import router
 from heat.engine.resources.neutron import subnet
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -2139,27 +2140,34 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
 
         # test update FloatingIpAssociation with port_id
-        update_snippet = copy.deepcopy(fipa.parsed_template())
+        props = copy.deepcopy(fipa.properties.data)
         update_port_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
-        update_snippet['Properties']['port_id'] = update_port_id
+        props['port_id'] = update_port_id
+        update_snippet = rsrc_defn.ResourceDefinition(fipa.name, fipa.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
 
         scheduler.TaskRunner(fipa.update, update_snippet)()
         self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
 
         # test update FloatingIpAssociation with floatingip_id
-        update_snippet = copy.deepcopy(fipa.parsed_template())
+        props = copy.deepcopy(fipa.properties.data)
         update_flip_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
-        update_snippet['Properties']['floatingip_id'] = update_flip_id
+        props['floatingip_id'] = update_flip_id
+        update_snippet = rsrc_defn.ResourceDefinition(fipa.name, fipa.type(),
+                                                      props)
 
         scheduler.TaskRunner(fipa.update, update_snippet)()
         self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
 
         # test update FloatingIpAssociation with port_id and floatingip_id
-        update_snippet = copy.deepcopy(fipa.parsed_template())
+        props = copy.deepcopy(fipa.properties.data)
         update_flip_id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         update_port_id = 'ade6fcac-7d47-416e-a3d7-ad12efe445c1'
-        update_snippet['Properties']['floatingip_id'] = update_flip_id
-        update_snippet['Properties']['port_id'] = update_port_id
+        props['floatingip_id'] = update_flip_id
+        props['port_id'] = update_port_id
+        update_snippet = rsrc_defn.ResourceDefinition(fipa.name, fipa.type(),
+                                                      props)
 
         scheduler.TaskRunner(fipa.update, update_snippet)()
         self.assertEqual((fipa.UPDATE, fipa.COMPLETE), fipa.state)
