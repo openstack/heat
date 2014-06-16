@@ -654,8 +654,9 @@ class EngineService(service.Service):
             props = properties.Properties(ResourceClass.properties_schema,
                                           res.get('Properties', {}),
                                           context=cnxt)
+            deletion_policy = res.get('DeletionPolicy', 'Delete')
             try:
-                ResourceClass.validate_deletion_policy(res)
+                ResourceClass.validate_deletion_policy(deletion_policy)
                 props.validate(with_value=False)
             except Exception as ex:
                 return {'Error': six.text_type(ex)}
