@@ -286,11 +286,15 @@ class Stack(collections.Mapping):
         resource.reparse()
         self.resources[resource.name] = resource
         self.t.add_resource(definition)
+        if self.t.id is not None:
+            self.t.store()
 
     def remove_resource(self, resource_name):
         '''Remove the resource with the specified name.'''
         del self.resources[resource_name]
         self.t.remove_resource(resource_name)
+        if self.t.id is not None:
+            self.t.store()
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
