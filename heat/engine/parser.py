@@ -253,15 +253,16 @@ class Stack(collections.Mapping):
         if self.id:
             db_api.stack_update(self.context, self.id, s)
         else:
-            # Create a context containing a trust_id and trustor_user_id
-            # if trusts are enabled
-            if cfg.CONF.deferred_auth_method == 'trusts':
-                trust_context = self.clients.keystone().create_trust_context()
-                new_creds = db_api.user_creds_create(trust_context)
-            else:
-                new_creds = db_api.user_creds_create(self.context)
-            s['user_creds_id'] = new_creds.id
-            self.user_creds_id = new_creds.id
+            if not self.user_creds_id:
+                # Create a context containing a trust_id and trustor_user_id
+                # if trusts are enabled
+                if cfg.CONF.deferred_auth_method == 'trusts':
+                    trust_ctx = self.clients.keystone().create_trust_context()
+                    new_creds = db_api.user_creds_create(trust_ctx)
+                else:
+                    new_creds = db_api.user_creds_create(self.context)
+                s['user_creds_id'] = new_creds.id
+                self.user_creds_id = new_creds.id
 
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id

@@ -2901,6 +2901,19 @@ class StackTest(HeatTestCase):
         db_stack = db_api.stack_get(self.ctx, stack_ownee.id)
         self.assertEqual(self.stack.id, db_stack.owner_id)
 
+    def test_init_user_creds_id(self):
+        ctx_init = utils.dummy_context(user='my_user',
+                                       password='my_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_init', self.tmpl,
+                                  user_creds_id=creds.id)
+        self.stack.store()
+        self.assertEqual(creds.id, self.stack.user_creds_id)
+        ctx_expected = ctx_init.to_dict()
+        ctx_expected['auth_token'] = None
+        self.assertEqual(ctx_expected, self.stack.stored_context().to_dict())
+
     def test_store_saves_creds(self):
         """
         A user_creds entry is created on first stack store
