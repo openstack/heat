@@ -264,7 +264,7 @@ class instancesTest(HeatTestCase):
 
         # create network interface
         scheduler.TaskRunner(nic.create)()
-        stack["nic1"] = nic
+        stack.resources["nic1"] = nic
 
         scheduler.TaskRunner(instance.create)()
         return instance
