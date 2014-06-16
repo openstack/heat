@@ -125,7 +125,7 @@ def format_stack_resource(resource, detail=True):
         api.RES_ACTION: resource.action,
         api.RES_STATUS: resource.status,
         api.RES_STATUS_DATA: resource.status_reason,
-        api.RES_TYPE: resource.t['Type'],
+        api.RES_TYPE: resource.type(),
         api.RES_ID: dict(resource.identifier()),
         api.RES_STACK_ID: dict(resource.stack.identifier()),
         api.RES_STACK_NAME: resource.stack.name,
