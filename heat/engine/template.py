@@ -13,6 +13,7 @@
 
 import abc
 import collections
+import copy
 import functools
 
 from heat.common import exception
@@ -123,6 +124,9 @@ class Template(collections.Mapping):
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
         self.version = get_version(self.t, _template_classes.keys())
+
+    def __deepcopy__(self, memo):
+        return Template(copy.deepcopy(self.t, memo), files=self.files)
 
     @classmethod
     def load(cls, context, template_id, t=None):
