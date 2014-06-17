@@ -77,7 +77,7 @@ Launching a stack
 Now lets launch a stack, using an example template from the heat-templates repository::
 
     heat stack-create teststack -u
-    https://raw.github.com/openstack/heat-templates/master/cfn/F17/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F17"
+    http://git.openstack.org/cgit/openstack/heat-templates/plain/hot/F20/WordPress_Native.yaml -P key_name=heat_key -P image_id=Fedora-x86_64-20-20131211.1-sda
 
 Which will respond::
 
