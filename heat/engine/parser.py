@@ -214,20 +214,23 @@ class Stack(collections.Mapping):
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
 
+        return cls._from_db(context, stack, parent_resource=parent_resource,
+                            resolve_data=resolve_data)
+
+    @classmethod
+    def _from_db(cls, context, stack, parent_resource=None, resolve_data=True):
         template = Template.load(
             context, stack.raw_template_id, stack.raw_template)
         env = environment.Environment(stack.parameters)
-        stack = cls(context, stack.name, template, env,
-                    stack.id, stack.action, stack.status, stack.status_reason,
-                    stack.timeout, resolve_data, stack.disable_rollback,
-                    parent_resource, owner_id=stack.owner_id,
-                    stack_user_project_id=stack.stack_user_project_id,
-                    created_time=stack.created_at,
-                    updated_time=stack.updated_at,
-                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
-                    validate_parameters=False)
-
-        return stack
+        return cls(context, stack.name, template, env,
+                   stack.id, stack.action, stack.status, stack.status_reason,
+                   stack.timeout, resolve_data, stack.disable_rollback,
+                   parent_resource, owner_id=stack.owner_id,
+                   stack_user_project_id=stack.stack_user_project_id,
+                   created_time=stack.created_at,
+                   updated_time=stack.updated_at,
+                   user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
+                   validate_parameters=False)
 
     def store(self, backup=False):
         '''
