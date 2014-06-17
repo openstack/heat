@@ -2211,10 +2211,17 @@ class StackTest(HeatTestCase):
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
         self.m.ReplayAll()
 
-        self.stack.update(updated_stack)
-        self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.COMPLETE),
-                         self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        with mock.patch.object(self.stack, 'state_set',
+                               side_effect=self.stack.state_set) as mock_state:
+            self.stack.update(updated_stack)
+            self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.COMPLETE),
+                             self.stack.state)
+            self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            self.assertEqual(2, mock_state.call_count)
+            self.assertEqual(('UPDATE', 'IN_PROGRESS'),
+                             mock_state.call_args_list[0][0][:2])
+            self.assertEqual(('ROLLBACK', 'IN_PROGRESS'),
+                             mock_state.call_args_list[1][0][:2])
         self.m.VerifyAll()
 
     def test_update_rollback_fail(self):

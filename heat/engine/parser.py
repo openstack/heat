@@ -596,7 +596,7 @@ class Stack(collections.Mapping):
                                'State invalid for %s' % action)
                 return
 
-        self.state_set(self.UPDATE, self.IN_PROGRESS,
+        self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
         oldstack = Stack(self.context, self.name, self.t, self.env)
