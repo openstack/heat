@@ -1670,8 +1670,8 @@ class StackServiceTest(HeatTestCase):
 
     @stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=mox.IgnoreArg(), resolve_data=False)\
+        self.m.StubOutWithMock(parser.Stack, '_from_db')
+        parser.Stack._from_db(self.ctx, mox.IgnoreArg(), resolve_data=False)\
             .AndReturn(self.stack)
 
         self.m.ReplayAll()
