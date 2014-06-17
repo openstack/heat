@@ -173,9 +173,6 @@ class KeystoneClientV3(object):
             if not client.auth_ref.trust_scoped:
                 LOG.error(_("trust token re-scoping failed!"))
                 raise exception.AuthorizationFailure()
-            # All OK so update the context with the token
-            self.context.auth_token = client.auth_ref.auth_token
-            self.context.auth_url = kwargs.get('auth_url')
             # Sanity check that impersonation is effective
             if self.context.trustor_user_id != client.auth_ref.user_id:
                 LOG.error(_("Trust impersonation failed"))
