@@ -12,12 +12,10 @@
 #    under the License.
 
 from heat.engine import attributes
-from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
 import neutronclient.common.exceptions as neutron_exp
-from neutronclient.neutron import v2_0 as neutronV20
 
 
 class Net(neutron.NeutronResource):
@@ -180,16 +178,6 @@ class Net(neutron.NeutronResource):
                 #  409: the network isn't scheduled by the dhcp_agent
                 if ex.status_code not in (404, 409):
                     raise ex
-
-
-class NetworkConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (neutron_exp.NeutronClientException,)
-
-    def validate_with_client(self, client, value):
-        neutron_client = client.client('neutron')
-        neutronV20.find_resourceid_by_name_or_id(
-            neutron_client, 'network', value)
 
 
 def resource_mapping():
