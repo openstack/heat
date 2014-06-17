@@ -35,8 +35,6 @@ from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
-DELETION_POLICY = (DELETE, RETAIN, SNAPSHOT) = ('Delete', 'Retain', 'Snapshot')
-
 
 def get_types(support_status):
     '''Return a list of valid resource types.'''
@@ -626,18 +624,18 @@ class Resource(object):
         LOG.info(_('Validating %s') % str(self))
 
         function.validate(self.t)
-        self.validate_deletion_policy(self.t)
+        self.validate_deletion_policy(self.t.deletion_policy())
         return self.properties.validate()
 
     @classmethod
-    def validate_deletion_policy(cls, template):
-        deletion_policy = template.get('DeletionPolicy', DELETE)
-        if deletion_policy not in DELETION_POLICY:
-            msg = _('Invalid DeletionPolicy %s') % deletion_policy
+    def validate_deletion_policy(cls, policy):
+        if policy not in rsrc_defn.ResourceDefinition.DELETION_POLICIES:
+            msg = _('Invalid deletion policy "%s"') % policy
             raise exception.StackValidationFailed(message=msg)
-        elif deletion_policy == SNAPSHOT:
+
+        if policy == rsrc_defn.ResourceDefinition.SNAPSHOT:
             if not callable(getattr(cls, 'handle_snapshot_delete', None)):
-                msg = _('Snapshot DeletionPolicy not supported')
+                msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
 
     def delete(self):
@@ -661,20 +659,20 @@ class Resource(object):
             self.state_set(action, self.IN_PROGRESS)
 
             if self.abandon_in_progress:
-                deletion_policy = RETAIN
+                deletion_policy = self.t.RETAIN
             else:
-                deletion_policy = self.t.get('DeletionPolicy', DELETE)
+                deletion_policy = self.t.deletion_policy()
             handle_data = None
-            if deletion_policy == DELETE:
+            if deletion_policy == self.t.DELETE:
                 if callable(getattr(self, 'handle_delete', None)):
                     handle_data = self.handle_delete()
                     yield
-            elif deletion_policy == SNAPSHOT:
+            elif deletion_policy == self.t.SNAPSHOT:
                 if callable(getattr(self, 'handle_snapshot_delete', None)):
                     handle_data = self.handle_snapshot_delete(initial_state)
                     yield
 
-            if (deletion_policy != RETAIN and
+            if (deletion_policy != self.t.RETAIN and
                     callable(getattr(self, 'check_delete_complete', None))):
                 while not self.check_delete_complete(handle_data):
                     yield

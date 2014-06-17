@@ -544,7 +544,7 @@ class ResourceFacade(function.Function):
             up = self.stack.parent_resource.t.get('UpdatePolicy', {})
             return function.resolve(up)
         elif attr == self.DELETION_POLICY:
-            dp = self.stack.parent_resource.t.get('DeletionPolicy', 'Delete')
+            dp = self.stack.parent_resource.t.deletion_policy()
             return function.resolve(dp)
 
 
