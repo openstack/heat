@@ -15,8 +15,6 @@ from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-import neutronclient.common.exceptions as neutron_exp
-
 
 class Net(neutron.NeutronResource):
     PROPERTIES = (
@@ -124,8 +122,8 @@ class Net(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_network(self.resource_id)
-        except neutron_exp.NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -147,12 +145,6 @@ class Net(neutron.NeutronResource):
         attributes = self._show_resource()
         return self.is_built(attributes)
 
-    def _handle_not_found_exception(self, ex):
-        # raise any exception which is not for a not found network
-        if not (ex.status_code == 404 or
-                isinstance(ex, neutron_exp.NetworkNotFoundClient)):
-            raise ex
-
     def _replace_dhcp_agents(self, dhcp_agent_ids):
         ret = self.neutron().list_dhcp_agent_hosting_networks(
             self.resource_id)
@@ -163,21 +155,22 @@ class Net(neutron.NeutronResource):
             try:
                 self.neutron().add_network_to_dhcp_agent(
                     dhcp_agent_id, {'network_id': self.resource_id})
-            except neutron_exp.NeutronClientException as ex:
+            except Exception as ex:
                 # if 409 is happened, the agent is already associated.
-                if ex.status_code != 409:
-                    raise ex
+                if not self.client_plugin().is_conflict(ex):
+                    raise
 
         for dhcp_agent_id in old - new:
             try:
                 self.neutron().remove_network_from_dhcp_agent(
                     dhcp_agent_id, self.resource_id)
-            except neutron_exp.NeutronClientException as ex:
+            except Exception as ex:
                 # assume 2 patterns about status_code following:
                 #  404: the network or agent is already gone
                 #  409: the network isn't scheduled by the dhcp_agent
-                if ex.status_code not in (404, 409):
-                    raise ex
+                if not (self.client_plugin().is_conflict(ex) or
+                        self.client_plugin().is_not_found(ex)):
+                    raise
 
 
 def resource_mapping():

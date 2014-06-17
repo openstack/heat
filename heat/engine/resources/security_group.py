@@ -111,7 +111,6 @@ class SecurityGroup(resource.Resource):
         }
 
     def _handle_create_neutron(self):
-        from neutronclient.common.exceptions import NeutronClientException
         client = self.neutron()
 
         sec = client.create_security_group({'security_group': {
@@ -140,8 +139,8 @@ class SecurityGroup(resource.Resource):
                         'security_group_rule':
                         self._convert_to_neutron_rule('ingress', i)
                     })
-                except NeutronClientException as ex:
-                    if ex.status_code == 409:
+                except Exception as ex:
+                    if self.client_plugin('neutron').is_conflict(ex):
                         # no worries, the rule is already there
                         pass
                     else:
@@ -160,8 +159,8 @@ class SecurityGroup(resource.Resource):
                         'security_group_rule':
                         self._convert_to_neutron_rule('egress', i)
                     })
-                except NeutronClientException as ex:
-                    if ex.status_code == 409:
+                except Exception as ex:
+                    if self.client_plugin('neutron').is_conflict(ex):
                         # no worries, the rule is already there
                         pass
                     else:
@@ -237,29 +236,25 @@ class SecurityGroup(resource.Resource):
             self.resource_id_set(None)
 
     def _handle_delete_neutron(self):
-        from neutronclient.common.exceptions import NeutronClientException
         client = self.neutron()
 
         if self.resource_id is not None:
             try:
                 sec = client.show_security_group(
                     self.resource_id)['security_group']
-            except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
             else:
                 for rule in sec['security_group_rules']:
                     try:
                         client.delete_security_group_rule(rule['id'])
-                    except NeutronClientException as ex:
-                        if ex.status_code != 404:
-                            raise
+                    except Exception as ex:
+                        self.client_plugin('neutron').ignore_not_found(ex)
 
                 try:
                     client.delete_security_group(self.resource_id)
-                except NeutronClientException as ex:
-                    if ex.status_code != 404:
-                        raise
+                except Exception as ex:
+                    self.client_plugin('neutron').ignore_not_found(ex)
             self.resource_id_set(None)
 
     def FnGetRefId(self):

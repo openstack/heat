@@ -21,8 +21,6 @@ from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
-from neutronclient.common.exceptions import NeutronClientException
-
 LOG = logging.getLogger(__name__)
 
 
@@ -71,9 +69,9 @@ class ElasticIp(resource.Resource):
             if self.properties[self.DOMAIN]:
                 try:
                     ips = self.neutron().show_floatingip(self.resource_id)
-                except NeutronClientException as e:
-                    if e.status_code == 404:
-                        LOG.warn(_("Floating IPs not found: %s") % e)
+                except Exception as ex:
+                    self.client_plugin('neutron').ignore_not_found(ex)
+                    LOG.warn(_("Floating IPs not found"))
                 else:
                     self.ipaddress = ips['floatingip']['floating_ip_address']
             else:
@@ -134,9 +132,8 @@ class ElasticIp(resource.Resource):
             if self.properties[self.DOMAIN]:
                 try:
                     self.neutron().delete_floatingip(self.resource_id)
-                except NeutronClientException as e:
-                    if e.status_code != 404:
-                        raise e
+                except Exception as ex:
+                    self.client_plugin('neutron').ignore_not_found(ex)
             else:
                 try:
                     self.nova().floating_ips.delete(self.resource_id)
@@ -249,9 +246,8 @@ class ElasticIpAssociation(resource.Resource):
             try:
                 self.neutron().update_floatingip(
                     float_id, {'floatingip': {'port_id': None}})
-            except NeutronClientException as e:
-                if e.status_code != 404:
-                    raise e
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
 
 
 def resource_mapping():

@@ -19,8 +19,6 @@ from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class Router(neutron.NeutronResource):
 
@@ -163,8 +161,8 @@ class Router(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_router(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -275,8 +273,8 @@ class RouterInterface(neutron.NeutronResource):
             client.remove_interface_router(
                 router_id,
                 {key: value})
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 class RouterGateway(neutron.NeutronResource):
@@ -360,8 +358,8 @@ class RouterGateway(neutron.NeutronResource):
         (router_id, network_id) = self.resource_id.split(':')
         try:
             client.remove_gateway_router(router_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

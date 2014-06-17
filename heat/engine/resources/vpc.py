@@ -69,6 +69,8 @@ class VPC(resource.Resource):
         ),
     }
 
+    default_client_name = 'neutron'
+
     def handle_create(self):
         client = self.neutron()
         # The VPC's net and router are associated by having identical names.
@@ -107,20 +109,17 @@ class VPC(resource.Resource):
         return neutron.NeutronResource.is_built(router)
 
     def handle_delete(self):
-        from neutronclient.common.exceptions import NeutronClientException
         client = self.neutron()
         router = self.router_for_vpc(client, self.resource_id)
         try:
             client.delete_router(router['id'])
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
         try:
             client.delete_network(self.resource_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

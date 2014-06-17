@@ -16,8 +16,6 @@ from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.vpc import VPC
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class RouteTable(resource.Resource):
 
@@ -89,16 +87,14 @@ class RouteTable(resource.Resource):
         router_id = self.resource_id
         try:
             client.delete_router(router_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin('neutron').ignore_not_found(ex)
 
         # just in case this router has been added to a gateway, remove it
         try:
             client.remove_gateway_router(router_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin('neutron').ignore_not_found(ex)
 
 
 class SubnetRouteTableAssociation(resource.Resource):
@@ -135,9 +131,8 @@ class SubnetRouteTableAssociation(resource.Resource):
                 client.remove_interface_router(
                     previous_router['id'],
                     {'subnet_id': subnet_id})
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin('neutron').ignore_not_found(ex)
 
         client.add_interface_router(
             router_id, {'subnet_id': subnet_id})
@@ -158,9 +153,8 @@ class SubnetRouteTableAssociation(resource.Resource):
         try:
             client.remove_interface_router(router_id, {
                 'subnet_id': subnet_id})
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin('neutron').ignore_not_found(ex)
 
         # add back the default router
         try:
@@ -168,9 +162,8 @@ class SubnetRouteTableAssociation(resource.Resource):
             if default_router:
                 client.add_interface_router(
                     default_router['id'], {'subnet_id': subnet_id})
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin('neutron').ignore_not_found(ex)
 
 
 def resource_mapping():

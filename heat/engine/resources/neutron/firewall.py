@@ -16,8 +16,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class Firewall(neutron.NeutronResource):
     """
@@ -111,8 +109,8 @@ class Firewall(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_firewall(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -213,8 +211,8 @@ class FirewallPolicy(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_firewall_policy(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -384,8 +382,8 @@ class FirewallRule(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_firewall_rule(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 

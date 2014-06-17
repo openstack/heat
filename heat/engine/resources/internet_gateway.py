@@ -97,6 +97,8 @@ class VPCGatewayAttachment(resource.Resource):
         ),
     }
 
+    default_client_name = 'neutron'
+
     def _vpc_route_tables(self):
         for resource in self.stack.itervalues():
             if (resource.has_interface('AWS::EC2::RouteTable') and
@@ -121,15 +123,12 @@ class VPCGatewayAttachment(resource.Resource):
                 'network_id': external_network_id})
 
     def handle_delete(self):
-        from neutronclient.common.exceptions import NeutronClientException
-
         client = self.neutron()
         for router in self._vpc_route_tables():
             try:
                 client.remove_gateway_router(router.resource_id)
-            except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

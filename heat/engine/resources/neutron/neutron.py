@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutronclient.common.exceptions import NeutronClientException
-
 from heat.common import exception
 from heat.engine import resource
 from heat.engine import scheduler
@@ -23,6 +21,8 @@ LOG = logging.getLogger(__name__)
 
 
 class NeutronResource(resource.Resource):
+
+    default_client_name = 'neutron'
 
     def validate(self):
         '''
@@ -117,7 +117,8 @@ class NeutronResource(resource.Resource):
     def _resolve_attribute(self, name):
         try:
             attributes = self._show_resource()
-        except NeutronClientException as ex:
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
             LOG.warn(_("failed to fetch resource attributes: %s") % ex)
             return None
         if name == 'show':
@@ -130,13 +131,9 @@ class NeutronResource(resource.Resource):
             try:
                 yield
                 self._show_resource()
-            except NeutronClientException as ex:
-                self._handle_not_found_exception(ex)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
                 return
-
-    def _handle_not_found_exception(self, ex):
-        if ex.status_code != 404:
-            raise ex
 
     def FnGetRefId(self):
         return unicode(self.resource_id)

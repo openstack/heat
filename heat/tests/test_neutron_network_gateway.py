@@ -444,7 +444,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                     'interface_name': u'breth1'}]
             }
         }
-        ).AndRaise(network_gateway.NeutronClientException)
+        ).AndRaise(qe.NeutronClientException)
 
         self.m.ReplayAll()
 

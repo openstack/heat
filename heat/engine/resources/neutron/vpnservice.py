@@ -18,8 +18,6 @@ from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class VPNService(neutron.NeutronResource):
     """
@@ -136,8 +134,8 @@ class VPNService(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_vpnservice(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -358,8 +356,8 @@ class IPsecSiteConnection(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_ipsec_site_connection(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -518,8 +516,8 @@ class IKEPolicy(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_ikepolicy(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -680,8 +678,8 @@ class IPsecPolicy(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_ipsecpolicy(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
