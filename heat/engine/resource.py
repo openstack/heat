@@ -148,35 +148,38 @@ class Resource(object):
 
         self.abandon_in_progress = False
 
-        resource = stack.db_resource_get(name)
-
-        if resource:
-            self.resource_id = resource.nova_instance
-            self.action = resource.action
-            self.status = resource.status
-            self.status_reason = resource.status_reason
-            self.id = resource.id
-            try:
-                self._data = db_api.resource_data_get_all(self, resource.data)
-            except exception.NotFound:
-                self._data = {}
-            self._rsrc_metadata = resource.rsrc_metadata
-            self.created_time = resource.created_at
-            self.updated_time = resource.updated_at
+        self.resource_id = None
+        # if the stack is being deleted, assume we've already been deleted
+        if stack.action == stack.DELETE:
+            self.action = self.DELETE
         else:
-            self.resource_id = None
-            # if the stack is being deleted, assume we've already been deleted
-            if stack.action == stack.DELETE:
-                self.action = self.DELETE
-            else:
-                self.action = self.INIT
-            self.status = self.COMPLETE
-            self.status_reason = ''
-            self.id = None
+            self.action = self.INIT
+        self.status = self.COMPLETE
+        self.status_reason = ''
+        self.id = None
+        self._data = {}
+        self._rsrc_metadata = None
+        self.created_time = None
+        self.updated_time = None
+
+        resource = stack.db_resource_get(name)
+        if resource:
+            self._load_data(resource)
+
+    def _load_data(self, resource):
+        '''Load the resource state from its DB representation.'''
+        self.resource_id = resource.nova_instance
+        self.action = resource.action
+        self.status = resource.status
+        self.status_reason = resource.status_reason
+        self.id = resource.id
+        try:
+            self._data = db_api.resource_data_get_all(self, resource.data)
+        except exception.NotFound:
             self._data = {}
-            self._rsrc_metadata = None
-            self.created_time = None
-            self.updated_time = None
+        self._rsrc_metadata = resource.rsrc_metadata
+        self.created_time = resource.created_at
+        self.updated_time = resource.updated_at
 
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,
