@@ -218,7 +218,7 @@ class Resource(object):
         if refresh:
             self._rsrc_metadata = None
         if self.id is None:
-            return self.parsed_template('Metadata')
+            return self.t.metadata()
         if self._rsrc_metadata is not None:
             return self._rsrc_metadata
         rs = db_api.resource_get(self.stack.context, self.id)
