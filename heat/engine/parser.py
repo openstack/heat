@@ -295,17 +295,17 @@ class Stack(collections.Mapping):
         '''Get the resource with the specified name.'''
         return self.resources[key]
 
-    def __setitem__(self, key, resource):
-        '''Set the resource with the specified name to a specific value.'''
+    def add_resource(self, resource):
+        '''Insert the given resource into the stack.'''
         template = resource.stack.t
         resource.stack = self
-        resource.t = template.resource_definitions(self)[key]
+        resource.t = resource.t.reparse(self, template)
         resource.reparse()
-        self.resources[key] = resource
+        self.resources[resource.name] = resource
 
-    def __delitem__(self, key):
+    def remove_resource(self, resource_name):
         '''Remove the resource with the specified name.'''
-        del self.resources[key]
+        del self.resources[resource_name]
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
