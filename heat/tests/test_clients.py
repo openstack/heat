@@ -14,7 +14,6 @@
 import mock
 
 from heatclient import client as heatclient
-from keystoneclient import exceptions as keystone_exceptions
 
 from heat.engine import clients
 from heat.tests.common import HeatTestCase
@@ -43,6 +42,7 @@ class ClientsTest(HeatTestCase):
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat(self, mock_call):
+        self.stub_keystoneclient()
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
@@ -61,6 +61,7 @@ class ClientsTest(HeatTestCase):
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat_no_auth_token(self, mock_call):
+        self.stub_keystoneclient(auth_token='anewtoken')
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
@@ -70,10 +71,12 @@ class ClientsTest(HeatTestCase):
         obj._get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
-        self.assertRaises(keystone_exceptions.AuthorizationFailure, obj.heat)
+        self.assertIsNotNone(obj.heat())
+        self.assertEqual('anewtoken', obj.keystone().auth_token)
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat_cached(self, mock_call):
+        self.stub_keystoneclient()
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
@@ -87,3 +90,17 @@ class ClientsTest(HeatTestCase):
         heat = obj.heat()
         heat_cached = obj.heat()
         self.assertEqual(heat, heat_cached)
+
+    def test_clients_auth_token_update(self):
+        fkc = self.stub_keystoneclient(auth_token='token1')
+        con = mock.Mock()
+        con.auth_url = "http://auth.example.com:5000/v2.0"
+        con.trust_id = "b363706f891f48019483f8bd6503c54b"
+        con.username = 'heat'
+        con.password = 'verysecret'
+        con.auth_token = None
+        obj = clients.Clients(con)
+        self.assertIsNotNone(obj.heat())
+        self.assertEqual('token1', obj.auth_token)
+        fkc.auth_token = 'token2'
+        self.assertEqual('token2', obj.auth_token)

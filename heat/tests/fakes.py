@@ -78,7 +78,7 @@ class FakeClient(object):
 class FakeKeystoneClient(object):
     def __init__(self, username='test_user', password='apassword',
                  user_id='1234', access='4567', secret='8901',
-                 credential_id='abcdxyz'):
+                 credential_id='abcdxyz', auth_token='abcd1234'):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -92,7 +92,7 @@ class FakeKeystoneClient(object):
             secret = self.secret
         self.creds = FakeCred()
 
-        self.auth_token = 'abcd1234'
+        self.auth_token = auth_token
 
     def create_stack_user(self, username, password=''):
         self.username = username
