@@ -121,7 +121,6 @@ def format_stack_resource(resource, detail=True):
         api.RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
         api.RES_NAME: resource.name,
         api.RES_PHYSICAL_ID: resource.resource_id or '',
-        api.RES_METADATA: resource.metadata_get(),
         api.RES_ACTION: resource.action,
         api.RES_STATUS: resource.status,
         api.RES_STATUS_DATA: resource.status_reason,
@@ -138,6 +137,7 @@ def format_stack_resource(resource, detail=True):
 
     if detail:
         res[api.RES_DESCRIPTION] = resource.t.description
+        res[api.RES_METADATA] = resource.metadata_get()
 
     return res
 
