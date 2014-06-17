@@ -36,7 +36,6 @@ notifier_opts = [
                default='INFO',
                help='Default notification level for outgoing notifications'),
     cfg.StrOpt('default_publisher_id',
-               default=None,
                help='Default publisher_id for outgoing notifications'),
 ]
 

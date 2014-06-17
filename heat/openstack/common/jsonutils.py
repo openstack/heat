@@ -31,6 +31,7 @@ This module provides a few things:
 '''
 
 
+import codecs
 import datetime
 import functools
 import inspect
@@ -52,6 +53,7 @@ import six.moves.xmlrpc_client as xmlrpclib
 
 from heat.openstack.common import gettextutils
 from heat.openstack.common import importutils
+from heat.openstack.common import strutils
 from heat.openstack.common import timeutils
 
 netaddr = importutils.try_import("netaddr")
@@ -166,12 +168,12 @@ def dumps(value, default=to_primitive, **kwargs):
     return json.dumps(value, default=default, **kwargs)
 
 
-def loads(s):
-    return json.loads(s)
+def loads(s, encoding='utf-8', **kwargs):
+    return json.loads(strutils.safe_decode(s, encoding), **kwargs)
 
 
-def load(fp):
-    return json.load(fp)
+def load(fp, encoding='utf-8', **kwargs):
+    return json.load(codecs.getreader(encoding)(fp), **kwargs)
 
 
 try:

@@ -49,8 +49,12 @@ def parse_host_port(address, default_port=None):
     ('::1', 1234)
     >>> parse_host_port('2001:db8:85a3::8a2e:370:7334', default_port=1234)
     ('2001:db8:85a3::8a2e:370:7334', 1234)
-
+    >>> parse_host_port(None)
+    (None, None)
     """
+    if not address:
+        return (None, None)
+
     if address[0] == '[':
         # Escaped ipv6
         _host, _port = address[1:].split(']')
@@ -113,14 +117,13 @@ def set_tcp_keepalive(sock, tcp_keepalive=True,
 
     This function configures tcp keepalive parameters if users wish to do
     so.
+
     :param tcp_keepalive: Boolean, turn on or off tcp_keepalive. If users are
       not sure, this should be True, and default values will be used.
 
     :param tcp_keepidle: time to wait before starting to send keepalive probes
-
     :param tcp_keepalive_interval: time between successive probes, once the
       initial wait time is over
-
     :param tcp_keepalive_count: number of probes to send before the connection
       is killed
     """

@@ -41,7 +41,6 @@ help_for_backdoor_port = (
     "chosen port is displayed in the service's log file.")
 eventlet_backdoor_opts = [
     cfg.StrOpt('backdoor_port',
-               default=None,
                help="Enable eventlet backdoor.  %s" % help_for_backdoor_port)
 ]
 
