@@ -12,8 +12,16 @@
 #    under the License.
 
 from glanceclient import client as gc
+from glanceclient import exc
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
+from heat.openstack.common import uuidutils
+
+LOG = logging.getLogger(__name__)
 
 
 class GlanceClientPlugin(client_plugin.ClientPlugin):
@@ -37,3 +45,57 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         }
 
         return gc.Client('1', endpoint, **args)
+
+    def get_image_id(self, image_identifier):
+        '''
+        Return an id for the specified image name or identifier.
+
+        :param image_identifier: image name or a UUID-like identifier
+        :returns: the id of the requested :image_identifier:
+        :raises: exception.ImageNotFound,
+                 exception.PhysicalResourceNameAmbiguity
+        '''
+        if uuidutils.is_uuid_like(image_identifier):
+            try:
+                image_id = self.client().images.get(image_identifier).id
+            except exc.HTTPNotFound:
+                image_id = self.get_image_id_by_name(image_identifier)
+        else:
+            image_id = self.get_image_id_by_name(image_identifier)
+        return image_id
+
+    def get_image_id_by_name(self, image_identifier):
+        '''
+        Return an id for the specified image name.
+
+        :param image_identifier: image name
+        :returns: the id of the requested :image_identifier:
+        :raises: exception.ImageNotFound,
+                 exception.PhysicalResourceNameAmbiguity
+        '''
+        try:
+            filters = {'name': image_identifier}
+            image_list = list(self.client().images.list(filters=filters))
+        except exc.ClientException as ex:
+            raise exception.Error(
+                _("Error retrieving image list from glance: %s") % ex)
+        num_matches = len(image_list)
+        if num_matches == 0:
+            LOG.info(_("Image %s was not found in glance") %
+                     image_identifier)
+            raise exception.ImageNotFound(image_name=image_identifier)
+        elif num_matches > 1:
+            LOG.info(_("Multiple images %s were found in glance with name") %
+                     image_identifier)
+            raise exception.PhysicalResourceNameAmbiguity(
+                name=image_identifier)
+        else:
+            return image_list[0].id
+
+
+class ImageConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.ImageNotFound,)
+
+    def validate_with_client(self, client, value):
+        client.client_plugin('glance').get_image_id(value)

@@ -21,7 +21,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import glance_utils
 from heat.engine.resources.network_interface import NetworkInterface
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources import nova_utils
@@ -439,7 +438,7 @@ class Instance(resource.Resource):
 
         image_name = self.properties[self.IMAGE_ID]
 
-        image_id = glance_utils.get_image_id(self.glance(), image_name)
+        image_id = self.client_plugin('glance').get_image_id(image_name)
 
         flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
 

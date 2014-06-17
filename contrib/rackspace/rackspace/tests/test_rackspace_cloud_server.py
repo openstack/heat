@@ -21,7 +21,6 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import glance_utils
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
@@ -68,12 +67,8 @@ class CloudServersTest(HeatTestCase):
                                  cloud_server.CloudServer)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(imageId_input).MultipleTimes().\
             AndReturn(imageId)
 
     def _stub_server_validate(self, server, imageId_input, image_id):

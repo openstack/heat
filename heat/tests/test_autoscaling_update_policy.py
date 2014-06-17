@@ -25,7 +25,6 @@ from heat.engine.clients.os import nova
 from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parser
-from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
@@ -212,13 +211,8 @@ class AutoScalingGroupTest(HeatTestCase):
                              'http://127.0.0.1:8000/v1/waitcondition')
 
     def _mock_get_image_id_success(self, imageId_input, imageId,
-                                   update_image=None, mock_create=True):
-        g_cli_mock = self.m.CreateMockAnything()
-        if mock_create:
-            self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-            glance.GlanceClientPlugin._create().AndReturn(
-                g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
+                                   update_image=None):
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
 
         # If update_image is None (create case), validation for initial image
         # imageId_input will be invoked multiple times (for each server).
@@ -226,10 +220,10 @@ class AutoScalingGroupTest(HeatTestCase):
         # values and new property values will be done, but the order is not
         # deterministic. Therefore, using mox.IgnoreArg() for the update case.
         if update_image is None:
-            glance_utils.get_image_id(g_cli_mock, imageId_input).\
+            glance.GlanceClientPlugin.get_image_id(imageId_input).\
                 MultipleTimes().AndReturn(imageId)
         else:
-            glance_utils.get_image_id(g_cli_mock, mox.IgnoreArg()).\
+            glance.GlanceClientPlugin.get_image_id(mox.IgnoreArg()).\
                 MultipleTimes().AndReturn(imageId)
 
     def _stub_validate(self):
@@ -509,8 +503,7 @@ class AutoScalingGroupTest(HeatTestCase):
                                   num_reloads_expected_on_updt)
         self.stub_wallclock()
         self._mock_get_image_id_success('F20-x86_64-cfntools', 'image_id',
-                                        update_image=update_image_id,
-                                        mock_create=False)
+                                        update_image=update_image_id)
 
         stack.validate()
         self.m.ReplayAll()

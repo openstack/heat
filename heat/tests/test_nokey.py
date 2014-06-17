@@ -14,7 +14,6 @@
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
-from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
@@ -62,13 +61,9 @@ class nokeyTest(HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, 'CentOS 5.2').MultipleTimes().\
-            AndReturn(1)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            'CentOS 5.2').MultipleTimes().AndReturn(1)
 
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(

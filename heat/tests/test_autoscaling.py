@@ -21,11 +21,11 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os import glance
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import autoscaling as asc
-from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
@@ -151,8 +151,8 @@ class AutoScalingTest(HeatTestCase):
     def _stub_create(self, num, with_error=None):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         if with_error:
             instance.Instance.handle_create().AndRaise(
@@ -166,9 +166,9 @@ class AutoScalingTest(HeatTestCase):
             cookie).MultipleTimes().AndReturn(True)
 
     def _stub_image_validate(self, num=1):
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         for x in range(num):
-            image.ImageConstraint.validate(
+            glance.ImageConstraint.validate(
                 mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(True)
 
     def _stub_delete(self, num):
@@ -553,8 +553,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         instance.Instance.handle_create().AndRaise(Exception)
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
         self.m.ReplayAll()

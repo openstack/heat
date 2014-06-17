@@ -16,7 +16,6 @@ import copy
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import properties
-from heat.engine.resources import glance_utils
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server
 from heat.openstack.common.gettextutils import _
@@ -114,7 +113,7 @@ class CloudServer(server.Server):
         """Return the server's image ID."""
         image = self.properties.get(self.IMAGE)
         if image and self._image is None:
-            self._image = glance_utils.get_image_id(self.glance(), image)
+            self._image = self.client_plugin('glance').get_image_id(image)
         return self._image
 
     def _config_drive(self):
