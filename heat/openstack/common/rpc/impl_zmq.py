@@ -63,7 +63,7 @@ zmq_opts = [
     cfg.IntOpt('rpc_zmq_contexts', default=1,
                help='Number of ZeroMQ contexts, defaults to 1'),
 
-    cfg.IntOpt('rpc_zmq_topic_backlog', default=None,
+    cfg.IntOpt('rpc_zmq_topic_backlog',
                help='Maximum number of ingress messages to locally buffer '
                     'per topic. Default is unlimited.'),
 

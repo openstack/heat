@@ -33,7 +33,7 @@ Recommended ways to use sessions within this framework:
 
   Examples:
 
-  .. code:: python
+  .. code-block:: python
 
     def get_foo(context, foo):
         return (model_query(context, models.Foo).
@@ -71,7 +71,7 @@ Recommended ways to use sessions within this framework:
   If you create models within the session, they need to be added, but you
   do not need to call `model.save()`:
 
-  .. code:: python
+  .. code-block:: python
 
     def create_many_foo(context, foos):
         session = sessionmaker()
@@ -100,7 +100,7 @@ Recommended ways to use sessions within this framework:
   which avoids the need for an explicit transaction. It can be expressed like
   so:
 
-  .. code:: python
+  .. code-block:: python
 
     def update_bar(context, foo_id, newbar):
         subq = (model_query(context, models.Foo.id).
@@ -113,7 +113,7 @@ Recommended ways to use sessions within this framework:
 
   For reference, this emits approximately the following SQL statement:
 
-  .. code:: sql
+  .. code-block:: sql
 
     UPDATE bar SET bar = ${newbar}
         WHERE id=(SELECT bar_id FROM foo WHERE id = ${foo_id} LIMIT 1);
@@ -123,7 +123,7 @@ Recommended ways to use sessions within this framework:
      instances with same primary key, must catch the exception out of context
      managed by a single session:
 
-  .. code:: python
+  .. code-block:: python
 
     def create_duplicate_foo(context):
         foo1 = models.Foo()
@@ -152,7 +152,7 @@ Recommended ways to use sessions within this framework:
   becomes less clear in this situation. When this is needed for code clarity,
   it should be clearly documented.
 
-  .. code:: python
+  .. code-block:: python
 
     def myfunc(foo):
         session = sessionmaker()
@@ -201,7 +201,7 @@ Enabling soft deletes:
 * To use/enable soft-deletes, the `SoftDeleteMixin` must be added
   to your model class. For example:
 
-  .. code:: python
+  .. code-block:: python
 
       class NovaBase(models.SoftDeleteMixin, models.ModelBase):
           pass
@@ -218,7 +218,7 @@ Efficient use of soft deletes:
 
 * In almost all cases you should use `query.soft_delete()`. Some examples:
 
-  .. code:: python
+  .. code-block:: python
 
         def soft_delete_bar():
             count = model_query(BarModel).find(some_condition).soft_delete()
@@ -241,7 +241,7 @@ Efficient use of soft deletes:
   you fetch a single record, work with it, and mark it as deleted in the same
   transaction.
 
-  .. code:: python
+  .. code-block:: python
 
         def soft_delete_bar_model():
             session = sessionmaker()
@@ -253,7 +253,7 @@ Efficient use of soft deletes:
   However, if you need to work with all entries that correspond to query and
   then soft delete them you should use the `query.soft_delete()` method:
 
-  .. code:: python
+  .. code-block:: python
 
         def soft_delete_multi_models():
             session = sessionmaker()
@@ -270,7 +270,7 @@ Efficient use of soft deletes:
   which issues a single query. Using `model.soft_delete()`, as in the following
   example, is very inefficient.
 
-  .. code:: python
+  .. code-block:: python
 
         for bar_ref in bar_refs:
             bar_ref.soft_delete(session=session)
