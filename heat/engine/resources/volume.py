@@ -553,11 +553,13 @@ class CinderVolume(Volume):
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
-            _('A name used to distinguish the volume.')
+            _('A name used to distinguish the volume.'),
+            update_allowed=True,
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
-            _('A description of the volume.')
+            _('A description of the volume.'),
+            update_allowed=True,
         ),
         VOLUME_TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -566,7 +568,8 @@ class CinderVolume(Volume):
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,
-            _('Key/value pairs to associate with the volume.')
+            _('Key/value pairs to associate with the volume.'),
+            update_allowed=True,
         ),
         IMAGE_REF: properties.Schema(
             properties.Schema.STRING,
@@ -658,6 +661,30 @@ class CinderVolume(Volume):
         if name == 'metadata':
             return unicode(json.dumps(vol.metadata))
         return unicode(getattr(vol, name))
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        vol = None
+        # update the name and description for cinder volume
+        if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
+            vol = self.cinder().volumes.get(self.resource_id)
+            kwargs = {}
+            update_name = (prop_diff.get(self.NAME) or
+                           self.properties.get(self.NAME))
+            update_description = (prop_diff.get(self.DESCRIPTION) or
+                                  self.properties.get(self.DESCRIPTION))
+            kwargs['display_name'] = update_name
+            kwargs['display_description'] = update_description
+            self.cinder().volumes.update(vol, **kwargs)
+        # update the metadata for cinder volume
+        if self.METADATA in prop_diff:
+            if not vol:
+                vol = self.cinder().volumes.get(self.resource_id)
+            metadata = prop_diff.get(self.METADATA)
+            self.cinder().volumes.update_all_metadata(vol, metadata)
+        # update the size in super
+        return super(CinderVolume, self).handle_update(json_snippet,
+                                                       tmpl_diff,
+                                                       prop_diff)
 
 
 class CinderVolumeAttachment(VolumeAttachment):
