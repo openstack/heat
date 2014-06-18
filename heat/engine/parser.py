@@ -598,7 +598,8 @@ class Stack(collections.Mapping):
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
-        oldstack = Stack(self.context, self.name, self.t, self.env)
+        oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
+                         self.env)
         backup_stack = self._backup_stack()
         try:
             update_task = update.StackUpdate(self, newstack, backup_stack,
