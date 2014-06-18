@@ -599,9 +599,8 @@ class ServersTest(HeatTestCase):
         }, server.metadata_get())
 
         resource_defns = tmpl.resource_definitions(stack)
-        created_server = servers.Server.load(stack.context, 'WebServer',
-                                             resource_defns['WebServer'],
-                                             stack)
+        created_server = servers.Server('WebServer',
+                                        resource_defns['WebServer'], stack)
         self.assertEqual('4567', created_server.access_key)
         self.assertTrue(stack.access_allowed('4567', 'WebServer'))
 
@@ -667,9 +666,8 @@ class ServersTest(HeatTestCase):
         }, server.metadata_get())
 
         resource_defns = tmpl.resource_definitions(stack)
-        created_server = servers.Server.load(stack.context, 'WebServer',
-                                             resource_defns['WebServer'],
-                                             stack)
+        created_server = servers.Server('WebServer',
+                                        resource_defns['WebServer'], stack)
         self.assertEqual('1234', created_server._get_user_id())
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
 
