@@ -8,6 +8,7 @@
     "cloudformation:DescribeStacks": "rule:deny_stack_user",
     "cloudformation:DeleteStack": "rule:deny_stack_user",
     "cloudformation:UpdateStack": "rule:deny_stack_user",
+    "cloudformation:CancelUpdateStack": "rule:deny_stack_user",
     "cloudformation:DescribeStackEvents": "rule:deny_stack_user",
     "cloudformation:ValidateTemplate": "rule:deny_stack_user",
     "cloudformation:GetTemplate": "rule:deny_stack_user",

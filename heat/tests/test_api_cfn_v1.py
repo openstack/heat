@@ -941,6 +941,40 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.assertEqual(expected, response)
 
+    def test_cancel_update(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        params = {'Action': 'CancelUpdateStack', 'StackName': stack_name}
+        dummy_req = self._dummy_GET_request(params)
+        self._stub_enforce(dummy_req, 'CancelUpdateStack')
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        identity = dict(identifier.HeatIdentifier('t', stack_name, '1'))
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ).AndReturn(identity)
+
+        rpc_client.EngineClient.call(
+            dummy_req.context,
+            ('stack_cancel_update',
+             {'stack_identity': identity})
+        ).AndReturn(identity)
+
+        self.m.ReplayAll()
+
+        response = self.controller.cancel_update(dummy_req)
+
+        expected = {
+            'CancelUpdateStackResponse': {
+                'CancelUpdateStackResult': {}
+            }
+        }
+
+        self.assertEqual(response, expected)
+
     def test_update_bad_name(self):
         stack_name = "wibble"
         json_template = json.dumps(self.template)
