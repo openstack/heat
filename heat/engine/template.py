@@ -181,6 +181,10 @@ class Template(collections.Mapping):
         '''
         pass
 
+    def remove_resource(self, name):
+        '''Remove a resource from the template.'''
+        self.t.get(self.RESOURCES, {}).pop(name)
+
     def functions(self):
         '''Return a dict of template functions keyed by name.'''
         if self.version not in self._functionmaps:
