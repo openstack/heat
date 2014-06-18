@@ -16,8 +16,6 @@
 import copy
 import uuid
 
-import heatclient.exc as heat_exp
-
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -160,6 +158,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         ),
     }
 
+    default_client_name = 'heat'
+
     def _signal_transport_cfn(self):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.CFN_SIGNAL
@@ -191,8 +191,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _delete_derived_config(self, derived_config_id):
         try:
             self.heat().software_configs.delete(derived_config_id)
-        except heat_exp.HTTPNotFound:
-            pass
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def _get_derived_config(self, action):
 
@@ -404,8 +404,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 sd = self.heat().software_deployments.get(self.resource_id)
                 derived_config_id = sd.config_id
                 sd.delete()
-            except heat_exp.HTTPNotFound:
-                pass
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
 
         if derived_config_id:
             self._delete_derived_config(derived_config_id)
