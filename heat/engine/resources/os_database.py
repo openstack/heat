@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from troveclient.openstack.common.apiclient import exceptions as troveexc
-
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -204,6 +202,8 @@ class OSDBInstance(resource.Resource):
         ),
     }
 
+    default_client_name = 'trove'
+
     def __init__(self, name, json_snippet, stack):
         super(OSDBInstance, self).__init__(name, json_snippet, stack)
         self._href = None
@@ -264,12 +264,15 @@ class OSDBInstance(resource.Resource):
     def _refresh_instance(self, instance):
         try:
             instance.get()
-        except troveexc.RequestEntityTooLarge as exc:
-            msg = _("Stack %(name)s (%(id)s) received an OverLimit "
-                    "response during instance.get(): %(exception)s")
-            LOG.warning(msg % {'name': self.stack.name,
-                               'id': self.stack.id,
-                               'exception': exc})
+        except Exception as exc:
+            if self.client_plugin().is_over_limit(exc):
+                msg = _("Stack %(name)s (%(id)s) received an OverLimit "
+                        "response during instance.get(): %(exception)s")
+                LOG.warning(msg % {'name': self.stack.name,
+                                   'id': self.stack.id,
+                                   'exception': exc})
+            else:
+                raise
 
     def check_create_complete(self, instance):
         '''
@@ -304,7 +307,8 @@ class OSDBInstance(resource.Resource):
         instance = None
         try:
             instance = self.trove().instances.get(self.resource_id)
-        except troveexc.NotFound:
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
             LOG.debug("Database instance %s not found." % self.resource_id)
             self.resource_id_set(None)
         else:
@@ -321,7 +325,8 @@ class OSDBInstance(resource.Resource):
         try:
             # For some time trove instance may continue to live
             self._refresh_instance(instance)
-        except troveexc.NotFound:
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
             self.resource_id_set(None)
             return True
 

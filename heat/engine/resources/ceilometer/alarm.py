@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ceilometerclient import exc as ceilometerclient_exc
-
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
@@ -150,6 +148,8 @@ class CeilometerAlarm(resource.Resource):
     }
     properties_schema.update(common_properties_schema)
 
+    default_client_name = 'ceilometer'
+
     def handle_create(self):
         props = actions_to_urls(self.stack, self.parsed_template('Properties'))
         props['name'] = self.physical_resource_name()
@@ -196,8 +196,8 @@ class CeilometerAlarm(resource.Resource):
         if self.resource_id is not None:
             try:
                 self.ceilometer().alarms.delete(self.resource_id)
-            except ceilometerclient_exc.HTTPNotFound:
-                pass
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
 
 
 class CombinationAlarm(resource.Resource):
@@ -222,6 +222,8 @@ class CombinationAlarm(resource.Resource):
             update_allowed=True)
     }
     properties_schema.update(common_properties_schema)
+
+    default_client_name = 'ceilometer'
 
     def handle_create(self):
         properties = actions_to_urls(self.stack,
@@ -262,8 +264,8 @@ class CombinationAlarm(resource.Resource):
     def handle_delete(self):
         try:
             self.ceilometer().alarms.delete(self.resource_id)
-        except ceilometerclient_exc.HTTPNotFound:
-            pass
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():
