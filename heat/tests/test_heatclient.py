@@ -149,7 +149,8 @@ class KeystoneClientTest(HeatTestCase):
                                             ).AndReturn(mock_user)
 
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.roles.list().AndReturn(self._mock_roles_list())
+        self.mock_ks_v3_client.roles.list(
+            name='heat_stack_user').AndReturn(self._mock_roles_list())
         self.mock_ks_v3_client.roles.grant(project=ctx.tenant_id,
                                            role='4546',
                                            user='auser123').AndReturn(None)
@@ -170,8 +171,8 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
 
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
-        mock_roles_list = self._mock_roles_list(heat_stack_user='badrole')
-        self.mock_ks_v3_client.roles.list().AndReturn(mock_roles_list)
+        self.mock_ks_v3_client.roles.list(
+            name='heat_stack_user').AndReturn([])
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         err = self.assertRaises(exception.Error,
@@ -181,11 +182,10 @@ class KeystoneClientTest(HeatTestCase):
 
     def _mock_roles_list(self, heat_stack_user='heat_stack_user'):
         mock_roles_list = []
-        for r_id, r_name in (('1234', 'blah'), ('4546', heat_stack_user)):
-            mock_role = self.m.CreateMockAnything()
-            mock_role.id = r_id
-            mock_role.name = r_name
-            mock_roles_list.append(mock_role)
+        mock_role = self.m.CreateMockAnything()
+        mock_role.id = '4546'
+        mock_role.name = heat_stack_user
+        mock_roles_list.append(mock_role)
         return mock_roles_list
 
     def test_create_stack_domain_user(self):
@@ -205,7 +205,8 @@ class KeystoneClientTest(HeatTestCase):
                                             domain='adomain123'
                                             ).AndReturn(mock_user)
         self.mock_admin_client.roles = self.m.CreateMockAnything()
-        self.mock_admin_client.roles.list().AndReturn(self._mock_roles_list())
+        self.mock_admin_client.roles.list(
+            name='heat_stack_user').AndReturn(self._mock_roles_list())
         self.mock_admin_client.roles.grant(project='aproject',
                                            role='4546',
                                            user='duser123').AndReturn(None)
@@ -233,7 +234,8 @@ class KeystoneClientTest(HeatTestCase):
                                             ).AndReturn(mock_user)
 
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.roles.list().AndReturn(self._mock_roles_list())
+        self.mock_ks_v3_client.roles.list(
+            name='heat_stack_user').AndReturn(self._mock_roles_list())
         self.mock_ks_v3_client.roles.grant(project=ctx.tenant_id,
                                            role='4546',
                                            user='auser123').AndReturn(None)
@@ -253,8 +255,7 @@ class KeystoneClientTest(HeatTestCase):
 
         # mock keystone client functions
         self.mock_admin_client.roles = self.m.CreateMockAnything()
-        mock_roles_list = self._mock_roles_list(heat_stack_user='badrole')
-        self.mock_admin_client.roles.list().AndReturn(mock_roles_list)
+        self.mock_admin_client.roles.list(name='heat_stack_user').AndReturn([])
         self.m.ReplayAll()
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
