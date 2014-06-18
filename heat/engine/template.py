@@ -144,6 +144,8 @@ class Template(collections.Mapping):
             }
             new_rt = db_api.raw_template_create(context, rt)
             self.id = new_rt.id
+        else:
+            db_api.raw_template_update_template(context, self.id, self.t)
         return self.id
 
     def __iter__(self):

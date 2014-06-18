@@ -100,6 +100,13 @@ def raw_template_create(context, values):
     return raw_template_ref
 
 
+def raw_template_update_template(context, template_id, template):
+    raw_template_ref = raw_template_get(context, template_id)
+    if raw_template_ref.template != template:
+        raw_template_ref.update_and_save({'template': template})
+    return raw_template_ref
+
+
 def resource_get(context, resource_id):
     result = model_query(context, models.Resource).get(resource_id)
 
