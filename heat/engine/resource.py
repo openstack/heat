@@ -133,6 +133,45 @@ class Resource(object):
 
         return super(Resource, cls).__new__(ResourceClass)
 
+    @classmethod
+    def load(cls, context, name, definition, stack):
+        '''
+        Create a resource and load any associated state from the DB.
+
+        Note that this is really inefficient if you have to do it for a group
+        of resources. Use Resource.load_all_from_stack() where possible
+        instead.
+        '''
+        resource = cls(name, definition, stack)
+        if stack.id is not None:
+            db_res = db_api.resource_get_by_name_and_stack(context, name,
+                                                           stack.id)
+            if db_res is not None:
+                resource._load_data(db_res)
+        return resource
+
+    @staticmethod
+    def load_all_from_stack(context, stack, definitions):
+        '''
+        Return an iterator over all Resources in a stack.
+
+        Resources are created from the provided definitions, and any associated
+        state loaded from the DB.
+        '''
+        db_resources = {}
+        if stack.id is not None:
+            try:
+                db_resources = db_api.resource_get_all_by_stack(context,
+                                                                stack.id)
+            except exception.NotFound:
+                pass
+
+        for name, definition in definitions.items():
+            resource = Resource(name, definition, stack)
+            if name in db_resources:
+                resource._load_data(db_resources[name])
+            yield resource
+
     def __init__(self, name, definition, stack):
         if '/' in name:
             raise ValueError(_('Resource name may not contain "/"'))
@@ -161,10 +200,6 @@ class Resource(object):
         self._rsrc_metadata = None
         self.created_time = None
         self.updated_time = None
-
-        resource = stack.db_resource_get(name)
-        if resource:
-            self._load_data(resource)
 
     def _load_data(self, resource):
         '''Load the resource state from its DB representation.'''
