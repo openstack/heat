@@ -72,6 +72,8 @@ class EC2Token(wsgi.Middleware):
 
     @staticmethod
     def _conf_get_keystone_ec2_uri(auth_uri):
+        if auth_uri.endswith('ec2tokens'):
+            return auth_uri
         if auth_uri.endswith('/'):
             return '%sec2tokens' % auth_uri
         return '%s/ec2tokens' % auth_uri
