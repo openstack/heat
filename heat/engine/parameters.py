@@ -270,7 +270,7 @@ class Parameter(object):
         if self.hidden():
             return '******'
         else:
-            return str(value)
+            return strutils.safe_encode(six.text_type(value))
 
 
 class NumberParam(Parameter):
