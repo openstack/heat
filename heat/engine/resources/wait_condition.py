@@ -153,7 +153,126 @@ class WaitConditionTimeout(exception.Error):
         super(WaitConditionTimeout, self).__init__(message)
 
 
-class WaitCondition(resource.Resource):
+class HeatWaitCondition(resource.Resource):
+    PROPERTIES = (
+        HANDLE, TIMEOUT, COUNT,
+    ) = (
+        'handle', 'timeout', 'count',
+    )
+
+    ATTRIBUTES = (
+        DATA,
+    ) = (
+        'data',
+    )
+
+    properties_schema = {
+        HANDLE: properties.Schema(
+            properties.Schema.STRING,
+            _('A reference to the wait condition handle used to signal this '
+              'wait condition.'),
+            required=True
+        ),
+        TIMEOUT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of seconds to wait for the correct number of '
+              'signals to arrive.'),
+            required=True,
+            constraints=[
+                constraints.Range(1, 43200),
+            ]
+        ),
+        COUNT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of success signals that must be received before '
+              'the stack creation process continues.'),
+            constraints=[
+                constraints.Range(min=1),
+            ],
+            default=1,
+            update_allowed=True
+        ),
+    }
+
+    attributes_schema = {
+        DATA: attributes.Schema(
+            _('JSON serialized dict containing data associated with wait '
+              'condition signals sent to the handle.'),
+            cache_mode=attributes.Schema.CACHE_NONE
+        ),
+    }
+
+    def __init__(self, name, definition, stack):
+        super(HeatWaitCondition, self).__init__(name, definition, stack)
+
+    def _get_handle_resource(self):
+        return self.stack.resource_by_refid(self.properties[self.HANDLE])
+
+    def _wait(self, handle):
+        while True:
+            try:
+                yield
+            except scheduler.Timeout:
+                timeout = WaitConditionTimeout(self, handle)
+                LOG.info(_('%(name)s Timed out (%(timeout)s)')
+                         % {'name': str(self), 'timeout': str(timeout)})
+                raise timeout
+
+            handle_status = handle.get_status()
+
+            if any(s != handle.STATUS_SUCCESS for s in handle_status):
+                failure = WaitConditionFailure(self, handle)
+                LOG.info(_('%(name)s Failed (%(failure)s)')
+                         % {'name': str(self), 'failure': str(failure)})
+                raise failure
+
+            if len(handle_status) >= self.properties[self.COUNT]:
+                LOG.info(_("%s Succeeded") % str(self))
+                return
+
+    def handle_create(self):
+        handle = self._get_handle_resource()
+        runner = scheduler.TaskRunner(self._wait, handle)
+        runner.start(timeout=float(self.properties[self.TIMEOUT]))
+        return runner
+
+    def check_create_complete(self, runner):
+        return runner.step()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.properties = json_snippet.properties(self.properties_schema,
+                                                      self.context)
+
+        handle = self._get_handle_resource()
+        runner = scheduler.TaskRunner(self._wait, handle)
+        runner.start(timeout=float(self.properties[self.TIMEOUT]))
+        return runner
+
+    def check_update_complete(self, runner):
+        return runner.step()
+
+    def handle_delete(self):
+        handle = self._get_handle_resource()
+        if handle:
+            handle.metadata_set({})
+
+    def _resolve_attribute(self, key):
+        res = {}
+        handle = self._get_handle_resource()
+        if key == self.DATA:
+            meta = handle.metadata_get(refresh=True)
+            # Note, can't use a dict generator on python 2.6, hence:
+            res = dict([(k, meta[k][handle.DATA]) for k in meta])
+            LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
+                      % {'name': self.name,
+                         'key': key,
+                         'res': res})
+
+            return unicode(json.dumps(res))
+
+
+class WaitCondition(HeatWaitCondition):
     PROPERTIES = (
         HANDLE, TIMEOUT, COUNT,
     ) = (
@@ -225,87 +344,20 @@ class WaitCondition(resource.Resource):
             raise ValueError(_("WaitCondition invalid Handle %s") %
                              handle_id.resource_name)
 
-    def _get_handle_resource_name(self):
+    def _get_handle_resource(self):
         handle_url = self.properties[self.HANDLE]
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
-        return handle_id.resource_name
-
-    def _wait(self, handle):
-        while True:
-            try:
-                yield
-            except scheduler.Timeout:
-                timeout = WaitConditionTimeout(self, handle)
-                LOG.info(_('%(name)s Timed out (%(timeout)s)')
-                         % {'name': str(self), 'timeout': str(timeout)})
-                raise timeout
-
-            handle_status = handle.get_status()
-
-            if any(s != handle.STATUS_SUCCESS for s in handle_status):
-                failure = WaitConditionFailure(self, handle)
-                LOG.info(_('%(name)s Failed (%(failure)s)')
-                         % {'name': str(self), 'failure': str(failure)})
-                raise failure
-
-            if len(handle_status) >= self.properties[self.COUNT]:
-                LOG.info(_("%s Succeeded") % str(self))
-                return
+        return self.stack[handle_id.resource_name]
 
     def handle_create(self):
         self._validate_handle_url()
-        handle_res_name = self._get_handle_resource_name()
-        handle = self.stack[handle_res_name]
-        self.resource_id_set(handle_res_name)
-
-        runner = scheduler.TaskRunner(self._wait, handle)
-        runner.start(timeout=float(self.properties[self.TIMEOUT]))
-        return runner
-
-    def check_create_complete(self, runner):
-        return runner.step()
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
-
-        handle_res_name = self._get_handle_resource_name()
-        handle = self.stack[handle_res_name]
-
-        runner = scheduler.TaskRunner(self._wait, handle)
-        runner.start(timeout=float(self.properties[self.TIMEOUT]))
-        return runner
-
-    def check_update_complete(self, runner):
-        return runner.step()
-
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        handle = self.stack[self.resource_id]
-        handle.metadata_set({})
-
-    def _resolve_attribute(self, key):
-        res = {}
-        handle_res_name = self._get_handle_resource_name()
-        handle = self.stack[handle_res_name]
-        if key == self.DATA:
-            meta = handle.metadata_get(refresh=True)
-            # Note, can't use a dict generator on python 2.6, hence:
-            res = dict([(k, meta[k][handle.DATA]) for k in meta])
-            LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
-                      % {'name': self.name,
-                         'key': key,
-                         'res': res})
-
-            return unicode(json.dumps(res))
+        return super(WaitCondition, self).handle_create()
 
 
 def resource_mapping():
     return {
         'AWS::CloudFormation::WaitCondition': WaitCondition,
+        'OS::Heat::WaitCondition': HeatWaitCondition,
         'AWS::CloudFormation::WaitConditionHandle': WaitConditionHandle,
         'OS::Heat::UpdateWaitConditionHandle': UpdateWaitConditionHandle,
     }
