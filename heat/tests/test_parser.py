@@ -1088,7 +1088,8 @@ class StackTest(HeatTestCase):
                               updated_time=None,
                               user_creds_id=stack.user_creds_id,
                               tenant_id='test_tenant_id',
-                              validate_parameters=False)
+                              validate_parameters=False,
+                              use_stored_context=False)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -3006,6 +3007,61 @@ class StackTest(HeatTestCase):
         ex = self.assertRaises(exception.Error, self.stack.stored_context)
         expected_err = 'Attempt to use stored_context with no user_creds'
         self.assertEqual(expected_err, six.text_type(ex))
+
+    def test_init_stored_context_false(self):
+        ctx_init = utils.dummy_context(user='mystored_user',
+                                       password='mystored_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_store1', self.tmpl,
+                                  user_creds_id=creds.id,
+                                  use_stored_context=False)
+        ctx_expected = self.ctx.to_dict()
+        self.assertEqual(ctx_expected, self.stack.context.to_dict())
+        self.stack.store()
+        self.assertEqual(ctx_expected, self.stack.context.to_dict())
+
+    def test_init_stored_context_true(self):
+        ctx_init = utils.dummy_context(user='mystored_user',
+                                       password='mystored_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_store2', self.tmpl,
+                                  user_creds_id=creds.id,
+                                  use_stored_context=True)
+        ctx_expected = ctx_init.to_dict()
+        ctx_expected['auth_token'] = None
+        self.assertEqual(ctx_expected, self.stack.context.to_dict())
+        self.stack.store()
+        self.assertEqual(ctx_expected, self.stack.context.to_dict())
+
+    def test_load_stored_context_false(self):
+        ctx_init = utils.dummy_context(user='mystored_user',
+                                       password='mystored_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_store3', self.tmpl,
+                                  user_creds_id=creds.id)
+        self.stack.store()
+
+        load_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id,
+                                       use_stored_context=False)
+        self.assertEqual(self.ctx.to_dict(), load_stack.context.to_dict())
+
+    def test_load_stored_context_true(self):
+        ctx_init = utils.dummy_context(user='mystored_user',
+                                       password='mystored_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_store4', self.tmpl,
+                                  user_creds_id=creds.id)
+        self.stack.store()
+        ctx_expected = ctx_init.to_dict()
+        ctx_expected['auth_token'] = None
+
+        load_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id,
+                                       use_stored_context=True)
+        self.assertEqual(ctx_expected, load_stack.context.to_dict())
 
     def test_load_honors_owner(self):
         """
