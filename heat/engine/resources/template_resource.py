@@ -59,7 +59,7 @@ class TemplateResource(stack_resource.StackResource):
         self._parsed_nested = None
         self.stack = stack
         self.validation_exception = None
-        self.update_allowed_keys = ('Properties',)
+        self.update_allowed_keys = ('Properties', 'Metadata')
 
         tri = stack.env.get_resource_info(
             json_snippet['Type'],
