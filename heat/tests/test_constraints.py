@@ -14,6 +14,7 @@
 
 import testtools
 
+from heat.common import exception
 from heat.engine import constraints
 from heat.engine import environment
 
@@ -254,6 +255,169 @@ class SchemaTest(testtools.TestCase):
                                schema={'Foo': nested})
         err = self.assertRaises(constraints.InvalidSchemaError, s.validate)
         self.assertIn('Range constraint invalid for String', str(err))
+
+    def test_allowed_values_numeric_int(self):
+        '''
+        Test AllowedValues constraint for numeric integer values.
+
+        Test if the AllowedValues constraint works for numeric values in any
+        combination of numeric strings or numbers in the constraint and
+        numeric strings or numbers as value.
+        '''
+
+        # Allowed values defined as integer numbers
+        schema = constraints.Schema(
+            'Integer',
+            constraints=[constraints.AllowedValues([1, 2, 4])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(schema.validate_constraints(1))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, 3)
+        self.assertEqual('"3" is not an allowed value [1, 2, 4]', str(err))
+        self.assertIsNone(schema.validate_constraints('1'))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, '3')
+        self.assertEqual('"3" is not an allowed value [1, 2, 4]', str(err))
+
+        # Allowed values defined as integer strings
+        schema = constraints.Schema(
+            'Integer',
+            constraints=[constraints.AllowedValues(['1', '2', '4'])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(schema.validate_constraints(1))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, 3)
+        self.assertEqual('"3" is not an allowed value [1, 2, 4]', str(err))
+        self.assertIsNone(schema.validate_constraints('1'))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, '3')
+        self.assertEqual('"3" is not an allowed value [1, 2, 4]', str(err))
+
+    def test_allowed_values_numeric_float(self):
+        '''
+        Test AllowedValues constraint for numeric floating point values.
+
+        Test if the AllowedValues constraint works for numeric values in any
+        combination of numeric strings or numbers in the constraint and
+        numeric strings or numbers as value.
+        '''
+
+        # Allowed values defined as numbers
+        schema = constraints.Schema(
+            'Number',
+            constraints=[constraints.AllowedValues([1.1, 2.2, 4.4])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(schema.validate_constraints(1.1))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, 3.3)
+        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+                         str(err))
+        self.assertIsNone(schema.validate_constraints('1.1'))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, '3.3')
+        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+                         str(err))
+
+        # Allowed values defined as strings
+        schema = constraints.Schema(
+            'Number',
+            constraints=[constraints.AllowedValues(['1.1', '2.2', '4.4'])]
+        )
+        # ... and value as number or string
+        self.assertIsNone(schema.validate_constraints(1.1))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, 3.3)
+        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+                         str(err))
+        self.assertIsNone(schema.validate_constraints('1.1'))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                schema.validate_constraints, '3.3')
+        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+                         str(err))
+
+    def test_to_schema_type_int(self):
+        '''Test Schema.to_schema_type method for type Integer.'''
+        schema = constraints.Schema('Integer')
+        # test valid values, i.e. integeres as string or number
+        res = schema.to_schema_type(1)
+        self.assertIsInstance(res, int)
+        res = schema.to_schema_type('1')
+        self.assertIsInstance(res, int)
+        # test invalid numeric values, i.e. floating point numbers
+        err = self.assertRaises(ValueError, schema.to_schema_type, 1.5)
+        self.assertEqual('Value "1.5" is invalid for data type "Integer".',
+                         str(err))
+        err = self.assertRaises(ValueError, schema.to_schema_type, '1.5')
+        self.assertEqual('Value "1.5" is invalid for data type "Integer".',
+                         str(err))
+        # test invalid string values
+        err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
+        self.assertEqual('Value "foo" is invalid for data type "Integer".',
+                         str(err))
+
+    def test_to_schema_type_num(self):
+        '''Test Schema.to_schema_type method for type Number.'''
+        schema = constraints.Schema('Number')
+        res = schema.to_schema_type(1)
+        self.assertIsInstance(res, int)
+        res = schema.to_schema_type('1')
+        self.assertIsInstance(res, int)
+        res = schema.to_schema_type(1.5)
+        self.assertIsInstance(res, float)
+        res = schema.to_schema_type('1.5')
+        self.assertIsInstance(res, float)
+        self.assertEqual(1.5, res)
+        err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
+        self.assertEqual('Value "foo" is invalid for data type "Number".',
+                         str(err))
+
+    def test_to_schema_type_string(self):
+        '''Test Schema.to_schema_type method for type String.'''
+        schema = constraints.Schema('String')
+        res = schema.to_schema_type('one')
+        self.assertIsInstance(res, basestring)
+        res = schema.to_schema_type('1')
+        self.assertIsInstance(res, basestring)
+        err = self.assertRaises(ValueError, schema.to_schema_type, 1)
+        self.assertEqual('Value "1" is invalid for data type "String".',
+                         str(err))
+
+    def test_to_schema_type_boolean(self):
+        '''Test Schema.to_schema_type method for type Boolean.'''
+        schema = constraints.Schema('Boolean')
+
+        true_values = [1, '1', True, 'true', 'True', 'yes', 'Yes']
+        for v in true_values:
+            res = schema.to_schema_type(v)
+            self.assertIsInstance(res, bool)
+            self.assertTrue(res)
+
+        false_values = [0, '0', False, 'false', 'False', 'No', 'no']
+        for v in false_values:
+            res = schema.to_schema_type(v)
+            self.assertIsInstance(res, bool)
+            self.assertFalse(res)
+
+        err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
+        self.assertEqual('Value "foo" is invalid for data type "Boolean".',
+                         str(err))
+
+    def test_to_schema_type_map(self):
+        '''Test Schema.to_schema_type method for type Map.'''
+        schema = constraints.Schema('Map')
+        res = schema.to_schema_type({'a': 'aa', 'b': 'bb'})
+        self.assertIsInstance(res, dict)
+        self.assertEqual({'a': 'aa', 'b': 'bb'}, res)
+
+    def test_to_schema_type_list(self):
+        '''Test Schema.to_schema_type method for type List.'''
+        schema = constraints.Schema('List')
+        res = schema.to_schema_type(['a', 'b'])
+        self.assertIsInstance(res, list)
+        self.assertEqual(['a', 'b'], res)
 
 
 class CustomConstraintTest(testtools.TestCase):
