@@ -167,9 +167,16 @@ class StackController(object):
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
 
+        show_deleted = False
         if engine_api.PARAM_SHOW_DELETED in params:
             params[engine_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
                 params[engine_api.PARAM_SHOW_DELETED])
+            show_deleted = params[engine_api.PARAM_SHOW_DELETED]
+        # get the with_count value, if invalid, raise ValueError
+        with_count = False
+        if req.params.get('with_count'):
+            with_count = param_utils.extract_bool(
+                req.params.get('with_count'))
 
         if not filter_params:
             filter_params = None
@@ -180,13 +187,14 @@ class StackController(object):
                                              **params)
 
         count = None
-        if req.params.get('with_count'):
+        if with_count:
             try:
                 # Check if engine has been updated to a version with
                 # support to count_stacks before trying to use it.
                 count = self.rpc_client.count_stacks(req.context,
                                                      filters=filter_params,
-                                                     tenant_safe=tenant_safe)
+                                                     tenant_safe=tenant_safe,
+                                                     show_deleted=show_deleted)
             except AttributeError as exc:
                 LOG.warning(_("Old Engine Version: %s") % exc)
 
