@@ -928,6 +928,14 @@ class EngineService(service.Service):
         if callable(stack[resource_name].signal):
             stack[resource_name].signal(details)
 
+        # Refresh the metadata for all other resources, since signals can
+        # update metadata which is used by other resources, e.g
+        # when signalling a WaitConditionHandle resource, and other
+        # resources may refer to WaitCondition Fn::GetAtt Data
+        for res in stack.dependencies:
+            if res.name != resource_name and res.id is not None:
+                res.metadata_update()
+
     @request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
         """
