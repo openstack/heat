@@ -235,10 +235,6 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        self.m.StubOutWithMock(service.EngineService, 'load_user_creds')
-        service.EngineService.load_user_creds(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(ctx)
-
         return stack
 
     def test_wait_meta(self):
