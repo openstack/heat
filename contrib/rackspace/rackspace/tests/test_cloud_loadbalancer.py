@@ -14,11 +14,13 @@
 
 import copy
 import json
+import mock
 import uuid
 
 from heat.common.exception import StackValidationFailed
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -534,3 +536,10 @@ class LoadBalancerTest(HeatTestCase):
         self.m.ReplayAll()
         self.assertRaises(ValueError, rsrc.handle_update, {}, {}, deleted_node)
         self.m.VerifyAll()
+
+    def test_resolve_attr_noid(self):
+        stack = mock.Mock()
+        stack.db_resource_get.return_value = None
+        resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
+        lbres = lb.CloudLoadBalancer("test", resdef, stack)
+        self.assertIsNone(lbres._resolve_attribute("PublicIp"))

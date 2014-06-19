@@ -620,16 +620,17 @@ class CloudLoadBalancer(resource.Resource):
                 return ip.address
 
     def _resolve_attribute(self, key):
-        attribute_function = {
-            'PublicIp': self._public_ip()
-        }
-        if key not in attribute_function:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
-        function = attribute_function[key]
-        LOG.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
-                 {'name': self.name, 'key': key, 'function': function})
-        return unicode(function)
+        if self.resource_id:
+            attribute_function = {
+                'PublicIp': self._public_ip()
+            }
+            if key not in attribute_function:
+                raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                         key=key)
+            function = attribute_function[key]
+            LOG.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
+                     {'name': self.name, 'key': key, 'function': function})
+            return unicode(function)
 
 
 def resource_mapping():
