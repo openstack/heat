@@ -50,9 +50,11 @@ class OpenStackClients(object):
 
     @property
     def auth_token(self):
-        # if there is no auth token in the context
-        # attempt to get one using the context username and password
-        return self.context.auth_token or self.keystone().auth_token
+        # Always use the auth_token from the keystone() client, as
+        # this may be refreshed if the context contains credentials
+        # which allow reissuing of a new token before the context
+        # auth_token expiry (e.g trust_id or username/password)
+        return self.keystone().auth_token
 
     def keystone(self):
         if 'keystone' in self._clients:
