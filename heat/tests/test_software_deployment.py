@@ -22,6 +22,7 @@ from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import template
+from heat.openstack.common import gettextutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -531,6 +532,21 @@ class SoftwareDeploymentTest(HeatTestCase):
             },
             'status': 'FAILED',
             'status_reason': 'failed : no enough memory found.'
+        }, args)
+
+        # Test bug 1332355, where details contains a translateable message
+        details = {'failed': gettextutils.Message('need more memory.')}
+        self.deployment.handle_signal(details)
+        args = sd.update.call_args[1]
+        self.assertEqual({
+            'output_values': {
+                'deploy_status_code': None,
+                'deploy_stderr': None,
+                'deploy_stdout': None,
+                'failed': 'need more memory.'
+            },
+            'status': 'FAILED',
+            'status_reason': 'failed : need more memory.'
         }, args)
 
     def test_handle_status_code_failed(self):
