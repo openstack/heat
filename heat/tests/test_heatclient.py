@@ -400,6 +400,7 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         client = heat_ks_client.client
         self.assertIsNotNone(client)
+        self.assertIsNone(ctx.trust_id)
 
     def test_init_v3_bad_nocreds(self):
 
@@ -547,6 +548,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertIsNotNone(heat_ks_client.client)
+        self.assertIsNone(ctx.auth_token)
 
     def test_trust_init_fail(self):
 
