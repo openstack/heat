@@ -16,12 +16,10 @@ import mox
 from testtools import skipIf
 
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine.resources import swift
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 swiftclient = try_import('swiftclient.client')
@@ -77,7 +75,7 @@ class swiftTest(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'head_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def create_resource(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -130,8 +128,6 @@ class swiftTest(HeatTestCase):
             "x-container-bytes-used": "17680980",
             "content-type": "text/plain; charset=utf-8"}
 
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name, {}).AndReturn(None)
@@ -162,8 +158,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -180,8 +174,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read_write(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -200,8 +192,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_container_headers(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -218,8 +208,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_account_headers(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(container_name, {})
         swiftclient.Connection.post_account(
@@ -234,8 +222,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_exception(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
@@ -252,9 +238,6 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_retain(self):
-
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         # first run, with retain policy
         swiftclient.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
@@ -277,8 +260,6 @@ class swiftTest(HeatTestCase):
         empty string or swiftclient will pass them as string None. see
         bug lp:1259571.
         '''
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name, {}).AndReturn(None)

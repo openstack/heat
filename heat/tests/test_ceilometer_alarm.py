@@ -27,10 +27,8 @@ from heat.engine import resource
 from heat.engine.resources.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.engine import stack_user
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests import utils
 
@@ -139,7 +137,7 @@ class CeilometerAlarmTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
         self.fa = FakeCeilometerClient()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
@@ -154,10 +152,6 @@ class CeilometerAlarmTest(HeatTestCase):
         stack = parser.Stack(ctx, utils.random_name(), template,
                              disable_rollback=True)
         stack.store()
-
-        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
-        stack_user.StackUser.keystone().MultipleTimes().AndReturn(
-            self.fc)
 
         self.m.StubOutWithMock(alarm.CeilometerAlarm, 'ceilometer')
         alarm.CeilometerAlarm.ceilometer().MultipleTimes().AndReturn(

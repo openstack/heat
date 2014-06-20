@@ -14,13 +14,11 @@
 from testtools import skipIf
 
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 from ..resources import extraroute  # noqa
@@ -65,7 +63,7 @@ class NeutronExtraRouteTest(HeatTestCase):
         super(NeutronExtraRouteTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')
         self.m.StubOutWithMock(neutronclient.Client, 'update_router')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
         resource._register_class("OS::Neutron::ExtraRoute",
                                  extraroute.ExtraRoute)
@@ -81,8 +79,6 @@ class NeutronExtraRouteTest(HeatTestCase):
         return rsrc
 
     def test_extraroute(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         # add first route
         neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8')\

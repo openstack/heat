@@ -29,7 +29,6 @@ from heat.engine.resources import nova_utils
 from heat.engine import template
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as v1fakes
 
@@ -116,7 +115,7 @@ class AutoScalingTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
         self.m.StubOutWithMock(clients.neutronclient.Client,
                                'create_health_monitor')
@@ -255,9 +254,6 @@ class AutoScalingTest(HeatTestCase):
 
         instances = {}
 
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
         clients.neutronclient.Client.create_health_monitor(mon_block).\
             AndReturn(mon_ret_block)
 
@@ -278,12 +274,6 @@ class AutoScalingTest(HeatTestCase):
 
         clients.neutronclient.Client.show_vip(vip_ret_block['vip']['id']).\
             AndReturn(vip_ret_block)
-
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
 
         parser.Stack.validate()
         instid = str(uuid.uuid4())
@@ -306,9 +296,6 @@ class AutoScalingTest(HeatTestCase):
         instances[instid] = membera_ret_block['member']['id']
 
         # Start of update
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
-
         parser.Stack.validate()
         instid = str(uuid.uuid4())
         instance.Instance.handle_create().AndReturn(instid)

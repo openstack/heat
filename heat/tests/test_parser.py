@@ -951,9 +951,7 @@ class StackTest(HeatTestCase):
     def test_no_auth_token(self):
         ctx = utils.dummy_context()
         ctx.auth_token = None
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            FakeKeystoneClient())
+        self.stub_keystoneclient()
 
         self.m.ReplayAll()
         stack = parser.Stack(ctx, 'test_stack', self.tmpl)
@@ -1325,11 +1323,7 @@ class StackTest(HeatTestCase):
 
     def test_delete_trust(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
-            FakeKeystoneClient())
-        self.m.ReplayAll()
+        self.stub_keystoneclient()
 
         self.stack = parser.Stack(
             self.ctx, 'delete_trust', self.tmpl)
@@ -3102,8 +3096,7 @@ class StackTest(HeatTestCase):
         self.assertIsNone(db_stack.stack_user_project_id)
 
     def test_stack_user_project_id_constructor(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+        self.stub_keystoneclient()
         self.m.ReplayAll()
 
         self.stack = parser.Stack(self.ctx, 'user_project_init',
@@ -3144,8 +3137,7 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_user_project_id_setter(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+        self.stub_keystoneclient()
         self.m.ReplayAll()
 
         self.stack = parser.Stack(self.ctx, 'user_project_init',

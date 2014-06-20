@@ -15,12 +15,10 @@ from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine.resources.neutron import metering
 from heat.engine import scheduler
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 neutronclient = try_import('neutronclient.v2_0.client')
@@ -66,11 +64,9 @@ class MeteringLabelTest(HeatTestCase):
                                'delete_metering_label_rule')
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def create_metering_label(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_metering_label({
             'metering_label': {
                 'name': 'TestLabel',
@@ -91,8 +87,6 @@ class MeteringLabelTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_metering_label({
             'metering_label': {
                 'name': 'TestLabel',
@@ -180,11 +174,9 @@ class MeteringRuleTest(HeatTestCase):
                                'delete_metering_label_rule')
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def create_metering_label_rule(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_metering_label_rule({
             'metering_label_rule': {
                 'metering_label_id': 'None',
@@ -207,8 +199,6 @@ class MeteringRuleTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed(self):
-        clients.OpenStackClients.keystone().AndReturn(
-            fakes.FakeKeystoneClient())
         neutronclient.Client.create_metering_label_rule({
             'metering_label_rule': {
                 'metering_label_id': 'None',

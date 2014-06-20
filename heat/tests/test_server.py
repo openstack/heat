@@ -68,8 +68,7 @@ class ServersTest(HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
         self.fc = fakes_v1_1.FakeClient()
-        self.fkc = fakes.FakeKeystoneClient()
-
+        self.stub_keystoneclient()
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
 
@@ -552,15 +551,12 @@ class ServersTest(HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
-        self.m.StubOutWithMock(server, 'keystone')
         self.m.StubOutWithMock(server, 'heat')
 
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
-
-        server.keystone().MultipleTimes().AndReturn(self.fkc)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -620,13 +616,11 @@ class ServersTest(HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
-        self.m.StubOutWithMock(server, 'keystone')
 
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
-        server.keystone().MultipleTimes().AndReturn(self.fkc)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
@@ -2461,6 +2455,7 @@ class FlavorConstraintTest(HeatTestCase):
 
     def test_validate(self):
         client = fakes.FakeClient()
+        self.stub_keystoneclient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(client)
         client.flavors = self.m.CreateMockAnything()

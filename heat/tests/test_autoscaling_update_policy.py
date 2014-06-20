@@ -28,9 +28,7 @@ from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
-from heat.engine import stack_user
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes11
 
@@ -208,7 +206,7 @@ class AutoScalingGroupTest(HeatTestCase):
     def setUp(self):
         super(AutoScalingGroupTest, self).setUp()
         self.fc = fakes11.FakeClient()
-        self.fkc = fakes.FakeKeystoneClient(username='test_stack.CfnLBUser')
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
@@ -230,8 +228,6 @@ class AutoScalingGroupTest(HeatTestCase):
         parser.Stack.validate().MultipleTimes()
 
     def _stub_lb_create(self):
-        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
-        stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fkc)
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 

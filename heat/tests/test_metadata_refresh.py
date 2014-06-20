@@ -26,7 +26,6 @@ from heat.engine.resources import wait_condition as wc
 from heat.engine import scheduler
 from heat.engine import service
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import utils
 
 
@@ -132,7 +131,7 @@ class MetadataRefreshTest(HeatTestCase):
     '''
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -198,7 +197,7 @@ class MetadataRefreshTest(HeatTestCase):
 class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
-        self.fc = fakes.FakeKeystoneClient()
+        self.stub_keystoneclient()
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
@@ -225,9 +224,6 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         for cookie in (object(), object()):
             instance.Instance.handle_create().AndReturn(cookie)
             instance.Instance.check_create_complete(cookie).AndReturn(True)
-
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
 
         id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
                                            stack.id, '', 'WH')

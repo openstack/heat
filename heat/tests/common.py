@@ -24,9 +24,11 @@ from oslotest import mockpatch
 import testscenarios
 import testtools
 
+from heat.engine import clients
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.tests import fakes
 from heat.tests import utils
 
 
@@ -109,3 +111,7 @@ class HeatTestCase(testscenarios.WithScenarios,
     def patchobject(self, obj, attr):
         mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr))
         return mockfixture.mock
+
+    def stub_keystoneclient(self, **kwargs):
+        client = self.patchobject(clients.OpenStackClients, "keystone")
+        client.return_value = fakes.FakeKeystoneClient(**kwargs)

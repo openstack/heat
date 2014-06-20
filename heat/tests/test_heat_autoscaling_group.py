@@ -20,14 +20,12 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
-from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests import utils
 
@@ -55,9 +53,7 @@ class AutoScalingGroupTest(HeatTestCase):
                                  generic_resource.ResourceWithProps)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.fc = fakes.FakeKeystoneClient()
-        client = self.patchobject(clients.OpenStackClients, "keystone")
-        client.return_value = self.fc
+        self.stub_keystoneclient()
         self.parsed = template_format.parse(self.as_template)
 
     def create_stack(self, t):
@@ -288,9 +284,7 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
                                  generic_resource.ResourceWithProps)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.fc = fakes.FakeKeystoneClient()
-        client = self.patchobject(clients.OpenStackClients, "keystone")
-        client.return_value = self.fc
+        self.stub_keystoneclient()
         self.parsed = template_format.parse(self.as_template)
 
     def create_stack(self, t):
@@ -344,9 +338,7 @@ class ScalingPolicyTest(HeatTestCase):
         super(ScalingPolicyTest, self).setUp()
         resource._register_class('ResourceWithProps',
                                  generic_resource.ResourceWithProps)
-        self.fc = fakes.FakeKeystoneClient()
-        client = self.patchobject(clients.OpenStackClients, "keystone")
-        client.return_value = self.fc
+        self.stub_keystoneclient()
         self.parsed = template_format.parse(self.as_template)
 
     def test_alarm_attribute(self):
@@ -418,9 +410,7 @@ class RollingUpdatesTest(HeatTestCase):
                                  generic_resource.ResourceWithProps)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.fc = fakes.FakeKeystoneClient()
-        client = self.patchobject(clients.OpenStackClients, "keystone")
-        client.return_value = self.fc
+        self.stub_keystoneclient()
         self.parsed = template_format.parse(self.as_template)
         generate_id = self.patchobject(short_id, 'generate_id')
         generate_id.side_effect = ('id-%d' % (i,)

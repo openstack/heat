@@ -70,7 +70,7 @@ class NovaFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(self.novaclient.servers, 'get')
         self.m.StubOutWithMock(self.novaclient.servers, 'add_floating_ip')
         self.m.StubOutWithMock(self.novaclient.servers, 'remove_floating_ip')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.stub_keystoneclient()
 
     def _make_obj(self, **kwargs):
         mock = self.m.CreateMockAnything()
