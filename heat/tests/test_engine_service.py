@@ -12,6 +12,7 @@
 #    under the License.
 
 
+import eventlet
 import functools
 import json
 import sys
@@ -2968,16 +2969,6 @@ class ThreadGroupManagerTest(HeatTestCase):
                                                    **self.fkwargs)
         self.assertEqual(self.tg_mock.add_thread(), ret)
 
-    def test_tgm_stop(self):
-        stack_id = 'test'
-
-        thm = service.ThreadGroupManager()
-        thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
-        thm.stop(stack_id, True)
-
-        self.tg_mock.stop.assert_called_with(True)
-        self.assertNotIn(stack_id, thm.groups)
-
     def test_tgm_add_timer(self):
         stack_id = 'test'
 
@@ -2988,3 +2979,27 @@ class ThreadGroupManagerTest(HeatTestCase):
         self.tg_mock.add_timer.assert_called_with(
             self.cfg_mock.CONF.periodic_interval,
             self.f, *self.fargs, **self.fkwargs)
+
+
+class ThreadGroupManagerStopTest(HeatTestCase):
+    def test_tgm_stop(self):
+        stack_id = 'test'
+        done = []
+
+        def function():
+            while True:
+                eventlet.sleep()
+
+        def linked(gt, thread):
+            for i in range(10):
+                eventlet.sleep()
+            done.append(thread)
+
+        thm = service.ThreadGroupManager()
+        thread = thm.start(stack_id, function)
+        thread.link(linked, thread)
+
+        thm.stop(stack_id)
+
+        self.assertIn(thread, done)
+        self.assertNotIn(stack_id, thm.groups)

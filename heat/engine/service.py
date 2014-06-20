@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import eventlet
 import functools
 import json
 import os
@@ -152,8 +153,22 @@ class ThreadGroupManager(object):
     def stop(self, stack_id, graceful=False):
         '''Stop any active threads on a stack.'''
         if stack_id in self.groups:
-            self.groups[stack_id].stop(graceful)
-            del self.groups[stack_id]
+            threadgroup = self.groups.pop(stack_id)
+            threads = threadgroup.threads[:]
+
+            threadgroup.stop(graceful)
+            threadgroup.wait()
+
+            # Wait for link()ed functions (i.e. lock release)
+            links_done = dict((th, False) for th in threads)
+
+            def mark_done(gt, th):
+                links_done[th] = True
+
+            for th in threads:
+                th.link(mark_done, th)
+            while not all(links_done.values()):
+                eventlet.sleep()
 
 
 class StackWatch(object):
@@ -716,14 +731,6 @@ class EngineService(service.Service):
             else:
                 raise exception.StopActionFailed(stack_name=stack.name,
                                                  engine_id=acquire_result)
-
-        # If the lock isn't released here, then the call to
-        # start_with_lock below will raise an ActionInProgress
-        # exception.  Ideally, we wouldn't be calling another
-        # release() here, since it should be called as soon as the
-        # ThreadGroup is stopped.  But apparently there's a race
-        # between release() the next call to lock.acquire().
-        db_api.stack_lock_release(stack.id, acquire_result)
 
         # There may be additional resources that we don't know about
         # if an update was in-progress when the stack was stopped, so
