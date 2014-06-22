@@ -16,7 +16,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
 
 
@@ -97,8 +96,7 @@ class KeyPair(resource.Resource):
             if self.properties[self.PUBLIC_KEY]:
                 self._public_key = self.properties[self.PUBLIC_KEY]
             elif self.resource_id:
-                nova_key = nova_utils.get_keypair(self.nova(),
-                                                  self.resource_id)
+                nova_key = self.client_plugin().get_keypair(self.resource_id)
                 self._public_key = nova_key.public_key
         return self._public_key
 
@@ -138,8 +136,7 @@ class KeypairConstraint(constraints.BaseCustomConstraint):
             # Don't validate empty key, which can happen when you use a KeyPair
             # resource
             return True
-        nova_client = client.client('nova')
-        nova_utils.get_keypair(nova_client, value)
+        client.client_plugin('nova').get_keypair(value)
 
 
 def resource_mapping():

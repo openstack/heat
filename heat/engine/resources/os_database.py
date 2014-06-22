@@ -16,7 +16,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
@@ -228,8 +227,8 @@ class OSDBInstance(resource.Resource):
         '''
         Create cloud database instance.
         '''
-        self.flavor = nova_utils.get_flavor_id(self.trove(),
-                                               self.properties[self.FLAVOR])
+        self.flavor = self.client_plugin().get_flavor_id(
+            self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
         self.databases = self.properties.get(self.DATABASES)
         self.users = self.properties.get(self.USERS)

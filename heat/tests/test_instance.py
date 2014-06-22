@@ -28,7 +28,6 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface
-from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -1336,8 +1335,10 @@ class InstancesTest(HeatTestCase):
         """The default value for instance_user in heat.conf is ec2-user."""
         return_server = self.fc.servers.list()[1]
         instance = self._setup_test_instance(return_server, 'default_user')
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(instance, 'wordpress', 'ec2-user')
+        metadata = instance.metadata_get()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata, 'wordpress', 'ec2-user')
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
         self.m.VerifyAll()
@@ -1354,8 +1355,10 @@ class InstancesTest(HeatTestCase):
         instance = self._setup_test_instance(return_server, 'custom_user')
         self.m.StubOutWithMock(instances.cfg.CONF, 'instance_user')
         instances.cfg.CONF.instance_user = 'custom_user'
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(instance, 'wordpress', 'custom_user')
+        metadata = instance.metadata_get()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata, 'wordpress', 'custom_user')
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
         self.m.VerifyAll()
@@ -1373,8 +1376,10 @@ class InstancesTest(HeatTestCase):
         instance = self._setup_test_instance(return_server, 'empty_user')
         self.m.StubOutWithMock(instances.cfg.CONF, 'instance_user')
         instances.cfg.CONF.instance_user = ''
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(instance, 'wordpress', 'ec2-user')
+        metadata = instance.metadata_get()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata, 'wordpress', 'ec2-user')
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
         self.m.VerifyAll()

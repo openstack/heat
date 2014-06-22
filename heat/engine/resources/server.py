@@ -22,7 +22,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import subnet
-from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support
@@ -471,8 +470,8 @@ class Server(stack_user.StackUser):
         else:
             instance_user = None
 
-        userdata = nova_utils.build_userdata(
-            self,
+        userdata = self.client_plugin().build_userdata(
+            self.metadata_get(),
             ud_content,
             instance_user=instance_user,
             user_data_format=user_data_format)
@@ -484,11 +483,12 @@ class Server(stack_user.StackUser):
         if image:
             image = self.client_plugin('glance').get_image_id(image)
 
-        flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
+        flavor_id = self.client_plugin().get_flavor_id(flavor)
 
         instance_meta = self.properties.get(self.METADATA)
         if instance_meta is not None:
-            instance_meta = nova_utils.meta_serialize(instance_meta)
+            instance_meta = self.client_plugin().meta_serialize(
+                instance_meta)
 
         scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
         nics = self._build_nics(self.properties.get(self.NETWORKS))
@@ -532,12 +532,13 @@ class Server(stack_user.StackUser):
 
     def _check_active(self, server):
 
+        cp = self.client_plugin()
         if server.status != 'ACTIVE':
-            nova_utils.refresh_server(server)
+            cp.refresh_server(server)
 
         # Some clouds append extra (STATUS) strings to the status
         short_server_status = server.status.split('(')[0]
-        if short_server_status in nova_utils.deferred_server_statuses:
+        if short_server_status in cp.deferred_server_statuses:
             return False
         elif server.status == 'ACTIVE':
             return True
@@ -621,8 +622,8 @@ class Server(stack_user.StackUser):
 
     def _resolve_attribute(self, name):
         if name == self.FIRST_ADDRESS:
-            return nova_utils.server_to_ipaddress(
-                self.nova(), self.resource_id) or ''
+            return self.client_plugin().server_to_ipaddress(
+                self.resource_id) or ''
         try:
             server = self.nova().servers.get(self.resource_id)
         except Exception as e:
@@ -718,9 +719,8 @@ class Server(stack_user.StackUser):
 
         if self.METADATA in prop_diff:
             server = self.nova().servers.get(self.resource_id)
-            nova_utils.meta_update(self.nova(),
-                                   server,
-                                   prop_diff[self.METADATA])
+            self.client_plugin().meta_update(server,
+                                             prop_diff[self.METADATA])
 
         if self.FLAVOR in prop_diff:
 
@@ -732,11 +732,11 @@ class Server(stack_user.StackUser):
                 raise resource.UpdateReplace(self.name)
 
             flavor = prop_diff[self.FLAVOR]
-            flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
+            flavor_id = self.client_plugin().get_flavor_id(flavor)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
-            checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
-                                           flavor_id)
+            checker = scheduler.TaskRunner(self.client_plugin().resize,
+                                           server, flavor, flavor_id)
             checkers.append(checker)
 
         if self.IMAGE in prop_diff:
@@ -752,14 +752,14 @@ class Server(stack_user.StackUser):
             preserve_ephemeral = (
                 image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
             checker = scheduler.TaskRunner(
-                nova_utils.rebuild, server, image_id,
+                self.client_plugin().rebuild, server, image_id,
                 preserve_ephemeral=preserve_ephemeral)
             checkers.append(checker)
 
         if self.NAME in prop_diff:
             if not server:
                 server = self.nova().servers.get(self.resource_id)
-            nova_utils.rename(server, prop_diff[self.NAME])
+            self.client_plugin().rename(server, prop_diff[self.NAME])
 
         if self.NETWORKS in prop_diff:
             new_networks = prop_diff.get(self.NETWORKS)
@@ -928,7 +928,7 @@ class Server(stack_user.StackUser):
         metadata = self.properties.get(self.METADATA)
         personality = self.properties.get(self.PERSONALITY)
         if metadata is not None or personality:
-            limits = nova_utils.absolute_limits(self.nova())
+            limits = self.client_plugin().absolute_limits()
 
         # if 'security_groups' present for the server and explict 'port'
         # in one or more entries in 'networks', raise validation error
@@ -977,7 +977,8 @@ class Server(stack_user.StackUser):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
         else:
-            deleter = scheduler.TaskRunner(nova_utils.delete_server, server)
+            deleter = scheduler.TaskRunner(self.client_plugin().delete_server,
+                                           server)
             deleter.start()
             return deleter
 
@@ -1022,10 +1023,11 @@ class Server(stack_user.StackUser):
             if server.status == 'SUSPENDED':
                 return True
 
-            nova_utils.refresh_server(server)
+            cp = self.client_plugin()
+            cp.refresh_server(server)
             LOG.debug('%(name)s check_suspend_complete status = %(status)s'
                       % {'name': self.name, 'status': server.status})
-            if server.status in list(nova_utils.deferred_server_statuses +
+            if server.status in list(cp.deferred_server_statuses +
                                      ['ACTIVE']):
                 return server.status == 'SUSPENDED'
             else:
@@ -1067,8 +1069,7 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.FlavorMissing,)
 
     def validate_with_client(self, client, value):
-        nova_client = client.client('nova')
-        nova_utils.get_flavor_id(nova_client, value)
+        client.client_plugin('nova').get_flavor_id(value)
 
 
 def resource_mapping():

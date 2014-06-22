@@ -20,7 +20,6 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
-from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -170,6 +169,7 @@ class instancesTest(HeatTestCase):
         resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('%s_name' % name,
                                       resource_defns['WebServer'], stack)
+        metadata = instance.metadata_get()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -180,13 +180,13 @@ class instancesTest(HeatTestCase):
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
         # need to resolve the template functions
-        server_userdata = nova_utils.build_userdata(
-            instance,
+        server_userdata = instance.client_plugin().build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(
-            instance,
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user').AndReturn(server_userdata)
 
@@ -225,6 +225,7 @@ class instancesTest(HeatTestCase):
 
         instance = instances.Instance('%s_name' % name,
                                       resource_defns['WebServer'], stack)
+        metadata = instance.metadata_get()
 
         self._mock_get_image_id_success(image_id, 1)
         self.m.StubOutWithMock(nic, 'neutron')
@@ -234,13 +235,13 @@ class instancesTest(HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         # need to resolve the template functions
-        server_userdata = nova_utils.build_userdata(
-            instance,
+        server_userdata = instance.client_plugin().build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(
-            instance,
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user').AndReturn(server_userdata)
 

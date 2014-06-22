@@ -15,7 +15,6 @@ from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine.resources import instance as instances
-from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -66,13 +65,14 @@ class nokeyTest(HeatTestCase):
             'CentOS 5.2').MultipleTimes().AndReturn(1)
 
         # need to resolve the template functions
-        server_userdata = nova_utils.build_userdata(
-            instance,
+        metadata = instance.metadata_get()
+        server_userdata = instance.client_plugin().build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova_utils, 'build_userdata')
-        nova_utils.build_userdata(
-            instance,
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+        nova.NovaClientPlugin.build_userdata(
+            metadata,
             instance.t['Properties']['UserData'],
             'ec2-user').AndReturn(server_userdata)
 

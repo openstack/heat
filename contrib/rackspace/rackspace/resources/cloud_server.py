@@ -16,7 +16,6 @@ import copy
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import properties
-from heat.engine.resources import nova_utils
 from heat.engine.resources import server
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -200,7 +199,7 @@ class CloudServer(server.Server):
         if not self._check_active(server):
             return False
 
-        nova_utils.refresh_server(server)
+        self.client_plugin().refresh_server(server)
 
         if 'rack_connect' in self.context.roles and not \
            self._check_rack_connect_complete(server):
@@ -216,7 +215,7 @@ class CloudServer(server.Server):
         if name == self.DISTRO:
             return self.distro
         if name == self.PRIVATE_IP_V4:
-            return nova_utils.get_ip(self.server, 'private', 4)
+            return self.client_plugin().get_ip(self.server, 'private', 4)
         if name == self.ADMIN_PASS_ATTR:
             return self.data().get(self.ADMIN_PASS_ATTR, '')
         return super(CloudServer, self)._resolve_attribute(name)

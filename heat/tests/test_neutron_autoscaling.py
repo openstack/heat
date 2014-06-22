@@ -20,10 +20,11 @@ from oslo.config import cfg
 
 from heat.common import template_format
 from heat.db import api as db_api
+from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import instance
-from heat.engine.resources import nova_utils
 from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -123,11 +124,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'list_members')
 
-        self.m.StubOutWithMock(nova_utils, 'server_to_ipaddress')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'server_to_ipaddress')
         self.m.StubOutWithMock(parser.Stack, 'validate')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
 
     def test_lb(self):
 
@@ -276,10 +278,10 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_create_complete(mox.IgnoreArg())\
             .AndReturn(True)
 
-        self.stub_ImageConstraint_validate()
+        glance.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
 
-        nova_utils.server_to_ipaddress(
-            mox.IgnoreArg(),
+        nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.4')
 
         neutronclient.Client.create_member(membera_block).\
@@ -304,15 +306,13 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_create_complete(mox.IgnoreArg())\
             .AndReturn(True)
 
-        nova_utils.server_to_ipaddress(
-            mox.IgnoreArg(),
+        nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.5')
 
         neutronclient.Client.create_member(memberb_block).\
             AndReturn(memberb_ret_block)
 
-        nova_utils.server_to_ipaddress(
-            mox.IgnoreArg(),
+        nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.6')
 
         neutronclient.Client.create_member(memberc_block).\

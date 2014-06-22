@@ -24,6 +24,7 @@ import string
 from oslo.config import cfg
 import six
 from six.moves.urllib import parse as urlparse
+import warnings
 
 from heat.common import exception
 from heat.engine import scheduler
@@ -49,6 +50,8 @@ def refresh_server(server):
     '''
     Refresh server's attributes and log warnings for non-critical API errors.
     '''
+    warnings.warn('nova_utils.refresh_server is deprecated. '
+                  'Use self.client_plugin("nova").refresh_server')
     try:
         server.get()
     except nova_exceptions.OverLimit as exc:
@@ -72,6 +75,8 @@ def refresh_server(server):
 
 def get_ip(server, net_type, ip_version):
     """Return the server's IP of the given type and version."""
+    warnings.warn('nova_utils.get_ip is deprecated. '
+                  'Use self.client_plugin("nova").get_ip')
     if net_type in server.addresses:
         for ip in server.addresses[net_type]:
             if ip['version'] == ip_version:
@@ -79,6 +84,8 @@ def get_ip(server, net_type, ip_version):
 
 
 def get_flavor_id(nova_client, flavor):
+    warnings.warn('nova_utils.get_flavor_id is deprecated. '
+                  'Use self.client_plugin("nova").get_flavor_id')
     '''
     Get the id for the specified flavor name.
     If the specified value is flavor id, just return it.
@@ -103,6 +110,8 @@ def get_flavor_id(nova_client, flavor):
 
 
 def get_keypair(nova_client, key_name):
+    warnings.warn('nova_utils.get_keypair is deprecated. '
+                  'Use self.client_plugin("nova").get_keypair')
     '''
     Get the public key specified by :key_name:
 
@@ -119,6 +128,8 @@ def get_keypair(nova_client, key_name):
 
 def build_userdata(resource, userdata=None, instance_user=None,
                    user_data_format='HEAT_CFNTOOLS'):
+    warnings.warn('nova_utils.build_userdata is deprecated. '
+                  'Use self.client_plugin("nova").build_userdata')
     '''
     Build multipart data blob for CloudInit which includes user-supplied
     Metadata, user data, and the required Heat in-instance configuration.
@@ -241,6 +252,8 @@ def delete_server(server):
     A co-routine that deletes the server and waits for it to
     disappear from Nova.
     '''
+    warnings.warn('nova_utils.delete_server is deprecated. '
+                  'Use self.client_plugin("nova").delete_server')
     if not server:
         return
     try:
@@ -274,12 +287,16 @@ def delete_server(server):
 @scheduler.wrappertask
 def resize(server, flavor, flavor_id):
     """Resize the server and then call check_resize task to verify."""
+    warnings.warn('nova_utils.resize is deprecated. '
+                  'Use self.client_plugin("nova").resize')
     server.resize(flavor_id)
     yield check_resize(server, flavor, flavor_id)
 
 
 def rename(server, name):
     """Update the name for a server."""
+    warnings.warn('nova_utils.rename is deprecated. '
+                  'Use self.client_plugin("nova").rename')
     server.update(name)
 
 
@@ -288,6 +305,8 @@ def check_resize(server, flavor, flavor_id):
     Verify that a resizing server is properly resized.
     If that's the case, confirm the resize, if not raise an error.
     """
+    warnings.warn('nova_utils.check_resize is deprecated. '
+                  'Use self.client_plugin("nova").check_resize')
     refresh_server(server)
     while server.status == 'RESIZE':
         yield
@@ -303,6 +322,8 @@ def check_resize(server, flavor, flavor_id):
 @scheduler.wrappertask
 def rebuild(server, image_id, preserve_ephemeral=False):
     """Rebuild the server and call check_rebuild to verify."""
+    warnings.warn('nova_utils.rebuild is deprecated. '
+                  'Use self.client_plugin("nova").rebuild')
     server.rebuild(image_id, preserve_ephemeral=preserve_ephemeral)
     yield check_rebuild(server, image_id)
 
@@ -312,6 +333,8 @@ def check_rebuild(server, image_id):
     Verify that a rebuilding server is rebuilt.
     Raise error if it ends up in an ERROR state.
     """
+    warnings.warn('nova_utils.check_rebuild is deprecated. '
+                  'Use self.client_plugin("nova").check_rebuild')
     refresh_server(server)
     while server.status == 'REBUILD':
         yield
@@ -326,6 +349,8 @@ def meta_serialize(metadata):
     Serialize non-string metadata values before sending them to
     Nova.
     """
+    warnings.warn('nova_utils.meta_serialize is deprecated. '
+                  'Use self.client_plugin("nova").meta_serialize')
     return dict((key, (value if isinstance(value,
                                            six.string_types)
                        else json.dumps(value))
@@ -334,6 +359,8 @@ def meta_serialize(metadata):
 
 def meta_update(client, server, metadata):
     """Delete/Add the metadata in nova as needed."""
+    warnings.warn('nova_utils.meta_update is deprecated. '
+                  'Use self.client_plugin("nova").meta_update')
     metadata = meta_serialize(metadata)
     current_md = server.metadata
     to_del = [key for key in current_md.keys() if key not in metadata]
@@ -347,6 +374,8 @@ def server_to_ipaddress(client, server):
     '''
     Return the server's IP address, fetching it from Nova.
     '''
+    warnings.warn('nova_utils.server_to_ipaddress is deprecated. '
+                  'Use self.client_plugin("nova").server_to_ipaddress')
     try:
         server = client.servers.get(server)
     except nova_exceptions.NotFound as ex:
@@ -360,5 +389,7 @@ def server_to_ipaddress(client, server):
 
 def absolute_limits(nova_client):
     """Return the absolute limits as a dictionary."""
+    warnings.warn('nova_utils.absolute_limits is deprecated. '
+                  'Use self.client_plugin("nova").absolute_limits')
     limits = nova_client.limits.get()
     return dict([(limit.name, limit.value) for limit in list(limits.absolute)])

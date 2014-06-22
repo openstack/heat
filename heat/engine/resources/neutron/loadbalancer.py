@@ -18,7 +18,6 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
-from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.engine import support
 
@@ -647,11 +646,10 @@ class LoadBalancer(resource.Resource):
     def handle_create(self):
         pool = self.properties[self.POOL_ID]
         client = self.neutron()
-        nova_client = self.nova()
         protocol_port = self.properties[self.PROTOCOL_PORT]
 
         for member in self.properties.get(self.MEMBERS):
-            address = nova_utils.server_to_ipaddress(nova_client, member)
+            address = self.client_plugin('nova').server_to_ipaddress(member)
             lb_member = client.create_member({
                 'member': {
                     'pool_id': pool,
@@ -673,10 +671,10 @@ class LoadBalancer(resource.Resource):
                     self.client_plugin().ignore_not_found(ex)
                 self.data_delete(member)
             pool = self.properties[self.POOL_ID]
-            nova_client = self.nova()
             protocol_port = self.properties[self.PROTOCOL_PORT]
             for member in members - old_members:
-                address = nova_utils.server_to_ipaddress(nova_client, member)
+                address = self.client_plugin('nova').server_to_ipaddress(
+                    member)
                 lb_member = client.create_member({
                     'member': {
                         'pool_id': pool,

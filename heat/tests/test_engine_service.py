@@ -40,7 +40,6 @@ from heat.engine import parser
 from heat.engine.properties import Properties
 from heat.engine import resource as res
 from heat.engine.resources import instance as instances
-from heat.engine.resources import nova_utils
 from heat.engine import service
 from heat.engine import stack_lock
 from heat.engine import watchrule
@@ -209,6 +208,7 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
     mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
     nova.NovaClientPlugin._create().AndReturn(fc)
     instance = stack['WebServer']
+    metadata = instance.metadata_get()
     if mock_image_constraint:
         setup_mock_for_image_constraint(mocks,
                                         instance.t['Properties']['ImageId'])
@@ -216,11 +216,11 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
     setup_keystone_mocks(mocks, stack)
 
     user_data = instance.properties['UserData']
-    server_userdata = nova_utils.build_userdata(instance, user_data,
-                                                'ec2-user')
-    mocks.StubOutWithMock(nova_utils, 'build_userdata')
-    nova_utils.build_userdata(
-        instance,
+    server_userdata = instance.client_plugin().build_userdata(
+        metadata, user_data, 'ec2-user')
+    mocks.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
+    nova.NovaClientPlugin.build_userdata(
+        metadata,
         instance.t['Properties']['UserData'],
         'ec2-user').AndReturn(server_userdata)
 

@@ -14,6 +14,7 @@
 from troveclient import client as tc
 from troveclient.openstack.common.apiclient import exceptions
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
 
 
@@ -49,3 +50,25 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
 
     def is_over_limit(self, ex):
         return isinstance(ex, exceptions.RequestEntityTooLarge)
+
+    def get_flavor_id(self, flavor):
+        '''
+        Get the id for the specified flavor name.
+        If the specified value is flavor id, just return it.
+
+        :param flavor: the name of the flavor to find
+        :returns: the id of :flavor:
+        :raises: exception.FlavorMissing
+        '''
+        flavor_id = None
+        flavor_list = self.client().flavors.list()
+        for o in flavor_list:
+            if o.name == flavor:
+                flavor_id = o.id
+                break
+            if o.id == flavor:
+                flavor_id = o.id
+                break
+        if flavor_id is None:
+            raise exception.FlavorMissing(flavor_id=flavor)
+        return flavor_id

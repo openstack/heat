@@ -23,7 +23,6 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.network_interface import NetworkInterface
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources import nova_utils
 from heat.engine.resources import volume
 from heat.engine import scheduler
 from heat.engine import signal_responder
@@ -432,8 +431,8 @@ class Instance(resource.Resource):
         Return the server's IP address, fetching it from Nova if necessary
         '''
         if self.ipaddress is None:
-            self.ipaddress = nova_utils.server_to_ipaddress(
-                self.nova(), self.resource_id)
+            self.ipaddress = self.client_plugin().server_to_ipaddress(
+                self.resource_id)
 
         return self.ipaddress or '0.0.0.0'
 
@@ -547,7 +546,7 @@ class Instance(resource.Resource):
 
         image_id = self.client_plugin('glance').get_image_id(image_name)
 
-        flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
+        flavor_id = self.client_plugin().get_flavor_id(flavor)
 
         scheduler_hints = {}
         if self.properties[self.NOVA_SCHEDULER_HINTS]:
@@ -587,8 +586,8 @@ class Instance(resource.Resource):
                 flavor=flavor_id,
                 key_name=self.properties[self.KEY_NAME],
                 security_groups=security_groups,
-                userdata=nova_utils.build_userdata(self, userdata,
-                                                   instance_user),
+                userdata=self.client_plugin().build_userdata(
+                    self.metadata_get(), userdata, instance_user),
                 meta=self._get_nova_metadata(self.properties),
                 scheduler_hints=scheduler_hints,
                 nics=nics,
@@ -624,15 +623,16 @@ class Instance(resource.Resource):
             return volume_attach_task.step()
 
     def _check_active(self, server):
+        cp = self.client_plugin()
         if server.status != 'ACTIVE':
-            nova_utils.refresh_server(server)
+            cp.refresh_server(server)
 
         if server.status == 'ACTIVE':
             return True
 
         # Some clouds append extra (STATUS) strings to the status
         short_server_status = server.status.split('(')[0]
-        if short_server_status in nova_utils.deferred_server_statuses:
+        if short_server_status in cp.deferred_server_statuses:
             return False
 
         if server.status == 'ERROR':
@@ -671,17 +671,16 @@ class Instance(resource.Resource):
         server = None
         if self.TAGS in prop_diff:
             server = self.nova().servers.get(self.resource_id)
-            nova_utils.meta_update(self.nova(),
-                                   server,
-                                   self._get_nova_metadata(prop_diff))
+            self.client_plugin().meta_update(
+                server, self._get_nova_metadata(prop_diff))
 
         if self.INSTANCE_TYPE in prop_diff:
             flavor = prop_diff[self.INSTANCE_TYPE]
-            flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
+            flavor_id = self.client_plugin().get_flavor_id(flavor)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
-            checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
-                                           flavor_id)
+            checker = scheduler.TaskRunner(self.client_plugin().resize,
+                                           server, flavor, flavor_id)
             checkers.append(checker)
         if self.NETWORK_INTERFACES in prop_diff:
             new_network_ifaces = prop_diff.get(self.NETWORK_INTERFACES)
@@ -815,11 +814,11 @@ class Instance(resource.Resource):
             server = self.nova().servers.get(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
-            self.resource_id_set(None)
             return
         deleters = (
             scheduler.TaskRunner(self._detach_volumes_task()),
-            scheduler.TaskRunner(nova_utils.delete_server, server))
+            scheduler.TaskRunner(self.client_plugin().delete_server,
+                                 server))
         deleters[0].start()
         return deleters
 
@@ -872,11 +871,12 @@ class Instance(resource.Resource):
                 if server.status == 'SUSPENDED':
                     return True
 
-                nova_utils.refresh_server(server)
+                cp = self.client_plugin()
+                cp.refresh_server(server)
                 LOG.debug("%(name)s check_suspend_complete "
                           "status = %(status)s",
                           {'name': self.name, 'status': server.status})
-                if server.status in list(nova_utils.deferred_server_statuses +
+                if server.status in list(cp.deferred_server_statuses +
                                          ['ACTIVE']):
                     return server.status == 'SUSPENDED'
                 else:
