@@ -187,12 +187,18 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image_err',
                                       resource_defns['WebServer'], stack)
 
-        g_cli_moc = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(g_cli_moc)
+        self._mock_get_image_id_fail('Slackware',
+                                     exception.ImageNotFound(
+                                         image_name='Slackware'))
         self.m.ReplayAll()
 
-        self.assertRaises(ValueError, instance.handle_create)
+        create = scheduler.TaskRunner(instance.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual(
+            'StackValidationFailed: Property error : WebServer: '
+            'ImageId Error validating value \'Slackware\': '
+            'The Image (Slackware) could not be found.',
+            str(error))
 
         self.m.VerifyAll()
 
@@ -213,7 +219,13 @@ class InstancesTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(ValueError, instance.handle_create)
+        create = scheduler.TaskRunner(instance.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual(
+            'StackValidationFailed: Property error : WebServer: '
+            'ImageId Multiple physical resources were '
+            'found with name (CentOS 5.2).',
+            str(error))
 
         self.m.VerifyAll()
 
@@ -231,7 +243,12 @@ class InstancesTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(ValueError, instance.handle_create)
+        create = scheduler.TaskRunner(instance.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual(
+            'StackValidationFailed: Property error : WebServer: '
+            'ImageId 404 (HTTP 404)',
+            str(error))
 
         self.m.VerifyAll()
 

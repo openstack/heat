@@ -184,6 +184,15 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
 
+    def _mock_get_keypair_success(self, keypair_input, keypair):
+        n_cli_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(
+            n_cli_mock)
+        self.m.StubOutWithMock(nova_utils, 'get_keypair')
+        nova_utils.get_keypair(n_cli_mock, keypair_input).MultipleTimes().\
+            AndReturn(keypair)
+
     def _server_validate_mock(self, server):
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -340,12 +349,15 @@ class ServersTest(HeatTestCase):
         self._mock_get_image_id_fail('Slackware',
                                      exception.ImageNotFound(
                                          image_name='Slackware'))
+        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
-        error = self.assertRaises(ValueError, server.handle_create)
+        create = scheduler.TaskRunner(server.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'WebServer: image Error validating value '
-            '\'Slackware\': The Image (Slackware) could not be found.',
+            'StackValidationFailed: Property error : WebServer: '
+            'image Error validating value \'Slackware\': '
+            'The Image (Slackware) could not be found.',
             str(error))
 
         self.m.VerifyAll()
@@ -363,11 +375,14 @@ class ServersTest(HeatTestCase):
         self._mock_get_image_id_fail('CentOS 5.2',
                                      exception.PhysicalResourceNameAmbiguity(
                                          name='CentOS 5.2'))
+        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
-        error = self.assertRaises(ValueError, server.handle_create)
+        create = scheduler.TaskRunner(server.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'WebServer: image Multiple physical resources were '
+            'StackValidationFailed: Property error : WebServer: '
+            'image Multiple physical resources were '
             'found with name (CentOS 5.2).',
             str(error))
 
@@ -385,12 +400,14 @@ class ServersTest(HeatTestCase):
 
         self._mock_get_image_id_fail('1',
                                      exception.ImageNotFound(image_name='1'))
-
+        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
-        error = self.assertRaises(ValueError, server.handle_create)
+        create = scheduler.TaskRunner(server.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'WebServer: image Error validating value \'1\': '
+            'StackValidationFailed: Property error : WebServer: '
+            'image Error validating value \'1\': '
             'The Image (1) could not be found.',
             str(error))
 
@@ -2457,6 +2474,60 @@ class ServersTest(HeatTestCase):
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_properties_validation_create_and_update(self):
+        return_server = self.fc.servers.list()[1]
+
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        # verify that validate gets invoked exactly once for create
+        image.ImageConstraint.validate(
+            'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
+        # verify that validate gets invoked exactly once for update
+        image.ImageConstraint.validate(
+            'Update Image', mox.IgnoreArg()).AndReturn(True)
+        self.m.ReplayAll()
+
+        # create
+        server = self._create_test_server(return_server,
+                                          'my_server')
+
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['image'] = 'Update Image'
+
+        #update
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
+
+        self.m.VerifyAll()
+
+    def test_server_properties_validation_create_and_update_fail(self):
+        return_server = self.fc.servers.list()[1]
+
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        # verify that validate gets invoked exactly once for create
+        image.ImageConstraint.validate(
+            'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
+        # verify that validate gets invoked exactly once for update
+        ex = exception.ImageNotFound(image_name='Update Image')
+        image.ImageConstraint.validate('Update Image',
+                                       mox.IgnoreArg()).AndRaise(ex)
+        self.m.ReplayAll()
+
+        # create
+        server = self._create_test_server(return_server,
+                                          'my_server')
+
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['image'] = 'Update Image'
+
+        #update
+        updater = scheduler.TaskRunner(server.update, update_template)
+        err = self.assertRaises(exception.ResourceFailure, updater)
+        self.assertEqual('StackValidationFailed: Property error : WebServer: '
+                         'image The Image (Update Image) could not be found.',
+                         str(err))
+
         self.m.VerifyAll()
 
 

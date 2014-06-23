@@ -217,10 +217,17 @@ class AutoScalingGroupTest(HeatTestCase):
         clients.OpenStackClients.glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
-            AndReturn(imageId)
-        if update_image:
-            glance_utils.get_image_id(g_cli_mock, update_image).\
+
+        # If update_image is None (create case), validation for initial image
+        # imageId_input will be invoked multiple times (for each server).
+        # If update_image is set (update case), validation of the old property
+        # values and new property values will be done, but the order is not
+        # deterministic. Therefore, using mox.IgnoreArg() for the update case.
+        if update_image is None:
+            glance_utils.get_image_id(g_cli_mock, imageId_input).\
+                MultipleTimes().AndReturn(imageId)
+        else:
+            glance_utils.get_image_id(g_cli_mock, mox.IgnoreArg()).\
                 MultipleTimes().AndReturn(imageId)
 
     def _stub_validate(self):
