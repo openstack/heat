@@ -413,25 +413,28 @@ class Pool(neutron.NeutronResource):
 
     def check_create_complete(self, data):
         attributes = self._show_resource()
-        if attributes['status'] == 'PENDING_CREATE':
+        status = attributes['status']
+        if status == 'PENDING_CREATE':
             return False
-        elif attributes['status'] == 'ACTIVE':
+        elif status == 'ACTIVE':
             vip_attributes = self.neutron().show_vip(
                 self.metadata_get()['vip'])['vip']
-            if vip_attributes['status'] == 'PENDING_CREATE':
+            vip_status = vip_attributes['status']
+            if vip_status == 'PENDING_CREATE':
                 return False
-            elif vip_attributes['status'] == 'ACTIVE':
+            if vip_status == 'ACTIVE':
                 return True
-            raise exception.Error(
-                _('neutron reported unexpected vip resource[%(name)s] '
-                  'status[%(status)s]') %
-                {'name': vip_attributes['name'],
-                 'status': vip_attributes['status']})
-        raise exception.Error(
-            _('neutron reported unexpected pool resource[%(name)s] '
-              'status[%(status)s]') %
-            {'name': attributes['name'],
-             'status': attributes['status']})
+            if vip_status == 'ERROR':
+                raise resource.ResourceInError(
+                    resource_status=vip_status,
+                    status_reason=_('error in vip'))
+            raise resource.ResourceUnknownStatus(resource_status=vip_status)
+        elif status == 'ERROR':
+            raise resource.ResourceInError(
+                resource_status=status,
+                status_reason=_('error in pool'))
+        else:
+            raise resource.ResourceUnknownStatus(resource_status=status)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

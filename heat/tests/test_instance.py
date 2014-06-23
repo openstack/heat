@@ -252,9 +252,12 @@ class InstancesTest(HeatTestCase):
                                               'test_instance_create')
         return_server.get = lambda: None
         return_server.status = 'BOGUS'
-        self.assertRaises(exception.Error,
-                          instance.check_create_complete,
-                          (return_server, self.FakeVolumeAttach()))
+        e = self.assertRaises(resource.ResourceUnknownStatus,
+                              instance.check_create_complete,
+                              (return_server, self.FakeVolumeAttach()))
+        self.assertEqual(
+            'Unknown status BOGUS',
+            str(e))
 
     def test_instance_create_error_status(self):
         return_server = self.fc.servers.list()[1]
@@ -270,9 +273,12 @@ class InstancesTest(HeatTestCase):
         return_server.get()
         self.m.ReplayAll()
 
-        self.assertRaises(exception.Error,
-                          instance.check_create_complete,
-                          (return_server, self.FakeVolumeAttach()))
+        e = self.assertRaises(resource.ResourceInError,
+                              instance.check_create_complete,
+                              (return_server, self.FakeVolumeAttach()))
+        self.assertEqual(
+            'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
+            str(e))
 
         self.m.VerifyAll()
 
@@ -287,10 +293,10 @@ class InstancesTest(HeatTestCase):
         self.m.ReplayAll()
 
         e = self.assertRaises(
-            exception.Error, instance.check_create_complete,
+            resource.ResourceInError, instance.check_create_complete,
             (return_server, self.FakeVolumeAttach()))
         self.assertEqual(
-            'Creation of server sample-server2 failed: Unknown (500)',
+            'Went to status ERROR due to "Message: Unknown, Code: Unknown"',
             six.text_type(e))
 
         self.m.VerifyAll()

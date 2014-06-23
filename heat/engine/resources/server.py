@@ -543,15 +543,16 @@ class Server(stack_user.StackUser):
         elif server.status == 'ACTIVE':
             return True
         elif server.status == 'ERROR':
-            exc = exception.Error(_('Creation of server %s failed.') %
-                                  server.name)
-            raise exc
+            fault = getattr(server, 'fault', {})
+            raise resource.ResourceInError(
+                resource_status=server.status,
+                status_reason=_("Message: %(message)s, Code: %(code)s") % {
+                    'message': fault.get('message', _('Unknown')),
+                    'code': fault.get('code', _('Unknown'))
+                })
         else:
-            exc = exception.Error(_('Creation of server %(server)s failed '
-                                    'with unknown status: %(status)s') %
-                                  dict(server=server.name,
-                                       status=server.status))
-            raise exc
+            raise resource.ResourceUnknownStatus(
+                resource_status=server.status)
 
     @classmethod
     def _build_block_device_mapping(cls, bdm):
