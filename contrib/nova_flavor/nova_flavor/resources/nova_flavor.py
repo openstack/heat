@@ -37,10 +37,10 @@ class NovaFlavor(resource.Resource):
 
     PROPERTIES = (
         RAM, VCPUS, DISK, SWAP, EPHEMERAL,
-        RXTX_FACTOR,
+        RXTX_FACTOR, EXTRA_SPECS,
     ) = (
         'ram', 'vcpus', 'disk', 'swap', 'ephemeral',
-        'rxtx_factor',
+        'rxtx_factor', 'extra_specs',
     )
 
     properties_schema = {
@@ -76,6 +76,12 @@ class NovaFlavor(resource.Resource):
             _('RX/TX factor.'),
             default=1.0
         ),
+        EXTRA_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Key/Value pairs to extend the capabilities of the flavor.'),
+            update_allowed=True,
+        ),
+
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -86,14 +92,27 @@ class NovaFlavor(resource.Resource):
         args['flavorid'] = 'auto'
         args['name'] = self.physical_resource_name()
         args['is_public'] = False
+        flavor_keys = args.pop(self.EXTRA_SPECS)
 
         flavor = self.nova().flavors.create(**args)
         self.resource_id_set(flavor.id)
+        if flavor_keys:
+            flavor.set_keys(flavor_keys)
 
         tenant = self.stack.context.tenant_id
         # grant access to the active project and the admin project
         self.nova().flavor_access.add_tenant_access(flavor, tenant)
         self.nova().flavor_access.add_tenant_access(flavor, 'admin')
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        """Update nova flavor."""
+        if self.EXTRA_SPECS in prop_diff:
+            flavor = self.nova().flavors.get(self.resource_id)
+            old_keys = flavor.get_keys()
+            flavor.unset_keys(old_keys)
+            new_keys = prop_diff.get(self.EXTRA_SPECS)
+            if new_keys is not None:
+                flavor.set_keys(new_keys)
 
     def handle_delete(self):
         if self.resource_id is None:

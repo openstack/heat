@@ -33,6 +33,7 @@ resources:
       vcpus: 1
       disk: 20
       swap: 2
+      extra_specs: {"quota:disk_read_bytes_sec": "10240000"}
 ```
 
 ### Issues with the Nova Flavor plugin
