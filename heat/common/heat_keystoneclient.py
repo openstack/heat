@@ -262,16 +262,6 @@ class KeystoneClientV3(object):
         #get the last 64 characters of the username
         return username[-64:]
 
-    def _get_stack_user_role(self, roles_list):
-        # FIXME(shardy): The currently released v3 keystoneclient doesn't
-        # support filtering the results, so we have to do it locally,
-        # update when a new keystoneclient release happens containing
-        # the extensible-crud-manager-operations patch
-        stack_user_role = [r for r in roles_list
-                           if r.name == cfg.CONF.heat_stack_user_role]
-        if len(stack_user_role) == 1:
-            return stack_user_role[0].id
-
     def create_stack_user(self, username, password=''):
         """Create a user defined as part of a stack.
 
@@ -285,9 +275,10 @@ class KeystoneClientV3(object):
         # create_stack_domain user, but this function is expected to
         # be removed after the transition of all resources to domain
         # users has been completed
-        roles_list = self.client.roles.list()
-        role_id = self._get_stack_user_role(roles_list)
-        if role_id:
+        stack_user_role = self.client.roles.list(
+            name=cfg.CONF.heat_stack_user_role)
+        if len(stack_user_role) == 1:
+            role_id = stack_user_role[0].id
             # Create the user
             user = self.client.users.create(
                 name=self._get_username(username), password=password,
@@ -327,9 +318,10 @@ class KeystoneClientV3(object):
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
         # deployed on an instance (hence are implicitly untrusted)
-        roles_list = self.domain_admin_client.roles.list()
-        role_id = self._get_stack_user_role(roles_list)
-        if role_id:
+        stack_user_role = self.domain_admin_client.roles.list(
+            name=cfg.CONF.heat_stack_user_role)
+        if len(stack_user_role) == 1:
+            role_id = stack_user_role[0].id
             # Create user
             user = self.domain_admin_client.users.create(
                 name=self._get_username(username), password=password,
