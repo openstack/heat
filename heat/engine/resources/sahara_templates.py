@@ -170,7 +170,168 @@ class SaharaNodeGroupTemplate(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
 
+class SaharaClusterTemplate(resource.Resource):
+
+    PROPERTIES = (
+        NAME, PLUGIN_NAME, HADOOP_VERSION, DESCRIPTION,
+        ANTI_AFFINITY, MANAGEMENT_NETWORK,
+        CLUSTER_CONFIGS, NODE_GROUPS, IMAGE_ID,
+    ) = (
+        'name', 'plugin_name', 'hadoop_version', 'description',
+        'anti_affinity', 'neutron_management_network',
+        'cluster_configs', 'node_groups', 'default_image_id',
+    )
+
+    _NODE_GROUP_KEYS = (
+        NG_NAME, COUNT, NG_TEMPLATE_ID,
+    ) = (
+        'name', 'count', 'node_group_template_id',
+    )
+
+    properties_schema = {
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _("Name for the Sahara Cluster Template."),
+            constraints=[
+                constraints.Length(min=1, max=50),
+                constraints.AllowedPattern(SAHARA_NAME_REGEX),
+            ],
+        ),
+        DESCRIPTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Description of the Sahara Group Template.'),
+            default="",
+        ),
+        PLUGIN_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Plugin name.'),
+            required=True,
+        ),
+        HADOOP_VERSION: properties.Schema(
+            properties.Schema.STRING,
+            _('Version of Hadoop running on instances.'),
+            required=True,
+        ),
+        IMAGE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _("ID of the default image to use for the template."),
+            constraints=[
+                constraints.CustomConstraint('glance.image')
+            ],
+        ),
+        MANAGEMENT_NETWORK: properties.Schema(
+            properties.Schema.STRING,
+            _('Name or UUID of Neutron network.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
+        ),
+        ANTI_AFFINITY: properties.Schema(
+            properties.Schema.LIST,
+            _("List of processes to enable anti-affinity for."),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+            ),
+        ),
+        CLUSTER_CONFIGS: properties.Schema(
+            properties.Schema.MAP,
+            _('Cluster configs dictionary.'),
+        ),
+        NODE_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Node groups.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    NG_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Name of the Node group.'),
+                        required=True
+                    ),
+                    COUNT: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _("Number of instances in the Node group."),
+                        required=True,
+                        constraints=[
+                            constraints.Range(min=1)
+                        ]
+                    ),
+                    NG_TEMPLATE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _("ID of the Node Group Template."),
+                        required=True
+                    ),
+                }
+            ),
+
+        ),
+    }
+
+    default_client_name = 'sahara'
+
+    physical_resource_name_limit = 50
+
+    def _cluster_template_name(self):
+        name = self.properties.get(self.NAME)
+        if name:
+            return name
+        return self.physical_resource_name()
+
+    def handle_create(self):
+        plugin_name = self.properties[self.PLUGIN_NAME]
+        hadoop_version = self.properties[self.HADOOP_VERSION]
+        description = self.properties.get(self.DESCRIPTION)
+        image_id = self.properties.get(self.IMAGE_ID)
+        net_id = self.properties.get(self.MANAGEMENT_NETWORK)
+        if net_id:
+            net_id = self.client_plugin('neutron').find_neutron_resource(
+                self.properties, self.MANAGEMENT_NETWORK, 'network')
+        anti_affinity = self.properties.get(self.ANTI_AFFINITY)
+        cluster_configs = self.properties.get(self.CLUSTER_CONFIGS)
+        node_groups = self.properties.get(self.NODE_GROUPS)
+        cluster_template = self.client().cluster_templates.create(
+            self._cluster_template_name(),
+            plugin_name, hadoop_version,
+            description=description,
+            default_image_id=image_id,
+            anti_affinity=anti_affinity,
+            net_id=net_id,
+            cluster_configs=cluster_configs,
+            node_groups=node_groups
+        )
+        LOG.info(_("Cluster Template '%s' has been created"
+                   ) % cluster_template.name)
+        self.resource_id_set(cluster_template.id)
+        return self.resource_id
+
+    def handle_delete(self):
+        if not self.resource_id:
+            return
+        try:
+            self.client().cluster_templates.delete(
+                self.resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+        LOG.info(_("Cluster Template '%s' has been deleted."
+                   ) % self._cluster_template_name())
+
+    def validate(self):
+        res = super(SaharaClusterTemplate, self).validate()
+        if res:
+            return res
+        # check if running on neutron and MANAGEMENT_NETWORK missing
+        #NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
+        # overall stack validation will fail due to neutron.network constraint,
+        # although the message will be not really relevant.
+        if (self.is_using_neutron() and
+                not self.properties.get(self.MANAGEMENT_NETWORK)):
+            msg = _("%s must be provided"
+                    ) % self.MANAGEMENT_NETWORK
+            raise exception.StackValidationFailed(message=msg)
+
+
 def resource_mapping():
     return {
         'OS::Sahara::NodeGroupTemplate': SaharaNodeGroupTemplate,
+        'OS::Sahara::ClusterTemplate': SaharaClusterTemplate,
     }
