@@ -660,6 +660,40 @@ class CinderVolume(Volume):
                 return False
         return True
 
+    def handle_snapshot(self):
+        return self.cinder().volume_snapshots.create(
+            self.resource_id, force=True)
+
+    def check_snapshot_complete(self, snapshot):
+        if snapshot.status == 'creating':
+            snapshot.get()
+            return False
+        if snapshot.status == 'available':
+            self.data_set('snapshot_id', snapshot.id)
+            return True
+        raise exception.Error(snapshot.status)
+
+    def handle_delete_snapshot(self, snapshot):
+        snapshot_id = snapshot['resource_data']['snapshot_id']
+
+        def delete():
+            client = self.cinder()
+            try:
+                snap = client.volume_snapshots.get(snapshot_id)
+                snap.delete()
+                while True:
+                    yield
+                    snap.get()
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
+
+        delete_task = scheduler.TaskRunner(delete)
+        delete_task.start()
+        return delete_task
+
+    def check_delete_snapshot_complete(self, delete_task):
+        return delete_task.step()
+
 
 class CinderVolumeAttachment(VolumeAttachment):
 

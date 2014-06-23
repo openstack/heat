@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import httplib2
 import mock
+import requests
 
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
@@ -74,10 +74,13 @@ class FakeHTTPClient(base_client.HTTPClient):
         self.callstack.append((method, url, kwargs.get('body')))
 
         status, body = getattr(self, callback)(**kwargs)
-        if hasattr(status, 'items'):
-            return httplib2.Response(status), body
+        response = requests.models.Response()
+        if isinstance(status, dict):
+            response.status_code = status.pop("status")
+            response.headers = status
         else:
-            return httplib2.Response({"status": status}), body
+            response.status_code = status
+        return response, body
 
     #
     # Servers
@@ -278,7 +281,8 @@ class FakeHTTPClient(base_client.HTTPClient):
             assert body[action].keys() == ['address']
         elif action == 'createImage':
             assert set(body[action].keys()) == set(['name', 'metadata'])
-            resp = dict(status=202, location="http://blah/images/456")
+            resp = {"status": 202,
+                    "location": "http://blah/images/456"}
         elif action == 'changePassword':
             assert body[action].keys() == ['adminPass']
         elif action == 'os-getConsoleOutput':
@@ -369,6 +373,8 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def get_images_1(self, **kw):
         return (200, {'image': self.get_images_detail()[1]['images'][0]})
+
+    get_images_456 = get_images_1
 
     #
     # Keypairs
