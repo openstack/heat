@@ -2674,6 +2674,66 @@ class ServersTest(HeatTestCase):
         # this call is Act stage of this test. We calling server.validate()
         # to verify that no excessive calls to Nova are made during validation.
         self.assertIsNone(server.validate())
+
+        self.m.VerifyAll()
+
+    def test_server_restore(self):
+        t = template_format.parse(wp_template)
+        template = parser.Template(t)
+        stack = parser.Stack(utils.dummy_context(), "server_restore", template)
+        stack.store()
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName("server_restore", "WebServer"),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(return_server)
+        self.fc.servers.create(
+            image=1, flavor=3, key_name='test',
+            name=utils.PhysName("server_restore", "WebServer"),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(return_server)
+
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            'F17-x86_64-gold').MultipleTimes().AndReturn(744)
+        glance.GlanceClientPlugin.get_image_id(
+            'CentOS 5.2').MultipleTimes().AndReturn(1)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(stack.create)()
+
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+
+        scheduler.TaskRunner(stack.snapshot)()
+
+        self.assertEqual((stack.SNAPSHOT, stack.COMPLETE), stack.state)
+
+        data = stack.prepare_abandon()
+        resource_data = data['resources']['WebServer']['resource_data']
+        resource_data['snapshot_image_id'] = 'CentOS 5.2'
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+
+        stack.restore(fake_snapshot)
+
+        self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
+
         self.m.VerifyAll()
 
 

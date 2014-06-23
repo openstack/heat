@@ -60,11 +60,11 @@ class ForcedCancel(BaseException):
 class Stack(collections.Mapping):
 
     ACTIONS = (
-        CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND,
-        RESUME, ADOPT, SNAPSHOT, CHECK,
+        CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,
+        SNAPSHOT, CHECK, RESTORE
     ) = (
-        'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
-        'RESUME', 'ADOPT', 'SNAPSHOT', 'CHECK',
+        'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND', 'RESUME', 'ADOPT',
+        'SNAPSHOT', 'CHECK', 'RESTORE'
     )
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
@@ -706,7 +706,7 @@ class Stack(collections.Mapping):
 
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, event=None):
-        if action not in (self.UPDATE, self.ROLLBACK):
+        if action not in (self.UPDATE, self.ROLLBACK, self.RESTORE):
             LOG.error(_LE("Unexpected action %s passed to update!"), action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
@@ -764,6 +764,8 @@ class Stack(collections.Mapping):
 
             if action == self.UPDATE:
                 reason = 'Stack successfully updated'
+            elif action == self.RESTORE:
+                reason = 'Stack successfully restored'
             else:
                 reason = 'Stack rollback completed'
             stack_status = self.COMPLETE
@@ -1039,6 +1041,32 @@ class Stack(collections.Mapping):
         for name, rsrc in self.resources.iteritems():
             data = snapshot.data['resources'].get(name)
             scheduler.TaskRunner(rsrc.delete_snapshot, data)()
+
+    @profiler.trace('Stack.restore', hide_args=False)
+    def restore(self, snapshot):
+        '''
+        Restore the given snapshot, invoking handle_restore on all resources.
+        '''
+        self.updated_time = datetime.utcnow()
+
+        tmpl = Template(snapshot.data['template'])
+
+        for name, defn in tmpl.resource_definitions(self).iteritems():
+            rsrc = resource.Resource(name, defn, self)
+            data = snapshot.data['resources'].get(name)
+            handle_restore = getattr(rsrc, 'handle_restore', None)
+            if callable(handle_restore):
+                defn = handle_restore(defn, data)
+            tmpl.add_resource(defn, name)
+
+        newstack = self.__class__(self.context, self.name, tmpl, self.env,
+                                  timeout_mins=self.timeout_mins,
+                                  disable_rollback=self.disable_rollback)
+        newstack.parameters.set_stack_id(self.identifier())
+
+        updater = scheduler.TaskRunner(self.update_task, newstack,
+                                       action=self.RESTORE)
+        updater()
 
     @profiler.trace('Stack.output', hide_args=False)
     def output(self, key):

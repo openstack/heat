@@ -751,6 +751,17 @@ class CinderVolume(Volume):
                 message=_('Scheduler hints are not supported by the current '
                           'volume API.'))
 
+    def handle_restore(self, defn, restore_data):
+        backup_id = restore_data['resource_data']['backup_id']
+        ignore_props = (
+            self.IMAGE_REF, self.IMAGE, self.SOURCE_VOLID, self.SIZE)
+        props = dict(
+            (key, value) for (key, value) in
+            defn.properties(self.properties_schema).iteritems()
+            if key not in ignore_props and value is not None)
+        props[self.BACKUP_ID] = backup_id
+        return defn.freeze(properties=props)
+
 
 class CinderVolumeAttachment(VolumeAttachment):
 

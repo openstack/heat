@@ -4282,3 +4282,63 @@ class StackTest(HeatTestCase):
         self.assertEqual('Output validation error: The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
+
+    def test_restore(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        self.stack = parser.Stack(self.ctx, 'stack_details_test',
+                                  parser.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+
+        data = copy.deepcopy(self.stack.prepare_abandon())
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+
+        new_tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                    'Resources': {'A': {'Type': 'GenericResourceType'}}}
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(new_tmpl))
+        self.stack.update(updated_stack)
+        self.assertEqual(1, len(self.stack.resources))
+
+        self.stack.restore(fake_snapshot)
+
+        self.assertEqual((parser.Stack.RESTORE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(2, len(self.stack.resources))
+
+    def test_hot_restore(self):
+
+        class ResourceWithRestore(generic_rsrc.ResWithComplexPropsAndAttrs):
+
+            def handle_restore(self, defn, data):
+                props = dict(
+                    (key, value) for (key, value) in
+                    defn.properties(self.properties_schema).iteritems()
+                    if value is not None)
+                value = data['resource_data']['a_string']
+                props['a_string'] = value
+                return defn.freeze(properties=props)
+
+        resource._register_class('ResourceWithRestore', ResourceWithRestore)
+        tpl = {'heat_template_version': '2013-05-23',
+               'resources':
+               {'A': {'type': 'ResourceWithRestore'}}}
+        self.stack = parser.Stack(self.ctx, 'stack_details_test',
+                                  parser.Template(tpl))
+        self.stack.store()
+        self.stack.create()
+
+        data = self.stack.prepare_abandon()
+        data['resources']['A']['resource_data']['a_string'] = 'foo'
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+
+        self.stack.restore(fake_snapshot)
+
+        self.assertEqual((parser.Stack.RESTORE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        self.assertEqual(
+            'foo', self.stack.resources['A'].properties['a_string'])

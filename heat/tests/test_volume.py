@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 import json
 
@@ -102,6 +103,18 @@ resources:
       instance_uuid: WikiDatabase
       volume_id: { get_resource: volume }
       mountpoint: /dev/vdc
+'''
+
+single_cinder_volume_template = '''
+heat_template_version: 2013-05-23
+description: Cinder volume
+resources:
+  volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: 1
+      name: test_name
+      description: test_description
 '''
 
 
@@ -1426,6 +1439,45 @@ class CinderVolumeTest(BaseVolumeTest):
                                self.create_volume, self.t, stack, 'volume3')
         self.assertIn('Scheduler hints are not supported by the current '
                       'volume API.', six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_volume_restore(self):
+        stack_name = 'test_restore_stack'
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        fv = FakeVolume('creating', 'available')
+        fb = FakeBackup('creating', 'available')
+        fvbr = FakeBackupRestore('vol-123')
+
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=1, availability_zone=None, description='test_description',
+            name='test_name'
+        ).AndReturn(fv)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
+        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
+        self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
+        self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(stack.create)()
+
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+
+        scheduler.TaskRunner(stack.snapshot)()
+
+        self.assertEqual((stack.SNAPSHOT, stack.COMPLETE), stack.state)
+
+        data = stack.prepare_abandon()
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+
+        stack.restore(fake_snapshot)
+
+        self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
 
         self.m.VerifyAll()
 
