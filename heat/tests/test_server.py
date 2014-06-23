@@ -758,7 +758,7 @@ class ServersTest(HeatTestCase):
         web_server = tmpl.t['Resources']['WebServer']
         del web_server['Properties']['image']
 
-        def create_server(device_name, mock_nova=True, mock_create=True):
+        def create_server(device_name, mock_create=True):
             self.m.UnsetStubs()
             web_server['Properties']['block_device_mapping'] = [{
                 "device_name": device_name,
@@ -768,9 +768,6 @@ class ServersTest(HeatTestCase):
             resource_defns = tmpl.resource_definitions(stack)
             server = servers.Server('server_with_bootable_volume',
                                     resource_defns['WebServer'], stack)
-            if mock_nova:
-                self.m.StubOutWithMock(server, 'nova')
-                server.nova().MultipleTimes().AndReturn(self.fc)
             if mock_create:
                 self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
                 nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -781,7 +778,7 @@ class ServersTest(HeatTestCase):
         self.assertIsNone(server.validate())
         server = create_server('vda', mock_create=False)
         self.assertIsNone(server.validate())
-        server = create_server('vdb', mock_nova=False, mock_create=False)
+        server = create_server('vdb', mock_create=False)
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
         self.assertEqual('Neither image nor bootable volume is specified for '
@@ -824,7 +821,6 @@ class ServersTest(HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
@@ -2518,6 +2514,31 @@ class ServersTest(HeatTestCase):
                          'image The Image (Update Image) could not be found.',
                          six.text_type(err))
 
+        self.m.VerifyAll()
+
+    def test_server_dont_validate_personality_if_personality_isnt_set(self):
+        stack_name = 'srv_val'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+
+        # We mock out nova_utils.absolute_limits but we don't specify
+        # how this mock should behave, so mox will verify that this mock
+        # is NOT called during call to server.validate().
+        # This is the way to validate that no excessive calls to Nova
+        # are made during validation.
+        self.m.StubOutWithMock(nova_utils, 'absolute_limits')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+
+        # Assert here checks that server resource validates, but actually
+        # this call is Act stage of this test. We calling server.validate()
+        # to verify that no excessive calls to Nova are made during validation.
+        self.assertIsNone(server.validate())
         self.m.VerifyAll()
 
 
