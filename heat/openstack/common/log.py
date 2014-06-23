@@ -462,9 +462,8 @@ def setup(product_name, version='unknown'):
 
 
 def set_defaults(logging_context_format_string):
-    cfg.set_defaults(log_opts,
-                     logging_context_format_string=
-                     logging_context_format_string)
+    cfg.set_defaults(
+        log_opts, logging_context_format_string=logging_context_format_string)
 
 
 def _find_facility_from_conf():
@@ -541,9 +540,14 @@ def _setup_logging_from_conf(project, version):
         log_root.addHandler(streamlog)
 
     if CONF.publish_errors:
-        handler = importutils.import_object(
-            "heat.openstack.common.log_handler.PublishErrorsHandler",
-            logging.ERROR)
+        try:
+            handler = importutils.import_object(
+                "heat.openstack.common.log_handler.PublishErrorsHandler",
+                logging.ERROR)
+        except ImportError:
+            handler = importutils.import_object(
+                "oslo.messaging.notify.log_handler.PublishErrorsHandler",
+                logging.ERROR)
         log_root.addHandler(handler)
 
     datefmt = CONF.log_date_format

@@ -723,8 +723,9 @@ def _patch_mysqldb_with_stacktrace_comments():
 
     Patches MySQLdb.cursors.BaseCursor._do_query.
     """
-    import MySQLdb.cursors
     import traceback
+
+    import MySQLdb.cursors
 
     old_mysql_do_query = MySQLdb.cursors.BaseCursor._do_query
 
