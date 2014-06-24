@@ -221,7 +221,8 @@ class HOTemplate(template.Template):
         if name is None:
             name = definition.name
 
-        self.t.setdefault(self.RESOURCES, {})[name] = definition.render_hot()
+        self.t.setdefault(self.RESOURCES, {})
+        self.t[self.RESOURCES][name] = definition.render_hot()
 
 
 def template_mapping():
