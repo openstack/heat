@@ -22,7 +22,6 @@ try:
     from marconiclient.queues.v1 import client as marconiclient
 except ImportError:
     marconiclient = None
-    LOG.info(_('marconiclient not available'))
 
 
 class Clients(clients.OpenStackClients):

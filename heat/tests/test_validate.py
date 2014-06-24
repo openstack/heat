@@ -12,6 +12,7 @@
 #    under the License.
 
 from glanceclient import exc as g_exc
+import mock
 from testtools import skipIf
 
 from heat.common import exception
@@ -812,6 +813,9 @@ class validateTest(HeatTestCase):
         self.gc = fakes.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
+        self.mock_warnings = mock.patch('heat.engine.service.warnings')
+        self.mock_warnings.start()
+        self.addCleanup(self.mock_warnings.stop)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()

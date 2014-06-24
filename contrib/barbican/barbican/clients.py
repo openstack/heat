@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.engine import clients as heat_clients
-from heat.openstack.common import log as logging
 
 
 try:
@@ -21,9 +20,6 @@ try:
 except ImportError:
     barbican_client = None
     auth = None
-    LOG = logging.getLogger(__name__)
-    LOG.warn(_("barbican plugin loaded, but "
-               "python-barbicanclient requirement not satisfied."))
 
 
 class Clients(heat_clients.OpenStackClients):
