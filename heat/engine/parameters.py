@@ -285,6 +285,10 @@ class NumberParam(Parameter):
         return float(super(NumberParam, self).value())
 
     def _validate(self, val, context):
+        try:
+            Schema.str_to_num(val)
+        except ValueError as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
         self.schema.validate_value(self.name, val, context)
 
     def value(self):
@@ -295,6 +299,10 @@ class BooleanParam(Parameter):
     '''A template parameter of type "Boolean".'''
 
     def _validate(self, val, context):
+        try:
+            strutils.bool_from_string(val, strict=True)
+        except ValueError as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
         self.schema.validate_value(self.name, val, context)
 
     def value(self):

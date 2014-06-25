@@ -215,6 +215,12 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'p', schema, '3')
         self.assertIn('wibble', str(err))
 
+    def test_number_bad(self):
+        schema = {'Type': 'Number'}
+        err = self.assertRaises(exception.StackValidationFailed,
+                                self.new_parameter, 'p', schema, 'str')
+        self.assertIn('float', str(err))
+
     def test_number_value_list_good(self):
         schema = {'Type': 'Number',
                   'AllowedValues': ['1', '3', '5']}
@@ -323,8 +329,8 @@ class ParameterTest(testtools.TestCase):
 
     def test_bool_value_invalid(self):
         schema = {'Type': 'Boolean'}
-        bo = self.new_parameter('bo', schema, 'foo')
-        err = self.assertRaises(ValueError, bo.value)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                self.new_parameter, 'bo', schema, 'foo')
         self.assertIn("Unrecognized value 'foo'", unicode(err))
 
     def test_missing_param(self):
