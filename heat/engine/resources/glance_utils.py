@@ -55,7 +55,7 @@ def get_image_id_by_name(glance_client, image_identifier):
         image_list = list(glance_client.images.list(filters=filters))
     except glance_exceptions.ClientException as ex:
         raise exception.Error(
-            message=(_("Error retrieving image list from glance: %s") % ex))
+            _("Error retrieving image list from glance: %s") % ex)
     num_matches = len(image_list)
     if num_matches == 0:
         logger.info(_("Image %s was not found in glance") %

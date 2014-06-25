@@ -72,6 +72,23 @@ class GlanceUtilsTests(HeatTestCase):
                                                            img_name))
         self.m.VerifyAll()
 
+    def test_get_image_id_glance_exception(self):
+        """Test get_image_id when glance raises an exception."""
+        # Simulate HTTP exception
+        self.glance_client.images = self.m.CreateMockAnything()
+        img_name = str(uuid.uuid4())
+        filters = {'name': img_name}
+        self.glance_client.images.list(filters=filters).AndRaise(
+            glance_exceptions.ClientException("Error"))
+        self.m.ReplayAll()
+
+        expected_error = "Error retrieving image list from glance: Error"
+        e = self.assertRaises(exception.Error,
+                              glance_utils.get_image_id_by_name,
+                              self.glance_client, img_name)
+        self.assertEqual(expected_error, str(e))
+        self.m.VerifyAll()
+
     def test_get_image_id_not_found(self):
         """Tests the get_image_id function while image is not found."""
         my_image = self.m.CreateMockAnything()
@@ -102,7 +119,6 @@ class GlanceUtilsTests(HeatTestCase):
         self.glance_client.images.list(filters=filters).MultipleTimes().\
             AndReturn(image_list)
         self.m.ReplayAll()
-
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
                           glance_utils.get_image_id,
                           self.glance_client, img_name)
