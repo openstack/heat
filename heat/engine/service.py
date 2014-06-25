@@ -18,6 +18,7 @@ import os
 
 from oslo.config import cfg
 import six
+import warnings
 import webob
 
 from heat.common import context
@@ -300,6 +301,11 @@ class EngineService(service.Service):
         self.listener = None
         self.engine_id = None
         self.thread_group_mgr = None
+
+        if cfg.CONF.instance_user:
+            warnings.warn('The "instance_user" option in heat.conf is '
+                          'deprecated and will be removed in the Juno '
+                          'release.')
 
     def create_periodic_tasks(self):
         LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())

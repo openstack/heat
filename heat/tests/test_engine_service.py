@@ -172,6 +172,12 @@ resources:
 '''
 
 
+def mock_warnings(test):
+        mock_warnings = mock.patch('heat.engine.service.warnings')
+        mock_warnings.start()
+        test.addCleanup(mock_warnings.stop)
+
+
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
     template = parser.Template(t)
@@ -427,6 +433,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
+        mock_warnings(self)
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1231,6 +1238,7 @@ class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):
     def setUp(self):
         super(StackServiceUpdateSuspendedNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
+        mock_warnings(self)
         self.man = service.EngineService('a-host', 'a-topic')
 
     def test_stack_update_suspended(self):
@@ -1264,6 +1272,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
         self.ctx = utils.dummy_context()
+        mock_warnings(self)
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1337,6 +1346,7 @@ class StackServiceAuthorizeTest(HeatTestCase):
         super(StackServiceAuthorizeTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
+        mock_warnings(self)
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
@@ -1431,6 +1441,7 @@ class StackServiceTest(HeatTestCase):
         super(StackServiceTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
+        mock_warnings(self)
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.create_periodic_tasks()
         self.eng.engine_id = 'engine-fake-uuid'
@@ -2604,6 +2615,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
     def setUp(self):
         super(SoftwareConfigServiceTest, self).setUp()
         self.ctx = utils.dummy_context()
+        mock_warnings(self)
         self.engine = service.EngineService('a-host', 'a-topic')
 
     def _create_software_config(
