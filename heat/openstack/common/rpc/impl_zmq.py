@@ -320,7 +320,7 @@ class ConsumerBase(object):
 
     @classmethod
     def normalize_reply(self, result, replies):
-        #TODO(ewindisch): re-evaluate and document this method.
+        # TODO(ewindisch): re-evaluate and document this method.
         if isinstance(result, types.GeneratorType):
             return list(result)
         elif replies:
@@ -539,7 +539,7 @@ class ZmqReactor(ZmqBaseReactor):
         super(ZmqReactor, self).__init__(conf)
 
     def consume(self, sock):
-        #TODO(ewindisch): use zero-copy (i.e. references, not copying)
+        # TODO(ewindisch): use zero-copy (i.e. references, not copying)
         data = sock.recv()
         LOG.debug("CONSUMER RECEIVED DATA: %s", data)
 

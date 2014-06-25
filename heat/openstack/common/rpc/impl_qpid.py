@@ -224,7 +224,7 @@ class DirectConsumer(ConsumerBase):
         elif conf.qpid_topology_version == 2:
             node_name = "amq.direct/%s" % msg_id
             node_opts = {}
-            link_name = None
+            link_name = msg_id
         else:
             raise_invalid_topology_version()
 
@@ -444,6 +444,7 @@ class Connection(object):
         if not qpid_messaging:
             raise ImportError("Failed to import qpid.messaging")
 
+        self.connection = None
         self.session = None
         self.consumers = {}
         self.consumer_thread = None
@@ -471,7 +472,6 @@ class Connection(object):
         brokers_count = len(self.brokers)
         self.next_broker_indices = itertools.cycle(range(brokers_count))
 
-        self.connection_create(self.brokers[0])
         self.reconnect()
 
     def connection_create(self, broker):
@@ -501,7 +501,7 @@ class Connection(object):
         delay = 1
         while True:
             # Close the session if necessary
-            if self.connection.opened():
+            if self.connection is not None and self.connection.opened():
                 try:
                     self.connection.close()
                 except qpid_exceptions.MessagingError:

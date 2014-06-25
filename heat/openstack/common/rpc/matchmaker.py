@@ -127,10 +127,10 @@ class MatchMakerBase(object):
     def add_binding(self, binding, rule, last=True):
         self.bindings.append((binding, rule, False, last))
 
-    #NOTE(ewindisch): kept the following method in case we implement the
-    #                 underlying support.
-    #def add_negate_binding(self, binding, rule, last=True):
-    #    self.bindings.append((binding, rule, True, last))
+    # NOTE(ewindisch): kept the following method in case we implement the
+    #                  underlying support.
+    # def add_negate_binding(self, binding, rule, last=True):
+    #     self.bindings.append((binding, rule, True, last))
 
     def queues(self, key):
         workers = []

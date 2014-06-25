@@ -264,6 +264,7 @@ class WalkVersionsMixin(object):
                 if check:
                     check(engine, data)
         except Exception:
-            LOG.error(_LE("Failed to migrate to version %s on engine %s") %
-                      (version, engine))
+            LOG.error(_LE("Failed to migrate to version %(version)s "
+                          "on engine %(engine)s") % {'version': version,
+                                                     'engine': engine})
             raise

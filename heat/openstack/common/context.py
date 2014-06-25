@@ -77,6 +77,21 @@ class RequestContext(object):
                 'instance_uuid': self.instance_uuid,
                 'user_identity': user_idt}
 
+    @classmethod
+    def from_dict(cls, ctx):
+        return cls(
+            auth_token=ctx.get("auth_token"),
+            user=ctx.get("user"),
+            tenant=ctx.get("tenant"),
+            domain=ctx.get("domain"),
+            user_domain=ctx.get("user_domain"),
+            project_domain=ctx.get("project_domain"),
+            is_admin=ctx.get("is_admin", False),
+            read_only=ctx.get("read_only", False),
+            show_deleted=ctx.get("show_deleted", False),
+            request_id=ctx.get("request_id"),
+            instance_uuid=ctx.get("instance_uuid"))
+
 
 def get_admin_context(show_deleted=False):
     context = RequestContext(None,
