@@ -784,6 +784,14 @@
 #insecure=false
 
 
+#
+# Options defined in heat.common.config
+#
+
+# Allow client's debug log output. (boolean value)
+#http_log_debug=false
+
+
 [clients_swift]
 
 #

@@ -83,6 +83,8 @@ class OpenStackClients(object):
             'api_key': None,
             'extensions': extensions,
             'endpoint_type': endpoint_type,
+            'http_log_debug': self._get_client_option('nova',
+                                                      'http_log_debug'),
             'cacert': self._get_client_option('nova', 'ca_file'),
             'insecure': self._get_client_option('nova', 'insecure')
         }
