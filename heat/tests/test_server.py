@@ -194,8 +194,10 @@ class ServersTest(HeatTestCase):
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server,
-                                          'test_server_create')
+        server_name = 'test_server_create'
+        stack_name = '%s_s' % server_name
+        server = self._create_test_server(return_server, server_name)
+
         # this makes sure the auto increment worked on server creation
         self.assertTrue(server.id > 0)
 
@@ -236,6 +238,10 @@ class ServersTest(HeatTestCase):
         self.assertEqual('sample-server2', server.FnGetAtt('instance_name'))
         self.assertEqual('192.0.2.0', server.FnGetAtt('accessIPv4'))
         self.assertEqual('::babe:4317:0A83', server.FnGetAtt('accessIPv6'))
+
+        expected_name = utils.PhysName(stack_name, server.name)
+        self.assertEqual(expected_name, server.FnGetAtt('name'))
+
         self.m.VerifyAll()
 
     def test_server_create_metadata(self):
@@ -274,8 +280,9 @@ class ServersTest(HeatTestCase):
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
+        server_name = 'test_server_create_image_id'
         server = self._setup_test_server(return_server,
-                                         'test_server_create_image_id',
+                                         server_name,
                                          image_id='1',
                                          override_name=True)
 
@@ -315,6 +322,8 @@ class ServersTest(HeatTestCase):
             server.FnGetAtt('networks')['private'][0], private_ip)
         self.assertIn(
             server.FnGetAtt('first_address'), (private_ip, public_ip))
+
+        self.assertEqual(server_name, server.FnGetAtt('name'))
 
         self.m.VerifyAll()
 
