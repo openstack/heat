@@ -23,6 +23,7 @@ from oslo.config import cfg
 from heat.common import identifier
 from heat.common import template_format
 from heat.db import api as db_api
+from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
@@ -95,20 +96,51 @@ test_template_update_waitcondition = '''
 '''
 
 
+test_template_heat_waitcondition = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_condition:
+        type: OS::Heat::WaitCondition
+        properties:
+            handle: {get_resource: wait_handle}
+            timeout: 5
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+'''
+
+test_template_heat_waitcondition_count = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_condition:
+        type: OS::Heat::WaitCondition
+        properties:
+            handle: {get_resource: wait_handle}
+            count: 3
+            timeout: 5
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+'''
+
+
+test_template_heat_waithandle = '''
+heat_template_version: 2013-05-23
+resources:
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+'''
+
+
 class WaitConditionTest(HeatTestCase):
 
     def setUp(self):
         super(WaitConditionTest, self).setUp()
-        self.m.StubOutWithMock(wc.WaitConditionHandle,
-                               'get_status')
-
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
 
     def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params=None,
-                     stub=True):
+                     stub=True, stub_status=True):
         params = params or {}
         temp = template_format.parse(template)
         template = parser.Template(temp)
@@ -130,6 +162,10 @@ class WaitConditionTest(HeatTestCase):
                                                stack.id, '', 'WaitHandle')
             self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
             wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+
+        if stub_status:
+            self.m.StubOutWithMock(wc.WaitConditionHandle,
+                                   'get_status')
 
         return stack
 
@@ -718,3 +754,283 @@ class WaitConditionUpdateTest(HeatTestCase):
         wait_condition_handle = self.stack['WaitHandle']
         self.assertRaises(
             resource.UpdateReplace, wait_condition_handle.update, None, None)
+
+
+class HeatWaitConditionTest(HeatTestCase):
+
+    def setUp(self):
+        super(HeatWaitConditionTest, self).setUp()
+        self.stub_keystoneclient()
+        self.tenant_id = 'test_tenant'
+
+    def create_stack(self, stack_id=None,
+                     template=test_template_heat_waitcondition_count,
+                     params={},
+                     stub=True, stub_status=True):
+        temp = template_format.parse(template)
+        template = parser.Template(temp)
+        ctx = utils.dummy_context(tenant_id=self.tenant_id)
+        stack = parser.Stack(ctx, 'test_stack', template,
+                             environment.Environment(params),
+                             disable_rollback=True)
+
+        # Stub out the stack ID so we have a known value
+        if stack_id is None:
+            stack_id = str(uuid.uuid4())
+
+        self.stack_id = stack_id
+        with utils.UUIDStub(self.stack_id):
+            stack.store()
+
+        if stub:
+            id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                               stack.id, '', 'wait_handle')
+            self.m.StubOutWithMock(wc.HeatWaitConditionHandle, 'identifier')
+            wc.HeatWaitConditionHandle.identifier().MultipleTimes().AndReturn(
+                id)
+
+        if stub_status:
+            self.m.StubOutWithMock(wc.HeatWaitConditionHandle,
+                                   'get_status')
+
+        return stack
+
+    def test_post_complete_to_handle(self):
+        self.stack = self.create_stack()
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                           'SUCCESS'])
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                           'SUCCESS',
+                                                           'SUCCESS'])
+
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['wait_condition']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE),
+                         rsrc.state)
+
+        r = db_api.resource_get_by_name_and_stack(None, 'wait_handle',
+                                                  self.stack.id)
+        self.assertEqual('wait_handle', r.name)
+        self.m.VerifyAll()
+
+    def test_post_failed_to_handle(self):
+        self.stack = self.create_stack()
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                           'SUCCESS'])
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                           'SUCCESS',
+                                                           'FAILURE'])
+
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['wait_condition']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED),
+                         rsrc.state)
+        reason = rsrc.status_reason
+        self.assertTrue(reason.startswith('WaitConditionFailure:'))
+
+        r = db_api.resource_get_by_name_and_stack(None, 'wait_handle',
+                                                  self.stack.id)
+        self.assertEqual('wait_handle', r.name)
+        self.m.VerifyAll()
+
+    def test_timeout(self):
+        st = time.time()
+
+        self.stack = self.create_stack()
+
+        # Avoid the stack create exercising the timeout code at the same time
+        self.m.StubOutWithMock(self.stack, 'timeout_secs')
+        self.stack.timeout_secs().MultipleTimes().AndReturn(None)
+
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.001)
+        scheduler.wallclock().AndReturn(st + 0.1)
+        wc.HeatWaitConditionHandle.get_status().AndReturn([])
+        scheduler.wallclock().AndReturn(st + 4.1)
+        wc.HeatWaitConditionHandle.get_status().AndReturn([])
+        scheduler.wallclock().AndReturn(st + 5.1)
+
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['wait_condition']
+
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        reason = rsrc.status_reason
+        self.assertTrue(reason.startswith('WaitConditionTimeout:'))
+
+        self.m.VerifyAll()
+
+    def _create_heat_wc_and_handle(self):
+        self.stack = self.create_stack(
+            template=test_template_heat_waitcondition)
+        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['wait_condition']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual(unicode({}), wc_att)
+
+        handle = self.stack['wait_handle']
+        self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
+        return (rsrc, handle)
+
+    def test_data(self):
+        rsrc, handle = self._create_heat_wc_and_handle()
+        test_metadata = {'data': 'foo', 'reason': 'bar',
+                         'status': 'SUCCESS', 'id': '123'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual('{"123": "foo"}', wc_att)
+
+        test_metadata = {'data': 'dog', 'reason': 'cat',
+                         'status': 'SUCCESS', 'id': '456'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
+        self.m.VerifyAll()
+
+    def test_data_noid(self):
+        rsrc, handle = self._create_heat_wc_and_handle()
+        test_metadata = {'data': 'foo', 'reason': 'bar',
+                         'status': 'SUCCESS'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual('{"1": "foo"}', wc_att)
+
+        test_metadata = {'data': 'dog', 'reason': 'cat',
+                         'status': 'SUCCESS'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual(u'{"1": "foo", "2": "dog"}', wc_att)
+        self.m.VerifyAll()
+
+    def test_data_nodata(self):
+        rsrc, handle = self._create_heat_wc_and_handle()
+        handle.handle_signal()
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual('{"1": null}', wc_att)
+
+        handle.handle_signal()
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual(u'{"1": null, "2": null}', wc_att)
+        self.m.VerifyAll()
+
+    def test_data_partial_complete(self):
+        rsrc, handle = self._create_heat_wc_and_handle()
+
+        test_metadata = {'status': 'SUCCESS'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual('{"1": null}', wc_att)
+
+        test_metadata = {'status': 'SUCCESS'}
+        handle.handle_signal(details=test_metadata)
+        wc_att = rsrc.FnGetAtt('data')
+        self.assertEqual(u'{"1": null, "2": null}', wc_att)
+        self.m.VerifyAll()
+
+    def _create_heat_handle(self):
+        self.stack = self.create_stack(
+            template=test_template_heat_waithandle, stub_status=False)
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        handle = self.stack['wait_handle']
+        self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
+        return handle
+
+    def test_get_status_none_complete(self):
+        handle = self._create_heat_handle()
+
+        handle.handle_signal()
+        self.assertEqual(['SUCCESS'], handle.get_status())
+        md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
+                       'status': 'SUCCESS'}}
+        self.assertEqual(md_expected, handle.metadata_get())
+        self.m.VerifyAll()
+
+    def test_get_status_partial_complete(self):
+        handle = self._create_heat_handle()
+        test_metadata = {'status': 'SUCCESS'}
+        handle.handle_signal(details=test_metadata)
+        self.assertEqual(['SUCCESS'], handle.get_status())
+        md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
+                       'status': 'SUCCESS'}}
+        self.assertEqual(md_expected, handle.metadata_get())
+
+        self.m.VerifyAll()
+
+    def test_get_status_failure(self):
+        handle = self._create_heat_handle()
+        test_metadata = {'status': 'FAILURE'}
+        handle.handle_signal(details=test_metadata)
+        self.assertEqual(['FAILURE'], handle.get_status())
+        md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
+                       'status': 'FAILURE'}}
+        self.assertEqual(md_expected, handle.metadata_get())
+
+        self.m.VerifyAll()
+
+    def test_getatt_token(self):
+        handle = self._create_heat_handle()
+        self.assertEqual('adomainusertoken', handle.FnGetAtt('token'))
+        self.m.VerifyAll()
+
+    def test_getatt_endpoint(self):
+        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, 'get_heat_url')
+        heat_plugin.HeatClientPlugin.get_heat_url().AndReturn(
+            'foo/%s' % self.tenant_id)
+        self.m.ReplayAll()
+        handle = self._create_heat_handle()
+        expected = ('foo/aprojectid/stacks/test_stack/%s/resources/'
+                    'wait_handle/signal'
+                    % self.stack_id)
+        self.assertEqual(expected, handle.FnGetAtt('endpoint'))
+        self.m.VerifyAll()
+
+    def test_getatt_curl_cli_success(self):
+        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, 'get_heat_url')
+        heat_plugin.HeatClientPlugin.get_heat_url().AndReturn(
+            'foo/%s' % self.tenant_id)
+        self.m.ReplayAll()
+        handle = self._create_heat_handle()
+        expected = ("curl -i -X POST -H 'X-Auth-Token: adomainusertoken' "
+                    "-H 'Content-Type: application/json' "
+                    "-H 'Accept: application/json' "
+                    "foo/aprojectid/stacks/test_stack/%s/resources/wait_handle"
+                    "/signal" % self.stack_id)
+        self.assertEqual(expected, handle.FnGetAtt('curl_cli_success'))
+        self.m.VerifyAll()
+
+    def test_getatt_curl_cli_failure(self):
+        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, 'get_heat_url')
+        heat_plugin.HeatClientPlugin.get_heat_url().AndReturn(
+            'foo/%s' % self.tenant_id)
+        self.m.ReplayAll()
+        handle = self._create_heat_handle()
+        expected = ("curl -i -X POST "
+                    "--data-binary '{\"status\": \"FAILURE\"}' "
+                    "-H 'X-Auth-Token: adomainusertoken' "
+                    "-H 'Content-Type: application/json' "
+                    "-H 'Accept: application/json' "
+                    "foo/aprojectid/stacks/test_stack/%s/resources/wait_handle"
+                    "/signal" % self.stack_id)
+        self.assertEqual(expected, handle.FnGetAtt('curl_cli_failure'))
+        self.m.VerifyAll()

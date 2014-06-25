@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import uuid
 
 from heat.common import exception
 from heat.common import identifier
@@ -26,13 +27,13 @@ from heat.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class WaitConditionHandle(signal_responder.SignalResponder):
+class BaseWaitConditionHandle(signal_responder.SignalResponder):
     '''
-    the main point of this class is to :
-    have no dependencies (so the instance can reference it)
-    generate a unique url (to be returned in the reference)
-    then the cfn-signal will use this url to post to and
-    WaitCondition will poll it to see if has been written to.
+    Base WaitConditionHandle resource.
+    The main point of this class is to :
+    - have no dependencies (so the instance can reference it)
+    - create credentials to allow for signalling from the instance.
+    - handle signals from the instance, validate and store result
     '''
     properties_schema = {}
 
@@ -44,6 +45,181 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         'SUCCESS',
     )
 
+    def handle_create(self):
+        super(BaseWaitConditionHandle, self).handle_create()
+        self.resource_id_set(self._get_user_id())
+
+    def _status_ok(self, status):
+        return status in self.WAIT_STATUSES
+
+    def _metadata_format_ok(self, metadata):
+        if sorted(tuple(metadata.keys())) == sorted(self.METADATA_KEYS):
+            return self._status_ok(metadata[self.STATUS])
+
+    def handle_signal(self, metadata=None):
+        if self._metadata_format_ok(metadata):
+            rsrc_metadata = self.metadata_get(refresh=True)
+            if metadata[self.UNIQUE_ID] in rsrc_metadata:
+                LOG.warning(_("Overwriting Metadata item for id %s!")
+                            % metadata[self.UNIQUE_ID])
+            safe_metadata = {}
+            for k in self.METADATA_KEYS:
+                if k == self.UNIQUE_ID:
+                    continue
+                safe_metadata[k] = metadata[k]
+            rsrc_metadata.update({metadata[self.UNIQUE_ID]: safe_metadata})
+            self.metadata_set(rsrc_metadata)
+        else:
+            LOG.error(_("Metadata failed validation for %s") % self.name)
+            raise ValueError(_("Metadata format invalid"))
+
+    def get_status(self):
+        '''
+        Return a list of the Status values for the handle signals
+        '''
+        return [v[self.STATUS]
+                for v in self.metadata_get(refresh=True).values()]
+
+    def get_status_reason(self, status):
+        '''
+        Return a list of reasons associated with a particular status
+        '''
+        return [v[self.REASON]
+                for v in self.metadata_get(refresh=True).values()
+                if v[self.STATUS] == status]
+
+
+class HeatWaitConditionHandle(BaseWaitConditionHandle):
+    METADATA_KEYS = (
+        DATA, REASON, STATUS, UNIQUE_ID
+    ) = (
+        'data', 'reason', 'status', 'id'
+    )
+
+    ATTRIBUTES = (
+        TOKEN,
+        ENDPOINT,
+        CURL_CLI_SUCCESS,
+        CURL_CLI_FAILURE,
+    ) = (
+        'token',
+        'endpoint',
+        'curl_cli_success',
+        'curl_cli_failure',
+    )
+
+    attributes_schema = {
+        TOKEN: attributes.Schema(
+            _('Token for stack-user which can be used for signalling handle'),
+            cache_mode=attributes.Schema.CACHE_NONE
+        ),
+        ENDPOINT: attributes.Schema(
+            _('Endpoint/url which can be used for signalling handle'),
+            cache_mode=attributes.Schema.CACHE_NONE
+        ),
+        CURL_CLI_SUCCESS: attributes.Schema(
+            _('Convenience attribute, provides curl CLI command '
+              'which can be used for signalling handle completion'),
+            cache_mode=attributes.Schema.CACHE_NONE
+        ),
+        CURL_CLI_FAILURE: attributes.Schema(
+            _('Convenience attribute, provides curl CLI command '
+              'which can be used for signalling handle failure'),
+            cache_mode=attributes.Schema.CACHE_NONE
+        ),
+    }
+
+    def handle_create(self):
+        password = uuid.uuid4().hex
+        self.data_set('password', password, True)
+        self._create_user()
+        self.resource_id_set(self._get_user_id())
+        # FIXME(shardy): The assumption here is that token expiry > timeout
+        # but we probably need a check here to fail fast if that's not true
+        # Also need to implement an update property, such that the handle
+        # can be replaced on update which will replace the token
+        token = self._user_token()
+        self.data_set('token', token, True)
+        self.data_set('endpoint', '%s/signal' % self._get_resource_endpoint())
+
+    def _get_resource_endpoint(self):
+        # Get the endpoint from stack.clients then replace the context
+        # project_id with the path to the resource (which includes the
+        # context project_id), then replace the context project with
+        # the one needed for signalling from the stack_user_project
+        heat_client_plugin = self.stack.clients.client_plugin('heat')
+        endpoint = heat_client_plugin.get_heat_url()
+        rsrc_ep = endpoint.replace(self.context.tenant_id,
+                                   self.identifier().url_path())
+        return rsrc_ep.replace(self.context.tenant_id,
+                               self.stack.stack_user_project_id)
+
+    def handle_delete(self):
+        self._delete_user()
+
+    @property
+    def password(self):
+        return self.data().get('password')
+
+    def _resolve_attribute(self, key):
+        if self.resource_id:
+            if key == self.TOKEN:
+                return self.data().get('token')
+            elif key == self.ENDPOINT:
+                return self.data().get('endpoint')
+            elif key == self.CURL_CLI_SUCCESS:
+                # Construct curl command for template-author convenience
+                return ('curl -i -X POST '
+                        '-H \'X-Auth-Token: %(token)s\' '
+                        '-H \'Content-Type: application/json\' '
+                        '-H \'Accept: application/json\' '
+                        '%(endpoint)s' %
+                        dict(token=self.data().get('token'),
+                             endpoint=self.data().get('endpoint')))
+            elif key == self.CURL_CLI_FAILURE:
+                return ('curl -i -X POST '
+                        '--data-binary \'{"status": "%(status)s"}\' '
+                        '-H \'X-Auth-Token: %(token)s\' '
+                        '-H \'Content-Type: application/json\' '
+                        '-H \'Accept: application/json\' '
+                        '%(endpoint)s' %
+                        dict(status=self.STATUS_FAILURE,
+                             token=self.data().get('token'),
+                             endpoint=self.data().get('endpoint')))
+
+    def handle_signal(self, details=None):
+        '''
+        Validate and update the resource metadata.
+        metadata is not mandatory, but if passed it must use the following
+        format:
+        {
+            "status" : "Status (must be SUCCESS or FAILURE)"
+            "data" : "Arbitrary data",
+            "reason" : "Reason string"
+        }
+        Optionally "id" may also be specified, but if missing the index
+        of the signal received will be used.
+        '''
+        rsrc_metadata = self.metadata_get(refresh=True)
+        signal_num = len(rsrc_metadata) + 1
+        reason = 'Signal %s received' % signal_num
+        # Tolerate missing values, default to success
+        metadata = details or {}
+        metadata.setdefault(self.REASON, reason)
+        metadata.setdefault(self.DATA, None)
+        metadata.setdefault(self.UNIQUE_ID, signal_num)
+        metadata.setdefault(self.STATUS, self.STATUS_SUCCESS)
+        super(HeatWaitConditionHandle, self).handle_signal(metadata)
+
+
+class WaitConditionHandle(BaseWaitConditionHandle):
+    '''
+    the main point of this class is to :
+    have no dependencies (so the instance can reference it)
+    generate a unique url (to be returned in the reference)
+    then the cfn-signal will use this url to post to and
+    WaitCondition will poll it to see if has been written to.
+    '''
     METADATA_KEYS = (
         DATA, REASON, STATUS, UNIQUE_ID
     ) = (
@@ -64,20 +240,6 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         else:
             return unicode(self.name)
 
-    def _metadata_format_ok(self, metadata):
-        """
-        Check the format of the provided metadata is as expected.
-        metadata must use the following format:
-        {
-            "Status" : "Status (must be SUCCESS or FAILURE)"
-            "UniqueId" : "Some ID, should be unique for Count>1",
-            "Data" : "Arbitrary Data",
-            "Reason" : "Reason String"
-        }
-        """
-        if tuple(sorted(metadata.keys())) == self.METADATA_KEYS:
-            return metadata[self.STATUS] in self.WAIT_STATUSES
-
     def metadata_update(self, new_metadata=None):
         """DEPRECATED. Should use handle_signal instead."""
         self.handle_signal(details=new_metadata)
@@ -85,40 +247,17 @@ class WaitConditionHandle(signal_responder.SignalResponder):
     def handle_signal(self, details=None):
         '''
         Validate and update the resource metadata
+        metadata must use the following format:
+        {
+            "Status" : "Status (must be SUCCESS or FAILURE)"
+            "UniqueId" : "Some ID, should be unique for Count>1",
+            "Data" : "Arbitrary Data",
+            "Reason" : "Reason String"
+        }
         '''
         if details is None:
             return
-
-        if self._metadata_format_ok(details):
-            rsrc_metadata = self.metadata_get(refresh=True)
-            if details[self.UNIQUE_ID] in rsrc_metadata:
-                LOG.warning(_("Overwriting Metadata item for UniqueId %s!")
-                            % details[self.UNIQUE_ID])
-            safe_metadata = {}
-            for k in self.METADATA_KEYS:
-                if k == self.UNIQUE_ID:
-                    continue
-                safe_metadata[k] = details[k]
-            rsrc_metadata.update({details[self.UNIQUE_ID]: safe_metadata})
-            self.metadata_set(rsrc_metadata)
-        else:
-            LOG.error(_("Metadata failed validation for %s") % self.name)
-            raise ValueError(_("Metadata format invalid"))
-
-    def get_status(self):
-        '''
-        Return a list of the Status values for the handle signals
-        '''
-        return [v[self.STATUS]
-                for v in self.metadata_get(refresh=True).values()]
-
-    def get_status_reason(self, status):
-        '''
-        Return a list of reasons associated with a particular status
-        '''
-        return [v[self.REASON]
-                for v in self.metadata_get(refresh=True).values()
-                if v[self.STATUS] == status]
+        super(WaitConditionHandle, self).handle_signal(details)
 
 
 class UpdateWaitConditionHandle(WaitConditionHandle):
@@ -358,6 +497,7 @@ def resource_mapping():
     return {
         'AWS::CloudFormation::WaitCondition': WaitCondition,
         'OS::Heat::WaitCondition': HeatWaitCondition,
+        'OS::Heat::WaitConditionHandle': HeatWaitConditionHandle,
         'AWS::CloudFormation::WaitConditionHandle': WaitConditionHandle,
         'OS::Heat::UpdateWaitConditionHandle': UpdateWaitConditionHandle,
     }
