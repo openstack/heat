@@ -10,15 +10,17 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
+import mock
 import uuid
 
-import mock
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.engine.resources import nova_utils
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
 
@@ -91,6 +93,33 @@ class NovaUtilsTests(HeatTestCase):
         self.assertRaises(exception.UserKeyPairMissing, nova_utils.get_keypair,
                           self.nova_client, 'notakey')
         self.m.VerifyAll()
+
+    def test_delete_server(self):
+        server = mock.Mock()
+        server.status = "DELETED"
+        task = scheduler.TaskRunner(nova_utils.delete_server, server)
+        self.assertIsNone(task())
+
+    def test_delete_server_notfound(self):
+        server = mock.Mock()
+        server.delete.side_effect = nova_exceptions.NotFound(404)
+        task = scheduler.TaskRunner(nova_utils.delete_server, server)
+        self.assertIsNone(task())
+
+    def test_delete_noserver(self):
+        task = scheduler.TaskRunner(nova_utils.delete_server, None)
+        self.assertIsNone(task())
+
+    def test_delete_servererror(self):
+        server = mock.Mock()
+        server.name = "myserver"
+        server.status = "ERROR"
+        server.fault = {
+            "message": "test error",
+        }
+        task = scheduler.TaskRunner(nova_utils.delete_server, server)
+        err = self.assertRaises(exception.Error, task)
+        self.assertIn("myserver delete failed: (None) test error", str(err))
 
 
 class NovaUtilsRefreshServerTests(HeatTestCase):
