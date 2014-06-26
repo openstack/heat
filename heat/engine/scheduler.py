@@ -265,7 +265,7 @@ def wrappertask(task):
                         except GeneratorExit as ex:
                             subtask.close()
                             raise ex
-                        except:
+                        except:  # noqa
                             try:
                                 step = subtask.throw(*sys.exc_info())
                             except StopIteration:
@@ -280,7 +280,7 @@ def wrappertask(task):
             except GeneratorExit as ex:
                 parent.close()
                 raise ex
-            except:
+            except:  # noqa
                 subtask = parent.throw(*sys.exc_info())
             else:
                 subtask = next(parent)
@@ -340,7 +340,7 @@ class DependencyTaskGroup(object):
                     if not self.aggregate_exceptions:
                         raise
                     raised_exceptions.append(e)
-        except:
+        except:  # noqa
             with excutils.save_and_reraise_exception():
                 for r in self._runners.itervalues():
                     r.cancel()
@@ -466,7 +466,7 @@ class PollingTaskGroup(object):
                 yield
                 runners = list(itertools.dropwhile(lambda r: r.step(),
                                                    runners))
-        except:
+        except:  # noqa
             with excutils.save_and_reraise_exception():
                 for r in runners:
                     r.cancel()

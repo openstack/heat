@@ -185,7 +185,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         userdata_parts = None
         try:
             userdata_parts = email.message_from_string(userdata)
-        except:
+        except Exception:
             pass
         if userdata_parts and userdata_parts.is_multipart():
             for part in userdata_parts.get_payload():

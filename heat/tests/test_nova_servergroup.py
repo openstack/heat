@@ -63,7 +63,7 @@ class NovaServerGroupTest(HeatTestCase):
                 try:
                         sg = sg_template['resources']['ServerGroup']
                         del sg['properties']['name']
-                except:
+                except Exception:
                         pass
                 self._init_template(sg_template)
                 name = 'test'
