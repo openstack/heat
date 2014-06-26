@@ -34,6 +34,7 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 
 from oslo.config import cfg
 
+from heat.common import messaging
 from heat.common import notify
 from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
@@ -55,6 +56,7 @@ if __name__ == '__main__':
                                    'eventlet.wsgi.server=WARN',
                                    ]
     logging.setup('heat')
+    messaging.setup()
 
     from heat.engine import service as engine
 

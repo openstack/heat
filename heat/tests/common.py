@@ -24,6 +24,7 @@ from oslotest import mockpatch
 import testscenarios
 import testtools
 
+from heat.common import messaging
 from heat.engine import clients
 from heat.engine import environment
 from heat.engine import resources
@@ -79,9 +80,10 @@ class HeatTestCase(testscenarios.WithScenarios,
                                'environment.d')
 
         cfg.CONF.set_default('environment_dir', env_dir)
-        cfg.CONF.set_override('allowed_rpc_exception_modules',
-                              ['heat.common.exception', 'exceptions'])
         self.addCleanup(cfg.CONF.reset)
+
+        messaging.setup("fake://", optional=True)
+        self.addCleanup(messaging.cleanup)
 
         tri = resources.global_env().get_resource_info(
             'AWS::RDS::DBInstance',

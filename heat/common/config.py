@@ -22,7 +22,6 @@ from oslo.config import cfg
 
 from heat.common import wsgi
 from heat.openstack.common import log as logging
-from heat.openstack.common import rpc
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
@@ -213,20 +212,6 @@ cfg.CONF.register_group(revision_group)
 
 for group, opts in list_opts():
     cfg.CONF.register_opts(opts, group=group)
-
-rpc.set_defaults(control_exchange='heat')
-
-
-# A bit of history:
-# This was added initially by jianingy, then it got added
-# to oslo by Luis. Then it was receintly removed from the
-# default list again.
-# I am not sure we can (or should) rely on oslo to keep
-# our exceptions class in the defaults list.
-allowed_rpc_exception_modules = cfg.CONF.allowed_rpc_exception_modules
-allowed_rpc_exception_modules.append('heat.common.exception')
-cfg.CONF.set_default(name='allowed_rpc_exception_modules',
-                     default=allowed_rpc_exception_modules)
 
 
 def _get_deployment_flavor():

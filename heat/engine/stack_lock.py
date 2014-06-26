@@ -15,14 +15,14 @@ import contextlib
 import uuid
 
 from oslo.config import cfg
+from oslo import messaging
 
 from heat.common import exception
+from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
 from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common.rpc import common as rpc_common
-from heat.openstack.common.rpc import proxy
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
@@ -38,13 +38,12 @@ class StackLock(object):
 
     @staticmethod
     def engine_alive(context, engine_id):
-        topic = engine_id
-        rpc = proxy.RpcProxy(topic, "1.0")
-        msg = rpc.make_msg("listening")
+        client = rpc_messaging.get_rpc_client(version='1.0', topic=engine_id)
+        client_context = client.prepare(
+            timeout=cfg.CONF.engine_life_check_timeout)
         try:
-            return rpc.call(context, msg, topic=topic,
-                            timeout=cfg.CONF.engine_life_check_timeout)
-        except rpc_common.Timeout:
+            return client_context.call(context, 'listening')
+        except messaging.MessagingTimeout:
             return False
 
     @staticmethod

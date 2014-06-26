@@ -13,7 +13,6 @@
 
 from heat.engine import api as engine_api
 from heat.engine import notification
-from heat.openstack.common.notifier import api as notifier_api
 
 
 def send(stack,
@@ -37,6 +36,6 @@ def send(stack,
 
     level = notification.get_default_level()
     if suffix == 'error':
-        level = notifier_api.ERROR
+        level = notification.ERROR
 
     notification.notify(stack.context, event_type, level, body)

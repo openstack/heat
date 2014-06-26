@@ -17,11 +17,11 @@
 Client side of the heat engine RPC API.
 """
 
-import heat.openstack.common.rpc.proxy
+from heat.common import messaging
 from heat.rpc import api
 
 
-class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
+class EngineClient(object):
     '''Client side of the heat engine rpc API.
 
     API version history::
@@ -33,9 +33,29 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
     BASE_RPC_API_VERSION = '1.0'
 
     def __init__(self):
-        super(EngineClient, self).__init__(
+        self._client = messaging.get_rpc_client(
             topic=api.ENGINE_TOPIC,
-            default_version=self.BASE_RPC_API_VERSION)
+            version=self.BASE_RPC_API_VERSION)
+
+    @staticmethod
+    def make_msg(method, **kwargs):
+        return method, kwargs
+
+    def call(self, ctxt, msg, version=None):
+        method, kwargs = msg
+        if version is not None:
+            client = self._client.prepare(version=version)
+        else:
+            client = self._client
+        return client.call(ctxt, method, **kwargs)
+
+    def cast(self, ctxt, msg, version=None):
+        method, kwargs = msg
+        if version is not None:
+            client = self._client.prepare(version=version)
+        else:
+            client = self._client
+        return client.cast(ctxt, method, **kwargs)
 
     def identify_stack(self, ctxt, stack_name):
         """

@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
@@ -41,13 +40,6 @@ class NotificationTest(common.HeatTestCase):
 
     def setUp(self):
         super(NotificationTest, self).setUp()
-
-        cfg.CONF.import_opt('notification_driver',
-                            'heat.openstack.common.notifier.api')
-
-        cfg.CONF.set_default('notification_driver',
-                             ['heat.openstack.common.notifier.test_notifier'])
-        cfg.CONF.set_default('host', 'test_host')
         resource._register_class('GenericResource',
                                  generic_resource.ResourceWithProps)
 
@@ -87,9 +79,7 @@ class NotificationTest(common.HeatTestCase):
         stack_arn = self.stack.identifier().arn()
         self.expected[action] = [
             mock.call(self.ctx,
-                      'orchestration.test_host',
                       'orchestration.stack.%s.start' % action,
-                      'INFO',
                       {'state_reason': 'Stack %s started' % action.upper(),
                        'user_id': 'test_username',
                        'stack_identity': stack_arn,
@@ -97,9 +87,8 @@ class NotificationTest(common.HeatTestCase):
                        'create_at': self.create_at,
                        'stack_name': self.stack_name,
                        'state': '%s_IN_PROGRESS' % action.upper()}),
-            mock.call(self.ctx, 'orchestration.test_host',
+            mock.call(self.ctx,
                       'orchestration.stack.%s.end' % action,
-                      'INFO',
                       {'state_reason':
                        'Stack %s completed successfully' % action.upper(),
                        'user_id': 'test_username',
@@ -109,60 +98,50 @@ class NotificationTest(common.HeatTestCase):
                        'stack_name': self.stack_name,
                        'state': '%s_COMPLETE' % action.upper()})]
 
-    def test_create_stack(self):
-        with mock.patch('heat.openstack.common.notifier.api.notify') \
-                as mock_notify:
-            self.create_test_stack()
-            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                             self.stack.state)
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.info')
+    def test_create_stack(self, mock_notify):
+        self.create_test_stack()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
-            self.assertEqual(self.expected['create'],
-                             mock_notify.call_args_list)
+        self.assertEqual(self.expected['create'],
+                         mock_notify.call_args_list)
 
-    def test_create_and_suspend_stack(self):
-        with mock.patch('heat.openstack.common.notifier.api.notify') \
-                as mock_notify:
-            self.create_test_stack()
-            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                             self.stack.state)
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.info')
+    def test_create_and_suspend_stack(self, mock_notify):
+        self.create_test_stack()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
-            self.assertEqual(self.expected['create'],
-                             mock_notify.call_args_list)
-            self.stack.suspend()
-            self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
-                             self.stack.state)
+        self.assertEqual(self.expected['create'],
+                         mock_notify.call_args_list)
+        self.stack.suspend()
+        self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
+                         self.stack.state)
 
-            expected = self.expected['create'] + self.expected['suspend']
-            self.assertEqual(expected, mock_notify.call_args_list)
+        expected = self.expected['create'] + self.expected['suspend']
+        self.assertEqual(expected, mock_notify.call_args_list)
 
-    def test_create_and_delete_stack(self):
-        with mock.patch('heat.openstack.common.notifier.api.notify') \
-                as mock_notify:
-            self.create_test_stack()
-            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
-                             self.stack.state)
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.info')
+    def test_create_and_delete_stack(self, mock_notify):
+        self.create_test_stack()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
-            self.assertEqual(self.expected['create'],
-                             mock_notify.call_args_list)
-            self.stack.delete()
-            self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
-                             self.stack.state)
-            expected = self.expected['create'] + self.expected['delete']
+        self.assertEqual(self.expected['create'],
+                         mock_notify.call_args_list)
+        self.stack.delete()
+        self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
+                         self.stack.state)
+        expected = self.expected['create'] + self.expected['delete']
 
-            self.assertEqual(expected, mock_notify.call_args_list)
+        self.assertEqual(expected, mock_notify.call_args_list)
 
 
 class ScaleNotificationTest(common.HeatTestCase):
 
     def setUp(self):
         super(ScaleNotificationTest, self).setUp()
-
-        cfg.CONF.import_opt('notification_driver',
-                            'heat.openstack.common.notifier.api')
-
-        cfg.CONF.set_default('notification_driver',
-                             ['heat.openstack.common.notifier.test_notifier'])
-        cfg.CONF.set_default('host', 'test_host')
         self.ctx = utils.dummy_context()
         self.ctx.tenant_id = 'test_tenant'
 
@@ -208,9 +187,7 @@ class ScaleNotificationTest(common.HeatTestCase):
 
         stack_arn = self.stack.identifier().arn()
         expected = [mock.call(self.ctx,
-                    'orchestration.test_host',
                     'orchestration.autoscaling.start',
-                    'INFO',
                     {'state_reason':
                      'Stack CREATE completed successfully',
                      'user_id': 'test_username',
@@ -228,9 +205,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                     ]
         if with_error:
             expected += [mock.call(self.ctx,
-                         'orchestration.test_host',
                          'orchestration.autoscaling.error',
-                         'ERROR',
                          {'state_reason':
                           'Stack CREATE completed successfully',
                           'user_id': 'test_username',
@@ -247,9 +222,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                          ]
         else:
             expected += [mock.call(self.ctx,
-                         'orchestration.test_host',
                          'orchestration.autoscaling.end',
-                         'INFO',
                          {'state_reason':
                           'Stack CREATE completed successfully',
                           'user_id': 'test_username',
@@ -268,48 +241,45 @@ class ScaleNotificationTest(common.HeatTestCase):
 
         return expected
 
-    def test_scale_success(self):
-        with mock.patch('heat.engine.notification.stack.send'):
-            with mock.patch('heat.openstack.common.notifier.api.notify') \
-                    as mock_notify:
+    @mock.patch('heat.engine.notification.stack.send')
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.info')
+    def test_scale_success(self, mock_notify, mock_send):
+        self.mock_stack_except_for_group()
+        group = self.create_autoscaling_stack_and_get_group()
+        expected = self.expected_notifs_calls(group,
+                                              adjust=1,
+                                              start_capacity=1,
+                                              end_capacity=2,
+                                              )
+        group.adjust(1)
+        self.assertEqual(2, len(group.get_instance_names()))
+        mock_notify.assert_has_calls(expected)
 
-                self.mock_stack_except_for_group()
-                group = self.create_autoscaling_stack_and_get_group()
-                expected = self.expected_notifs_calls(group,
-                                                      adjust=1,
-                                                      start_capacity=1,
-                                                      end_capacity=2,
-                                                      )
-                group.adjust(1)
-                self.assertEqual(2, len(group.get_instance_names()))
-                mock_notify.assert_has_calls(expected)
+        expected = self.expected_notifs_calls(group,
+                                              adjust=-1,
+                                              start_capacity=2,
+                                              end_capacity=1,
+                                              )
+        group.adjust(-1)
+        self.assertEqual(1, len(group.get_instance_names()))
+        mock_notify.assert_has_calls(expected)
 
-                expected = self.expected_notifs_calls(group,
-                                                      adjust=-1,
-                                                      start_capacity=2,
-                                                      end_capacity=1,
-                                                      )
-                group.adjust(-1)
-                self.assertEqual(1, len(group.get_instance_names()))
-                mock_notify.assert_has_calls(expected)
+    @mock.patch('heat.engine.notification.stack.send')
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.info')
+    @mock.patch('oslo.messaging.notify.notifier.Notifier.error')
+    def test_scaleup_failure(self, mock_error, mock_info, mock_send):
+        self.mock_stack_except_for_group()
+        group = self.create_autoscaling_stack_and_get_group()
 
-    def test_scaleup_failure(self):
-        with mock.patch('heat.engine.notification.stack.send'):
-            with mock.patch('heat.openstack.common.notifier.api.notify') \
-                    as mock_notify:
+        err_message = 'Boooom'
+        m_as = self.patchobject(autoscaling.AutoScalingGroup, 'resize')
+        m_as.side_effect = exception.Error(err_message)
 
-                self.mock_stack_except_for_group()
-                group = self.create_autoscaling_stack_and_get_group()
-
-                err_message = 'Boooom'
-                m_as = self.patchobject(autoscaling.AutoScalingGroup, 'resize')
-                m_as.side_effect = exception.Error(err_message)
-
-                expected = self.expected_notifs_calls(group,
-                                                      adjust=2,
-                                                      start_capacity=1,
-                                                      with_error=err_message,
-                                                      )
-                self.assertRaises(exception.Error, group.adjust, 2)
-                self.assertEqual(1, len(group.get_instance_names()))
-                mock_notify.assert_has_calls(expected)
+        info, error = self.expected_notifs_calls(group,
+                                                 adjust=2,
+                                                 start_capacity=1,
+                                                 with_error=err_message)
+        self.assertRaises(exception.Error, group.adjust, 2)
+        self.assertEqual(1, len(group.get_instance_names()))
+        mock_error.assert_has_calls([error])
+        mock_info.assert_has_calls([info])

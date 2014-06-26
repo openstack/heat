@@ -21,7 +21,6 @@ import webob.exc
 
 from heat.common import serializers
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common.rpc import common as rpc_common
 
 
 class HeatAPIException(webob.exc.HTTPError):
@@ -262,7 +261,7 @@ class HeatActionInProgressError(HeatAPIException):
 
 def map_remote_error(ex):
         """
-        Map rpc_common.RemoteError exceptions returned by the engine
+        Map RemoteError exceptions returned by the engine
         to HeatAPIException subclasses which can be used to return
         properly formatted AWS error responses
         """
@@ -290,8 +289,8 @@ def map_remote_error(ex):
 
         ex_type = ex.__class__.__name__
 
-        if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
-            ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
+        if ex_type.endswith('_Remote'):
+            ex_type = ex_type[:-len('_Remote')]
 
         if ex_type in inval_param_errors:
             return HeatInvalidParameterValueError(detail=six.text_type(ex))
