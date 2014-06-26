@@ -27,17 +27,6 @@ try:
 except ImportError:
     LOG.info(_('pyrax not available'))
 
-try:
-    from swiftclient import client as swiftclient
-except ImportError:
-    swiftclient = None
-    LOG.info(_('swiftclient not available'))
-try:
-    from ceilometerclient import client as ceilometerclient
-except ImportError:
-    ceilometerclient = None
-    LOG.info(_('ceilometerclient not available'))
-
 cloud_opts = [
     cfg.StrOpt('region_name',
                help=_('Region for connecting to services.'))
@@ -56,15 +45,14 @@ class Clients(clients.OpenStackClients):
     def _get_client(self, name):
         if not self.pyrax:
             self.__authenticate()
-        return self.pyrax.get(name)
+        if name not in self._clients:
+            client = self.pyrax.get_client(name, cfg.CONF.region_name)
+            self._clients[name] = client
+        return self._clients[name]
 
     def auto_scale(self):
         """Rackspace Auto Scale client."""
         return self._get_client("autoscale")
-
-    def cloud_db(self):
-        """Rackspace cloud database client."""
-        return self._get_client("database")
 
     def cloud_lb(self):
         """Rackspace cloud loadbalancer client."""
@@ -79,37 +67,71 @@ class Clients(clients.OpenStackClients):
         return self._get_client("compute")
 
     def cloud_networks(self):
-        """Rackspace cloud networks client."""
-        return self._get_client("network")
+        """
+        Rackspace cloud networks client.
+
+        Though pyrax "fixed" the network client bugs that were introduced
+        in 1.8, it still doesn't work for contexts because of caching of the
+        nova client.
+        """
+        if "networks" not in self._clients:
+            if not self.pyrax:
+                self.__authenticate()
+            # need special handling now since the contextual
+            # pyrax doesn't handle "networks" not being in
+            # the catalog
+            ep = pyrax._get_service_endpoint(self.pyrax, "compute",
+                                             region=cfg.CONF.region_name)
+            cls = pyrax._client_classes['compute:network']
+            self._clients["networks"] = cls(self.pyrax,
+                                            region_name=cfg.CONF.region_name,
+                                            management_url=ep)
+        return self._clients["networks"]
 
     def trove(self):
-        """Rackspace trove client."""
-        if not self._trove:
+        """
+        Rackspace trove client.
+
+        Since the pyrax module uses its own client implementation for Cloud
+        Databases, we have to skip pyrax on this one and override the super
+        management url to be region-aware.
+        """
+        if "trove" not in self._clients:
             super(Clients, self).trove(service_type='rax:database')
             management_url = self.url_for(service_type='rax:database',
                                           region_name=cfg.CONF.region_name)
-            self._trove.client.management_url = management_url
-        return self._trove
+            self._clients['trove'].client.management_url = management_url
+        return self._clients['trove']
 
     def cinder(self):
         """Override the region for the cinder client."""
-        if not self._cinder:
+        if "cinder" not in self._clients:
             super(Clients, self).cinder()
             management_url = self.url_for(service_type='volume',
                                           region_name=cfg.CONF.region_name)
-            self._cinder.client.management_url = management_url
-        return self._cinder
+            self._clients['cinder'].client.management_url = management_url
+        return self._clients['cinder']
+
+    def swift(self):
+        # Rackspace doesn't include object-store in the default catalog
+        # for "reasons". The pyrax client takes care of this, but it
+        # returns a wrapper over the upstream python-swiftclient so we
+        # unwrap here and things just work
+        return self._get_client("object_store").connection
 
     def __authenticate(self):
-        pyrax.set_setting("identity_type", "keystone")
-        pyrax.set_setting("auth_endpoint", self.context.auth_url)
-        LOG.info(_("Authenticating username:%s") % self.context.username)
-        self.pyrax = pyrax.auth_with_token(self.context.auth_token,
-                                           tenant_id=self.context.tenant_id,
-                                           tenant_name=self.context.tenant,
-                                           region=(cfg.CONF.region_name
-                                                   or None))
-        if not self.pyrax:
-            raise exception.AuthorizationFailure("No services available.")
-        LOG.info(_("User %s authenticated successfully.")
-                 % self.context.username)
+        """Create an authenticated client context."""
+        self.pyrax = pyrax.create_context("rackspace")
+        self.pyrax.auth_endpoint = self.context.auth_url
+        LOG.info(_("Authenticating username: %s") %
+                 self.context.username)
+        tenant = self.context.tenant_id
+        tenant_name = self.context.tenant
+        self.pyrax.auth_with_token(self.context.auth_token,
+                                   tenant_id=tenant,
+                                   tenant_name=tenant_name)
+        if not self.pyrax.authenticated:
+            LOG.warn(_("Pyrax Authentication Failed."))
+            raise exception.AuthorizationFailure()
+        LOG.info(_("User %s authenticated successfully."),
+                 self.context.username)
