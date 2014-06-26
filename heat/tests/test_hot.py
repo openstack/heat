@@ -17,10 +17,10 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
-from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
 from heat.engine import environment
 from heat.engine import function
+from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
 from heat.engine import parameters
@@ -585,8 +585,8 @@ class HOTemplateTest(HeatTestCase):
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
                                              parser.Template(hot_tpl_empty))
-        del_policy = cfn_funcs.Join(parent_resource.stack,
-                                    'Fn::Join', ['eta', ['R', 'in']])
+        del_policy = hot_functions.Join(parent_resource.stack,
+                                        'list_join', ['eta', ['R', 'in']])
         parent_resource.t = rsrc_defn.ResourceDefinition(
             'parent', 'SomeType',
             deletion_policy=del_policy)

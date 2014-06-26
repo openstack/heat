@@ -726,6 +726,26 @@ The *resource ID* of the referenced resources as used in the current template is
 given as single parameter to the get_resource function.
 
 
+list_join
+--------
+The *list_join* function joins a list of strings with the given delimiter.
+The syntax of the list_join function is as follows:
+
+::
+
+  list_join:
+  - <delimiter>
+  - <list to join>
+
+A sample use of this function with a simple list is shown below.
+
+::
+
+  list_join: [', ', ['one', 'two', 'and three']]
+
+This would resolve to "one, two, and three".
+
+
 resource_facade
 ---------------
 The *resource_facade* function allows a provider template to retrieve data

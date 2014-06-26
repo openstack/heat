@@ -202,6 +202,20 @@ class GetFile(function.Function):
         return f
 
 
+class Join(cfn_funcs.Join):
+    '''
+    A function for joining strings.
+
+    Takes the form::
+
+        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] }
+
+    And resolves to::
+
+        "<string_1><delim><string_2><delim>..."
+    '''
+
+
 class ResourceFacade(cfn_funcs.ResourceFacade):
     '''
     A function for obtaining data from the facade resource from within the
@@ -235,6 +249,7 @@ def function_mapping(version_key, version):
             'get_attr': GetAtt,
             'Fn::Select': cfn_funcs.Select,
             'Fn::Join': cfn_funcs.Join,
+            'list_join': Join,
             'Fn::Split': cfn_funcs.Split,
             'str_replace': Replace,
             'Fn::Replace': cfn_funcs.Replace,
