@@ -82,6 +82,18 @@ volume_template = '''
 }
 '''
 
+cinder_volume_template = '''
+heat_template_version: 2013-05-23
+description: This template to define a cinder volume.
+resources:
+  my_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: 1
+      name: my_vol
+      description: test
+'''
+
 
 class VolumeTest(HeatTestCase):
     def setUp(self):
@@ -94,6 +106,8 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'get')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'extend')
+        self.m.StubOutWithMock(self.cinder_fc.volumes, 'update')
+        self.m.StubOutWithMock(self.cinder_fc.volumes, 'update_all_metadata')
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'get_server_volume')
@@ -104,6 +118,16 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.Volume(resource_name,
                           stack.t.resource_definitions(stack)[resource_name],
                           stack)
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        return rsrc
+
+    def create_cinder_volume(self, t, stack, resource_name):
+        rsrc = vol.CinderVolume(resource_name,
+                                stack.t.resource_definitions(
+                                    stack)[resource_name],
+                                stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -1269,6 +1293,47 @@ class VolumeTest(HeatTestCase):
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         self.assertIsNone(update_task())
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_cinder_volume(self):
+        # update the name, description and metadata
+        fv = FakeVolume('creating', 'available', size=1, name='my_vol',
+                        description='test')
+        stack_name = 'test_volume_stack'
+        update_name = 'update_name'
+        meta = {'Key': 'Value'}
+
+        update_description = 'update_description'
+        kwargs = {
+            'display_name': update_name,
+            'display_description': update_description
+        }
+
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            availability_zone=None,
+            size=1,
+            display_description='test',
+            display_name='my_vol').AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        self.cinder_fc.volumes.update(fv, **kwargs).AndReturn(None)
+        self.cinder_fc.volumes.update_all_metadata(fv, meta).AndReturn(None)
+        self.m.ReplayAll()
+
+        t = template_format.parse(cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        rsrc = self.create_cinder_volume(t, stack, 'my_volume')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['name'] = update_name
+        props['description'] = update_description
+        props['metadata'] = meta
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        scheduler.TaskRunner(rsrc.update, after)()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
