@@ -383,6 +383,7 @@ class TestIsNotFound(HeatTestCase):
             is_not_found=True,
             is_over_limit=False,
             is_client_exception=True,
+            is_unprocessable_entity=False,
             plugin='nova',
             exception=lambda: fakes.fake_exception(),
         )),
@@ -390,6 +391,7 @@ class TestIsNotFound(HeatTestCase):
             is_not_found=False,
             is_over_limit=False,
             is_client_exception=False,
+            is_unprocessable_entity=False,
             plugin='nova',
             exception=lambda: Exception()
         )),
@@ -397,8 +399,17 @@ class TestIsNotFound(HeatTestCase):
             is_not_found=False,
             is_over_limit=True,
             is_client_exception=True,
+            is_unprocessable_entity=False,
             plugin='nova',
             exception=lambda: fakes.fake_exception(413),
+        )),
+        ('nova_unprocessable_entity', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_unprocessable_entity=True,
+            plugin='nova',
+            exception=lambda: fakes.fake_exception(422),
         )),
         ('swift_not_found', dict(
             is_not_found=True,
@@ -493,3 +504,16 @@ class TestIsNotFound(HeatTestCase):
             ice = self.is_client_exception
             if ice != client_plugin.is_client_exception(e):
                 raise
+
+    def test_is_unprocessable_entity(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        # only 'nova' client plugin need to check this exception
+        if self.plugin == 'nova':
+            client_plugin = c.client_plugin(self.plugin)
+            try:
+                raise self.exception()
+            except Exception as e:
+                iue = self.is_unprocessable_entity
+                if iue != client_plugin.is_unprocessable_entity(e):
+                    raise

@@ -258,6 +258,50 @@ class EIPTest(HeatTestCase):
         rsrc.handle_delete()
         self.m.VerifyAll()
 
+    def test_delete_eip_successful_if_eip_associate_failed(self):
+        floating_ip = mox.IsA(object)
+        floating_ip.ip = '172.24.4.13'
+        floating_ip.id = '9037272b-6875-42e6-82e9-4342d5925da4'
+
+        self.m.StubOutWithMock(self.fc.floating_ips, 'create')
+        self.fc.floating_ips.create().AndReturn(floating_ip)
+
+        server = self.fc.servers.list()[0]
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.fc.servers.get('WebServer').MultipleTimes().AndReturn(server)
+
+        self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
+        self.fc.servers.add_floating_ip(server, floating_ip.ip, None).\
+            AndRaise(nova_exceptions.BadRequest(400))
+
+        self.m.StubOutWithMock(self.fc.servers, 'remove_floating_ip')
+        msg = ("ClientException: Floating ip 172.24.4.13 is not associated "
+               "with instance 1234.")
+        self.fc.servers.remove_floating_ip(server, floating_ip.ip).\
+            AndRaise(nova_exceptions.ClientException(422, msg))
+        self.m.StubOutWithMock(self.fc.floating_ips, 'delete')
+        self.fc.floating_ips.delete(mox.IsA(object))
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template)
+        stack = utils.parse_stack(t)
+        resource_name = 'IPAddress'
+        resource_defns = stack.t.resource_definitions(stack)
+        rsrc = eip.ElasticIp(resource_name,
+                             resource_defns[resource_name],
+                             stack)
+
+        self.assertIsNone(rsrc.validate())
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+
+        # to delete the eip
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
 
 class AllocTest(HeatTestCase):
 

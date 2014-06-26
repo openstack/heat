@@ -86,6 +86,12 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
     def is_bad_request(self, ex):
         return isinstance(ex, exceptions.BadRequest)
 
+    def is_unprocessable_entity(self, ex):
+        http_status = (getattr(ex, 'http_status', None) or
+                       getattr(ex, 'code', None))
+        return (isinstance(ex, exceptions.ClientException) and
+                http_status == 422)
+
     def refresh_server(self, server):
         '''
         Refresh server's attributes and log warnings for non-critical
