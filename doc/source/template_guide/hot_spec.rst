@@ -45,7 +45,7 @@ HOT templates are defined in YAML and follow the structure outlined below.
 
   heat_template_version: 2013-05-23
 
-  description: 
+  description:
     # a description of the template
 
   parameter_groups:
@@ -553,6 +553,108 @@ to perform specific tasks, such as getting the value of a resource attribute at
 runtime. A definition of all intrinsic functions available in HOT is given
 below.
 
+
+get_attr
+--------
+The *get_attr* function allows referencing an attribute of a resource. At
+runtime, it will be resolved to the value of an attribute of a resource instance
+created from the respective resource definition of the template.
+The syntax of the get_attr function is as follows:
+
+::
+
+  get_attr:
+    - <resource ID>
+    - <attribute name>
+    - <key/index 1> (optional)
+    - <key/index 2> (optional)
+    - ...
+
+resource ID
+    This parameter specifies the resource for which the attributes shall be
+    resolved. This resource must be defined within the *resources* section of
+    the template (see also :ref:`hot_spec_resources`).
+attribute name
+    The attribute name is required as it specifies the attribute
+    to be resolved. If the attribute returns a complex data structure
+    such as a list or a map, then subsequent keys or indexes can be specified
+    which navigate the data structure to return the desired value.
+
+Some examples of how to use the get_attr function are shown below:
+
+::
+
+  resources:
+    my_instance:
+      type: OS::Nova::Server
+      # ...
+
+  outputs:
+    instance_ip:
+      description: IP address of the deployed compute instance
+      value: { get_attr: [my_instance, first_address] }
+    instance_private_ip:
+      description: Private IP address of the deployed compute instance
+      value: { get_attr: [my_instance, networks, private, 0] }
+
+In this example, if the networks attribute contained the following data:
+
+::
+
+   {"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
+    "private": ["10.0.0.1"]}
+
+then the value of the get_attr function would resolve to "10.0.0.1".
+
+
+get_file
+------------
+The *get_file* function allows string content to be substituted into the
+template. It is generally used as a file inclusion mechanism for files
+containing non-heat scripts or configuration files.
+The syntax of the get_file function is as follows:
+
+::
+
+  get_file: <content key>
+
+The *content key* will be used to look up the files dictionary that is
+provided in the REST API call. The *heat* client command from
+python-heatclient is *get_file* aware and will populate the *files* with
+the actual content of fetched paths and URLs. The *heat* client command
+supports relative paths and will transform these to absolute URLs which
+will be used as the *content key* in the files dictionary.
+
+Note: The argument to *get_file* should be a static path or URL and not
+rely on intrinsic functions like *get_param*. In general, the *heat* client
+does not process intrinsic functions (they are only processed by the heat
+server).
+
+The example below demonstrates *get_file* usage with both relative and
+absolute URLs.
+
+::
+
+  resources:
+    my_instance:
+      type: OS::Nova::Server
+      properties:
+        # general properties ...
+        user_data:
+          get_file: my_instance_user_data.sh
+    my_other_instance:
+      type: OS::Nova::Server
+      properties:
+        # general properties ...
+        user_data:
+          get_file: http://example.com/my_other_instance_user_data.sh
+
+If this template was launched from a local file this would result in
+a *files* dictionary containing entries with keys
+*file:///path/to/my_instance_user_data.sh* and
+*http://example.com/my_other_instance_user_data.sh*.
+
+
 get_param
 ---------
 The *get_param* function allows for referencing an input parameter of a template
@@ -608,58 +710,6 @@ the following data:
 then the value of the property 'flavor' would resolve to "m1.tiny", 'metadata'
 would resolve to {"foo": "bar"} and 'key_name' would resolve to "a_key".
 
-get_attr
---------
-The *get_attr* function allows referencing an attribute of a resource. At
-runtime, it will be resolved to the value of an attribute of a resource instance
-created from the respective resource definition of the template.
-The syntax of the get_attr function is as follows:
-
-::
-
-  get_attr:
-    - <resource ID>
-    - <attribute name>
-    - <key/index 1> (optional)
-    - <key/index 2> (optional)
-    - ...
-
-resource ID
-    This parameter specifies the resource for which the attributes shall be
-    resolved. This resource must be defined within the *resources* section of
-    the template (see also :ref:`hot_spec_resources`).
-attribute name
-    The attribute name is required as it specifies the attribute 
-    to be resolved. If the attribute returns a complex data structure
-    such as a list or a map, then subsequent keys or indexes can be specified
-    which navigate the data structure to return the desired value.
-
-Some examples of how to use the get_attr function are shown below:
-
-::
-
-  resources:
-    my_instance:
-      type: OS::Nova::Server
-      # ...
-
-  outputs:
-    instance_ip:
-      description: IP address of the deployed compute instance
-      value: { get_attr: [my_instance, first_address] }
-    instance_private_ip:
-      description: Private IP address of the deployed compute instance
-      value: { get_attr: [my_instance, networks, private, 0] }
-
-In this example, if the networks attribute contained the following data:
-
-::
-
-   {"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
-    "private": ["10.0.0.1"]}
-
-then the value of the get_attr function would resolve to "10.0.0.1".
-
 get_resource
 ------------
 The *get_resource* function allows for referencing another resource within the
@@ -674,6 +724,17 @@ The syntax of the get_resource function is as follows:
 
 The *resource ID* of the referenced resources as used in the current template is
 given as single parameter to the get_resource function.
+
+
+resource_facade
+---------------
+The *resource_facade* function allows a provider template to retrieve data
+about its resource facade in the parent template. (A provider template is used to provide a custom definition of a resource - the facade - in the form of a Heat template. The resource's properties are passed to the provider template as its parameters, but other resource data can be included using this function.)
+The syntax of the *resource_facade* function is as follows::
+
+  resource_facade: <data type>
+
+The *data type* can be `metadata`, `deletion_policy` or `update_policy`.
 
 
 str_replace
@@ -751,60 +812,3 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the str_replace function.
-
-get_file
-------------
-The *get_file* function allows string content to be substituted into the
-template. It is generally used as a file inclusion mechanism for files
-containing non-heat scripts or configuration files.
-The syntax of the get_file function is as follows:
-
-::
-
-  get_file: <content key>
-
-The *content key* will be used to look up the files dictionary that is
-provided in the REST API call. The *heat* client command from
-python-heatclient is *get_file* aware and will populate the *files* with
-the actual content of fetched paths and URLs. The *heat* client command
-supports relative paths and will transform these to absolute URLs which
-will be used as the *content key* in the files dictionary.
-
-Note: The argument to *get_file* should be a static path or URL and not
-rely on intrinsic functions like *get_param*. In general, the *heat* client
-does not process intrinsic functions (they are only processed by the heat
-server).
-
-The example below demonstrates *get_file* usage with both relative and
-absolute URLs.
-
-::
-
-  resources:
-    my_instance:
-      type: OS::Nova::Server
-      properties:
-        # general properties ...
-        user_data:
-          get_file: my_instance_user_data.sh
-    my_other_instance:
-      type: OS::Nova::Server
-      properties:
-        # general properties ...
-        user_data:
-          get_file: http://example.com/my_other_instance_user_data.sh
-
-If this template was launched from a local file this would result in
-a *files* dictionary containing entries with keys
-*file:///path/to/my_instance_user_data.sh* and
-*http://example.com/my_other_instance_user_data.sh*.
-
-resource_facade
----------------
-The *resource_facade* function allows a provider template to retrieve data
-about its resource facade in the parent template. (A provider template is used to provide a custom definition of a resource - the facade - in the form of a Heat template. The resource's properties are passed to the provider template as its parameters, but other resource data can be included using this function.)
-The syntax of the *resource_facade* function is as follows::
-
-  resource_facade: <data type>
-
-The *data type* can be `metadata`, `deletion_policy` or `update_policy`.
