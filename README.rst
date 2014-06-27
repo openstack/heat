@@ -37,3 +37,7 @@ We have integration with
 * https://github.com/openstack/python-keystoneclient (auth)
 * https://github.com/openstack/python-swiftclient (s3)
 * https://github.com/openstack/python-neutronclient (networking)
+* https://github.com/openstack/python-ceilometerclient (metering)
+* https://github.com/openstack/python-cinderclient (storage service)
+* https://github.com/openstack/python-glanceclient (image service)
+* https://github.com/openstack/python-troveclient (database as a Service)
