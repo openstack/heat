@@ -148,10 +148,13 @@ class InstancesTest(HeatTestCase):
         self.assertTrue(instance.id > 0)
 
         expected_ip = return_server.networks['public'][0]
+        expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
+
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_az, instance.FnGetAtt('AvailabilityZone'))
 
         self.m.VerifyAll()
 
@@ -163,10 +166,13 @@ class InstancesTest(HeatTestCase):
         self.assertTrue(instance.id > 0)
 
         expected_ip = return_server.networks['public'][0]
+        expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
+
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_az, instance.FnGetAtt('AvailabilityZone'))
 
         self.m.VerifyAll()
 
@@ -329,11 +335,26 @@ class InstancesTest(HeatTestCase):
         self.assertTrue(instance.id > 0)
 
         expected_ip = return_server.networks['public'][0]
+        expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
+
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicDnsName'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_az, instance.FnGetAtt('AvailabilityZone'))
 
+        self.m.VerifyAll()
+
+    def test_instance_create_resolve_az_attribute(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._setup_test_instance(return_server,
+                                             'create_resolve_az_attribute')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(instance.create)()
+        expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
+        actual_az = instance._availability_zone()
+
+        self.assertEqual(expected_az, actual_az)
         self.m.VerifyAll()
 
     def test_instance_create_image_name_err(self):

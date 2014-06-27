@@ -228,11 +228,14 @@ class VolumeTest(HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        self.m.StubOutWithMock(instance.Instance, '_resolve_attribute')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'check_create_complete')
 
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
+        instance.Instance._resolve_attribute(
+            'AvailabilityZone').MultipleTimes().AndReturn(None)
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
         self.stub_ImageConstraint_validate()

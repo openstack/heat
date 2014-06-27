@@ -435,10 +435,26 @@ class Instance(resource.Resource):
 
         return self.ipaddress or '0.0.0.0'
 
+    def _availability_zone(self):
+        '''
+        Return Server's Availability Zone, fetching it from Nova if necessary.
+        '''
+        availability_zone = self.properties[self.AVAILABILITY_ZONE]
+        if availability_zone is None:
+            try:
+                server = self.nova().servers.get(self.resource_id)
+                availability_zone = getattr(server,
+                                            'OS-EXT-AZ:availability_zone')
+            except Exception as e:
+                self.client_plugin().ignore_not_found(e)
+                return
+
+        return availability_zone
+
     def _resolve_attribute(self, name):
         res = None
         if name == self.AVAILABILITY_ZONE_ATTR:
-            res = self.properties[self.AVAILABILITY_ZONE]
+            res = self._availability_zone()
         elif name in self.ATTRIBUTES[1:]:
             res = self._ipaddress()
 
