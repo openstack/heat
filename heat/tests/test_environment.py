@@ -153,6 +153,14 @@ def constraint_mapping():
                                   resources._load_global_environment, env)
         self.assertEqual("oops", str(error))
 
+    def test_constraints_registry_stevedore(self):
+        env = environment.Environment({})
+        resources._load_global_environment(env)
+
+        self.assertEqual("FlavorConstraint",
+                         env.get_constraint("nova.flavor").__name__)
+        self.assertIs(None, env.get_constraint("no_constraint"))
+
 
 class EnvironmentDuplicateTest(common.HeatTestCase):
 

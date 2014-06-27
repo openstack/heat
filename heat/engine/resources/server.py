@@ -1053,10 +1053,6 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
         nova_utils.get_flavor_id(nova_client, value)
 
 
-def constraint_mapping():
-    return {'nova.flavor': FlavorConstraint}
-
-
 def resource_mapping():
     return {
         'OS::Nova::Server': Server,

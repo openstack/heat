@@ -194,12 +194,6 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
             neutron_client, 'network', value)
 
 
-def constraint_mapping():
-    if clients.neutronclient is None:
-        return {}
-    return {'neutron.network': NetworkConstraint}
-
-
 def resource_mapping():
     if clients.neutronclient is None:
         return {}
