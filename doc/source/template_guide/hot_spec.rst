@@ -770,6 +770,11 @@ the actual content of fetched paths and URLs. The *heat* client command
 supports relative paths and will transform these to absolute URLs which
 will be used as the *content key* in the files dictionary.
 
+Note: The argument to *get_file* should be a static path or URL and not
+rely on intrinsic functions like *get_param*. In general, the *heat* client
+does not process intrinsic functions (they are only processed by the heat
+server).
+
 The example below demonstrates *get_file* usage with both relative and
 absolute URLs.
 
