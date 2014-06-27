@@ -325,14 +325,14 @@ class Stack(collections.Mapping):
         self.resources[resource.name] = resource
         self.t.add_resource(definition)
         if self.t.id is not None:
-            self.t.store()
+            self.t.store(self.context)
 
     def remove_resource(self, resource_name):
         '''Remove the resource with the specified name.'''
         del self.resources[resource_name]
         self.t.remove_resource(resource_name)
         if self.t.id is not None:
-            self.t.store()
+            self.t.store(self.context)
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
@@ -564,10 +564,8 @@ class Stack(collections.Mapping):
             LOG.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
         elif create_if_missing:
-            templ = Template.load(self.context, self.t.id)
-            templ.files = copy.deepcopy(self.t.files)
-            prev = type(self)(self.context, self.name, templ, self.env,
-                              owner_id=self.id)
+            prev = type(self)(self.context, self.name, copy.deepcopy(self.t),
+                              self.env, owner_id=self.id)
             prev.store(backup=True)
             LOG.debug('Created new backup stack')
             return prev

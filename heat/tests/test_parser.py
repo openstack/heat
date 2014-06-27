@@ -2145,6 +2145,41 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
+    def test_update_add_signal(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {
+                 'AResource': {'Type': 'GenericResourceType'},
+                 'BResource': {'Type': 'GenericResourceType'}}}
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        updater = scheduler.TaskRunner(self.stack.update_task, updated_stack)
+        updater.start()
+        while 'BResource' not in self.stack:
+            self.assertFalse(updater.step())
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.IN_PROGRESS),
+                         self.stack.state)
+
+        # Reload the stack from the DB and prove that it contains the new
+        # resource already
+        re_stack = parser.Stack.load(utils.dummy_context(), self.stack.id)
+        self.assertIn('BResource', re_stack)
+
+        updater.run_to_completion()
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertIn('BResource', self.stack)
+
     def test_update_add_failed_create(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -2175,7 +2210,7 @@ class StackTest(HeatTestCase):
 
         # Reload the stack from the DB and prove that it contains the failed
         # resource (to ensure it will be deleted on stack delete)
-        re_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
+        re_stack = parser.Stack.load(utils.dummy_context(), self.stack.id)
         self.assertIn('BResource', re_stack)
         self.m.VerifyAll()
 
