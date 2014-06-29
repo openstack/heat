@@ -19,7 +19,7 @@ submitted bug fix does have a unit test, be sure to add a new one that fails
 without the patch and passes with the patch.
 
 For more information on creating unit tests and utilizing the testing
-infrastructure in OpenStack Heat, please read heat/testing/README.rst.
+infrastructure in OpenStack Heat, please read heat/tests/testing-overview.txt.
 
 
 Running Tests
