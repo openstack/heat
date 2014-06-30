@@ -1,10 +1,10 @@
-Marconi plugin for OpenStack Heat
+Barbican plugin for OpenStack Heat
 ================================
 
-This plugin enable using Marconi queuing service as a resource in a Heat template.
+This plugin enables using Barbican resources in a Heat template.
 
 
-### 1. Install the Marconi plugin in Heat
+### 1. Install the Barbican plugin in Heat
 
 NOTE: These instructions assume the value of heat.conf plugin_dirs includes the
 default directory /usr/lib/heat.

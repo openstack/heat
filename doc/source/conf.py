@@ -50,7 +50,7 @@ sys.path.insert(0, BASE_DIR)
 sys.path = PLUGIN_DIRS + sys.path
 
 cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
+#cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
 
 cfg.CONF.import_opt('environment_dir', 'heat.common.config')
 cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR)

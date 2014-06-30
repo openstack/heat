@@ -2,6 +2,21 @@
 The resources and configuration in this module are for using Heat with the Rackspace Cloud. These resources either
 allow using Rackspace services that don't have equivalent services in OpenStack or account for differences between
 a generic OpenStack deployment and Rackspace Cloud.
+
+### 1. Install the Rackspace plugins in Heat
+
+NOTE: These instructions assume the value of heat.conf plugin_dirs includes the
+default directory /usr/lib/heat.
+
+To install the plugin, from this directory run:
+    sudo python ./setup.py install
+
+### 2. Restart heat
+
+Only the process "heat-engine" needs to be restarted to load the newly installed
+plugin.
+
+
 ## Resources
 The following resources are provided for compatibility:
 

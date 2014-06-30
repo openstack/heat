@@ -13,9 +13,8 @@ Some forward compatibility decisions had to be made:
 
 # Installation
 
-1. In `heat.conf`, add the path to the `heat_keystoneclient_v2` root
-   directory to `plugin_dirs`.
-   e.g.: `plugin_dirs=path/to/heat/contrib/heat_keystoneclient_v2`
+1. From this directory run:
+    sudo python ./setup.py install
 
 2. Set the `keystone_backend` option to
    `heat.engine.plugins.heat_keystoneclient_v2.client.KeystoneClientV2`

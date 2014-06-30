@@ -10,9 +10,11 @@ all flavor have a global scope.
 
 ### 1. Install the Nova Flavor plugin in Heat
 
-NOTE: Heat scans several directories to find plugins. The list of directories
-is specified in the configuration file "heat.conf" with the "plugin_dirs"
-directive.
+NOTE: These instructions assume the value of heat.conf plugin_dirs includes the
+default directory /usr/lib/heat.
+
+To install the plugin, from this directory run:
+    sudo python ./setup.py install
 
 ### 2. Restart heat
 
