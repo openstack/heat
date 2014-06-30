@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import clients as heat_clients
+from heat.engine.clients import client_plugin
 
 
 try:
@@ -22,9 +22,12 @@ except ImportError:
     auth = None
 
 
-class Clients(heat_clients.OpenStackClients):
+class BarbicanClientPlugin(client_plugin.ClientPlugin):
 
-    def _barbican(self):
-        keystone_client = self.client('keystone').client
+    def _create(self):
+
+        keystone_client = self.clients('keystone').client
         auth_plugin = auth.KeystoneAuthV2(keystone=keystone_client)
-        return barbican_client.Client(auth_plugin=auth_plugin)
+        client = barbican_client.Client(auth_plugin=auth_plugin)
+
+        return client

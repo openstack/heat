@@ -22,8 +22,8 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
+from .. import client  # noqa
 from ..resources import order  # noqa
-
 
 stack_template = '''
 heat_template_version: 2013-05-23
@@ -94,17 +94,16 @@ class TestOrder(HeatTestCase):
         self.assertEqual('test-order-ref', res.FnGetAtt('order_ref'))
         self.assertEqual('test-secret-ref', res.FnGetAtt('secret_ref'))
 
-    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_attributes_handle_exceptions(self):
         mock_order = mock.Mock()
         self.barbican.orders.get.return_value = mock_order
         res = self._create_resource('foo', self.res_template, self.stack)
 
-        order.clients.barbican_client.HTTPClientError = Exception
-        not_found_exc = order.clients.barbican_client.HTTPClientError('boom')
-        self.barbican.orders.get.side_effect = not_found_exc
-
-        self.assertEqual('', res.FnGetAtt('order_ref'))
+        client.barbican_client.HTTPClientError = Exception
+        self.barbican.orders.get.side_effect = Exception('boom')
+        self.assertRaises(client.barbican_client.HTTPClientError,
+                          res.FnGetAtt, 'order_ref')
 
     def test_create_order_sets_resource_id(self):
         self.barbican.orders.create.return_value = 'foo'
@@ -147,22 +146,22 @@ class TestOrder(HeatTestCase):
         self.assertIsNone(res.resource_id)
         self.barbican.orders.delete.assert_called_once_with('foo')
 
-    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_handle_delete_ignores_not_found_errors(self):
         res = self._create_resource('foo', self.res_template, self.stack)
 
-        order.clients.barbican_client.HTTPClientError = Exception
-        exc = order.clients.barbican_client.HTTPClientError('Not Found. Nope.')
+        client.barbican_client.HTTPClientError = Exception
+        exc = client.barbican_client.HTTPClientError('Not Found. Nope.')
         self.barbican.orders.delete.side_effect = exc
         scheduler.TaskRunner(res.delete)()
         self.assertTrue(self.barbican.orders.delete.called)
 
-    @mock.patch.object(order.clients, 'barbican_client', new=mock.Mock())
+    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_handle_delete_raises_resource_failure_on_error(self):
         res = self._create_resource('foo', self.res_template, self.stack)
 
-        order.clients.barbican_client.HTTPClientError = Exception
-        exc = order.clients.barbican_client.HTTPClientError('Boom.')
+        client.barbican_client.HTTPClientError = Exception
+        exc = client.barbican_client.HTTPClientError('Boom.')
         self.barbican.orders.delete.side_effect = exc
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.delete))

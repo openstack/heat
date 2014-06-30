@@ -15,12 +15,13 @@ import six
 
 from heat.common import exception
 from heat.engine import attributes
+from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
-from .. import clients  # noqa
+from .. import client  # noqa
 
 
 LOG = logging.getLogger(__name__)
@@ -107,10 +108,6 @@ class Secret(resource.Resource):
         ),
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(Secret, self).__init__(name, json_snippet, stack)
-        self.clients = clients.Clients(self.context)
-
     def barbican(self):
         return self.clients.client('barbican')
 
@@ -141,7 +138,7 @@ class Secret(resource.Resource):
         try:
             self.barbican().secrets.delete(self.resource_id)
             self.resource_id_set(None)
-        except clients.barbican_client.HTTPClientError as exc:
+        except client.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
             if 'Not Found' in six.text_type(exc):
@@ -150,19 +147,13 @@ class Secret(resource.Resource):
                 raise
 
     def _resolve_attribute(self, name):
-        try:
-            if name == self.DECRYPTED_PAYLOAD:
-                return self.barbican().secrets.decrypt(
-                    self.resource_id)
+        if name == self.DECRYPTED_PAYLOAD:
+            return self.barbican().secrets.decrypt(
+                self.resource_id)
 
-            secret = self.barbican().secrets.get(self.resource_id)
-            if name == self.STATUS:
-                return secret.status
-        except clients.barbican_client.HTTPClientError as e:
-            msg = _("Failed to resolve '%(name)s' for %(res)s '%(id)s': %(e)s")
-            LOG.warn(msg % {'name': name, 'res': self.__class__.__name__,
-                            'id': self.resource_id, 'e': six.text_type(e)})
-            return ''
+        secret = self.barbican().secrets.get(self.resource_id)
+        if name == self.STATUS:
+            return secret.status
 
 
 def resource_mapping():
@@ -172,7 +163,7 @@ def resource_mapping():
 
 
 def available_resource_mapping():
-    if not clients.barbican_client:
+    if not clients.has_client('barbican'):
         return {}
 
     return resource_mapping()
