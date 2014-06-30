@@ -13,20 +13,17 @@
 
 from heat.common import exception
 from heat.engine import attributes
+from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 
-from .. import clients  # noqa
 
-
-if clients.marconiclient is None:
-    def resource_mapping():
+def resource_mapping():
+    if not clients.has_client('marconi'):
         return {}
-else:
-    def resource_mapping():
-        return {
-            'OS::Marconi::Queue': MarconiQueue,
-        }
+    return {
+        'OS::Marconi::Queue': MarconiQueue,
+    }
 
 
 class MarconiQueue(resource.Resource):
@@ -64,10 +61,6 @@ class MarconiQueue(resource.Resource):
             _("The resource href of the queue.")
         ),
     }
-
-    def __init__(self, name, json_snippet, stack):
-        super(MarconiQueue, self).__init__(name, json_snippet, stack)
-        self.clients = clients.Clients(self.context)
 
     def marconi(self):
         return self.clients.client('marconi')

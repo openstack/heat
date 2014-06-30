@@ -11,9 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Client Library for Marconi Resources."""
-
-from heat.engine import clients
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -23,10 +20,12 @@ try:
 except ImportError:
     marconiclient = None
 
+from heat.engine.clients import client_plugin
 
-class Clients(clients.OpenStackClients):
 
-    def _marconi(self, service_type="queuing"):
+class MarconiClientPlugin(client_plugin.ClientPlugin):
+
+    def _create(self):
 
         con = self.context
         if self.auth_token is None:
@@ -37,11 +36,13 @@ class Clients(clients.OpenStackClients):
             'os_auth_token': con.auth_token,
             'os_auth_url': con.auth_url,
             'os_project_id': con.tenant,
-            'os_service_type': service_type,
+            'os_service_type': 'queuing',
         }
         auth_opts = {'backend': 'keystone',
                      'options': opts}
         conf = {'auth_opts': auth_opts}
-        endpoint = self.url_for(service_type=service_type)
+        endpoint = self.url_for(service_type='queuing')
 
-        return marconiclient.Client(url=endpoint, conf=conf)
+        client = marconiclient.Client(url=endpoint, conf=conf)
+
+        return client
