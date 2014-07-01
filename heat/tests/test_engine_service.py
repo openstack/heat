@@ -2622,7 +2622,10 @@ class SoftwareConfigServiceTest(HeatTestCase):
 
     def _create_software_config(
             self, group='Heat::Shell', name='config_mysql', config=None,
-            inputs=[], outputs=[], options={}):
+            inputs=None, outputs=None, options=None):
+        inputs = inputs or []
+        outputs = outputs or []
+        options = options or {}
         return self.engine.create_software_config(
             self.ctx, group, name, config, inputs, outputs, options)
 
@@ -2674,13 +2677,14 @@ class SoftwareConfigServiceTest(HeatTestCase):
                                self.ctx, config_id)
         self.assertEqual(ex.exc_info[0], exception.NotFound)
 
-    def _create_software_deployment(self, config_id=None, input_values={},
+    def _create_software_deployment(self, config_id=None, input_values=None,
                                     action='INIT',
                                     status='COMPLETE', status_reason='',
                                     config_group=None,
                                     server_id=str(uuid.uuid4()),
                                     config_name=None,
                                     stack_user_project_id=None):
+        input_values = input_values or {}
         if config_id is None:
             config = self._create_software_config(group=config_group,
                                                   name=config_name)

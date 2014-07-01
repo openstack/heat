@@ -21,7 +21,8 @@ from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 
 
-def format_resource(req, res, keys=[]):
+def format_resource(req, res, keys=None):
+    keys = keys or []
     include_key = lambda k: k in keys if keys else True
 
     def transform(key, value):

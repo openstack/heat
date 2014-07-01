@@ -80,7 +80,7 @@ class Schema(collections.Mapping):
 
     def __init__(self, data_type, description=None,
                  default=None, schema=None,
-                 required=False, constraints=[], label=None):
+                 required=False, constraints=None, label=None):
         self._len = None
         self.label = label
         self.type = data_type
@@ -108,7 +108,7 @@ class Schema(collections.Mapping):
                                                        utype=self.type)
             raise InvalidSchemaError(msg)
 
-        self.constraints = constraints
+        self.constraints = constraints or []
         self.default = default
 
     def validate(self, context=None):

@@ -54,7 +54,7 @@ class Schema(constr.Schema):
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
-                 constraints=[], hidden=False, label=None):
+                 constraints=None, hidden=False, label=None):
         super(Schema, self).__init__(data_type=data_type,
                                      description=description,
                                      default=default,
@@ -403,11 +403,13 @@ class Parameters(collections.Mapping):
         'AWS::StackId', 'AWS::StackName', 'AWS::Region'
     )
 
-    def __init__(self, stack_identifier, tmpl, user_params={}):
+    def __init__(self, stack_identifier, tmpl, user_params=None):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
+        user_params = user_params or {}
+
         def user_parameter(schema_item):
             name, schema = schema_item
             return Parameter(name, schema,

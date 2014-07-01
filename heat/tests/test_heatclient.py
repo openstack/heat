@@ -889,8 +889,9 @@ class KeystoneClientTest(HeatTestCase):
                           user_id='duser123', project_id='aproject',
                           credential_id='acredentialid')
 
-    def _stub_uuid(self, values=[]):
+    def _stub_uuid(self, values=None):
         # stub UUID.hex to return the values specified
+        values = values or []
         self.m.StubOutWithMock(uuid, 'uuid4')
         for v in values:
             mock_uuid = self.m.CreateMockAnything()

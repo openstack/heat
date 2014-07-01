@@ -33,8 +33,10 @@ class Ec2TokenTest(HeatTestCase):
         super(Ec2TokenTest, self).setUp()
         self.m.StubOutWithMock(requests, 'post')
 
-    def _dummy_GET_request(self, params={}, environ={}):
+    def _dummy_GET_request(self, params=None, environ=None):
         # Mangle the params dict into a query string
+        params = params or {}
+        environ = environ or {}
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ.update({'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs})
         req = Request(environ)
@@ -179,8 +181,11 @@ class Ec2TokenTest(HeatTestCase):
         ec2 = ec2token.EC2Token(app='xyz', conf={})
         self.assertEqual('xyz', ec2.__call__(dummy_req))
 
-    def _stub_http_connection(self, headers={}, params={}, response=None,
+    def _stub_http_connection(self, headers=None, params=None, response=None,
                               req_url='http://123:5000/v2.0/ec2tokens'):
+
+        headers = headers or {}
+        params = params or {}
 
         class DummyHTTPResponse(object):
             text = response

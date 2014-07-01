@@ -34,12 +34,12 @@ class ActionController(object):
         self.rpc_client = rpc_client.EngineClient()
 
     @util.identified_stack
-    def action(self, req, identity, body={}):
+    def action(self, req, identity, body=None):
         """
         Performs a specified action on a stack, the body is expecting to
         contain exactly one item whose key specifies the action
         """
-
+        body = body or {}
         if len(body) < 1:
             raise exc.HTTPBadRequest(_("No action specified"))
 

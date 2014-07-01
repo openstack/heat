@@ -264,12 +264,13 @@ class Resource(object):
         return identifier.ResourceIdentifier(resource_name=self.name,
                                              **self.stack.identifier())
 
-    def parsed_template(self, section=None, default={}):
+    def parsed_template(self, section=None, default=None):
         '''
         Return the parsed template data for the resource. May be limited to
         only one section of the data, in which case a default value may also
         be supplied.
         '''
+        default = default or {}
         if section is None:
             template = self.t
         else:

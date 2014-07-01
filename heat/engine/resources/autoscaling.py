@@ -386,7 +386,7 @@ class InstanceGroup(stack_resource.StackResource):
             # nodes.
             self._lb_reload()
 
-    def _lb_reload(self, exclude=[]):
+    def _lb_reload(self, exclude=None):
         '''
         Notify the LoadBalancer to reload its config to include
         the changes in instances we have just made.
@@ -394,6 +394,7 @@ class InstanceGroup(stack_resource.StackResource):
         This must be done after activation (instance in ACTIVE state),
         otherwise the instances' IP addresses may not be available.
         '''
+        exclude = exclude or []
         if self.properties[self.LOAD_BALANCER_NAMES]:
             id_list = [inst.FnGetRefId() for inst in self.get_instances()
                        if inst.FnGetRefId() not in exclude]

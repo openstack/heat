@@ -160,11 +160,12 @@ class Graph(collections.defaultdict):
 class Dependencies(object):
     '''Helper class for calculating a dependency graph.'''
 
-    def __init__(self, edges=[]):
+    def __init__(self, edges=None):
         '''
         Initialise, optionally with a list of edges, in the form of
         (requirer, required) tuples.
         '''
+        edges = edges or []
         self._graph = Graph()
         for e in edges:
             self += e

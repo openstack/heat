@@ -68,7 +68,8 @@ class NeutronExtraRouteTest(HeatTestCase):
         resource._register_class("OS::Neutron::ExtraRoute",
                                  extraroute.ExtraRoute)
 
-    def create_extraroute(self, t, stack, resource_name, properties={}):
+    def create_extraroute(self, t, stack, resource_name, properties=None):
+        properties = properties or {}
         t['Resources'][resource_name]['Properties'] = properties
         rsrc = extraroute.ExtraRoute(
             resource_name,

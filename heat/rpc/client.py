@@ -403,7 +403,10 @@ class EngineClient(object):
                                              config_id=config_id))
 
     def create_software_config(self, cnxt, group, name, config,
-                               inputs=[], outputs=[], options={}):
+                               inputs=None, outputs=None, options=None):
+        inputs = inputs or []
+        outputs = outputs or []
+        options = options or {}
         return self.call(cnxt, self.make_msg('create_software_config',
                                              group=group,
                                              name=name,
@@ -429,9 +432,10 @@ class EngineClient(object):
                                              deployment_id=deployment_id))
 
     def create_software_deployment(self, cnxt, server_id, config_id=None,
-                                   input_values={}, action='INIT',
+                                   input_values=None, action='INIT',
                                    status='COMPLETE', status_reason='',
                                    stack_user_project_id=None):
+        input_values = input_values or {}
         return self.call(cnxt, self.make_msg(
             'create_software_deployment',
             server_id=server_id,

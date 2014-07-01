@@ -1169,7 +1169,9 @@ class NeutronRouterTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def create_router_interface(self, t, stack, resource_name, properties={}):
+    def create_router_interface(self, t, stack, resource_name,
+                                properties=None):
+        properties = properties or {}
         t['Resources'][resource_name]['Properties'] = properties
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = router.RouterInterface(
@@ -1180,7 +1182,8 @@ class NeutronRouterTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def create_gateway_router(self, t, stack, resource_name, properties={}):
+    def create_gateway_router(self, t, stack, resource_name, properties=None):
+        properties = properties or {}
         t['Resources'][resource_name]['Properties'] = properties
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = router.RouterGateway(

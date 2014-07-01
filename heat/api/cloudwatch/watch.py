@@ -183,13 +183,14 @@ class WatchController(object):
         """
         self._enforce(req, 'ListMetrics')
 
-        def format_metric_data(d, fil={}):
+        def format_metric_data(d, fil=None):
             """
             Reformat engine output into the AWS "Metric" format
             Takes an optional filter dict, which is traversed
             so a metric dict is only returned if all keys match
             the filter dict
             """
+            fil = fil or {}
             dimensions = [
                 {'AlarmName': d[engine_api.WATCH_DATA_ALARM]},
                 {'Timestamp': d[engine_api.WATCH_DATA_TIME]}
