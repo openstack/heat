@@ -168,7 +168,8 @@ class ServerTagsTest(HeatTestCase):
             name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=nova_tags, nics=None, availability_zone=None).AndReturn(
+            meta=nova_tags, nics=None, availability_zone=None,
+            block_device_mapping=None).AndReturn(
                 self.fc.servers.list()[1])
 
         return instance
@@ -242,7 +243,8 @@ class ServerTagsTest(HeatTestCase):
             name=mox.IgnoreArg(),
             security_groups=None,
             userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=nova_tags, nics=None, availability_zone=None).AndReturn(
+            meta=nova_tags, nics=None, availability_zone=None,
+            block_device_mapping=None).AndReturn(
                 self.fc.servers.list()[1])
 
         return group
@@ -291,7 +293,8 @@ class ServerTagsTest(HeatTestCase):
             name=mox.IgnoreArg(),
             security_groups=None,
             userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=nova_tags, nics=None, availability_zone=None).AndReturn(
+            meta=nova_tags, nics=None, availability_zone=None,
+            block_device_mapping=None).AndReturn(
                 self.fc.servers.list()[1])
 
         return group

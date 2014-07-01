@@ -82,7 +82,8 @@ class nokeyTest(HeatTestCase):
             name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None).AndReturn(
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None).AndReturn(
                 self.fc.servers.list()[1])
         self.m.ReplayAll()
 

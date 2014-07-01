@@ -57,7 +57,13 @@ wp_template = '''
                                 {"Key": "bar", "Value": "eggs"},
                                 {"Key": "foo", "Value": "ham"},
                                 {"Key": "foo", "Value": "baz"}],
-        "UserData"       : "wordpress"
+        "UserData"       : "wordpress",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "vdb",
+                "Ebs": {"SnapshotId": "9ef5496e-7426-446a-bbc8-01f84d9c9972",
+                        "DeleteOnTermination": "True"}
+            }]
       }
     }
   }
@@ -103,6 +109,7 @@ class InstancesTest(HeatTestCase):
         tmpl, stack = self._get_test_template(stack_name, image_id)
         resource_defns = tmpl.resource_definitions(stack)
         instance = instances.Instance(name, resource_defns['WebServer'], stack)
+        bdm = {"vdb": "9ef5496e-7426-446a-bbc8-01f84d9c9972:snap::True"}
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
@@ -120,7 +127,8 @@ class InstancesTest(HeatTestCase):
                 security_groups=None,
                 userdata=mox.IgnoreArg(),
                 scheduler_hints={'foo': ['spam', 'ham', 'baz'], 'bar': 'eggs'},
-                meta=None, nics=None, availability_zone=None).AndReturn(
+                meta=None, nics=None, availability_zone=None,
+                block_device_mapping=bdm).AndReturn(
                     return_server)
 
         return instance
@@ -144,6 +152,167 @@ class InstancesTest(HeatTestCase):
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+
+        self.m.VerifyAll()
+
+    def test_instance_create_with_BlockDeviceMappings(self):
+        return_server = self.fc.servers.list()[4]
+        instance = self._create_test_instance(return_server,
+                                              'create_with_bdm')
+        # this makes sure the auto increment worked on instance creation
+        self.assertTrue(instance.id > 0)
+
+        expected_ip = return_server.networks['public'][0]
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+
+        self.m.VerifyAll()
+
+    def test_build_block_device_mapping(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_build_bdm')
+        self.assertIsNone(instance._build_block_device_mapping([]))
+        self.assertIsNone(instance._build_block_device_mapping(None))
+
+        self.assertEqual({
+            'vdb': '1234:snap:',
+            'vdc': '5678:snap::False',
+        }, instance._build_block_device_mapping([
+            {'DeviceName': 'vdb', 'Ebs': {'SnapshotId': '1234'}},
+            {'DeviceName': 'vdc', 'Ebs': {'SnapshotId': '5678',
+                                          'DeleteOnTermination': False}},
+        ]))
+
+        self.assertEqual({
+            'vdb': '1234:snap:1',
+            'vdc': '5678:snap:2:True',
+        }, instance._build_block_device_mapping([
+            {'DeviceName': 'vdb', 'Ebs': {'SnapshotId': '1234',
+                                          'VolumeSize': '1'}},
+            {'DeviceName': 'vdc', 'Ebs': {'SnapshotId': '5678',
+                                          'VolumeSize': '2',
+                                          'DeleteOnTermination': True}},
+        ]))
+
+    def test_validate_BlockDeviceMappings_VolumeSize_valid_str(self):
+        stack_name = 'val_VolumeSize_valid'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'DeviceName': 'vdb',
+                'Ebs': {'SnapshotId': '1234',
+                        'VolumeSize': '1'}}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['BlockDeviceMappings'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_volume_size',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        self.assertIsNone(instance.validate())
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_VolumeSize_invalid_str(self):
+        stack_name = 'val_VolumeSize_valid'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'DeviceName': 'vdb',
+                'Ebs': {'SnapshotId': '1234',
+                        'VolumeSize': 10}}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['BlockDeviceMappings'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_volume_size',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                instance.validate)
+        self.assertIn("Value must be a string", six.text_type(exc))
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_Ebs_property(self):
+        stack_name = 'without_Ebs'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'DeviceName': 'vdb'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['BlockDeviceMappings'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_without_Ebs',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                instance.validate)
+        self.assertIn("Ebs is missing, this is required",
+                      six.text_type(exc))
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_SnapshotId_property(self):
+        stack_name = 'without_SnapshotId'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'DeviceName': 'vdb',
+                'Ebs': {'VolumeSize': '1'}}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['BlockDeviceMappings'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_without_SnapshotId',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                instance.validate)
+        self.assertIn("SnapshotId is missing, this is required",
+                      six.text_type(exc))
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_DeviceName_property(self):
+        stack_name = 'without_DeviceName'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'Ebs': {'SnapshotId': '1234',
+                        'VolumeSize': '1'}}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['BlockDeviceMappings'] = bdm
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_without_DeviceName',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                instance.validate)
+        excepted_error = ('Property error : WebServer: BlockDeviceMappings '
+                          'Property error : BlockDeviceMappings: 0 Property '
+                          'error : 0: Property DeviceName not assigned')
+        self.assertIn(excepted_error, six.text_type(exc))
 
         self.m.VerifyAll()
 

@@ -120,14 +120,14 @@ class Instance(resource.Resource):
         PLACEMENT_GROUP_NAME, PRIVATE_IP_ADDRESS, RAM_DISK_ID,
         SECURITY_GROUPS, SECURITY_GROUP_IDS, NETWORK_INTERFACES,
         SOURCE_DEST_CHECK, SUBNET_ID, TAGS, NOVA_SCHEDULER_HINTS, TENANCY,
-        USER_DATA, VOLUMES,
+        USER_DATA, VOLUMES, BLOCK_DEVICE_MAPPINGS
     ) = (
         'ImageId', 'InstanceType', 'KeyName', 'AvailabilityZone',
         'DisableApiTermination', 'KernelId', 'Monitoring',
         'PlacementGroupName', 'PrivateIpAddress', 'RamDiskId',
         'SecurityGroups', 'SecurityGroupIds', 'NetworkInterfaces',
         'SourceDestCheck', 'SubnetId', 'Tags', 'NovaSchedulerHints', 'Tenancy',
-        'UserData', 'Volumes',
+        'UserData', 'Volumes', 'BlockDeviceMappings'
     )
 
     _TAG_KEYS = (
@@ -146,6 +146,20 @@ class Instance(resource.Resource):
         VOLUME_DEVICE, VOLUME_ID,
     ) = (
         'Device', 'VolumeId',
+    )
+
+    _BLOCK_DEVICE_MAPPINGS_KEYS = (
+        DEVICE_NAME, EBS, NO_DEVICE, VIRTUAL_NAME,
+    ) = (
+        'DeviceName', 'Ebs', 'NoDevice', 'VirtualName',
+    )
+
+    _EBS_KEYS = (
+        DELETE_ON_TERMINATION, IOPS, SNAPSHOT_ID, VOLUME_SIZE,
+        VOLUME_TYPE,
+    ) = (
+        'DeleteOnTermination', 'Iops', 'SnapshotId', 'VolumeSize',
+        'VolumeType'
     )
 
     ATTRIBUTES = (
@@ -308,6 +322,70 @@ class Instance(resource.Resource):
                 }
             )
         ),
+        BLOCK_DEVICE_MAPPINGS: properties.Schema(
+            properties.Schema.LIST,
+            _('Block device mappings to attach to instance.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    DEVICE_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('A device name where the volume will be '
+                          'attached in the system at /dev/device_name.'
+                          'e.g. vdb'),
+                        required=True,
+                    ),
+                    EBS: properties.Schema(
+                        properties.Schema.MAP,
+                        _('The ebs volume to attach to the instance.'),
+                        schema={
+                            DELETE_ON_TERMINATION: properties.Schema(
+                                properties.Schema.BOOLEAN,
+                                _('Indicate whether the volume should be '
+                                  'deleted when the instance is terminated.'),
+                                default=True
+                            ),
+                            IOPS: properties.Schema(
+                                properties.Schema.NUMBER,
+                                _('The number of I/O operations per second '
+                                  'that the volume supports.'),
+                                implemented=False
+                            ),
+                            SNAPSHOT_ID: properties.Schema(
+                                properties.Schema.STRING,
+                                _('The ID of the snapshot to create '
+                                  'a volume from.'),
+                            ),
+                            VOLUME_SIZE: properties.Schema(
+                                properties.Schema.STRING,
+                                _('The size of the volume, in GB. Must be '
+                                  'equal or greater than the size of the '
+                                  'snapshot. It is safe to leave this blank '
+                                  'and have the Compute service infer '
+                                  'the size.'),
+                            ),
+                            VOLUME_TYPE: properties.Schema(
+                                properties.Schema.STRING,
+                                _('The volume type.'),
+                                implemented=False
+                            ),
+                        },
+                    ),
+                    NO_DEVICE: properties.Schema(
+                        properties.Schema.MAP,
+                        _('The can be used to unmap a defined device.'),
+                        implemented=False
+                    ),
+                    VIRTUAL_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The name of the virtual device. The name must be '
+                          'in the form ephemeralX where X is a number '
+                          'starting from zero (0); for example, ephemeral0.'),
+                        implemented=False
+                    ),
+                },
+            ),
+        ),
     }
 
     attributes_schema = {
@@ -422,6 +500,33 @@ class Instance(resource.Resource):
             security_groups = None
         return security_groups
 
+    def _build_block_device_mapping(self, bdm):
+        if not bdm:
+            return None
+        bdm_dict = {}
+        for mapping in bdm:
+            device_name = mapping.get(self.DEVICE_NAME)
+            ebs = mapping.get(self.EBS)
+            if ebs:
+                mapping_parts = []
+                snapshot_id = ebs.get(self.SNAPSHOT_ID)
+                volume_size = ebs.get(self.VOLUME_SIZE)
+                delete = ebs.get(self.DELETE_ON_TERMINATION)
+
+                if snapshot_id:
+                    mapping_parts.append(snapshot_id)
+                    mapping_parts.append('snap')
+                if volume_size:
+                    mapping_parts.append(str(volume_size))
+                else:
+                    mapping_parts.append('')
+                if delete is not None:
+                    mapping_parts.append(str(delete))
+
+                bdm_dict[device_name] = ':'.join(mapping_parts)
+
+        return bdm_dict
+
     def _get_nova_metadata(self, properties):
         if properties is None or properties.get(self.TAGS) is None:
             return None
@@ -460,6 +565,9 @@ class Instance(resource.Resource):
         nics = self._build_nics(self.properties[self.NETWORK_INTERFACES],
                                 security_groups=security_groups,
                                 subnet_id=self.properties[self.SUBNET_ID])
+        block_device_mapping = self._build_block_device_mapping(
+            self.properties.get(self.BLOCK_DEVICE_MAPPINGS))
+
         server = None
 
         # FIXME(shadower): the instance_user config option is deprecated. Once
@@ -482,7 +590,8 @@ class Instance(resource.Resource):
                 meta=self._get_nova_metadata(self.properties),
                 scheduler_hints=scheduler_hints,
                 nics=nics,
-                availability_zone=availability_zone)
+                availability_zone=availability_zone,
+                block_device_mapping=block_device_mapping)
         finally:
             # Avoid a race condition where the thread could be cancelled
             # before the ID is stored
@@ -669,6 +778,23 @@ class Instance(resource.Resource):
             raise exception.ResourcePropertyConflict(
                 '/'.join([self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS]),
                 self.NETWORK_INTERFACES)
+
+        # check bdm property
+        # now we don't support without snapshot_id in bdm
+        bdm = self.properties.get(self.BLOCK_DEVICE_MAPPINGS)
+        if bdm:
+            for mapping in bdm:
+                ebs = mapping.get(self.EBS)
+                if ebs:
+                    snapshot_id = ebs.get(self.SNAPSHOT_ID)
+                    if not snapshot_id:
+                        msg = _("SnapshotId is missing, this is required "
+                                "when specifying BlockDeviceMappings.")
+                        raise exception.StackValidationFailed(message=msg)
+                else:
+                    msg = _("Ebs is missing, this is required "
+                            "when specifying BlockDeviceMappings.")
+                    raise exception.StackValidationFailed(message=msg)
 
     def _detach_volumes_task(self):
         '''
