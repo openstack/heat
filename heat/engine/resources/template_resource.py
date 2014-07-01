@@ -108,7 +108,15 @@ class TemplateResource(stack_resource.StackResource):
             if not pval.implemented():
                 continue
 
-            val = self.properties[pname]
+            try:
+                val = self.properties[pname]
+            except ValueError:
+                if self.action == self.INIT:
+                    prop = self.properties.props[pname]
+                    val = prop.get_value(None)
+                else:
+                    raise
+
             if val is not None:
                 # take a list and create a CommaDelimitedList
                 if pval.type() == properties.Schema.LIST:
