@@ -51,7 +51,6 @@ HEAT_DOMAIN_PASSWORD = os.environ.get('HEAT_DOMAIN_PASSWORD',
 HEAT_DOMAIN_DESCRIPTION = 'Contains users and projects created by heat'
 
 logger.debug("USERNAME=%s" % USERNAME)
-logger.debug("PASSWORD=%s" % PASSWORD)
 logger.debug("AUTH_URL=%s" % AUTH_URL)
 
 
