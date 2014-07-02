@@ -1705,6 +1705,24 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_passes_marker_info(self, mock_stack_get_all):
+        limit = object()
+        marker = object()
+        sort_keys = object()
+        sort_dir = object()
+        self.eng.list_stacks(self.ctx, limit=limit, marker=marker,
+                             sort_keys=sort_keys, sort_dir=sort_dir)
+        mock_stack_get_all.assert_called_once_with(self.ctx,
+                                                   limit,
+                                                   sort_keys,
+                                                   marker,
+                                                   sort_dir,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   )
+
+    @mock.patch.object(db_api, 'stack_get_all')
     def test_stack_list_passes_filtering_info(self, mock_stack_get_all):
         filters = {'foo': 'bar'}
         self.eng.list_stacks(self.ctx, filters=filters)

@@ -452,7 +452,7 @@ class EngineService(service.Service):
         :param show_deleted: if true, show soft-deleted stacks
         :returns: a list of formatted stacks
         """
-        stacks = parser.Stack.load_all(cnxt, limit, sort_keys, marker,
+        stacks = parser.Stack.load_all(cnxt, limit, marker, sort_keys,
                                        sort_dir, filters, tenant_safe,
                                        show_deleted, resolve_data=False)
         return [api.format_stack(stack) for stack in stacks]
