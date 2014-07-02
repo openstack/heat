@@ -17,7 +17,6 @@ import testtools
 
 from heat.common import exception
 from heat.common import identifier
-from heat.engine import constraints as constr
 from heat.engine import parameters
 from heat.engine import template
 
@@ -51,8 +50,8 @@ class ParameterTest(testtools.TestCase):
         self.assertIsInstance(p, parameters.JsonParam)
 
     def test_new_bad_type(self):
-        self.assertRaises(constr.InvalidSchemaError, self.new_parameter, 'p',
-                          {'Type': 'List'}, validate_value=False)
+        self.assertRaises(exception.InvalidSchemaError, self.new_parameter,
+                          'p', {'Type': 'List'}, validate_value=False)
 
     def test_default_no_override(self):
         p = self.new_parameter('defaulted', {'Type': 'String',
@@ -75,7 +74,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedValues': ['foo'],
                   'ConstraintDescription': 'wibble',
                   'Default': 'bar'}
-        err = self.assertRaises(constr.InvalidSchemaError,
+        err = self.assertRaises(exception.InvalidSchemaError,
                                 self.new_parameter, 'p', schema, 'foo')
         self.assertIn('wibble', str(err))
 
@@ -470,7 +469,7 @@ class ParametersTest(testtools.TestCase):
         params = {'Parameters': {'Foo': {'Type': 'String'},
                                  'NoAttr': 'No attribute.',
                                  'Bar': {'Type': 'Number', 'Default': '1'}}}
-        self.assertRaises(constr.InvalidSchemaError,
+        self.assertRaises(exception.InvalidSchemaError,
                           self.new_parameters,
                           'test',
                           params)
@@ -479,14 +478,14 @@ class ParametersTest(testtools.TestCase):
 class ParameterSchemaTest(testtools.TestCase):
 
     def test_validate_schema_wrong_key(self):
-        error = self.assertRaises(constr.InvalidSchemaError,
+        error = self.assertRaises(exception.InvalidSchemaError,
                                   parameters.Schema.from_dict, 'param_name',
                                   {"foo": "bar"})
         self.assertEqual("Invalid key 'foo' for parameter (param_name)",
                          str(error))
 
     def test_validate_schema_no_type(self):
-        error = self.assertRaises(constr.InvalidSchemaError,
+        error = self.assertRaises(exception.InvalidSchemaError,
                                   parameters.Schema.from_dict,
                                   'broken',
                                   {"Description": "Hi!"})

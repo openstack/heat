@@ -74,7 +74,8 @@ class Schema(constr.Schema):
 
         unknown = [k for k in schema_dict if k not in SCHEMA_KEYS]
         if unknown:
-            raise constr.InvalidSchemaError(_('Unknown key(s) %s') % unknown)
+            raise exception.InvalidSchemaError(
+                message=_('Unknown key(s) %s') % unknown)
 
         def constraints():
             def get_num(key):
@@ -95,7 +96,8 @@ class Schema(constr.Schema):
         try:
             data_type = schema_dict[TYPE]
         except KeyError:
-            raise constr.InvalidSchemaError(_('No %s specified') % TYPE)
+            raise exception.InvalidSchemaError(
+                message=_('No %s specified') % TYPE)
 
         if SCHEMA in schema_dict:
             if data_type == Schema.LIST:
@@ -104,11 +106,9 @@ class Schema(constr.Schema):
                 schema_dicts = schema_dict[SCHEMA].items()
                 ss = dict((n, cls.from_legacy(sd)) for n, sd in schema_dicts)
             else:
-                raise constr.InvalidSchemaError(_('%(schema)s supplied for '
-                                                  ' %(type)s %(data)s') %
-                                                dict(schema=SCHEMA,
-                                                     type=TYPE,
-                                                     data=data_type))
+                raise exception.InvalidSchemaError(
+                    message=_('%(schema)s supplied for %(type)s %(data)s') %
+                    dict(schema=SCHEMA, type=TYPE, data=data_type))
         else:
             ss = None
 

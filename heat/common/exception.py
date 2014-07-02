@@ -253,6 +253,10 @@ class StackValidationFailed(HeatException):
     msg_fmt = _("%(message)s")
 
 
+class InvalidSchemaError(HeatException):
+    msg_fmt = _("%(message)s")
+
+
 class ResourceNotFound(HeatException):
     msg_fmt = _("The Resource (%(resource_name)s) could not be found "
                 "in Stack %(stack_name)s.")

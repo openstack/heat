@@ -75,17 +75,16 @@ class Schema(constr.Schema):
                 try:
                     default_value = self.default.split(',')
                 except (KeyError, AttributeError) as err:
-                    raise constr.InvalidSchemaError(_('Default must be a '
-                                                      'comma-delimited list '
-                                                      'string: %s') % err)
+                    raise exception.InvalidSchemaError(
+                        message=_('Default must be a comma-delimited list '
+                                  'string: %s') % err)
             try:
                 self.validate_constraints(default_value, context)
             except (ValueError, TypeError,
                     exception.StackValidationFailed) as exc:
-                raise constr.InvalidSchemaError(_('Invalid default '
-                                                  '%(default)s (%(exc)s)') %
-                                                dict(default=self.default,
-                                                     exc=exc))
+                raise exception.InvalidSchemaError(
+                    message=_('Invalid default %(default)s (%(exc)s)') %
+                    dict(default=self.default, exc=exc))
 
     def set_default(self, default=None):
         super(Schema, self).set_default(default)
@@ -101,12 +100,12 @@ class Schema(constr.Schema):
     @staticmethod
     def _check_dict(schema_dict, allowed_keys, entity):
         if not isinstance(schema_dict, dict):
-            raise constr.InvalidSchemaError(
-                _("Invalid %s, expected a mapping") % entity)
+            raise exception.InvalidSchemaError(
+                message=_("Invalid %s, expected a mapping") % entity)
         for key in schema_dict:
             if key not in allowed_keys:
-                raise constr.InvalidSchemaError(
-                    _("Invalid key '%(key)s' for %(entity)s") % {
+                raise exception.InvalidSchemaError(
+                    message=_("Invalid key '%(key)s' for %(entity)s") % {
                         "key": key, "entity": entity})
 
     @classmethod
@@ -116,8 +115,9 @@ class Schema(constr.Schema):
                         "parameter (%s)" % param_name)
 
         if cls.TYPE not in schema_dict:
-            raise constr.InvalidSchemaError(
-                _("Missing parameter type for parameter: %s") % param_name)
+            raise exception.InvalidSchemaError(
+                message=_("Missing parameter type for parameter: %s") %
+                param_name)
 
     @classmethod
     def from_dict(cls, param_name, schema_dict):

@@ -68,6 +68,7 @@ class FaultWrapper(wsgi.Middleware):
         'Forbidden': webob.exc.HTTPForbidden,
         'StackExists': webob.exc.HTTPConflict,
         'StackValidationFailed': webob.exc.HTTPBadRequest,
+        'InvalidSchemaError': webob.exc.HTTPBadRequest,
         'InvalidTemplateReference': webob.exc.HTTPBadRequest,
         'InvalidTemplateVersion': webob.exc.HTTPBadRequest,
         'InvalidTemplateSection': webob.exc.HTTPBadRequest,

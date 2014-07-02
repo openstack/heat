@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import constraints as constr
 from heat.engine import parameters
 
@@ -63,9 +64,9 @@ class HOTParamSchema(parameters.Schema):
                 return
 
             if not isinstance(constraints, list):
-                raise constr.InvalidSchemaError(
-                    _("Invalid parameter constraints for parameter %s, "
-                      "expected a list") % param_name)
+                raise exception.InvalidSchemaError(
+                    message=_("Invalid parameter constraints for parameter "
+                              "%s, expected a list") % param_name)
 
             valid_keys = (DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES,
                           ALLOWED_PATTERN, CUSTOM_CONSTRAINT)
@@ -96,8 +97,8 @@ class HOTParamSchema(parameters.Schema):
                     cdef = constraint.get(CUSTOM_CONSTRAINT)
                     yield constr.CustomConstraint(cdef, desc)
                 else:
-                    raise constr.InvalidSchemaError(
-                        _("No constraint expressed"))
+                    raise exception.InvalidSchemaError(
+                        message=_("No constraint expressed"))
 
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
