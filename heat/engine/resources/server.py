@@ -572,8 +572,10 @@ class Server(stack_user.StackUser):
 
             volume_size = mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE)
             delete = mapping.get(cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM)
-            if volume_size or delete:
-                mapping_parts.append(str(volume_size or 0))
+            if volume_size:
+                mapping_parts.append(str(volume_size))
+            else:
+                mapping_parts.append('')
             if delete:
                 mapping_parts.append(str(delete))
 
