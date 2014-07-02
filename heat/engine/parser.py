@@ -785,8 +785,13 @@ class Stack(collections.Mapping):
                     LOG.info(_("Tried to delete user_creds that do not exist "
                                "(stack=%(stack)s user_creds_id=%(uc)s)") %
                              {'stack': self.id, 'uc': self.user_creds_id})
-                self.user_creds_id = None
-                self.store()
+
+                try:
+                    self.user_creds_id = None
+                    self.store()
+                except exception.NotFound:
+                    LOG.info(_("Tried to store a stack that does not exist "
+                               "%s ") % self.id)
 
             # If the stack has a domain project, delete it
             if self.stack_user_project_id:
@@ -798,11 +803,19 @@ class Stack(collections.Mapping):
                     stack_status = self.FAILED
                     reason = "Error deleting project: %s" % six.text_type(ex)
 
-        self.state_set(action, stack_status, reason)
+        try:
+            self.state_set(action, stack_status, reason)
+        except exception.NotFound:
+            LOG.info(_("Tried to delete stack that does not exist "
+                       "%s ") % self.id)
 
         if stack_status != self.FAILED:
             # delete the stack
-            db_api.stack_delete(self.context, self.id)
+            try:
+                db_api.stack_delete(self.context, self.id)
+            except exception.NotFound:
+                LOG.info(_("Tried to delete stack that does not exist "
+                           "%s ") % self.id)
             self.id = None
 
     def suspend(self):
