@@ -38,8 +38,8 @@ opts = [
     cfg.StrOpt('stack-domain-admin-password',
                help="Password to set for stack-domain-admin"),
 ]
-for opt in opts:
-    cfg.CONF.register_opt(opt, cli=True)
+
+cfg.CONF.register_cli_opts(opts)
 cfg.CONF(sys.argv[1:], project='heat', prog='heat-keystone-setup-domain')
 
 HEAT_DOMAIN_NAME = os.environ.get(
