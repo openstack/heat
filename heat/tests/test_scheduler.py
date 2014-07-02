@@ -14,7 +14,6 @@
 import contextlib
 
 import eventlet
-import mox
 
 from heat.engine import dependencies
 from heat.engine import scheduler
@@ -46,13 +45,14 @@ class PollingTaskGroupTest(HeatTestCase):
             self.m.StubOutWithMock(t, 'do_step')
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
 
         for t in tasks:
             t.do_step(1).AndReturn(None)
         for t in tasks:
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            scheduler.TaskRunner._sleep(1).AndReturn(None)
             t.do_step(2).AndReturn(None)
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            scheduler.TaskRunner._sleep(1).AndReturn(None)
             t.do_step(3).AndReturn(None)
 
         self.m.ReplayAll()
@@ -218,6 +218,7 @@ class DependencyTaskGroupTest(HeatTestCase):
         self.steps = 0
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         with self._dep_test(('second', 'first')):
+            scheduler.TaskRunner._sleep(None).AndReturn(None)
             scheduler.TaskRunner._sleep(None).AndReturn(None)
 
     def test_single_node(self):
@@ -416,6 +417,7 @@ class TaskTest(HeatTestCase):
         task.do_step(2).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
         task.do_step(3).AndReturn(None)
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -431,6 +433,7 @@ class TaskTest(HeatTestCase):
         task.do_step(2).AndReturn(None)
         scheduler.TaskRunner._sleep(42).AndReturn(None)
         task.do_step(3).AndReturn(None)
+        scheduler.TaskRunner._sleep(42).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -732,13 +735,14 @@ class WrapperTaskTest(HeatTestCase):
             self.m.StubOutWithMock(child_task, 'do_step')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
+        scheduler.TaskRunner._sleep(1).AndReturn(None)
         for child_task in child_tasks:
             child_task.do_step(1).AndReturn(None)
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            scheduler.TaskRunner._sleep(1).AndReturn(None)
             child_task.do_step(2).AndReturn(None)
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            scheduler.TaskRunner._sleep(1).AndReturn(None)
             child_task.do_step(3).AndReturn(None)
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            scheduler.TaskRunner._sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 

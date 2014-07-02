@@ -139,6 +139,9 @@ class TaskRunner(object):
         sleeping, pass `None` for `wait_time`.
         """
         self.start(timeout=timeout)
+        # ensure that wait is applied only if task has not completed.
+        if not self.done():
+            self._sleep(wait_time)
         self.run_to_completion(wait_time=wait_time)
 
     def start(self, timeout=None):
