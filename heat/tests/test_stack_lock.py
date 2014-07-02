@@ -170,17 +170,17 @@ class StackLockTest(HeatTestCase):
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         try:
             with slock.thread_lock(self.stack.id):
-                db_api.stack_lock_create.assert_called_once()
+                self.assertEqual(1, db_api.stack_lock_create.call_count)
                 raise Exception
         except:
-            db_api.stack_lock_release.assert_called_once()
+            self.assertEqual(1, db_api.stack_lock_release.call_count)
 
     def test_thread_lock_context_mgr_no_exception(self):
         db_api.stack_lock_create = mock.Mock(return_value=None)
         db_api.stack_lock_release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         with slock.thread_lock(self.stack.id):
-            db_api.stack_lock_create.assert_called_once()
+            self.assertEqual(1, db_api.stack_lock_create.call_count)
         assert not db_api.stack_lock_release.called
 
     def test_try_thread_lock_context_mgr_exception(self):
@@ -189,17 +189,17 @@ class StackLockTest(HeatTestCase):
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         try:
             with slock.try_thread_lock(self.stack.id):
-                db_api.stack_lock_create.assert_called_once()
+                self.assertEqual(1, db_api.stack_lock_create.call_count)
                 raise Exception
         except:
-            db_api.stack_lock_release.assert_called_once()
+            self.assertEqual(1, db_api.stack_lock_release.call_count)
 
     def test_try_thread_lock_context_mgr_no_exception(self):
         db_api.stack_lock_create = mock.Mock(return_value=None)
         db_api.stack_lock_release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         with slock.try_thread_lock(self.stack.id):
-            db_api.stack_lock_create.assert_called_once()
+            self.assertEqual(1, db_api.stack_lock_create.call_count)
         assert not db_api.stack_lock_release.called
 
     def test_try_thread_lock_context_mgr_existing_lock(self):
@@ -208,7 +208,7 @@ class StackLockTest(HeatTestCase):
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         try:
             with slock.try_thread_lock(self.stack.id):
-                db_api.stack_lock_create.assert_called_once()
+                self.assertEqual(1, db_api.stack_lock_create.call_count)
                 raise Exception
         except:
             assert not db_api.stack_lock_release.called

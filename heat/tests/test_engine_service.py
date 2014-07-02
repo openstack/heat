@@ -2987,12 +2987,10 @@ class ThreadGroupManagerTest(HeatTestCase):
             self.stlock_mock.StackLock.assert_called_with(self.cnxt,
                                                           self.stack,
                                                           self.engine_id)
-            self.lock_mock.acquire.assert_called_once()
-            thm.start_with_acquired_lock.assert_called_once()
-            calls = thm.start_with_acquired_lock.call_args
-            self.assertEqual((self.stack, self.lock_mock, self.f) + self.fargs,
-                             calls[0])
-            self.assertEqual(self.fkwargs, calls[1])
+
+            thm.start_with_acquired_lock.assert_called_once_with(
+                self.stack, self.lock_mock,
+                self.f, *self.fargs, **self.fkwargs)
 
     def test_tgm_start(self):
         stack_id = 'test'
