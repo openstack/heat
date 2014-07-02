@@ -50,7 +50,7 @@ class Schema(constr.Schema):
 
     def __init__(self, data_type, description=None,
                  default=None, schema=None,
-                 required=False, constraints=[],
+                 required=False, constraints=None,
                  implemented=True,
                  update_allowed=False,
                  support_status=support.SupportStatus()):

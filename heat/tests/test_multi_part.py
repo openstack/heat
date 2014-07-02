@@ -30,7 +30,8 @@ class MultipartMimeTest(HeatTestCase):
         self.ctx = utils.dummy_context()
         self.init_config()
 
-    def init_config(self, parts=[]):
+    def init_config(self, parts=None):
+        parts = parts or []
         stack = parser.Stack(
             self.ctx, 'software_config_test_stack',
             template.Template({

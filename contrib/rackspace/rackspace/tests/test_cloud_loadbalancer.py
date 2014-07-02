@@ -51,7 +51,7 @@ class FakeManager(object):
     def find(self, *args, **kwargs):
         pass
 
-    def action(self, item, action_type, body={}):
+    def action(self, item, action_type, body=None):
         pass
 
 

@@ -109,8 +109,9 @@ class WaitConditionTest(HeatTestCase):
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
     def create_stack(self, stack_id=None,
-                     template=test_template_waitcondition, params={},
+                     template=test_template_waitcondition, params=None,
                      stub=True):
+        params = params or {}
         temp = template_format.parse(template)
         template = parser.Template(temp)
         ctx = utils.dummy_context(tenant_id='test_tenant')

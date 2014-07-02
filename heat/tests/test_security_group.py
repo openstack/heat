@@ -156,7 +156,8 @@ Resources:
         stack.store()
         return stack
 
-    def assertResourceState(self, rsrc, ref_id, metadata={}):
+    def assertResourceState(self, rsrc, ref_id, metadata=None):
+        metadata = metadata or {}
         self.assertIsNone(rsrc.validate())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())

@@ -2612,7 +2612,9 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
 class RoutesTest(HeatTestCase):
 
-    def assertRoute(self, mapper, path, method, action, controller, params={}):
+    def assertRoute(self, mapper, path, method, action, controller,
+                    params=None):
+        params = params or {}
         route = mapper.match(path, {'REQUEST_METHOD': method})
         self.assertIsNotNone(route)
         self.assertEqual(action, route['action'])

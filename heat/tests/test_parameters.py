@@ -361,8 +361,9 @@ params_schema = json.loads('''{
 
 
 class ParametersTest(testtools.TestCase):
-    def new_parameters(self, stack_name, tmpl, user_params={}, stack_id=None,
-                       validate_value=True):
+    def new_parameters(self, stack_name, tmpl, user_params=None,
+                       stack_id=None, validate_value=True):
+        user_params = user_params or {}
         tmpl.update({'HeatTemplateFormatVersion': '2012-12-12'})
         tmpl = template.Template(tmpl)
         params = tmpl.parameters(

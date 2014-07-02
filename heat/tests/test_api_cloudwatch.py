@@ -31,8 +31,9 @@ class WatchControllerTest(HeatTestCase):
     the endpoint processing API requests after they are routed
     '''
 
-    def _dummy_GET_request(self, params={}):
+    def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string
+        params = params or {}
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
         req = Request(environ)

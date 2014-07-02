@@ -185,7 +185,8 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_delete_complete(
             task).MultipleTimes().AndReturn(True)
 
-    def _stub_suspend(self, cookies=[], with_error=None):
+    def _stub_suspend(self, cookies=None, with_error=None):
+        cookies = cookies or []
         self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
         self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
         if with_error:
@@ -200,7 +201,8 @@ class AutoScalingTest(HeatTestCase):
             instance.Instance.check_suspend_complete(
                 cookie).InAnyOrder().AndReturn(True)
 
-    def _stub_resume(self, cookies=[], with_error=None):
+    def _stub_resume(self, cookies=None, with_error=None):
+        cookies = cookies or []
         self.m.StubOutWithMock(instance.Instance, 'handle_resume')
         self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
         if with_error:

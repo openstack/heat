@@ -36,7 +36,7 @@ class ResourceDefinitionCore(object):
     )
 
     def __init__(self, name, resource_type, properties=None, metadata=None,
-                 depends=[], deletion_policy=None, update_policy=None,
+                 depends=None, deletion_policy=None, update_policy=None,
                  description=''):
         """
         Initialise with the parsed definition of a resource.
@@ -53,7 +53,7 @@ class ResourceDefinitionCore(object):
         :param update_policy: A dictionary of supplied update policies
         :param description: A string describing the resource
         """
-
+        depends = depends or []
         self.name = name
         self.resource_type = resource_type
         self.description = description

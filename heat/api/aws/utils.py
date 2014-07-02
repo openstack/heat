@@ -106,9 +106,11 @@ def get_param_value(params, key):
         raise exception.HeatMissingParameterError(key)
 
 
-def reformat_dict_keys(keymap={}, inputdict={}):
+def reformat_dict_keys(keymap=None, inputdict=None):
     '''
     Utility function for mapping one dict format to another
     '''
+    keymap = keymap or {}
+    inputdict = inputdict or {}
     return dict([(outk, inputdict[ink]) for ink, outk in keymap.items()
                 if ink in inputdict])
