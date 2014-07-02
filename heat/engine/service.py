@@ -746,6 +746,9 @@ class EngineService(service.Service):
 
         # Current engine has the lock
         if acquire_result == self.engine_id:
+            # give threads which are almost complete an opportunity to
+            # finish naturally before force stopping them
+            eventlet.sleep(0.2)
             self.thread_group_mgr.stop(stack.id)
 
         # Another active engine has the lock
