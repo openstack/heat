@@ -356,10 +356,10 @@ class CombinationAlarmTest(HeatTestCase):
     def setUp(self):
         super(CombinationAlarmTest, self).setUp()
         self.fc = FakeCeilometerClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'ceilometer')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_ceilometer')
 
     def create_alarm(self):
-        clients.OpenStackClients.ceilometer().MultipleTimes().AndReturn(
+        clients.OpenStackClients._ceilometer().AndReturn(
             self.fc)
         self.m.StubOutWithMock(self.fc.alarms, 'create')
         self.fc.alarms.create(

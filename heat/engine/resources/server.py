@@ -1051,7 +1051,7 @@ class FlavorConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.FlavorMissing,)
 
     def validate_with_client(self, client, value):
-        nova_client = client.nova()
+        nova_client = client.client('nova')
         nova_utils.get_flavor_id(nova_client, value)
 
 

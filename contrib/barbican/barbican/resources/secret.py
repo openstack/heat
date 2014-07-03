@@ -109,6 +109,9 @@ class Secret(resource.Resource):
         super(Secret, self).__init__(name, json_snippet, stack)
         self.clients = clients.Clients(self.context)
 
+    def barbican(self):
+        return self.clients.client('barbican')
+
     def validate(self):
         super(Secret, self).validate()
         self._validate_payload()
@@ -125,7 +128,7 @@ class Secret(resource.Resource):
 
     def handle_create(self):
         info = dict(self.properties)
-        secret_ref = self.clients.barbican().secrets.store(**info)
+        secret_ref = self.barbican().secrets.store(**info)
         self.resource_id_set(secret_ref)
         return secret_ref
 
@@ -134,7 +137,7 @@ class Secret(resource.Resource):
             return
 
         try:
-            self.clients.barbican().secrets.delete(self.resource_id)
+            self.barbican().secrets.delete(self.resource_id)
             self.resource_id_set(None)
         except clients.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
@@ -147,10 +150,10 @@ class Secret(resource.Resource):
     def _resolve_attribute(self, name):
         try:
             if name == self.DECRYPTED_PAYLOAD:
-                return self.clients.barbican().secrets.decrypt(
+                return self.barbican().secrets.decrypt(
                     self.resource_id)
 
-            secret = self.clients.barbican().secrets.get(self.resource_id)
+            secret = self.barbican().secrets.get(self.resource_id)
             if name == self.STATUS:
                 return secret.status
         except clients.barbican_client.HTTPClientError as e:

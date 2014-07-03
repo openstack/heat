@@ -93,6 +93,9 @@ class Resource(object):
 
     support_status = support.SupportStatus()
 
+    # Default name to use for calls to self.client()
+    default_client_name = None
+
     def __new__(cls, name, definition, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -336,32 +339,37 @@ class Resource(object):
         return list(
             [r.name for r in self.stack.dependencies.required_by(self)])
 
+    def client(self, name=None):
+        client_name = name or self.default_client_name
+        assert client_name, "Must specify client name"
+        return self.stack.clients.client(client_name)
+
     def keystone(self):
-        return self.stack.clients.keystone()
+        return self.client('keystone')
 
     def nova(self):
-        return self.stack.clients.nova()
+        return self.client('nova')
 
     def swift(self):
-        return self.stack.clients.swift()
+        return self.client('swift')
 
     def neutron(self):
-        return self.stack.clients.neutron()
+        return self.client('neutron')
 
     def cinder(self):
-        return self.stack.clients.cinder()
+        return self.client('cinder')
 
     def trove(self):
-        return self.stack.clients.trove()
+        return self.client('trove')
 
     def ceilometer(self):
-        return self.stack.clients.ceilometer()
+        return self.client('ceilometer')
 
     def heat(self):
-        return self.stack.clients.heat()
+        return self.client('heat')
 
     def glance(self):
-        return self.stack.clients.glance()
+        return self.client('glance')
 
     def _do_action(self, action, pre_func=None, resource_data=None):
         '''

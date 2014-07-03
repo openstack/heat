@@ -189,7 +189,7 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (neutron_exp.NeutronClientException,)
 
     def validate_with_client(self, client, value):
-        neutron_client = client.neutron()
+        neutron_client = client.client('neutron')
         neutronV20.find_resourceid_by_name_or_id(
             neutron_client, 'network', value)
 

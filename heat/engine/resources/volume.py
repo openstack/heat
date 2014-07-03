@@ -250,7 +250,7 @@ class VolumeExtendTask(object):
     def __call__(self):
         LOG.debug(str(self))
 
-        cinder = self.clients.cinder().volumes
+        cinder = self.clients.client('cinder').volumes
         vol = cinder.get(self.volume_id)
 
         try:
@@ -307,14 +307,14 @@ class VolumeAttachTask(object):
         """Return a co-routine which runs the task."""
         LOG.debug(str(self))
 
-        va = self.clients.nova().volumes.create_server_volume(
+        va = self.clients.client('nova').volumes.create_server_volume(
             server_id=self.server_id,
             volume_id=self.volume_id,
             device=self.device)
         self.attachment_id = va.id
         yield
 
-        vol = self.clients.cinder().volumes.get(self.volume_id)
+        vol = self.clients.client('cinder').volumes.get(self.volume_id)
         while vol.status == 'available' or vol.status == 'attaching':
             LOG.debug('%(name)s - volume status: %(status)s'
                       % {'name': str(self), 'status': vol.status})
@@ -354,13 +354,13 @@ class VolumeDetachTask(object):
         """Return a co-routine which runs the task."""
         LOG.debug(str(self))
 
-        server_api = self.clients.nova().volumes
+        server_api = self.clients.client('nova').volumes
 
         # get reference to the volume while it is attached
         try:
             nova_vol = server_api.get_server_volume(self.server_id,
                                                     self.attachment_id)
-            vol = self.clients.cinder().volumes.get(nova_vol.id)
+            vol = self.clients.client('cinder').volumes.get(nova_vol.id)
         except (clients.cinderclient.exceptions.NotFound,
                 clients.novaclient.exceptions.BadRequest,
                 clients.novaclient.exceptions.NotFound):

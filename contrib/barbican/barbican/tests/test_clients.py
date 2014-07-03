@@ -33,12 +33,12 @@ class TestClient(HeatTestCase):
                                                      mock_barbican_client,
                                                      mock_heat_clients):
         mock_ks = mock.Mock()
-        self.clients.keystone = mock.Mock()
-        self.clients.keystone.return_value.client = mock_ks
+        self.clients._keystone = mock.Mock()
+        self.clients._keystone.return_value.client = mock_ks
         mock_plugin = mock.Mock()
         mock_auth.KeystoneAuthV2.return_value = mock_plugin
 
-        self.clients.barbican()
+        self.clients.client('barbican')
         mock_auth.KeystoneAuthV2.assert_called_once_with(keystone=mock_ks)
         mock_barbican_client.Client.assert_called_once_with(auth_plugin=
                                                             mock_plugin)

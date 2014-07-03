@@ -21,7 +21,7 @@ class ImageConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.ImageNotFound,)
 
     def validate_with_client(self, client, value):
-        glance_client = client.glance()
+        glance_client = client.client('glance')
         glance_utils.get_image_id(glance_client, value)
 
 

@@ -152,8 +152,8 @@ class KeypairConstraintTest(HeatTestCase):
 
     def test_validation(self):
         client = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(client)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(client)
         client.keypairs = self.m.CreateMockAnything()
 
         key = collections.namedtuple("Key", ["name"])

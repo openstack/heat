@@ -466,9 +466,9 @@ Mappings:
         snippet = {"Fn::GetAZs": ""}
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template))
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         fc = fakes.FakeClient()
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
         self.m.ReplayAll()
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
 
@@ -1346,8 +1346,8 @@ class StackTest(HeatTestCase):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
+        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -1372,8 +1372,8 @@ class StackTest(HeatTestCase):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
+        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -2959,8 +2959,8 @@ class StackTest(HeatTestCase):
         """
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
+        clients.OpenStackClients._keystone().MultipleTimes().AndReturn(
             FakeKeystoneClient())
         self.m.ReplayAll()
 
@@ -3118,8 +3118,9 @@ class StackTest(HeatTestCase):
             def delete_stack_domain_project(self, project_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClientFail())
+        self.m.StubOutWithMock(clients.OpenStackClients, '_keystone')
+        clients.OpenStackClients._keystone().AndReturn(
+            FakeKeystoneClientFail())
         self.m.ReplayAll()
 
         self.stack = parser.Stack(self.ctx, 'user_project_init',
@@ -3245,8 +3246,8 @@ class StackTest(HeatTestCase):
         # Mock objects so the query for flavors in server.FlavorConstraint
         # works for stack creation
         fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
 
         fc.flavors = self.m.CreateMockAnything()
         flavor = collections.namedtuple("Flavor", ["id", "name"])

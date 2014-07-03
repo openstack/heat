@@ -63,7 +63,7 @@ class NovaFloatingIPTest(HeatTestCase):
         super(NovaFloatingIPTest, self).setUp()
 
         self.novaclient = novaclient.Client('user', 'pass', 'project', 'uri')
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         self.m.StubOutWithMock(self.novaclient.floating_ips, 'create')
         self.m.StubOutWithMock(self.novaclient.floating_ips, 'get')
         self.m.StubOutWithMock(self.novaclient.floating_ips, 'delete')
@@ -79,7 +79,7 @@ class NovaFloatingIPTest(HeatTestCase):
         return mock
 
     def prepare_floating_ip(self):
-        clients.OpenStackClients.nova().AndReturn(self.novaclient)
+        clients.OpenStackClients._nova().AndReturn(self.novaclient)
         self.novaclient.floating_ips.create(pool='public').AndReturn(
             self._make_obj(**{
                 'id': '1',
@@ -95,7 +95,7 @@ class NovaFloatingIPTest(HeatTestCase):
         return NovaFloatingIp('MyFloatingIP', floating_ip, stack)
 
     def prepare_floating_ip_assoc(self):
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(
+        clients.OpenStackClients._nova().AndReturn(
             self.novaclient)
         self.novaclient.servers.get('67dc62f9-efde-4c8b-94af-013e00f5dc57')
         self.novaclient.floating_ips.get('1').AndReturn(
@@ -132,7 +132,6 @@ class NovaFloatingIPTest(HeatTestCase):
         rsrc = self.prepare_floating_ip()
         rsrc.validate()
 
-        clients.OpenStackClients.nova().AndReturn(self.novaclient)
         self.novaclient.floating_ips.delete('1')
 
         self.m.ReplayAll()

@@ -104,7 +104,7 @@ class LoadBalancerTest(HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(resource.Resource, 'metadata_set')
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
@@ -124,8 +124,8 @@ class LoadBalancerTest(HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'glance')
-        clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+        self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
+        clients.OpenStackClients._glance().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).\
@@ -136,7 +136,7 @@ class LoadBalancerTest(HeatTestCase):
             utils.PhysName('test_stack', 'LoadBalancer'),
             'LB_instance',
             limit=instance.Instance.physical_resource_name_limit)
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,

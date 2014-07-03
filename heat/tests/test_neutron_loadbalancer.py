@@ -955,10 +955,10 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.stub_keystoneclient()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
 
     def create_load_balancer(self):
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients._nova().AndReturn(self.fc)
         neutronclient.Client.create_member({
             'member': {
                 'pool_id': 'pool123', 'protocol_port': 8080,

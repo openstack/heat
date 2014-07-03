@@ -277,7 +277,8 @@ class Stack(collections.Mapping):
                 # Create a context containing a trust_id and trustor_user_id
                 # if trusts are enabled
                 if cfg.CONF.deferred_auth_method == 'trusts':
-                    trust_ctx = self.clients.keystone().create_trust_context()
+                    keystone = self.clients.client('keystone')
+                    trust_ctx = keystone.create_trust_context()
                     new_creds = db_api.user_creds_create(trust_ctx)
                 else:
                     new_creds = db_api.user_creds_create(self.context)
@@ -771,7 +772,8 @@ class Stack(collections.Mapping):
                     trust_id = user_creds.get('trust_id')
                     if trust_id:
                         try:
-                            self.clients.keystone().delete_trust(trust_id)
+                            self.clients.client('keystone').delete_trust(
+                                trust_id)
                         except Exception as ex:
                             LOG.exception(ex)
                             stack_status = self.FAILED
@@ -796,7 +798,8 @@ class Stack(collections.Mapping):
             # If the stack has a domain project, delete it
             if self.stack_user_project_id:
                 try:
-                    self.clients.keystone().delete_stack_domain_project(
+                    keystone = self.clients.client('keystone')
+                    keystone.delete_stack_domain_project(
                         project_id=self.stack_user_project_id)
                 except Exception as ex:
                     LOG.exception(ex)
@@ -897,10 +900,11 @@ class Stack(collections.Mapping):
         # restart the whole stack
 
     def get_availability_zones(self):
+        nova = self.clients.client('nova')
         if self._zones is None:
             self._zones = [
                 zone.zoneName for zone in
-                self.clients.nova().availability_zones.list(detailed=False)]
+                nova.availability_zones.list(detailed=False)]
         return self._zones
 
     def set_stack_user_project_id(self, project_id):

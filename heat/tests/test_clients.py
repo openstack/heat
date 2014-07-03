@@ -52,11 +52,11 @@ class ClientsTest(HeatTestCase):
         obj._get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
-        obj.heat()
+        obj.client('heat')
         self.assertEqual('url_from_keystone', mock_call.call_args[0][1])
         obj._get_heat_url.return_value = "url_from_config"
         del(obj._clients['heat'])
-        obj.heat()
+        obj.client('heat')
         self.assertEqual('url_from_config', mock_call.call_args[0][1])
 
     @mock.patch.object(heatclient, 'Client')
@@ -71,8 +71,8 @@ class ClientsTest(HeatTestCase):
         obj._get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
-        self.assertIsNotNone(obj.heat())
-        self.assertEqual('anewtoken', obj.keystone().auth_token)
+        self.assertIsNotNone(obj.client('heat'))
+        self.assertEqual('anewtoken', obj.client('keystone').auth_token)
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat_cached(self, mock_call):
@@ -87,8 +87,8 @@ class ClientsTest(HeatTestCase):
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
         obj._heat = None
-        heat = obj.heat()
-        heat_cached = obj.heat()
+        heat = obj.client('heat')
+        heat_cached = obj.client('heat')
         self.assertEqual(heat, heat_cached)
 
     def test_clients_auth_token_update(self):
@@ -100,7 +100,7 @@ class ClientsTest(HeatTestCase):
         con.password = 'verysecret'
         con.auth_token = None
         obj = clients.Clients(con)
-        self.assertIsNotNone(obj.heat())
+        self.assertIsNotNone(obj.client('heat'))
         self.assertEqual('token1', obj.auth_token)
         fkc.auth_token = 'token2'
         self.assertEqual('token2', obj.auth_token)

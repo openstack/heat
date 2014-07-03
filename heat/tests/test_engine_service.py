@@ -196,15 +196,15 @@ def get_stack(stack_name, ctx, template):
 
 def setup_keystone_mocks(mocks, stack):
     fkc = test_fakes.FakeKeystoneClient()
-    mocks.StubOutWithMock(stack.clients, 'keystone')
-    stack.clients.keystone().MultipleTimes().AndReturn(fkc)
+    mocks.StubOutWithMock(stack.clients, '_keystone')
+    stack.clients._keystone().MultipleTimes().AndReturn(fkc)
 
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
     g_cli_mock = mocks.CreateMockAnything()
-    mocks.StubOutWithMock(clients.OpenStackClients, 'glance')
-    clients.OpenStackClients.glance().MultipleTimes().AndReturn(
+    mocks.StubOutWithMock(clients.OpenStackClients, '_glance')
+    clients.OpenStackClients._glance().MultipleTimes().AndReturn(
         g_cli_mock)
     mocks.StubOutWithMock(glance_utils, 'get_image_id')
     glance_utils.get_image_id(g_cli_mock, imageId_input).\
@@ -215,8 +215,8 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
     fc = fakes.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
-    mocks.StubOutWithMock(clients.OpenStackClients, 'nova')
-    clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+    mocks.StubOutWithMock(clients.OpenStackClients, '_nova')
+    clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
     instance = stack['WebServer']
     if mock_image_constraint:
         setup_mock_for_image_constraint(mocks,
