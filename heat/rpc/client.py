@@ -262,15 +262,29 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('generate_template',
                                              type_name=type_name))
 
-    def list_events(self, ctxt, stack_identity):
+    def list_events(self, ctxt, stack_identity, filters=None, limit=None,
+                    marker=None, sort_keys=None, sort_dir=None,):
         """
         The list_events method lists all events associated with a given stack.
+        It supports pagination (``limit`` and ``marker``),
+        sorting (``sort_keys`` and ``sort_dir``) and filtering(filters)
+        of the results.
 
         :param ctxt: RPC context.
-        :param stack_identity: Name of the stack you want to get events for.
+        :param stack_identity: Name of the stack you want to get events for
+        :param filters: a dict with attribute:value to filter the list
+        :param limit: the number of events to list (integer or string)
+        :param marker: the ID of the last event in the previous page
+        :param sort_keys: an array of fields used to sort the list
+        :param sort_dir: the direction of the sort ('asc' or 'desc').
         """
         return self.call(ctxt, self.make_msg('list_events',
-                                             stack_identity=stack_identity))
+                                             stack_identity=stack_identity,
+                                             filters=filters,
+                                             limit=limit,
+                                             marker=marker,
+                                             sort_keys=sort_keys,
+                                             sort_dir=sort_dir))
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name):
         """

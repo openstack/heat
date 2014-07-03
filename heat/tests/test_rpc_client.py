@@ -149,8 +149,13 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self._test_engine_api('generate_template', 'call', type_name="TYPE")
 
     def test_list_events(self):
-        self._test_engine_api('list_events', 'call',
-                              stack_identity=self.identity)
+        kwargs = {'stack_identity': self.identity,
+                  'limit': None,
+                  'marker': None,
+                  'sort_keys': None,
+                  'sort_dir': None,
+                  'filters': None}
+        self._test_engine_api('list_events', 'call', **kwargs)
 
     def test_describe_stack_resource(self):
         self._test_engine_api('describe_stack_resource', 'call',

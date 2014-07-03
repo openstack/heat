@@ -150,6 +150,13 @@ class SqlAlchemyTest(HeatTestCase):
 
         assert mock_paginate_query.called
 
+    @mock.patch.object(db_api, '_events_paginate_query')
+    def test_events_filter_and_page_query(self, mock_events_paginate_query):
+        query = mock.Mock()
+        db_api._events_filter_and_page_query(self.ctx, query)
+
+        assert mock_events_paginate_query.called
+
     @mock.patch.object(db_api.db_filters, 'exact_filter')
     def test_filter_and_page_query_handles_no_filters(self, mock_db_filter):
         query = mock.Mock()
@@ -158,10 +165,27 @@ class SqlAlchemyTest(HeatTestCase):
         mock_db_filter.assert_called_once_with(mock.ANY, mock.ANY, {})
 
     @mock.patch.object(db_api.db_filters, 'exact_filter')
+    def test_events_filter_and_page_query_handles_no_filters(self,
+                                                             mock_db_filter):
+        query = mock.Mock()
+        db_api._events_filter_and_page_query(self.ctx, query)
+
+        mock_db_filter.assert_called_once_with(mock.ANY, mock.ANY, {})
+
+    @mock.patch.object(db_api.db_filters, 'exact_filter')
     def test_filter_and_page_query_applies_filters(self, mock_db_filter):
         query = mock.Mock()
         filters = {'foo': 'bar'}
         db_api._filter_and_page_query(self.ctx, query, filters=filters)
+
+        assert mock_db_filter.called
+
+    @mock.patch.object(db_api.db_filters, 'exact_filter')
+    def test_events_filter_and_page_query_applies_filters(self,
+                                                          mock_db_filter):
+        query = mock.Mock()
+        filters = {'foo': 'bar'}
+        db_api._events_filter_and_page_query(self.ctx, query, filters=filters)
 
         assert mock_db_filter.called
 
@@ -174,6 +198,17 @@ class SqlAlchemyTest(HeatTestCase):
 
         args, _ = mock_paginate_query.call_args
         self.assertIn(['name'], args)
+
+    @mock.patch.object(db_api, '_events_paginate_query')
+    def test_events_filter_and_page_query_whitelists_sort_keys(
+            self, mock_paginate_query):
+        query = mock.Mock()
+        sort_keys = ['created_at', 'foo']
+        db_api._events_filter_and_page_query(self.ctx, query,
+                                             sort_keys=sort_keys)
+
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['created_at'], args)
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_paginate_query_default_sorts_by_created_at_and_id(
@@ -535,12 +570,76 @@ class SqlAlchemyTest(HeatTestCase):
         events = db_api.event_get_all_by_stack(self.ctx, UUID1)
         self.assertEqual(2, len(events))
 
+        # test filter by resource_status
+        filters = {'resource_status': 'COMPLETE'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(1, len(events))
+        self.assertEqual('COMPLETE', events[0].resource_status)
+        # test filter by resource_action
+        filters = {'resource_action': 'CREATE'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(2, len(events))
+        self.assertEqual('CREATE', events[0].resource_action)
+        self.assertEqual('CREATE', events[1].resource_action)
+        # test filter by resource_type
+        filters = {'resource_type': 'AWS::EC2::Instance'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(2, len(events))
+        self.assertEqual('AWS::EC2::Instance', events[0].resource_type)
+        self.assertEqual('AWS::EC2::Instance', events[1].resource_type)
+
+        filters = {'resource_type': 'OS::Nova::Server'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(0, len(events))
+        # test limit and marker
+        events_all = db_api.event_get_all_by_stack(self.ctx, UUID1)
+        marker = events_all[0].uuid
+        expected = events_all[1].uuid
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               limit=1, marker=marker)
+        self.assertEqual(1, len(events))
+        self.assertEqual(expected, events[0].uuid)
+
         self._mock_delete(self.m)
         self.m.ReplayAll()
         stack.delete()
 
-        events = db_api.event_get_all_by_stack(self.ctx, UUID1)
-        self.assertEqual(4, len(events))
+        # test filter by resource_status
+        filters = {'resource_status': 'COMPLETE'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(2, len(events))
+        self.assertEqual('COMPLETE', events[0].resource_status)
+        self.assertEqual('COMPLETE', events[1].resource_status)
+        # test filter by resource_action
+        filters = {'resource_action': 'DELETE',
+                   'resource_status': 'COMPLETE'}
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               filters=filters)
+        self.assertEqual(1, len(events))
+        self.assertEqual('DELETE', events[0].resource_action)
+        self.assertEqual('COMPLETE', events[0].resource_status)
+        # test limit and marker
+        events_all = db_api.event_get_all_by_stack(self.ctx, UUID1)
+        self.assertEqual(4, len(events_all))
+
+        marker = events_all[1].uuid
+        events2_uuid = events_all[2].uuid
+        events3_uuid = events_all[3].uuid
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               limit=1, marker=marker)
+        self.assertEqual(1, len(events))
+        self.assertEqual(events2_uuid, events[0].uuid)
+
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1,
+                                               limit=2, marker=marker)
+        self.assertEqual(2, len(events))
+        self.assertEqual(events2_uuid, events[0].uuid)
+        self.assertEqual(events3_uuid, events[1].uuid)
 
         self.m.VerifyAll()
 
@@ -1604,6 +1703,26 @@ class DBAPIEventTest(HeatTestCase):
 
         self.ctx.tenant_id = 'tenant1'
         events = db_api.event_get_all_by_tenant(self.ctx)
+        self.assertEqual(2, len(events))
+        marker = events[0].uuid
+        expected = events[1].uuid
+        events = db_api.event_get_all_by_tenant(self.ctx,
+                                                marker=marker)
+        self.assertEqual(1, len(events))
+        self.assertEqual(expected, events[0].uuid)
+
+        events = db_api.event_get_all_by_tenant(self.ctx, limit=1)
+        self.assertEqual(1, len(events))
+
+        filters = {'resource_name': 'res2'}
+        events = db_api.event_get_all_by_tenant(self.ctx,
+                                                filters=filters)
+        self.assertEqual(1, len(events))
+        self.assertEqual('res2', events[0].resource_name)
+
+        sort_keys = 'resource_type'
+        events = db_api.event_get_all_by_tenant(self.ctx,
+                                                sort_keys=sort_keys)
         self.assertEqual(2, len(events))
 
         self.ctx.tenant_id = 'tenant2'

@@ -527,15 +527,16 @@ def event_get_all(context):
     return results
 
 
-def event_get_all_by_tenant(context):
-    stacks = soft_delete_aware_query(context, models.Stack).\
-        filter_by(tenant=context.tenant_id).all()
-    results = []
-    for stack in stacks:
-        results.extend(model_query(context, models.Event).
-                       filter_by(stack_id=stack.id).all())
+def event_get_all_by_tenant(context, limit=None, marker=None,
+                            sort_keys=None, sort_dir=None, filters=None):
+    query = model_query(context, models.Event)
+    query = db_filters.exact_filter(query, models.Event, filters)
+    query = query.join(models.Event.stack).\
+        filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
+    filters = None
 
-    return results
+    return _events_filter_and_page_query(context, query, limit, marker,
+                                         sort_keys, sort_dir, filters).all()
 
 
 def _query_all_by_stack(context, stack_id):
@@ -544,9 +545,55 @@ def _query_all_by_stack(context, stack_id):
     return query
 
 
-def event_get_all_by_stack(context, stack_id):
-    return _query_all_by_stack(context, stack_id).order_by(
-        models.Event.id).all()
+def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
+                           sort_keys=None, sort_dir=None, filters=None):
+    query = _query_all_by_stack(context, stack_id)
+    return _events_filter_and_page_query(context, query, limit, marker,
+                                         sort_keys, sort_dir, filters).all()
+
+
+def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
+                           marker=None, sort_dir=None):
+    default_sort_keys = ['created_at']
+    if not sort_keys:
+        sort_keys = default_sort_keys
+        if not sort_dir:
+            sort_dir = 'desc'
+
+    # This assures the order of the stacks will always be the same
+    # even for sort_key values that are not unique in the database
+    sort_keys = sort_keys + ['id']
+
+    model_marker = None
+    if marker:
+        # not to use model_query(context, model).get(marker), because
+        # user can only see the ID(column 'uuid') and the ID as the marker
+        model_marker = model_query(context, model).filter_by(uuid=marker).\
+            first()
+    try:
+        query = utils.paginate_query(query, model, limit, sort_keys,
+                                     model_marker, sort_dir)
+    except utils.InvalidSortKey as exc:
+        raise exception.Invalid(reason=exc.message)
+
+    return query
+
+
+def _events_filter_and_page_query(context, query,
+                                  limit=None, marker=None,
+                                  sort_keys=None, sort_dir=None,
+                                  filters=None):
+    if filters is None:
+        filters = {}
+
+    allowed_sort_keys = [models.Event.created_at.key,
+                         models.Event.resource_type.key]
+    whitelisted_sort_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
+
+    query = db_filters.exact_filter(query, models.Event, filters)
+
+    return _events_paginate_query(context, query, models.Event, limit,
+                                  whitelisted_sort_keys, marker, sort_dir)
 
 
 def event_count_all_by_stack(context, stack_id):

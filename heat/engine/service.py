@@ -847,20 +847,37 @@ class EngineService(service.Service):
             raise exception.ResourceTypeNotFound(type_name=type_name)
 
     @request_context
-    def list_events(self, cnxt, stack_identity):
+    def list_events(self, cnxt, stack_identity, filters=None, limit=None,
+                    marker=None, sort_keys=None, sort_dir=None):
         """
         The list_events method lists all events associated with a given stack.
+        It supports pagination (``limit`` and ``marker``),
+        sorting (``sort_keys`` and ``sort_dir``) and filtering(filters)
+        of the results.
 
         :param cnxt: RPC context.
-        :param stack_identity: Name of the stack you want to get events for.
+        :param stack_identity: Name of the stack you want to get events for
+        :param filters: a dict with attribute:value to filter the list
+        :param limit: the number of events to list (integer or string)
+        :param marker: the ID of the last event in the previous page
+        :param sort_keys: an array of fields used to sort the list
+        :param sort_dir: the direction of the sort ('asc' or 'desc').
         """
 
         if stack_identity is not None:
             st = self._get_stack(cnxt, stack_identity, show_deleted=True)
 
-            events = db_api.event_get_all_by_stack(cnxt, st.id)
+            events = db_api.event_get_all_by_stack(cnxt, st.id, limit=limit,
+                                                   marker=marker,
+                                                   sort_keys=sort_keys,
+                                                   sort_dir=sort_dir,
+                                                   filters=filters)
         else:
-            events = db_api.event_get_all_by_tenant(cnxt)
+            events = db_api.event_get_all_by_tenant(cnxt, limit=limit,
+                                                    marker=marker,
+                                                    sort_keys=sort_keys,
+                                                    sort_dir=sort_dir,
+                                                    filters=filters)
 
         stacks = {}
 

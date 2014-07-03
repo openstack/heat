@@ -15,6 +15,7 @@
 Stack endpoint for Heat v1 ReST API.
 """
 
+from six.moves.urllib import parse
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -269,6 +270,10 @@ class StackController(object):
         location = util.make_url(req, identity)
         if path:
             location = '/'.join([location, path])
+
+        params = req.params
+        if params:
+            location += '?%s' % parse.urlencode(params, True)
 
         raise exc.HTTPFound(location=location)
 

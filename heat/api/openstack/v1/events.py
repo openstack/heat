@@ -80,10 +80,16 @@ class EventController(object):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    def _event_list(self, req, identity,
-                    filter_func=lambda e: True, detail=False):
+    def _event_list(self, req, identity, filter_func=lambda e: True,
+                    detail=False, filters=None, limit=None, marker=None,
+                    sort_keys=None, sort_dir=None):
         events = self.rpc_client.list_events(req.context,
-                                             identity)
+                                             identity,
+                                             filters=filters,
+                                             limit=limit,
+                                             marker=marker,
+                                             sort_keys=sort_keys,
+                                             sort_dir=sort_dir)
         keys = None if detail else summary_keys
 
         return [format_event(req, e, keys) for e in events if filter_func(e)]
@@ -93,13 +99,31 @@ class EventController(object):
         """
         Lists summary information for all events
         """
+        whitelist = {
+            'limit': 'single',
+            'marker': 'single',
+            'sort_dir': 'single',
+            'sort_keys': 'multi',
+        }
+        filter_whitelist = {
+            'resource_status': 'mixed',
+            'resource_action': 'mixed',
+            'resource_name': 'mixed',
+            'resource_type': 'mixed',
+        }
+        params = util.get_allowed_params(req.params, whitelist)
+        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        if not filter_params:
+            filter_params = None
 
         if resource_name is None:
-            events = self._event_list(req, identity)
+            events = self._event_list(req, identity,
+                                      filters=filter_params, **params)
         else:
             res_match = lambda e: e[engine_api.EVENT_RES_NAME] == resource_name
 
-            events = self._event_list(req, identity, res_match)
+            events = self._event_list(req, identity, res_match,
+                                      filters=filter_params, **params)
             if not events:
                 msg = _('No events found for resource %s') % resource_name
                 raise exc.HTTPNotFound(msg)
