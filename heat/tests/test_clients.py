@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heatclient import client as heatclient
 import mock
 from oslo.config import cfg
-
-from heatclient import client as heatclient
+from testtools.testcase import skip
 
 from heat.engine import clients
 from heat.engine.clients import client_plugin
@@ -172,3 +172,32 @@ class ClientPluginTest(HeatTestCase):
         con = mock.Mock()
         c = clients.Clients(con)
         self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
+
+
+class TestClientPluginsInitialise(HeatTestCase):
+
+    @skip('skipped until keystone can read context auth_ref')
+    def test_create_all_clients(self):
+        con = mock.Mock()
+        con.auth_url = "http://auth.example.com:5000/v2.0"
+        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
+        c = clients.Clients(con)
+
+        for plugin_name in clients._mgr.names():
+            self.assertTrue(clients.has_client(plugin_name))
+            c.client(plugin_name)
+
+    def test_create_all_client_plugins(self):
+        plugin_types = clients._mgr.names()
+        self.assertIsNotNone(plugin_types)
+
+        con = mock.Mock()
+        c = clients.Clients(con)
+
+        for plugin_name in plugin_types:
+            plugin = c.client_plugin(plugin_name)
+            self.assertIsNotNone(plugin)
+            self.assertEqual(c, plugin.clients)
+            self.assertEqual(con, plugin.context)
+            self.assertIsNone(plugin._client)
