@@ -15,6 +15,8 @@ import random
 import string
 import uuid
 
+from oslo.config import cfg
+from oslo.db import options
 import sqlalchemy
 
 from heat.common import context
@@ -22,7 +24,6 @@ from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.openstack.common.db import options
 
 get_engine = db_api.get_engine
 
@@ -47,7 +48,7 @@ def random_name():
 
 def setup_dummy_db():
     options.cfg.set_defaults(options.database_opts, sqlite_synchronous=False)
-    options.set_defaults(sql_connection="sqlite://", sqlite_db='heat.db')
+    options.set_defaults(cfg.CONF, connection="sqlite://", sqlite_db='heat.db')
     engine = get_engine()
     db_api.db_sync(engine)
     engine.connect()

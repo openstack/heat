@@ -17,6 +17,8 @@ from datetime import timedelta
 import sys
 
 from oslo.config import cfg
+from oslo.db.sqlalchemy import session as db_session
+from oslo.db.sqlalchemy import utils
 import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.orm.session import Session
@@ -26,16 +28,12 @@ from heat.common import exception
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
-from heat.openstack.common.db.sqlalchemy import session as db_session
-from heat.openstack.common.db.sqlalchemy import utils
 from heat.openstack.common.gettextutils import _
 
 cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
-CONF.import_opt('connection', 'heat.openstack.common.db.options',
-                group='database')
 
 _facade = None
 
@@ -44,8 +42,7 @@ def get_facade():
     global _facade
 
     if not _facade:
-        _facade = db_session.EngineFacade(
-            CONF.database.connection, **dict(CONF.database.iteritems()))
+        _facade = db_session.EngineFacade.from_config(CONF)
     return _facade
 
 get_engine = lambda: get_facade().get_engine()

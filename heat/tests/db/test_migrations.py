@@ -28,12 +28,12 @@ import tempfile
 import uuid
 
 from migrate.versioning import repository
+from oslo.db.sqlalchemy import test_migrations
 from six.moves.urllib import parse as urlparse
 import sqlalchemy
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
-from heat.openstack.common.db.sqlalchemy import test_migrations
 from heat.openstack.common import log as logging
 from heat.tests import common
 
@@ -71,7 +71,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def setUp(self):
         lock_dir = tempfile.mkdtemp()
-        os.environ["HEAT_LOCK_PATH"] = lock_dir
+        os.environ["OSLO_LOCK_PATH"] = lock_dir
 
         super(TestHeatMigrations, self).setUp()
         self.setup_logging()
@@ -84,7 +84,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         self.downgrade = False
         self.INIT_VERSION = migration.INIT_VERSION
         if self.migration_api is None:
-            temp = __import__('heat.openstack.common.db.sqlalchemy.migration',
+            temp = __import__('oslo.db.sqlalchemy.migration',
                               globals(), locals(),
                               ['versioning_api'], -1)
             self.migration_api = temp.versioning_api

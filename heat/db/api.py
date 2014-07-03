@@ -25,18 +25,14 @@ supported backend.
 '''
 
 from oslo.config import cfg
-
-from heat.openstack.common.db import api as db_api
+from oslo.db import api
 
 CONF = cfg.CONF
-CONF.import_opt('backend', 'heat.openstack.common.db.options',
-                group='database')
 
 
 _BACKEND_MAPPING = {'sqlalchemy': 'heat.db.sqlalchemy.api'}
 
-IMPL = db_api.DBAPI(CONF.database.backend, backend_mapping=_BACKEND_MAPPING,
-                    lazy=True)
+IMPL = api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
 
 
 def get_engine():
