@@ -12,10 +12,12 @@
 #    under the License.
 
 import mock
+from oslo.config import cfg
 
 from heatclient import client as heatclient
 
 from heat.engine import clients
+from heat.engine.clients import client_plugin
 from heat.tests.common import HeatTestCase
 
 
@@ -104,3 +106,69 @@ class ClientsTest(HeatTestCase):
         self.assertEqual('token1', obj.auth_token)
         fkc.auth_token = 'token2'
         self.assertEqual('token2', obj.auth_token)
+
+
+class FooClientsPlugin(client_plugin.ClientPlugin):
+
+    def _create(self):
+        pass
+
+
+class ClientPluginTest(HeatTestCase):
+
+    def test_get_client_option(self):
+        con = mock.Mock()
+        con.auth_url = "http://auth.example.com:5000/v2.0"
+        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
+        c = clients.Clients(con)
+        plugin = FooClientsPlugin(c)
+
+        cfg.CONF.set_override('ca_file', '/tmp/bar',
+                              group='clients_heat')
+        cfg.CONF.set_override('ca_file', '/tmp/foo',
+                              group='clients')
+
+        # check heat group
+        self.assertEqual('/tmp/bar',
+                         plugin._get_client_option('heat', 'ca_file'))
+
+        # check fallback clients group for unknown client foo
+        self.assertEqual('/tmp/foo',
+                         plugin._get_client_option('foo', 'ca_file'))
+
+    def test_auth_token(self):
+        con = mock.Mock()
+        con.auth_token = "1234"
+
+        c = clients.Clients(con)
+        c.client = mock.Mock(name="client")
+        mock_keystone = mock.Mock()
+        c.client.return_value = mock_keystone
+        mock_keystone.auth_token = '5678'
+        plugin = FooClientsPlugin(c)
+
+        # assert token is from keystone rather than context
+        # even though both are set
+        self.assertEqual('5678', plugin.auth_token)
+        c.client.assert_called_with('keystone')
+
+    def test_url_for(self):
+        con = mock.Mock()
+        con.auth_token = "1234"
+
+        c = clients.Clients(con)
+        c.client = mock.Mock(name="client")
+        mock_keystone = mock.Mock()
+        c.client.return_value = mock_keystone
+        mock_keystone.url_for.return_value = 'http://192.0.2.1/foo'
+        plugin = FooClientsPlugin(c)
+
+        self.assertEqual('http://192.0.2.1/foo',
+                         plugin.url_for(service_type='foo'))
+        c.client.assert_called_with('keystone')
+
+    def test_abstract_create(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
