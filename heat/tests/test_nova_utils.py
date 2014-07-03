@@ -18,9 +18,9 @@ import mock
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
+from heat.tests.v1_1 import fakes
 
 
 class NovaUtilsTests(HeatTestCase):
@@ -84,7 +84,7 @@ class NovaUtilsTests(HeatTestCase):
         self.nova_client.keypairs.get(
             my_key_name).AndReturn(my_key)
         self.nova_client.keypairs.get(
-            'notakey').AndRaise(nova_exceptions.NotFound(404))
+            'notakey').AndRaise(fakes.fake_exception())
         self.m.ReplayAll()
         self.assertEqual(my_key, nova_utils.get_keypair(self.nova_client,
                                                         my_key_name))
@@ -105,16 +105,12 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
     def test_overlimit_error(self):
         server = mock.Mock()
-        server.get.side_effect = clients.novaclient.exceptions.OverLimit(
-            413, "limit reached")
+        server.get.side_effect = fakes.fake_exception(413)
         self.assertIsNone(nova_utils.refresh_server(server))
 
     def test_500_error(self):
         server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            clients.novaclient.exceptions.ClientException(500, msg))
+        server.get().AndRaise(fakes.fake_exception(500))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))
@@ -122,10 +118,7 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
     def test_503_error(self):
         server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            clients.novaclient.exceptions.ClientException(503, msg))
+        server.get().AndRaise(fakes.fake_exception(503))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))
@@ -133,13 +126,10 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
     def test_unhandled_exception(self):
         server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            clients.novaclient.exceptions.ClientException(501, msg))
+        server.get().AndRaise(fakes.fake_exception(501))
         self.m.ReplayAll()
 
-        self.assertRaises(clients.novaclient.exceptions.ClientException,
+        self.assertRaises(nova_exceptions.ClientException,
                           nova_utils.refresh_server, server)
         self.m.VerifyAll()
 

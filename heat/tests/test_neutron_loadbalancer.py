@@ -18,7 +18,7 @@ from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine.resources.neutron import loadbalancer
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
@@ -955,10 +955,10 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.stub_keystoneclient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
 
     def create_load_balancer(self):
-        clients.OpenStackClients._nova().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         neutronclient.Client.create_member({
             'member': {
                 'pool_id': 'pool123', 'protocol_port': 8080,

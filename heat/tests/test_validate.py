@@ -18,6 +18,7 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.hot.template import HOTemplate
 from heat.engine import parser
@@ -1267,8 +1268,8 @@ class validateTest(HeatTestCase):
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']
@@ -1284,8 +1285,8 @@ class validateTest(HeatTestCase):
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         resource = stack['Instance']

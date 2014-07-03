@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as nova_exceptions
+import six
+
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import properties
@@ -204,8 +207,8 @@ class SecurityGroup(resource.Resource):
                         i.get(self.RULE_TO_PORT),
                         i.get(self.RULE_CIDR_IP),
                         source_group_id)
-                except clients.novaclient.exceptions.BadRequest as ex:
-                    if ex.message.find('already exists') >= 0:
+                except nova_exceptions.BadRequest as ex:
+                    if six.text_type(ex).find('already exists') >= 0:
                         # no worries, the rule is already there
                         pass
                     else:
@@ -222,13 +225,13 @@ class SecurityGroup(resource.Resource):
         if self.resource_id is not None:
             try:
                 sec = self.nova().security_groups.get(self.resource_id)
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 pass
             else:
                 for rule in sec.rules:
                     try:
                         self.nova().security_group_rules.delete(rule['id'])
-                    except clients.novaclient.exceptions.NotFound:
+                    except nova_exceptions.NotFound:
                         pass
 
                 self.nova().security_groups.delete(self.resource_id)

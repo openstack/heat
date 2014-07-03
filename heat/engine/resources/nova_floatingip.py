@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as nova_exceptions
+
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import excutils
@@ -62,7 +63,7 @@ class NovaFloatingIp(resource.Resource):
         try:
             pool = self.properties.get(self.POOL)
             floating_ip = self.nova().floating_ips.create(pool=pool)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             with excutils.save_and_reraise_exception():
                 if pool is None:
                     msg = _('Could not allocate floating IP. Probably there '
@@ -76,7 +77,7 @@ class NovaFloatingIp(resource.Resource):
         if self.resource_id is not None:
             try:
                 self.nova().floating_ips.delete(self.resource_id)
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 pass
 
     def _resolve_attribute(self, key):
@@ -130,7 +131,7 @@ class NovaFloatingIpAssociation(resource.Resource):
                 fl_ip = self.nova().floating_ips.\
                     get(self.properties[self.FLOATING_IP])
                 self.nova().servers.remove_floating_ip(server, fl_ip.ip)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             pass
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):

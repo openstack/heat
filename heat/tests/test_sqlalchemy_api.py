@@ -26,7 +26,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import clients
-from heat.engine.clients import novaclient
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resource import Resource
@@ -121,8 +121,8 @@ class SqlAlchemyTest(HeatTestCase):
         fc = fakes.FakeClient()
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
         mocks.StubOutWithMock(fc.servers, 'create')
@@ -141,7 +141,7 @@ class SqlAlchemyTest(HeatTestCase):
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         mocks.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().MultipleTimes().AndRaise(novaclient.exceptions.NotFound(404))
+        get().MultipleTimes().AndRaise(fakes.fake_exception())
 
     @mock.patch.object(db_api, '_paginate_query')
     def test_filter_and_page_query_paginates_query(self, mock_paginate_query):

@@ -32,6 +32,7 @@ import heat.engine.cfn.functions
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_t
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import template as hot_t
@@ -466,9 +467,9 @@ Mappings:
         snippet = {"Fn::GetAZs": ""}
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template))
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         fc = fakes.FakeClient()
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
         self.m.ReplayAll()
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
 
@@ -3281,8 +3282,8 @@ class StackTest(HeatTestCase):
         # Mock objects so the query for flavors in server.FlavorConstraint
         # works for stack creation
         fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
 
         fc.flavors = self.m.CreateMockAnything()
         flavor = collections.namedtuple("Flavor", ["id", "name"])

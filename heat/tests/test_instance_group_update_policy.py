@@ -19,6 +19,7 @@ from testtools.matchers import MatchesRegex
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import nova
 from heat.engine import function
 from heat.engine import parser
 from heat.engine.resources import image
@@ -211,8 +212,8 @@ class InstanceGroupTest(HeatTestCase):
         """
         Expect update of the instances
         """
-        self.m.StubOutWithMock(instance.Instance, 'nova')
-        instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         def activate_status(server):
             server.status = 'VERIFY_RESIZE'

@@ -21,6 +21,7 @@ from neutronclient.v2_0 import client as neutronclient
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
@@ -114,10 +115,8 @@ class InstancesTest(HeatTestCase):
 
         self._mock_get_image_id_success(image_id or 'CentOS 5.2', 1)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -314,8 +313,8 @@ class InstancesTest(HeatTestCase):
         instance = instances.Instance('instance_create_image',
                                       resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         self._mock_get_image_id_success('1', 1)
         self.m.ReplayAll()
@@ -347,8 +346,7 @@ class InstancesTest(HeatTestCase):
             d2['server']['status'] = vm_delete_status
             get().AndReturn((200, d2))
         else:
-            get().AndRaise(
-                instances.clients.novaclient.exceptions.NotFound(404))
+            get().AndRaise(fakes.fake_exception())
 
         self.m.ReplayAll()
 

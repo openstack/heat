@@ -20,7 +20,7 @@ from novaclient.v1_1 import security_groups as nova_sg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -127,7 +127,7 @@ Resources:
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')
@@ -165,7 +165,7 @@ Resources:
 
     def test_security_group_nova(self):
         #create script
-        clients.OpenStackClients._nova().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
             id=1,
             name='test',
@@ -257,7 +257,7 @@ Resources:
 
     def test_security_group_nova_bad_source_group(self):
         #create script
-        clients.OpenStackClients._nova().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
             id=1,
             name='test',
@@ -319,9 +319,9 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    def test_security_group_nova_exception(self):
+    def test_security_group_client_exception(self):
         #create script
-        clients.OpenStackClients._nova().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         sg_name = utils.PhysName('test_stack', 'the_sg')
         nova_sg.SecurityGroupManager.list().AndReturn([
             NovaSG(
@@ -340,20 +340,16 @@ Resources:
 
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', '22', '22', '0.0.0.0/0', None).AndRaise(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'icmp', None, None, None, '1').AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
 
         # delete script
         nova_sg.SecurityGroupManager.get(2).AndReturn(NovaSG(
@@ -405,17 +401,17 @@ Resources:
             }]
         ))
         nova_sgr.SecurityGroupRuleManager.delete(130).AndRaise(
-            clients.novaclient.exceptions.NotFound('goneburger'))
+            fakes.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(131).AndRaise(
-            clients.novaclient.exceptions.NotFound('goneburger'))
+            fakes.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(132).AndRaise(
-            clients.novaclient.exceptions.NotFound('goneburger'))
+            fakes.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(133).AndRaise(
-            clients.novaclient.exceptions.NotFound('goneburger'))
+            fakes.fake_exception())
         nova_sg.SecurityGroupManager.delete(2).AndReturn(None)
 
         nova_sg.SecurityGroupManager.get(2).AndRaise(
-            clients.novaclient.exceptions.NotFound('goneburger'))
+            fakes.fake_exception())
 
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template_nova)

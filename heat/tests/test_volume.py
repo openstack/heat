@@ -22,6 +22,7 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.engine.resources import instance
@@ -101,7 +102,7 @@ class VolumeTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
         self.m.StubOutWithMock(clients.OpenStackClients, '_cinder')
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'create')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'get')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
@@ -168,7 +169,7 @@ class VolumeTest(HeatTestCase):
                                           device=u'/dev/vdc',
                                           update=False):
         if not update:
-            clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+            nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create_server_volume(
             device=device, server_id=server, volume_id=volume).AndReturn(fva)
         self.cinder_fc.volumes.get(volume).AndReturn(fva)
@@ -211,7 +212,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
@@ -333,8 +334,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         self.m.ReplayAll()
 
@@ -367,14 +367,12 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
 
         self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.BadRequest('Already detached'))
+            'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception(400))
 
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
@@ -437,8 +435,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         self.m.ReplayAll()
 
@@ -527,8 +524,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fva2, device=u'/dev/vdd',
@@ -588,8 +584,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fv2a, volume='vol-456',
@@ -647,8 +642,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fva2, server=u'WikiDatabase2',
@@ -1040,8 +1034,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         self.m.ReplayAll()
 
@@ -1222,8 +1215,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fvd)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(
-                clients.novaclient.exceptions.NotFound('NotFound'))
+            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
 
         # resize script
         fvr = FakeLatencyVolume(life_cycle=('extending', 'extending',

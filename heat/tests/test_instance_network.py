@@ -15,6 +15,7 @@ import uuid
 
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import glance_utils
@@ -175,10 +176,8 @@ class instancesTest(HeatTestCase):
         instance = instances.Instance('%s_name' % name,
                                       resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
 
@@ -235,10 +234,8 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(nic, 'neutron')
         nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(

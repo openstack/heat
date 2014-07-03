@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as nova_exceptions
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import clients
@@ -79,7 +81,7 @@ class ElasticIp(resource.Resource):
             else:
                 try:
                     ips = self.nova().floating_ips.get(self.resource_id)
-                except clients.novaclient.exceptions.NotFound as ex:
+                except nova_exceptions.NotFound as ex:
                     LOG.warn(_("Floating IPs not found: %s") % ex)
                 else:
                     self.ipaddress = ips.ip
@@ -105,7 +107,7 @@ class ElasticIp(resource.Resource):
                                       % self.name)
             try:
                 ips = self.nova().floating_ips.create()
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 with excutils.save_and_reraise_exception():
                     msg = _("No default floating IP pool configured. "
                             "Set 'default_floating_pool' in nova.conf.")
@@ -128,7 +130,7 @@ class ElasticIp(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self._ipaddress())
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 pass
 
         """De-allocate a floating IP."""
@@ -143,7 +145,7 @@ class ElasticIp(resource.Resource):
             else:
                 try:
                     self.nova().floating_ips.delete(self.resource_id)
-                except clients.novaclient.exceptions.NotFound:
+                except nova_exceptions.NotFound:
                     pass
 
     def FnGetRefId(self):
@@ -246,7 +248,7 @@ class ElasticIpAssociation(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self.properties[self.EIP])
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 pass
         elif self.properties[self.ALLOCATION_ID]:
             float_id = self.properties[self.ALLOCATION_ID]

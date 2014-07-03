@@ -32,6 +32,7 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
@@ -215,8 +216,8 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
     fc = fakes.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
-    mocks.StubOutWithMock(clients.OpenStackClients, '_nova')
-    clients.OpenStackClients._nova().MultipleTimes().AndReturn(fc)
+    mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
+    nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
     instance = stack['WebServer']
     if mock_image_constraint:
         setup_mock_for_image_constraint(mocks,
@@ -264,7 +265,7 @@ def clean_up_stack(stack, delete_res=True):
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        get().AndRaise(fakes.fake_exception())
         m.ReplayAll()
     stack.delete()
     if delete_res:
@@ -417,7 +418,7 @@ class StackCreateTest(HeatTestCase):
 
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        get().AndRaise(fakes.fake_exception())
         mox.Replay(get)
         stack.delete()
 
@@ -1391,7 +1392,7 @@ class StackServiceAuthorizeTest(HeatTestCase):
         fc = setup_mocks(self.m, stack)
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        get().AndRaise(fakes.fake_exception())
 
         self.m.ReplayAll()
         stack.store()

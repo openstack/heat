@@ -14,11 +14,11 @@
 import copy
 import uuid
 
+from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -626,7 +626,7 @@ class Server(stack_user.StackUser):
                 self.nova(), self.resource_id) or ''
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound as ex:
+        except nova_exceptions.NotFound as ex:
             LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
                      % {'server': self.resource_id, 'ex': ex})
             return ''
@@ -969,7 +969,7 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             pass
         else:
             delete = scheduler.TaskRunner(nova_utils.delete_server, server)
@@ -989,7 +989,7 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:
@@ -1034,7 +1034,7 @@ class Server(stack_user.StackUser):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:

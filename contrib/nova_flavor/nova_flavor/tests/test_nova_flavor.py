@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-from novaclient.exceptions import NotFound
 
 from heat.engine import parser
 from heat.engine import resource
@@ -22,6 +21,7 @@ from heat.tests import utils
 
 from ..resources.nova_flavor import NovaFlavor  # noqa
 from ..resources.nova_flavor import resource_mapping  # noqa
+from heat.tests.v1_1 import fakes
 
 flavor_template = {
     'heat_template_version': '2013-05-23',
@@ -98,5 +98,5 @@ class NovaFlavorTest(HeatTestCase):
         self.my_flavor.resource_id = flavor_id
         self.flavors.delete.return_value = None
         self.assertIsNone(self.my_flavor.handle_delete())
-        self.flavors.delete.side_effect = NotFound(404, "Not found")
+        self.flavors.delete.side_effect = fakes.fake_exception()
         self.assertIsNone(self.my_flavor.handle_delete())

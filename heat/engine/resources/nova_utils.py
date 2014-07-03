@@ -16,17 +16,16 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import json
+from novaclient import exceptions as nova_exceptions
 import os
 import pkgutil
 import string
 
-from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 import six
 from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -52,15 +51,16 @@ def refresh_server(server):
     '''
     try:
         server.get()
-    except clients.novaclient.exceptions.OverLimit as exc:
+    except nova_exceptions.OverLimit as exc:
         msg = _("Server %(name)s (%(id)s) received an OverLimit "
                 "response during server.get(): %(exception)s")
         LOG.warning(msg % {'name': server.name,
                            'id': server.id,
                            'exception': exc})
-    except clients.novaclient.exceptions.ClientException as exc:
-        if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
-             (500, 503))):
+    except nova_exceptions.ClientException as exc:
+        http_status = (getattr(exc, 'http_status', None) or
+                       getattr(exc, 'code', None))
+        if http_status in (500, 503):
             msg = _('Server "%(name)s" (%(id)s) received the following '
                     'exception during server.get(): %(exception)s')
             LOG.warning(msg % {'name': server.name,
@@ -248,7 +248,7 @@ def delete_server(server):
 
         try:
             refresh_server(server)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             break
 
 
@@ -330,7 +330,7 @@ def server_to_ipaddress(client, server):
     '''
     try:
         server = client.servers.get(server)
-    except clients.novaclient.exceptions.NotFound as ex:
+    except nova_exceptions.NotFound as ex:
         LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
                  % {'server': server, 'ex': ex})
     else:

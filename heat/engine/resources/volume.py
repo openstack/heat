@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.engine import attributes
@@ -362,16 +363,16 @@ class VolumeDetachTask(object):
                                                     self.attachment_id)
             vol = self.clients.client('cinder').volumes.get(nova_vol.id)
         except (clients.cinderclient.exceptions.NotFound,
-                clients.novaclient.exceptions.BadRequest,
-                clients.novaclient.exceptions.NotFound):
+                nova_exceptions.BadRequest,
+                nova_exceptions.NotFound):
             LOG.warning(_('%s - volume not found') % str(self))
             return
 
         # detach the volume using volume_attachment
         try:
             server_api.delete_server_volume(self.server_id, self.attachment_id)
-        except (clients.novaclient.exceptions.BadRequest,
-                clients.novaclient.exceptions.NotFound) as e:
+        except (nova_exceptions.BadRequest,
+                nova_exceptions.NotFound) as e:
             LOG.warning(_('%(res)s - %(err)s') % {'res': str(self),
                                                   'err': e})
 
@@ -398,7 +399,7 @@ class VolumeDetachTask(object):
         def server_has_attachment(server_id, attachment_id):
             try:
                 server_api.get_server_volume(server_id, attachment_id)
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 return False
             return True
 

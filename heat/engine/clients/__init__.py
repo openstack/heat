@@ -16,8 +16,6 @@ from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient
 from heatclient import client as heatclient
 from neutronclient.v2_0 import client as neutronclient
-from novaclient import client as novaclient
-from novaclient import shell as novashell
 from oslo.config import cfg
 from stevedore import extension
 from swiftclient import client as swiftclient
@@ -100,35 +98,6 @@ class OpenStackClients(object):
         warnings.warn('nova() is deprecated. '
                       'Replace with calls to client("nova")')
         return self.client('nova')
-
-    def _nova(self):
-        con = self.context
-        computeshell = novashell.OpenStackComputeShell()
-        extensions = computeshell._discover_extensions("1.1")
-
-        endpoint_type = self._get_client_option('nova', 'endpoint_type')
-        args = {
-            'project_id': con.tenant,
-            'auth_url': con.auth_url,
-            'service_type': 'compute',
-            'username': None,
-            'api_key': None,
-            'extensions': extensions,
-            'endpoint_type': endpoint_type,
-            'http_log_debug': self._get_client_option('nova',
-                                                      'http_log_debug'),
-            'cacert': self._get_client_option('nova', 'ca_file'),
-            'insecure': self._get_client_option('nova', 'insecure')
-        }
-
-        client = novaclient.Client(1.1, **args)
-
-        management_url = self.url_for(service_type='compute',
-                                      endpoint_type=endpoint_type)
-        client.client.auth_token = self.auth_token
-        client.client.management_url = management_url
-
-        return client
 
     def swift(self):
         warnings.warn('swift() is deprecated. '

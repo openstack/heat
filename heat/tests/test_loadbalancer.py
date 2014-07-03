@@ -21,6 +21,7 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import resource
 from heat.engine.resources import glance_utils
 from heat.engine.resources import instance
@@ -104,7 +105,7 @@ class LoadBalancerTest(HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(resource.Resource, 'metadata_set')
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
@@ -136,7 +137,7 @@ class LoadBalancerTest(HeatTestCase):
             utils.PhysName('test_stack', 'LoadBalancer'),
             'LB_instance',
             limit=instance.Instance.physical_resource_name_limit)
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,

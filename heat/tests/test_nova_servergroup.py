@@ -14,12 +14,11 @@
 import json
 import mock
 
-from novaclient import exceptions as nova_exceptions
-
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 sg_template = {
     "heat_template_version": "2013-05-23",
@@ -101,7 +100,7 @@ class NovaServerGroupTest(HeatTestCase):
 
     def test_sg_delete_not_found(self):
         self._create_sg('test')
-        self.sg_mgr.delete.side_effect = nova_exceptions.NotFound("ahhhhh")
+        self.sg_mgr.delete.side_effect = fakes.fake_exception()
         scheduler.TaskRunner(self.sg.delete)()
         self.sg_mgr.delete.assert_called_once_with('test')
         self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),

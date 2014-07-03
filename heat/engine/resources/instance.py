@@ -12,13 +12,12 @@
 #    under the License.
 
 import copy
-
+from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 import six
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -694,7 +693,7 @@ class Instance(resource.Resource):
                 nova_utils.refresh_server(server)
                 if server.status == "DELETED":
                     break
-            except clients.novaclient.exceptions.NotFound:
+            except nova_exceptions.NotFound:
                 break
         self.resource_id_set(None)
 
@@ -717,7 +716,7 @@ class Instance(resource.Resource):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             self.resource_id_set(None)
             return
 
@@ -745,7 +744,7 @@ class Instance(resource.Resource):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:
@@ -800,7 +799,7 @@ class Instance(resource.Resource):
 
         try:
             server = self.nova().servers.get(self.resource_id)
-        except clients.novaclient.exceptions.NotFound:
+        except nova_exceptions.NotFound:
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:

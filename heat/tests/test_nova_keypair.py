@@ -14,9 +14,7 @@
 import collections
 import copy
 
-from novaclient import exceptions as nova_exceptions
-
-from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -58,8 +56,8 @@ class NovaKeyPairTest(HeatTestCase):
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = nova_keypair.KeyPair('kp', definition, stack)
-        self.m.StubOutWithMock(kp_res, "nova")
-        kp_res.nova().MultipleTimes().AndReturn(self.fake_nova)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fake_nova)
         return kp_res
 
     def _get_mock_kp_for_create(self, key_name, public_key=None,
@@ -110,7 +108,7 @@ class NovaKeyPairTest(HeatTestCase):
         test_res.resource_id = "key_name"
         test_res.state_set(test_res.CREATE, test_res.COMPLETE)
         (self.fake_keypairs.delete("key_name")
-            .AndRaise(nova_exceptions.NotFound(404)))
+            .AndRaise(fakes.fake_exception()))
         self.m.ReplayAll()
         scheduler.TaskRunner(test_res.delete)()
         self.assertEqual((test_res.DELETE, test_res.COMPLETE), test_res.state)
@@ -152,13 +150,13 @@ class KeypairConstraintTest(HeatTestCase):
 
     def test_validation(self):
         client = fakes.FakeClient()
-        self.m.StubOutWithMock(clients.OpenStackClients, '_nova')
-        clients.OpenStackClients._nova().MultipleTimes().AndReturn(client)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(client)
         client.keypairs = self.m.CreateMockAnything()
 
         key = collections.namedtuple("Key", ["name"])
         key.name = "foo"
-        client.keypairs.get('bar').AndRaise(nova_exceptions.NotFound(404))
+        client.keypairs.get('bar').AndRaise(fakes.fake_exception())
         client.keypairs.get(key.name).AndReturn(key)
         self.m.ReplayAll()
 

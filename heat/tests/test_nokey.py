@@ -13,6 +13,7 @@
 
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
@@ -59,8 +60,8 @@ class nokeyTest(HeatTestCase):
         instance = instances.Instance('create_instance_name',
                                       resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(clients.OpenStackClients, '_glance')
         clients.OpenStackClients._glance().MultipleTimes().AndReturn(

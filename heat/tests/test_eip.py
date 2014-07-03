@@ -12,11 +12,13 @@
 #    under the License.
 
 import mox
+from novaclient import exceptions as nova_exceptions
 from testtools import skipIf
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine.clients.os import nova
 from heat.engine import parser
 from heat.engine.resources import eip
 from heat.engine import scheduler
@@ -149,8 +151,7 @@ class EIPTest(HeatTestCase):
         force_networking('nova')
         super(EIPTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(eip.ElasticIp, 'nova')
-        self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(self.fc.servers, 'get')
 
     def tearDown(self):
@@ -178,7 +179,7 @@ class EIPTest(HeatTestCase):
         return rsrc
 
     def test_eip(self):
-        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
         self.fc.servers.get('WebServer')
 
@@ -205,8 +206,7 @@ class EIPTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_eip(self):
-        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
-        eip.ElasticIpAssociation.nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.servers.get('WebServer').MultipleTimes() \
             .AndReturn(self.fc.servers.list()[0])
 
@@ -238,9 +238,8 @@ class EIPTest(HeatTestCase):
 
     def test_eip_with_exception(self):
         self.m.StubOutWithMock(self.fc.floating_ips, 'create')
-        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
-        self.fc.floating_ips.create().AndRaise(
-            clients.novaclient.exceptions.NotFound('fake_falure'))
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.fc.floating_ips.create().AndRaise(fakes.fake_exception())
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template)
@@ -251,15 +250,15 @@ class EIPTest(HeatTestCase):
                              resource_defns[resource_name],
                              stack)
 
-        self.assertRaises(clients.novaclient.exceptions.NotFound,
+        self.assertRaises(nova_exceptions.NotFound,
                           rsrc.handle_create)
         self.m.VerifyAll()
 
     def test_delete_eip_with_exception(self):
         self.m.StubOutWithMock(self.fc.floating_ips, 'delete')
-        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.floating_ips.delete(mox.IsA(object)).AndRaise(
-            clients.novaclient.exceptions.NotFound('fake_falure'))
+            fakes.fake_exception())
         self.fc.servers.get(mox.IsA(object)).AndReturn(False)
         self.m.ReplayAll()
 
@@ -282,10 +281,8 @@ class AllocTest(HeatTestCase):
         super(AllocTest, self).setUp()
 
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(eip.ElasticIp, 'nova')
-        self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
-
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
         self.m.StubOutWithMock(clients.neutronclient.Client,
                                'create_floatingip')
@@ -468,7 +465,7 @@ class AllocTest(HeatTestCase):
         })
 
     def test_neutron_eip(self):
-        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
         self.fc.servers.get('WebServer')
 
