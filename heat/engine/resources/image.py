@@ -23,7 +23,3 @@ class ImageConstraint(constraints.BaseCustomConstraint):
     def validate_with_client(self, client, value):
         glance_client = client.client('glance')
         glance_utils.get_image_id(glance_client, value)
-
-
-def constraint_mapping():
-    return {'glance.image': ImageConstraint}

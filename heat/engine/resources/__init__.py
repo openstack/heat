@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from stevedore import extension
+
 from heat.engine import environment
 from heat.engine import plugin_manager
 
@@ -23,6 +25,14 @@ def _register_resources(env, type_pairs):
 def _register_constraints(env, type_pairs):
     for constraint_name, constraint in type_pairs:
         env.register_constraint(constraint_name, constraint)
+
+
+def _get_mapping(namespace):
+    mgr = extension.ExtensionManager(
+        namespace=namespace,
+        invoke_on_load=False,
+        verify_requirements=True)
+    return [[name, mgr[name].plugin] for name in mgr.names()]
 
 
 _environment = None
@@ -50,8 +60,9 @@ def _load_global_environment(env):
 
 
 def _load_global_resources(env):
-    manager = plugin_manager.PluginManager(__name__)
+    _register_constraints(env, _get_mapping('heat.constraints'))
 
+    manager = plugin_manager.PluginManager(__name__)
     # Sometimes resources should not be available for registration in Heat due
     # to unsatisfied dependencies. We look first for the function
     # 'available_resource_mapping', which should return the filtered resources.
@@ -61,4 +72,5 @@ def _load_global_resources(env):
     constraint_mapping = plugin_manager.PluginMapping('constraint')
 
     _register_resources(env, resource_mapping.load_all(manager))
+
     _register_constraints(env, constraint_mapping.load_all(manager))

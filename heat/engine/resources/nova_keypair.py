@@ -142,9 +142,5 @@ class KeypairConstraint(constraints.BaseCustomConstraint):
         nova_utils.get_keypair(nova_client, value)
 
 
-def constraint_mapping():
-    return {'nova.keypair': KeypairConstraint}
-
-
 def resource_mapping():
     return {'OS::Nova::KeyPair': KeyPair}

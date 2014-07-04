@@ -23,7 +23,3 @@ class ISO8601Constraint(object):
             return False
         else:
             return True
-
-
-def constraint_mapping():
-    return {'iso_8601': ISO8601Constraint}
