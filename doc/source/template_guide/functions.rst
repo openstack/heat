@@ -11,11 +11,12 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-==================
-Built in functions
-==================
+===================================
+CloudFormation Compatible Functions
+===================================
 
-There are a number of functions that you can use to help you write templates.
+There are a number of functions that you can use to help you write
+CloudFormation compatible templates.
 
 All of these functions (except *Ref*) start with *Fn::*.
 

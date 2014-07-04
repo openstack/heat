@@ -17,10 +17,10 @@ Template Guide
 .. toctree::
    :maxdepth: 2
 
-   environment
-   functions
+   hot_guide
+   hot_spec
    openstack
    cfn
    contrib
-   hot_guide
-   hot_spec
+   environment
+   functions
