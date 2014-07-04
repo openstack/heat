@@ -273,6 +273,9 @@ class DockerContainer(resource.Resource):
         kwargs = {}
         if self.properties[self.PRIVILEGED]:
             kwargs[self.PRIVILEGED] = True
+        if self.properties[self.VOLUMES]:
+            kwargs['binds'] = self.properties[self.VOLUMES]
+
         client.start(container_id, **kwargs)
         return container_id
 
