@@ -35,6 +35,7 @@ flavor_template = {
                 'swap': 2,
                 'rxtx_factor': 1.0,
                 'ephemeral': 0,
+                'extra_specs': {"foo": "bar"}
             }
         }
     }
@@ -75,7 +76,20 @@ class NovaFlavorTest(HeatTestCase):
         value.id = flavor_id
         self.flavors.create.return_value = value
         self.my_flavor.handle_create()
+        value.set_keys.assert_called_once_with({"foo": "bar"})
         self.assertEqual(flavor_id, self.my_flavor.resource_id)
+
+    def test_flavor_handle_update_keys(self):
+        value = mock.MagicMock()
+        self.flavors.get.return_value = value
+        value.get_keys.return_value = {}
+
+        new_keys = {"new_foo": "new_bar"}
+        prop_diff = {'extra_specs': new_keys}
+        self.my_flavor.handle_update(json_snippet=None,
+                                     tmpl_diff=None, prop_diff=prop_diff)
+        value.unset_keys.assert_called_once_with({})
+        value.set_keys.assert_called_once_with(new_keys)
 
     def test_flavor_handle_delete(self):
         self.resource_id = None
