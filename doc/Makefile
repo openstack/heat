@@ -27,6 +27,7 @@ help:
 	@echo "  qthelp     to make HTML files and a qthelp project"
 	@echo "  devhelp    to make HTML files and a Devhelp project"
 	@echo "  epub       to make an epub"
+	@echo "  xml        to make Docutils-native XML files"
 	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
 	@echo "  text       to make text files"
@@ -94,6 +95,11 @@ epub:
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
+
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
+	@echo
+	@echo "Build finished. The xml files are in $(BUILDDIR)/xml."
 
 latex:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
