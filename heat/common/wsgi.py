@@ -625,8 +625,8 @@ class Resource(object):
                                           request, **action_args)
         except TypeError as err:
             logging.error(_('Exception handling resource: %s') % err)
-            msg = _('The server could not comply with the request since\r\n'
-                    'it is either malformed or otherwise incorrect.\r\n')
+            msg = _('The server could not comply with the request since '
+                    'it is either malformed or otherwise incorrect.')
             err = webob.exc.HTTPBadRequest(msg)
             http_exc = translate_exception(err, request.best_match_language())
             # NOTE(luisg): We disguise HTTP exceptions, otherwise they will be
