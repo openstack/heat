@@ -22,6 +22,20 @@ class SignalController(object):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
+    def update_waitcondition(self, req, body, arn):
+        con = req.context
+        identity = identifier.ResourceIdentifier.from_arn(arn)
+        try:
+            md = self.rpc_client.metadata_update(
+                con,
+                stack_identity=dict(identity.stack()),
+                resource_name=identity.resource_name,
+                metadata=body)
+        except Exception as ex:
+            return exception.map_remote_error(ex)
+
+        return {'resource': identity.resource_name, 'metadata': md}
+
     def signal(self, req, arn, body=None):
         con = req.context
         identity = identifier.ResourceIdentifier.from_arn(arn)
