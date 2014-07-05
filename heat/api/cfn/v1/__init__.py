@@ -72,7 +72,7 @@ class API(wsgi.Router):
         signal_controller = signal.create_resource(conf)
         mapper.connect('/waitcondition/{arn:.*}',
                        controller=signal_controller,
-                       action='signal',
+                       action='update_waitcondition',
                        conditions=dict(method=['PUT']))
         mapper.connect('/signal/{arn:.*}',
                        controller=signal_controller,
