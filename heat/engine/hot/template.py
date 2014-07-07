@@ -223,9 +223,3 @@ class HOTemplate(template.Template):
 
         self.t.setdefault(self.RESOURCES, {})
         self.t[self.RESOURCES][name] = definition.render_hot()
-
-
-def template_mapping():
-    return {
-        ('heat_template_version', '2013-05-23'): HOTemplate,
-    }

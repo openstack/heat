@@ -147,10 +147,3 @@ class CfnTemplate(template.Template):
 
         self.t.setdefault(self.RESOURCES, {})
         self.t[self.RESOURCES][name] = cfn_tmpl
-
-
-def template_mapping():
-    return {
-        ('HeatTemplateFormatVersion', '2012-12-12'): CfnTemplate,
-        ('AWSTemplateFormatVersion', '2010-09-09'): CfnTemplate,
-    }

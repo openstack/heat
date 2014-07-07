@@ -15,6 +15,7 @@ import abc
 import collections
 import copy
 import functools
+from stevedore import extension
 
 from heat.common import exception
 from heat.db import api as db_api
@@ -76,8 +77,12 @@ def get_template_class(plugin_mgr, template_data):
     global _template_classes
 
     if _template_classes is None:
-        tmpl_mapping = plugin_manager.PluginMapping('template')
-        _template_classes = dict(tmpl_mapping.load_all(plugin_mgr))
+        mgr = extension.ExtensionManager(
+            namespace='heat.templates',
+            invoke_on_load=False,
+            verify_requirements=True)
+        _template_classes = dict((tuple(name.split('.')), mgr[name].plugin)
+                                 for name in mgr.names())
 
     available_versions = _template_classes.keys()
     version = get_version(template_data, available_versions)
