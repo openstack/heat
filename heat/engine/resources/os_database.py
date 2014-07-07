@@ -235,6 +235,8 @@ class OSDBInstance(resource.Resource):
         self.databases = self.properties.get(self.DATABASES)
         self.users = self.properties.get(self.USERS)
         restore_point = self.properties.get(self.RESTORE_POINT)
+        if restore_point:
+            restore_point = {"backupRef": restore_point}
         zone = self.properties.get(self.AVAILABILITY_ZONE)
         self.datastore_type = self.properties.get(self.DATASTORE_TYPE)
         self.datastore_version = self.properties.get(self.DATASTORE_VERSION)
