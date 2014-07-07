@@ -86,11 +86,20 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_admin_client.auth_ref.user_id = '1234'
 
     def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id'):
+                  user_id='trustor_user_id', auth_ref=None):
 
         if method == 'token':
             kc_v3.Client(
                 token='abcd1234', project_id='test_tenant_id',
+                auth_url='http://server.test:5000/v3',
+                endpoint='http://server.test:5000/v3',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None).AndReturn(self.mock_ks_v3_client)
+        elif method == 'auth_ref':
+            kc_v3.Client(
+                auth_ref=auth_ref,
                 auth_url='http://server.test:5000/v3',
                 endpoint='http://server.test:5000/v3',
                 cacert=None,
@@ -124,7 +133,8 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_v3_client.auth_ref.trust_scoped = trust_scoped
             self.mock_ks_v3_client.auth_ref.auth_token = 'atrusttoken'
 
-        self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
+        if method != 'auth_ref':
+            self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
 
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
@@ -384,6 +394,44 @@ class KeystoneClientTest(HeatTestCase):
         ctx.username = None
         ctx.password = None
         ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.client
+        self.assertIsNotNone(heat_ks_client._client)
+
+    def test_init_v3_token_auth_ref_v2(self):
+
+        """Test creating the client, token v2 auth_ref."""
+
+        expected_auth_ref = {'token': {'id': 'ctx_token', 'expires': '123'},
+                             'version': 'v2.0'}
+        self._stubs_v3(method='auth_ref', auth_ref=expected_auth_ref)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        ctx.auth_token = 'ctx_token'
+        ctx.auth_token_info = {'access': {'token': {'expires': '123'}}}
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.client
+        self.assertIsNotNone(heat_ks_client._client)
+
+    def test_init_v3_token_auth_ref_v3(self):
+
+        """Test creating the client, token v3 auth_ref."""
+
+        expected_auth_ref = {'auth_token': 'ctx_token',
+                             'expires': '456', 'version': 'v3'}
+        self._stubs_v3(method='auth_ref', auth_ref=expected_auth_ref)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        ctx.auth_token = 'ctx_token'
+        ctx.auth_token_info = {'token': {'expires': '456'}}
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.client
         self.assertIsNotNone(heat_ks_client._client)
