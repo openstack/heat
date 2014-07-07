@@ -35,15 +35,13 @@ except ImportError:
 class DockerContainer(resource.Resource):
 
     PROPERTIES = (
-        DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, ATTACH_STDIN,
-        ATTACH_STDOUT, ATTACH_STDERR, PORT_SPECS, PRIVILEGED, TTY,
-        OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS, IMAGE, VOLUMES,
-        VOLUMES_FROM,
+        DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
+        PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
+        IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
     ) = (
-        'docker_endpoint', 'hostname', 'user', 'memory', 'attach_stdin',
-        'attach_stdout', 'attach_stderr', 'port_specs', 'privileged', 'tty',
-        'open_stdin', 'stdin_once', 'env', 'cmd', 'dns', 'image', 'volumes',
-        'volumes_from',
+        'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
+        'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
+        'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name'
     )
 
     ATTRIBUTES = (
@@ -60,122 +58,117 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT: properties.Schema(
             properties.Schema.STRING,
             _('Docker daemon endpoint (by default the local docker daemon '
-              'will be used)'),
+              'will be used).'),
             default=None
         ),
         HOSTNAME: properties.Schema(
             properties.Schema.STRING,
-            _('Hostname of the container'),
+            _('Hostname of the container.'),
             default=''
         ),
         USER: properties.Schema(
             properties.Schema.STRING,
-            _('Username or UID'),
+            _('Username or UID.'),
             default=''
         ),
         MEMORY: properties.Schema(
             properties.Schema.INTEGER,
-            _('Memory limit (Bytes)'),
+            _('Memory limit (Bytes).'),
             default=0
-        ),
-        ATTACH_STDIN: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('Attach to the process\' standard input'),
-            default=False
-        ),
-        ATTACH_STDOUT: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('Attach to the process\' standard output'),
-            default=True
-        ),
-        ATTACH_STDERR: properties.Schema(
-            properties.Schema.BOOLEAN,
-            _('Attach to the process\' standard error'),
-            default=True
         ),
         PORT_SPECS: properties.Schema(
             properties.Schema.LIST,
-            _('TCP/UDP ports mapping'),
+            _('TCP/UDP ports mapping.'),
             default=None
+        ),
+        PORT_BINDINGS: properties.Schema(
+            properties.Schema.MAP,
+            _('TCP/UDP ports bindings.'),
+        ),
+        LINKS: properties.Schema(
+            properties.Schema.MAP,
+            _('Links to other containers.'),
+        ),
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the container.'),
         ),
         PRIVILEGED: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Enable extended privileges'),
+            _('Enable extended privileges.'),
             default=False
         ),
         TTY: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Allocate a pseudo-tty'),
+            _('Allocate a pseudo-tty.'),
             default=False
         ),
         OPEN_STDIN: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Open stdin'),
+            _('Open stdin.'),
             default=False
         ),
         STDIN_ONCE: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('If true, close stdin after the 1 attached client disconnects'),
+            _('If true, close stdin after the 1 attached client disconnects.'),
             default=False
         ),
         ENV: properties.Schema(
             properties.Schema.LIST,
-            _('Set environment variables'),
-            default=None
+            _('Set environment variables.'),
         ),
         CMD: properties.Schema(
             properties.Schema.LIST,
-            _('Command to run after spawning the container'),
+            _('Command to run after spawning the container.'),
             default=[]
         ),
         DNS: properties.Schema(
             properties.Schema.LIST,
-            _('Set custom dns servers'),
-            default=None
+            _('Set custom dns servers.'),
         ),
         IMAGE: properties.Schema(
             properties.Schema.STRING,
-            _('Image name')
+            _('Image name.')
         ),
         VOLUMES: properties.Schema(
             properties.Schema.MAP,
-            _('Create a bind mount'),
+            _('Create a bind mount.'),
             default={}
         ),
         VOLUMES_FROM: properties.Schema(
             properties.Schema.STRING,
-            _('Mount all specified volumes'),
+            _('Mount all specified volumes.'),
             default=''
         ),
     }
 
     attributes_schema = {
         INFO: attributes.Schema(
-            _('Container info')
+            _('Container info.')
         ),
         NETWORK_INFO: attributes.Schema(
-            _('Container network info')
+            _('Container network info.')
         ),
         NETWORK_IP: attributes.Schema(
-            _('Container ip address')
+            _('Container ip address.')
         ),
         NETWORK_GATEWAY: attributes.Schema(
-            _('Container ip gateway')
+            _('Container ip gateway.')
         ),
         NETWORK_TCP_PORTS: attributes.Schema(
-            _('Container TCP ports')
+            _('Container TCP ports.')
         ),
         NETWORK_UDP_PORTS: attributes.Schema(
-            _('Container UDP ports')
+            _('Container UDP ports.')
         ),
         LOGS: attributes.Schema(
-            _('Container logs')
+            _('Container logs.')
         ),
         LOGS_HEAD: attributes.Schema(
-            _('Container first logs line')
+            _('Container first logs line.')
         ),
         LOGS_TAIL: attributes.Schema(
-            _('Container last logs line')
+            _('Container last logs line.')
         ),
     }
 
@@ -264,8 +257,10 @@ class DockerContainer(resource.Resource):
             'dns': self.properties[self.DNS],
             'volumes': self.properties[self.VOLUMES],
             'volumes_from': self.properties[self.VOLUMES_FROM],
+            'name': self.properties[self.NAME]
         }
         client = self.get_client()
+        client.pull(self.properties[self.IMAGE])
         result = client.create_container(**args)
         container_id = result['Id']
         self.resource_id_set(container_id)
@@ -275,6 +270,10 @@ class DockerContainer(resource.Resource):
             kwargs[self.PRIVILEGED] = True
         if self.properties[self.VOLUMES]:
             kwargs['binds'] = self.properties[self.VOLUMES]
+        if self.properties[self.PORT_BINDINGS]:
+            kwargs['port_bindings'] = self.properties[self.PORT_BINDINGS]
+        if self.properties[self.LINKS]:
+            kwargs['links'] = self.properties[self.LINKS]
 
         client.start(container_id, **kwargs)
         return container_id
