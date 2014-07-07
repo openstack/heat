@@ -13,6 +13,7 @@
 
 from stevedore import extension
 
+from heat.engine import clients
 from heat.engine import environment
 from heat.engine import plugin_manager
 
@@ -48,6 +49,8 @@ def initialise():
     global _environment
     if _environment is not None:
         return
+
+    clients.initialise()
 
     global_env = environment.Environment({}, user_env=False)
     _load_global_environment(global_env)

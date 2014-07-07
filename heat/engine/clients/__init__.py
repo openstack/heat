@@ -19,6 +19,7 @@ from neutronclient.v2_0 import client as neutronclient
 from novaclient import client as novaclient
 from novaclient import shell as novashell
 from oslo.config import cfg
+from stevedore import extension
 from swiftclient import client as swiftclient
 from troveclient import client as troveclient
 import warnings
@@ -45,18 +46,36 @@ class OpenStackClients(object):
     '''
     Convenience class to create and cache client instances.
     '''
+
     def __init__(self, context):
         self.context = context
         self._clients = {}
+        self._client_plugins = {}
+
+    def client_plugin(self, name):
+        global _mgr
+        if name in self._client_plugins:
+            return self._client_plugins[name]
+        if _mgr and name in _mgr.names():
+            client_plugin = _mgr[name].plugin(self)
+            self._client_plugins[name] = client_plugin
+            return client_plugin
 
     def client(self, name):
+        client_plugin = self.client_plugin(name)
+        if client_plugin:
+            return client_plugin.client()
+
         if name in self._clients:
             return self._clients[name]
+        # call the local method _<name>() if a real client plugin
+        # doesn't exist
         method_name = '_%s' % name
         if callable(getattr(self, method_name, None)):
             client = getattr(self, method_name)()
             self._clients[name] = client
             return client
+        LOG.warn(_('Requested client "%s" not found') % name)
 
     @property
     def auth_token(self):
@@ -326,3 +345,21 @@ class ClientBackend(object):
 
 
 Clients = ClientBackend
+
+
+_mgr = None
+
+
+def has_client(name):
+    return _mgr and name in _mgr
+
+
+def initialise():
+    global _mgr
+    if _mgr:
+        return
+
+    _mgr = extension.ExtensionManager(
+        namespace='heat.clients',
+        invoke_on_load=False,
+        verify_requirements=True)
