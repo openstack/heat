@@ -89,19 +89,25 @@ class KeystoneClientV3(object):
         # If the domain is specified, then you must specify a domain
         # admin user.  If no domain is specified, we fall back to
         # legacy behavior with warnings.
-        self.stack_domain_id = cfg.CONF.stack_user_domain
+        self._stack_domain_is_id = True
+        self._stack_domain_id = None
+        self.stack_domain = cfg.CONF.stack_user_domain_id
+        if not self.stack_domain and cfg.CONF.stack_user_domain_name:
+            self.stack_domain = cfg.CONF.stack_user_domain_name
+            self._stack_domain_is_id = False
         self.domain_admin_user = cfg.CONF.stack_domain_admin
         self.domain_admin_password = cfg.CONF.stack_domain_admin_password
-        if self.stack_domain_id:
+        if self.stack_domain:
             if not (self.domain_admin_user and self.domain_admin_password):
                 raise exception.Error(_('heat.conf misconfigured, cannot '
-                                      'specify stack_user_domain without'
-                                      ' stack_domain_admin and'
-                                      ' stack_domain_admin_password'))
+                                      'specify "stack_user_domain_id" or '
+                                      '"stack_user_domain_name" without '
+                                      '"stack_domain_admin" and '
+                                      '"stack_domain_admin_password"'))
         else:
-            LOG.warning(_('stack_user_domain ID not set in heat.conf '
-                          'falling back to using default'))
-        LOG.debug('Using stack domain %s' % self.stack_domain_id)
+            LOG.warning(_('stack_user_domain_id or stack_user_domain_name not '
+                          'set in heat.conf falling back to using default'))
+        LOG.debug('Using stack domain %s' % self.stack_domain)
 
     @property
     def client(self):
@@ -133,7 +139,11 @@ class KeystoneClientV3(object):
             c = kc_v3.Client(**admin_creds)
             # Note we must specify the domain when getting the token
             # as only a domain scoped token can create projects in the domain
-            if c.authenticate(domain_id=self.stack_domain_id):
+            if self._stack_domain_is_id:
+                auth_kwargs = {'domain_id': self.stack_domain}
+            else:
+                auth_kwargs = {'domain_name': self.stack_domain}
+            if c.authenticate(**auth_kwargs):
                 self._domain_admin_client = c
             else:
                 LOG.error(_("Domain admin client authentication failed"))
@@ -216,10 +226,13 @@ class KeystoneClientV3(object):
     def _domain_admin_creds(self):
         creds = {
             'username': self.domain_admin_user,
-            'user_domain_id': self.stack_domain_id,
             'password': self.domain_admin_password,
             'auth_url': self.v3_endpoint,
             'endpoint': self.v3_endpoint}
+        if self._stack_domain_is_id:
+            creds['user_domain_id'] = self.stack_domain
+        else:
+            creds['user_domain_name'] = self.stack_domain
         return creds
 
     def _ssl_options(self):
@@ -330,7 +343,7 @@ class KeystoneClientV3(object):
 
         Returns the keystone ID of the resulting user.
         """
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain user create, '
@@ -347,7 +360,7 @@ class KeystoneClientV3(object):
             # Create user
             user = self.domain_admin_client.users.create(
                 name=self._get_username(username), password=password,
-                default_project=project_id, domain=self.stack_domain_id)
+                default_project=project_id, domain=self.stack_domain)
             # Add to stack user role
             LOG.debug("Adding user %(user)s to role %(role)s" % {
                       'user': user.id, 'role': role_id})
@@ -366,13 +379,22 @@ class KeystoneClientV3(object):
     def _check_stack_domain_user(self, user_id, project_id, action):
         """Sanity check that domain/project is correct."""
         user = self.domain_admin_client.users.get(user_id)
-        if user.domain_id != self.stack_domain_id:
+
+        if not self._stack_domain_id:
+            if self._stack_domain_is_id:
+                self._stack_domain_id = self.stack_domain
+            else:
+                domain = self.domain_admin_client.domains.get(
+                    self.stack_domain)
+                self._stack_domain_id = domain.id
+
+        if user.domain_id != self._stack_domain_id:
             raise ValueError(_('User %s in invalid domain') % action)
         if user.default_project_id != project_id:
             raise ValueError(_('User %s in invalid project') % action)
 
     def delete_stack_domain_user(self, user_id, project_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain user delete, '
@@ -393,7 +415,7 @@ class KeystoneClientV3(object):
 
     def create_stack_domain_project(self, stack_id):
         """Create a project in the heat stack-user domain."""
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain project, '
@@ -405,12 +427,12 @@ class KeystoneClientV3(object):
         desc = "Heat stack user project"
         domain_project = self.domain_admin_client.projects.create(
             name=project_name,
-            domain=self.stack_domain_id,
+            domain=self.stack_domain,
             description=desc)
         return domain_project.id
 
     def delete_stack_domain_project(self, project_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain project, '
@@ -484,7 +506,7 @@ class KeystoneClientV3(object):
                          secret=data_blob['secret'])
 
     def create_stack_domain_user_keypair(self, user_id, project_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain keypair, '
@@ -501,7 +523,7 @@ class KeystoneClientV3(object):
 
     def delete_stack_domain_user_keypair(self, user_id, project_id,
                                          credential_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain keypair, '
@@ -520,7 +542,7 @@ class KeystoneClientV3(object):
         self.client.users.update(user=user_id, enabled=True)
 
     def disable_stack_domain_user(self, user_id, project_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain disable, '
@@ -530,7 +552,7 @@ class KeystoneClientV3(object):
         self.domain_admin_client.users.update(user=user_id, enabled=False)
 
     def enable_stack_domain_user(self, user_id, project_id):
-        if not self.stack_domain_id:
+        if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             LOG.warning(_('Falling back to legacy non-domain enable, '

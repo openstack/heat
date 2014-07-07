@@ -103,7 +103,7 @@ def main():
     c.roles.grant(role=admin_role, user=domain_admin, domain=heat_domain)
 
     print("\nPlease update your heat.conf with the following in [DEFAULT]\n")
-    print("stack_user_domain=%s" % heat_domain.id)
+    print("stack_user_domain_id=%s" % heat_domain.id)
     print("stack_domain_admin=%s" % HEAT_DOMAIN_ADMIN)
     print("stack_domain_admin_password=%s" % HEAT_DOMAIN_PASSWORD)
 
