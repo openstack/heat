@@ -68,3 +68,33 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
         neutron_client = client.client('neutron')
         neutronV20.find_resourceid_by_name_or_id(
             neutron_client, 'network', value)
+
+
+class PortConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.client('neutron')
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'port', value)
+
+
+class RouterConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.client('neutron')
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'router', value)
+
+
+class SubnetConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.client('neutron')
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'subnet', value)
