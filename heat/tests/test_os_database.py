@@ -16,7 +16,6 @@ import uuid
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients import troveclient
-from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import os_database
 from heat.engine import scheduler
@@ -24,27 +23,10 @@ from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 
-wp_template = '''
+db_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "MySQL instance running on openstack DBaaS cloud",
-  "Parameters" : {
-    "flavor": {
-      "Description" : "Flavor reference",
-      "Type": "String",
-      "Default": '1GB'
-    },
-    "size": {
-      "Description" : "The volume size",
-      "Type": "Number",
-      "Default": '30'
-    },
-    "name": {
-      "Description" : "The database instance name",
-      "Type": "String",
-      "Default": "OpenstackDbaas"
-    }
-  },
   "Resources" : {
     "MySqlCloudDB": {
       "Type": "OS::Trove::Instance",
@@ -91,14 +73,12 @@ class OSDBInstanceTest(HeatTestCase):
         super(OSDBInstanceTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
 
-    def _setup_test_clouddbinstance(self, name, parsed_t):
+    def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
-        t = parsed_t
         template = parser.Template(t)
         stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              template,
-                             environment.Environment({'name': 'test'}),
                              stack_id=str(uuid.uuid4()))
 
         instance = os_database.OSDBInstance(
@@ -131,7 +111,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_create(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_create', t)
         self._stubout_create(instance, fake_dbinstance)
         scheduler.TaskRunner(instance.create)()
@@ -140,7 +120,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_create_overlimit(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_create', t)
 
         self._stubout_create(instance, fake_dbinstance)
@@ -159,7 +139,7 @@ class OSDBInstanceTest(HeatTestCase):
     def test_osdatabase_create_fails(self):
         fake_dbinstance = FakeDBInstance()
         fake_dbinstance.status = 'ERROR'
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_create', t)
         self._stubout_create(instance, fake_dbinstance)
         self.assertRaises(exception.ResourceFailure,
@@ -168,7 +148,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_delete(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_del', t)
         self._stubout_create(instance, fake_dbinstance)
         scheduler.TaskRunner(instance.create)()
@@ -187,7 +167,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_delete_overlimit(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_del', t)
         self._stubout_create(instance, fake_dbinstance)
         scheduler.TaskRunner(instance.create)()
@@ -210,7 +190,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_delete_resource_none(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_del', t)
         self._stubout_create(instance, fake_dbinstance)
         scheduler.TaskRunner(instance.create)()
@@ -223,7 +203,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_resource_not_found(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_del', t)
         self._stubout_create(instance, fake_dbinstance)
         scheduler.TaskRunner(instance.create)()
@@ -237,7 +217,7 @@ class OSDBInstanceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_osdatabase_invalid_attribute(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance("db_invalid_attrib", t)
         attrib = instance._resolve_attribute("invalid_attrib")
         self.assertIsNone(attrib)
@@ -245,7 +225,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_get_hostname(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         self.m.StubOutWithMock(instance, 'trove')
@@ -260,7 +240,7 @@ class OSDBInstanceTest(HeatTestCase):
 
     def test_osdatabase_get_href(self):
         fake_dbinstance = FakeDBInstance()
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         self.m.StubOutWithMock(instance, 'trove')
@@ -271,11 +251,12 @@ class OSDBInstanceTest(HeatTestCase):
         self.m.ReplayAll()
         attrib = instance._resolve_attribute('href')
         self.assertEqual(fake_dbinstance.links[0]['href'], attrib)
+        self.m.VerifyAll()
 
     def test_osdatabase_get_href_links_none(self):
         fake_dbinstance = FakeDBInstance()
         fake_dbinstance.links = None
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         instance.resource_id = 12345
         self.m.StubOutWithMock(instance, 'trove')
@@ -286,15 +267,17 @@ class OSDBInstanceTest(HeatTestCase):
         self.m.ReplayAll()
         attrib = instance._resolve_attribute('href')
         self.assertIsNone(attrib)
+        self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_success(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         ret = instance.validate()
         self.assertIsNone(ret)
+        self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_invaliddb(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties']['databases'] = [
             {"name": "onedb"}]
         t['Resources']['MySqlCloudDB']['Properties']['users'] = [
@@ -303,16 +286,18 @@ class OSDBInstanceTest(HeatTestCase):
              "databases": ["invaliddb"]}]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         self.assertRaises(exception.StackValidationFailed, instance.validate)
+        self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_users_none(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties']['users'] = []
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         ret = instance.validate()
         self.assertIsNone(ret)
+        self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_databases_none(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties']['databases'] = []
         t['Resources']['MySqlCloudDB']['Properties']['users'] = [
             {"name": "testuser",
@@ -320,9 +305,10 @@ class OSDBInstanceTest(HeatTestCase):
              "databases": ["invaliddb"]}]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         self.assertRaises(exception.StackValidationFailed, instance.validate)
+        self.m.VerifyAll()
 
     def test_osdatabase_prop_validation_user_no_db(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(db_template)
         t['Resources']['MySqlCloudDB']['Properties']['databases'] = [
             {"name": "validdb"}]
         t['Resources']['MySqlCloudDB']['Properties']['users'] = [
@@ -330,3 +316,4 @@ class OSDBInstanceTest(HeatTestCase):
 
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         self.assertRaises(exception.StackValidationFailed, instance.validate)
+        self.m.VerifyAll()

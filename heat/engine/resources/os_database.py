@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from troveclient.openstack.common.apiclient import exceptions as troveexc
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine.clients import troveclient
@@ -28,6 +30,14 @@ class OSDBInstance(resource.Resource):
     '''
     OpenStack cloud database instance resource.
     '''
+
+    TROVE_STATUS = (
+        ERROR, FAILED, ACTIVE,
+    ) = (
+        'ERROR', 'FAILED', 'ACTIVE',
+    )
+
+    BAD_STATUSES = (ERROR, FAILED)
 
     PROPERTIES = (
         NAME, FLAVOR, SIZE, DATABASES, USERS, AVAILABILITY_ZONE,
@@ -59,7 +69,6 @@ class OSDBInstance(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('Name of the DB instance to create.'),
-            required=True,
             constraints=[
                 constraints.Length(max=255),
             ]
@@ -153,7 +162,10 @@ class OSDBInstance(resource.Resource):
                         schema=properties.Schema(
                             properties.Schema.STRING,
                         ),
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.Length(min=1),
+                        ]
                     ),
                 },
             )
@@ -190,18 +202,17 @@ class OSDBInstance(resource.Resource):
 
         return self._dbinstance
 
-    def physical_resource_name(self):
+    def _dbinstance_name(self):
         name = self.properties.get(self.NAME)
         if name:
             return name
 
-        return super(OSDBInstance, self).physical_resource_name()
+        return self.physical_resource_name()
 
     def handle_create(self):
         '''
         Create cloud database instance.
         '''
-        self.dbinstancename = self.physical_resource_name()
         self.flavor = nova_utils.get_flavor_id(self.trove(),
                                                self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
@@ -218,7 +229,7 @@ class OSDBInstance(resource.Resource):
 
         # create db instance
         instance = self.trove().instances.create(
-            self.dbinstancename,
+            self._dbinstance_name(),
             self.flavor,
             volume=self.volume,
             databases=self.databases,
@@ -243,17 +254,16 @@ class OSDBInstance(resource.Resource):
         '''
         Check if cloud DB instance creation is complete.
         '''
-        self._refresh_instance(instance)
-
-        if instance.status == 'ERROR':
+        self._refresh_instance(instance)  # get updated attributes
+        if instance.status in self.BAD_STATUSES:
             raise exception.Error(_("Database instance creation failed."))
 
-        if instance.status != 'ACTIVE':
+        if instance.status != self.ACTIVE:
             return False
 
         msg = _("Database instance %(database)s created (flavor:%(flavor)s, "
                 "volume:%(volume)s)")
-        LOG.info(msg % ({'database': self.dbinstancename,
+        LOG.info(msg % ({'database': self._dbinstance_name(),
                          'flavor': self.flavor,
                          'volume': self.volume}))
         return True
@@ -268,7 +278,7 @@ class OSDBInstance(resource.Resource):
         instance = None
         try:
             instance = self.trove().instances.get(self.resource_id)
-        except troveclient.exceptions.NotFound:
+        except troveexc.NotFound:
             LOG.debug("Database instance %s not found." % self.resource_id)
             self.resource_id_set(None)
         else:
@@ -277,14 +287,15 @@ class OSDBInstance(resource.Resource):
 
     def check_delete_complete(self, instance):
         '''
-        Check for completion of cloud DB instance delettion
+        Check for completion of cloud DB instance deletion
         '''
         if not instance:
             return True
 
         try:
+            # For some time trove instance may continue to live
             self._refresh_instance(instance)
-        except troveclient.exceptions.NotFound:
+        except troveexc.NotFound:
             self.resource_id_set(None)
             return True
 
@@ -305,23 +316,19 @@ class OSDBInstance(resource.Resource):
 
         databases = self.properties.get(self.DATABASES)
         if not databases:
-            msg = _('Databases property is required if users property'
-                    ' is provided')
+            msg = _('Databases property is required if users property '
+                    'is provided for resource %s.') % self.name
             raise exception.StackValidationFailed(message=msg)
 
         db_names = set([db[self.DATABASE_NAME] for db in databases])
         for user in users:
-            if not user.get(self.USER_DATABASES, []):
-                msg = _('Must provide access to at least one database for '
-                        'user %s') % user[self.USER_NAME]
-                raise exception.StackValidationFailed(message=msg)
-
             missing_db = [db_name for db_name in user[self.USER_DATABASES]
                           if db_name not in db_names]
 
             if missing_db:
-                msg = _('Database %s specified for user does not exist in '
-                        'databases.') % missing_db
+                msg = (_('Database %(dbs)s specified for user does '
+                         'not exist in databases for resource %(name)s.')
+                       % {'dbs': missing_db, 'name': self.name})
                 raise exception.StackValidationFailed(message=msg)
 
     def href(self):
