@@ -41,10 +41,10 @@ class OSDBInstance(resource.Resource):
 
     PROPERTIES = (
         NAME, FLAVOR, SIZE, DATABASES, USERS, AVAILABILITY_ZONE,
-        RESTORE_POINT,
+        RESTORE_POINT, DATASTORE_TYPE, DATASTORE_VERSION,
     ) = (
         'name', 'flavor', 'size', 'databases', 'users', 'availability_zone',
-        'restore_point',
+        'restore_point', 'datastore_type', 'datastore_version',
     )
 
     _DATABASE_KEYS = (
@@ -77,6 +77,22 @@ class OSDBInstance(resource.Resource):
             properties.Schema.STRING,
             _('Reference to a flavor for creating DB instance.'),
             required=True
+        ),
+        DATASTORE_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _("Name of registered datastore type."),
+            constraints=[
+                constraints.Length(max=255)
+            ]
+        ),
+        DATASTORE_VERSION: properties.Schema(
+            properties.Schema.STRING,
+            _("Name of the registered datastore version. "
+              "It must exist for provided datastore type. "
+              "Defaults to using single active version. "
+              "If several active versions exist for provided datastore type, "
+              "explicit value for this parameter must be specified."),
+            constraints=[constraints.Length(max=255)]
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
@@ -220,6 +236,8 @@ class OSDBInstance(resource.Resource):
         self.users = self.properties.get(self.USERS)
         restore_point = self.properties.get(self.RESTORE_POINT)
         zone = self.properties.get(self.AVAILABILITY_ZONE)
+        self.datastore_type = self.properties.get(self.DATASTORE_TYPE)
+        self.datastore_version = self.properties.get(self.DATASTORE_VERSION)
 
         # convert user databases to format required for troveclient.
         # that is, list of database dictionaries
@@ -235,7 +253,9 @@ class OSDBInstance(resource.Resource):
             databases=self.databases,
             users=self.users,
             restorePoint=restore_point,
-            availability_zone=zone)
+            availability_zone=zone,
+            datastore=self.datastore_type,
+            datastore_version=self.datastore_version)
         self.resource_id_set(instance.id)
 
         return instance
@@ -262,10 +282,14 @@ class OSDBInstance(resource.Resource):
             return False
 
         msg = _("Database instance %(database)s created (flavor:%(flavor)s, "
-                "volume:%(volume)s)")
-        LOG.info(msg % ({'database': self._dbinstance_name(),
-                         'flavor': self.flavor,
-                         'volume': self.volume}))
+                "volume:%(volume)s, datastore:%(datastore_type)s, "
+                "datastore_version:%(datastore_version)s)")
+
+        LOG.info(msg % {'database': self._dbinstance_name(),
+                        'flavor': self.flavor,
+                        'volume': self.volume,
+                        'datastore_type': self.datastore_type,
+                        'datastore_version': self.datastore_version})
         return True
 
     def handle_delete(self):
@@ -308,6 +332,39 @@ class OSDBInstance(resource.Resource):
         res = super(OSDBInstance, self).validate()
         if res:
             return res
+
+        datastore_type = self.properties.get(self.DATASTORE_TYPE)
+        datastore_version = self.properties.get(self.DATASTORE_VERSION)
+
+        if datastore_type:
+            # get current active versions
+            allowed_versions = self.trove().datastore_versions.list(
+                datastore_type)
+            allowed_version_names = [v.name for v in allowed_versions]
+            if datastore_version:
+                if datastore_version not in allowed_version_names:
+                    msg = _("Datastore version %(dsversion)s "
+                            "for datastore type %(dstype)s is not valid. "
+                            "Allowed versions are %(allowed)s.") % {
+                                'dstype': datastore_type,
+                                'dsversion': datastore_version,
+                                'allowed': ', '.join(allowed_version_names)}
+                    raise exception.StackValidationFailed(message=msg)
+            else:
+                if len(allowed_versions) > 1:
+                    msg = _("Multiple active datastore versions exist for "
+                            "datastore type %(dstype)s. "
+                            "Explicit datastore version must be provided. "
+                            "Allowed versions are %(allowed)s.") % {
+                                'dstype': datastore_type,
+                                'allowed': ', '.join(allowed_version_names)}
+                    raise exception.StackValidationFailed(message=msg)
+        else:
+            if datastore_version:
+                msg = _("Not allowed - %(dsver)s without %(dstype)s.") % {
+                    'dsver': self.DATASTORE_VERSION,
+                    'dstype': self.DATASTORE_TYPE}
+                raise exception.StackValidationFailed(message=msg)
 
         # check validity of user and databases
         users = self.properties.get(self.USERS)
