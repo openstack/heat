@@ -23,12 +23,12 @@ from neutronclient.v2_0 import client as neutronclient
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import instance as instances
-from heat.engine.resources import network_interface
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -1271,11 +1271,9 @@ class InstancesTest(HeatTestCase):
                 neutronclient.Client, 'list_security_groups')
             neutronclient.Client.list_security_groups().AndReturn(
                 fake_groups_list)
-
-        net_interface = network_interface.NetworkInterface
-        self.m.StubOutWithMock(net_interface, 'network_id_from_subnet_id')
-        net_interface.network_id_from_subnet_id(
-            nclient,
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin,
+                               'network_id_from_subnet_id')
+        neutron.NeutronClientPlugin.network_id_from_subnet_id(
             'fake_subnet_id').MultipleTimes().AndReturn('fake_network_id')
 
         if not get_secgroup_raises:

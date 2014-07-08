@@ -21,7 +21,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.network_interface import NetworkInterface
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources import volume
 from heat.engine import scheduler
@@ -468,8 +467,9 @@ class Instance(resource.Resource):
             # if SubnetId property in Instance, ensure subnet exists
             if subnet_id:
                 neutronclient = self.neutron()
-                network_id = NetworkInterface.network_id_from_subnet_id(
-                    neutronclient, subnet_id)
+                network_id = \
+                    self.client_plugin('neutron').network_id_from_subnet_id(
+                        subnet_id)
                 # if subnet verified, create a port to use this subnet
                 # if port is not created explicitly, nova will choose
                 # the first subnet in the given network.

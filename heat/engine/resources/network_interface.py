@@ -103,7 +103,8 @@ class NetworkInterface(resource.Resource):
         client = self.neutron()
 
         subnet_id = self.properties[self.SUBNET_ID]
-        network_id = self.network_id_from_subnet_id(client, subnet_id)
+        network_id = self.client_plugin().network_id_from_subnet_id(
+            subnet_id)
 
         fixed_ip = {'subnet_id': subnet_id}
         if self.properties[self.PRIVATE_IP_ADDRESS]:
