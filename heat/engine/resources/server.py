@@ -845,7 +845,15 @@ class Server(stack_user.StackUser):
         Refresh the metadata if new_metadata is None
         '''
         if new_metadata is None:
-            self.metadata_set(self.t.metadata())
+            # Re-resolve the template metadata and merge it with the
+            # current resource metadata.  This is necessary because the
+            # attributes referenced in the template metadata may change
+            # and the resource itself adds keys to the metadata which
+            # are not specified in the template (e.g the deployments data)
+            meta = self.metadata_get(refresh=True) or {}
+            tmpl_meta = self.t.metadata()
+            meta.update(tmpl_meta)
+            self.metadata_set(meta)
 
     @staticmethod
     def _check_maximum(count, maximum, msg):
