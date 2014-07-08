@@ -133,7 +133,7 @@ input parameters by means of the *get_param* function (see also
 You can also define default values for input parameters which will be used in
 case the user does not provide the respective parameter during deployment. For
 example, the following definition for the *instance_type* parameter would select
-the 'm1.small' flavor unless specified otherwise be the user.
+the 'm1.small' flavor unless specified otherwise by the user.
 
 ::
 
