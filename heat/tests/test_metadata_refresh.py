@@ -134,8 +134,6 @@ class MetadataRefreshTest(HeatTestCase):
         super(MetadataRefreshTest, self).setUp()
         self.stub_keystoneclient()
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack', params=None):
         params = params or {}
         temp = template_format.parse(test_template_metadata)
@@ -208,8 +206,6 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)

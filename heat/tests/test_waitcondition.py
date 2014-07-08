@@ -106,8 +106,6 @@ class WaitConditionTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params=None,
                      stub=True):
@@ -545,8 +543,6 @@ class WaitConditionUpdateTest(HeatTestCase):
         super(WaitConditionUpdateTest, self).tearDown()
         scheduler.ENABLE_SLEEP = True
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, tmpl=None):
         if tmpl is None:
             tmpl = test_template_wc_count

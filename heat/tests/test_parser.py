@@ -1096,8 +1096,6 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the self.stack is properly cleaned up
     def test_identifier(self):
         self.stack = parser.Stack(self.ctx, 'identifier_test',
                                   self.tmpl)

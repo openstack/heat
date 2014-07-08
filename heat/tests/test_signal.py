@@ -62,8 +62,6 @@ class SignalTest(HeatTestCase):
     def tearDown(self):
         super(SignalTest, self).tearDown()
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack', stub=True):
         temp = template_format.parse(test_template_signal)
         template = parser.Template(temp)
@@ -310,9 +308,7 @@ class SignalTest(HeatTestCase):
         self.m.UnsetStubs()
 
         # Since we unset the stubs above we must re-stub keystone to keep the
-        # test isolated from keystoneclient. The unset stubs is done so that we
-        # do not have to mock out all of the deleting that the
-        # stack_delete_after decorator will do during cleanup.
+        # test isolated from keystoneclient.
         self.m.StubOutWithMock(self.stack.clients, '_keystone')
         self.stack.clients._keystone().AndReturn(self.fc)
 

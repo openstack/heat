@@ -140,8 +140,6 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stub_keystoneclient()
         self.fa = FakeCeilometerClient()
 
-    # Note tests creating a stack should be decorated with @stack_delete_after
-    # to ensure the stack is properly cleaned up
     def create_stack(self, template=None):
         if template is None:
             template = alarm_template
