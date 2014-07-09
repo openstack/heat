@@ -150,6 +150,15 @@ class VolumeTest(HeatTestCase):
             display_name=vol_name,
             metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
 
+    def _mock_create_cinder_volume(self, fv, stack_name, size=1):
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        vol_name = utils.PhysName(stack_name, 'DataVolume')
+        self.cinder_fc.volumes.create(
+            size=size, availability_zone='nova',
+            display_description=None,
+            display_name=vol_name).AndReturn(fv)
+
     def _stubout_delete_volume(self, fv):
         self.m.StubOutWithMock(fv, 'delete')
         fv.delete().AndReturn(True)
@@ -1048,26 +1057,29 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_volume_shrink_fails(self):
+    def test_cinder_volume_shrink_fails(self):
         fv = FakeVolume('creating', 'available', size=2)
         stack_name = 'test_volume_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name, size=2)
+        self._mock_create_cinder_volume(fv, stack_name, size=2)
         # update script
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
 
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
-        t['Resources']['DataVolume']['Properties']['Size'] = 2
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': 2,
+            'availability_zone': 'nova',
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 1
+        props['size'] = 1
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
@@ -1078,12 +1090,12 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_extend_detached(self):
+    def test_cinder_volume_extend_detached(self):
         fv = FakeVolume('creating', 'available', size=1, attachments=[])
         stack_name = 'test_volume_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
         # update script
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv2 = FakeLatencyVolume(life_cycle=('extending', 'extending',
@@ -1095,13 +1107,17 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': 1,
+            'availability_zone': 'nova',
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 2
+        props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
@@ -1110,12 +1126,12 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_extend_fails_to_start(self):
+    def test_cinder_volume_extend_fails_to_start(self):
         fv = FakeVolume('creating', 'available', size=1, attachments=[])
         stack_name = 'test_volume_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
         # update script
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv2 = FakeVolume('extending', 'extending')
@@ -1127,13 +1143,17 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': 1,
+            'availability_zone': 'nova',
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 2
+        props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
@@ -1142,12 +1162,12 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_extend_fails_to_complete(self):
+    def test_cinder_volume_extend_fails_to_complete(self):
         fv = FakeVolume('creating', 'available', size=1, attachments=[])
         stack_name = 'test_volume_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
         # update script
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv2 = FakeLatencyVolume(life_cycle=('extending', 'extending',
@@ -1159,13 +1179,17 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': 1,
+            'availability_zone': 'nova',
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 2
+        props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
@@ -1176,11 +1200,11 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_extend_attached(self):
+    def test_cinder_volume_extend_attached(self):
         # create script
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
 
         fva = FakeVolume('attaching', 'in-use')
         self._mock_create_server_volume_script(fva)
@@ -1218,14 +1242,18 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': 1,
+            'availability_zone': 'nova',
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
         self.create_attachment(t, stack, 'MountPoint')
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 2
+        props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
@@ -1234,7 +1262,7 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_extend_created_from_snapshot_with_same_size(self):
+    def test_cinder_volume_extend_created_from_backup_with_same_size(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolumeWithStateTransition('restoring-backup', 'available',
                                            size=2)
@@ -1249,7 +1277,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(fv, 'update')
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         fv.update(
-            display_description=vol_name,
+            display_description=None,
             display_name=vol_name)
 
         # update script
@@ -1257,16 +1285,18 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
-        t['Resources']['DataVolume']['Properties'].pop('Size')
-        t['Resources']['DataVolume']['Properties']['SnapshotId'] = 'backup-123'
+        t['Resources']['DataVolume']['Properties'] = {
+            'availability_zone': 'nova',
+            'backup_id': 'backup-123'
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        rsrc = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
-        props['Size'] = 2
+        props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
