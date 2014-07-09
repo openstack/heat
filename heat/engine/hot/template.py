@@ -41,8 +41,6 @@ class HOTemplate(template.Template):
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 
-    VERSIONS = ('2013-05-23',)
-
     _CFN_TO_HOT_SECTIONS = {cfn_template.CfnTemplate.VERSION: VERSION,
                             cfn_template.CfnTemplate.DESCRIPTION: DESCRIPTION,
                             cfn_template.CfnTemplate.PARAMETERS: PARAMETERS,
