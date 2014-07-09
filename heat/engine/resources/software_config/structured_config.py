@@ -51,7 +51,7 @@ class StructuredConfig(sc.SoftwareConfig):
         sc.SoftwareConfig.CONFIG: properties.Schema(
             properties.Schema.MAP,
             _('Map representing the configuration data structure which will '
-              'be serialized to the chosen format.')
+              'be serialized to JSON format.')
         )
     }
 
