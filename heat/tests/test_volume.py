@@ -141,6 +141,16 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
+    def create_cinder_attachment(self, t, stack, resource_name):
+        resource_defns = stack.t.resource_definitions(stack)
+        rsrc = vol.CinderVolumeAttachment(resource_name,
+                                          resource_defns[resource_name],
+                                          stack)
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        return rsrc
+
     def _mock_create_volume(self, fv, stack_name, size=1):
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
@@ -536,13 +546,13 @@ class VolumeTest(HeatTestCase):
                       six.text_type(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
-    def test_volume_attachment_update_device(self):
+    def test_cinder_volume_attachment_update_device(self):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')
         fva2 = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'
 
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
 
         self._mock_create_server_volume_script(fva)
 
@@ -565,20 +575,27 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
-        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
+        t['Resources']['DataVolume']['Properties'] = {
+            'availability_zone': 'nova',
+            'size': 1,
+        }
+        t['Resources']['MountPoint']['Properties'] = {
+            'instance_uuid': 'WikiDatabase',
+            'volume_id': 'vol-123',
+            'mountpoint': '/dev/vdc'
+        }
+
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        scheduler.TaskRunner(stack['DataVolume'].create)()
+        self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        rsrc = self.create_attachment(t, stack, 'MountPoint')
+        rsrc = self.create_cinder_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         after_t = copy.deepcopy(t)
         after = after_t['Resources']['MountPoint']
-        after['Properties']['VolumeId'] = 'vol-123'
-        after['Properties']['InstanceId'] = 'WikiDatabase'
-        after['Properties']['Device'] = '/dev/vdd'
+        after['Properties']['mountpoint'] = '/dev/vdd'
         after_defs = template.Template(after_t).resource_definitions(stack)
 
         scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()
@@ -586,7 +603,7 @@ class VolumeTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
-    def test_volume_attachment_update_volume(self):
+    def test_cinder_volume_attachment_update_volume(self):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')
         fv2 = FakeVolume('creating', 'available')
@@ -595,14 +612,13 @@ class VolumeTest(HeatTestCase):
         fv2a.id = 'vol-456'
         stack_name = 'test_volume_attach_stack'
 
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
 
         vol2_name = utils.PhysName(stack_name, 'DataVolume2')
         self.cinder_fc.volumes.create(
             size=2, availability_zone='nova',
-            display_description=vol2_name,
-            display_name=vol2_name,
-            metadata={u'Usage': u'Wiki Data Volume2'}).AndReturn(fv2)
+            display_description=None,
+            display_name=vol2_name).AndReturn(fv2)
 
         self._mock_create_server_volume_script(fva)
 
@@ -621,31 +637,36 @@ class VolumeTest(HeatTestCase):
         # attach script
         self._mock_create_server_volume_script(fv2a, volume='vol-456',
                                                update=True)
-        #self.fc.volumes.create_server_volume(
-            #device=u'/dev/vdc', server_id=u'WikiDatabase',
-            #volume_id='vol-456').AndReturn(fv2a)
-        #self.cinder_fc.volumes.get('vol-456').AndReturn(fv2a)
 
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
-        zone = 'nova'
-        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = zone
-        t['Resources']['DataVolume2']['Properties']['AvailabilityZone'] = zone
+        t['Resources']['DataVolume']['Properties'] = {
+            'availability_zone': 'nova',
+            'size': 1,
+        }
+        t['Resources']['DataVolume2']['Properties'] = {
+            'availability_zone': 'nova',
+            'size': 2,
+        }
+        t['Resources']['MountPoint']['Properties'] = {
+            'instance_uuid': 'WikiDatabase',
+            'volume_id': 'vol-123',
+            'mountpoint': '/dev/vdc'
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        scheduler.TaskRunner(stack['DataVolume'].create)()
+        self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
-        scheduler.TaskRunner(stack['DataVolume2'].create)()
+        self.create_cinder_volume(t, stack, 'DataVolume2')
         self.assertEqual('available', fv2.status)
 
-        rsrc = self.create_attachment(t, stack, 'MountPoint')
+        rsrc = self.create_cinder_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         after_t = copy.deepcopy(t)
         after = after_t['Resources']['MountPoint']
-        after['Properties']['VolumeId'] = 'vol-456'
-        after['Properties']['InstanceId'] = 'WikiDatabase'
+        after['Properties']['volume_id'] = 'vol-456'
         after_defs = template.Template(after_t).resource_definitions(stack)
 
         scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()
@@ -654,13 +675,13 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(fv2a.id, rsrc.resource_id)
         self.m.VerifyAll()
 
-    def test_volume_attachment_update_server(self):
+    def test_cinder_volume_attachment_update_server(self):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')
         fva2 = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'
 
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_cinder_volume(fv, stack_name)
 
         self._mock_create_server_volume_script(fva)
 
@@ -683,20 +704,26 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
-        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
+        t['Resources']['DataVolume']['Properties'] = {
+            'availability_zone': 'nova',
+            'size': 1,
+        }
+        t['Resources']['MountPoint']['Properties'] = {
+            'instance_uuid': 'WikiDatabase',
+            'volume_id': 'vol-123',
+            'mountpoint': '/dev/vdc'
+        }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        scheduler.TaskRunner(stack['DataVolume'].create)()
+        self.create_cinder_volume(t, stack, 'DataVolume')
         self.assertEqual('available', fv.status)
 
-        rsrc = self.create_attachment(t, stack, 'MountPoint')
+        rsrc = self.create_cinder_attachment(t, stack, 'MountPoint')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         after_t = copy.deepcopy(t)
         after = after_t['Resources']['MountPoint']
-        after['Properties']['VolumeId'] = 'vol-123'
-        after['Properties']['InstanceId'] = 'WikiDatabase2'
-        #after['Properties']['Device'] = '/dev/vdd'
+        after['Properties']['instance_uuid'] = 'WikiDatabase2'
         after_defs = template.Template(after_t).resource_definitions(stack)
 
         scheduler.TaskRunner(rsrc.update, after_defs['MountPoint'])()

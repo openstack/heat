@@ -389,14 +389,12 @@ class VolumeAttachment(resource.Resource):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the instance to which the volume attaches.'),
-            required=True,
-            update_allowed=True
+            required=True
         ),
         VOLUME_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
-            required=True,
-            update_allowed=True
+            required=True
         ),
         DEVICE: properties.Schema(
             properties.Schema.STRING,
@@ -404,7 +402,6 @@ class VolumeAttachment(resource.Resource):
               'assignment may not be honored and it is advised that the path '
               '/dev/disk/by-id/virtio-<VolumeId> be used instead.'),
             required=True,
-            update_allowed=True,
             constraints=[
                 constraints.AllowedPattern('/dev/vd[b-z]'),
             ]
@@ -432,46 +429,6 @@ class VolumeAttachment(resource.Resource):
         server_id = self.properties[self.INSTANCE_ID]
         detach_task = VolumeDetachTask(self.stack, server_id, self.resource_id)
         scheduler.TaskRunner(detach_task)()
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        checkers = []
-        if prop_diff:
-            # Even though some combinations of changed properties
-            # could be updated in UpdateReplace manner,
-            # we still first detach the old resource so that
-            # self.resource_id is not replaced prematurely
-            volume_id = self.properties.get(self.VOLUME_ID)
-            if self.VOLUME_ID in prop_diff:
-                volume_id = prop_diff.get(self.VOLUME_ID)
-
-            device = self.properties.get(self.DEVICE)
-            if self.DEVICE in prop_diff:
-                device = prop_diff.get(self.DEVICE)
-
-            server_id = self.properties.get(self.INSTANCE_ID)
-            detach_task = VolumeDetachTask(self.stack, server_id,
-                                           self.resource_id)
-            checkers.append(scheduler.TaskRunner(detach_task))
-
-            if self.INSTANCE_ID in prop_diff:
-                server_id = prop_diff.get(self.INSTANCE_ID)
-            attach_task = VolumeAttachTask(self.stack, server_id,
-                                           volume_id, device)
-
-            checkers.append(scheduler.TaskRunner(attach_task))
-
-        if checkers:
-            checkers[0].start()
-        return checkers
-
-    def check_update_complete(self, checkers):
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
-                return False
-        self.resource_id_set(checkers[-1]._task.attachment_id)
-        return True
 
 
 class CinderVolume(Volume):
@@ -733,6 +690,46 @@ class CinderVolumeAttachment(VolumeAttachment):
             update_allowed=True
         ),
     }
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        checkers = []
+        if prop_diff:
+            # Even though some combinations of changed properties
+            # could be updated in UpdateReplace manner,
+            # we still first detach the old resource so that
+            # self.resource_id is not replaced prematurely
+            volume_id = self.properties.get(self.VOLUME_ID)
+            if self.VOLUME_ID in prop_diff:
+                volume_id = prop_diff.get(self.VOLUME_ID)
+
+            device = self.properties.get(self.DEVICE)
+            if self.DEVICE in prop_diff:
+                device = prop_diff.get(self.DEVICE)
+
+            server_id = self.properties.get(self.INSTANCE_ID)
+            detach_task = VolumeDetachTask(self.stack, server_id,
+                                           self.resource_id)
+            checkers.append(scheduler.TaskRunner(detach_task))
+
+            if self.INSTANCE_ID in prop_diff:
+                server_id = prop_diff.get(self.INSTANCE_ID)
+            attach_task = VolumeAttachTask(self.stack, server_id,
+                                           volume_id, device)
+
+            checkers.append(scheduler.TaskRunner(attach_task))
+
+        if checkers:
+            checkers[0].start()
+        return checkers
+
+    def check_update_complete(self, checkers):
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        self.resource_id_set(checkers[-1]._task.attachment_id)
+        return True
 
 
 def resource_mapping():
