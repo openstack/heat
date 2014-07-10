@@ -114,7 +114,7 @@ class Resource(object):
             # of the same type. Instead get the next match which will get
             # us closer to a concrete class.
             def get_ancestor_template_resources():
-                """Return an ancestory list (TemplateResources only)."""
+                """Return an ancestry list (TemplateResources only)."""
                 parent = stack.parent_resource
                 while parent is not None:
                     if isinstance(parent, template_resource.TemplateResource):
