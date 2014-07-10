@@ -2120,6 +2120,29 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @mock.patch.object(parser.Stack, 'load')
+    @stack_context('service_resources_list_test_stack_with_depth')
+    def test_stack_resources_list_with_depth(self, mock_load):
+        mock_load.return_value = self.stack
+        resources = self.stack.values()
+        self.stack.iter_resources = mock.Mock(return_value=resources)
+        resources = self.eng.list_stack_resources(self.ctx,
+                                                  self.stack.identifier(),
+                                                  2)
+        self.stack.iter_resources.assert_called_once_with(2)
+
+    @mock.patch.object(parser.Stack, 'load')
+    @stack_context('service_resources_list_test_stack_with_max_depth')
+    def test_stack_resources_list_with_max_depth(self, mock_load):
+        mock_load.return_value = self.stack
+        resources = self.stack.values()
+        self.stack.iter_resources = mock.Mock(return_value=resources)
+        resources = self.eng.list_stack_resources(self.ctx,
+                                                  self.stack.identifier(),
+                                                  99)
+        max_depth = cfg.CONF.max_nested_stack_depth
+        self.stack.iter_resources.assert_called_once_with(max_depth)
+
     def test_stack_resources_list_nonexist_stack(self):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.tenant_id, 'wibble',

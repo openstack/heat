@@ -135,6 +135,9 @@ def format_stack_resource(resource, detail=True):
             resource.nested()):
         res[api.RES_NESTED_STACK_ID] = dict(resource.nested().identifier())
 
+    if resource.stack.parent_resource:
+        res[api.RES_PARENT_RESOURCE] = resource.stack.parent_resource.name
+
     if detail:
         res[api.RES_DESCRIPTION] = resource.t.description
         res[api.RES_METADATA] = resource.metadata_get()
