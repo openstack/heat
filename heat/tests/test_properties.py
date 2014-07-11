@@ -31,6 +31,7 @@ class PropertySchemaTest(testtools.TestCase):
             'default': 'wibble',
             'required': True,
             'update_allowed': False,
+            'immutable': False,
             'constraints': [
                 {'length': {'min': 4, 'max': 8}},
             ]
@@ -51,13 +52,15 @@ class PropertySchemaTest(testtools.TestCase):
                     'default': 'wibble',
                     'required': True,
                     'update_allowed': False,
+                    'immutable': False,
                     'constraints': [
                         {'length': {'min': 4, 'max': 8}},
                     ]
                 }
             },
             'required': False,
-            'update_allowed': False
+            'update_allowed': False,
+            'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
                               default='wibble', required=True,
@@ -76,6 +79,7 @@ class PropertySchemaTest(testtools.TestCase):
                     'default': 'wibble',
                     'required': True,
                     'update_allowed': False,
+                    'immutable': False,
                     'constraints': [
                         {'length': {'min': 4, 'max': 8}},
                     ]
@@ -83,6 +87,7 @@ class PropertySchemaTest(testtools.TestCase):
             },
             'required': False,
             'update_allowed': False,
+            'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
                               default='wibble', required=True,
@@ -106,6 +111,7 @@ class PropertySchemaTest(testtools.TestCase):
                             'default': 'wibble',
                             'required': True,
                             'update_allowed': False,
+                            'immutable': False,
                             'constraints': [
                                 {'length': {'min': 4, 'max': 8}},
                             ]
@@ -113,10 +119,12 @@ class PropertySchemaTest(testtools.TestCase):
                     },
                     'required': False,
                     'update_allowed': False,
+                    'immutable': False,
                 }
             },
             'required': False,
             'update_allowed': False,
+            'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
                               default='wibble', required=True,
@@ -164,6 +172,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual('wibble', s.default)
         self.assertTrue(s.required)
         self.assertEqual(3, len(s.constraints))
+        self.assertFalse(s.immutable)
 
     def test_from_legacy_min_length(self):
         s = properties.Schema.from_legacy({
@@ -1136,6 +1145,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "The WordPress database admin account username",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 16},
                      "description": "must begin with a letter and contain "
@@ -1150,6 +1160,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "Distribution of choice",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"allowed_values": ["F18", "F17", "U10",
                                         "RHEL-6.1", "RHEL-6.2", "RHEL-6.3"]}
@@ -1160,6 +1171,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "WebServer EC2 instance type",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"allowed_values": ["t1.micro",
                                         "m1.small",
@@ -1179,6 +1191,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "Root password for MySQL",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "must contain only alphanumeric "
@@ -1194,12 +1207,14 @@ class PropertiesTest(testtools.TestCase):
                                 "SSH access to the instances"),
                 "required": True,
                 'update_allowed': True,
+                'immutable': False,
             },
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "must contain only alphanumeric "
@@ -1214,6 +1229,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "The WordPress database name",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 64},
                      "description": "must begin with a letter and contain "
@@ -1319,12 +1335,14 @@ class PropertiesTest(testtools.TestCase):
                                 "SSH access to the instances"),
                 "required": True,
                 'update_allowed': True,
+                'immutable': False,
             },
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"allowed_values": ["t1.micro", "m1.small", "m1.large",
                                         "m1.xlarge", "m2.xlarge", "m2.2xlarge",
@@ -1338,6 +1356,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "Distribution of choice",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"allowed_values": ["F18", "F17", "U10",
                                         "RHEL-6.1", "RHEL-6.2", "RHEL-6.3"],
@@ -1349,6 +1368,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "The WordPress database name",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 64},
                      "description": "Length must be between 1 and 64"},
@@ -1362,6 +1382,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "The WordPress database admin account username",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 16},
                      "description": "Length must be between 1 and 16"},
@@ -1375,6 +1396,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "The WordPress database admin account password",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "Length must be between 1 and 41"},
@@ -1388,6 +1410,7 @@ class PropertiesTest(testtools.TestCase):
                 "description": "Root password for MySQL",
                 "required": False,
                 'update_allowed': True,
+                'immutable': False,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "Length must be between 1 and 41"},
@@ -1671,3 +1694,11 @@ class PropertiesValidationTest(testtools.TestCase):
             properties.Properties.schema_to_parameters_and_properties(schema)
         self.assertEqual({}, parameters)
         self.assertEqual({}, props)
+
+    def test_update_allowed_and_immutable_contradict(self):
+        schema = {'foo': properties.Schema(
+            properties.Schema.STRING,
+            update_allowed=True,
+            immutable=True)}
+        props = properties.Properties(schema, {})
+        self.assertRaises(exception.InvalidSchemaError, props.validate)

@@ -1975,6 +1975,7 @@ class StackServiceTest(HeatTestCase):
                     'type': 'string',
                     'required': False,
                     'update_allowed': False,
+                    'immutable': False,
                 },
             },
             'attributes': {
