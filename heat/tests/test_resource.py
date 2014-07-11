@@ -391,8 +391,9 @@ class ResourceTest(HeatTestCase):
         before_props = {'Foo': '123'}
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
                                             before_props)
-        generic_rsrc.ResourceWithProps.properties_schema = \
-            {'Foo': {'Type': 'String', 'Default': '567'}}
+        schema = {'Foo': {'Type': 'String', 'Default': '567'}}
+        self.patchobject(generic_rsrc.ResourceWithProps, 'properties_schema',
+                         new=schema)
         # Here should be used real property to get default value
         new_t = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         new_res = generic_rsrc.ResourceWithProps('new_res', new_t, self.stack)
