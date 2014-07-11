@@ -425,6 +425,29 @@ class ResourceTest(HeatTestCase):
                           res.update_template_diff_properties,
                           after_props, before_props)
 
+    def test_update_template_diff_properties_immutable_notsupported(self):
+        before_props = {'Foo': 'bar', 'Parrot': 'dead',
+                        'Spam': 'ham', 'Viking': 'axe'}
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            before_props)
+        schema = {'Foo': {'Type': 'String'},
+                  'Viking': {'Type': 'String', 'Immutable': True},
+                  'Spam': {'Type': 'String', 'Immutable': True},
+                  'Parrot': {'Type': 'String', 'Immutable': True},
+                  }
+        after_props = {'Foo': 'baz', 'Parrot': 'dead',
+                       'Spam': 'eggs', 'Viking': 'sword'}
+
+        self.patchobject(generic_rsrc.ResourceWithProps,
+                         'properties_schema', new=schema)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl,
+                                             self.stack)
+        ex = self.assertRaises(exception.NotSupported,
+                               res.update_template_diff_properties,
+                               after_props, before_props)
+        self.assertIn("Update to properties Spam, Viking of",
+                      six.text_type(ex))
+
     def test_resource(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
                                             {'Foo': 'abc'})
