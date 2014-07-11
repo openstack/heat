@@ -18,7 +18,6 @@ from heatclient import client as heatclient
 from neutronclient.v2_0 import client as neutronclient
 from oslo.config import cfg
 from stevedore import extension
-from swiftclient import client as swiftclient
 from troveclient import client as troveclient
 import warnings
 
@@ -103,25 +102,6 @@ class OpenStackClients(object):
         warnings.warn('swift() is deprecated. '
                       'Replace with calls to client("swift")')
         return self.client('swift')
-
-    def _swift(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('swift', 'endpoint_type')
-        args = {
-            'auth_version': '2.0',
-            'tenant_name': con.tenant,
-            'user': con.username,
-            'key': None,
-            'authurl': None,
-            'preauthtoken': self.auth_token,
-            'preauthurl': self.url_for(service_type='object-store',
-                                       endpoint_type=endpoint_type),
-            'os_options': {'endpoint_type': endpoint_type},
-            'cacert': self._get_client_option('swift', 'ca_file'),
-            'insecure': self._get_client_option('swift', 'insecure')
-        }
-        return swiftclient.Connection(**args)
 
     def glance(self):
         warnings.warn('glance() is deprecated. '

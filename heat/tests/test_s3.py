@@ -12,17 +12,15 @@
 #    under the License.
 
 
-from testtools import skipIf
+import swiftclient.client as sc
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import s3
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-swiftclient = try_import('swiftclient.client')
 
 swift_template = '''
 {
@@ -65,13 +63,12 @@ swift_template = '''
 
 
 class s3Test(HeatTestCase):
-    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def setUp(self):
         super(s3Test, self).setUp()
-        self.m.CreateMock(swiftclient.Connection)
-        self.m.StubOutWithMock(swiftclient.Connection, 'put_container')
-        self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
-        self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
+        self.m.CreateMock(sc.Connection)
+        self.m.StubOutWithMock(sc.Connection, 'put_container')
+        self.m.StubOutWithMock(sc.Connection, 'delete_container')
+        self.m.StubOutWithMock(sc.Connection, 'get_auth')
         self.stub_keystoneclient()
 
     def create_resource(self, t, stack, resource_name):
@@ -85,14 +82,14 @@ class s3Test(HeatTestCase):
 
     def test_attributes(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username'}
         ).AndReturn(None)
-        swiftclient.Connection.get_auth().MultipleTimes().AndReturn(
+        sc.Connection.get_auth().MultipleTimes().AndReturn(
             ('http://server.test:8080/v_2', None))
-        swiftclient.Connection.delete_container(container_name).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -115,11 +112,11 @@ class s3Test(HeatTestCase):
 
     def test_public_read(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
+        sc.Connection.delete_container(
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
@@ -133,13 +130,13 @@ class s3Test(HeatTestCase):
 
     def test_tags(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username',
              'X-Container-Meta-S3-Tag-greeting': 'hello',
              'X-Container-Meta-S3-Tag-location': 'here'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
+        sc.Connection.delete_container(
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
@@ -151,11 +148,11 @@ class s3Test(HeatTestCase):
 
     def test_public_read_write(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             container_name,
             {'X-Container-Write': '.r:*',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
+        sc.Connection.delete_container(
             container_name).AndReturn(None)
 
         self.m.ReplayAll()
@@ -169,11 +166,11 @@ class s3Test(HeatTestCase):
 
     def test_authenticated_read(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant'}).AndReturn(None)
-        swiftclient.Connection.delete_container(container_name).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -186,13 +183,13 @@ class s3Test(HeatTestCase):
 
     def test_website(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             container_name,
             {'X-Container-Meta-Web-Error': 'error.html',
              'X-Container-Meta-Web-Index': 'index.html',
              'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(container_name).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -203,12 +200,12 @@ class s3Test(HeatTestCase):
 
     def test_delete_exception(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             container_name,
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        swiftclient.Connection.delete_container(container_name).AndRaise(
-            swiftclient.ClientException('Test delete failure'))
+        sc.Connection.delete_container(container_name).AndRaise(
+            sc.ClientException('Test delete failure'))
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -220,7 +217,7 @@ class s3Test(HeatTestCase):
 
     def test_delete_retain(self):
         # first run, with retain policy
-        swiftclient.Connection.put_container(
+        sc.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
