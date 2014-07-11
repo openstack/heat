@@ -2904,20 +2904,20 @@ class StackTest(HeatTestCase):
         for action, status in (
                 (rsrc.CREATE, rsrc.IN_PROGRESS),
                 (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.CREATE, rsrc.FAILED),
                 (rsrc.SUSPEND, rsrc.IN_PROGRESS),
                 (rsrc.SUSPEND, rsrc.COMPLETE),
                 (rsrc.RESUME, rsrc.IN_PROGRESS),
                 (rsrc.RESUME, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.FAILED),
                 (rsrc.UPDATE, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
             self.assertEqual('AResource', self.stack.output('TestOutput'))
         for action, status in (
-                (rsrc.CREATE, rsrc.FAILED),
                 (rsrc.DELETE, rsrc.IN_PROGRESS),
                 (rsrc.DELETE, rsrc.FAILED),
-                (rsrc.DELETE, rsrc.COMPLETE),
-                (rsrc.UPDATE, rsrc.FAILED)):
+                (rsrc.DELETE, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
             self.assertIsNone(self.stack.output('TestOutput'))
 

@@ -174,6 +174,7 @@ class FormatTest(HeatTestCase):
             'description': 'No description',
             'disable_rollback': True,
             'notification_topics': [],
+            'outputs': [],
             'stack_action': '',
             'stack_name': 'test_stack',
             'stack_status': '',
