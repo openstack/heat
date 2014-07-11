@@ -516,7 +516,7 @@ class Stack(collections.Mapping):
     def stack_task(self, action, reverse=False, post_func=None):
         '''
         A task to perform an action on the stack and all of the resources
-        in forward or reverse dependency order as specfifed by reverse
+        in forward or reverse dependency order as specified by reverse
         '''
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
