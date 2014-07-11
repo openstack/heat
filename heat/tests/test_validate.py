@@ -12,7 +12,6 @@
 #    under the License.
 
 from glanceclient import exc as glance_exceptions
-import mock
 import six
 
 from heat.common import exception
@@ -812,9 +811,7 @@ class validateTest(HeatTestCase):
         self.gc = fakes.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
-        self.mock_warnings = mock.patch('heat.engine.service.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
+        self.patch('heat.engine.service.warnings')
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')

@@ -54,9 +54,7 @@ class ResourceTest(HeatTestCase):
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   parser.Template(empty_template), env=env,
                                   stack_id=str(uuid.uuid4()))
-        self.mock_warnings = mock.patch('heat.engine.resource.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
+        self.patch('heat.engine.resource.warnings')
 
     def test_get_class_ok(self):
         cls = resource.get_class('GenericResourceType')
@@ -926,9 +924,7 @@ class ResourceAdoptTest(HeatTestCase):
         super(ResourceAdoptTest, self).setUp()
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        self.mock_warnings = mock.patch('heat.engine.resource.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
+        self.patch('heat.engine.resource.warnings')
 
     def test_adopt_resource_success(self):
         adopt_data = '{}'
@@ -1504,9 +1500,7 @@ class MetadataTest(HeatTestCase):
 
         scheduler.TaskRunner(self.res.create)()
         self.addCleanup(self.stack.delete)
-        self.mock_warnings = mock.patch('heat.engine.resource.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
+        self.patch('heat.engine.resource.warnings')
 
     def test_read_initial(self):
         self.assertEqual({'Test': 'Initial metadata'}, self.res.metadata_get())

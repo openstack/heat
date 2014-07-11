@@ -12,7 +12,6 @@
 #    under the License.
 
 
-import mock
 import mox
 from oslo.config import cfg
 
@@ -218,9 +217,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
         self.stub_keystoneclient()
-        self.mock_warnings = mock.patch('heat.engine.service.warnings')
-        self.mock_warnings.start()
-        self.addCleanup(self.mock_warnings.stop)
+        self.patch('heat.engine.service.warnings')
 
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',

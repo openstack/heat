@@ -110,8 +110,15 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.m.StubOutWithMock(scheduler, 'wallclock')
         scheduler.wallclock = fake_wallclock
 
-    def patchobject(self, obj, attr):
-        mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr))
+    def patchobject(self, obj, attr, **kwargs):
+        mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,
+                                                            **kwargs))
+        return mockfixture.mock
+
+    # NOTE(pshchelo): this overrides the testtools.TestCase.patch method
+    # that does simple monkey-patching in favor of mock's patching
+    def patch(self, target, **kwargs):
+        mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
         return mockfixture.mock
 
     def stub_keystoneclient(self, fake_client=None, **kwargs):

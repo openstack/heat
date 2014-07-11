@@ -204,8 +204,8 @@ class ScalingGroupTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(clients.OpenStackClients,
-                   'auto_scale', lambda resource: self.fake_auto_scale)
+        self.patchobject(clients.OpenStackClients, 'auto_scale',
+                         return_value=self.fake_auto_scale, create=True)
 
     def _setup_test_stack(self):
         self.stack = utils.parse_stack(self.group_template)
@@ -382,7 +382,7 @@ Resources:
             if count < 3:
                 raise auto_scale.Forbidden("Not empty!")
 
-        self.patch(self.fake_auto_scale, 'delete', delete)
+        self.patchobject(self.fake_auto_scale, 'delete', new=delete)
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
         # It really called delete until it succeeded:
@@ -398,7 +398,7 @@ Resources:
         def delete(group_id):
             1 / 0
 
-        self.patch(self.fake_auto_scale, 'delete', delete)
+        self.patchobject(self.fake_auto_scale, 'delete', new=delete)
         resource = self.stack['my_group']
         err = self.assertRaises(
             exception.ResourceFailure, scheduler.TaskRunner(resource.delete))
@@ -426,8 +426,8 @@ class PolicyTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(clients.OpenStackClients,
-                   'auto_scale', lambda resource: self.fake_auto_scale)
+        self.patchobject(clients.OpenStackClients, 'auto_scale',
+                         return_value=self.fake_auto_scale, create=True)
 
     def _setup_test_stack(self, template):
         self.stack = utils.parse_stack(template)
@@ -570,8 +570,8 @@ class WebHookTest(HeatTestCase):
         for res_name, res_class in auto_scale.resource_mapping().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(clients.OpenStackClients,
-                   'auto_scale', lambda resource: self.fake_auto_scale)
+        self.patchobject(clients.OpenStackClients, 'auto_scale',
+                         return_value=self.fake_auto_scale, create=True)
 
     def _setup_test_stack(self, template):
         self.stack = utils.parse_stack(template)

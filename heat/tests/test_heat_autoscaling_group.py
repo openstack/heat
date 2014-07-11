@@ -13,7 +13,6 @@
 import copy
 import datetime
 import itertools
-import mock
 
 from oslo.config import cfg
 
@@ -436,11 +435,9 @@ class RollingUpdatesTest(HeatTestCase):
             templates = [definitions[name] for name in created_order]
             batches.append(templates)
 
-        patcher = mock.patch.object(
+        self.patchobject(
             stack_resource.StackResource, 'update_with_template',
             side_effect=update_with_template, wraps=rsrc.update_with_template)
-        patcher.start()
-        self.addCleanup(patcher.stop)
 
         props = copy.deepcopy(rsrc.properties.data)
         props['resource']['properties']['Foo'] = 'Hi'

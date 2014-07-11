@@ -24,7 +24,6 @@ from oslo.config import cfg
 from oslo import messaging
 from oslo.messaging.rpc import client as rpc_client
 from oslo.messaging.rpc import dispatcher
-from oslotest import mockpatch
 import six
 
 from heat.common import exception
@@ -173,12 +172,6 @@ resources:
   WebServer:
     type: OS::Nova::Server
 '''
-
-
-def mock_warnings(test):
-        mock_warnings = mock.patch('heat.engine.service.warnings')
-        mock_warnings.start()
-        test.addCleanup(mock_warnings.stop)
 
 
 def get_wordpress_stack(stack_name, ctx):
@@ -432,7 +425,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1257,7 +1250,7 @@ class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):
     def setUp(self):
         super(StackServiceUpdateSuspendedNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
 
     def test_stack_update_suspended(self):
@@ -1291,7 +1284,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
         self.ctx = utils.dummy_context()
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.create_periodic_tasks()
 
@@ -1365,7 +1358,7 @@ class StackServiceAuthorizeTest(HeatTestCase):
         super(StackServiceAuthorizeTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.engine_id = 'engine-fake-uuid'
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
@@ -1460,7 +1453,7 @@ class StackServiceTest(HeatTestCase):
         super(StackServiceTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.create_periodic_tasks()
         self.eng.engine_id = 'engine-fake-uuid'
@@ -2722,7 +2715,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
     def setUp(self):
         super(SoftwareConfigServiceTest, self).setUp()
         self.ctx = utils.dummy_context()
-        mock_warnings(self)
+        self.patch('heat.engine.service.warnings')
         self.engine = service.EngineService('a-host', 'a-topic')
 
     def _create_software_config(
@@ -3052,15 +3045,12 @@ class ThreadGroupManagerTest(HeatTestCase):
         self.engine_id = 'engine_id'
         self.stack = mock.Mock()
         self.lock_mock = mock.Mock()
-        self.stlock_mock = self.useFixture(
-            mockpatch.Patch('heat.engine.service.stack_lock')).mock
+        self.stlock_mock = self.patch('heat.engine.service.stack_lock')
         self.stlock_mock.StackLock.return_value = self.lock_mock
         self.tg_mock = mock.Mock()
-        self.thg_mock = self.useFixture(
-            mockpatch.Patch('heat.engine.service.threadgroup')).mock
+        self.thg_mock = self.patch('heat.engine.service.threadgroup')
         self.thg_mock.ThreadGroup.return_value = self.tg_mock
-        self.cfg_mock = self.useFixture(
-            mockpatch.Patch('heat.engine.service.cfg')).mock
+        self.cfg_mock = self.patch('heat.engine.service.cfg')
 
     def test_tgm_start_with_lock(self):
         thm = service.ThreadGroupManager()
