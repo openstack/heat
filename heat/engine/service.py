@@ -495,6 +495,19 @@ class EngineService(service.Service):
             message = exception.StackResourceLimitExceeded.msg_fmt
             raise exception.RequestLimitExceeded(message=message)
 
+    def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
+                                           params, files, args):
+        tmpl = parser.Template(template, files=files)
+        self._validate_new_stack(cnxt, stack_name, tmpl)
+
+        common_params = api.extract_args(args)
+        env = environment.Environment(params)
+        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
+
+        self._validate_deferred_auth_context(cnxt, stack)
+        stack.validate()
+        return stack
+
     @request_context
     def preview_stack(self, cnxt, stack_name, template, params, files, args):
         """
@@ -512,15 +525,12 @@ class EngineService(service.Service):
         """
 
         LOG.info(_('previewing stack %s') % stack_name)
-        tmpl = parser.Template(template, files=files)
-        self._validate_new_stack(cnxt, stack_name, tmpl)
-
-        common_params = api.extract_args(args)
-        env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
-
-        self._validate_deferred_auth_context(cnxt, stack)
-        stack.validate()
+        stack = self._parse_template_and_validate_stack(cnxt,
+                                                        stack_name,
+                                                        template,
+                                                        params,
+                                                        files,
+                                                        args)
 
         return api.format_stack_preview(stack)
 
@@ -556,16 +566,12 @@ class EngineService(service.Service):
             else:
                 LOG.warning(_("Stack create failed, status %s") % stack.status)
 
-        tmpl = parser.Template(template, files=files)
-        self._validate_new_stack(cnxt, stack_name, tmpl)
-
-        common_params = api.extract_args(args)
-        env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
-
-        self._validate_deferred_auth_context(cnxt, stack)
-
-        stack.validate()
+        stack = self._parse_template_and_validate_stack(cnxt,
+                                                        stack_name,
+                                                        template,
+                                                        params,
+                                                        files,
+                                                        args)
 
         stack.store()
 
