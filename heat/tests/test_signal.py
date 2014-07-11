@@ -19,7 +19,6 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine.clients.os import keystone
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -57,7 +56,6 @@ class SignalTest(HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         self.stack_id = 'STACKABCD1234'
-        self.fc = fakes.FakeKeystoneClient()
 
     def tearDown(self):
         super(SignalTest, self).tearDown()
@@ -73,13 +71,8 @@ class SignalTest(HeatTestCase):
         # Stub out the stack ID so we have a known value
         with utils.UUIDStub(self.stack_id):
             stack.store()
-
         if stub:
-            self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
-            stack_user.StackUser.keystone().MultipleTimes().AndReturn(
-                self.fc)
-
-        self.m.ReplayAll()
+            self.stub_keystoneclient()
 
         return stack
 
@@ -213,10 +206,8 @@ class SignalTest(HeatTestCase):
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_stack_user(self, name):
                 raise kc_exceptions.NotFound()
+        self.stub_keystoneclient(fake_client=FakeKeystoneClientFail())
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClientFail())
         self.m.ReplayAll()
 
         self.stack.create()
@@ -305,14 +296,6 @@ class SignalTest(HeatTestCase):
             rsrc.signal(details=test_d)
 
         self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        # Since we unset the stubs above we must re-stub keystone to keep the
-        # test isolated from keystoneclient.
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(self.fc)
-
-        self.m.ReplayAll()
 
     def test_signal_wrong_resource(self):
         # assert that we get the correct exception when calling a
