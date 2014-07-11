@@ -83,7 +83,7 @@ class GetParam(function.Function):
             return ''
 
 
-class GetAtt(cfn_funcs.GetAtt):
+class GetAttThenSelect(cfn_funcs.GetAtt):
     '''
     A function for resolving resource attributes.
 
@@ -112,12 +112,38 @@ class GetAtt(cfn_funcs.GetAtt):
         return tuple(self.args[:2])
 
     def result(self):
-        attribute = super(GetAtt, self).result()
+        attribute = super(GetAttThenSelect, self).result()
         if attribute is None:
             return None
 
         path_components = function.resolve(self._path_components)
         return attributes.select_from_attribute(attribute, path_components)
+
+
+class GetAtt(GetAttThenSelect):
+    '''
+    A function for resolving resource attributes.
+
+    Takes the form::
+
+        get_attr:
+          - <resource_name>
+          - <attribute_name>
+          - <path1>
+          - ...
+    '''
+
+    def result(self):
+        path_components = function.resolve(self._path_components)
+        attribute = function.resolve(self._attribute)
+
+        r = self._resource()
+        if (r.status in (r.IN_PROGRESS, r.COMPLETE) and
+                r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
+                             r.UPDATE)):
+            return r.FnGetAtt(attribute, *path_components)
+        else:
+            return None
 
 
 class Replace(cfn_funcs.Replace):
@@ -247,7 +273,7 @@ def function_mapping(version_key, version):
             'get_param': GetParam,
             'get_resource': cfn_funcs.ResourceRef,
             'Ref': cfn_funcs.Ref,
-            'get_attr': GetAtt,
+            'get_attr': GetAttThenSelect,
             'Fn::Select': cfn_funcs.Select,
             'Fn::Join': cfn_funcs.Join,
             'Fn::Split': cfn_funcs.Split,
