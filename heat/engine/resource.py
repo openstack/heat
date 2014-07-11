@@ -897,8 +897,12 @@ class Resource(object):
                        str(self))
                 raise Exception(msg)
 
-            self._add_event('signal', self.status, get_string_details())
-            self.handle_signal(details)
+            signal_result = self.handle_signal(details)
+            if signal_result:
+                reason_string = "Signal: %s" % signal_result
+            else:
+                reason_string = get_string_details()
+            self._add_event('signal', self.status, reason_string)
         except Exception as ex:
             LOG.exception(_('signal %(name)s : %(msg)s') % {'name': str(self),
                                                             'msg': ex})

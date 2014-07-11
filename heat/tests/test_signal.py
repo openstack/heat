@@ -297,6 +297,30 @@ class SignalTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_signal_plugin_reason(self):
+        # Ensure if handle_signal returns data, we use it as the reason
+        self.stack = self.create_stack()
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.StubOutWithMock(generic_resource.SignalResource,
+                               'handle_signal')
+        signal_details = {'status': 'COMPLETE'}
+        ret_expected = "Received COMPLETE signal"
+        generic_resource.SignalResource.handle_signal(
+            signal_details).AndReturn(ret_expected)
+
+        self.m.StubOutWithMock(generic_resource.SignalResource,
+                               '_add_event')
+        generic_resource.SignalResource._add_event(
+            'signal', 'COMPLETE', 'Signal: %s' % ret_expected).AndReturn(None)
+        self.m.ReplayAll()
+
+        rsrc.signal(details=signal_details)
+        self.m.VerifyAll()
+
     def test_signal_wrong_resource(self):
         # assert that we get the correct exception when calling a
         # resource.signal() that does not have a handle_signal()
