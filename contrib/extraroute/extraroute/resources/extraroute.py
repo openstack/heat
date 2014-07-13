@@ -13,12 +13,10 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-if clients.neutronclient is not None:
-    from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.common.exceptions import NeutronClientException
 
 
 class ExtraRoute(neutron.NeutronResource):
@@ -97,9 +95,6 @@ class ExtraRoute(neutron.NeutronResource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'OS::Neutron::ExtraRoute': ExtraRoute,
     }

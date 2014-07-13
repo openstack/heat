@@ -13,15 +13,13 @@
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
 
-if clients.neutronclient is not None:
-    from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.common.exceptions import NeutronClientException
 
 
 class Router(neutron.NeutronResource):
@@ -367,9 +365,6 @@ class RouterGateway(neutron.NeutronResource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'OS::Neutron::Router': Router,
         'OS::Neutron::RouterInterface': RouterInterface,

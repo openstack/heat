@@ -17,7 +17,6 @@ import datetime
 import mock
 import mox
 from oslo.config import cfg
-from testtools import skipIf
 
 from heat.common import exception
 from heat.common import short_id
@@ -32,12 +31,9 @@ from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-
-neutronclient = try_import('neutronclient.v2_0.client')
 
 
 as_template = '''
@@ -811,7 +807,6 @@ class AutoScalingTest(HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    @skipIf(neutronclient is None, 'neutronclient unavailable')
     def test_lb_reload_members(self):
         t = template_format.parse(as_template)
         t['Resources']['ElasticLoadBalancer'] = {
@@ -847,7 +842,6 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skipIf(neutronclient is None, 'neutronclient unavailable')
     def test_lb_reload_invalid_resource(self):
         t = template_format.parse(as_template)
         t['Resources']['ElasticLoadBalancer'] = {

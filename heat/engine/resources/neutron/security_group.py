@@ -12,13 +12,11 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-if clients.neutronclient is not None:
-    import neutronclient.common.exceptions as neutron_exp
+import neutronclient.common.exceptions as neutron_exp
 
 
 class SecurityGroup(neutron.NeutronResource):

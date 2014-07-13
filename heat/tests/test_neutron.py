@@ -14,12 +14,13 @@
 import copy
 
 import mox
-from testtools import skipIf
+from neutronclient.common import exceptions as qe
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
-from heat.engine import clients
+from heat.engine.clients.os import neutron
 from heat.engine import properties
 from heat.engine.resources.neutron import net
 from heat.engine.resources.neutron.neutron import NeutronResource as qr
@@ -29,12 +30,9 @@ from heat.engine.resources.neutron import router
 from heat.engine.resources.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-neutronclient = try_import('neutronclient.v2_0.client')
-qe = try_import('neutronclient.common.exceptions')
 
 neutron_template = '''
 {
@@ -517,7 +515,6 @@ class NeutronTest(HeatTestCase):
         })
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronNetTest(HeatTestCase):
 
     def setUp(self):
@@ -717,7 +714,6 @@ class NeutronNetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronProviderNetTest(HeatTestCase):
 
     def setUp(self):
@@ -836,7 +832,6 @@ class NeutronProviderNetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronSubnetTest(HeatTestCase):
 
     def setUp(self):
@@ -1138,10 +1133,8 @@ class NeutronSubnetTest(HeatTestCase):
         }, p)
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronRouterTest(HeatTestCase):
 
-    @skipIf(neutron_utils.neutronV20 is None, "Missing Neutron v2_0")
     def setUp(self):
         super(NeutronRouterTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_router')
@@ -1758,10 +1751,8 @@ class NeutronRouterTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronFloatingIPTest(HeatTestCase):
 
-    @skipIf(net.clients.neutronclient is None, "Missing Neutron Client")
     def setUp(self):
         super(NeutronFloatingIPTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_floatingip')
@@ -2139,10 +2130,8 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronPortTest(HeatTestCase):
 
-    @skipIf(net.clients.neutronclient is None, "Missing Neutron Client")
     def setUp(self):
         super(NeutronPortTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
@@ -2380,12 +2369,11 @@ class NeutronPortTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NetworkConstraintTest(HeatTestCase):
 
     def test_validate(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, '_neutron')
-        clients.OpenStackClients._neutron().MultipleTimes().AndReturn(None)
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(None)
         self.m.StubOutWithMock(net.neutronV20, 'find_resourceid_by_name_or_id')
         net.neutronV20.find_resourceid_by_name_or_id(
             None, 'network', 'foo'

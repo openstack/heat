@@ -14,7 +14,7 @@
 import copy
 import mox
 
-from testtools import skipIf
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
@@ -22,12 +22,10 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.neutron import loadbalancer
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as nova_fakes
 
-neutronclient = try_import('neutronclient.v2_0.client')
 
 health_monitor_template = '''
 {
@@ -219,7 +217,6 @@ pool_with_health_monitors_template = '''
 '''
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class HealthMonitorTest(HeatTestCase):
 
     def setUp(self):
@@ -345,7 +342,6 @@ class HealthMonitorTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class PoolTest(HeatTestCase):
 
     def setUp(self):
@@ -843,7 +839,6 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class PoolMemberTest(HeatTestCase):
 
     def setUp(self):
@@ -946,7 +941,6 @@ class PoolMemberTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class LoadBalancerTest(HeatTestCase):
 
     def setUp(self):
@@ -1033,7 +1027,6 @@ class LoadBalancerTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class PoolUpdateHealthMonitorsTest(HeatTestCase):
 
     def setUp(self):

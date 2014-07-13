@@ -12,28 +12,24 @@
 #    under the License.
 
 import copy
+from neutronclient.v2_0 import client as neutronclient
 import uuid
 
 import mox
 from oslo.config import cfg
-from testtools import skipIf
 
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine import clients
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.engine import template
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as v1fakes
 
-
-neutroncli = try_import('neutronclient')
 
 as_template = '''
 {
@@ -117,16 +113,16 @@ class AutoScalingTest(HeatTestCase):
 
         self.stub_keystoneclient()
 
-        self.m.StubOutWithMock(clients.neutronclient.Client,
+        self.m.StubOutWithMock(neutronclient.Client,
                                'create_health_monitor')
-        self.m.StubOutWithMock(clients.neutronclient.Client,
+        self.m.StubOutWithMock(neutronclient.Client,
                                'associate_health_monitor')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'create_pool')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'create_vip')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'show_pool')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'show_vip')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'create_member')
-        self.m.StubOutWithMock(clients.neutronclient.Client, 'list_members')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_pool')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_pool')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_member')
+        self.m.StubOutWithMock(neutronclient.Client, 'list_members')
 
         self.m.StubOutWithMock(nova_utils, 'server_to_ipaddress')
         self.m.StubOutWithMock(parser.Stack, 'validate')
@@ -135,7 +131,6 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(image.ImageConstraint, "validate")
 
-    @skipIf(neutroncli is None, 'neutronclient unavailable')
     def test_lb(self):
 
         tmpl = template_format.parse(as_template)
@@ -254,25 +249,25 @@ class AutoScalingTest(HeatTestCase):
 
         instances = {}
 
-        clients.neutronclient.Client.create_health_monitor(mon_block).\
+        neutronclient.Client.create_health_monitor(mon_block).\
             AndReturn(mon_ret_block)
 
-        clients.neutronclient.Client.create_pool(pool_block).\
+        neutronclient.Client.create_pool(pool_block).\
             AndReturn(pool_ret_block)
 
-        clients.neutronclient.Client.associate_health_monitor(
+        neutronclient.Client.associate_health_monitor(
             pool_ret_block['pool']['id'],
             {'health_monitor': {
                 'id': mon_ret_block['health_monitor']['id']
             }}).AndReturn(None)
 
-        clients.neutronclient.Client.create_vip(vip_block).\
+        neutronclient.Client.create_vip(vip_block).\
             AndReturn(vip_ret_block)
 
-        clients.neutronclient.Client.show_pool(pool_ret_block['pool']['id']).\
+        neutronclient.Client.show_pool(pool_ret_block['pool']['id']).\
             AndReturn(pool_ret_block)
 
-        clients.neutronclient.Client.show_vip(vip_ret_block['vip']['id']).\
+        neutronclient.Client.show_vip(vip_ret_block['vip']['id']).\
             AndReturn(vip_ret_block)
 
         parser.Stack.validate()
@@ -290,7 +285,7 @@ class AutoScalingTest(HeatTestCase):
             mox.IgnoreArg(),
             mox.IgnoreArg()).AndReturn('1.2.3.4')
 
-        clients.neutronclient.Client.create_member(membera_block).\
+        neutronclient.Client.create_member(membera_block).\
             AndReturn(membera_ret_block)
 
         instances[instid] = membera_ret_block['member']['id']
@@ -316,14 +311,14 @@ class AutoScalingTest(HeatTestCase):
             mox.IgnoreArg(),
             mox.IgnoreArg()).AndReturn('1.2.3.5')
 
-        clients.neutronclient.Client.create_member(memberb_block).\
+        neutronclient.Client.create_member(memberb_block).\
             AndReturn(memberb_ret_block)
 
         nova_utils.server_to_ipaddress(
             mox.IgnoreArg(),
             mox.IgnoreArg()).AndReturn('1.2.3.6')
 
-        clients.neutronclient.Client.create_member(memberc_block).\
+        neutronclient.Client.create_member(memberc_block).\
             AndReturn(memberc_ret_block)
 
         self.m.ReplayAll()

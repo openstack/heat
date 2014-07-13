@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from testtools import skipIf
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
@@ -29,7 +27,6 @@ except ImportError:
 
 class VPCTestBase(HeatTestCase):
 
-    @skipIf(neutronclient is None, 'neutronclient unavaialble')
     def setUp(self):
         super(VPCTestBase, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')

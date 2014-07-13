@@ -15,7 +15,6 @@ from novaclient import exceptions as nova_exceptions
 import six
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 
@@ -93,7 +92,7 @@ class SecurityGroup(resource.Resource):
     }
 
     def handle_create(self):
-        if self.properties[self.VPC_ID] and clients.neutronclient is not None:
+        if self.properties[self.VPC_ID]:
             self._handle_create_neutron()
         else:
             self._handle_create_nova()
@@ -216,7 +215,7 @@ class SecurityGroup(resource.Resource):
                         raise
 
     def handle_delete(self):
-        if self.properties[self.VPC_ID] and clients.neutronclient is not None:
+        if self.properties[self.VPC_ID]:
             self._handle_delete_neutron()
         else:
             self._handle_delete_nova()
@@ -274,9 +273,8 @@ class SecurityGroup(resource.Resource):
         if res:
             return res
 
-        if self.properties[self.SECURITY_GROUP_EGRESS] and not(
-                self.properties[self.VPC_ID] and
-                clients.neutronclient is not None):
+        if self.properties[self.SECURITY_GROUP_EGRESS] and not \
+                self.properties[self.VPC_ID]:
             raise exception.EgressRuleNotAllowed()
 
 

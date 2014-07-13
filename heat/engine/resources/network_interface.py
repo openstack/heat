@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutronclient.common.exceptions import NeutronClientException
+
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
@@ -123,8 +124,6 @@ class NetworkInterface(resource.Resource):
         self.resource_id_set(port['id'])
 
     def handle_delete(self):
-        from neutronclient.common.exceptions import NeutronClientException
-
         client = self.neutron()
         try:
             client.delete_port(self.resource_id)
@@ -134,8 +133,6 @@ class NetworkInterface(resource.Resource):
 
     def _get_fixed_ip_address(self, ):
         if self.fixed_ip_address is None:
-            from neutronclient.common.exceptions import NeutronClientException
-
             client = self.neutron()
             try:
                 port = client.show_port(self.resource_id)['port']
@@ -153,9 +150,6 @@ class NetworkInterface(resource.Resource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'AWS::EC2::NetworkInterface': NetworkInterface,
     }

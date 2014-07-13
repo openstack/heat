@@ -13,20 +13,16 @@
 
 import copy
 import mox
-
-from testtools import skipIf
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import vpnservice
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-
-neutronclient = try_import('neutronclient.v2_0.client')
 
 vpnservice_template_deprecated = '''
 {
@@ -153,7 +149,6 @@ ipsecpolicy_template = '''
 '''
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class VPNServiceTest(HeatTestCase):
 
     VPN_SERVICE_CONF = {
@@ -304,7 +299,6 @@ class VPNServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class IPsecSiteConnectionTest(HeatTestCase):
 
     IPSEC_SITE_CONNECTION_CONF = {
@@ -462,7 +456,6 @@ class IPsecSiteConnectionTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class IKEPolicyTest(HeatTestCase):
 
     IKE_POLICY_CONF = {
@@ -604,7 +597,6 @@ class IKEPolicyTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class IPsecPolicyTest(HeatTestCase):
 
     IPSEC_POLICY_CONF = {

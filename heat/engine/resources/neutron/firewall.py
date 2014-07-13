@@ -12,13 +12,11 @@
 #    under the License.
 
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-if clients.neutronclient is not None:
-    from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.common.exceptions import NeutronClientException
 
 
 class Firewall(neutron.NeutronResource):
@@ -393,9 +391,6 @@ class FirewallRule(neutron.NeutronResource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'OS::Neutron::Firewall': Firewall,
         'OS::Neutron::FirewallPolicy': FirewallPolicy,

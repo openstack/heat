@@ -11,20 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from testtools import skipIf
+from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import template_format
 from heat.engine import resource
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 from ..resources import extraroute  # noqa
 
-neutronclient = try_import('neutronclient.v2_0.client')
-qe = try_import('neutronclient.common.exceptions')
 
 neutron_template = '''
 {
@@ -56,9 +52,7 @@ neutron_template = '''
 '''
 
 
-@skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronExtraRouteTest(HeatTestCase):
-    @skipIf(neutron_utils.neutronV20 is None, "Missing Neutron v2_0")
     def setUp(self):
         super(NeutronExtraRouteTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')

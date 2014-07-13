@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
@@ -20,8 +19,7 @@ from heat.engine.resources.neutron import subnet
 from heat.engine import support
 from heat.openstack.common import log as logging
 
-if clients.neutronclient is not None:
-    import neutronclient.common.exceptions as neutron_exp
+import neutronclient.common.exceptions as neutron_exp
 
 LOG = logging.getLogger(__name__)
 
@@ -296,9 +294,6 @@ class Port(neutron.NeutronResource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'OS::Neutron::Port': Port,
     }

@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import route_table
@@ -134,9 +133,6 @@ class VPCGatewayAttachment(resource.Resource):
 
 
 def resource_mapping():
-    if clients.neutronclient is None:
-        return {}
-
     return {
         'AWS::EC2::InternetGateway': InternetGateway,
         'AWS::EC2::VPCGatewayAttachment': VPCGatewayAttachment,
