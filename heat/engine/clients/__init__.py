@@ -13,7 +13,6 @@
 
 from ceilometerclient import client as ceilometerclient
 from cinderclient import client as cinderclient
-from glanceclient import client as glanceclient
 from heatclient import client as heatclient
 from neutronclient.v2_0 import client as neutronclient
 from oslo.config import cfg
@@ -107,26 +106,6 @@ class OpenStackClients(object):
         warnings.warn('glance() is deprecated. '
                       'Replace with calls to client("glance")')
         return self.client('glance')
-
-    def _glance(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('glance', 'endpoint_type')
-        endpoint = self.url_for(service_type='image',
-                                endpoint_type=endpoint_type)
-        args = {
-            'auth_url': con.auth_url,
-            'service_type': 'image',
-            'project_id': con.tenant,
-            'token': self.auth_token,
-            'endpoint_type': endpoint_type,
-            'ca_file': self._get_client_option('glance', 'ca_file'),
-            'cert_file': self._get_client_option('glance', 'cert_file'),
-            'key_file': self._get_client_option('glance', 'key_file'),
-            'insecure': self._get_client_option('glance', 'insecure')
-        }
-
-        return glanceclient.Client('1', endpoint, **args)
 
     def neutron(self):
         warnings.warn('neutron() is deprecated. '
