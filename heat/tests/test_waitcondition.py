@@ -299,15 +299,17 @@ class WaitConditionTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        handle.handle_signal(test_metadata)
+        ret = handle.handle_signal(test_metadata)
         wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual('{"123": "foo"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:bar', ret)
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        handle.handle_signal(test_metadata)
+        ret = handle.handle_signal(test_metadata)
         wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:cat', ret)
         self.m.VerifyAll()
 
     def test_validate_handle_url_bad_stackid(self):
@@ -538,13 +540,15 @@ class WaitConditionHandleTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        rsrc.handle_signal(test_metadata)
+        ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['SUCCESS'], rsrc.get_status())
+        self.assertEqual('status:SUCCESS reason:bar', ret)
 
-        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+        test_metadata = {'Data': 'foo', 'Reason': 'bar2',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        rsrc.handle_signal(test_metadata)
+        ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['SUCCESS', 'SUCCESS'], rsrc.get_status())
+        self.assertEqual('status:SUCCESS reason:bar2', ret)
 
     def test_get_status_reason(self):
         self.stack = self.create_stack()
@@ -553,18 +557,21 @@ class WaitConditionHandleTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        rsrc.handle_signal(test_metadata)
+        ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['bar'], rsrc.get_status_reason('SUCCESS'))
+        self.assertEqual('status:SUCCESS reason:bar', ret)
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        rsrc.handle_signal(test_metadata)
+        ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['bar', 'cat'], rsrc.get_status_reason('SUCCESS'))
+        self.assertEqual('status:SUCCESS reason:cat', ret)
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
-        rsrc.handle_signal(test_metadata)
+        ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['hoo'], rsrc.get_status_reason('FAILURE'))
+        self.assertEqual('status:FAILURE reason:hoo', ret)
         self.m.VerifyAll()
 
 
@@ -699,7 +706,10 @@ class WaitConditionUpdateTest(HeatTestCase):
     def _handle_signal(self, rsrc, metadata, times=1):
         for time in range(times):
             metadata['UniqueId'] = metadata['UniqueId'] * 2
-            rsrc.handle_signal(metadata)
+            ret = rsrc.handle_signal(metadata)
+            self.assertEqual("status:%s reason:%s" %
+                             (metadata[rsrc.STATUS], metadata[rsrc.REASON]),
+                             ret)
 
     def test_handle_update_timeout(self):
         self.stack = self.create_stack()
@@ -895,35 +905,41 @@ class HeatWaitConditionTest(HeatTestCase):
         rsrc, handle = self._create_heat_wc_and_handle()
         test_metadata = {'data': 'foo', 'reason': 'bar',
                          'status': 'SUCCESS', 'id': '123'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual('{"123": "foo"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:bar', ret)
 
         test_metadata = {'data': 'dog', 'reason': 'cat',
                          'status': 'SUCCESS', 'id': '456'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:cat', ret)
         self.m.VerifyAll()
 
     def test_data_noid(self):
         rsrc, handle = self._create_heat_wc_and_handle()
         test_metadata = {'data': 'foo', 'reason': 'bar',
                          'status': 'SUCCESS'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual('{"1": "foo"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:bar', ret)
 
         test_metadata = {'data': 'dog', 'reason': 'cat',
                          'status': 'SUCCESS'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual(u'{"1": "foo", "2": "dog"}', wc_att)
+        self.assertEqual('status:SUCCESS reason:cat', ret)
         self.m.VerifyAll()
 
     def test_data_nodata(self):
         rsrc, handle = self._create_heat_wc_and_handle()
-        handle.handle_signal()
+        ret = handle.handle_signal()
+        expected = 'status:SUCCESS reason:Signal 1 received'
+        self.assertEqual(expected, ret)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual('{"1": null}', wc_att)
 
@@ -934,14 +950,17 @@ class HeatWaitConditionTest(HeatTestCase):
 
     def test_data_partial_complete(self):
         rsrc, handle = self._create_heat_wc_and_handle()
-
         test_metadata = {'status': 'SUCCESS'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
+        expected = 'status:SUCCESS reason:Signal 1 received'
+        self.assertEqual(expected, ret)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual('{"1": null}', wc_att)
 
         test_metadata = {'status': 'SUCCESS'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
+        expected = 'status:SUCCESS reason:Signal 2 received'
+        self.assertEqual(expected, ret)
         wc_att = rsrc.FnGetAtt('data')
         self.assertEqual(u'{"1": null, "2": null}', wc_att)
         self.m.VerifyAll()
@@ -960,7 +979,9 @@ class HeatWaitConditionTest(HeatTestCase):
     def test_get_status_none_complete(self):
         handle = self._create_heat_handle()
 
-        handle.handle_signal()
+        ret = handle.handle_signal()
+        expected = 'status:SUCCESS reason:Signal 1 received'
+        self.assertEqual(expected, ret)
         self.assertEqual(['SUCCESS'], handle.get_status())
         md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
                        'status': 'SUCCESS'}}
@@ -970,7 +991,9 @@ class HeatWaitConditionTest(HeatTestCase):
     def test_get_status_partial_complete(self):
         handle = self._create_heat_handle()
         test_metadata = {'status': 'SUCCESS'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
+        expected = 'status:SUCCESS reason:Signal 1 received'
+        self.assertEqual(expected, ret)
         self.assertEqual(['SUCCESS'], handle.get_status())
         md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
                        'status': 'SUCCESS'}}
@@ -981,7 +1004,9 @@ class HeatWaitConditionTest(HeatTestCase):
     def test_get_status_failure(self):
         handle = self._create_heat_handle()
         test_metadata = {'status': 'FAILURE'}
-        handle.handle_signal(details=test_metadata)
+        ret = handle.handle_signal(details=test_metadata)
+        expected = 'status:FAILURE reason:Signal 1 received'
+        self.assertEqual(expected, ret)
         self.assertEqual(['FAILURE'], handle.get_status())
         md_expected = {'1': {'data': None, 'reason': 'Signal 1 received',
                        'status': 'FAILURE'}}

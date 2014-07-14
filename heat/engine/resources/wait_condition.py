@@ -57,6 +57,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
             return self._status_ok(metadata[self.STATUS])
 
     def handle_signal(self, metadata=None):
+        signal_reason = None
         if self._metadata_format_ok(metadata):
             rsrc_metadata = self.metadata_get(refresh=True)
             if metadata[self.UNIQUE_ID] in rsrc_metadata:
@@ -69,9 +70,13 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                 safe_metadata[k] = metadata[k]
             rsrc_metadata.update({metadata[self.UNIQUE_ID]: safe_metadata})
             self.metadata_set(rsrc_metadata)
+            signal_reason = ('status:%s reason:%s' %
+                             (safe_metadata[self.STATUS],
+                              safe_metadata[self.REASON]))
         else:
             LOG.error(_("Metadata failed validation for %s") % self.name)
             raise ValueError(_("Metadata format invalid"))
+        return signal_reason
 
     def get_status(self):
         '''
@@ -196,7 +201,7 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
         metadata.setdefault(self.DATA, None)
         metadata.setdefault(self.UNIQUE_ID, signal_num)
         metadata.setdefault(self.STATUS, self.STATUS_SUCCESS)
-        super(HeatWaitConditionHandle, self).handle_signal(metadata)
+        return super(HeatWaitConditionHandle, self).handle_signal(metadata)
 
 
 class WaitConditionHandle(BaseWaitConditionHandle):
@@ -244,7 +249,7 @@ class WaitConditionHandle(BaseWaitConditionHandle):
         '''
         if details is None:
             return
-        super(WaitConditionHandle, self).handle_signal(details)
+        return super(WaitConditionHandle, self).handle_signal(details)
 
 
 class UpdateWaitConditionHandle(WaitConditionHandle):
