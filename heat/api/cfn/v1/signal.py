@@ -26,11 +26,11 @@ class SignalController(object):
         con = req.context
         identity = identifier.ResourceIdentifier.from_arn(arn)
         try:
-            md = self.rpc_client.metadata_update(
+            md = self.rpc_client.resource_signal(
                 con,
                 stack_identity=dict(identity.stack()),
                 resource_name=identity.resource_name,
-                metadata=body)
+                details=body)
         except Exception as ex:
             return exception.map_remote_error(ex)
 
