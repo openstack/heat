@@ -13,6 +13,7 @@
 
 import copy
 
+import mock
 import mox
 from testtools import skipIf
 
@@ -515,6 +516,27 @@ class NeutronTest(HeatTestCase):
             'name': 'the_net',
             'status': 'FROBULATING'
         })
+
+    def test_resolve_attribute(self):
+        class SomeNeutronResource(qr):
+            properties_schema = {}
+
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        stack = mock.MagicMock()
+        res = SomeNeutronResource('aresource', tmpl, stack)
+
+        mock_show_resource = mock.MagicMock()
+        mock_show_resource.side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
+                                          {'attr1': 'val1', 'attr2': 'val2'},
+                                          {'attr1': 'val1', 'attr2': 'val2'},
+                                          qe.NeutronClientException]
+        res._show_resource = mock_show_resource
+
+        self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
+                         res._resolve_attribute('show'))
+        self.assertEqual('val2', res._resolve_attribute('attr2'))
+        self.assertRaises(KeyError, res._resolve_attribute, 'attr3')
+        self.assertIsNone(res._resolve_attribute('attr2'))
 
 
 @skipIf(neutronclient is None, 'neutronclient unavailable')
