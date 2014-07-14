@@ -2213,6 +2213,43 @@ class StackTest(HeatTestCase):
         self.assertIn('BResource', re_stack)
         self.m.VerifyAll()
 
+    def test_update_add_failed_create_rollback_failed(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {
+                 'AResource': {'Type': 'GenericResourceType'},
+                 'BResource': {'Type': 'GenericResourceType'}}}
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
+
+        # patch in a dummy handle_create making BResource fail creating
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        generic_rsrc.GenericResource.handle_delete().AndRaise(Exception)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.FAILED),
+                         self.stack.state)
+        self.assertIn('BResource', self.stack)
+
+        # Reload the stack from the DB and prove that it contains the failed
+        # resource (to ensure it will be deleted on stack delete)
+        re_stack = parser.Stack.load(utils.dummy_context(), self.stack.id)
+        self.assertIn('BResource', re_stack)
+        self.m.VerifyAll()
+
     def test_update_rollback(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
