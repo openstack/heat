@@ -966,6 +966,8 @@ class EngineService(service.Service):
             if res.name != resource_name and res.id is not None:
                 res.metadata_update()
 
+        return resource.metadata_get()
+
     @request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
         """

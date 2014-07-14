@@ -2288,6 +2288,34 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
         self.stack.delete()
 
+    def test_signal_returns_metadata(self):
+        stack = get_stack('signal_reception',
+                          self.ctx,
+                          policy_template)
+        self.stack = stack
+        setup_keystone_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        test_metadata = {'food': 'yum'}
+        rsrc = stack['WebServerScaleDownPolicy']
+        rsrc.metadata_set(test_metadata)
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+
+        self.m.StubOutWithMock(res.Resource, 'signal')
+        res.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        self.m.ReplayAll()
+
+        md = self.eng.resource_signal(self.ctx,
+                                      dict(self.stack.identifier()),
+                                      'WebServerScaleDownPolicy', None)
+        self.assertEqual(test_metadata, md)
+        self.m.VerifyAll()
+
     @stack_context('service_metadata_test_stack')
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
