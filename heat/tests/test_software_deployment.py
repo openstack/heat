@@ -463,7 +463,8 @@ class SoftwareDeploymentTest(HeatTestCase):
             'foo': 'bar',
             'deploy_status_code': 0
         }
-        self.deployment.handle_signal(details)
+        ret = self.deployment.handle_signal(details)
+        self.assertEqual('deployment succeeded', ret)
         args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
@@ -493,7 +494,8 @@ class SoftwareDeploymentTest(HeatTestCase):
             'foo': 'bar',
             'deploy_status_code': '0'
         }
-        self.deployment.handle_signal(details)
+        ret = self.deployment.handle_signal(details)
+        self.assertEqual('deployment succeeded', ret)
         args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
@@ -520,7 +522,8 @@ class SoftwareDeploymentTest(HeatTestCase):
         self.deployments.get.return_value = sd
         self.software_configs.get.return_value = sc
         details = {'failed': 'no enough memory found.'}
-        self.deployment.handle_signal(details)
+        ret = self.deployment.handle_signal(details)
+        self.assertEqual('deployment failed', ret)
         args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
