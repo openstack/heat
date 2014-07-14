@@ -219,7 +219,7 @@ class Template(collections.Mapping):
 
         # check resources
         tmpl_resources = self[self.RESOURCES]
-        if not tmpl_resources:
+        if len(tmpl_resources) == 0:
             LOG.warn(_('Template does not contain any resources, so '
                        'the template would not really do anything when '
                        'being instantiated.'))

@@ -13,6 +13,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.common import template_format
 from heat.engine.cfn.template import CfnTemplate
 from heat.engine import plugin_manager
 from heat.engine import template
@@ -150,6 +151,17 @@ class TestTemplateValidate(HeatTestCase):
         err = self.assertRaises(exception.InvalidTemplateSection,
                                 tmpl.validate)
         self.assertIn('Parameteers', str(err))
+
+    def test_template_validate_cfn_empty(self):
+        t = template_format.parse('''
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+Resources:
+Outputs:
+''')
+        tmpl = template.Template(t)
+        err = tmpl.validate()
+        self.assertIsNone(err)
 
     def test_template_validate_hot_good(self):
         t = {

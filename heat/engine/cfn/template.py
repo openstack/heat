@@ -53,12 +53,14 @@ class CfnTemplate(template.Template):
         else:
             default = {}
 
-        return self.t.get(section, default)
+        # if a section is None (empty yaml section) return {}
+        # to be consistent with an empty json section.
+        return self.t.get(section) or default
 
     def param_schemata(self):
-        params = self.t.get(self.PARAMETERS, {}).iteritems()
+        params = self.t.get(self.PARAMETERS) or {}
         return dict((name, parameters.Schema.from_dict(name, schema))
-                    for name, schema in params)
+                    for name, schema in params.iteritems())
 
     def parameters(self, stack_identifier, user_params):
         return parameters.Parameters(stack_identifier, self,
@@ -125,8 +127,9 @@ class CfnTemplate(template.Template):
                                                 description=description)
             return name, defn
 
-        resources = self.t.get(self.RESOURCES, {}).items()
-        return dict(rsrc_defn_item(name, data) for name, data in resources)
+        resources = self.t.get(self.RESOURCES) or {}
+        return dict(rsrc_defn_item(name, data)
+                    for name, data in resources.items())
 
     def add_resource(self, definition, name=None):
         if name is None:
