@@ -138,6 +138,39 @@ class OSDBInstanceTest(HeatTestCase):
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 
+    def test_osdatabase_restore_point(self):
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template)
+        t['Resources']['MySqlCloudDB']['Properties']['restore_point'] = "1234"
+        instance = self._setup_test_clouddbinstance('dbinstance_create', t)
+
+        self.m.StubOutWithMock(instance, 'trove')
+        instance.trove().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.fc, 'flavors')
+        self.m.StubOutWithMock(self.fc.flavors, "list")
+        self.fc.flavors.list().AndReturn([FakeFlavor(1, '1GB'),
+                                          FakeFlavor(2, '2GB')])
+        self.m.StubOutWithMock(self.fc, 'instances')
+        self.m.StubOutWithMock(self.fc.instances, 'create')
+        users = [{"name": "testuser", "password": "pass", "host": "%",
+                  "databases": [{"name": "validdb"}]}]
+        databases = [{"collate": "utf8_general_ci",
+                      "character_set": "utf8",
+                      "name": "validdb"}]
+        self.fc.instances.create('test', 1, volume={'size': 30},
+                                 databases=databases,
+                                 users=users,
+                                 restorePoint={"backupRef": "1234"},
+                                 availability_zone=None,
+                                 datastore="SomeDStype",
+                                 datastore_version="MariaDB-5.5"
+                                 ).AndReturn(fake_dbinstance)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
+
     def test_osdatabase_create_overlimit(self):
         fake_dbinstance = FakeDBInstance()
         t = template_format.parse(db_template)
