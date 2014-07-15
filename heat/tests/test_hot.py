@@ -39,6 +39,10 @@ hot_tpl_empty = template_format.parse('''
 heat_template_version: 2013-05-23
 ''')
 
+hot_juno_tpl_empty = template_format.parse('''
+heat_template_version: 2014-10-16
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -582,9 +586,10 @@ class HOTemplateTest(HeatTestCase):
 
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
+        tmpl = parser.Template(hot_juno_tpl_empty)
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
-                                             parser.Template(hot_tpl_empty))
+                                             tmpl)
         del_policy = hot_functions.Join(parent_resource.stack,
                                         'list_join', ['eta', ['R', 'in']])
         parent_resource.t = rsrc_defn.ResourceDefinition(
@@ -620,6 +625,15 @@ class HOTemplateTest(HeatTestCase):
                              parser.Template(hot_tpl_empty),
                              parent_resource=parent_resource)
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
+
+    def test_removed_function(self):
+        snippet = {'Fn::GetAZs': ''}
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(hot_juno_tpl_empty))
+        error = self.assertRaises(exception.InvalidTemplateVersion,
+                                  function.validate,
+                                  stack.t.parse(stack, snippet))
+        self.assertIn(snippet.keys()[0], str(error))
 
     def test_add_resource(self):
         hot_tpl = template_format.parse('''

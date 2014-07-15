@@ -199,9 +199,11 @@ class TemplateTest(HeatTestCase):
             }''')
         init_ex = self.assertRaises(exception.InvalidTemplateVersion,
                                     parser.Template, invalid_hot_version_tmp)
+        valid_versions = ['2014-10-16', '2013-05-23']
         ex_error_msg = ('The template version is invalid: '
                         '"heat_template_version: 2012-12-12". '
-                        '"heat_template_version" should be: 2013-05-23')
+                        '"heat_template_version" should be one of: %s'
+                        % ', '.join(valid_versions))
         self.assertEqual(ex_error_msg, str(init_ex))
 
     def test_invalid_version_not_in_hot_versions(self):

@@ -236,6 +236,21 @@ class ResourceFacade(cfn_funcs.ResourceFacade):
     )
 
 
+class Removed(function.Function):
+    '''
+    This function existed in previous versions of HOT, but has been removed.
+    Check the HOT guide for an equivalent native function.
+    '''
+
+    def validate(self):
+        exp = (_("The function %s is not supported in this version of HOT.") %
+               self.fn_name)
+        raise exception.InvalidTemplateVersion(explanation=exp)
+
+    def result(self):
+        return super(Removed, self).result()
+
+
 def function_mapping(version_key, version):
     if version_key != 'heat_template_version':
         return {}
@@ -249,7 +264,6 @@ def function_mapping(version_key, version):
             'get_attr': GetAtt,
             'Fn::Select': cfn_funcs.Select,
             'Fn::Join': cfn_funcs.Join,
-            'list_join': Join,
             'Fn::Split': cfn_funcs.Split,
             'str_replace': Replace,
             'Fn::Replace': cfn_funcs.Replace,
@@ -258,6 +272,27 @@ def function_mapping(version_key, version):
             'resource_facade': ResourceFacade,
             'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
             'get_file': GetFile,
+        }
+    if version == '2014-10-16':
+        return {
+            'get_param': GetParam,
+            'get_resource': cfn_funcs.ResourceRef,
+            'get_attr': GetAtt,
+            'list_join': Join,
+            'str_replace': Replace,
+            'resource_facade': ResourceFacade,
+            'get_file': GetFile,
+
+            'Fn::Select': cfn_funcs.Select,
+
+            'Fn::GetAZs': Removed,
+            'Ref': Removed,
+            'Fn::Join': Removed,
+            'Fn::Split': Removed,
+            'Fn::Replace': Removed,
+            'Fn::Base64': Removed,
+            'Fn::MemberListToMap': Removed,
+            'Fn::ResourceFacade': Removed,
         }
 
     return {}
