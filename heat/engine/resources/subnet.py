@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.vpc import VPC
@@ -29,6 +29,10 @@ class Subnet(resource.Resource):
         TAG_KEY, TAG_VALUE,
     ) = (
         'Key', 'Value',
+    )
+
+    ATTRIBUTES = (
+        AVAILABILITY_ZONE,
     )
 
     properties_schema = {
@@ -64,6 +68,12 @@ class Subnet(resource.Resource):
                 },
                 implemented=False,
             )
+        ),
+    }
+
+    attributes_schema = {
+        AVAILABILITY_ZONE: attributes.Schema(
+            _('Availability Zone of the subnet.')
         ),
     }
 
@@ -110,10 +120,9 @@ class Subnet(resource.Resource):
             if ex.status_code != 404:
                 raise ex
 
-    def FnGetAtt(self, key):
-        if key == 'AvailabilityZone':
-            return self.properties.get(key)
-        raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
+    def _resolve_attribute(self, name):
+        if name == self.AVAILABILITY_ZONE:
+            return self.properties.get(self.AVAILABILITY_ZONE)
 
 
 def resource_mapping():
