@@ -126,28 +126,26 @@ class ResourceGroup(stack_resource.StackResource):
         return self.delete_nested()
 
     def FnGetAtt(self, key):
-        if key.startswith("resource."):
-            parts = key.split(".", 2)
-            attr_name = parts[-1] if len(parts) > 2 else None
+        nested_stack = self.nested()
+
+        def get_rsrc_attr(resource_name, attr_name=None):
             try:
-                res = self.nested()[parts[1]]
+                resource = nested_stack[resource_name]
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
+            if attr_name is None:
+                return resource.FnGetRefId()
             else:
-                return (res.FnGetRefId() if attr_name is None
-                        else res.FnGetAtt(attr_name))
+                return resource.FnGetAtt(attr_name)
+
+        if key.startswith("resource."):
+            parts = key.split(".", 2)
+            return get_rsrc_attr(*parts[1:])
         else:
-
-            def get_aggregated_attr(func, *args):
-                for n in range(self.properties[self.COUNT]):
-                    resource_method = getattr(self.nested()[str(n)], func)
-                    yield resource_method(*args)
-
-            method_name, method_call = (("FnGetRefId", []) if self.REFS == key
-                                        else ("FnGetAtt", [key]))
-            return [val for val in get_aggregated_attr(method_name,
-                                                       *method_call)]
+            count = self.properties[self.COUNT]
+            attr = None if key == self.REFS else key
+            return [get_rsrc_attr(str(n), attr) for n in range(count)]
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)
