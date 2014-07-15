@@ -929,6 +929,17 @@ class StackTest(HeatTestCase):
                              tenant_id=None)
         self.assertEqual('foo', stack.tenant_id)
 
+    def test_stack_reads_username(self):
+        stack = parser.Stack(self.ctx, 'test_stack', self.tmpl,
+                             username='bar')
+        self.assertEqual('bar', stack.username)
+
+    def test_stack_reads_username_from_context_if_empty(self):
+        self.ctx.username = 'foo'
+        stack = parser.Stack(self.ctx, 'test_stack', self.tmpl,
+                             username=None)
+        self.assertEqual('foo', stack.username)
+
     def test_stack_string_repr(self):
         stack = parser.Stack(self.ctx, 'test_stack', self.tmpl)
         expected = 'Stack "%s" [%s]' % (stack.name, stack.id)
@@ -1107,7 +1118,8 @@ class StackTest(HeatTestCase):
                               updated_time=None,
                               user_creds_id=stack.user_creds_id,
                               tenant_id='test_tenant_id',
-                              use_stored_context=False)
+                              use_stored_context=False,
+                              username=IgnoreArg())
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -1214,6 +1226,20 @@ class StackTest(HeatTestCase):
         self.ctx.tenant_id = None
         stack = parser.Stack.load(self.ctx, stack_id=stack_id)
         self.assertEqual('foobar', stack.tenant_id)
+
+    def test_load_reads_username_from_db(self):
+        self.ctx.username = 'foobar'
+        self.stack = parser.Stack(self.ctx, 'stack_name', self.tmpl)
+        self.stack.store()
+        stack_id = self.stack.id
+
+        self.ctx.username = None
+        stack = parser.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertEqual('foobar', stack.username)
+
+        self.ctx.username = 'not foobar'
+        stack = parser.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertEqual('foobar', stack.username)
 
     def test_created_time(self):
         self.stack = parser.Stack(self.ctx, 'creation_time_test',
@@ -3271,6 +3297,14 @@ class StackTest(HeatTestCase):
         ex = self.assertRaises(exception.Error, self.stack.stored_context)
         expected_err = 'Attempt to use stored_context with no user_creds'
         self.assertEqual(expected_err, six.text_type(ex))
+
+    def test_store_gets_username_from_stack(self):
+        self.stack = parser.Stack(self.ctx, 'username_stack',
+                                  self.tmpl, username='foobar')
+        self.ctx.username = 'not foobar'
+        self.stack.store()
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('foobar', db_stack.username)
 
     def test_init_stored_context_false(self):
         ctx_init = utils.dummy_context(user='mystored_user',
