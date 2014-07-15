@@ -1069,7 +1069,7 @@ class HOTParamValidatorTest(HeatTestCase):
         def v(value):
             param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
             param_schema.validate()
-            param_schema.validate_value(name, value)
+            param_schema.validate_value(value)
             return True
 
         value = 'wp'
@@ -1164,7 +1164,7 @@ class HOTParamValidatorTest(HeatTestCase):
         def v(value):
             param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
             param_schema.validate()
-            param_schema.validate_value(name, value)
+            param_schema.validate_value(value)
             return True
 
         value = 29999
@@ -1207,7 +1207,7 @@ class HOTParamValidatorTest(HeatTestCase):
         def v(value):
             param_schema = hot_param.HOTParamSchema.from_dict(name, schema)
             param_schema.validate()
-            param_schema.validate_value(name, value)
+            param_schema.validate_value(value)
             return True
 
         value = "1"
