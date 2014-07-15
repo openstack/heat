@@ -36,6 +36,20 @@ class WaitConditionHandle(signal_responder.SignalResponder):
     '''
     properties_schema = {}
 
+    WAIT_STATUSES = (
+        STATUS_FAILURE,
+        STATUS_SUCCESS,
+    ) = (
+        'FAILURE',
+        'SUCCESS',
+    )
+
+    METADATA_KEYS = (
+        DATA, REASON, STATUS, UNIQUE_ID
+    ) = (
+        'Data', 'Reason', 'Status', 'UniqueId'
+    )
+
     def handle_create(self):
         super(WaitConditionHandle, self).handle_create()
         self.resource_id_set(self._get_user_id())
@@ -61,9 +75,8 @@ class WaitConditionHandle(signal_responder.SignalResponder):
             "Reason" : "Reason String"
         }
         """
-        expected_keys = ['Data', 'Reason', 'Status', 'UniqueId']
-        if sorted(metadata.keys()) == expected_keys:
-            return metadata['Status'] in WAIT_STATUSES
+        if tuple(sorted(metadata.keys())) == self.METADATA_KEYS:
+            return metadata[self.STATUS] in self.WAIT_STATUSES
 
     def metadata_update(self, new_metadata=None):
         """DEPRECATED. Should use handle_signal instead."""
@@ -78,13 +91,15 @@ class WaitConditionHandle(signal_responder.SignalResponder):
 
         if self._metadata_format_ok(details):
             rsrc_metadata = self.metadata_get(refresh=True)
-            if details['UniqueId'] in rsrc_metadata:
+            if details[self.UNIQUE_ID] in rsrc_metadata:
                 LOG.warning(_("Overwriting Metadata item for UniqueId %s!")
-                            % details['UniqueId'])
+                            % details[self.UNIQUE_ID])
             safe_metadata = {}
-            for k in ('Data', 'Reason', 'Status'):
+            for k in self.METADATA_KEYS:
+                if k == self.UNIQUE_ID:
+                    continue
                 safe_metadata[k] = details[k]
-            rsrc_metadata.update({details['UniqueId']: safe_metadata})
+            rsrc_metadata.update({details[self.UNIQUE_ID]: safe_metadata})
             self.metadata_set(rsrc_metadata)
         else:
             LOG.error(_("Metadata failed validation for %s") % self.name)
@@ -94,24 +109,16 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         '''
         Return a list of the Status values for the handle signals
         '''
-        return [v['Status'] for v in self.metadata_get(refresh=True).values()]
+        return [v[self.STATUS]
+                for v in self.metadata_get(refresh=True).values()]
 
     def get_status_reason(self, status):
         '''
         Return a list of reasons associated with a particular status
         '''
-        return [v['Reason']
+        return [v[self.REASON]
                 for v in self.metadata_get(refresh=True).values()
-                if v['Status'] == status]
-
-
-WAIT_STATUSES = (
-    STATUS_FAILURE,
-    STATUS_SUCCESS,
-) = (
-    'FAILURE',
-    'SUCCESS',
-)
+                if v[self.STATUS] == status]
 
 
 class UpdateWaitConditionHandle(WaitConditionHandle):
@@ -129,13 +136,13 @@ class UpdateWaitConditionHandle(WaitConditionHandle):
 
 class WaitConditionFailure(exception.Error):
     def __init__(self, wait_condition, handle):
-        reasons = handle.get_status_reason(STATUS_FAILURE)
+        reasons = handle.get_status_reason(handle.STATUS_FAILURE)
         super(WaitConditionFailure, self).__init__(';'.join(reasons))
 
 
 class WaitConditionTimeout(exception.Error):
     def __init__(self, wait_condition, handle):
-        reasons = handle.get_status_reason(STATUS_SUCCESS)
+        reasons = handle.get_status_reason(handle.STATUS_SUCCESS)
         vals = {'len': len(reasons),
                 'count': wait_condition.properties[wait_condition.COUNT]}
         if reasons:
@@ -235,7 +242,7 @@ class WaitCondition(resource.Resource):
 
             handle_status = handle.get_status()
 
-            if any(s != STATUS_SUCCESS for s in handle_status):
+            if any(s != handle.STATUS_SUCCESS for s in handle_status):
                 failure = WaitConditionFailure(self, handle)
                 LOG.info(_('%(name)s Failed (%(failure)s)')
                          % {'name': str(self), 'failure': str(failure)})
@@ -287,7 +294,7 @@ class WaitCondition(resource.Resource):
         if key == self.DATA:
             meta = handle.metadata_get(refresh=True)
             # Note, can't use a dict generator on python 2.6, hence:
-            res = dict([(k, meta[k]['Data']) for k in meta])
+            res = dict([(k, meta[k][handle.DATA]) for k in meta])
             LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
                       % {'name': self.name,
                          'key': key,
