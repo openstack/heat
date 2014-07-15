@@ -259,11 +259,10 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         '''
         1 create stack
         2 assert empty instance metadata
-        3 service.metadata_update()
+        3 service.resource_signal()
         4 assert valid waitcond metadata
         5 assert valid instance metadata
         '''
-
         self.stack = self.create_stack()
 
         watch = self.stack['WC']
@@ -274,7 +273,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
             self.assertIsNone(inst.metadata_get()['test'])
 
         def update_metadata(id, data, reason):
-            self.man.metadata_update(utils.dummy_context(),
+            self.man.resource_signal(utils.dummy_context(),
                                      dict(self.stack.identifier()),
                                      'WH',
                                      {'Data': data, 'Reason': reason,

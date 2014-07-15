@@ -262,13 +262,13 @@ class WaitConditionTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        handle.metadata_update(new_metadata=test_metadata)
+        handle.handle_signal(test_metadata)
         wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual('{"123": "foo"}', wc_att)
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        handle.metadata_update(new_metadata=test_metadata)
+        handle.handle_signal(test_metadata)
         wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(u'{"123": "foo", "456": "dog"}', wc_att)
         self.m.VerifyAll()
@@ -431,61 +431,61 @@ class WaitConditionHandleTest(HeatTestCase):
         self.assertEqual(unicode(expected_url), rsrc.FnGetRefId())
         self.m.VerifyAll()
 
-    def test_metadata_update(self):
+    def test_handle_signal(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         handle_metadata = {u'123': {u'Data': u'foo',
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
         self.assertEqual(handle_metadata, rsrc.metadata_get())
         self.m.VerifyAll()
 
-    def test_metadata_update_invalid(self):
+    def test_handle_signal_invalid(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        # metadata_update should raise a ValueError if the metadata
+        # handle_signal should raise a ValueError if the metadata
         # is missing any of the expected keys
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
 
         err_metadata = {'data': 'foo', 'reason': 'bar',
                         'status': 'SUCCESS', 'uniqueid': '1234'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
 
         # Also any Status other than SUCCESS or FAILURE should be rejected
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'UCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'wibble', 'UniqueId': '123'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'success', 'UniqueId': '123'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'FAIL', 'UniqueId': '123'}
-        self.assertRaises(ValueError, rsrc.metadata_update,
-                          new_metadata=err_metadata)
+        self.assertRaises(ValueError, rsrc.handle_signal,
+                          err_metadata)
         self.m.VerifyAll()
 
     def test_get_status(self):
@@ -501,12 +501,12 @@ class WaitConditionHandleTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         self.assertEqual(['SUCCESS'], rsrc.get_status())
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         self.assertEqual(['SUCCESS', 'SUCCESS'], rsrc.get_status())
 
     def test_get_status_reason(self):
@@ -516,17 +516,17 @@ class WaitConditionHandleTest(HeatTestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         self.assertEqual(['bar'], rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         self.assertEqual(['bar', 'cat'], rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
-        rsrc.metadata_update(new_metadata=test_metadata)
+        rsrc.handle_signal(test_metadata)
         self.assertEqual(['hoo'], rsrc.get_status_reason('FAILURE'))
         self.m.VerifyAll()
 
@@ -587,7 +587,7 @@ class WaitConditionUpdateTest(HeatTestCase):
         wait_condition_handle = self.stack['WaitHandle']
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '1'}
-        self._metadata_update(wait_condition_handle, test_metadata, 5)
+        self._handle_signal(wait_condition_handle, test_metadata, 5)
 
         uprops = copy.copy(rsrc.properties.data)
         uprops['Count'] = '5'
@@ -614,7 +614,7 @@ class WaitConditionUpdateTest(HeatTestCase):
         wait_condition_handle = self.stack['WaitHandle']
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '1'}
-        self._metadata_update(wait_condition_handle, test_metadata, 5)
+        self._handle_signal(wait_condition_handle, test_metadata, 5)
 
         prop_diff = {"Count": 5}
         props = copy.copy(rsrc.properties.data)
@@ -641,13 +641,13 @@ class WaitConditionUpdateTest(HeatTestCase):
         wait_condition_handle = self.stack['WaitHandle']
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '1'}
-        self._metadata_update(wait_condition_handle, test_metadata, 2)
+        self._handle_signal(wait_condition_handle, test_metadata, 2)
 
         self.stack.store()
         self.stack = self.get_stack(self.stack_id)
         rsrc = self.stack['WaitForTheHandle']
 
-        self._metadata_update(wait_condition_handle, test_metadata, 3)
+        self._handle_signal(wait_condition_handle, test_metadata, 3)
         prop_diff = {"Count": 5}
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
@@ -659,10 +659,10 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.assertEqual(5, rsrc.properties['Count'])
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-    def _metadata_update(self, rsrc, metadata, times=1):
+    def _handle_signal(self, rsrc, metadata, times=1):
         for time in range(times):
             metadata['UniqueId'] = metadata['UniqueId'] * 2
-            rsrc.metadata_update(new_metadata=metadata)
+            rsrc.handle_signal(metadata)
 
     def test_handle_update_timeout(self):
         self.stack = self.create_stack()

@@ -66,21 +66,25 @@ class WaitConditionHandle(signal_responder.SignalResponder):
             return metadata['Status'] in WAIT_STATUSES
 
     def metadata_update(self, new_metadata=None):
+        """DEPRECATED. Should use handle_signal instead."""
+        self.handle_signal(details=new_metadata)
+
+    def handle_signal(self, details=None):
         '''
         Validate and update the resource metadata
         '''
-        if new_metadata is None:
+        if details is None:
             return
 
-        if self._metadata_format_ok(new_metadata):
+        if self._metadata_format_ok(details):
             rsrc_metadata = self.metadata_get(refresh=True)
-            if new_metadata['UniqueId'] in rsrc_metadata:
+            if details['UniqueId'] in rsrc_metadata:
                 LOG.warning(_("Overwriting Metadata item for UniqueId %s!")
-                            % new_metadata['UniqueId'])
+                            % details['UniqueId'])
             safe_metadata = {}
             for k in ('Data', 'Reason', 'Status'):
-                safe_metadata[k] = new_metadata[k]
-            rsrc_metadata.update({new_metadata['UniqueId']: safe_metadata})
+                safe_metadata[k] = details[k]
+            rsrc_metadata.update({details['UniqueId']: safe_metadata})
             self.metadata_set(rsrc_metadata)
         else:
             LOG.error(_("Metadata failed validation for %s") % self.name)
