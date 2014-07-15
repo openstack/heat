@@ -313,7 +313,7 @@ class EngineService(service.Service):
         if cfg.CONF.instance_user:
             warnings.warn('The "instance_user" option in heat.conf is '
                           'deprecated and will be removed in the Juno '
-                          'release.')
+                          'release.', DeprecationWarning)
 
     def create_periodic_tasks(self):
         LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())
