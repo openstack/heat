@@ -11,22 +11,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from cinderclient import client as cinderclient
+from cinderclient.v1 import volume_backups
 import json
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.engine import attributes
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import glance_utils
 from heat.engine import scheduler
 from heat.engine import support
-from heat.openstack.common.importutils import try_import
 from heat.openstack.common import log as logging
-
-volume_backups = try_import('cinderclient.v1.volume_backups')
 
 LOG = logging.getLogger(__name__)
 
@@ -163,7 +161,7 @@ class Volume(resource.Resource):
                 while True:
                     yield
                     vol.get()
-            except clients.cinderclient.exceptions.NotFound:
+            except cinderclient.exceptions.NotFound:
                 self.resource_id_set(None)
 
     if volume_backups is not None:
@@ -256,7 +254,7 @@ class VolumeExtendTask(object):
 
         try:
             cinder.extend(self.volume_id, self.size)
-        except clients.cinderclient.exceptions.ClientException as ex:
+        except cinderclient.exceptions.ClientException as ex:
             raise exception.Error(_(
                 "Failed to extend volume %(vol)s - %(err)s") % {
                     'vol': vol.id, 'err': str(ex)})
@@ -362,7 +360,7 @@ class VolumeDetachTask(object):
             nova_vol = server_api.get_server_volume(self.server_id,
                                                     self.attachment_id)
             vol = self.clients.client('cinder').volumes.get(nova_vol.id)
-        except (clients.cinderclient.exceptions.NotFound,
+        except (cinderclient.exceptions.NotFound,
                 nova_exceptions.BadRequest,
                 nova_exceptions.NotFound):
             LOG.warning(_('%s - volume not found') % str(self))
@@ -389,7 +387,7 @@ class VolumeDetachTask(object):
             if vol.status != 'available':
                 raise exception.Error(vol.status)
 
-        except clients.cinderclient.exceptions.NotFound:
+        except cinderclient.exceptions.NotFound:
             LOG.warning(_('%s - volume not found') % str(self))
 
         # The next check is needed for immediate reattachment when updating:

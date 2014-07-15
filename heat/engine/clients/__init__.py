@@ -12,7 +12,6 @@
 #    under the License.
 
 from ceilometerclient import client as ceilometerclient
-from cinderclient import client as cinderclient
 from heatclient import client as heatclient
 from oslo.config import cfg
 from stevedore import extension
@@ -115,29 +114,6 @@ class OpenStackClients(object):
         warnings.warn('cinder() is deprecated. '
                       'Replace with calls to client("cinder")')
         return self.client('cinder')
-
-    def _cinder(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
-        args = {
-            'service_type': 'volume',
-            'auth_url': con.auth_url,
-            'project_id': con.tenant,
-            'username': None,
-            'api_key': None,
-            'endpoint_type': endpoint_type,
-            'cacert': self._get_client_option('cinder', 'ca_file'),
-            'insecure': self._get_client_option('cinder', 'insecure')
-        }
-
-        client = cinderclient.Client('1', **args)
-        management_url = self.url_for(service_type='volume',
-                                      endpoint_type=endpoint_type)
-        client.client.auth_token = self.auth_token
-        client.client.management_url = management_url
-
-        return client
 
     def trove(self):
         warnings.warn('trove() is deprecated. '
