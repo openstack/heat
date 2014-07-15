@@ -1111,7 +1111,12 @@ class EngineService(service.Service):
                         resource_name, metadata):
         """
         Update the metadata for the given resource.
+        DEPRECATED: Use resource_signal instead
         """
+        warnings.warn('metadata_update is deprecated, '
+                      'use resource_signal instead',
+                      DeprecationWarning)
+
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
