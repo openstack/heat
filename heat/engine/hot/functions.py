@@ -14,6 +14,7 @@
 import collections
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 
@@ -116,22 +117,7 @@ class GetAtt(cfn_funcs.GetAtt):
             return None
 
         path_components = function.resolve(self._path_components)
-
-        def get_path_component(collection, key):
-            if not isinstance(collection, (collections.Mapping,
-                                           collections.Sequence)):
-                raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
-
-            if not isinstance(key, (basestring, int)):
-                raise TypeError(_('Path components in "%s" '
-                                  'must be strings') % self.fn_name)
-
-            return collection[key]
-
-        try:
-            return reduce(get_path_component, path_components, attribute)
-        except (KeyError, IndexError, TypeError):
-            return None
+        return attributes.select_from_attribute(attribute, path_components)
 
 
 class Replace(cfn_funcs.Replace):
