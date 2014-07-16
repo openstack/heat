@@ -49,6 +49,21 @@ class StackUser(resource.Resource):
         # Store the ID in resource data, for compatibility with SignalResponder
         self.data_set('user_id', user_id)
 
+    def _user_token(self):
+        project_id = self.stack.stack_user_project_id
+        if not project_id:
+            raise ValueError(_("Can't get user token, user not yet created"))
+        password = getattr(self, 'password', None)
+        # FIXME(shardy): the create and getattr here could allow insane
+        # passwords, e.g a zero length string, if these happen it almost
+        # certainly means a bug elsewhere in heat, so add assertion to catch
+        if password is None:
+            raise ValueError(_("Can't get user token without password"))
+
+        return self.keystone().stack_domain_user_token(
+            username=self.physical_resource_name(),
+            project_id=project_id, password=password)
+
     def _get_user_id(self):
         user_id = self.data().get('user_id')
         if user_id:
