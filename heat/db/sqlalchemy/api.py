@@ -55,7 +55,6 @@ def get_backend():
 def model_query(context, *args):
     session = _session(context)
     query = session.query(*args)
-
     return query
 
 
@@ -70,7 +69,6 @@ def soft_delete_aware_query(context, *args, **kwargs):
 
     if not show_deleted:
         query = query.filter_by(deleted_at=None)
-
     return query
 
 
@@ -84,7 +82,6 @@ def raw_template_get(context, template_id):
     if not result:
         raise exception.NotFound(_('raw template with id %s not found') %
                                  template_id)
-
     return result
 
 
@@ -108,7 +105,6 @@ def resource_get(context, resource_id):
     if not result:
         raise exception.NotFound(_("resource with id %s not found") %
                                  resource_id)
-
     return result
 
 
@@ -117,7 +113,6 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
         filter_by(name=resource_name).\
         filter_by(stack_id=stack_id).\
         options(orm.joinedload("data")).first()
-
     return result
 
 
@@ -130,7 +125,6 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
         if context is None or context.tenant_id in (
                 result.stack.tenant, result.stack.stack_user_project_id):
             return result
-
     return None
 
 
@@ -139,7 +133,6 @@ def resource_get_all(context):
 
     if not results:
         raise exception.NotFound(_('no resources were found'))
-
     return results
 
 
@@ -162,7 +155,6 @@ def resource_data_get_all(resource, data=None):
             ret[res.key] = _decrypt(res.value, res.decrypt_method)
         else:
             ret[res.key] = res.value
-
     return ret
 
 
@@ -259,7 +251,6 @@ def resource_get_all_by_stack(context, stack_id):
     if not results:
         raise exception.NotFound(_("no resources for stack_id %s were found")
                                  % stack_id)
-
     return dict((res.name, res) for res in results)
 
 
@@ -271,7 +262,6 @@ def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
         )).\
         filter_by(name=stack_name).\
         filter_by(owner_id=owner_id)
-
     return query.first()
 
 
@@ -282,7 +272,6 @@ def stack_get_by_name(context, stack_name):
             models.Stack.stack_user_project_id == context.tenant_id
         )).\
         filter_by(name=stack_name)
-
     return query.first()
 
 
@@ -303,7 +292,6 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
         context.tenant_id not in (result.tenant,
                                   result.stack_user_project_id)):
         return None
-
     return result
 
 
@@ -324,7 +312,6 @@ def _filter_sort_keys(sort_keys, whitelist):
         return []
     elif not isinstance(sort_keys, list):
         sort_keys = [sort_keys]
-
     return [key for key in sort_keys if key in whitelist]
 
 
@@ -348,7 +335,6 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
                                      model_marker, sort_dir)
     except utils.InvalidSortKey as exc:
         raise exception.Invalid(reason=exc.message)
-
     return query
 
 
@@ -359,7 +345,6 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False):
 
     if tenant_safe:
         query = query.filter_by(tenant=context.tenant_id)
-
     return query
 
 
@@ -423,14 +408,12 @@ def stack_delete(context, stack_id):
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
-
     session = Session.object_session(s)
 
     for r in s.resources:
         session.delete(r)
 
     s.soft_delete(session=session)
-
     session.flush()
 
 
@@ -511,7 +494,6 @@ def user_creds_delete(context, user_creds_id):
 
 def event_get(context, event_id):
     result = model_query(context, models.Event).get(event_id)
-
     return result
 
 
@@ -520,7 +502,6 @@ def event_get_all(context):
     stack_ids = [stack.id for stack in stacks]
     results = model_query(context, models.Event).\
         filter(models.Event.stack_id.in_(stack_ids)).all()
-
     return results
 
 
@@ -531,7 +512,6 @@ def event_get_all_by_tenant(context, limit=None, marker=None,
     query = query.join(models.Event.stack).\
         filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
     filters = None
-
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 
@@ -662,7 +642,6 @@ def watch_rule_update(context, watch_id, values):
                                  '%(id)s %(msg)s') % {
                                      'id': watch_id,
                                      'msg': 'that does not exist'})
-
     wr.update(values)
     wr.save(_session(context))
 
