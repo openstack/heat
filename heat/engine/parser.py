@@ -566,7 +566,8 @@ class Stack(collections.Mapping):
             return self.load(self.context, stack=s)
         elif create_if_missing:
             prev = type(self)(self.context, self.name, copy.deepcopy(self.t),
-                              self.env, owner_id=self.id)
+                              self.env, owner_id=self.id,
+                              user_creds_id=self.user_creds_id)
             prev.store(backup=True)
             LOG.debug('Created new backup stack')
             return prev
