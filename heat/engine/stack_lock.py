@@ -131,7 +131,7 @@ class StackLock(object):
         try:
             self.acquire()
             yield
-        except:
+        except:  # noqa
             with excutils.save_and_reraise_exception():
                 self.release(stack_id)
 
@@ -146,7 +146,7 @@ class StackLock(object):
         try:
             result = self.try_acquire()
             yield result
-        except:
+        except:  # noqa
             if result is None:  # Lock was successfully acquired
                 with excutils.save_and_reraise_exception():
                     self.release(stack_id)

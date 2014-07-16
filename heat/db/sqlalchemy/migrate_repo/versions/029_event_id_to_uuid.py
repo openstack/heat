@@ -34,7 +34,7 @@ def downgrade(migrate_engine):
 
     try:
         event.c.id.alter(type=sqlalchemy.Integer, primary_key=True)
-    except:
+    except Exception:
         # NOTE(pafuent): since there is no way to downgrade just passing
         # The same is did in 018_resource_id_uuid.py
         migrate_util.log.warning(_('If you really want to downgrade to this '

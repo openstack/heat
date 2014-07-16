@@ -153,7 +153,7 @@ def upgrade(migrate_engine):
     for index, table in enumerate(tables):
         try:
             table.create()
-        except:
+        except Exception:
             # If an error occurs, drop all tables created so far to return
             # to the previously existing state.
             meta.drop_all(tables=tables[:index])

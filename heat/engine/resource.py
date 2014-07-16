@@ -411,7 +411,7 @@ class Resource(object):
             failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
-        except:
+        except:  # noqa
             with excutils.save_and_reraise_exception():
                 try:
                     self.state_set(action, self.FAILED,
@@ -694,7 +694,7 @@ class Resource(object):
             failure = exception.ResourceFailure(ex, self, self.action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
-        except:
+        except:  # noqa
             with excutils.save_and_reraise_exception():
                 try:
                     self.state_set(action, self.FAILED,

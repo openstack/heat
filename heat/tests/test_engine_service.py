@@ -295,7 +295,7 @@ def stack_context(stack_name, create_res=True):
             create_stack()
             try:
                 test_fn(test_case, *args, **kwargs)
-            except:
+            except Exception:
                 exc_class, exc_val, exc_tb = sys.exc_info()
                 try:
                     delete_stack()
