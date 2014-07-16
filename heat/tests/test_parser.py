@@ -1382,6 +1382,36 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
+    def test_delete_trust_nested(self):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        class FakeKeystoneClientFail(FakeKeystoneClient):
+            def delete_trust(self, trust_id):
+                raise Exception("Shouldn't delete")
+
+        self.stub_keystoneclient(fake_client=FakeKeystoneClientFail())
+
+        self.stack = parser.Stack(
+            self.ctx, 'delete_trust_nested', self.tmpl,
+            owner_id='owner123')
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+        user_creds_id = db_s.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertIsNotNone(user_creds)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNone(db_s)
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertIsNotNone(user_creds)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.DELETE, parser.Stack.COMPLETE))
+
     def test_delete_trust_fail(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
