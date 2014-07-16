@@ -89,6 +89,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
         default_args = {
             'filters': mock.ANY,
             'tenant_safe': mock.ANY,
+            'show_deleted': mock.ANY,
         }
         self._test_engine_api('count_stacks', 'call', **default_args)
 

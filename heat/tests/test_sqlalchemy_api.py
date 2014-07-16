@@ -510,10 +510,16 @@ class SqlAlchemyTest(HeatTestCase):
         stacks[0].delete()
         st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(2, st_db)
+        # show deleted
+        st_db = db_api.stack_count_all(self.ctx, show_deleted=True)
+        self.assertEqual(3, st_db)
 
         stacks[1].delete()
         st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(1, st_db)
+        # show deleted
+        st_db = db_api.stack_count_all(self.ctx, show_deleted=True)
+        self.assertEqual(3, st_db)
 
     def test_stack_count_all_with_filters(self):
         self._setup_test_stack('foo', UUID1)

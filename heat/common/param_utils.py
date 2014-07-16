@@ -21,6 +21,6 @@ def extract_bool(subject):
     regardless of case.
     '''
     if str(subject).lower() not in ('true', 'false'):
-        raise ValueError(_('Unrecognized value "%(value)s, acceptable values '
-                           'are: true, false.') % {'value': subject})
+        raise ValueError(_('Unrecognized value "%(value)s", acceptable '
+                           'values are: true, false.') % {'value': subject})
     return strutils.bool_from_string(subject, strict=True)

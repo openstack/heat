@@ -94,17 +94,20 @@ class EngineClient(object):
                                        tenant_safe=tenant_safe,
                                        show_deleted=show_deleted))
 
-    def count_stacks(self, ctxt, filters=None, tenant_safe=True):
+    def count_stacks(self, ctxt, filters=None, tenant_safe=True,
+                     show_deleted=False):
         """
         Return the number of stacks that match the given filters
         :param ctxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
         :param tenant_safe: if true, scope the request by the current tenant
+        :param show_deleted: if true, count will include the deleted stacks
         :returns: a integer representing the number of matched stacks
         """
         return self.call(ctxt, self.make_msg('count_stacks',
                                              filters=filters,
-                                             tenant_safe=tenant_safe))
+                                             tenant_safe=tenant_safe,
+                                             show_deleted=show_deleted))
 
     def show_stack(self, ctxt, stack_identity):
         """

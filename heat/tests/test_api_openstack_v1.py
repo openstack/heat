@@ -16,6 +16,7 @@ import json
 import mock
 from oslo.config import cfg
 from oslo.messaging._drivers import common as rpc_common
+import six
 import webob.exc
 
 import heat.api.middleware.fault as fault
@@ -441,10 +442,10 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         result = self.controller.index(req, tenant_id=self.tenant)
         self.assertEqual(0, result['count'])
 
-    def test_index_doesnt_return_stack_count_if_with_count_is_falsy(
+    def test_index_doesnt_return_stack_count_if_with_count_is_false(
             self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'with_count': ''}
+        params = {'with_count': 'false'}
         req = self._get('/stacks', params=params)
         engine = self.controller.rpc_client
 
@@ -455,11 +456,22 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertNotIn('count', result)
         assert not engine.count_stacks.called
 
+    def test_index_with_count_is_invalid(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'with_count': 'invalid_value'}
+        req = self._get('/stacks', params=params)
+
+        exc = self.assertRaises(ValueError, self.controller.index,
+                                req, tenant_id=self.tenant)
+        excepted = ('Unrecognized value "invalid_value", '
+                    'acceptable values are: true, false')
+        self.assertIn(excepted, six.text_type(exc))
+
     @mock.patch.object(rpc_client.EngineClient, 'count_stacks')
     def test_index_doesnt_break_with_old_engine(self, mock_count_stacks,
                                                 mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'with_count': 'Truthy'}
+        params = {'with_count': 'True'}
         req = self._get('/stacks', params=params)
         engine = self.controller.rpc_client
 
@@ -519,6 +531,25 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                                        filters=mock.ANY,
                                                        tenant_safe=True,
                                                        show_deleted=True)
+
+    def test_index_show_deleted_True_with_count_True(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock(return_value=0)
+
+        params = {'show_deleted': 'True',
+                  'with_count': 'True'}
+        req = self._get('/stacks', params=params)
+        result = self.controller.index(req, tenant_id=self.tenant)
+        self.assertEqual(0, result['count'])
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=True,
+                                                       show_deleted=True)
+        rpc_client.count_stacks.assert_called_once_with(mock.ANY,
+                                                        filters=mock.ANY,
+                                                        tenant_safe=True,
+                                                        show_deleted=True)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_detail(self, mock_call, mock_enforce):

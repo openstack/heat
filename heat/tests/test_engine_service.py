@@ -1768,21 +1768,24 @@ class StackServiceTest(HeatTestCase):
         self.eng.count_stacks(self.ctx, filters={'foo': 'bar'})
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters={'foo': 'bar'},
-                                                     tenant_safe=mock.ANY)
+                                                     tenant_safe=mock.ANY,
+                                                     show_deleted=False)
 
     @mock.patch.object(db_api, 'stack_count_all')
     def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
-                                                     tenant_safe=True)
+                                                     tenant_safe=True,
+                                                     show_deleted=False)
 
     @mock.patch.object(db_api, 'stack_count_all')
     def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, tenant_safe=False)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
-                                                     tenant_safe=False)
+                                                     tenant_safe=False,
+                                                     show_deleted=False)
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):
