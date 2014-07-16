@@ -123,6 +123,7 @@ class HOTemplateTest(HeatTestCase):
 
         self.assertIsNone(stack.parameters._validate_user_parameters())
         self.assertIsNone(stack.parameters._validate_tmpl_parameters())
+        self.assertIsNone(stack.validate())
 
     def test_translate_resources_good(self):
         """Test translation of resources into internal engine format."""

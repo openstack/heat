@@ -70,6 +70,8 @@ class HOTemplate(template.Template):
         else:
             default = {}
 
+        # if a section is None (empty yaml section) return {}
+        # to be consistent with an empty json section.
         the_section = self.t.get(section) or default
 
         # In some cases (e.g. parameters), also translate each entry of
@@ -212,8 +214,9 @@ class HOTemplate(template.Template):
                                                 update_policy)
             return name, defn
 
-        resources = self.t.get(self.RESOURCES, {}).items()
-        return dict(rsrc_defn_item(name, data) for name, data in resources)
+        resources = self.t.get(self.RESOURCES) or {}
+        return dict(rsrc_defn_item(name, data)
+                    for name, data in resources.items())
 
     def add_resource(self, definition, name=None):
         if name is None:
