@@ -49,12 +49,6 @@ LOG = logging.getLogger('heat.engine')
 if __name__ == '__main__':
 
     cfg.CONF(project='heat', prog='heat-engine')
-    cfg.CONF.default_log_levels = ['amqplib=WARN',
-                                   'sqlalchemy=WARN',
-                                   'qpid.messaging=INFO',
-                                   'keystone=INFO',
-                                   'eventlet.wsgi.server=WARN',
-                                   ]
     logging.setup('heat')
     messaging.setup()
 

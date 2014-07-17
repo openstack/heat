@@ -49,11 +49,6 @@ LOG = logging.getLogger('heat.api.cloudwatch')
 if __name__ == '__main__':
     try:
         cfg.CONF(project='heat', prog='heat-api-cloudwatch')
-        cfg.CONF.default_log_levels = ['amqplib=WARN',
-                                       'qpid.messaging=INFO',
-                                       'keystone=INFO',
-                                       'eventlet.wsgi.server=WARN',
-                                       ]
         logging.setup('heat')
         messaging.setup()
 
