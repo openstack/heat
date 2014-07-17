@@ -229,9 +229,6 @@ class Port(neutron.NeutronResource):
                                       props, self.NETWORK, 'network_id')
         self._prepare_list_properties(props)
 
-        if not props['fixed_ips']:
-            del(props['fixed_ips'])
-
         port = self.neutron().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
@@ -256,6 +253,9 @@ class Port(neutron.NeutronResource):
                 props.get(self.SECURITY_GROUPS), self.neutron())
         else:
             props.pop(self.SECURITY_GROUPS, None)
+
+        if not props[self.FIXED_IPS]:
+            del(props[self.FIXED_IPS])
 
     def _show_resource(self):
         return self.neutron().show_port(
@@ -284,7 +284,6 @@ class Port(neutron.NeutronResource):
         props = self.prepare_update_properties(json_snippet)
 
         self._prepare_list_properties(props)
-
         LOG.debug('updating port with %s' % props)
         self.neutron().update_port(self.resource_id, {'port': props})
 
