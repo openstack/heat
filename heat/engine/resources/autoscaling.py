@@ -568,12 +568,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
     }
 
     def handle_create(self):
-        if self.properties[self.DESIRED_CAPACITY]:
-            num_to_create = self.properties[self.DESIRED_CAPACITY]
-        else:
-            num_to_create = self.properties[self.MIN_SIZE]
-        initial_template = self._create_template(num_to_create)
-        return self.create_with_template(initial_template,
+        return self.create_with_template(self.child_template(),
                                          self._environment())
 
     def check_create_complete(self, task):
@@ -747,6 +742,13 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                 len(self.properties[self.VPCZONE_IDENTIFIER]) != 1:
             raise exception.NotSupported(feature=_("Anything other than one "
                                          "VPCZoneIdentifier"))
+
+    def child_template(self):
+        if self.properties[self.DESIRED_CAPACITY]:
+            num_instances = self.properties[self.DESIRED_CAPACITY]
+        else:
+            num_instances = self.properties[self.MIN_SIZE]
+        return self._create_template(num_instances)
 
 
 class LaunchConfiguration(resource.Resource):

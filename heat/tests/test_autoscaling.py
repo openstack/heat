@@ -1682,6 +1682,33 @@ class AutoScalingTest(HeatTestCase):
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
         self.assertEqual(expected_msg, str(e))
 
+    def test_child_template_uses_min_size(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=self.params)
+        defn = rsrc_defn.ResourceDefinition(
+            'asg', 'AWS::AutoScaling::AutoScalingGroup',
+            {'MinSize': 2, 'MaxSize': 5, 'LaunchConfigurationName': 'foo'})
+        rsrc = asc.AutoScalingGroup('asg', defn, stack)
+
+        rsrc._create_template = mock.Mock(return_value='tpl')
+
+        self.assertEqual('tpl', rsrc.child_template())
+        rsrc._create_template.assert_called_once_with(2)
+
+    def test_child_template_uses_desired_capacity(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=self.params)
+        defn = rsrc_defn.ResourceDefinition(
+            'asg', 'AWS::AutoScaling::AutoScalingGroup',
+            {'MinSize': 2, 'MaxSize': 5, 'DesiredCapacity': 3,
+             'LaunchConfigurationName': 'foo'})
+        rsrc = asc.AutoScalingGroup('asg', defn, stack)
+
+        rsrc._create_template = mock.Mock(return_value='tpl')
+
+        self.assertEqual('tpl', rsrc.child_template())
+        rsrc._create_template.assert_called_once_with(3)
+
 
 class TestInstanceGroup(HeatTestCase):
     params = {'KeyName': 'test', 'ImageId': 'foo'}
