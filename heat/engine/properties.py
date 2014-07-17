@@ -278,7 +278,9 @@ class Property(object):
         elif t == Schema.BOOLEAN:
             _value = self._get_bool(value)
 
-        if validate:
+        # property value resolves to None if resource it depends on is not
+        # created. So, if value is None skip constraint validation.
+        if value is not None and validate:
             self.schema.validate_constraints(_value, self.context)
 
         return _value
