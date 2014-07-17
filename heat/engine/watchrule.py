@@ -285,7 +285,7 @@ class WatchRule(object):
             sample['resource_id'] = dims.get('InstanceId')
             LOG.debug('new sample:%(k)s data:%(sample)s' % {
                       'k': k, 'sample': sample})
-            clients.ceilometer().samples.create(**sample)
+            clients.client('ceilometer').samples.create(**sample)
 
     def create_watch_data(self, data):
         if self.state == self.CEILOMETER_CONTROLLED:
