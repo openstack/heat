@@ -27,6 +27,9 @@ class FakeDockerClient(object):
     def __init__(self, endpoint=None):
         self._endpoint = endpoint
         self._containers = {}
+        self.pulled_images = []
+        self.container_create = []
+        self.container_start = []
 
     def _generate_string(self, n=32):
         return ''.join(random.choice(string.lowercase) for i in range(n))
@@ -66,13 +69,15 @@ class FakeDockerClient(object):
         logs.append('---logs_end---')
         return '\n'.join(logs)
 
-    def create_container(self, *args, **kwargs):
+    def create_container(self, **kwargs):
+        self.container_create.append(kwargs)
         container_id = self._generate_string()
         self._containers[container_id] = None
         self._set_running(container_id, False)
         return self.inspect_container(container_id)
 
-    def start(self, container_id, privileged=None):
+    def start(self, container_id, **kwargs):
+        self.container_start.append(kwargs)
         self._set_running(container_id, True)
 
     def stop(self, container_id):
@@ -80,3 +85,6 @@ class FakeDockerClient(object):
 
     def kill(self, container_id):
         self._set_running(container_id, False)
+
+    def pull(self, image):
+        self.pulled_images.append(image)
