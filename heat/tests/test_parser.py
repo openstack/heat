@@ -3064,6 +3064,18 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
 
+    def test_backup_copies_user_creds_id(self):
+        ctx_init = utils.dummy_context(user='my_user',
+                                       password='my_pass')
+        ctx_init.request_id = self.ctx.request_id
+        creds = db_api.user_creds_create(ctx_init)
+        self.stack = parser.Stack(self.ctx, 'creds_init', self.tmpl,
+                                  user_creds_id=creds.id)
+        self.stack.store()
+        self.assertEqual(creds.id, self.stack.user_creds_id)
+        backup = self.stack._backup_stack()
+        self.assertEqual(creds.id, backup.user_creds_id)
+
     def test_stored_context_err(self):
         """
         Test stored_context error path.
