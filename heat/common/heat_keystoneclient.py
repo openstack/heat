@@ -18,7 +18,9 @@ import copy
 import json
 import uuid
 
+from keystoneclient.auth.identity import v3 as kc_auth_v3
 import keystoneclient.exceptions as kc_exception
+from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
 from oslo.config import cfg
 
@@ -332,6 +334,50 @@ class KeystoneClientV3(object):
                                   % cfg.CONF.heat_stack_user_role)
 
         return user.id
+
+    def stack_domain_user_token(self, username, project_id, password):
+        """Get a token for a stack domain user."""
+        if not self.stack_domain:
+            # Note, no legacy fallback path as we don't want to deploy
+            # tokens for non stack-domain users inside instances
+            msg = _('Cannot get stack domain user token, no stack domain id '
+                    'configured, please fix your heat.conf')
+            raise exception.Error(msg)
+
+        # Create a keystoneclient session, then request a token with no
+        # catalog (the token is expected to be used inside an instance
+        # where a specific endpoint will be specified, and user-data
+        # space is limited..)
+        if self._stack_domain_is_id:
+            auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
+                                       username=username,
+                                       password=password,
+                                       project_id=project_id,
+                                       user_domain_id=self.stack_domain)
+        else:
+            auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
+                                       username=username,
+                                       password=password,
+                                       project_id=project_id,
+                                       user_domain_name=self.stack_domain)
+        sess = session.Session(auth=auth)
+        # Note we do this directly via a post as there's currently
+        # no way to get a nocatalog token via keystoneclient
+        token_url = "%s/auth/tokens?nocatalog" % self.v3_endpoint
+        headers = {'Accept': 'application/json'}
+        if self._stack_domain_is_id:
+            domain = {'id': self.stack_domain}
+        else:
+            domain = {'name': self.stack_domain}
+        body = {'auth': {'scope':
+                         {'project': {'id': project_id}},
+                         'identity': {'password': {'user': {
+                         'domain': domain,
+                         'password': password, 'name': username}},
+                             'methods': ['password']}}}
+        t = sess.post(token_url, headers=headers, json=body,
+                      authenticated=False)
+        return t.headers['X-Subject-Token']
 
     def create_stack_domain_user(self, username, project_id, password=None):
         """Create a domain user defined as part of a stack.

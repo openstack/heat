@@ -12,9 +12,12 @@
 #    under the License.
 
 import json
+import mox
 import uuid
 
+from keystoneclient.auth.identity import v3 as ks_auth_v3
 import keystoneclient.exceptions as kc_exception
+from keystoneclient import session as ks_session
 from keystoneclient.v3 import client as kc_v3
 from keystoneclient.v3 import domains as kc_v3_domains
 from oslo.config import cfg
@@ -1249,6 +1252,47 @@ class KeystoneClientTest(HeatTestCase):
         # Second delete will raise ignored NotFound
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
 
+    def _stub_domain_user_pw_auth(self):
+        self.m.StubOutWithMock(ks_auth_v3, 'Password')
+        ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                            username='duser',
+                            password='apassw',
+                            project_id='aproject',
+                            user_domain_id='adomain123').AndReturn('dummyauth')
+
+    def test_stack_domain_user_token(self):
+        """Test stack_domain_user_token function."""
+        self._stub_domain_user_pw_auth()
+        dummysession = self.m.CreateMockAnything()
+        dummyresp = self.m.CreateMockAnything()
+        dummyresp.headers = {'X-Subject-Token': 'dummytoken'}
+        dummysession.post('http://server.test:5000/v3/auth/tokens?nocatalog',
+                          authenticated=False,
+                          headers={'Accept': 'application/json'},
+                          json=mox.IgnoreArg()).AndReturn(dummyresp)
+        self.m.StubOutWithMock(ks_session, 'Session')
+        ks_session.Session(auth='dummyauth').AndReturn(dummysession)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        token = heat_ks_client.stack_domain_user_token(
+            username='duser', project_id='aproject', password='apassw')
+        self.assertEqual('dummytoken', token)
+
+    def test_stack_domain_user_token_err_nodomain(self):
+        """Test stack_domain_user_token error path."""
+        self._clear_domain_override()
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(exception.Error,
+                          heat_ks_client.stack_domain_user_token,
+                          username='user',
+                          project_id='aproject',
+                          password='password')
+
     def test_delete_stack_domain_project_legacy_fallback(self):
         """Test the delete_stack_domain_project function, fallback path."""
         self._clear_domain_override()
@@ -1347,6 +1391,15 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         if auth_ok:
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
             self.mock_admin_client.auth_ref.user_id = '1234'
+
+    def _stub_domain_user_pw_auth(self):
+        self.m.StubOutWithMock(ks_auth_v3, 'Password')
+        ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                            username='duser',
+                            password='apassw',
+                            project_id='aproject',
+                            user_domain_name='adomain123'
+                            ).AndReturn('dummyauth')
 
     def test_enable_stack_domain_user_error_project(self):
         self._stub_domain_admin_client_domain_get()
