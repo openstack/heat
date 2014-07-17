@@ -65,7 +65,7 @@ class KeystoneClientV2(object):
     def _v2_client_init(self):
         kwargs = {
             'auth_url': self.context.auth_url,
-            'region': cfg.CONF.region_name_for_services
+            'region_name': cfg.CONF.region_name_for_services
         }
         auth_kwargs = {}
         # Note try trust_id first, as we can't reuse auth_token in that case
