@@ -447,6 +447,9 @@ class Properties(collections.Mapping):
 
             return (name, param_def), (name, prop_def)
 
+        if not schema:
+            return {}, {}
+
         param_prop_defs = [param_prop_def_items(n, s)
                            for n, s in schemata(schema).iteritems()
                            if s.implemented]
