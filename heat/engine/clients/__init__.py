@@ -15,7 +15,6 @@ from oslo.config import cfg
 from stevedore import extension
 import warnings
 
-from heat.common import heat_keystoneclient as hkc
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
@@ -80,9 +79,6 @@ class OpenStackClients(object):
         warnings.warn('keystone() is deprecated. '
                       'Replace with calls to client("keystone")')
         return self.client('keystone')
-
-    def _keystone(self):
-        return hkc.KeystoneClient(self.context)
 
     def url_for(self, **kwargs):
         return self.client('keystone').url_for(**kwargs)
