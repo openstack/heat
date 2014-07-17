@@ -25,12 +25,13 @@ class StackTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
     def _assert_can_create(self, templ):
-        stack = parser.Stack(self.ctx, 'update_stack_arn_test',
+        stack = parser.Stack(self.ctx, utils.random_name(),
                              template.Template(templ))
         stack.store()
         stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          stack.state)
+        return stack
 
     def test_heat_empty_json(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -73,3 +74,47 @@ resources:
 outputs:
 ''')
         self._assert_can_create(t)
+
+    def test_update_hot_empty_yaml(self):
+        t = template_format.parse('''
+heat_template_version: 2013-05-23
+parameters:
+resources:
+outputs:
+''')
+        ut = template_format.parse('''
+heat_template_version: 2013-05-23
+parameters:
+resources:
+  rand:
+    type: OS::Heat::RandomString
+outputs:
+''')
+        stack = self._assert_can_create(t)
+        updated = parser.Stack(self.ctx, utils.random_name(),
+                               template.Template(ut))
+        stack.update(updated)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         stack.state)
+
+    def test_update_cfn_empty_yaml(self):
+        t = template_format.parse('''
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+Resources:
+Outputs:
+''')
+        ut = template_format.parse('''
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+Resources:
+  rand:
+    Type: OS::Heat::RandomString
+Outputs:
+''')
+        stack = self._assert_can_create(t)
+        updated = parser.Stack(self.ctx, utils.random_name(),
+                               template.Template(ut))
+        stack.update(updated)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         stack.state)

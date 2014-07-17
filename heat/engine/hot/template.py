@@ -222,5 +222,6 @@ class HOTemplate(template.Template):
         if name is None:
             name = definition.name
 
-        self.t.setdefault(self.RESOURCES, {})
+        if self.t.get(self.RESOURCES) is None:
+            self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = definition.render_hot()
