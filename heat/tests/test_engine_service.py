@@ -1682,6 +1682,48 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @mock.patch.object(db_api, 'event_get_all_by_stack')
+    @mock.patch.object(service.EngineService, '_get_stack')
+    def test_stack_events_list_passes_marker_and_filters(self,
+                                                         mock_get_stack,
+                                                         mock_events_get_all):
+        limit = object()
+        marker = object()
+        sort_keys = object()
+        sort_dir = object()
+        filters = object()
+        s = mock.Mock(id=1)
+        mock_get_stack.return_value = s
+        self.eng.list_events(self.ctx, 1, limit=limit,
+                             marker=marker, sort_keys=sort_keys,
+                             sort_dir=sort_dir, filters=filters)
+        mock_events_get_all.assert_called_once_with(self.ctx,
+                                                    1,
+                                                    limit=limit,
+                                                    sort_keys=sort_keys,
+                                                    marker=marker,
+                                                    sort_dir=sort_dir,
+                                                    filters=filters)
+
+    @mock.patch.object(db_api, 'event_get_all_by_tenant')
+    def test_tenant_events_list_passes_marker_and_filters(
+            self, mock_tenant_events_get_all):
+        limit = object()
+        marker = object()
+        sort_keys = object()
+        sort_dir = object()
+        filters = object()
+
+        self.eng.list_events(self.ctx, None, limit=limit,
+                             marker=marker, sort_keys=sort_keys,
+                             sort_dir=sort_dir, filters=filters)
+        mock_tenant_events_get_all.assert_called_once_with(self.ctx,
+                                                           limit=limit,
+                                                           sort_keys=sort_keys,
+                                                           marker=marker,
+                                                           sort_dir=sort_dir,
+                                                           filters=filters)
+
     @stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
         self.m.StubOutWithMock(parser.Stack, '_from_db')

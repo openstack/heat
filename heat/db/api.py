@@ -189,12 +189,24 @@ def event_get_all(context):
     return IMPL.event_get_all(context)
 
 
-def event_get_all_by_tenant(context):
-    return IMPL.event_get_all_by_tenant(context)
+def event_get_all_by_tenant(context, limit=None, marker=None,
+                            sort_keys=None, sort_dir=None, filters=None):
+    return IMPL.event_get_all_by_tenant(context,
+                                        limit=limit,
+                                        marker=marker,
+                                        sort_keys=sort_keys,
+                                        sort_dir=sort_dir,
+                                        filters=filters)
 
 
-def event_get_all_by_stack(context, stack_id):
-    return IMPL.event_get_all_by_stack(context, stack_id)
+def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
+                           sort_keys=None, sort_dir=None, filters=None):
+    return IMPL.event_get_all_by_stack(context, stack_id,
+                                       limit=limit,
+                                       marker=marker,
+                                       sort_keys=sort_keys,
+                                       sort_dir=sort_dir,
+                                       filters=filters)
 
 
 def event_count_all_by_stack(context, stack_id):

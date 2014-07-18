@@ -2195,6 +2195,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         engine_resp = [
             {
                 u'stack_name': u'wordpress',
@@ -2226,8 +2230,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         ]
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            req.context, ('list_events', kwargs)
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2277,6 +2280,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         engine_resp = [
             {
                 u'stack_name': u'wordpress',
@@ -2295,7 +2302,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            ('list_events', kwargs)
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2332,11 +2339,15 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            ('list_events', kwargs)
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2379,6 +2390,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         engine_resp = [
             {
                 u'stack_name': u'wordpress',
@@ -2397,7 +2412,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            ('list_events', kwargs)
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2408,6 +2423,81 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                           stack_id=stack_identity.stack_id,
                           resource_name=res_name)
         self.m.VerifyAll()
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'limit': 'fake limit',
+            'sort_keys': 'fake sort keys',
+            'marker': 'fake marker',
+            'sort_dir': 'fake sort dir',
+            'balrog': 'you shall not pass!'
+        }
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+
+        req = self._get(stack_identity._tenant_path() + '/events',
+                        params=params)
+
+        mock_call.return_value = []
+
+        self.controller.index(req, tenant_id=self.tenant,
+                              stack_name=stack_identity.stack_name,
+                              stack_id=stack_identity.stack_id)
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[1][1]
+        self.assertEqual(6, len(engine_args))
+        self.assertIn('limit', engine_args)
+        self.assertEqual('fake limit', engine_args['limit'])
+        self.assertIn('sort_keys', engine_args)
+        self.assertEqual(['fake sort keys'], engine_args['sort_keys'])
+        self.assertIn('marker', engine_args)
+        self.assertEqual('fake marker', engine_args['marker'])
+        self.assertIn('sort_dir', engine_args)
+        self.assertEqual('fake sort dir', engine_args['sort_dir'])
+        self.assertIn('filters', engine_args)
+        self.assertIsNone(engine_args['filters'])
+        self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {
+            'resource_status': 'COMPLETE',
+            'resource_action': 'CREATE',
+            'resource_name': 'my_server',
+            'resource_type': 'OS::Nova::Server',
+            'balrog': 'you shall not pass!'
+        }
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+
+        req = self._get(stack_identity._tenant_path() + '/events',
+                        params=params)
+
+        mock_call.return_value = []
+
+        self.controller.index(req, tenant_id=self.tenant,
+                              stack_name=stack_identity.stack_name,
+                              stack_id=stack_identity.stack_id)
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[1][1]
+        self.assertIn('filters', engine_args)
+
+        filters = engine_args['filters']
+        self.assertEqual(4, len(filters))
+        self.assertIn('resource_status', filters)
+        self.assertEqual('COMPLETE', filters['resource_status'])
+        self.assertIn('resource_action', filters)
+        self.assertEqual('CREATE', filters['resource_action'])
+        self.assertIn('resource_name', filters)
+        self.assertEqual('my_server', filters['resource_name'])
+        self.assertIn('resource_type', filters)
+        self.assertEqual('OS::Nova::Server', filters['resource_type'])
+        self.assertNotIn('balrog', filters)
 
     def test_show_event_id_integer(self, mock_enforce):
         self._test_show('42', mock_enforce)
@@ -2429,6 +2519,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
+
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
 
         engine_resp = [
             {
@@ -2462,7 +2556,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            ('list_events', kwargs)
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2516,6 +2610,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         engine_resp = [
             {
                 u'stack_name': u'wordpress',
@@ -2533,9 +2631,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         ]
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context,
-            ('list_events', {'stack_identity': stack_identity})
-        ).AndReturn(engine_resp)
+            req.context, ('list_events', kwargs)).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -2560,6 +2656,10 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         engine_resp = [
             {
                 u'stack_name': u'wordpress',
@@ -2577,9 +2677,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         ]
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context,
-            ('list_events', {'stack_identity': stack_identity})
-        ).AndReturn(engine_resp)
+            req.context, ('list_events', kwargs)).AndReturn(engine_resp)
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPNotFound,
@@ -2600,11 +2698,14 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
+        kwargs = {'stack_identity': stack_identity,
+                  'limit': None, 'sort_keys': None, 'marker': None,
+                  'sort_dir': None, 'filters': None}
+
         error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
-            req.context,
-            ('list_events', {'stack_identity': stack_identity})
+            req.context, ('list_events', kwargs)
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
