@@ -126,7 +126,7 @@ class LoadBalancerTest(HeatTestCase):
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
+        glance.GlanceClientPlugin._create().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).\
@@ -137,7 +137,7 @@ class LoadBalancerTest(HeatTestCase):
             utils.PhysName('test_stack', 'LoadBalancer'),
             'LB_instance',
             limit=instance.Instance.physical_resource_name_limit)
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,

@@ -47,7 +47,7 @@ class OpenStackClients(object):
         if name in self._client_plugins:
             return self._client_plugins[name]
         if _mgr and name in _mgr.names():
-            client_plugin = _mgr[name].plugin(self)
+            client_plugin = _mgr[name].plugin(self.context)
             self._client_plugins[name] = client_plugin
             return client_plugin
 

@@ -267,8 +267,7 @@ class WatchRule(object):
         return actions
 
     def _to_ceilometer(self, data):
-        from heat.engine import clients
-        clients = clients.Clients(self.context)
+        clients = self.context.clients
         sample = {}
         sample['meter_type'] = 'gauge'
 
