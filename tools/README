@@ -31,7 +31,3 @@ sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0
 + heat-db-drop
     - This script drops the heat database from mysql in the case of developer
       data corruption or erasing heat.
-
-+ glance-jeos-add-from-github.sh
-    - Register all JEOS images from github prebuilt repositories.
-      This takes about 1 hour on a typical wireless connection.
