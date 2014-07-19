@@ -17,24 +17,21 @@ from heat.engine import clients
 from heat.engine.resources import glance_utils
 from heat.engine.resources import image
 from heat.tests.common import HeatTestCase
-from heat.tests import utils
 
 
 class ImageConstraintTest(HeatTestCase):
 
     @mock.patch.object(glance_utils, 'get_image_id')
     def test_validation(self, mock_get_image):
-        ctx = utils.dummy_context()
         with mock.patch.object(clients, "OpenStackClients"):
             constraint = image.ImageConstraint()
             mock_get_image.return_value = "id1"
-            self.assertTrue(constraint.validate("foo", ctx))
+            self.assertTrue(constraint.validate("foo", None))
 
     @mock.patch.object(glance_utils, 'get_image_id')
     def test_validation_error(self, mock_get_image):
-        ctx = utils.dummy_context()
         with mock.patch.object(clients, "OpenStackClients"):
             constraint = image.ImageConstraint()
             mock_get_image.side_effect = exception.ImageNotFound(
                 image_name='bar')
-            self.assertFalse(constraint.validate("bar", ctx))
+            self.assertFalse(constraint.validate("bar", None))

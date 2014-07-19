@@ -143,7 +143,7 @@ class VolumeTest(HeatTestCase):
         return rsrc
 
     def _mock_create_volume(self, fv, stack_name, size=1):
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -167,7 +167,7 @@ class VolumeTest(HeatTestCase):
                                           device=u'/dev/vdc',
                                           update=False):
         if not update:
-            nova.NovaClientPlugin._create().AndReturn(self.fc)
+            nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create_server_volume(
             device=device, server_id=server, volume_id=volume).AndReturn(fva)
         self.cinder_fc.volumes.get(volume).AndReturn(fva)
@@ -210,7 +210,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
@@ -218,7 +218,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(image.ImageConstraint, "validate")
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         image.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
@@ -752,7 +752,7 @@ class VolumeTest(HeatTestCase):
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
@@ -780,7 +780,7 @@ class VolumeTest(HeatTestCase):
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
@@ -811,7 +811,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
 
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
@@ -883,11 +883,11 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolumeWithStateTransition('downloading', 'available')
         stack_name = 'test_volume_stack'
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, image_id).MultipleTimes().\
@@ -926,7 +926,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
 
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -963,7 +963,7 @@ class VolumeTest(HeatTestCase):
                         created_at='2013-02-25T02:40:21.000000')
         stack_name = 'test_volume_stack'
 
-        cinder.CinderClientPlugin._create().AndReturn(
+        cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(

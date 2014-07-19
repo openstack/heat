@@ -64,7 +64,7 @@ class nokeyTest(HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, 'CentOS 5.2').MultipleTimes().\

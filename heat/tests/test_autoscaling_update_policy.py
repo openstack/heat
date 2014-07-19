@@ -212,12 +212,11 @@ class AutoScalingGroupTest(HeatTestCase):
                              'http://127.0.0.1:8000/v1/waitcondition')
 
     def _mock_get_image_id_success(self, imageId_input, imageId,
-                                   update_image=None, mock_create=True):
+                                   update_image=None):
         g_cli_mock = self.m.CreateMockAnything()
-        if mock_create:
-            self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-            glance.GlanceClientPlugin._create().AndReturn(
-                g_cli_mock)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
+            g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
 
         # If update_image is None (create case), validation for initial image
@@ -264,7 +263,7 @@ class AutoScalingGroupTest(HeatTestCase):
         cookie = object()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         # for load balancer setup
         if setup_lb:
             self._stub_lb_create()
@@ -294,6 +293,10 @@ class AutoScalingGroupTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(instance.Instance, 'destroy')
+
+        if num_reloads_expected_on_updt > 1:
+            self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+            nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         cookie = object()
         for i in range(num_creates_expected_on_updt):
@@ -509,8 +512,7 @@ class AutoScalingGroupTest(HeatTestCase):
                                   num_reloads_expected_on_updt)
         self.stub_wallclock()
         self._mock_get_image_id_success('F20-x86_64-cfntools', 'image_id',
-                                        update_image=update_image_id,
-                                        mock_create=False)
+                                        update_image=update_image_id)
 
         stack.validate()
         self.m.ReplayAll()
