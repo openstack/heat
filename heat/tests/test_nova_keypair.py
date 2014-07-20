@@ -151,7 +151,7 @@ class KeypairConstraintTest(HeatTestCase):
     def test_validation(self):
         client = fakes.FakeClient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(client)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(client)
         client.keypairs = self.m.CreateMockAnything()
 
         key = collections.namedtuple("Key", ["name"])
@@ -161,9 +161,8 @@ class KeypairConstraintTest(HeatTestCase):
         self.m.ReplayAll()
 
         constraint = nova_keypair.KeypairConstraint()
-        ctx = utils.dummy_context()
-        self.assertFalse(constraint.validate("bar", ctx))
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertTrue(constraint.validate("", ctx))
+        self.assertFalse(constraint.validate("bar", None))
+        self.assertTrue(constraint.validate("foo", None))
+        self.assertTrue(constraint.validate("", None))
 
         self.m.VerifyAll()

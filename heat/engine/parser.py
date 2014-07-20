@@ -25,6 +25,7 @@ from heat.common import exception
 from heat.common.exception import StackValidationFailed
 from heat.common import identifier
 from heat.db import api as db_api
+from heat.engine.clients import Clients
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import function
@@ -98,7 +99,7 @@ class Stack(collections.Mapping):
         if use_stored_context:
             self.context = self.stored_context()
 
-        self.clients = context.clients
+        self.clients = Clients(self.context)
 
         # This will use the provided tenant ID when loading the stack
         # from the DB or get it from the context for new stacks.

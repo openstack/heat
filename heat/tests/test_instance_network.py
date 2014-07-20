@@ -154,7 +154,7 @@ class instancesTest(HeatTestCase):
     def _mock_get_image_id_success(self, imageId_input, imageId):
         g_cli_mock = self.m.CreateMockAnything()
         self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
+        glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
             g_cli_mock)
         self.m.StubOutWithMock(glance_utils, 'get_image_id')
         glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
@@ -177,7 +177,7 @@ class instancesTest(HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
 
@@ -235,7 +235,7 @@ class instancesTest(HeatTestCase):
         nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
         # need to resolve the template functions
         server_userdata = nova_utils.build_userdata(

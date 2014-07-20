@@ -199,14 +199,14 @@ def get_stack(stack_name, ctx, template):
 def setup_keystone_mocks(mocks, stack):
     fkc = test_fakes.FakeKeystoneClient()
     mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-    keystone.KeystoneClientPlugin._create().AndReturn(fkc)
+    keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(fkc)
 
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
     g_cli_mock = mocks.CreateMockAnything()
     mocks.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-    glance.GlanceClientPlugin._create().AndReturn(
+    glance.GlanceClientPlugin._create().MultipleTimes().AndReturn(
         g_cli_mock)
     mocks.StubOutWithMock(glance_utils, 'get_image_id')
     glance_utils.get_image_id(g_cli_mock, imageId_input).\
@@ -218,7 +218,7 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
     mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
-    nova.NovaClientPlugin._create().AndReturn(fc)
+    nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
     instance = stack['WebServer']
     if mock_image_constraint:
         setup_mock_for_image_constraint(mocks,
@@ -644,7 +644,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         setup_mocks(self.m, stack, mock_image_constraint=False)
         resource = stack['WebServer']
 
-        setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
         self.m.ReplayAll()
 
         resource.properties = Properties(
@@ -653,8 +652,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                 'ImageId': 'CentOS 5.2',
                 'KeyName': 'test',
                 'InstanceType': 'm1.large'
-            },
-            context=self.ctx)
+            })
+        setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
         stack.validate()
 
         resource.properties = Properties(
@@ -662,8 +661,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
             {
                 'KeyName': 'test',
                 'InstanceType': 'm1.large'
-            },
-            context=self.ctx)
+            })
         self.assertRaises(exception.StackValidationFailed, stack.validate)
 
     def test_stack_delete(self):
