@@ -19,11 +19,8 @@ from heat.engine.clients import client_plugin
 class HeatClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
-
-        con = self.context
-        endpoint_type = self._get_client_option('heat', 'endpoint_type')
         args = {
-            'auth_url': con.auth_url,
+            'auth_url': self.context.auth_url,
             'token': self.auth_token,
             'username': None,
             'password': None,
@@ -33,15 +30,16 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option('heat', 'insecure')
         }
 
-        endpoint = self._get_heat_url()
-        if not endpoint:
-            endpoint = self.url_for(service_type='orchestration',
-                                    endpoint_type=endpoint_type)
+        endpoint = self.get_heat_url()
         return hc.Client('1', endpoint, **args)
 
-    def _get_heat_url(self):
+    def get_heat_url(self):
         heat_url = self._get_client_option('heat', 'url')
         if heat_url:
             tenant_id = self.context.tenant_id
             heat_url = heat_url % {'tenant_id': tenant_id}
+        else:
+            endpoint_type = self._get_client_option('heat', 'endpoint_type')
+            heat_url = self.url_for(service_type='orchestration',
+                                    endpoint_type=endpoint_type)
         return heat_url
