@@ -15,6 +15,7 @@
 Utilities for handling ISO 8601 duration format.
 """
 
+import random
 import re
 
 
@@ -39,3 +40,21 @@ def parse_isoduration(duration):
     t += int(result.group(3)) if result.group(3) else 0
 
     return t
+
+
+def retry_backoff_delay(attempt, scale_factor=1.0, jitter_max=0.0):
+    """
+    Calculate an exponential backoff delay with jitter.
+
+    Delay is calculated as
+    2^attempt + (uniform random from [0,1) * jitter_max)
+
+    :param attempt: The count of the current retry attempt
+    :param scale_factor: Multiplier to scale the exponential delay by
+    :param jitter_max: Maximum of random seconds to add to the delay
+    :returns: Seconds since epoch to wait until
+    """
+    exp = float(2 ** attempt) * float(scale_factor)
+    if jitter_max == 0.0:
+        return exp
+    return exp + random.random() * jitter_max
