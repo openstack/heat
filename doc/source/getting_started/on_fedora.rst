@@ -14,19 +14,12 @@
 Getting Started With Heat on Fedora
 ===================================
 
-..
-  This file is a ReStructuredText document, but can be converted to a script
-  using the accompanying rst2script.sed script. Any blocks that are indented by
-  4 spaces (including comment blocks) will appear in the script. To document
-  code that should not appear in the script, use an indent of less than 4
-  spaces. (Using a Quoted instead of Indented Literal block also works.)
-  To include code in the script that should not appear in the output, make it
-  a comment block.
-
 Installing OpenStack and Heat on Fedora
 ---------------------------------------
 
-Either the Grizzly, or Havana release of OpenStack is required.  If you are using Grizzly, you should use the stable/grizzly branch of Heat.
+Heat requires an Openstack release of Grizzly or newer, but bear in mind that Grizzly is EOL. The current stable release_ is, of course, recommended.
+
+.. _release: https://wiki.openstack.org/wiki/Releases
 
 Instructions for installing the RDO OpenStack distribution on Fedora are available at ``http://openstack.redhat.com/Quickstart``
 
