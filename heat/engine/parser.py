@@ -145,6 +145,25 @@ class Stack(collections.Mapping):
             self._db_resources = None
         return self._resources
 
+    def iter_resources(self, nested_depth=0):
+        '''
+        Iterates over all the resources in a stack, including nested stacks up
+        to `nested_depth` levels below.
+        '''
+        for res in self.values():
+            yield res
+
+            get_nested = getattr(res, 'nested', None)
+            if not callable(get_nested) or nested_depth == 0:
+                continue
+
+            nested_stack = get_nested()
+            if nested_stack is None:
+                continue
+
+            for nested_res in nested_stack.iter_resources(nested_depth - 1):
+                yield nested_res
+
     def db_resource_get(self, name):
         if not self.id:
             return None

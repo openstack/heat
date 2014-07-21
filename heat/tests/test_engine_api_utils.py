@@ -118,6 +118,14 @@ class FormatTest(HeatTestCase):
         self.assertEqual(['generic2'], res1['required_by'])
         self.assertEqual([], res2['required_by'])
 
+    def test_format_stack_resource_with_parent_stack(self):
+        res = self.stack['generic1']
+        res.stack.parent_resource = mock.Mock()
+        res.stack.parent_resource.name = 'foobar'
+
+        formatted = api.format_stack_resource(res, False)
+        self.assertEqual('foobar', formatted[rpc_api.RES_PARENT_RESOURCE])
+
     def test_format_event_identifier_uuid(self):
         self._test_format_event('abc123yc-9f88-404d-a85b-531529456xyz')
 

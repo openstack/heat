@@ -1055,6 +1055,23 @@ class StackTest(HeatTestCase):
             4,
             self.stack['A'].nested().root_stack.total_resources())
 
+    def test_iter_resources(self):
+        self._setup_nested('iter_resources')
+        nested_stack = self.stack['A'].nested()
+        resource_generator = self.stack.iter_resources()
+        self.assertIsNot(resource_generator, list)
+
+        first_level_resources = list(resource_generator)
+        self.assertEqual(2, len(first_level_resources))
+        self.assertIn(self.stack['A'], first_level_resources)
+        self.assertIn(self.stack['B'], first_level_resources)
+
+        all_resources = list(self.stack.iter_resources(1))
+        self.assertIn(self.stack['A'], first_level_resources)
+        self.assertIn(self.stack['B'], first_level_resources)
+        self.assertIn(nested_stack['A'], all_resources)
+        self.assertIn(nested_stack['B'], all_resources)
+
     def test_root_stack(self):
         self._setup_nested('toor')
         self.assertEqual(self.stack, self.stack.root_stack)

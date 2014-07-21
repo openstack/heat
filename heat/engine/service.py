@@ -997,13 +997,13 @@ class EngineService(service.Service):
                 if resource_name is None or name == resource_name]
 
     @request_context
-    def list_stack_resources(self, cnxt, stack_identity):
+    def list_stack_resources(self, cnxt, stack_identity, nested_depth=0):
         s = self._get_stack(cnxt, stack_identity)
-
         stack = parser.Stack.load(cnxt, stack=s)
+        depth = min(nested_depth, cfg.CONF.max_nested_stack_depth)
 
         return [api.format_stack_resource(resource, detail=False)
-                for resource in stack.values()]
+                for resource in stack.iter_resources(depth)]
 
     @request_context
     def stack_suspend(self, cnxt, stack_identity):
