@@ -2158,6 +2158,7 @@ class NeutronPortTest(HeatTestCase):
         super(NeutronPortTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_port')
         self.m.StubOutWithMock(neutron_utils.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
@@ -2387,6 +2388,59 @@ class NeutronPortTest(HeatTestCase):
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
+
+        self.m.VerifyAll()
+
+    def test_create_and_update_port(self):
+        props = {'network_id': u'net1234',
+                 'name': utils.PhysName('test_stack', 'port'),
+                 'admin_state_up': True,
+                 'device_owner': u'network:dhcp'}
+        new_props = props.copy()
+        new_props['name'] = "new_name"
+        new_props_update = new_props.copy()
+        new_props_update.pop('network_id')
+
+        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).AndReturn('net1234')
+        neutronclient.Client.create_port(
+            {'port': props}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "fixed_ips": {
+                "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
+                "ip_address": "10.0.0.2"
+            }
+        }})
+        neutronclient.Client.update_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'port': new_props_update}
+        ).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        # create port
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+
+        # update port
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertIsNone(port.handle_update(update_snippet, {}, {}))
 
         self.m.VerifyAll()
 
