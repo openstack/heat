@@ -966,9 +966,7 @@ class Server(stack_user.StackUser):
                                     limits['maxPersonalitySize'], msg)
 
     def handle_delete(self):
-        '''
-        Delete a server, blocking until it is disposed by OpenStack
-        '''
+
         if self.resource_id is None:
             return
 
@@ -978,12 +976,16 @@ class Server(stack_user.StackUser):
         try:
             server = self.nova().servers.get(self.resource_id)
         except nova_exceptions.NotFound:
-            pass
-        else:
-            delete = scheduler.TaskRunner(nova_utils.delete_server, server)
-            delete(wait_time=0.2)
+            return
+        deleter = scheduler.TaskRunner(nova_utils.delete_server, server)
+        deleter.start()
+        return deleter
 
-        self.resource_id_set(None)
+    def check_delete_complete(self, deleter):
+        if deleter is None or deleter.step():
+            self.resource_id_set(None)
+            return True
+        return False
 
     def handle_suspend(self):
         '''
