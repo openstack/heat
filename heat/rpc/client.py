@@ -323,14 +323,16 @@ class EngineClient(object):
                                              stack_identity=stack_identity,
                                              resource_name=resource_name))
 
-    def list_stack_resources(self, ctxt, stack_identity):
+    def list_stack_resources(self, ctxt, stack_identity, nested_depth=0):
         """
         List the resources belonging to a stack.
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
+        :param nested_depth: Levels of nested stacks of which list resources.
         """
         return self.call(ctxt, self.make_msg('list_stack_resources',
-                                             stack_identity=stack_identity))
+                                             stack_identity=stack_identity,
+                                             nested_depth=nested_depth))
 
     def stack_suspend(self, ctxt, stack_identity):
         return self.call(ctxt, self.make_msg('stack_suspend',

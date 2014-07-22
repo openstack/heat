@@ -1723,7 +1723,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity})
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 0})
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -1759,7 +1760,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity})
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 0})
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -1771,6 +1773,29 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('StackNotFound', resp.json['error']['type'])
+        self.m.VerifyAll()
+
+    def test_index_nested_depth(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+
+        req = self._get(stack_identity._tenant_path() + '/resources',
+                        {'nested_depth': '99'})
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 99})
+        ).AndReturn([])
+        self.m.ReplayAll()
+
+        result = self.controller.index(req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id)
+
+        self.assertEqual([], result['resources'])
         self.m.VerifyAll()
 
     def test_index_denied_policy(self, mock_enforce):

@@ -174,7 +174,8 @@ class EngineRpcAPITestCase(testtools.TestCase):
 
     def test_list_stack_resources(self):
         self._test_engine_api('list_stack_resources', 'call',
-                              stack_identity=self.identity)
+                              stack_identity=self.identity,
+                              nested_depth=0)
 
     def test_stack_suspend(self):
         self._test_engine_api('stack_suspend', 'call',
