@@ -310,7 +310,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual('wibble', ss.default)
 
     def test_from_legacy_invalid_key(self):
-        self.assertRaises(constraints.InvalidSchemaError,
+        self.assertRaises(exception.InvalidSchemaError,
                           properties.Schema.from_legacy,
                           {'Type': 'String', 'Foo': 'Bar'})
 
@@ -604,11 +604,11 @@ class PropertyTest(testtools.TestCase):
         self.assertEqual('String', p.type())
 
     def test_bad_type(self):
-        self.assertRaises(constraints.InvalidSchemaError,
+        self.assertRaises(exception.InvalidSchemaError,
                           properties.Property, {'Type': 'Fish'})
 
     def test_bad_key(self):
-        self.assertRaises(constraints.InvalidSchemaError,
+        self.assertRaises(exception.InvalidSchemaError,
                           properties.Property,
                           {'Type': 'String', 'Foo': 'Bar'})
 

@@ -23,10 +23,6 @@ from heat.engine import resources
 from heat.openstack.common import strutils
 
 
-class InvalidSchemaError(exception.Error):
-    pass
-
-
 class Schema(collections.Mapping):
     """
     Schema base class for validating properties or parameters.
@@ -85,7 +81,8 @@ class Schema(collections.Mapping):
         self.label = label
         self.type = data_type
         if self.type not in self.TYPES:
-            raise InvalidSchemaError(_('Invalid type (%s)') % self.type)
+            raise exception.InvalidSchemaError(
+                message=_('Invalid type (%s)') % self.type)
 
         self.description = description
         self.required = required
@@ -95,7 +92,7 @@ class Schema(collections.Mapping):
                 msg = _('Single schema valid only for '
                         '%(ltype)s, not %(utype)s') % dict(ltype=self.LIST,
                                                            utype=self.type)
-                raise InvalidSchemaError(msg)
+                raise exception.InvalidSchemaError(message=msg)
 
             self.schema = AnyIndexDict(schema)
         else:
@@ -106,7 +103,7 @@ class Schema(collections.Mapping):
                     '%(mtype)s, not %(utype)s') % dict(ltype=self.LIST,
                                                        mtype=self.MAP,
                                                        utype=self.type)
-            raise InvalidSchemaError(msg)
+            raise exception.InvalidSchemaError(message=msg)
 
         self.constraints = constraints or []
         self.default = default
@@ -124,7 +121,7 @@ class Schema(collections.Mapping):
                             'invalid for %(utype)s') % dict(
                                 name=type(c).__name__,
                                 utype=self.type)
-                raise InvalidSchemaError(err_msg)
+                raise exception.InvalidSchemaError(message=err_msg)
 
         self._validate_default(context)
         # validated nested schema(ta)
@@ -140,9 +137,9 @@ class Schema(collections.Mapping):
             try:
                 self.validate_constraints(self.default, context)
             except (ValueError, TypeError) as exc:
-                raise InvalidSchemaError(_('Invalid default '
-                                           '%(default)s (%(exc)s)') %
-                                         dict(default=self.default, exc=exc))
+                raise exception.InvalidSchemaError(
+                    message=_('Invalid default %(default)s (%(exc)s)') %
+                    dict(default=self.default, exc=exc))
 
     def set_default(self, default=None):
         """Set the default value for this Schema object."""
@@ -335,12 +332,13 @@ class Range(Constraint):
 
         for param in (min, max):
             if not isinstance(param, (float, int, long, type(None))):
-                raise InvalidSchemaError(_('min/max must be numeric'))
+                raise exception.InvalidSchemaError(
+                    message=_('min/max must be numeric'))
 
         if min is max is None:
-            raise InvalidSchemaError(
-                _('A range constraint must have a min value and/or a max '
-                  'value specified.'))
+            raise exception.InvalidSchemaError(
+                message=_('A range constraint must have a min value and/or '
+                          'a max value specified.'))
 
     def _str(self):
         if self.max is None:
@@ -395,16 +393,16 @@ class Length(Range):
 
     def __init__(self, min=None, max=None, description=None):
         if min is max is None:
-            raise InvalidSchemaError(
-                _('A length constraint must have a min value and/or a max '
-                  'value specified.'))
+            raise exception.InvalidSchemaError(
+                message=_('A length constraint must have a min value and/or '
+                          'a max value specified.'))
 
         super(Length, self).__init__(min, max, description)
 
         for param in (min, max):
             if not isinstance(param, (int, long, type(None))):
                 msg = _('min/max length must be integral')
-                raise InvalidSchemaError(msg)
+                raise exception.InvalidSchemaError(message=msg)
 
     def _str(self):
         if self.max is None:
@@ -443,7 +441,8 @@ class AllowedValues(Constraint):
         super(AllowedValues, self).__init__(description)
         if (not isinstance(allowed, collections.Sequence) or
                 isinstance(allowed, basestring)):
-            raise InvalidSchemaError(_('AllowedValues must be a list'))
+            raise exception.InvalidSchemaError(
+                message=_('AllowedValues must be a list'))
         self.allowed = tuple(allowed)
 
     def _str(self):
@@ -487,7 +486,8 @@ class AllowedPattern(Constraint):
     def __init__(self, pattern, description=None):
         super(AllowedPattern, self).__init__(description)
         if not isinstance(pattern, basestring):
-            raise InvalidSchemaError(_('AllowedPattern must be a string'))
+            raise exception.InvalidSchemaError(
+                message=_('AllowedPattern must be a string'))
         self.pattern = pattern
         self.match = re.compile(pattern).match
 

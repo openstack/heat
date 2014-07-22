@@ -276,6 +276,7 @@ def map_remote_error(ex):
             'PhysicalResourceNotFound',
             'WatchRuleNotFound',
             'StackValidationFailed',
+            'InvalidSchemaError',
             'InvalidTemplateReference',
             'InvalidTemplateVersion',
             'InvalidTemplateSection',
