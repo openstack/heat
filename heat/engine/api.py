@@ -111,7 +111,18 @@ def format_stack(stack):
     return info
 
 
-def format_stack_resource(resource, detail=True):
+def format_resource_properties(resource):
+    def get_property(prop):
+        try:
+            return resource.properties[prop]
+        except (KeyError, ValueError):
+            return None
+
+    return dict((prop, get_property(prop))
+                for prop in resource.properties_schema.keys())
+
+
+def format_stack_resource(resource, detail=True, with_props=False):
     '''
     Return a representation of the given resource that matches the API output
     expectations.
@@ -142,6 +153,9 @@ def format_stack_resource(resource, detail=True):
         res[api.RES_DESCRIPTION] = resource.t.description
         res[api.RES_METADATA] = resource.metadata_get()
 
+    if with_props:
+        res[api.RES_SCHEMA_PROPERTIES] = format_resource_properties(resource)
+
     return res
 
 
@@ -149,7 +163,7 @@ def format_stack_preview(stack):
     def format_resource(res):
         if isinstance(res, list):
             return map(format_resource, res)
-        return format_stack_resource(res)
+        return format_stack_resource(res, with_props=True)
 
     fmt_stack = format_stack(stack)
     fmt_resources = map(format_resource, stack.preview_resources())
