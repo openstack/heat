@@ -114,7 +114,8 @@ class StackResource(resource.Resource):
                               self._nested_environment(params),
                               disable_rollback=True,
                               parent_resource=self,
-                              owner_id=self.stack.id)
+                              owner_id=self.stack.id,
+                              user_creds_id=self.stack.user_creds_id)
 
         return nested.preview_resources()
 
@@ -173,6 +174,7 @@ class StackResource(resource.Resource):
                               disable_rollback=True,
                               parent_resource=self,
                               owner_id=self.stack.id,
+                              user_creds_id=self.stack.user_creds_id,
                               adopt_stack_data=adopt_data)
         nested.validate()
         self._nested = nested
@@ -229,7 +231,8 @@ class StackResource(resource.Resource):
                              timeout_mins=timeout_mins,
                              disable_rollback=True,
                              parent_resource=self,
-                             owner_id=self.stack.id)
+                             owner_id=self.stack.id,
+                             user_creds_id=self.stack.user_creds_id)
         stack.parameters.set_stack_id(nested_stack.identifier())
         stack.validate()
 

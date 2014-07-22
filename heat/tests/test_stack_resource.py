@@ -111,7 +111,8 @@ class StackResourceTest(HeatTestCase):
                              'Resources':
                              {self.ws_resname: ws_res_snippet}})
         self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                         t, stack_id=str(uuid.uuid4()))
+                                         t, stack_id=str(uuid.uuid4()),
+                                         user_creds_id='uc123')
         resource_defns = t.resource_definitions(self.parent_stack)
         self.parent_resource = MyStackResource('test',
                                                resource_defns[self.ws_resname],
@@ -172,7 +173,8 @@ class StackResourceTest(HeatTestCase):
             'environment',
             disable_rollback=mock.ANY,
             parent_resource=parent_resource,
-            owner_id=mock.ANY
+            owner_id=self.parent_stack.id,
+            user_creds_id=self.parent_stack.user_creds_id
         )
 
     def test_preview_validates_nested_resources(self):
@@ -539,6 +541,7 @@ class StackResourceTest(HeatTestCase):
                      disable_rollback=True,
                      parent_resource=self.parent_resource,
                      owner_id=self.parent_stack.id,
+                     user_creds_id=self.parent_stack.user_creds_id,
                      adopt_stack_data=None).AndReturn(self.stack)
 
         st_set = self.stack.state_set

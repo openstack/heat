@@ -780,7 +780,9 @@ class Stack(collections.Mapping):
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
 
-        if stack_status != self.FAILED and not backup:
+        # If the stack delete suceeded, this is not a backup stack and it's
+        # not a nested stack, we should delete the credentials
+        if stack_status != self.FAILED and not backup and not self.owner_id:
             # Cleanup stored user_creds so they aren't accessible via
             # the soft-deleted stack which remains in the DB
             if self.user_creds_id:
