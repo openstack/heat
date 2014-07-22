@@ -148,5 +148,6 @@ class CfnTemplate(template.Template):
         if len(cfn_tmpl.get(RES_DEPENDS_ON, [])) == 1:
             cfn_tmpl[RES_DEPENDS_ON] = cfn_tmpl[RES_DEPENDS_ON][0]
 
-        self.t.setdefault(self.RESOURCES, {})
+        if self.t.get(self.RESOURCES) is None:
+            self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = cfn_tmpl
