@@ -1662,3 +1662,11 @@ class PropertiesValidationTest(testtools.TestCase):
         self.assertEqual('Property error : foo Property error : foo: boo '
                          'Property error : boo: doo Unknown Property bar',
                          str(ex))
+
+    def test_schema_to_template_empty_schema(self):
+        schema = {}
+
+        (parameters, props) = \
+            properties.Properties.schema_to_parameters_and_properties(schema)
+        self.assertEqual({}, parameters)
+        self.assertEqual({}, props)
