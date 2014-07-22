@@ -104,8 +104,8 @@ def format_stack(stack):
         api.STACK_TIMEOUT: stack.timeout_mins,
     }
 
-    # only show the outputs on a completely created or updated stack
-    if (stack.action != stack.DELETE and stack.status == stack.COMPLETE):
+    # allow users to view the outputs of stacks
+    if (stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS):
         info[api.STACK_OUTPUTS] = format_stack_outputs(stack, stack.outputs)
 
     return info
