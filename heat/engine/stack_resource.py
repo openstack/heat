@@ -347,4 +347,4 @@ class StackResource(resource.Resource):
         return stack.output(op)
 
     def _resolve_attribute(self, name):
-        return unicode(self.get_output(name))
+        return self.get_output(name)

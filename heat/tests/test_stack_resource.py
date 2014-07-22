@@ -476,6 +476,45 @@ class StackResourceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_resolve_attribute_string(self):
+        nested = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
+        stack_resource.StackResource.nested().AndReturn(nested)
+        nested.outputs = {'key': 'value'}
+        nested.output('key').AndReturn('value')
+        self.m.ReplayAll()
+
+        self.assertEqual('value',
+                         self.parent_resource._resolve_attribute("key"))
+
+        self.m.VerifyAll()
+
+    def test_resolve_attribute_dict(self):
+        nested = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
+        stack_resource.StackResource.nested().AndReturn(nested)
+        nested.outputs = {'key': {'a': 1, 'b': 2}}
+        nested.output('key').AndReturn({'a': 1, 'b': 2})
+        self.m.ReplayAll()
+
+        self.assertEqual({'a': 1, 'b': 2},
+                         self.parent_resource._resolve_attribute("key"))
+
+        self.m.VerifyAll()
+
+    def test_resolve_attribute_list(self):
+        nested = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
+        stack_resource.StackResource.nested().AndReturn(nested)
+        nested.outputs = {"key": [1, 2, 3]}
+        nested.output('key').AndReturn([1, 2, 3])
+        self.m.ReplayAll()
+
+        self.assertEqual([1, 2, 3],
+                         self.parent_resource._resolve_attribute("key"))
+
+        self.m.VerifyAll()
+
     def test_create_complete_state_err(self):
         """
         check_create_complete should raise error when create task is
