@@ -25,8 +25,5 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
     sys.path.insert(0, POSSIBLE_TOPDIR)
 
 from heat.cmd import manage
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat')
 
 manage.main()
