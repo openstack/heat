@@ -15,13 +15,14 @@ import abc
 import collections
 import itertools
 
+import six
 
+
+@six.add_metaclass(abc.ABCMeta)
 class Function(object):
     """
     Abstract base class for template functions.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, stack, fn_name, args):
         """
