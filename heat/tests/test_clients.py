@@ -30,14 +30,16 @@ class ClientsTest(HeatTestCase):
         obj = c.client_plugin('heat')
         obj._get_client_option = mock.Mock()
         obj._get_client_option.return_value = None
-        self.assertIsNone(obj._get_heat_url())
+        obj.url_for = mock.Mock(name="url_for")
+        obj.url_for.return_value = "url_from_keystone"
+        self.assertEqual("url_from_keystone", obj.get_heat_url())
         heat_url = "http://0.0.0.0:8004/v1/%(tenant_id)s"
         obj._get_client_option.return_value = heat_url
         tenant_id = "b363706f891f48019483f8bd6503c54b"
         result = heat_url % {"tenant_id": tenant_id}
-        self.assertEqual(result, obj._get_heat_url())
+        self.assertEqual(result, obj.get_heat_url())
         obj._get_client_option.return_value = result
-        self.assertEqual(result, obj._get_heat_url())
+        self.assertEqual(result, obj.get_heat_url())
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat(self, mock_call):
@@ -48,16 +50,10 @@ class ClientsTest(HeatTestCase):
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
         obj = c.client_plugin('heat')
-        obj._get_heat_url = mock.Mock(name="_get_heat_url")
-        obj._get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
         obj.client()
-        self.assertEqual('url_from_keystone', mock_call.call_args[0][1])
-        obj._get_heat_url.return_value = "url_from_config"
-        obj._client = None
-        obj.client()
-        self.assertEqual('url_from_config', mock_call.call_args[0][1])
+        self.assertEqual('url_from_keystone', obj.get_heat_url())
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat_no_auth_token(self, mock_call):
@@ -68,8 +64,6 @@ class ClientsTest(HeatTestCase):
         con.auth_token = None
         c = clients.Clients(con)
         obj = c.client_plugin('heat')
-        obj._get_heat_url = mock.Mock(name="_get_heat_url")
-        obj._get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
         self.assertEqual('anewtoken', c.client('keystone').auth_token)
@@ -83,8 +77,8 @@ class ClientsTest(HeatTestCase):
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
         obj = c.client_plugin('heat')
-        obj._get_heat_url = mock.Mock(name="_get_heat_url")
-        obj._get_heat_url.return_value = None
+        obj.get_heat_url = mock.Mock(name="get_heat_url")
+        obj.get_heat_url.return_value = None
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
         obj._client = None
