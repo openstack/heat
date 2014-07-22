@@ -472,13 +472,14 @@ class PollingTaskGroup(object):
         Each argument to use should be passed as a list (or iterable) of values
         such that one is passed in the corresponding position for each subtask.
         The number of subtasks spawned depends on the length of the argument
-        lists. For example:
+        lists.
+        For example::
 
             PollingTaskGroup.from_task_with_args(my_task,
                                                  [1, 2, 3],
                                                  alpha=['a', 'b', 'c'])
 
-        will start three TaskRunners that will run:
+        will start three TaskRunners that will run::
 
             my_task(1, alpha='a')
             my_task(2, alpha='b')
