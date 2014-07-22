@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from keystoneclient import exceptions as kc_exceptions
 
 from heat.common import exception
@@ -48,7 +50,8 @@ class StackUserTest(HeatTestCase):
         super(StackUserTest, self).tearDown()
 
     def _user_create(self, stack_name, project_id, user_id,
-                     resource_name='user', create_project=True):
+                     resource_name='user', create_project=True,
+                     password=None):
         t = template_format.parse(user_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
         rsrc = stack[resource_name]
@@ -72,7 +75,7 @@ class StackUserTest(HeatTestCase):
                                'create_stack_domain_user')
         expected_username = '%s-%s-%s' % (stack_name, resource_name, 'aabbcc')
         fakes.FakeKeystoneClient.create_stack_domain_user(
-            username=expected_username, password=None,
+            username=expected_username, password=password,
             project_id=project_id).AndReturn(user_id)
 
         return rsrc
@@ -350,3 +353,48 @@ class StackUserTest(HeatTestCase):
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual({'user_id': 'auserdel'}, rs_data)
         self.m.VerifyAll()
+
+    def test_user_token(self):
+        rsrc = self._user_create(stack_name='user_test123',
+                                 project_id='aproject123',
+                                 user_id='auser123',
+                                 password='apassword')
+
+        short_id.get_id(rsrc.id).AndReturn('aabbcc')
+        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+                               'stack_domain_user_token')
+        username = 'user_test123-user-aabbcc'
+        fakes.FakeKeystoneClient.stack_domain_user_token(
+            username=username, project_id='aproject123',
+            password='apassword').AndReturn('atoken123')
+        self.m.ReplayAll()
+
+        rsrc.password = 'apassword'
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('atoken123', rsrc._user_token())
+        self.m.VerifyAll()
+
+    def test_user_token_err_nopassword(self):
+        rsrc = self._user_create(stack_name='user_test123',
+                                 project_id='aproject123',
+                                 user_id='auser123')
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        ex = self.assertRaises(ValueError, rsrc._user_token)
+        expected = "Can't get user token without password"
+        self.assertEqual(expected, six.text_type(ex))
+        self.m.VerifyAll()
+
+    def test_user_token_err_noproject(self):
+        stack_name = 'user_test123'
+        resource_name = 'user'
+        t = template_format.parse(user_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+        rsrc = stack[resource_name]
+
+        ex = self.assertRaises(ValueError, rsrc._user_token)
+        expected = "Can't get user token, user not yet created"
+        self.assertEqual(expected, six.text_type(ex))

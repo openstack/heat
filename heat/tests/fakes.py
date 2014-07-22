@@ -164,3 +164,6 @@ class FakeKeystoneClient(object):
     def delete_stack_domain_user_keypair(self, user_id, project_id,
                                          credential_id):
         pass
+
+    def stack_domain_user_token(self, username, project_id, password):
+        pass
