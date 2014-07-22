@@ -238,10 +238,15 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
 def delete_server(server):
     '''
-    Return a co-routine that deletes the server and waits for it to
+    A co-routine that deletes the server and waits for it to
     disappear from Nova.
     '''
-    server.delete()
+    if not server:
+        return
+    try:
+        server.delete()
+    except nova_exceptions.NotFound:
+        return
 
     while True:
         yield
@@ -250,6 +255,20 @@ def delete_server(server):
             refresh_server(server)
         except nova_exceptions.NotFound:
             break
+        else:
+            # Some clouds append extra (STATUS) strings to the status
+            short_server_status = server.status.split('(')[0]
+            if short_server_status == "DELETED":
+                break
+            if short_server_status == "ERROR":
+                fault = getattr(server, 'fault', {})
+                message = fault.get('message', 'Unknown')
+                code = fault.get('code')
+                errmsg = (_("Server %(name)s delete failed: (%(code)s) "
+                            "%(message)s"))
+                raise exception.Error(errmsg % {"name": server.name,
+                                                "code": code,
+                                                "message": message})
 
 
 @scheduler.wrappertask
