@@ -296,6 +296,10 @@ class NotSupported(HeatException):
     msg_fmt = _("%(feature)s is not supported.")
 
 
+class ResourceActionNotSupported(HeatException):
+    msg_fmt = _("%(action)s is not supported for resource.")
+
+
 class ResourcePropertyConflict(HeatException):
     msg_fmt = _('Cannot define the following properties at the same time: %s.')
 

@@ -934,13 +934,10 @@ class Resource(object):
                                 '(%(deploy_status_code)s)' % details)
 
             return 'Unknown'
+        if not callable(getattr(self, 'handle_signal', None)):
+            raise exception.ResourceActionNotSupported(action='signal')
 
         try:
-            if not callable(getattr(self, 'handle_signal', None)):
-                msg = (_('Resource %s is not able to receive a signal') %
-                       str(self))
-                raise Exception(msg)
-
             signal_result = self.handle_signal(details)
             if signal_result:
                 reason_string = "Signal: %s" % signal_result
