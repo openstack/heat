@@ -19,14 +19,11 @@ import webob
 
 from heat.api.aws import exception
 from heat.api.aws.exception import HeatAPIException
+from heat.common.i18n import _
 from heat.common import wsgi
-from heat.openstack.common import gettextutils
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils as json
 from heat.openstack.common import log as logging
-
-gettextutils.install('heat')
 
 LOG = logging.getLogger(__name__)
 

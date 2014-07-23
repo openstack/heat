@@ -19,8 +19,8 @@
 import six
 import webob.exc
 
+from heat.common.i18n import _
 from heat.common import serializers
-from heat.openstack.common.gettextutils import _
 
 
 class HeatAPIException(webob.exc.HTTPError):
