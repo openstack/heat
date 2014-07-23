@@ -30,8 +30,6 @@ from heat.openstack.common.db.sqlalchemy import session as db_session
 from heat.openstack.common.db.sqlalchemy import utils
 from heat.openstack.common.gettextutils import _
 
-cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
-
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_opt('connection', 'heat.openstack.common.db.options',
