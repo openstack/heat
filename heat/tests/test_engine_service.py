@@ -81,6 +81,30 @@ wp_template = '''
 }
 '''
 
+wp_template_no_default = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String"
+    }
+  },
+  "Resources" : {
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "KeyName"        : "test",
+        "UserData"       : "wordpress"
+      }
+    }
+  }
+}
+'''
+
 nested_alarm_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -181,6 +205,14 @@ def get_wordpress_stack(stack_name, ctx):
     template = templatem.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment({'KeyName': 'test'}))
+    return stack
+
+
+def get_wordpress_stack_no_params(stack_name, ctx):
+    t = template_format.parse(wp_template)
+    template = parser.Template(t)
+    stack = parser.Stack(ctx, stack_name, template,
+                         environment.Environment({}))
     return stack
 
 
@@ -890,6 +922,56 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         api_args = {'timeout_mins': 60}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
+        self.assertEqual(old_stack.identifier(), result)
+        self.assertIsInstance(result, dict)
+        self.assertTrue(result['stack_id'])
+        self.assertEqual(self.man.thread_group_mgr.events[sid], [evt_mock])
+        self.m.VerifyAll()
+
+    def test_stack_update_existing_parameters(self):
+        '''Use a template with default parameter and no input parameter
+        then update with a template without default and no input
+        parameter, using the existing parameter.
+        '''
+        stack_name = 'service_update_test_stack_existing_parameters'
+        no_params = {}
+        with_params = {'KeyName': 'foo'}
+
+        old_stack = get_wordpress_stack_no_params(stack_name, self.ctx)
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        t = template_format.parse(wp_template_no_default)
+        template = parser.Template(t)
+        env = environment.Environment({'parameters': with_params,
+                                       'resource_registry': {'rsc': 'test'}})
+        stack = parser.Stack(self.ctx, stack_name, template, env)
+
+        self._stub_update_mocks(s, old_stack)
+
+        templatem.Template(wp_template_no_default,
+                           files=None).AndReturn(stack.t)
+        environment.Environment(no_params).AndReturn(old_stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t, old_stack.env,
+                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+
+        evt_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(grevent, 'Event')
+        grevent.Event().AndReturn(evt_mock)
+        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+
+        self.m.ReplayAll()
+
+        api_args = {engine_api.PARAM_TIMEOUT: 60,
+                    engine_api.PARAM_EXISTING: True}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       wp_template_no_default, no_params,
+                                       None, api_args)
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])

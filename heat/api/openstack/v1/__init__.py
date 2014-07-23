@@ -106,6 +106,10 @@ class API(wsgi.Router):
                                  "/stacks/{stack_name}/{stack_id}",
                                  action="update",
                                  conditions={'method': 'PUT'})
+            stack_mapper.connect("stack_update_patch",
+                                 "/stacks/{stack_name}/{stack_id}",
+                                 action="update_patch",
+                                 conditions={'method': 'PATCH'})
             stack_mapper.connect("stack_delete",
                                  "/stacks/{stack_name}/{stack_id}",
                                  action="delete",

@@ -657,6 +657,8 @@ class EngineService(service.Service):
         common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
                                  current_stack.disable_rollback)
         env = environment.Environment(params)
+        if args.get(rpc_api.PARAM_EXISTING, None):
+            env.patch_previous_parameters(current_stack.env)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)
         updated_stack.parameters.set_stack_id(current_stack.identifier())

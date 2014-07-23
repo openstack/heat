@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import glob
 import itertools
 import os.path
@@ -365,6 +366,15 @@ class Environment(object):
     def load(self, env_snippet):
         self.registry.load(env_snippet.get(env_fmt.RESOURCE_REGISTRY, {}))
         self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
+
+    def patch_previous_parameters(self, previous_env):
+        """This instance of Environment is the new environment where
+        we are reusing as default the previous parameter values.
+        """
+        previous_parameters = copy.deepcopy(previous_env.params)
+        # patch the new set of parameters
+        previous_parameters.update(self.params)
+        self.params = previous_parameters
 
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""
