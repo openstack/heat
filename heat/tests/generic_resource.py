@@ -14,6 +14,8 @@
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import signal_responder
 from heat.engine import stack_user
@@ -151,3 +153,10 @@ class StackUserResource(stack_user.StackUser):
     def handle_create(self):
         super(StackUserResource, self).handle_create()
         self.resource_id_set(self._get_user_id())
+
+
+class ResourceWithCustomConstraint(GenericResource):
+    properties_schema = \
+        {'Foo': properties.Schema(
+            properties.Schema.STRING,
+            constraints=[constraints.CustomConstraint('neutron.network')])}
