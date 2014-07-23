@@ -1368,11 +1368,10 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         cfg.CONF.clear_override('stack_user_domain_name')
 
     def _stub_domain_admin_client_domain_get(self):
+        dummy_domain = self.m.CreateMockAnything()
+        dummy_domain.id = 'adomain123'
         self.mock_ks_v3_client_domain_mngr.get('adomain123').AndReturn(
-            kc_v3_domains.Domain(
-                self.mock_ks_v3_client_domain_mngr,
-                {'id': 'adomain123'},
-                loaded=True))
+            dummy_domain)
 
     def _stub_domain_admin_client(self, auth_ok=True):
         kc_v3.Client(
