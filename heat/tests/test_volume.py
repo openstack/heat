@@ -24,8 +24,6 @@ from heat.common import template_format
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
-from heat.engine.resources import glance_utils
-from heat.engine.resources import image
 from heat.engine.resources import instance
 from heat.engine.resources import volume as vol
 from heat.engine import rsrc_defn
@@ -215,12 +213,12 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'check_create_complete')
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
-        image.ImageConstraint.validate(
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -885,13 +883,9 @@ class VolumeTest(HeatTestCase):
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, image_id).MultipleTimes().\
-            AndReturn(image_id)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            image_id).MultipleTimes().AndReturn(image_id)
 
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',

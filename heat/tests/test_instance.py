@@ -25,8 +25,6 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import glance_utils
-from heat.engine.resources import image
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface
 from heat.engine.resources import nova_utils
@@ -80,21 +78,13 @@ class InstancesTest(HeatTestCase):
         return (template, stack)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
-            AndReturn(imageId)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _mock_get_image_id_fail(self, image_id, exp):
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
 
     def _get_test_template(self, stack_name, image_id=None):
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -712,8 +702,8 @@ class InstancesTest(HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'in_update2')
 
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 

@@ -39,7 +39,6 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.properties import Properties
 from heat.engine import resource as res
-from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import service
@@ -204,12 +203,8 @@ def setup_keystone_mocks(mocks, stack):
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
-    g_cli_mock = mocks.CreateMockAnything()
-    mocks.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-    glance.GlanceClientPlugin._create().AndReturn(
-        g_cli_mock)
-    mocks.StubOutWithMock(glance_utils, 'get_image_id')
-    glance_utils.get_image_id(g_cli_mock, imageId_input).\
+    mocks.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+    glance.GlanceClientPlugin.get_image_id(imageId_input).\
         MultipleTimes().AndReturn(imageId_output)
 
 

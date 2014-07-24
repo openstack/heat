@@ -344,6 +344,11 @@ class Resource(object):
         assert client_name, "Must specify client name"
         return self.stack.clients.client(client_name)
 
+    def client_plugin(self, name=None):
+        client_name = name or self.default_client_name
+        assert client_name, "Must specify client name"
+        return self.stack.clients.client_plugin(client_name)
+
     def keystone(self):
         return self.client('keystone')
 

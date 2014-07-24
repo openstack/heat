@@ -21,7 +21,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import glance_utils
 from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import log as logging
@@ -644,8 +643,8 @@ class CinderVolume(Volume):
             'availability_zone': self.properties[self.AVAILABILITY_ZONE]
         }
         if self.properties.get(self.IMAGE):
-            arguments['imageRef'] = glance_utils.get_image_id(
-                self.glance(), self.properties[self.IMAGE])
+            arguments['imageRef'] = self.client_plugin('glance').get_image_id(
+                self.properties[self.IMAGE])
         elif self.properties.get(self.IMAGE_REF):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 

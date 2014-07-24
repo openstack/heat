@@ -26,8 +26,6 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import glance_utils
-from heat.engine.resources import image
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
 from heat.engine.resources.software_config import software_config as sc
@@ -162,28 +160,18 @@ class ServersTest(HeatTestCase):
         return fake_interface(port, mac, ip)
 
     def _mock_get_image_id_success(self, imageId_input, imageId,
-                                   server_rebuild=False,
-                                   mock_create=True):
-        g_cli_mock = self.m.CreateMockAnything()
-        if mock_create:
-            self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-            glance.GlanceClientPlugin._create().AndReturn(
-                g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
-            AndReturn(imageId)
+                                   server_rebuild=False):
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            imageId_input).MultipleTimes().AndReturn(imageId)
 
         if server_rebuild:
-            glance_utils.get_image_id(g_cli_mock, 'F17-x86_64-gold').\
+            glance.GlanceClientPlugin.get_image_id('F17-x86_64-gold').\
                 MultipleTimes().AndReturn(744)
 
     def _mock_get_image_id_fail(self, image_id, exp):
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, image_id).AndRaise(exp)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(image_id).AndRaise(exp)
 
     def _mock_get_keypair_success(self, keypair_input, keypair):
         n_cli_mock = self.m.CreateMockAnything()
@@ -835,8 +823,8 @@ class ServersTest(HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
         self.m.ReplayAll()
@@ -1090,7 +1078,7 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(new_return_server,
                                  new_meta).AndReturn(None)
-        self._mock_get_image_id_success('CentOS 5.2', 1, mock_create=False)
+        self._mock_get_image_id_success('CentOS 5.2', 1)
         self.m.ReplayAll()
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta
@@ -1240,8 +1228,8 @@ class ServersTest(HeatTestCase):
         image_id = self.getUniqueString()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 
@@ -1350,8 +1338,8 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'update_prop')
 
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
-        image.ImageConstraint.validate(
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
+        glance.ImageConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 
@@ -2478,12 +2466,12 @@ class ServersTest(HeatTestCase):
     def test_server_properties_validation_create_and_update(self):
         return_server = self.fc.servers.list()[1]
 
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         # verify that validate gets invoked exactly once for create
-        image.ImageConstraint.validate(
+        glance.ImageConstraint.validate(
             'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
         # verify that validate gets invoked exactly once for update
-        image.ImageConstraint.validate(
+        glance.ImageConstraint.validate(
             'Update Image', mox.IgnoreArg()).AndReturn(True)
         self.m.ReplayAll()
 
@@ -2503,14 +2491,14 @@ class ServersTest(HeatTestCase):
     def test_server_properties_validation_create_and_update_fail(self):
         return_server = self.fc.servers.list()[1]
 
-        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
         # verify that validate gets invoked exactly once for create
-        image.ImageConstraint.validate(
+        glance.ImageConstraint.validate(
             'CentOS 5.2', mox.IgnoreArg()).AndReturn(True)
         # verify that validate gets invoked exactly once for update
         ex = exception.ImageNotFound(image_name='Update Image')
-        image.ImageConstraint.validate('Update Image',
-                                       mox.IgnoreArg()).AndRaise(ex)
+        glance.ImageConstraint.validate('Update Image',
+                                        mox.IgnoreArg()).AndRaise(ex)
         self.m.ReplayAll()
 
         # create

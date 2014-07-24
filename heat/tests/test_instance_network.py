@@ -18,7 +18,6 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resources import glance_utils
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine.resources import nova_utils
@@ -152,13 +151,9 @@ class instancesTest(HeatTestCase):
         self.fc = fakes.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        g_cli_mock = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, '_create')
-        glance.GlanceClientPlugin._create().AndReturn(
-            g_cli_mock)
-        self.m.StubOutWithMock(glance_utils, 'get_image_id')
-        glance_utils.get_image_id(g_cli_mock, imageId_input).MultipleTimes().\
-            AndReturn(imageId)
+        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
+        glance.GlanceClientPlugin.get_image_id(
+            imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name
