@@ -27,6 +27,8 @@ class ClientsTest(HeatTestCase):
         con = mock.Mock()
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         c = clients.Clients(con)
+        con.clients = c
+
         obj = c.client_plugin('heat')
         obj._get_client_option = mock.Mock()
         obj._get_client_option.return_value = None
@@ -49,6 +51,8 @@ class ClientsTest(HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
+        con.clients = c
+
         obj = c.client_plugin('heat')
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
@@ -63,6 +67,8 @@ class ClientsTest(HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = None
         c = clients.Clients(con)
+        con.clients = c
+
         obj = c.client_plugin('heat')
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
@@ -76,6 +82,8 @@ class ClientsTest(HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
+        con.clients = c
+
         obj = c.client_plugin('heat')
         obj.get_heat_url = mock.Mock(name="get_heat_url")
         obj.get_heat_url.return_value = None
@@ -95,6 +103,8 @@ class ClientsTest(HeatTestCase):
         con.password = 'verysecret'
         con.auth_token = None
         obj = clients.Clients(con)
+        con.clients = obj
+
         self.assertIsNotNone(obj.client('heat'))
         self.assertEqual('token1', obj.auth_token)
         fkc.auth_token = 'token2'
@@ -115,7 +125,9 @@ class ClientPluginTest(HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
-        plugin = FooClientsPlugin(c)
+        con.clients = c
+
+        plugin = FooClientsPlugin(con)
 
         cfg.CONF.set_override('ca_file', '/tmp/bar',
                               group='clients_heat')
@@ -135,11 +147,13 @@ class ClientPluginTest(HeatTestCase):
         con.auth_token = "1234"
 
         c = clients.Clients(con)
+        con.clients = c
+
         c.client = mock.Mock(name="client")
         mock_keystone = mock.Mock()
         c.client.return_value = mock_keystone
         mock_keystone.auth_token = '5678'
-        plugin = FooClientsPlugin(c)
+        plugin = FooClientsPlugin(con)
 
         # assert token is from keystone rather than context
         # even though both are set
@@ -151,11 +165,13 @@ class ClientPluginTest(HeatTestCase):
         con.auth_token = "1234"
 
         c = clients.Clients(con)
+        con.clients = c
+
         c.client = mock.Mock(name="client")
         mock_keystone = mock.Mock()
         c.client.return_value = mock_keystone
         mock_keystone.url_for.return_value = 'http://192.0.2.1/foo'
-        plugin = FooClientsPlugin(c)
+        plugin = FooClientsPlugin(con)
 
         self.assertEqual('http://192.0.2.1/foo',
                          plugin.url_for(service_type='foo'))
@@ -164,6 +180,8 @@ class ClientPluginTest(HeatTestCase):
     def test_abstract_create(self):
         con = mock.Mock()
         c = clients.Clients(con)
+        con.clients = c
+
         self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
 
 
@@ -176,6 +194,7 @@ class TestClientPluginsInitialise(HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
+        con.clients = c
 
         for plugin_name in clients._mgr.names():
             self.assertTrue(clients.has_client(plugin_name))
@@ -187,6 +206,7 @@ class TestClientPluginsInitialise(HeatTestCase):
 
         con = mock.Mock()
         c = clients.Clients(con)
+        con.clients = c
 
         for plugin_name in plugin_types:
             plugin = c.client_plugin(plugin_name)

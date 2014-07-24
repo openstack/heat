@@ -2448,19 +2448,21 @@ class NeutronPortTest(HeatTestCase):
 class NetworkConstraintTest(HeatTestCase):
 
     def test_validate(self):
+        nc = self.m.CreateMockAnything()
         self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(None)
+        neutron.NeutronClientPlugin._create().AndReturn(nc)
         self.m.StubOutWithMock(net.neutronV20, 'find_resourceid_by_name_or_id')
         net.neutronV20.find_resourceid_by_name_or_id(
-            None, 'network', 'foo'
+            nc, 'network', 'foo'
         ).AndReturn('foo')
         net.neutronV20.find_resourceid_by_name_or_id(
-            None, 'network', 'bar'
+            nc, 'network', 'bar'
         ).AndRaise(qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
 
         constraint = net.NetworkConstraint()
-        self.assertTrue(constraint.validate("foo", None))
-        self.assertFalse(constraint.validate("bar", None))
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
 
         self.m.VerifyAll()

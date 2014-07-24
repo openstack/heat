@@ -15,6 +15,7 @@ from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
 from heat.db import api as db_api
+from heat.engine import clients
 from heat.openstack.common import context
 from heat.openstack.common import importutils
 from heat.openstack.common import local
@@ -58,6 +59,7 @@ class RequestContext(context.RequestContext):
         if overwrite or not hasattr(local.store, 'context'):
             self.update_store()
         self._session = None
+        self._clients = None
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
         self.policy = policy.Enforcer()
@@ -75,6 +77,12 @@ class RequestContext(context.RequestContext):
         if self._session is None:
             self._session = db_api.get_session()
         return self._session
+
+    @property
+    def clients(self):
+        if self._clients is None:
+            self._clients = clients.Clients(self)
+        return self._clients
 
     def to_dict(self):
         return {'auth_token': self.auth_token,

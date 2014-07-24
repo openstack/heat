@@ -469,7 +469,7 @@ Mappings:
                              parser.Template(empty_template))
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         fc = fakes.FakeClient()
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
+        nova.NovaClientPlugin._create().AndReturn(fc)
         self.m.ReplayAll()
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
 
@@ -1364,7 +1364,7 @@ class StackTest(HeatTestCase):
                 raise Exception("Shouldn't delete")
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
+        keystone.KeystoneClientPlugin._create().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -1420,7 +1420,7 @@ class StackTest(HeatTestCase):
                 raise kc_exceptions.Forbidden("Denied!")
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
+        keystone.KeystoneClientPlugin._create().AndReturn(
             FakeKeystoneClientFail())
         self.m.ReplayAll()
 
@@ -3079,7 +3079,7 @@ class StackTest(HeatTestCase):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().MultipleTimes().AndReturn(
+        keystone.KeystoneClientPlugin._create().AndReturn(
             FakeKeystoneClient())
         self.m.ReplayAll()
 
@@ -3378,7 +3378,7 @@ class StackTest(HeatTestCase):
         # works for stack creation
         fc = fakes.FakeClient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(fc)
+        nova.NovaClientPlugin._create().AndReturn(fc)
 
         fc.flavors = self.m.CreateMockAnything()
         flavor = collections.namedtuple("Flavor", ["id", "name"])
