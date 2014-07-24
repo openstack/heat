@@ -11,9 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutronclient.common import exceptions
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
 
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
@@ -35,3 +38,13 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         }
 
         return nc.Client(**args)
+
+
+class NetworkConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.NeutronClientException,)
+
+    def validate_with_client(self, client, value):
+        neutron_client = client.client('neutron')
+        neutronV20.find_resourceid_by_name_or_id(
+            neutron_client, 'network', value)
