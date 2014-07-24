@@ -367,11 +367,15 @@ class Environment(object):
         self.registry.load(env_snippet.get(env_fmt.RESOURCE_REGISTRY, {}))
         self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
 
-    def patch_previous_parameters(self, previous_env):
+    def patch_previous_parameters(self, previous_env, clear_parameters=[]):
         """This instance of Environment is the new environment where
         we are reusing as default the previous parameter values.
         """
         previous_parameters = copy.deepcopy(previous_env.params)
+        # clear the parameters from the previous set as requested
+        for p in clear_parameters:
+            previous_parameters.pop(p, None)
+
         # patch the new set of parameters
         previous_parameters.update(self.params)
         self.params = previous_parameters
