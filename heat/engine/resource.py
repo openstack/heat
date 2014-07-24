@@ -52,17 +52,10 @@ def _register_class(resource_type, resource_class):
 
 
 class UpdateReplace(Exception):
-    '''
-    Raised when resource update requires replacement
-    '''
-
-    def __init__(self, resource_name='Unknown',
-                 message=_("The Resource %s requires replacement.")):
-        try:
-            msg = message % resource_name
-        except TypeError:
-            msg = message
-        super(Exception, self).__init__(msg)
+    '''Raised when resource update requires replacement.'''
+    def __init__(self, resource_name='Unknown'):
+        msg = _("The Resource %s requires replacement.") % resource_name
+        super(Exception, self).__init__(six.text_type(msg))
 
 
 class ResourceInError(exception.HeatException):
