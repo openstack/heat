@@ -315,6 +315,22 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'p', schema, val)
         self.assertIn('out of range', six.text_type(err))
 
+    def test_json_list(self):
+        schema = {'Type': 'Json'}
+        val = ["fizz", "buzz"]
+        p = self.new_parameter('p', schema, val)
+        self.assertIsInstance(p.value(), list)
+        self.assertIn("fizz", p.value())
+        self.assertIn("buzz", p.value())
+
+    def test_json_string_list(self):
+        schema = {'Type': 'Json'}
+        val = '["fizz", "buzz"]'
+        p = self.new_parameter('p', schema, val)
+        self.assertIsInstance(p.value(), list)
+        self.assertIn("fizz", p.value())
+        self.assertIn("buzz", p.value())
+
     def test_bool_value_true(self):
         schema = {'Type': 'Boolean'}
         for val in ('1', 't', 'true', 'on', 'y', 'yes', True, 1):
