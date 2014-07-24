@@ -13,7 +13,7 @@
 
 import os
 
-from heat.openstack.common.db.sqlalchemy import migration as oslo_migration
+from oslo.db.sqlalchemy import migration as oslo_migration
 
 
 INIT_VERSION = 14
