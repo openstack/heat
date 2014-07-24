@@ -1,32 +1,11 @@
 Files in this directory are general developer tools or examples of how
 to do certain activities.
 
-If you're running on F16, make sure you first enable the preview yum repository
-http://fedoraproject.org/wiki/Getting_started_with_OpenStack_on_Fedora_17#Preview_Repository_for_Fedora_16
+If you're running on Fedora, see the instructions at http://docs.openstack.org/developer/heat/getting_started/on_fedora.html
 
 -----
 Tools
 -----
-
-+ experimental_ssh_eventlet.py
-     - Example of using ssh inside python with eventlets.
-
-+ openstack - WARNING COULD DESTROY DATA
-    - Installs, Uninstalls, starts, and stops openstack from the RPM repository
-      on F16 or F17.  This provides a consistent way for developers to deploy
-      openstack in a consistent painless way.
-
-      THIS IS NOT INTENDED FOR END USERS AS IT COULD PERMANENTLY DESTROY DATA
-      AND DOES NOT PROPERLY SECURE THE INSTALLATION.
-
-      note: This tool does not create a network.  Creating a network depends
-            on the specific environment, but an example network creation:
-
-sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0
-
-+ heat-keystone-setup
-    - This tool configures keystone for use with the heat service  the first
-       time openstack is installed.
 
 + heat-db-drop
     - This script drops the heat database from mysql in the case of developer
