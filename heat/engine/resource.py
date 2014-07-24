@@ -12,6 +12,7 @@
 #    under the License.
 
 import base64
+import contextlib
 from datetime import datetime
 import six
 import warnings
@@ -371,6 +372,38 @@ class Resource(object):
     def glance(self):
         return self.client('glance')
 
+    @contextlib.contextmanager
+    def _action_recorder(self, action, expected_exceptions=tuple()):
+        '''Return a context manager to record the progress of an action.
+
+        Upon entering the context manager, the state is set to IN_PROGRESS.
+        Upon exiting, the state will be set to COMPLETE if no exception was
+        raised, or FAILED otherwise. Non-exit exceptions will be translated
+        to ResourceFailure exceptions.
+
+        Expected exceptions are re-raised, with the Resource left in the
+        IN_PROGRESS state.
+        '''
+        try:
+            self.state_set(action, self.IN_PROGRESS)
+            yield
+        except expected_exceptions as ex:
+            with excutils.save_and_reraise_exception():
+                LOG.debug('%s', six.text_type(ex))
+        except Exception as ex:
+            LOG.exception('%s: %s' % (action, str(self)))  # noqa
+            failure = exception.ResourceFailure(ex, self, action)
+            self.state_set(action, self.FAILED, six.text_type(failure))
+            raise failure
+        except:  # noqa
+            with excutils.save_and_reraise_exception():
+                try:
+                    self.state_set(action, self.FAILED, '%s aborted' % action)
+                except Exception:
+                    LOG.exception(_('Error marking resource as failed'))
+        else:
+            self.state_set(action, self.COMPLETE)
+
     def _do_action(self, action, pre_func=None, resource_data=None):
         '''
         Perform a transition to a new state via a specified action
@@ -388,9 +421,7 @@ class Resource(object):
         '''
         assert action in self.ACTIONS, 'Invalid action %s' % action
 
-        try:
-            self.state_set(action, self.IN_PROGRESS)
-
+        with self._action_recorder(action):
             action_l = action.lower()
             handle = getattr(self, 'handle_%s' % action_l, None)
             check = getattr(self, 'check_%s_complete' % action_l, None)
@@ -406,20 +437,6 @@ class Resource(object):
                 if callable(check):
                     while not check(handle_data):
                         yield
-        except Exception as ex:
-            LOG.exception('%s : %s' % (action, str(self)))  # noqa
-            failure = exception.ResourceFailure(ex, self, action)
-            self.state_set(action, self.FAILED, six.text_type(failure))
-            raise failure
-        except:  # noqa
-            with excutils.save_and_reraise_exception():
-                try:
-                    self.state_set(action, self.FAILED,
-                                   '%s aborted' % action)
-                except Exception:
-                    LOG.exception(_('Error marking resource as failed'))
-        else:
-            self.state_set(action, self.COMPLETE)
 
     def preview(self):
         '''
@@ -526,9 +543,8 @@ class Resource(object):
 
         LOG.info(_('updating %s') % str(self))
 
-        try:
-            self.updated_time = datetime.utcnow()
-            self.state_set(action, self.IN_PROGRESS)
+        self.updated_time = datetime.utcnow()
+        with self._action_recorder(action, UpdateReplace):
             before_properties = Properties(self.properties_schema,
                                            before.get('Properties', {}),
                                            function.resolve,
@@ -547,20 +563,9 @@ class Resource(object):
                 if callable(getattr(self, 'check_update_complete', None)):
                     while not self.check_update_complete(handle_data):
                         yield
-        except UpdateReplace:
-            with excutils.save_and_reraise_exception():
-                LOG.debug("Resource %s update requires replacement" %
-                          self.name)
-        except Exception as ex:
-            LOG.exception(_('update %(resource)s : %(err)s') %
-                          {'resource': str(self), 'err': ex})
-            failure = exception.ResourceFailure(ex, self, action)
-            self.state_set(action, self.FAILED, six.text_type(failure))
-            raise failure
-        else:
-            self.t = after
-            self.reparse()
-            self.state_set(action, self.COMPLETE)
+
+        self.t = after
+        self.reparse()
 
     def suspend(self):
         '''
@@ -667,9 +672,7 @@ class Resource(object):
 
         LOG.info(_('deleting %s') % str(self))
 
-        try:
-            self.state_set(action, self.IN_PROGRESS)
-
+        with self._action_recorder(action):
             if self.abandon_in_progress:
                 deletion_policy = self.t.RETAIN
             else:
@@ -688,21 +691,6 @@ class Resource(object):
                     callable(getattr(self, 'check_delete_complete', None))):
                 while not self.check_delete_complete(handle_data):
                     yield
-
-        except Exception as ex:
-            LOG.exception(_('Delete %s') % str(self))
-            failure = exception.ResourceFailure(ex, self, self.action)
-            self.state_set(action, self.FAILED, six.text_type(failure))
-            raise failure
-        except:  # noqa
-            with excutils.save_and_reraise_exception():
-                try:
-                    self.state_set(action, self.FAILED,
-                                   'Deletion aborted')
-                except Exception:
-                    LOG.exception(_('Error marking resource deletion failed'))
-        else:
-            self.state_set(action, self.COMPLETE)
 
     @scheduler.wrappertask
     def destroy(self):
