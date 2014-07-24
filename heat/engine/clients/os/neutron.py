@@ -15,8 +15,10 @@ from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+from heat.openstack.common import uuidutils
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
@@ -80,6 +82,39 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def network_id_from_subnet_id(self, subnet_id):
         subnet_info = self.client().show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']
+
+    def get_secgroup_uuids(self, security_groups):
+        '''
+        Returns a list of security group UUIDs.
+        Args:
+            security_groups: List of security group names or UUIDs
+        '''
+        seclist = []
+        all_groups = None
+        for sg in security_groups:
+            if uuidutils.is_uuid_like(sg):
+                seclist.append(sg)
+            else:
+                if not all_groups:
+                    response = self.client().list_security_groups()
+                    all_groups = response['security_groups']
+                same_name_groups = [g for g in all_groups if g['name'] == sg]
+                groups = [g['id'] for g in same_name_groups]
+                if len(groups) == 0:
+                    raise exception.PhysicalResourceNotFound(resource_id=sg)
+                elif len(groups) == 1:
+                    seclist.append(groups[0])
+                else:
+                    # for admin roles, can get the other users'
+                    # securityGroups, so we should match the tenant_id with
+                    # the groups, and return the own one
+                    own_groups = [g['id'] for g in same_name_groups
+                                  if g['tenant_id'] == self.context.tenant_id]
+                    if len(own_groups) == 1:
+                        seclist.append(own_groups[0])
+                    else:
+                        raise exception.PhysicalResourceNameAmbiguity(name=sg)
+        return seclist
 
 
 class NetworkConstraint(constraints.BaseCustomConstraint):

@@ -537,6 +537,96 @@ class NeutronTest(HeatTestCase):
         self.assertRaises(KeyError, res._resolve_attribute, 'attr3')
         self.assertIsNone(res._resolve_attribute('attr2'))
 
+    def test_get_secgroup_uuids(self):
+        # test get_secgroup_uuids with uuid
+        security_groups = ['b62c3079-6946-44f5-a67b-6b9091884d4f',
+                           '9887157c-d092-40f5-b547-6361915fce7d']
+        self.assertEqual(security_groups,
+                         qr.get_secgroup_uuids(security_groups, None, None))
+        # test get_secgroup_uuids with name
+        secgroups = ['security_group_1']
+        expected_groups = ['0389f747-7785-4757-b7bb-2ab07e4b09c3']
+        ctx = utils.dummy_context(
+            tenant_id='dc4b074874244f7693dd65583733a758')
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+        nclient = neutronclient.Client()
+        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
+        neutronclient.Client.list_security_groups().AndReturn(
+            fake_groups_list)
+        self.m.ReplayAll()
+        self.assertEqual(expected_groups,
+                         qr.get_secgroup_uuids(secgroups, nclient,
+                                               ctx.tenant_id))
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+        # test there are two securityGroups with same name, but there is
+        # one belongs to the tenant
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                },
+                {
+                    'tenant_id': '64395a8e5beb4930a18245f76a5b1570',
+                    'id': '384ccd91-447c-4d83-832c-06974a7d3d05',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
+        neutronclient.Client.list_security_groups().AndReturn(
+            fake_groups_list)
+        self.m.ReplayAll()
+        self.assertEqual(expected_groups,
+                         qr.get_secgroup_uuids(secgroups, nclient,
+                                               ctx.tenant_id))
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+        # test there are two securityGroups with same name, and the two
+        # all belong to the tenant
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                },
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '384ccd91-447c-4d83-832c-06974a7d3d05',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
+        neutronclient.Client.list_security_groups().AndReturn(fake_groups_list)
+        self.m.ReplayAll()
+        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+                          qr.get_secgroup_uuids,
+                          secgroups, nclient, ctx.tenant_id)
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
 
 class NeutronNetTest(HeatTestCase):
 
