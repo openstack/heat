@@ -905,7 +905,8 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                LOG.error(_('delete: %s') % ex)
+                LOG.error(_('Resource %(name)s delete failed: %(ex)s') %
+                          {'name': res.name, 'ex': ex})
 
         for res in deps:
             if not failed:
@@ -913,7 +914,8 @@ class Stack(collections.Mapping):
                     res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
-                    LOG.exception(_('create'))
+                    LOG.exception(_('Resource %(name)s create failed: %(ex)s')
+                                  % {'name': res.name, 'ex': ex})
                     failed = True
             else:
                 res.state_set(res.CREATE, res.FAILED,
