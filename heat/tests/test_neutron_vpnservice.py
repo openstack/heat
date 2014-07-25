@@ -14,6 +14,7 @@
 import copy
 import mox
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -223,7 +224,7 @@ class VPNServiceTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -258,7 +259,7 @@ class VPNServiceTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -284,7 +285,7 @@ class VPNServiceTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (vpnservice non-existent_property) is '
             'incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -370,7 +371,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -405,7 +406,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -441,7 +442,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (ipsec_site_connection '
             'non-existent_property) is incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -516,7 +517,7 @@ class IKEPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -551,7 +552,7 @@ class IKEPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -581,7 +582,7 @@ class IKEPolicyTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (ikepolicy non-existent_property) is '
             'incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -657,7 +658,7 @@ class IPsecPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -692,7 +693,7 @@ class IPsecPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -722,7 +723,7 @@ class IPsecPolicyTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (ipsecpolicy non-existent_property) is '
             'incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):

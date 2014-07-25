@@ -12,6 +12,7 @@
 #    under the License.
 
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -100,7 +101,7 @@ class MeteringLabelTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -138,7 +139,7 @@ class MeteringLabelTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -213,7 +214,7 @@ class MeteringRuleTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -251,7 +252,7 @@ class MeteringRuleTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 

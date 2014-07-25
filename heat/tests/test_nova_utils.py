@@ -14,6 +14,7 @@
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
 import mock
+import six
 import uuid
 
 from novaclient import exceptions as nova_exceptions
@@ -119,7 +120,8 @@ class NovaUtilsTests(HeatTestCase):
         }
         task = scheduler.TaskRunner(nova_utils.delete_server, server)
         err = self.assertRaises(exception.Error, task)
-        self.assertIn("myserver delete failed: (None) test error", str(err))
+        self.assertIn("myserver delete failed: (None) test error",
+                      six.text_type(err))
 
 
 class NovaUtilsRefreshServerTests(HeatTestCase):

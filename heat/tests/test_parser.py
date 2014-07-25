@@ -204,7 +204,7 @@ class TemplateTest(HeatTestCase):
                         '"heat_template_version: 2012-12-12". '
                         '"heat_template_version" should be one of: %s'
                         % ', '.join(valid_versions))
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
 
     def test_invalid_version_not_in_hot_versions(self):
         invalid_hot_version_tmp = template_format.parse(
@@ -224,7 +224,7 @@ class TemplateTest(HeatTestCase):
                         '"heat_template_version: 2012-12-12". '
                         '"heat_template_version" should be '
                         'one of: 2013-05-23, 2013-06-23')
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
         template._template_classes = temp_copy
 
     def test_invalid_aws_version(self):
@@ -237,7 +237,7 @@ class TemplateTest(HeatTestCase):
         ex_error_msg = ('The template version is invalid: '
                         '"AWSTemplateFormatVersion: 2012-12-12". '
                         '"AWSTemplateFormatVersion" should be: 2010-09-09')
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
 
     def test_invalid_version_not_in_aws_versions(self):
         invalid_aws_version_tmp = template_format.parse(
@@ -257,7 +257,7 @@ class TemplateTest(HeatTestCase):
                         '"AWSTemplateFormatVersion: 2012-12-12". '
                         '"AWSTemplateFormatVersion" should be '
                         'one of: 2010-09-09, 2011-06-23')
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
         template._template_classes = temp_copy
 
     def test_invalid_heat_version(self):
@@ -270,7 +270,7 @@ class TemplateTest(HeatTestCase):
         ex_error_msg = ('The template version is invalid: '
                         '"HeatTemplateFormatVersion: 2010-09-09". '
                         '"HeatTemplateFormatVersion" should be: 2012-12-12')
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
 
     def test_invalid_version_not_in_heat_versions(self):
         invalid_heat_version_tmp = template_format.parse(
@@ -290,7 +290,7 @@ class TemplateTest(HeatTestCase):
                         '"HeatTemplateFormatVersion: 2010-09-09". '
                         '"HeatTemplateFormatVersion" should be '
                         'one of: 2012-12-12, 2014-12-12')
-        self.assertEqual(ex_error_msg, str(init_ex))
+        self.assertEqual(ex_error_msg, six.text_type(init_ex))
 
         template._template_classes = temp_copy
 
@@ -595,7 +595,7 @@ Mappings:
                                   self.resolve,
                                   snippet,
                                   stack.t, stack)
-        self.assertIn(snippet.keys()[0], str(error))
+        self.assertIn(snippet.keys()[0], six.text_type(error))
 
     def test_resource_facade_missing_deletion_policy(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
@@ -619,7 +619,7 @@ Mappings:
                                 {'foo': {'Type': 'String', 'Required': True}}})
         self.assertEqual(expected_description, tmpl['Description'])
         keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'Parameters')
-        self.assertIn("can not be accessed directly", str(keyError))
+        self.assertIn("can not be accessed directly", six.text_type(keyError))
 
     def test_parameters_section_not_iterable(self):
         expected_description = "This can be accessed"
@@ -774,7 +774,7 @@ class TemplateFnErrorTest(HeatTestCase):
         error = self.assertRaises(self.expect,
                                   resolve,
                                   self.snippet)
-        self.assertIn(self.snippet.keys()[0], str(error))
+        self.assertIn(self.snippet.keys()[0], six.text_type(error))
 
 
 class ResolveDataTest(HeatTestCase):

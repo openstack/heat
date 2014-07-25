@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import six
 import uuid
 
 import mock
@@ -343,7 +344,7 @@ class ServersTest(HeatTestCase):
             'StackValidationFailed: Property error : WebServer: '
             'image Error validating value \'Slackware\': '
             'The Image (Slackware) could not be found.',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -369,7 +370,7 @@ class ServersTest(HeatTestCase):
             'StackValidationFailed: Property error : WebServer: '
             'image Multiple physical resources were '
             'found with name (CentOS 5.2).',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -394,7 +395,7 @@ class ServersTest(HeatTestCase):
             'StackValidationFailed: Property error : WebServer: '
             'image Error validating value \'1\': '
             'The Image (1) could not be found.',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -728,7 +729,7 @@ class ServersTest(HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   servers.Server._check_maximum,
                                   2, 1, msg)
-        self.assertEqual(msg, str(error))
+        self.assertEqual(msg, six.text_type(error))
 
     def test_server_validate(self):
         stack_name = 'srv_val'
@@ -784,7 +785,8 @@ class ServersTest(HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
         self.assertEqual('Neither image nor bootable volume is specified for '
-                         'instance server_with_bootable_volume', str(ex))
+                         'instance server_with_bootable_volume',
+                         six.text_type(ex))
         self.m.VerifyAll()
 
     def test_server_validate_with_nova_keypair_resource(self):
@@ -854,7 +856,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual(
             'Property error : WebServer: key_name Error validating '
             'value \'test2\': The Key (test2) could not be found.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_server_validate_with_networks(self):
@@ -884,7 +886,7 @@ class ServersTest(HeatTestCase):
                         '"%(server)s". The "uuid" property is deprecated. '
                         'Use only "network" property.'
                         '') % dict(network=network_name, server=server.name),
-                      str(ex))
+                      six.text_type(ex))
         self.m.VerifyAll()
 
     def test_server_validate_net_security_groups(self):
@@ -912,7 +914,7 @@ class ServersTest(HeatTestCase):
                                   server.validate)
         self.assertEqual("Cannot define the following properties at the same "
                          "time: security_groups, networks/port.",
-                         str(error))
+                         six.text_type(error))
         self.m.VerifyAll()
 
     def test_server_delete(self):
@@ -984,7 +986,8 @@ class ServersTest(HeatTestCase):
 
         resf = self.assertRaises(exception.ResourceFailure,
                                  scheduler.TaskRunner(server.delete))
-        self.assertIn("Server sample-server delete failed", str(resf))
+        self.assertIn("Server sample-server delete failed",
+                      six.text_type(resf))
 
         self.m.VerifyAll()
 
@@ -1172,7 +1175,7 @@ class ServersTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
-            str(error))
+            six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
@@ -1329,7 +1332,7 @@ class ServersTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: Rebuilding server failed, status 'ERROR'",
-            str(error))
+            six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
@@ -1375,7 +1378,7 @@ class ServersTest(HeatTestCase):
                                scheduler.TaskRunner(server.suspend))
         self.assertEqual('Error: Cannot suspend srv_sus1, '
                          'resource_id not set',
-                         str(ex))
+                         six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
@@ -1395,7 +1398,7 @@ class ServersTest(HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
         self.assertEqual('NotFound: Failed to find server 1234',
-                         str(ex))
+                         six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
@@ -1494,7 +1497,7 @@ class ServersTest(HeatTestCase):
                                scheduler.TaskRunner(server.suspend))
         self.assertEqual('Error: Suspend of server sample-server failed '
                          'with unknown status: TRANSMOGRIFIED',
-                         str(ex))
+                         six.text_type(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
@@ -1540,7 +1543,7 @@ class ServersTest(HeatTestCase):
                                scheduler.TaskRunner(server.resume))
         self.assertEqual('Error: Cannot resume srv_susp_norid, '
                          'resource_id not set',
-                         str(ex))
+                         six.text_type(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
 
         self.m.VerifyAll()
@@ -1565,7 +1568,7 @@ class ServersTest(HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.resume))
         self.assertEqual('NotFound: Failed to find server 1234',
-                         str(ex))
+                         six.text_type(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
 
         self.m.VerifyAll()
@@ -1748,7 +1751,7 @@ class ServersTest(HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
-        self.assertIn("Value '10a' is not an integer", str(exc))
+        self.assertIn("Value '10a' is not an integer", six.text_type(exc))
 
     def test_validate_conflict_block_device_mapping_props(self):
         stack_name = 'val_blkdev1'
@@ -1789,7 +1792,7 @@ class ServersTest(HeatTestCase):
                                server.validate)
         msg = 'Either volume_id or snapshot_id must be specified for device' +\
               ' mapping vdb'
-        self.assertEqual(msg, str(ex))
+        self.assertEqual(msg, six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -1812,7 +1815,7 @@ class ServersTest(HeatTestCase):
                                server.validate)
         msg = 'Neither image nor bootable volume is specified for instance %s'\
             % server.name
-        self.assertEqual(msg, str(ex))
+        self.assertEqual(msg, six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -1839,7 +1842,7 @@ class ServersTest(HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
         self.assertIn('Instance metadata must not contain greater than 3 '
-                      'entries', str(ex))
+                      'entries', six.text_type(ex))
         self.m.VerifyAll()
 
     def test_validate_metadata_okay(self):
@@ -1891,7 +1894,7 @@ class ServersTest(HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
         self.assertEqual("The personality property may not contain "
-                         "greater than 5 entries.", str(exc))
+                         "greater than 5 entries.", six.text_type(exc))
         self.m.VerifyAll()
 
     def test_server_validate_personality_okay(self):
@@ -1962,7 +1965,7 @@ class ServersTest(HeatTestCase):
                                 server.validate)
         self.assertEqual("The contents of personality file \"/fake/path1\" "
                          "is larger than the maximum allowed personality "
-                         "file size (10240 bytes).", str(exc))
+                         "file size (10240 bytes).", six.text_type(exc))
         self.m.VerifyAll()
 
     def test_resolve_attribute_server_not_found(self):
@@ -2513,7 +2516,7 @@ class ServersTest(HeatTestCase):
         err = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual('StackValidationFailed: Property error : WebServer: '
                          'image The Image (Update Image) could not be found.',
-                         str(err))
+                         six.text_type(err))
 
         self.m.VerifyAll()
 

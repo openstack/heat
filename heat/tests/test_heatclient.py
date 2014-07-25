@@ -13,6 +13,7 @@
 
 import json
 import mox
+import six
 import uuid
 
 from keystoneclient.auth.identity import v3 as ks_auth_v3
@@ -199,7 +200,7 @@ class KeystoneClientTest(HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_user,
                                 'auser', password='password')
-        self.assertIn('Can\'t find role heat_stack_user', str(err))
+        self.assertIn('Can\'t find role heat_stack_user', six.text_type(err))
 
     def _mock_roles_list(self, heat_stack_user='heat_stack_user'):
         mock_roles_list = []
@@ -283,7 +284,7 @@ class KeystoneClientTest(HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_domain_user,
                                 username='duser', project_id='aproject')
-        self.assertIn('Can\'t find role heat_stack_user', str(err))
+        self.assertIn('Can\'t find role heat_stack_user', six.text_type(err))
 
     def test_delete_stack_domain_user(self):
         """Test deleting a stack domain user."""
@@ -555,7 +556,7 @@ class KeystoneClientTest(HeatTestCase):
                    '"stack_user_domain_id" or "stack_user_domain_name" '
                    'without "stack_domain_admin" and '
                    '"stack_domain_admin_password"')
-        self.assertIn(exp_msg, str(err))
+        self.assertIn(exp_msg, six.text_type(err))
 
     def test_init_admin_client(self):
 

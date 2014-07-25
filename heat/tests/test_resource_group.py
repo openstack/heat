@@ -13,6 +13,7 @@
 
 import copy
 import mock
+import six
 
 from heat.common import exception
 from heat.engine import resource
@@ -150,7 +151,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resg.validate)
-        self.assertIn('Unknown resource Type', str(exc))
+        self.assertIn('Unknown resource Type', six.text_type(exc))
 
     def test_reference_attr(self):
         stack = utils.parse_stack(template2)

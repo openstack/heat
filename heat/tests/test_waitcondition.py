@@ -14,6 +14,7 @@
 import copy
 import datetime
 import json
+import six
 import time
 import uuid
 
@@ -700,7 +701,7 @@ class WaitConditionUpdateTest(HeatTestCase):
         self.assertEqual(5, rsrc.properties['Count'])
         ex = self.assertRaises(wc.WaitConditionTimeout,
                                updater.run_to_completion)
-        self.assertEqual("0 of 5 received", str(ex))
+        self.assertEqual("0 of 5 received", six.text_type(ex))
         self.m.VerifyAll()
         self.m.UnsetStubs()
 

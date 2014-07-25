@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 
 import mock
 import mox
@@ -1528,7 +1529,7 @@ class NeutronRouterTest(HeatTestCase):
                                      stack)
         ex = self.assertRaises(exception.StackValidationFailed, res.validate)
         self.assertEqual("Either subnet or port_id must be specified.",
-                         str(ex))
+                         six.text_type(ex))
 
     def test_gateway_router(self):
         neutron_utils.neutronV20.find_resourceid_by_name_or_id(

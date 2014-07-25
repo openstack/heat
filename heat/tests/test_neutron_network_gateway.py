@@ -18,6 +18,7 @@ import mox
 from mox import IgnoreArg
 from neutronclient.common import exceptions as qe
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -456,7 +457,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
@@ -480,7 +481,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
 
         self.assertEqual(
             'segmentation_id must be specified for using vlan',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -501,7 +502,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
 
         self.assertEqual(
             'segmentation_id cannot be specified except 0 for using flat',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -521,6 +522,6 @@ class NeutronNetworkGatewayTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'hoge')
         self.assertEqual(
             'The Referenced Attribute (test_network_gateway hoge) is '
-            'incorrect.', str(error))
+            'incorrect.', six.text_type(error))
 
         self.m.VerifyAll()

@@ -93,7 +93,8 @@ class ResourceTest(HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                resource.Resource, resource_name,
                                snippet, self.stack)
-        self.assertIn(_('Resource "%s" has no type') % resource_name, str(ex))
+        self.assertIn(_('Resource "%s" has no type') % resource_name,
+                      six.text_type(ex))
 
     def test_state_defaults(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res_def', 'Foo')
@@ -438,7 +439,7 @@ class ResourceTest(HeatTestCase):
         estr = 'Property error : test_resource: Property Foo not assigned'
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
-        self.assertIn(estr, str(err))
+        self.assertIn(estr, six.text_type(err))
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_prop_typo(self):
@@ -450,7 +451,7 @@ class ResourceTest(HeatTestCase):
         estr = 'StackValidationFailed: Unknown Property Food'
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
-        self.assertIn(estr, str(err))
+        self.assertIn(estr, six.text_type(err))
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_metadata_parse_error(self):
@@ -1066,7 +1067,7 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                stack.validate)
-        self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
+        self.assertIn('"baz" (in bar.Properties.Foo)', six.text_type(ex))
 
     def test_getatt(self):
         tmpl = template.Template({
@@ -1222,7 +1223,7 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
-        self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
+        self.assertIn('"baz" (in bar.Properties.Foo)', six.text_type(ex))
 
     def test_hot_getatt_fail(self):
         tmpl = template.Template({
@@ -1240,7 +1241,7 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
-        self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
+        self.assertIn('"baz" (in bar.Properties.Foo)', six.text_type(ex))
 
     def test_getatt_fail_nested_deep(self):
         tmpl = template.Template({
@@ -1263,7 +1264,8 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
-        self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
+        self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])',
+                      six.text_type(ex))
 
     def test_hot_getatt_fail_nested_deep(self):
         tmpl = template.Template({
@@ -1286,7 +1288,8 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
-        self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
+        self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])',
+                      six.text_type(ex))
 
     def test_dependson(self):
         tmpl = template.Template({
@@ -1341,7 +1344,7 @@ class ResourceDependenciesTest(HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
-        self.assertIn('"wibble" (in foo)', str(ex))
+        self.assertIn('"wibble" (in foo)', six.text_type(ex))
 
 
 class MetadataTest(HeatTestCase):

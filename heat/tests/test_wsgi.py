@@ -16,6 +16,7 @@
 
 
 import json
+import six
 
 from oslo.config import cfg
 import stubout
@@ -222,7 +223,7 @@ class ResourceTest(HeatTestCase):
 
         e = self.assertRaises(exception.HTTPExceptionDisguise,
                               resource, request)
-        self.assertEqual(message_es, str(e.exc))
+        self.assertEqual(message_es, six.text_type(e.exc))
         self.m.VerifyAll()
 
 
@@ -259,7 +260,7 @@ class ResourceExceptionHandlingTest(HeatTestCase):
                                  None)
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
-        self.assertNotIn(str(e), self.LOG.output)
+        self.assertNotIn(six.text_type(e), self.LOG.output)
 
 
 class JSONRequestDeserializerTest(HeatTestCase):
@@ -396,4 +397,4 @@ class JSONRequestDeserializerTest(HeatTestCase):
         msg = 'Request limit exceeded: JSON body size ' + \
               '(%s bytes) exceeds maximum allowed size (%s bytes).' % \
               (len(body), cfg.CONF.max_json_body_size)
-        self.assertEqual(msg, str(error))
+        self.assertEqual(msg, six.text_type(error))

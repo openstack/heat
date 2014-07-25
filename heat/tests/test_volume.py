@@ -862,7 +862,7 @@ class VolumeTest(HeatTestCase):
                                   rsrc.validate)
         self.assertEqual(
             "Property error : DataVolume: size 0 is out of "
-            "range (min: 1, max: None)", str(error))
+            "range (min: 1, max: None)", six.text_type(error))
 
     def test_volume_size_constraint_aws(self):
         t = template_format.parse(volume_template)
@@ -875,7 +875,7 @@ class VolumeTest(HeatTestCase):
                                   rsrc.validate)
         self.assertEqual(
             "Property error : DataVolume: Size 0 is out of "
-            "range (min: 1, max: None)", str(error))
+            "range (min: 1, max: None)", six.text_type(error))
 
     def test_cinder_create_from_image(self):
         fv = FakeVolumeWithStateTransition('downloading', 'available')
@@ -998,7 +998,7 @@ class VolumeTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
             'The Referenced Attribute (DataVolume unknown) is incorrect.',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 

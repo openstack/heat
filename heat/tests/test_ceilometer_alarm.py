@@ -17,6 +17,7 @@ import json
 from ceilometerclient import exc as ceilometerclient_exc
 import mox
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -285,7 +286,7 @@ class CeilometerAlarmTest(HeatTestCase):
                                       rsrc.validate)
             self.assertEqual(
                 "Property error : MEMAlarmHigh: %s Value '60a' is not an "
-                "integer" % p, str(error))
+                "integer" % p, six.text_type(error))
 
     def test_mem_alarm_high_not_integer_parameters(self):
         snippet = template_format.parse(not_string_alarm_template)
@@ -300,7 +301,7 @@ class CeilometerAlarmTest(HeatTestCase):
                                       rsrc.validate)
             self.assertEqual(
                 "Property error : MEMAlarmHigh: %s int() argument must be "
-                "a string or a number, not 'list'" % p, str(error))
+                "a string or a number, not 'list'" % p, six.text_type(error))
 
     def test_mem_alarm_high_check_not_required_parameters(self):
         snippet = template_format.parse(not_string_alarm_template)
@@ -314,7 +315,7 @@ class CeilometerAlarmTest(HeatTestCase):
                                   rsrc.validate)
         self.assertEqual(
             "Property error : MEMAlarmHigh: Property meter_name not assigned",
-            str(error))
+            six.text_type(error))
 
         for p in ('period', 'evaluation_periods', 'statistic',
                   'comparison_operator'):
@@ -389,7 +390,7 @@ class CombinationAlarmTest(HeatTestCase):
                                   rsrc.validate)
         self.assertEqual(
             "Property error : CombinAlarm: alarm_ids length (0) is out of "
-            "range (min: 1, max: None)", str(error))
+            "range (min: 1, max: None)", six.text_type(error))
 
     def test_update(self):
         rsrc = self.create_alarm()

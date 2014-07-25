@@ -13,6 +13,7 @@
 
 import copy
 import mox
+import six
 
 from neutronclient.v2_0 import client as neutronclient
 
@@ -264,7 +265,7 @@ class HealthMonitorTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -302,7 +303,7 @@ class HealthMonitorTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -325,7 +326,7 @@ class HealthMonitorTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (monitor subnet_id) is incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -506,7 +507,7 @@ class PoolTest(HeatTestCase):
         self.assertEqual(
             'Error: neutron reported unexpected pool '
             'resource[5678] status[ERROR]',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -545,7 +546,7 @@ class PoolTest(HeatTestCase):
         self.assertEqual(
             'Error: neutron reported unexpected vip '
             'resource[xyz] status[ERROR]',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -573,7 +574,7 @@ class PoolTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -630,7 +631,7 @@ class PoolTest(HeatTestCase):
 
         error = self.assertRaises(exception.StackValidationFailed,
                                   resource.validate)
-        self.assertEqual(msg, str(error))
+        self.assertEqual(msg, six.text_type(error))
 
     def test_validation_not_failing_without_session_persistence(self):
         snippet = template_format.parse(pool_template)
@@ -726,7 +727,7 @@ class PoolTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -743,7 +744,7 @@ class PoolTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -776,7 +777,7 @@ class PoolTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'net_id')
         self.assertEqual(
             'The Referenced Attribute (pool net_id) is incorrect.',
-            str(error))
+            six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):

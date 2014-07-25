@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
 import uuid
 
 import mock
@@ -391,7 +392,7 @@ class StackResourceTest(HeatTestCase):
         ex = self.assertRaises(exception.Error,
                                self.parent_resource.check_update_complete,
                                updater)
-        self.assertEqual('Nested stack UPDATE failed: ', str(ex))
+        self.assertEqual('Nested stack UPDATE failed: ', six.text_type(ex))
 
         self.m.VerifyAll()
 

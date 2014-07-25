@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import six
 
 import testtools
 
@@ -76,7 +77,7 @@ class ParameterTest(testtools.TestCase):
                   'Default': 'bar'}
         err = self.assertRaises(exception.InvalidSchemaError,
                                 self.new_parameter, 'p', schema, 'foo')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_no_echo_true(self):
         p = self.new_parameter('anechoic',
@@ -126,7 +127,7 @@ class ParameterTest(testtools.TestCase):
                   'MinLength': '4'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_string_overflow(self):
         schema = {'Type': 'String',
@@ -134,7 +135,7 @@ class ParameterTest(testtools.TestCase):
                   'MaxLength': '2'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_string_pattern_good(self):
         schema = {'Type': 'String',
@@ -148,7 +149,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedPattern': '[a-z]*'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '1foo')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_string_pattern_bad_suffix(self):
         schema = {'Type': 'String',
@@ -156,7 +157,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedPattern': '[a-z]*'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo1')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_string_value_list_good(self):
         schema = {'Type': 'String',
@@ -175,7 +176,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedValues': ['foo', 'bar', 'baz']}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'blarg')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_number_int_good(self):
         schema = {'Type': 'Number',
@@ -204,7 +205,7 @@ class ParameterTest(testtools.TestCase):
                   'MinValue': '4'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '3')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_number_high(self):
         schema = {'Type': 'Number',
@@ -212,13 +213,13 @@ class ParameterTest(testtools.TestCase):
                   'MaxValue': '2'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '3')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_number_bad(self):
         schema = {'Type': 'Number'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'str')
-        self.assertIn('float', str(err))
+        self.assertIn('float', six.text_type(err))
 
     def test_number_value_list_good(self):
         schema = {'Type': 'Number',
@@ -232,7 +233,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedValues': ['1', '3', '5']}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '2')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_list_value_list_default_empty(self):
         schema = {'Type': 'CommaDelimitedList'}
@@ -259,7 +260,7 @@ class ParameterTest(testtools.TestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema,
                                 'foo,baz,blarg')
-        self.assertIn('wibble', str(err))
+        self.assertIn('wibble', six.text_type(err))
 
     def test_map_value(self):
         '''Happy path for value that's already a map.'''
@@ -276,7 +277,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "not_json": len}
         err = self.assertRaises(ValueError,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('Value must be valid JSON', str(err))
+        self.assertIn('Value must be valid JSON', six.text_type(err))
 
     def test_map_value_parse(self):
         '''Happy path for value that's a string.'''
@@ -294,7 +295,7 @@ class ParameterTest(testtools.TestCase):
         val = "I am not a map"
         err = self.assertRaises(ValueError,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('Value must be valid JSON', str(err))
+        self.assertIn('Value must be valid JSON', six.text_type(err))
 
     def test_map_underrun(self):
         '''Test map length under MIN_LEN.'''
@@ -303,7 +304,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "items": [1, 2, 3]}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('out of range', str(err))
+        self.assertIn('out of range', six.text_type(err))
 
     def test_map_overrun(self):
         '''Test map length over MAX_LEN.'''
@@ -312,7 +313,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "items": [1, 2, 3]}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('out of range', str(err))
+        self.assertIn('out of range', six.text_type(err))
 
     def test_bool_value_true(self):
         schema = {'Type': 'Boolean'}
@@ -482,7 +483,7 @@ class ParameterSchemaTest(testtools.TestCase):
                                   parameters.Schema.from_dict, 'param_name',
                                   {"foo": "bar"})
         self.assertEqual("Invalid key 'foo' for parameter (param_name)",
-                         str(error))
+                         six.text_type(error))
 
     def test_validate_schema_no_type(self):
         error = self.assertRaises(exception.InvalidSchemaError,
@@ -490,4 +491,4 @@ class ParameterSchemaTest(testtools.TestCase):
                                   'broken',
                                   {"Description": "Hi!"})
         self.assertEqual("Missing parameter type for parameter: broken",
-                         str(error))
+                         six.text_type(error))

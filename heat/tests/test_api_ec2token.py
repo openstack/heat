@@ -13,6 +13,7 @@
 
 
 import json
+import six
 
 from oslo.config import cfg
 import requests
@@ -449,7 +450,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.ReplayAll()
         ex = self.assertRaises(exception.HeatInternalFailureError,
                                ec2.__call__, dummy_req)
-        self.assertEqual('Service misconfigured', str(ex))
+        self.assertEqual('Service misconfigured', six.text_type(ex))
 
         self.m.VerifyAll()
 

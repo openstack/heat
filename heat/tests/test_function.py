@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 
 from heat.engine import function
 from heat.tests.common import HeatTestCase
@@ -97,7 +98,7 @@ class ValidateTest(HeatTestCase):
         self.assertIsNone(function.validate(self.func))
         self.func = TestFunction(None, 'foo', ['bar'])
         ex = self.assertRaises(Exception, function.validate, self.func)
-        self.assertEqual('Need more arguments', str(ex))
+        self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_dict(self):
         snippet = {'foo': 'bar', 'blarg': self.func}
@@ -106,7 +107,7 @@ class ValidateTest(HeatTestCase):
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
         ex = self.assertRaises(Exception, function.validate, snippet)
-        self.assertEqual('Need more arguments', str(ex))
+        self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_list(self):
         snippet = ['foo', 'bar', 'baz', 'blarg', self.func]
@@ -115,7 +116,7 @@ class ValidateTest(HeatTestCase):
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
         ex = self.assertRaises(Exception, function.validate, snippet)
-        self.assertEqual('Need more arguments', str(ex))
+        self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_all(self):
         snippet = ['foo', {'bar': ['baz', {'blarg': self.func}]}]
@@ -124,7 +125,7 @@ class ValidateTest(HeatTestCase):
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
         ex = self.assertRaises(Exception, function.validate, snippet)
-        self.assertEqual('Need more arguments', str(ex))
+        self.assertEqual('Need more arguments', six.text_type(ex))
 
 
 class DependenciesTest(HeatTestCase):

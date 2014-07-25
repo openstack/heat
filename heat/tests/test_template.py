@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn.template import CfnTemplate
@@ -82,7 +84,7 @@ class TestTemplateVersion(HeatTestCase):
         ex = self.assertRaises(exception.InvalidTemplateVersion,
                                template.get_version, tmpl, self.versions)
         self.assertEqual('The template version is invalid: Template version '
-                         'was not provided', str(ex))
+                         'was not provided', six.text_type(ex))
 
     def test_ambiguous_version(self):
         tmpl = {
@@ -150,7 +152,7 @@ class TestTemplateValidate(HeatTestCase):
         tmpl = template.Template(t)
         err = self.assertRaises(exception.InvalidTemplateSection,
                                 tmpl.validate)
-        self.assertIn('Parameteers', str(err))
+        self.assertIn('Parameteers', six.text_type(err))
 
     def test_template_validate_cfn_empty(self):
         t = template_format.parse('''
@@ -196,4 +198,4 @@ Outputs:
         tmpl = template.Template(t)
         err = self.assertRaises(exception.InvalidTemplateSection,
                                 tmpl.validate)
-        self.assertIn('parameteers', str(err))
+        self.assertIn('parameteers', six.text_type(err))

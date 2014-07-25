@@ -15,6 +15,7 @@ from heatclient.exc import HTTPNotFound
 
 import copy
 import mock
+import six
 
 from heat.common import exception
 from heat.engine import parser
@@ -140,7 +141,7 @@ class SoftwareDeploymentTest(HeatTestCase):
         self.assertEqual("Resource server's property "
                          "user_data_format should be set to "
                          "SOFTWARE_CONFIG since there are "
-                         "software deployments on it.", str(err))
+                         "software deployments on it.", six.text_type(err))
 
     def test_resource_mapping(self):
         self._create_stack(self.template)
@@ -302,7 +303,7 @@ class SoftwareDeploymentTest(HeatTestCase):
         err = self.assertRaises(
             exception.Error, self.deployment.check_create_complete, sd)
         self.assertEqual(
-            'Deployment to server failed: something wrong', str(err))
+            'Deployment to server failed: something wrong', six.text_type(err))
 
     def test_handle_delete(self):
         self._create_stack(self.template)
@@ -595,7 +596,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             self.deployment.FnGetAtt, 'foo2')
         self.assertEqual(
             'The Referenced Attribute (deployment_mysql foo2) is incorrect.',
-            str(err))
+            six.text_type(err))
 
     def test_handle_action(self):
         self._create_stack(self.template)

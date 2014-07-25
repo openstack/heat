@@ -14,6 +14,7 @@
 
 import copy
 import json
+import six
 
 import mock
 from oslo.config import cfg
@@ -379,7 +380,7 @@ Outputs:
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                rsrc.handle_update, new_res, {}, prop_diff)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      str(ex))
+                      six.text_type(ex))
         rsrc.delete()
 
         self.m.VerifyAll()

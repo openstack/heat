@@ -13,6 +13,7 @@
 
 import mock
 import mox
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -169,7 +170,8 @@ class CloudServersTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: RackConnect automation FAILED', str(exc))
+        self.assertEqual('Error: RackConnect automation FAILED',
+                         six.text_type(exc))
 
     def test_rackconnect_unprocessable(self):
         return_server = self.fc.servers.list()[1]
@@ -200,7 +202,7 @@ class CloudServersTest(HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual('Error: Unknown RackConnect automation status: FOO',
-                         str(exc))
+                         six.text_type(exc))
 
     def test_rackconnect_deploying(self):
         return_server = self.fc.servers.list()[0]
@@ -298,7 +300,8 @@ class CloudServersTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual('Error: Managed Cloud automation failed', str(exc))
+        self.assertEqual('Error: Managed Cloud automation failed',
+                         six.text_type(exc))
 
     def test_managed_cloud_unknown(self):
         return_server = self.fc.servers.list()[1]
@@ -312,7 +315,7 @@ class CloudServersTest(HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual('Error: Unknown Managed Cloud automation status: FOO',
-                         str(exc))
+                         six.text_type(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'data_set')

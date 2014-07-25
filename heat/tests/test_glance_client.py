@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
 import uuid
 
 from glanceclient import exc as glance_exceptions
@@ -86,7 +87,7 @@ class GlanceUtilsTests(HeatTestCase):
         e = self.assertRaises(exception.Error,
                               self.glance_plugin.get_image_id_by_name,
                               img_name)
-        self.assertEqual(expected_error, str(e))
+        self.assertEqual(expected_error, six.text_type(e))
         self.m.VerifyAll()
 
     def test_get_image_id_not_found(self):

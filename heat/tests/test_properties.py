@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
 import testtools
 
 from heat.common import exception
@@ -690,7 +691,7 @@ class PropertyTest(testtools.TestCase):
         p = properties.Property(schema)
         ex = self.assertRaises(TypeError, p.get_value, [1])
         self.assertEqual("int() argument must be a string or a number, "
-                         "not 'list'", str(ex))
+                         "not 'list'", six.text_type(ex))
 
     def test_int_from_str_good(self):
         schema = {'Type': 'Integer'}
@@ -701,7 +702,7 @@ class PropertyTest(testtools.TestCase):
         schema = {'Type': 'Integer'}
         p = properties.Property(schema)
         ex = self.assertRaises(TypeError, p.get_value, '3a')
-        self.assertEqual("Value '3a' is not an integer", str(ex))
+        self.assertEqual("Value '3a' is not an integer", six.text_type(ex))
 
     def test_integer_low(self):
         schema = {'Type': 'Integer',
@@ -852,7 +853,7 @@ class PropertyTest(testtools.TestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                p.get_value, {'valid': 'fish'}, True)
         self.assertEqual('Property error : valid "fish" is not '
-                         'a valid boolean', str(ex))
+                         'a valid boolean', six.text_type(ex))
 
     def test_map_schema_missing_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
@@ -865,7 +866,7 @@ class PropertyTest(testtools.TestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                p.get_value, {}, True)
         self.assertEqual('Property error : Property valid not assigned',
-                         str(ex))
+                         six.text_type(ex))
 
     def test_list_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
@@ -884,7 +885,7 @@ class PropertyTest(testtools.TestCase):
                                p.get_value,
                                [{'valid': 'True'}, {'valid': 'fish'}], True)
         self.assertEqual('Property error : 1 Property error : 1: valid '
-                         '"fish" is not a valid boolean', str(ex))
+                         '"fish" is not a valid boolean', six.text_type(ex))
 
     def test_list_schema_int_good(self):
         list_schema = {'Type': 'Integer'}
@@ -897,7 +898,7 @@ class PropertyTest(testtools.TestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                p.get_value, [42, 'fish'], True)
         self.assertEqual('Property error : 1 Value \'fish\' is not '
-                         'an integer', str(ex))
+                         'an integer', six.text_type(ex))
 
 
 class PropertiesTest(testtools.TestCase):
@@ -1029,7 +1030,7 @@ class PropertiesTest(testtools.TestCase):
 
         props = properties.Properties(schema, {'foo': 'baz'}, bad_resolver)
         err = self.assertRaises(ValueError, props.get, 'foo')
-        self.assertEqual('foo resolution failed!', str(err))
+        self.assertEqual('foo resolution failed!', six.text_type(err))
 
     def test_resolve_returns_none(self):
         schema = {'foo': {'Type': 'String', "MinLength": "5"}}
@@ -1603,7 +1604,7 @@ class PropertiesValidationTest(testtools.TestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                props.validate)
         self.assertEqual('Property error : foo Property error : foo: 0 '
-                         'Unknown Property bar', str(ex))
+                         'Unknown Property bar', six.text_type(ex))
 
     def test_nested_properties_schema_invalid_property_in_map(self):
         child_schema = {'Key': {'Type': 'String',
@@ -1623,7 +1624,7 @@ class PropertiesValidationTest(testtools.TestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                props.validate)
         self.assertEqual('Property error : foo Property error : foo: boo '
-                         'Unknown Property bar', str(ex))
+                         'Unknown Property bar', six.text_type(ex))
 
     def test_more_nested_properties_schema_invalid_property_in_list(self):
         nested_child_schema = {'Key': {'Type': 'String',
@@ -1642,7 +1643,7 @@ class PropertiesValidationTest(testtools.TestCase):
                                props.validate)
         self.assertEqual('Property error : foo Property error : foo: 0 '
                          'Property error : 0: doo Unknown Property bar',
-                         str(ex))
+                         six.text_type(ex))
 
     def test_more_nested_properties_schema_invalid_property_in_map(self):
         nested_child_schema = {'Key': {'Type': 'String',
@@ -1661,7 +1662,7 @@ class PropertiesValidationTest(testtools.TestCase):
                                props.validate)
         self.assertEqual('Property error : foo Property error : foo: boo '
                          'Property error : boo: doo Unknown Property bar',
-                         str(ex))
+                         six.text_type(ex))
 
     def test_schema_to_template_empty_schema(self):
         schema = {}

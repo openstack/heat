@@ -17,6 +17,7 @@ import datetime
 import mock
 import mox
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common import short_id
@@ -860,7 +861,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(
             "Error: Unsupported resource 'ElasticLoadBalancer' in "
             "LoadBalancerNames",
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -1198,7 +1199,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertIsNotNone(alarm_url)
         ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
         self.assertIn('Alarm WebServerScaleUpPolicy could '
-                      'not find scaling group', str(ex))
+                      'not find scaling group', six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -1633,7 +1634,7 @@ class AutoScalingTest(HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "The size of AutoScalingGroup can not be less than zero"
-        self.assertEqual(expected_msg, str(e))
+        self.assertEqual(expected_msg, six.text_type(e))
 
     def test_invalid_max_size(self):
         t = template_format.parse(as_template)
@@ -1648,7 +1649,7 @@ class AutoScalingTest(HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "MinSize can not be greater than MaxSize"
-        self.assertEqual(expected_msg, str(e))
+        self.assertEqual(expected_msg, six.text_type(e))
 
     def test_invalid_desiredcapacity(self):
         t = template_format.parse(as_template)
@@ -1664,7 +1665,7 @@ class AutoScalingTest(HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, str(e))
+        self.assertEqual(expected_msg, six.text_type(e))
 
     def test_invalid_desiredcapacity_zero(self):
         t = template_format.parse(as_template)
@@ -1680,7 +1681,7 @@ class AutoScalingTest(HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, str(e))
+        self.assertEqual(expected_msg, six.text_type(e))
 
     def test_child_template_uses_min_size(self):
         t = template_format.parse(as_template)

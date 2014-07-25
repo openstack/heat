@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 import uuid
 
 from glanceclient import exc as glance_exceptions
@@ -187,7 +188,7 @@ class InstancesTest(HeatTestCase):
             'StackValidationFailed: Property error : WebServer: '
             'ImageId Error validating value \'Slackware\': '
             'The Image (Slackware) could not be found.',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -214,7 +215,7 @@ class InstancesTest(HeatTestCase):
             'StackValidationFailed: Property error : WebServer: '
             'ImageId Multiple physical resources were '
             'found with name (CentOS 5.2).',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -237,7 +238,7 @@ class InstancesTest(HeatTestCase):
         self.assertEqual(
             'StackValidationFailed: Property error : WebServer: '
             'ImageId 404 (HTTP 404)',
-            str(error))
+            six.text_type(error))
 
         self.m.VerifyAll()
 
@@ -290,7 +291,7 @@ class InstancesTest(HeatTestCase):
             (return_server, self.FakeVolumeAttach()))
         self.assertEqual(
             'Creation of server sample-server2 failed: Unknown (500)',
-            str(e))
+            six.text_type(e))
 
         self.m.VerifyAll()
 
@@ -429,7 +430,7 @@ class InstancesTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
-            str(error))
+            six.text_type(error))
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
         self.m.VerifyAll()
 

@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -165,7 +166,7 @@ class TestOrder(HeatTestCase):
         self.barbican.orders.delete.side_effect = exc
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.delete))
-        self.assertIn('Boom.', str(exc))
+        self.assertIn('Boom.', six.text_type(exc))
 
     def test_check_create_complete(self):
         res = order.Order('foo', self.res_template, self.stack)
@@ -183,5 +184,5 @@ class TestOrder(HeatTestCase):
         self.barbican.orders.get.return_value = mock_not_active
         exc = self.assertRaises(exception.Error,
                                 res.check_create_complete, 'foo')
-        self.assertIn('foo', str(exc))
-        self.assertIn('500', str(exc))
+        self.assertIn('foo', six.text_type(exc))
+        self.assertIn('500', six.text_type(exc))

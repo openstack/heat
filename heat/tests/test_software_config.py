@@ -13,6 +13,7 @@
 
 from heatclient.exc import HTTPNotFound
 import mock
+import six
 
 from heat.common import exception
 from heat.engine import parser
@@ -91,7 +92,7 @@ class SoftwareConfigTest(HeatTestCase):
             heatclient, config_id)
         self.assertEqual(
             ('The config (c8a19429-7fde-47ea-a42f-40045488226c) '
-             'could not be found.'), str(err))
+             'could not be found.'), six.text_type(err))
 
     def test_resolve_attribute(self):
         self.assertIsNone(self.config._resolve_attribute('others'))

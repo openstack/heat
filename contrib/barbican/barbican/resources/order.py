@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -137,7 +139,7 @@ class Order(resource.Resource):
         except clients.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
-            if 'Not Found' in str(exc):
+            if 'Not Found' in six.text_type(exc):
                 self.resource_id_set(None)
             else:
                 raise
@@ -147,7 +149,7 @@ class Order(resource.Resource):
             order = self.barbican().orders.get(self.resource_id)
         except clients.barbican_client.HTTPClientError as exc:
             LOG.warn(_("Order '%(name)s' not found: %(exc)s") %
-                     {'name': self.resource_id, 'exc': str(exc)})
+                     {'name': self.resource_id, 'exc': six.text_type(exc)})
             return ''
 
         return getattr(order, name)

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
 import uuid
 
 import mock
@@ -120,7 +121,7 @@ class CloudNetworkTest(HeatTestCase):
         self._parse_stack()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.stack.validate)
-        self.assertIn("Invalid cidr", str(exc))
+        self.assertIn("Invalid cidr", six.text_type(exc))
 
     def test_delete(self, mock_client):
         self._setup_stack(mock_client)
@@ -129,7 +130,7 @@ class CloudNetworkTest(HeatTestCase):
         scheduler.TaskRunner(res.delete)()
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
         exc = self.assertRaises(NotFound, self.fake_cnw.get, res_id)
-        self.assertIn(res_id, str(exc))
+        self.assertIn(res_id, six.text_type(exc))
 
     def test_delete_not_complete(self, mock_client):
         self._setup_stack(mock_client)

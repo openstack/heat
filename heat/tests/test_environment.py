@@ -17,6 +17,7 @@ import sys
 import fixtures
 import mock
 from oslo.config import cfg
+import six
 
 from heat.common import environment_format
 from heat.engine import environment
@@ -151,7 +152,7 @@ def constraint_mapping():
         env = environment.Environment({})
         error = self.assertRaises(ValueError,
                                   resources._load_global_environment, env)
-        self.assertEqual("oops", str(error))
+        self.assertEqual("oops", six.text_type(error))
 
     def test_constraints_registry_stevedore(self):
         env = environment.Environment({})

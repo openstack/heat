@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -144,15 +145,15 @@ class TestSecret(HeatTestCase):
                                             props)
         res = self._create_resource(defn.name, defn, self.stack)
         exc = self.assertRaises(exception.StackValidationFailed, res.validate)
-        self.assertIn('payload', str(exc))
-        self.assertIn('payload_content_type', str(exc))
+        self.assertIn('payload', six.text_type(exc))
+        self.assertIn('payload_content_type', six.text_type(exc))
 
         defn = rsrc_defn.ResourceDefinition('notype', 'OS::Barbican::Secret',
                                             {'payload': 'foo'})
         res = self._create_resource(defn.name, defn, self.stack)
         exc = self.assertRaises(exception.StackValidationFailed, res.validate)
-        self.assertIn('payload', str(exc))
-        self.assertIn('payload_content_type', str(exc))
+        self.assertIn('payload', six.text_type(exc))
+        self.assertIn('payload_content_type', six.text_type(exc))
 
     def test_delete_secret(self):
         self.assertEqual('foo_id', self.res.resource_id)
@@ -178,4 +179,4 @@ class TestSecret(HeatTestCase):
         self.barbican.secrets.delete.side_effect = exc
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(self.res.delete))
-        self.assertIn('Boom.', str(exc))
+        self.assertIn('Boom.', six.text_type(exc))

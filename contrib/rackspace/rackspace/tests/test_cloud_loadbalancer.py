@@ -15,6 +15,7 @@
 import copy
 import json
 import mock
+import six
 import uuid
 
 from heat.common.exception import StackValidationFailed
@@ -401,7 +402,7 @@ class LoadBalancerTest(HeatTestCase):
                                                           expected)
 
         exc = self.assertRaises(StackValidationFailed, rsrc.validate)
-        self.assertIn("Property certificate not assigned", str(exc))
+        self.assertIn("Property certificate not assigned", six.text_type(exc))
 
         ssl_termination['certificate'] = 'dfaewfwef'
         template = self._set_template(template,

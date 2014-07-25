@@ -13,6 +13,7 @@
 
 from glanceclient import exc as glance_exceptions
 import mock
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -1318,7 +1319,7 @@ class validateTest(HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('The InstanceType parameter must be assigned to '
-                         'one Parameter Group only.'), str(exc))
+                         'one Parameter Group only.'), six.text_type(exc))
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
@@ -1333,7 +1334,8 @@ class validateTest(HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('The Parameter name (SomethingNotHere) does not '
-                         'reference an existing parameter.'), str(exc))
+                         'reference an existing parameter.'),
+                         six.text_type(exc))
 
     def test_validate_no_parameters_in_group(self):
         t = template_format.parse(test_template_no_parameters)
@@ -1343,7 +1345,7 @@ class validateTest(HeatTestCase):
                                 stack.validate)
 
         self.assertEqual(_('Parameters must be provided for each Parameter '
-                         'Group.'), str(exc))
+                         'Group.'), six.text_type(exc))
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
@@ -1381,13 +1383,15 @@ class validateTest(HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
                                 self.ctx, 'test_stack', template,
                                 environment.Environment({'size': '3'}))
-        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+                      six.text_type(err))
 
         # test with size parameter provided as number
         err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
                                 self.ctx, 'test_stack', template,
                                 environment.Environment({'size': 3}))
-        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+                      six.text_type(err))
 
     def test_validate_not_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
@@ -1397,10 +1401,12 @@ class validateTest(HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
                                 self.ctx, 'test_stack', template,
                                 environment.Environment({'size': '3'}))
-        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+                      six.text_type(err))
 
         # test with size parameter provided as number
         err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
                                 self.ctx, 'test_stack', template,
                                 environment.Environment({'size': 3}))
-        self.assertIn('"3" is not an allowed value [1, 4, 8]', str(err))
+        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+                      six.text_type(err))

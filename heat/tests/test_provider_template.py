@@ -13,6 +13,7 @@
 
 import json
 import os
+import six
 import uuid
 import yaml
 
@@ -358,7 +359,7 @@ class ProviderTemplateTest(HeatTestCase):
                                temp_res.validate)
         self.assertEqual("Property Foo type mismatch between facade "
                          "DummyResource (Map) and provider (String)",
-                         str(ex))
+                         six.text_type(ex))
 
     def test_boolean_type_provider(self):
         provider = {

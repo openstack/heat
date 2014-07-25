@@ -25,6 +25,7 @@ from oslo import messaging
 from oslo.messaging.rpc import client as rpc_client
 from oslo.messaging.rpc import dispatcher
 from oslotest import mockpatch
+import six
 
 from heat.common import exception
 from heat.common import identifier
@@ -481,7 +482,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                self._test_stack_create, stack_name)
         self.assertEqual(ex.exc_info[0], exception.RequestLimitExceeded)
         self.assertIn("You have reached the maximum stacks per tenant",
-                      str(ex.exc_info[1]))
+                      six.text_type(ex.exc_info[1]))
 
     def test_stack_create_verify_err(self):
         stack_name = 'service_create_verify_err_test_stack'
@@ -568,7 +569,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                template, params, None, {})
         self.assertEqual(ex.exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', str(ex.exc_info[1]))
+            'Missing required credential: X-Auth-Key',
+            six.text_type(ex.exc_info[1]))
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.create_stack,
@@ -576,7 +578,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                template, params, None, {})
         self.assertEqual(ex.exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-User', str(ex.exc_info[1]))
+            'Missing required credential: X-Auth-User',
+            six.text_type(ex.exc_info[1]))
 
     def test_stack_create_total_resources_equals_max(self):
         stack_name = 'service_create_stack_total_resources_equals_max'
@@ -631,7 +634,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                tpl, params, None, {})
         self.assertEqual(ex.exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      str(ex.exc_info[1]))
+                      six.text_type(ex.exc_info[1]))
 
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
@@ -1088,7 +1091,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                None, {})
         self.assertEqual(ex.exc_info[0], exception.RequestLimitExceeded)
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      str(ex.exc_info[1]))
+                      six.text_type(ex.exc_info[1]))
 
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'
@@ -1183,7 +1186,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                template, params, None, api_args)
         self.assertEqual(ex.exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', str(ex.exc_info[1]))
+            'Missing required credential: X-Auth-Key',
+            six.text_type(ex.exc_info[1]))
 
         self.m.VerifyAll()
 
@@ -1216,14 +1220,16 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         ex = self.assertRaises(exception.MissingCredentialError,
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
-        self.assertEqual('Missing required credential: X-Auth-User', str(ex))
+        self.assertEqual('Missing required credential: X-Auth-User',
+                         six.text_type(ex))
 
         # missing password
         ctx = utils.dummy_context(password=None)
         ex = self.assertRaises(exception.MissingCredentialError,
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
-        self.assertEqual('Missing required credential: X-Auth-Key', str(ex))
+        self.assertEqual('Missing required credential: X-Auth-Key',
+                         six.text_type(ex))
 
 
 class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):

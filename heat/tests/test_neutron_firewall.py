@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 
 from neutronclient.v2_0 import client as neutronclient
 
@@ -130,7 +131,7 @@ class FirewallTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -168,7 +169,7 @@ class FirewallTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -192,7 +193,7 @@ class FirewallTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall subnet_id) is '
-            'incorrect.', str(error))
+            'incorrect.', six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -257,7 +258,7 @@ class FirewallPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -295,7 +296,7 @@ class FirewallPolicyTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -318,7 +319,7 @@ class FirewallPolicyTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall_policy subnet_id) is '
-            'incorrect.', str(error))
+            'incorrect.', six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):
@@ -385,7 +386,7 @@ class FirewallRuleTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -423,7 +424,7 @@ class FirewallRuleTest(HeatTestCase):
                                   scheduler.TaskRunner(rsrc.delete))
         self.assertEqual(
             'NeutronClientException: An unknown exception occurred.',
-            str(error))
+            six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
@@ -446,7 +447,7 @@ class FirewallRuleTest(HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall_rule subnet_id) is '
-            'incorrect.', str(error))
+            'incorrect.', six.text_type(error))
         self.m.VerifyAll()
 
     def test_update(self):

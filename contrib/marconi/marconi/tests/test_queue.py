@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
@@ -131,7 +133,7 @@ class MarconiMessageQueueTest(HeatTestCase):
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(queue.create))
         self.assertEqual("Error: Message queue myqueue already exists.",
-                         str(err))
+                         six.text_type(err))
         self.m.VerifyAll()
 
     def test_create_failed(self):
@@ -156,7 +158,7 @@ class MarconiMessageQueueTest(HeatTestCase):
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(queue.create))
         self.assertEqual("Error: Message queue myqueue creation failed.",
-                         str(err))
+                         six.text_type(err))
         self.m.VerifyAll()
 
     def test_delete(self):
@@ -233,6 +235,6 @@ class MarconiMessageQueueTest(HeatTestCase):
                                 scheduler.TaskRunner(queue.update,
                                                      new_queue))
         msg = 'The Resource MyQueue2 requires replacement.'
-        self.assertEqual(msg, str(err))
+        self.assertEqual(msg, six.text_type(err))
 
         self.m.VerifyAll()

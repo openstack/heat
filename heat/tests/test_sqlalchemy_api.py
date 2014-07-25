@@ -15,6 +15,7 @@ from datetime import datetime
 from datetime import timedelta
 from json import dumps
 from json import loads
+import six
 import uuid
 
 import fixtures
@@ -890,7 +891,7 @@ class SqlAlchemyTest(HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.software_deployment_update,
                                 self.ctx, deployment_id, values={})
-        self.assertIn(deployment_id, str(err))
+        self.assertIn(deployment_id, six.text_type(err))
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         deployment_id = deployment.id
@@ -905,7 +906,7 @@ class SqlAlchemyTest(HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.software_deployment_delete,
                                 self.ctx, deployment_id)
-        self.assertIn(deployment_id, str(err))
+        self.assertIn(deployment_id, six.text_type(err))
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         deployment_id = deployment.id
@@ -919,7 +920,7 @@ class SqlAlchemyTest(HeatTestCase):
             self.ctx,
             deployment_id)
 
-        self.assertIn(deployment_id, str(err))
+        self.assertIn(deployment_id, six.text_type(err))
 
     def test_snapshot_create(self):
         template = create_raw_template(self.ctx)
@@ -983,7 +984,7 @@ class SqlAlchemyTest(HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.snapshot_update,
                                 self.ctx, snapshot_id, values={})
-        self.assertIn(snapshot_id, str(err))
+        self.assertIn(snapshot_id, six.text_type(err))
 
     def test_snapshot_update(self):
         template = create_raw_template(self.ctx)
@@ -1003,7 +1004,7 @@ class SqlAlchemyTest(HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.snapshot_delete,
                                 self.ctx, snapshot_id)
-        self.assertIn(snapshot_id, str(err))
+        self.assertIn(snapshot_id, six.text_type(err))
 
     def test_snapshot_delete(self):
         template = create_raw_template(self.ctx)
@@ -1023,7 +1024,7 @@ class SqlAlchemyTest(HeatTestCase):
             self.ctx,
             snapshot_id)
 
-        self.assertIn(snapshot_id, str(err))
+        self.assertIn(snapshot_id, six.text_type(err))
 
 
 def create_raw_template(context, **kwargs):
@@ -1187,7 +1188,7 @@ class DBAPIUserCredsTest(HeatTestCase):
             self.ctx, user_creds.id)
         exp_msg = ('Attempt to delete user creds with id '
                    '%s that does not exist' % user_creds.id)
-        self.assertIn(exp_msg, str(err))
+        self.assertIn(exp_msg, six.text_type(err))
 
 
 class DBAPIStackTest(HeatTestCase):

@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
@@ -142,7 +144,7 @@ class Secret(resource.Resource):
         except clients.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
-            if 'Not Found' in str(exc):
+            if 'Not Found' in six.text_type(exc):
                 self.resource_id_set(None)
             else:
                 raise
@@ -159,7 +161,7 @@ class Secret(resource.Resource):
         except clients.barbican_client.HTTPClientError as e:
             msg = _("Failed to resolve '%(name)s' for %(res)s '%(id)s': %(e)s")
             LOG.warn(msg % {'name': name, 'res': self.__class__.__name__,
-                            'id': self.resource_id, 'e': str(e)})
+                            'id': self.resource_id, 'e': six.text_type(e)})
             return ''
 
 
