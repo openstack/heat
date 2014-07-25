@@ -15,8 +15,8 @@ from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo.config import cfg
 from six.moves.urllib import parse as urlparse
 
+from heat.common.i18n import _
 from heat.engine import stack_user
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 

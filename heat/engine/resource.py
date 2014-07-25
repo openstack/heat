@@ -19,6 +19,7 @@ import six
 import warnings
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
@@ -33,7 +34,6 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')

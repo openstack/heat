@@ -12,7 +12,7 @@
 #    under the License.
 
 from heat.common.exception import StackValidationFailed
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

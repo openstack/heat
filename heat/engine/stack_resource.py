@@ -15,13 +15,13 @@ from oslo.config import cfg
 
 from heat.common import environment_format
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

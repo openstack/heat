@@ -26,6 +26,7 @@ import webob
 
 from heat.common import context
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
@@ -42,7 +43,6 @@ from heat.engine import resources
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
