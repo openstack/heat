@@ -18,6 +18,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
@@ -672,7 +673,7 @@ class CloudLoadBalancer(resource.Resource):
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
             function = attribute_function[key]
-            LOG.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
+            LOG.info(_LI('%(name)s.GetAtt(%(key)s) == %(function)s'),
                      {'name': self.name, 'key': key, 'function': function})
             return function
 

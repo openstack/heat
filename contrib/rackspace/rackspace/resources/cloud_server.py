@@ -15,6 +15,7 @@ import copy
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources import server
@@ -181,7 +182,7 @@ class CloudServer(server.Server):
             reason = server.metadata.get('rackconnect_unprocessable_reason',
                                          None)
             if reason is not None:
-                LOG.warning(_("RackConnect unprocessable reason: %s") % reason)
+                LOG.warn(_LW("RackConnect unprocessable reason: %s"), reason)
 
             msg = _("RackConnect automation has completed")
             self._add_event(self.action, self.status, msg)
