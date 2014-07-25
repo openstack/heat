@@ -23,7 +23,7 @@ import pkgutil
 import sys
 import types
 
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _LE
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ def load_modules(package, ignore_error=False):
         try:
             module = _import_module(importer, module_name, package)
         except ImportError:
-            LOG.error(_('Failed to import module %s') % module_name)
+            LOG.error(_LE('Failed to import module %s'), module_name)
             if not ignore_error:
                 raise
         else:
