@@ -327,6 +327,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_properties_type_mismatch(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'Foo': {'Type': 'String'},
             },
@@ -353,8 +354,11 @@ class ProviderTemplateTest(HeatTestCase):
                                                   {"Foo": "bar"})
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
-        self.assertRaises(exception.StackValidationFailed,
-                          temp_res.validate)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               temp_res.validate)
+        self.assertEqual("Property Foo type mismatch between facade "
+                         "DummyResource (Map) and provider (String)",
+                         str(ex))
 
     def test_boolean_type_provider(self):
         provider = {
