@@ -25,10 +25,10 @@ from sqlalchemy.orm.session import Session
 
 from heat.common import crypt
 from heat.common import exception
+from heat.common.i18n import _
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
-from heat.openstack.common.gettextutils import _
 
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_stack', 'heat.common.config')

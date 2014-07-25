@@ -16,7 +16,7 @@ import uuid
 from migrate.versioning import util as migrate_util
 import sqlalchemy
 
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 
 
 def upgrade(migrate_engine):

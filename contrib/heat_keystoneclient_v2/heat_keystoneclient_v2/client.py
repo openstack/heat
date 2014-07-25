@@ -19,7 +19,7 @@ from keystoneclient.v2_0 import client as kc
 from oslo.config import cfg
 
 from heat.common import exception
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 

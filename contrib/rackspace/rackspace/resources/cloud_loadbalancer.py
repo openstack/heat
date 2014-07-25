@@ -17,6 +17,7 @@ import itertools
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
@@ -24,7 +25,6 @@ from heat.engine import properties
 from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 try:

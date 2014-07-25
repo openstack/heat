@@ -22,6 +22,7 @@ import mox
 from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
@@ -34,7 +35,6 @@ from heat.engine import resource
 from heat.engine.resources import server as servers
 from heat.engine import scheduler
 from heat.engine import template
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes

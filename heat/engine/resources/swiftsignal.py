@@ -17,13 +17,13 @@ import urlparse
 from swiftclient import client as swiftclient_client
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine.clients.os import swift
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

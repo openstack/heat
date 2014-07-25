@@ -17,12 +17,12 @@ import string
 from six.moves import xrange
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
-from heat.openstack.common.gettextutils import _
 
 
 class RandomString(resource.Resource):

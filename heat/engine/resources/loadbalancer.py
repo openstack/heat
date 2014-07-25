@@ -15,12 +15,12 @@ import os
 from oslo.config import cfg
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import stack_resource
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

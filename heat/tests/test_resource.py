@@ -20,6 +20,7 @@ from oslo.config import cfg
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import short_id
 from heat.common import timeutils
 from heat.db import api as db_api
@@ -32,7 +33,6 @@ from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
-from heat.openstack.common.gettextutils import _
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils

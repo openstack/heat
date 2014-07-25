@@ -12,11 +12,11 @@
 #    under the License.
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 

@@ -18,13 +18,13 @@ import urlparse
 from oslo.config import cfg
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 from glanceclient import client as gc

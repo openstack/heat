@@ -11,18 +11,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# See http://code.google.com/p/python-nose/issues/detail?id=373
-# The code below enables nosetests to work with i18n _() blocks
-from heat.openstack.common import gettextutils
+from oslo import i18n
 
 
 def fake_translate_msgid(msgid, domain, desired_locale=None):
     return msgid
 
-gettextutils.enable_lazy()
-gettextutils.install('heat', lazy=True)
+i18n.enable_lazy()
+# fixme(elynn): Since install() is deprecated, we should remove it in
+# the future
+i18n.install('heat')
 
 #To ensure messages don't really get translated while running tests.
 #As there are lots of places where matching is expected when comparing
 #exception message(translated) with raw message.
-gettextutils._translate_msgid = fake_translate_msgid
+i18n._translate_msgid = fake_translate_msgid
