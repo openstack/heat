@@ -18,6 +18,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -83,21 +84,22 @@ class Restarter(signal_responder.SignalResponder):
         else:
             alarm_state = details.get('state', 'alarm').lower()
 
-        LOG.info(_('%(name)s Alarm, new state %(state)s')
-                 % {'name': self.name, 'state': alarm_state})
+        LOG.info(_LI('%(name)s Alarm, new state %(state)s'),
+                 {'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
             return
 
         victim = self._find_resource(self.properties[self.INSTANCE_ID])
         if victim is None:
-            LOG.info(_('%(name)s Alarm, can not find instance %(instance)s')
-                     % {'name': self.name,
-                        'instance': self.properties[self.INSTANCE_ID]})
+            LOG.info(_LI('%(name)s Alarm, can not find instance '
+                         '%(instance)s'),
+                     {'name': self.name,
+                      'instance': self.properties[self.INSTANCE_ID]})
             return
 
-        LOG.info(_('%(name)s Alarm, restarting resource: %(victim)s')
-                 % {'name': self.name, 'victim': victim.name})
+        LOG.info(_LI('%(name)s Alarm, restarting resource: %(victim)s'),
+                 {'name': self.name, 'victim': victim.name})
         self.stack.restart_resource(victim.name)
 
     def _resolve_attribute(self, name):
@@ -457,7 +459,7 @@ class Instance(resource.Resource):
         elif name in self.ATTRIBUTES[1:]:
             res = self._ipaddress()
 
-        LOG.info(_('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
+        LOG.info(_LI('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
                  {'name': self.name, 'attname': name, 'res': res})
         return unicode(res) if res else None
 

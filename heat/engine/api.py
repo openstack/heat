@@ -14,6 +14,7 @@
 from oslo.utils import timeutils
 
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.common import param_utils
 from heat.common import template_format
 from heat.engine import constraints as constr
@@ -263,7 +264,7 @@ def format_watch_data(wd):
     if len(metric) == 1:
         metric_name, metric_data = metric[0]
     else:
-        LOG.error(_("Unexpected number of keys in watch_data.data!"))
+        LOG.error(_LE("Unexpected number of keys in watch_data.data!"))
         return
 
     result = {

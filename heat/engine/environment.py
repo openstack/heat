@@ -23,6 +23,9 @@ import six
 from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.engine import support
 from heat.openstack.common import log
 
@@ -193,13 +196,13 @@ class ResourceRegistry(object):
                 for res_name in registry.keys():
                     if isinstance(registry[res_name], ResourceInfo) and \
                        res_name.startswith(name[:-1]):
-                        LOG.warn(_('Removing %(item)s from %(path)s') % {
+                        LOG.warn(_LW('Removing %(item)s from %(path)s'), {
                             'item': res_name,
                             'path': descriptive_path})
                         del registry[res_name]
             else:
                 # delete this entry.
-                LOG.warn(_('Removing %(item)s from %(path)s') % {
+                LOG.warn(_LW('Removing %(item)s from %(path)s'), {
                     'item': name,
                     'path': descriptive_path})
                 registry.pop(name, None)
@@ -212,9 +215,10 @@ class ResourceRegistry(object):
                 'path': descriptive_path,
                 'was': str(registry[name].value),
                 'now': str(info.value)}
-            LOG.warn(_('Changing %(path)s from %(was)s to %(now)s') % details)
+            LOG.warn(_LW('Changing %(path)s from %(was)s to %(now)s'),
+                     details)
         else:
-            LOG.info(_('Registering %(path)s -> %(value)s') % {
+            LOG.info(_LI('Registering %(path)s -> %(value)s'), {
                 'path': descriptive_path,
                 'value': str(info.value)})
 
@@ -429,22 +433,22 @@ def read_global_environment(env, env_dir=None):
     try:
         env_files = glob.glob(os.path.join(env_dir, '*'))
     except OSError as osex:
-        LOG.error(_('Failed to read %s') % env_dir)
+        LOG.error(_LE('Failed to read %s'), env_dir)
         LOG.exception(osex)
         return
 
     for file_path in env_files:
         try:
             with open(file_path) as env_fd:
-                LOG.info(_('Loading %s') % file_path)
+                LOG.info(_LI('Loading %s'), file_path)
                 env_body = env_fmt.parse(env_fd.read())
                 env_fmt.default_for_missing(env_body)
                 env.load(env_body)
         except ValueError as vex:
-            LOG.error(_('Failed to parse %(file_path)s') % {
+            LOG.error(_LE('Failed to parse %(file_path)s'), {
                       'file_path': file_path})
             LOG.exception(vex)
         except IOError as ioex:
-            LOG.error(_('Failed to read %(file_path)s') % {
+            LOG.error(_LE('Failed to read %(file_path)s'), {
                       'file_path': file_path})
             LOG.exception(ioex)

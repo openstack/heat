@@ -21,6 +21,9 @@ import warnings
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
@@ -528,7 +531,7 @@ class Resource(object):
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_('creating %s') % str(self))
+        LOG.info(_LI('creating %s'), str(self))
 
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
@@ -677,7 +680,7 @@ class Resource(object):
             exc = Exception(_('Resource update already requested'))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_('updating %s') % str(self))
+        LOG.info(_LI('updating %s'), six.text_type(self))
 
         self.updated_time = datetime.utcnow()
         with self._action_recorder(action, UpdateReplace):
@@ -702,7 +705,7 @@ class Resource(object):
         original state with the added message that check was not performed.
         """
         action = self.CHECK
-        LOG.info(_('Checking %s') % six.text_type(self))
+        LOG.info(_LI('Checking %s'), six.text_type(self))
 
         if hasattr(self, 'handle_%s' % action.lower()):
             return self._do_action(action)
@@ -723,7 +726,7 @@ class Resource(object):
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_('suspending %s') % str(self))
+        LOG.info(_LI('suspending %s'), six.text_type(self))
         return self._do_action(action)
 
     def resume(self):
@@ -739,12 +742,12 @@ class Resource(object):
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_('resuming %s') % str(self))
+        LOG.info(_LI('resuming %s'), six.text_type(self))
         return self._do_action(action)
 
     def snapshot(self):
         '''Snapshot the resource and return the created data, if any.'''
-        LOG.info(_('snapshotting %s') % str(self))
+        LOG.info(_LI('snapshotting %s'), six.text_type(self))
         return self._do_action(self.SNAPSHOT)
 
     @scheduler.wrappertask
@@ -790,7 +793,7 @@ class Resource(object):
         return name[0:2] + '-' + name[-postfix_length:]
 
     def validate(self):
-        LOG.info(_('Validating %s') % str(self))
+        LOG.info(_LI('Validating %s'), six.text_type(self))
 
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
@@ -823,7 +826,7 @@ class Resource(object):
 
         initial_state = self.state
 
-        LOG.info(_('deleting %s') % str(self))
+        LOG.info(_LI('deleting %s'), six.text_type(self))
 
         with self._action_recorder(action):
             if self.abandon_in_progress:
@@ -864,7 +867,7 @@ class Resource(object):
                 rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
-                LOG.warn(_('db error %s') % ex)
+                LOG.warn(_LW('db error %s'), ex)
 
     def _store(self):
         '''Create the resource in the database.'''
@@ -885,7 +888,7 @@ class Resource(object):
             self.created_time = new_rs.created_at
             self._rsrc_metadata = metadata
         except Exception as ex:
-            LOG.error(_('DB error %s') % ex)
+            LOG.error(_LE('DB error %s'), ex)
 
     def _add_event(self, action, status, reason):
         '''Add a state change event to the database.'''
@@ -912,7 +915,7 @@ class Resource(object):
                     'properties_data': self._stored_properties_data,
                     'nova_instance': self.resource_id})
             except Exception as ex:
-                LOG.error(_('DB error %s') % ex)
+                LOG.error(_LE('DB error %s'), ex)
 
         # store resource in DB on transition to CREATE_IN_PROGRESS
         # all other transitions (other than to DELETE_COMPLETE)
@@ -1050,8 +1053,8 @@ class Resource(object):
         No-op for resources which don't explicitly override this method
         '''
         if new_metadata:
-            LOG.warning(_("Resource %s does not implement metadata update")
-                        % self.name)
+            LOG.warn(_LW("Resource %s does not implement metadata update"),
+                     self.name)
 
     @classmethod
     def resource_to_template(cls, resource_type):

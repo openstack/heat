@@ -17,8 +17,9 @@ from cinderclient import client as cc
 from cinderclient import exceptions
 
 from heat.common import exception
+from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import clients
-from heat.openstack.common.gettextutils import _
 
 
 LOG = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ class CinderClientPlugin(clients.client_plugin.ClientPlugin):
             client_version = '2'
         else:
             raise exception.Error(_('No volume service available.'))
-        LOG.info(_('Creating Cinder client with volume API version %d.'),
+        LOG.info(_LI('Creating Cinder client with volume API version %d.'),
                  volume_api_version)
 
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')

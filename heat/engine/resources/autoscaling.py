@@ -20,6 +20,7 @@ import six
 from heat.common import environment_format
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import constraints
@@ -617,10 +618,10 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
         Adjust the size of the scaling group if the cooldown permits.
         """
         if self._cooldown_inprogress():
-            LOG.info(_("%(name)s NOT performing scaling adjustment, "
-                       "cooldown %(cooldown)s")
-                     % {'name': self.name,
-                        'cooldown': self.properties[self.COOLDOWN]})
+            LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
+                         "cooldown %(cooldown)s"),
+                     {'name': self.name,
+                      'cooldown': self.properties[self.COOLDOWN]})
             return
 
         capacity = len(self.get_instances())
