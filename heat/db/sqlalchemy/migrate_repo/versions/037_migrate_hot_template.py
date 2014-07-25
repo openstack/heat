@@ -53,6 +53,7 @@ def upgrade(migrate_engine):
 
                 if changed:
                     _commit_schema(parameter, schema)
+    session.close()
 
 
 def downgrade(migrate_engine):

@@ -46,7 +46,8 @@ def upgrade(migrate_engine):
     fake_autoincrement = itertools.count(1)
 
     event_list = event_table.select().order_by(
-        sqlalchemy.sql.expression.asc(event_table.c.created_at)).execute()
+        sqlalchemy.sql.expression.asc(
+            event_table.c.created_at)).execute().fetchall()
     for event in event_list:
         values = {'tmp_id': fake_autoincrement.next(), 'uuid': event.id}
         update = event_table.update().where(
