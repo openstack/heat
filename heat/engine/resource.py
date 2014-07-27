@@ -14,12 +14,14 @@
 import base64
 import contextlib
 from datetime import datetime
+from oslo.config import cfg
 import six
 import warnings
 
 from heat.common import exception
 from heat.common import identifier
 from heat.common import short_id
+from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine.attributes import Attributes
 from heat.engine import environment
@@ -33,6 +35,8 @@ from heat.engine import support
 from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+
+cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -465,6 +469,7 @@ class Resource(object):
         '''
         return self
 
+    @scheduler.wrappertask
     def create(self):
         '''
         Create the resource. Subclasses should provide a handle_create() method
@@ -483,7 +488,49 @@ class Resource(object):
         # the parser.Stack is stored (which is after the resources
         # are __init__'d, but before they are create()'d)
         self.reparse()
-        return self._do_action(action, self.properties.validate)
+
+        def pause():
+            try:
+                while True:
+                    yield
+            except scheduler.Timeout:
+                return
+
+        count = {self.CREATE: 0, self.DELETE: 0}
+
+        retry_limit = max(cfg.CONF.action_retry_limit, 0)
+        first_failure = None
+
+        while (count[self.CREATE] <= retry_limit and
+               count[self.DELETE] <= retry_limit):
+            if count[action]:
+                delay = timeutils.retry_backoff_delay(count[action],
+                                                      jitter_max=2.0)
+                waiter = scheduler.TaskRunner(pause)
+                waiter.start(timeout=delay)
+                while not waiter.step():
+                    yield
+            try:
+                yield self._do_action(action, self.properties.validate)
+                if action == self.CREATE:
+                    return
+                else:
+                    action = self.CREATE
+            except exception.ResourceFailure as failure:
+                if not isinstance(failure.exc, ResourceInError):
+                    raise failure
+
+                count[action] += 1
+                if action == self.CREATE:
+                    action = self.DELETE
+                    count[action] = 0
+
+                if first_failure is None:
+                    # Save the first exception
+                    first_failure = failure
+
+        if first_failure:
+            raise first_failure
 
     def prepare_abandon(self):
         self.abandon_in_progress = True

@@ -17,6 +17,7 @@ import json
 from cinderclient import exceptions as cinder_exp
 from cinderclient.v1 import client as cinderclient
 import mox
+from oslo.config import cfg
 import six
 
 from heat.common import exception
@@ -719,6 +720,8 @@ class VolumeTest(HeatTestCase):
 
     def test_snapshot_no_volume(self):
         stack_name = 'test_volume_stack'
+
+        cfg.CONF.set_override('action_retry_limit', 0)
         fv = FakeVolume('creating', 'error')
 
         self._mock_create_volume(fv, stack_name)
