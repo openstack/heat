@@ -39,4 +39,36 @@ def downgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
 
     stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.backup.drop()
+    if migrate_engine.name == 'sqlite':
+        _downgrade_045_sqlite(migrate_engine, meta, stack)
+    else:
+        stack.c.backup.drop()
+
+
+def _downgrade_045_sqlite(migrate_engine, metadata, table):
+
+    table_name = table.name
+
+    constraints = [
+        c.copy() for c in table.constraints
+        if not isinstance(c, sqlalchemy.CheckConstraint)
+    ]
+    columns = [c.copy() for c in table.columns if c.name != "backup"]
+
+    new_table = sqlalchemy.Table(table_name + "__tmp__", metadata,
+                                 *(columns + constraints))
+    new_table.create()
+
+    migrate_data = """
+        INSERT INTO stack__tmp__
+            SELECT id, created_at, updated_at, name, raw_template_id,
+                   user_creds_id, username, owner_id, status, status_reason,
+                   parameters, timeout, tenant, disable_rollback, action,
+                   deleted_at, stack_user_project_id
+            FROM stack;"""
+
+    migrate_engine.execute(migrate_data)
+
+    table.drop()
+
+    new_table.rename(table_name)

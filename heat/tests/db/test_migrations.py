@@ -39,8 +39,8 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                              common.FakeLogMixin):
     """Test sqlalchemy-migrate migrations."""
 
-    snake_walk = False
-    downgrade = False
+    snake_walk = True
+    downgrade = True
 
     @property
     def INIT_VERSION(self):
@@ -206,7 +206,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
 
     def _pre_upgrade_045(self, engine):
         raw_template = utils.get_table(engine, 'raw_template')
-        templ = [dict(id=5, template='{}')]
+        templ = [dict(id=5, template='{}', files='{}')]
         engine.execute(raw_template.insert(), templ)
 
         user_creds = utils.get_table(engine, 'user_creds')
