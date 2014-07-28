@@ -174,3 +174,27 @@ class Attributes(collections.Mapping):
     def __repr__(self):
         return ("Attributes for %s:\n\t" % self._resource_name +
                 '\n\t'.join(self._attributes.values()))
+
+
+def select_from_attribute(attribute_value, path):
+    '''
+    Select an element from an attribute value.
+
+    :param attribute_value: the attribute value.
+    :param path: a list of path components to select from the attribute.
+    :returns: the selected attribute component value.
+    '''
+    def get_path_component(collection, key):
+        if not isinstance(collection, (collections.Mapping,
+                                       collections.Sequence)):
+            raise TypeError(_("Can't traverse attribute path"))
+
+        if not isinstance(key, (basestring, int)):
+            raise TypeError(_('Path components in attributes must be strings'))
+
+        return collection[key]
+
+    try:
+        return reduce(get_path_component, path, attribute_value)
+    except (KeyError, IndexError, TypeError):
+        return None
