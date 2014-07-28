@@ -18,12 +18,14 @@ from heat.engine import parameters
 
 
 PARAM_CONSTRAINTS = (
-    CONSTRAINTS, DESCRIPTION, LENGTH, RANGE, MIN, MAX,
-    ALLOWED_VALUES, ALLOWED_PATTERN, CUSTOM_CONSTRAINT,
+    DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES, ALLOWED_PATTERN,
+    CUSTOM_CONSTRAINT,
 ) = (
-    'constraints', 'description', 'length', 'range', 'min', 'max',
-    'allowed_values', 'allowed_pattern', 'custom_constraint',
+    'description', 'length', 'range', 'allowed_values', 'allowed_pattern',
+    'custom_constraint',
 )
+
+RANGE_KEYS = (MIN, MAX) = ('min', 'max')
 
 
 class HOTParamSchema(parameters.Schema):
@@ -59,7 +61,7 @@ class HOTParamSchema(parameters.Schema):
         cls._validate_dict(param_name, schema_dict)
 
         def constraints():
-            constraints = schema_dict.get(CONSTRAINTS)
+            constraints = schema_dict.get(cls.CONSTRAINTS)
             if constraints is None:
                 return
 
@@ -68,22 +70,19 @@ class HOTParamSchema(parameters.Schema):
                     message=_("Invalid parameter constraints for parameter "
                               "%s, expected a list") % param_name)
 
-            valid_keys = (DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES,
-                          ALLOWED_PATTERN, CUSTOM_CONSTRAINT)
-
             for constraint in constraints:
-                cls._check_dict(constraint, valid_keys,
+                cls._check_dict(constraint, PARAM_CONSTRAINTS,
                                 'parameter constraints')
                 desc = constraint.get(DESCRIPTION)
                 if RANGE in constraint:
                     cdef = constraint.get(RANGE)
-                    cls._check_dict(cdef, (MIN, MAX), 'range constraint')
+                    cls._check_dict(cdef, RANGE_KEYS, 'range constraint')
                     yield constr.Range(parameters.Schema.get_num(MIN, cdef),
                                        parameters.Schema.get_num(MAX, cdef),
                                        desc)
                 elif LENGTH in constraint:
                     cdef = constraint.get(LENGTH)
-                    cls._check_dict(cdef, (MIN, MAX), 'length constraint')
+                    cls._check_dict(cdef, RANGE_KEYS, 'length constraint')
                     yield constr.Length(parameters.Schema.get_num(MIN, cdef),
                                         parameters.Schema.get_num(MAX, cdef),
                                         desc)
