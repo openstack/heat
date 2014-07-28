@@ -18,6 +18,8 @@ Utilities for handling ISO 8601 duration format.
 import random
 import re
 
+from heat.common.i18n import _
+
 
 iso_duration_re = re.compile('PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$')
 

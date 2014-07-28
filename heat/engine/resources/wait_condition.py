@@ -15,6 +15,7 @@ import json
 import uuid
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import identifier
 from heat.engine import attributes
 from heat.engine import constraints

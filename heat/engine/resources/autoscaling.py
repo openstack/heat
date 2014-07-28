@@ -19,6 +19,7 @@ import six
 
 from heat.common import environment_format
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import constraints

@@ -17,6 +17,7 @@ import collections
 import functools
 import six
 
+from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine.resources.software_config import software_deployment as sd

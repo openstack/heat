@@ -16,6 +16,7 @@ import collections
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import constraints as constr
 from heat.engine import function
 from heat.engine import parameters

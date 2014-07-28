@@ -19,6 +19,7 @@ import sys
 from oslo.config import cfg
 import six
 
+from heat.common.i18n import _
 from heat.common import plugin_loader
 from heat.openstack.common import log
 

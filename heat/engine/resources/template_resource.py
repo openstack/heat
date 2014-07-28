@@ -18,6 +18,7 @@ from requests import exceptions
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes

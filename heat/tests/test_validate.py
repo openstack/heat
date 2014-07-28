@@ -15,6 +15,7 @@ from glanceclient import exc as glance_exceptions
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova

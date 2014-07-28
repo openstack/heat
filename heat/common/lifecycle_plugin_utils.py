@@ -15,8 +15,9 @@
 '''
 Utility for fetching and running plug point implementation classes
 '''
+from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.engine import resources
-from heat.openstack.common.gettextutils import _LE
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

@@ -15,6 +15,7 @@
 import collections
 import six
 
+from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 from heat.engine import parameters

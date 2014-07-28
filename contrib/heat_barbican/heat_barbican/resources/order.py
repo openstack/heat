@@ -14,6 +14,7 @@
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
