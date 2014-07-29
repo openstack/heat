@@ -676,26 +676,6 @@ class Instance(resource.Resource):
                 '/'.join([self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS]),
                 self.NETWORK_INTERFACES)
 
-    @scheduler.wrappertask
-    def _delete_server(self, server):
-        '''
-        Return a co-routine that deletes the server and waits for it to
-        disappear from Nova.
-        '''
-        yield self._detach_volumes_task()()
-        server.delete()
-
-        while True:
-            yield
-
-            try:
-                nova_utils.refresh_server(server)
-                if server.status == "DELETED":
-                    break
-            except nova_exceptions.NotFound:
-                break
-        self.resource_id_set(None)
-
     def _detach_volumes_task(self):
         '''
         Detach volumes from the instance
@@ -707,29 +687,28 @@ class Instance(resource.Resource):
         return scheduler.PollingTaskGroup(detach_tasks)
 
     def handle_delete(self):
-        '''
-        Delete an instance, blocking until it is disposed by OpenStack
-        '''
         if self.resource_id is None:
             return
-
         try:
             server = self.nova().servers.get(self.resource_id)
         except nova_exceptions.NotFound:
-            self.resource_id_set(None)
             return
+        deleters = (
+            scheduler.TaskRunner(self._detach_volumes_task()),
+            scheduler.TaskRunner(nova_utils.delete_server, server))
+        deleters[0].start()
+        return deleters
 
-        server_delete_task = scheduler.TaskRunner(self._delete_server,
-                                                  server=server)
-        server_delete_task.start()
-        return server_delete_task
-
-    def check_delete_complete(self, server_delete_task):
-        # if the resource was already deleted, server_delete_task will be None
-        if server_delete_task is None:
-            return True
-        else:
-            return server_delete_task.step()
+    def check_delete_complete(self, deleters):
+        # if the resource was already deleted, deleters will be None
+        if deleters:
+            for deleter in deleters:
+                if not deleter.started():
+                    deleter.start()
+                if not deleter.step():
+                    return False
+        self.resource_id_set(None)
+        return True
 
     def handle_suspend(self):
         '''
