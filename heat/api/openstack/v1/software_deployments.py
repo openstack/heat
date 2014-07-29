@@ -85,7 +85,8 @@ class SoftwareDeploymentController(object):
         """
         update_data = dict((k, body.get(k)) for k in (
             'config_id', 'input_values', 'output_values', 'action',
-            'status', 'status_reason'))
+            'status', 'status_reason')
+            if body.get(k, None) is not None)
         sd = self.rpc_client.update_software_deployment(req.context,
                                                         deployment_id,
                                                         **update_data)
