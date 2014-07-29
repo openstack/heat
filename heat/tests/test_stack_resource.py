@@ -307,13 +307,15 @@ class StackResourceTest(HeatTestCase):
         # check abandoned data contains all the necessary information.
         # (no need to check stack/resource IDs, because they are
         # randomly generated uuids)
-        self.assertEqual(6, len(ret))
+        self.assertEqual(8, len(ret))
         self.assertEqual('CREATE', ret['action'])
         self.assertIn('name', ret)
         self.assertIn('id', ret)
         self.assertIn('resources', ret)
         self.assertEqual(template_format.parse(param_template),
                          ret['template'])
+        self.assertIn('stack_user_project_id', ret)
+        self.assertIn('project_id', ret)
 
     def test_create_with_template_validates(self):
         """
