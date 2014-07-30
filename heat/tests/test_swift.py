@@ -15,6 +15,7 @@
 import mox
 import swiftclient.client as sc
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import swift
 from heat.engine import scheduler
@@ -148,7 +149,7 @@ class swiftTest(HeatTestCase):
         self.assertEqual('17680980', rsrc.FnGetAtt('BytesUsed'))
         self.assertEqual(headers, rsrc.FnGetAtt('HeadContainer'))
 
-        self.assertRaises(swift.exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
 
         scheduler.TaskRunner(rsrc.delete)()

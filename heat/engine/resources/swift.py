@@ -14,7 +14,6 @@
 from six.moves.urllib import parse as urlparse
 from swiftclient import exceptions as swift_exceptions
 
-from heat.common import exception
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
@@ -152,7 +151,7 @@ class SwiftContainer(resource.Resource):
     def FnGetRefId(self):
         return unicode(self.resource_id)
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, key):
         parsed = list(urlparse.urlparse(self.swift().url))
         if key == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
@@ -175,9 +174,6 @@ class SwiftContainer(resource.Resource):
                     return headers['x-container-bytes-used']
                 elif key == self.HEAD_CONTAINER:
                     return headers
-        else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
 
 
 def resource_mapping():
