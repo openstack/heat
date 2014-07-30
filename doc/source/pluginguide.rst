@@ -123,14 +123,13 @@ plug-in.
                 ]
             )
         }
-        
         properties_schema = {
             "property_name": properties.Schema(
                 properties.Schema.MAP,
                 _('Internationalized description of property'),
                 required=True,
                 default={"Foo": "Bar"},
-                schema": nested_schema
+                schema=nested_schema
             )
         }
 
@@ -282,7 +281,7 @@ Assume the following simple property and attribute definition:
                 ]
             )
         }
-        
+
         attributes_schema = {
             'Attr_1': 'The first attribute',
             'Attr_2': 'The second attribute'
@@ -296,14 +295,14 @@ following declarations in a template:
 .. code-block:: yaml
 
         # ... other sections omitted for brevity ...
-        
+
         resources:
           resource-1:
             type: Resource::Foo
             properties:
               foo: Value of the foo property
               bar: 7
-        
+
         outputs:
           foo-attrib-1:
             value: { get_attr: [resource-1, Attr_1] }
@@ -341,7 +340,7 @@ Create
   take this information in as a parameter and then periodically be polled.
   This allows for cooperative multi-threading between multiple resources that
   have had their dependencies satisfied.
-  
+
   *Note* once the native identifier of the physical resource is known, this
   function should call ``self.resource_id_set`` passing the native identifier
   of the physical resource. This will persist the identifier and make it
@@ -370,7 +369,7 @@ that updates require the engine to delete and re-create the resource
 .. py:function:: handle_update(self, json_snippet, templ_diff, prop_diff)
 
   Update the physical resources using updated information.
-  
+
   :param json_snippet: the resource definition from the updated template
   :type json_snippet: collections.Mapping
   :param templ_diff: changed values from the original template definition
