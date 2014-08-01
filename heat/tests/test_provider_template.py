@@ -14,6 +14,7 @@
 import json
 import os
 import uuid
+import yaml
 
 import testscenarios
 
@@ -561,6 +562,94 @@ class ProviderTemplateTest(HeatTestCase):
                                                       stack)
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
         self.m.VerifyAll()
+
+
+class NestedProvider(HeatTestCase):
+    """Prove that we can use the registry in a nested provider."""
+
+    def setUp(self):
+        super(NestedProvider, self).setUp()
+        utils.setup_dummy_db()
+
+    def test_nested_env(self):
+        main_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: My::NestedSecret
+outputs:
+  secret1:
+    value: { get_attr: [secret1, value] }
+'''
+
+        nested_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: My::Secret
+outputs:
+  value:
+    value: { get_attr: [secret2, value] }
+'''
+
+        env_templ = '''
+resource_registry:
+  "My::Secret": "OS::Heat::RandomString"
+  "My::NestedSecret": nested.yaml
+'''
+
+        env = environment.Environment()
+        env.load(yaml.load(env_templ))
+        templ = parser.Template(template_format.parse(main_templ),
+                                files={'nested.yaml': nested_templ})
+        stack = parser.Stack(utils.dummy_context(),
+                             utils.random_name(),
+                             templ, env=env)
+        stack.store()
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+
+    def test_no_infinite_recursion(self):
+        """Prove that we can override a python resource.
+
+        And use that resource within the template resource.
+        """
+
+        main_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: OS::Heat::RandomString
+outputs:
+  secret1:
+    value: { get_attr: [secret1, value] }
+'''
+
+        nested_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: OS::Heat::RandomString
+outputs:
+  value:
+    value: { get_attr: [secret2, value] }
+'''
+
+        env_templ = '''
+resource_registry:
+  "OS::Heat::RandomString": nested.yaml
+'''
+
+        env = environment.Environment()
+        env.load(yaml.load(env_templ))
+        templ = parser.Template(template_format.parse(main_templ),
+                                files={'nested.yaml': nested_templ})
+        stack = parser.Stack(utils.dummy_context(),
+                             utils.random_name(),
+                             templ, env=env)
+        stack.store()
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
 
 class ProviderTemplateUpdateTest(HeatTestCase):

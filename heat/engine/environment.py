@@ -249,7 +249,7 @@ class ResourceRegistry(object):
                 yield self._registry[pattern]
 
     def get_resource_info(self, resource_type, resource_name=None,
-                          registry_type=None):
+                          registry_type=None, accept_fn=None):
         """Find possible matches to the resource type and name.
         chain the results from the global and user registry to find
         a match.
@@ -280,10 +280,11 @@ class ResourceRegistry(object):
         for info in sorted(matches):
             match = info.get_resource_info(resource_type,
                                            resource_name)
-            if registry_type is None or isinstance(match, registry_type):
+            if ((registry_type is None or isinstance(match, registry_type)) and
+                    (accept_fn is None or accept_fn(info))):
                 return match
 
-    def get_class(self, resource_type, resource_name=None):
+    def get_class(self, resource_type, resource_name=None, accept_fn=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
             raise exception.StackValidationFailed(message=msg)
@@ -296,7 +297,8 @@ class ResourceRegistry(object):
             raise exception.StackValidationFailed(message=msg)
 
         info = self.get_resource_info(resource_type,
-                                      resource_name=resource_name)
+                                      resource_name=resource_name,
+                                      accept_fn=accept_fn)
         if info is None:
             msg = _("Unknown resource Type : %s") % resource_type
             raise exception.StackValidationFailed(message=msg)
