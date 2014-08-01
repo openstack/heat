@@ -266,11 +266,12 @@ class Server(object):
 
         def hup(*args):
             """
-            Shuts down the server, but allows running requests to complete
+            Shuts down the server(s), but allows running requests to complete
             """
             self.LOG.error(_('SIGHUP received'))
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
-            self.running = False
+            os.killpg(0, signal.SIGHUP)
+            signal.signal(signal.SIGHUP, hup)
 
         eventlet.wsgi.MAX_HEADER_LINE = conf.max_header_line
         self.application = application
@@ -303,6 +304,7 @@ class Server(object):
                     raise
             except KeyboardInterrupt:
                 self.LOG.info(_('Caught keyboard interrupt. Exiting.'))
+                os.killpg(0, signal.SIGTERM)
                 break
         eventlet.greenio.shutdown_safe(self.sock)
         self.sock.close()
@@ -354,7 +356,8 @@ class Server(object):
         eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
-                             log=WritableLogger(self.LOG))
+                             log=WritableLogger(self.LOG),
+                             debug=cfg.CONF.debug)
 
 
 class Middleware(object):
