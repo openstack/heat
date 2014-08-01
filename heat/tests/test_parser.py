@@ -2342,24 +2342,30 @@ class StackTest(HeatTestCase):
 
     def test_update_rollback_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Parameters': {'AParam': {'Type': 'String'}},
                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
+        env1 = {'parameters': {'AParam': 'abc'}}
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
-                                  disable_rollback=False)
+                                  disable_rollback=False,
+                                  env=environment.Environment(env1))
         self.stack.store()
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
 
         tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Parameters': {'BParam': {'Type': 'String'}},
                  'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
+        env2 = {'parameters': {'BParam': 'smelly'}}
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2),
-                                     disable_rollback=False)
+                                     disable_rollback=False,
+                                     env=environment.Environment(env2))
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)

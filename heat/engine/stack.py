@@ -644,8 +644,11 @@ class Stack(collections.Mapping):
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
-        oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
-                         self.env)
+        if action == self.UPDATE:
+            # Oldstack is useless when the action is not UPDATE , so we don't
+            # need to build it, this can avoid some unexpected errors.
+            oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
+                             self.env)
         backup_stack = self._backup_stack()
         try:
             update_task = update.StackUpdate(self, newstack, backup_stack,
