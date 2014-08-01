@@ -125,27 +125,28 @@ class ResourceGroup(stack_resource.StackResource):
     def handle_delete(self):
         return self.delete_nested()
 
-    def FnGetAtt(self, key):
+    def FnGetAtt(self, key, *path):
         nested_stack = self.nested()
 
-        def get_rsrc_attr(resource_name, attr_name=None):
+        def get_rsrc_attr(resource_name, *attr_path):
             try:
                 resource = nested_stack[resource_name]
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
-            if attr_name is None:
+            if not attr_path:
                 return resource.FnGetRefId()
             else:
-                return resource.FnGetAtt(attr_name)
+                return resource.FnGetAtt(*attr_path)
 
         if key.startswith("resource."):
-            parts = key.split(".", 2)
-            return get_rsrc_attr(*parts[1:])
+            path = key.split(".", 2)[1:] + list(path)
+            return get_rsrc_attr(*path)
         else:
             count = self.properties[self.COUNT]
-            attr = None if key == self.REFS else key
-            return [get_rsrc_attr(str(n), attr) for n in range(count)]
+            attr = [] if key == self.REFS else [key]
+            attribute = [get_rsrc_attr(str(n), *attr) for n in range(count)]
+            return attributes.select_from_attribute(attribute, path)
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)

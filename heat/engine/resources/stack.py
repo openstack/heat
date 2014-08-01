@@ -16,6 +16,7 @@ from requests import exceptions
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import stack_resource
 
@@ -82,11 +83,12 @@ class NestedStack(stack_resource.StackResource):
     def handle_delete(self):
         return self.delete_nested()
 
-    def FnGetAtt(self, key):
+    def FnGetAtt(self, key, *path):
         if key and not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
-        return self.get_output(key.partition('.')[-1])
+        attribute = self.get_output(key.partition('.')[-1])
+        return attributes.select_from_attribute(attribute, path)
 
     def FnGetRefId(self):
         return self.nested().identifier().arn()

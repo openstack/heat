@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import short_id
 from heat.db import api as db_api
-from heat.engine.attributes import Attributes
+from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
@@ -146,9 +146,9 @@ class Resource(object):
         self.name = name
         self.t = definition
         self.reparse()
-        self.attributes = Attributes(self.name,
-                                     self.attributes_schema,
-                                     self._resolve_attribute)
+        self.attributes = attributes.Attributes(self.name,
+                                                self.attributes_schema,
+                                                self._resolve_attribute)
 
         self.abandon_in_progress = False
 
@@ -827,18 +827,21 @@ class Resource(object):
         else:
             return unicode(self.name)
 
-    def FnGetAtt(self, key):
+    def FnGetAtt(self, key, *path):
         '''
         For the intrinsic function Fn::GetAtt.
 
         :param key: the attribute key.
+        :param path: a list of path components to select from the attribute.
         :returns: the attribute value.
         '''
         try:
-            return self.attributes[key]
+            attribute = self.attributes[key]
         except KeyError:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
+        else:
+            return attributes.select_from_attribute(attribute, path)
 
     def FnBase64(self, data):
         '''
@@ -927,7 +930,7 @@ class Resource(object):
                     'Properties': properties
                 }
             },
-            'Outputs': Attributes.as_outputs(resource_name, cls)
+            'Outputs': attributes.Attributes.as_outputs(resource_name, cls)
         }
 
     def data(self):
