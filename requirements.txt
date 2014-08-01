@@ -13,8 +13,8 @@ sqlalchemy-migrate>=0.8.2,!=0.8.4
 python-novaclient>=2.17.0
 PasteDeploy>=1.5.0
 requests>=1.1
-Routes>=1.12.3
-SQLAlchemy>=0.7.8,<=0.9.99
+Routes>=1.12.3,!=2.0
+SQLAlchemy>=0.7.8,!=0.9.5,<=0.9.99
 WebOb>=1.2.3
 python-heatclient>=0.2.3
 python-keystoneclient>=0.7.0
