@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
+from heat.tests.v1_1 import fakes
 
 
 class NovaUtilsTests(HeatTestCase):
@@ -126,10 +127,7 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
     def test_500_error(self):
         server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            clients.novaclient.exceptions.ClientException(500, msg))
+        server.get().AndRaise(fakes.fake_exception(500))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))
@@ -137,10 +135,7 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
 
     def test_503_error(self):
         server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            clients.novaclient.exceptions.ClientException(503, msg))
+        server.get().AndRaise(fakes.fake_exception(503))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))

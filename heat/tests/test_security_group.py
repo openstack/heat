@@ -361,20 +361,16 @@ Resources:
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', '22', '22', '0.0.0.0/0', None).AndRaise(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'icmp', None, None, None, '1').AndReturn(
-                clients.novaclient.exceptions.BadRequest(
-                    400, 'Rule already exists'))
+                fakes.fake_exception(400, 'Rule already exists'))
 
         # delete script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
