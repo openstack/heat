@@ -277,7 +277,8 @@ class OSDBInstance(resource.Resource):
         '''
         self._refresh_instance(instance)  # get updated attributes
         if instance.status in self.BAD_STATUSES:
-            raise exception.Error(_("Database instance creation failed."))
+            raise resource.ResourceInError(
+                resource_status=instance.status)
 
         if instance.status != self.ACTIVE:
             return False

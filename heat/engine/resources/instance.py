@@ -526,20 +526,14 @@ class Instance(resource.Resource):
 
         if server.status == 'ERROR':
             fault = getattr(server, 'fault', {})
-            message = fault.get('message', 'Unknown')
-            code = fault.get('code', 500)
-            exc = exception.Error(_("Creation of server %(server)s "
-                                    "failed: %(message)s (%(code)s)") %
-                                  dict(server=server.name,
-                                       message=message,
-                                       code=code))
-            raise exc
+            raise resource.ResourceInError(
+                resource_status=server.status,
+                status_reason=_("Message: %(message)s, Code: %(code)s") % {
+                    'message': fault.get('message', _('Unknown')),
+                    'code': fault.get('code', _('Unknown'))
+                })
 
-        exc = exception.Error(_("Creation of server %(server)s failed "
-                                "with unknown status: %(status)s") %
-                              dict(server=server.name,
-                                   status=server.status))
-        raise exc
+        raise resource.ResourceUnknownStatus(resource_status=server.status)
 
     def volumes(self):
         """

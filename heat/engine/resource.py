@@ -65,6 +65,19 @@ class UpdateReplace(Exception):
         super(Exception, self).__init__(msg)
 
 
+class ResourceInError(exception.HeatException):
+    msg_fmt = _('Went to status %(resource_status)s '
+                'due to "%(status_reason)s"')
+
+    def __init__(self, status_reason=_('Unknown'), **kwargs):
+        super(ResourceInError, self).__init__(status_reason=status_reason,
+                                              **kwargs)
+
+
+class ResourceUnknownStatus(exception.HeatException):
+    msg_fmt = _('Unknown status %(resource_status)s')
+
+
 class Resource(object):
     ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
                ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',

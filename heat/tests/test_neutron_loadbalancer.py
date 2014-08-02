@@ -505,8 +505,7 @@ class PoolTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'Error: neutron reported unexpected pool '
-            'resource[5678] status[ERROR]',
+            'ResourceInError: Went to status ERROR due to "error in pool"',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
@@ -544,8 +543,7 @@ class PoolTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'Error: neutron reported unexpected vip '
-            'resource[xyz] status[ERROR]',
+            'ResourceInError: Went to status ERROR due to "error in vip"',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

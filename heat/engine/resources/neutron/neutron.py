@@ -103,15 +103,16 @@ class NeutronResource(resource.Resource):
 
     @staticmethod
     def is_built(attributes):
-        if attributes['status'] == 'BUILD':
+        status = attributes['status']
+        if status == 'BUILD':
             return False
-        if attributes['status'] in ('ACTIVE', 'DOWN'):
+        if status in ('ACTIVE', 'DOWN'):
             return True
+        elif status == 'ERROR':
+            raise resource.ResourceInError(
+                resource_status=status)
         else:
-            raise exception.Error(_('neutron reported unexpected '
-                                    'resource[%(name)s] status[%(status)s]') %
-                                  {'name': attributes['name'],
-                                   'status': attributes['status']})
+            raise resource.ResourceUnknownStatus(resource_status=status)
 
     def _resolve_attribute(self, name):
         try:

@@ -405,9 +405,12 @@ class ServersTest(HeatTestCase):
                                           'cr_unexp_sts')
         return_server.get = lambda: None
         return_server.status = 'BOGUS'
-        self.assertRaises(exception.Error,
-                          server.check_create_complete,
-                          return_server)
+        e = self.assertRaises(resource.ResourceUnknownStatus,
+                              server.check_create_complete,
+                              return_server)
+        self.assertEqual(
+            'Unknown status BOGUS',
+            str(e))
 
     def test_server_create_error_status(self):
         return_server = self.fc.servers.list()[1]
@@ -423,9 +426,12 @@ class ServersTest(HeatTestCase):
         return_server.get()
         self.m.ReplayAll()
 
-        self.assertRaises(exception.Error,
-                          server.check_create_complete,
-                          return_server)
+        e = self.assertRaises(resource.ResourceInError,
+                              server.check_create_complete,
+                              return_server)
+        self.assertEqual(
+            'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
+            str(e))
 
         self.m.VerifyAll()
 

@@ -129,10 +129,14 @@ class Volume(resource.Resource):
 
         if vol.status == 'available':
             return True
-        elif vol.status in self._volume_creating_status:
+        if vol.status in self._volume_creating_status:
             return False
+        if vol.status == 'error':
+            raise resource.ResourceInError(
+                resource_status=vol.status)
         else:
-            raise exception.Error(vol.status)
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status)
 
     def _backup(self):
         backup = self.cinder().backups.create(self.resource_id)
@@ -140,7 +144,8 @@ class Volume(resource.Resource):
             yield
             backup.get()
         if backup.status != 'available':
-            raise exception.Error(backup.status)
+            raise resource.ResourceUnknownStatus(
+                resource_status=backup.status)
 
     @scheduler.wrappertask
     def _delete(self, backup=False):

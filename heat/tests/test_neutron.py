@@ -24,6 +24,7 @@ from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import neutron
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.neutron import net
 from heat.engine.resources.neutron.neutron import NeutronResource as qr
 from heat.engine.resources.neutron import neutron_utils
@@ -499,22 +500,21 @@ class NeutronTest(HeatTestCase):
                           'shared': False}, props)
 
     def test_is_built(self):
-        self.assertTrue(qr.is_built({
-            'name': 'the_net',
-            'status': 'ACTIVE'
-        }))
-        self.assertTrue(qr.is_built({
-            'name': 'the_net',
-            'status': 'DOWN'
-        }))
-        self.assertFalse(qr.is_built({
-            'name': 'the_net',
-            'status': 'BUILD'
-        }))
-        self.assertRaises(exception.Error, qr.is_built, {
-            'name': 'the_net',
+        self.assertTrue(qr.is_built({'status': 'ACTIVE'}))
+        self.assertTrue(qr.is_built({'status': 'DOWN'}))
+        self.assertFalse(qr.is_built({'status': 'BUILD'}))
+        e = self.assertRaises(resource.ResourceInError, qr.is_built, {
+            'status': 'ERROR'
+        })
+        self.assertEqual(
+            'Went to status ERROR due to "Unknown"',
+            str(e))
+        e = self.assertRaises(resource.ResourceUnknownStatus, qr.is_built, {
             'status': 'FROBULATING'
         })
+        self.assertEqual(
+            'Unknown status FROBULATING',
+            str(e))
 
     def test_resolve_attribute(self):
         class SomeNeutronResource(qr):
