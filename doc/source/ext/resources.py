@@ -123,7 +123,7 @@ resources:
     properties:
       %s''' % (self.resource_type, '\n      '.join(props))
 
-        block = nodes.literal_block('', template)
+        block = nodes.literal_block('', template, language="hot")
         section.append(block)
 
     def contribute_yaml_syntax(self, parent):
@@ -145,7 +145,7 @@ Resources:
     Properties:
       %s''' % (self.resource_type, '\n      '.join(props))
 
-        block = nodes.literal_block('', template)
+        block = nodes.literal_block('', template, language='yaml')
         section.append(block)
 
     def contribute_json_syntax(self, parent):
@@ -170,7 +170,7 @@ Resources:
     }
   }
 }''' % (self.resource_type, ',\n        '.join(props))
-        block = nodes.literal_block('', template)
+        block = nodes.literal_block('', template, language="json")
         section.append(block)
 
     @staticmethod
