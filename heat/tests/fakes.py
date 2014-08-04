@@ -166,4 +166,4 @@ class FakeKeystoneClient(object):
         pass
 
     def stack_domain_user_token(self, username, project_id, password):
-        pass
+        return 'adomainusertoken'
