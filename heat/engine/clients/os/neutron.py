@@ -21,6 +21,8 @@ from heat.engine import constraints
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
 
+    exceptions_module = exceptions
+
     def _create(self):
 
         con = self.context
@@ -38,6 +40,24 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         }
 
         return nc.Client(**args)
+
+    def is_not_found(self, ex):
+        if isinstance(ex, (exceptions.NotFound,
+                           exceptions.NetworkNotFoundClient,
+                           exceptions.PortNotFoundClient)):
+            return True
+        return (isinstance(ex, exceptions.NeutronClientException) and
+                ex.status_code == 404)
+
+    def is_conflict(self, ex):
+        if not isinstance(ex, exceptions.NeutronClientException):
+            return False
+        return ex.status_code == 409
+
+    def is_over_limit(self, ex):
+        if not isinstance(ex, exceptions.NeutronClientException):
+            return False
+        return ex.status_code == 413
 
 
 class NetworkConstraint(constraints.BaseCustomConstraint):

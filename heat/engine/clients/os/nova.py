@@ -12,12 +12,15 @@
 #    under the License.
 
 from novaclient import client as nc
+from novaclient import exceptions
 from novaclient import shell as novashell
 
 from heat.engine.clients import client_plugin
 
 
 class NovaClientPlugin(client_plugin.ClientPlugin):
+
+    exceptions_module = exceptions
 
     def _create(self):
         computeshell = novashell.OpenStackComputeShell()
@@ -46,3 +49,12 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         client.client.management_url = management_url
 
         return client
+
+    def is_not_found(self, ex):
+        return isinstance(ex, exceptions.NotFound)
+
+    def is_over_limit(self, ex):
+        return isinstance(ex, exceptions.OverLimit)
+
+    def is_bad_request(self, ex):
+        return isinstance(ex, exceptions.BadRequest)

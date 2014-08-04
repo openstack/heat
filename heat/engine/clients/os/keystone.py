@@ -11,11 +11,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneclient import exceptions
+
 from heat.common import heat_keystoneclient as hkc
 from heat.engine.clients import client_plugin
 
 
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
+    exceptions_module = exceptions
+
     def _create(self):
         return hkc.KeystoneClient(self.context)
+
+    def is_not_found(self, ex):
+        return isinstance(ex, exceptions.NotFound)
+
+    def is_over_limit(self, ex):
+        return isinstance(ex, exceptions.RequestEntityTooLarge)

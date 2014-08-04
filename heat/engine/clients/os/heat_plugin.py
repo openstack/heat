@@ -12,11 +12,14 @@
 #    under the License.
 
 from heatclient import client as hc
+from heatclient import exc
 
 from heat.engine.clients import client_plugin
 
 
 class HeatClientPlugin(client_plugin.ClientPlugin):
+
+    exceptions_module = exc
 
     def _create(self):
         args = {
@@ -32,6 +35,12 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
 
         endpoint = self.get_heat_url()
         return hc.Client('1', endpoint, **args)
+
+    def is_not_found(self, ex):
+        return isinstance(ex, exc.HTTPNotFound)
+
+    def is_over_limit(self, ex):
+        return isinstance(ex, exc.HTTPOverLimit)
 
     def get_heat_url(self):
         heat_url = self._get_client_option('heat', 'url')
