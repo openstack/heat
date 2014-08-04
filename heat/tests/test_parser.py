@@ -2194,6 +2194,138 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
+    def test_update_modify_replace_create_in_progress_and_delete_1(self):
+        resource._register_class('ResourceWithResourceIDType',
+                                 generic_rsrc.ResourceWithResourceID)
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type':
+                                            'ResourceWithResourceIDType',
+                                            'Properties': {'ID': 'a_res'}},
+                              'BResource': {'Type':
+                                            'ResourceWithResourceIDType',
+                                            'Properties': {'ID': 'b_res'},
+                                            'DependsOn': 'AResource'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type':
+                                             'ResourceWithResourceIDType',
+                                             'Properties': {'ID': 'xyz'}},
+                               'BResource': {'Type':
+                                             'ResourceWithResourceIDType',
+                                             'Properties': {'ID': 'b_res'},
+                                             'DependsOn': 'AResource'}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        # patch in a dummy handle_create making the replace fail creating
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
+                               'handle_create')
+        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
+                               'mox_resource_id')
+        # First, attempts to delete backup_stack. The create (xyz) has been
+        # failed, so it has no resource_id.
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            None).AndReturn(None)
+        # There are dependency AResource and BResource, so we must delete
+        # BResource, then delete AResource.
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            'b_res').AndReturn(None)
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            'a_res').AndReturn(None)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        # Override stack status and resources status for emulating
+        # IN_PROGRESS situation
+        self.stack.state_set(
+            parser.Stack.UPDATE, parser.Stack.IN_PROGRESS, None)
+        self.stack.resources['AResource'].state_set(
+            resource.Resource.CREATE, resource.Resource.IN_PROGRESS, None)
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    def test_update_modify_replace_create_in_progress_and_delete_2(self):
+        resource._register_class('ResourceWithResourceIDType',
+                                 generic_rsrc.ResourceWithResourceID)
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type':
+                                            'ResourceWithResourceIDType',
+                                            'Properties': {'ID': 'a_res'}},
+                              'BResource': {'Type':
+                                            'ResourceWithResourceIDType',
+                                            'Properties': {'ID': 'b_res'},
+                                            'DependsOn': 'AResource'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type':
+                                             'ResourceWithResourceIDType',
+                                             'Properties': {'ID': 'c_res'}},
+                               'BResource': {'Type':
+                                             'ResourceWithResourceIDType',
+                                             'Properties': {'ID': 'xyz'},
+                                             'DependsOn': 'AResource'}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        # patch in a dummy handle_create making the replace fail creating
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
+                               'handle_create')
+        generic_rsrc.ResourceWithResourceID.handle_create()
+        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
+                               'mox_resource_id')
+        # First, attempts to delete backup_stack. The create (xyz) has been
+        # failed, so it has no resource_id.
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            None).AndReturn(None)
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            'c_res').AndReturn(None)
+        # There are dependency AResource and BResource, so we must delete
+        # BResource, then delete AResource.
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            'b_res').AndReturn(None)
+        generic_rsrc.ResourceWithResourceID.mox_resource_id(
+            'a_res').AndReturn(None)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        # set resource_id for AResource because handle_create() is overwritten
+        # by the mox.
+        self.stack.resources['AResource'].resource_id_set('c_res')
+        # Override stack status and resources status for emulating
+        # IN_PROGRESS situation
+        self.stack.state_set(
+            parser.Stack.UPDATE, parser.Stack.IN_PROGRESS, None)
+        self.stack.resources['BResource'].state_set(
+            resource.Resource.CREATE, resource.Resource.IN_PROGRESS, None)
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
     def test_update_add_signal(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
