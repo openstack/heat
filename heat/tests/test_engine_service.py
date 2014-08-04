@@ -729,6 +729,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_delete_current_engine_active_lock(self):
+        self.man.start()
         stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
         sid = stack.store()
@@ -745,9 +746,22 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'try_acquire')
         stack_lock.StackLock.try_acquire().AndReturn(self.man.engine_id)
+        # this is to simulate lock release on DummyThreadGroup stop
+        self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
+        stack_lock.StackLock.acquire().AndReturn(None)
+
         self.m.ReplayAll()
 
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        with mock.patch.object(self.man.thread_group_mgr, 'stop',
+                               side_effect=self.man.thread_group_mgr.stop
+                               ) as stop_mock:
+
+            self.assertIsNone(self.man.delete_stack(self.ctx,
+                                                    stack.identifier()))
+
+            self.assertEqual(1, stop_mock.call_count)
+            self.assertEqual((stack.id,), stop_mock.call_args[0])
+
         self.m.VerifyAll()
 
     def test_stack_delete_other_engine_active_lock_failed(self):
