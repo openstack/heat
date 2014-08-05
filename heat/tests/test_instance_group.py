@@ -46,6 +46,7 @@ ig_template = '''
 
     "JobServerConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata": {"foo": "bar"},
       "Properties": {
         "ImageId"           : "foo",
         "InstanceType"      : "m1.large",
@@ -326,4 +327,37 @@ class InstanceGroupTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
         rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_update_config_metadata(self):
+        t = template_format.parse(ig_template)
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['Size'] = '2'
+        stack = utils.parse_stack(t)
+
+        self._stub_create(2)
+        self.m.ReplayAll()
+        rsrc = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerGroup')
+
+        props = copy.copy(rsrc.properties.data)
+        metadata = copy.copy(rsrc.metadata_get())
+
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props,
+                                                      metadata)
+        # Change nothing in the first update
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+
+        self.assertEqual('bar', metadata['foo'])
+        metadata['foo'] = 'wibble'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props,
+                                                      metadata)
+        # Changing metadata in the second update triggers UpdateReplace
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        self.assertRaises(resource.UpdateReplace, updater)
+
         self.m.VerifyAll()

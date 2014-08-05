@@ -824,6 +824,10 @@ class LaunchConfiguration(resource.Resource):
         ),
     }
 
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if 'Metadata' in tmpl_diff:
+            raise resource.UpdateReplace(self.name)
+
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
 
