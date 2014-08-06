@@ -47,6 +47,10 @@
 # one time. (integer value)
 #max_stacks_per_tenant=100
 
+# Number of times to retry to bring a resource to a non-error
+# state. Set to 0 to disable retries. (integer value)
+#action_retry_limit=5
+
 # Controls how many events will be pruned whenever a  stack's
 # events exceed max_events_per_stack. Set this lower to keep
 # more events at the expense of more frequent purges. (integer

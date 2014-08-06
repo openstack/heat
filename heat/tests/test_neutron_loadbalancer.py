@@ -13,6 +13,7 @@
 
 import copy
 import mox
+from oslo.config import cfg
 import six
 
 from neutronclient.v2_0 import client as neutronclient
@@ -474,7 +475,9 @@ class PoolTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
-    def test_create_failed_unexpected_status(self):
+    def test_create_failed_error_status(self):
+        cfg.CONF.set_override('action_retry_limit', 0)
+
         neutron_utils.neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -532,7 +535,7 @@ class PoolTest(HeatTestCase):
         neutronclient.Client.show_pool('5678').MultipleTimes().AndReturn(
             {'pool': {'status': 'ACTIVE'}})
         neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ERROR', 'name': 'xyz'}})
+            {'vip': {'status': 'SOMETHING', 'name': 'xyz'}})
 
         snippet = template_format.parse(pool_template)
         stack = utils.parse_stack(snippet)
@@ -543,7 +546,7 @@ class PoolTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'ResourceInError: Went to status ERROR due to "error in vip"',
+            'ResourceUnknownStatus: Unknown status SOMETHING',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

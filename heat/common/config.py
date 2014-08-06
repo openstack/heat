@@ -113,6 +113,11 @@ engine_opts = [
                default=100,
                help=_('Maximum number of stacks any one tenant may have'
                       ' active at one time.')),
+    cfg.IntOpt('action_retry_limit',
+               default=5,
+               help=_('Number of times to retry to bring a '
+                      'resource to a non-error state. Set to 0 to disable '
+                      'retries.')),
     cfg.IntOpt('event_purge_batch_size',
                default=10,
                help=_('Controls how many events will be pruned whenever a '

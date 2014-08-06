@@ -16,9 +16,11 @@ import json
 import uuid
 
 import mock
+from oslo.config import cfg
 import six
 
 from heat.common import exception
+from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
@@ -473,11 +475,150 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
         res.id = 'test_res_id'
         (res.action, res.status) = (res.INIT, res.DELETE)
-        self.assertRaises(exception.ResourceFailure, res.create)
+        create = scheduler.TaskRunner(res.create)
+        self.assertRaises(exception.ResourceFailure, create)
         scheduler.TaskRunner(res.destroy)()
         res.state_reset()
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+    def test_create_fail_retry(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+
+        # first attempt to create fails
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='CREATE',
+                                     status_reason='just because'))
+        # delete error resource from first attempt
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+
+        # second attempt to create succeeds
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        self.m.VerifyAll()
+
+    def test_create_fail_retry_disabled(self):
+        cfg.CONF.set_override('action_retry_limit', 0)
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+
+        # attempt to create fails
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='CREATE',
+                                     status_reason='just because'))
+        self.m.ReplayAll()
+
+        estr = ('ResourceInError: Went to status ERROR due to "just because"')
+        create = scheduler.TaskRunner(res.create)
+        err = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual(estr, str(err))
+        self.assertEqual((res.CREATE, res.FAILED), res.state)
+
+        self.m.VerifyAll()
+
+    def test_create_deletes_fail_retry(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+
+        # first attempt to create fails
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='CREATE',
+                                     status_reason='just because'))
+        # first attempt to delete fails
+        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='DELETE',
+                                     status_reason='delete failed'))
+        # second attempt to delete fails
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='DELETE',
+                                     status_reason='delete failed again'))
+
+        # third attempt to delete succeeds
+        timeutils.retry_backoff_delay(2, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+
+        # second attempt to create succeeds
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        self.m.VerifyAll()
+
+    def test_creates_fail_retry(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+
+        self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+
+        # first attempt to create fails
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='CREATE',
+                                     status_reason='just because'))
+        # delete error resource from first attempt
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+
+        # second attempt to create fails
+        timeutils.retry_backoff_delay(1, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            resource.ResourceInError(resource_name='test_resource',
+                                     resource_status='ERROR',
+                                     resource_type='GenericResourceType',
+                                     resource_action='CREATE',
+                                     status_reason='just because'))
+        # delete error resource from second attempt
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+
+        # third attempt to create succeeds
+        timeutils.retry_backoff_delay(2, jitter_max=2.0).AndReturn(0.01)
+        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        self.m.VerifyAll()
 
     def test_preview(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
