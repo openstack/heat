@@ -729,6 +729,10 @@ class Stack(collections.Mapping):
 
         backup_stack = self._backup_stack(False)
         if backup_stack:
+            def failed(child):
+                return (child.action == child.CREATE and
+                        child.status in (child.FAILED, child.IN_PROGRESS))
+
             for key, backup_resource in backup_stack.resources.items():
                 # If UpdateReplace is failed, we must restore backup_resource
                 # to existing_stack in case of it may have dependencies in
@@ -739,18 +743,16 @@ class Stack(collections.Mapping):
                 current_resource = self.resources[key]
                 current_resource_id = current_resource.resource_id
                 if backup_resource_id:
-                    child_failed = False
-                    for child in self.dependencies[current_resource]:
+                    if (any(failed(child) for child in
+                            self.dependencies[current_resource]) or
+                            current_resource.status in
+                            (current_resource.FAILED,
+                             current_resource.IN_PROGRESS)):
                         # If child resource failed to update, current_resource
                         # should be replaced to resolve dependencies. But this
                         # is not fundamental solution. If there are update
                         # failer and success resources in the children, cannot
                         # delete the stack.
-                        if (child.status == child.FAILED and child.action ==
-                                child.CREATE):
-                            child_failed = True
-                    if (current_resource.status == current_resource.FAILED or
-                            child_failed):
                         # Stack class owns dependencies as set of resource's
                         # objects, so we switch members of the resource that is
                         # needed to delete it.
