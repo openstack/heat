@@ -173,8 +173,6 @@ class Schema(collections.Mapping):
             elif self.type == self.NUMBER:
                 return Schema.str_to_num(value)
             elif self.type == self.STRING:
-                if value and not isinstance(value, basestring):
-                    raise ValueError()
                 return str(value)
             elif self.type == self.BOOLEAN:
                 return strutils.bool_from_string(str(value), strict=True)

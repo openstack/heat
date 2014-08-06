@@ -390,9 +390,12 @@ class SchemaTest(testtools.TestCase):
         self.assertIsInstance(res, basestring)
         res = schema.to_schema_type('1')
         self.assertIsInstance(res, basestring)
-        err = self.assertRaises(ValueError, schema.to_schema_type, 1)
-        self.assertEqual('Value "1" is invalid for data type "String".',
-                         six.text_type(err))
+        res = schema.to_schema_type(1)
+        self.assertIsInstance(res, basestring)
+        res = schema.to_schema_type(True)
+        self.assertIsInstance(res, basestring)
+        res = schema.to_schema_type(None)
+        self.assertIsInstance(res, basestring)
 
     def test_to_schema_type_boolean(self):
         '''Test Schema.to_schema_type method for type Boolean.'''
