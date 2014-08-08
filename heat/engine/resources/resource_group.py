@@ -177,10 +177,13 @@ class ResourceGroup(stack_resource.StackResource):
             path = key.split(".", 2)[1:] + list(path)
             return get_rsrc_attr(*path)
         else:
+            if key == self.REFS:
+                path = []
+            else:
+                path = [key] + list(path)
+
             count = self.properties[self.COUNT]
-            attr = [] if key == self.REFS else [key]
-            attribute = [get_rsrc_attr(str(n), *attr) for n in range(count)]
-            return attributes.select_from_attribute(attribute, path)
+            return [get_rsrc_attr(str(n), *path) for n in range(count)]
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)
