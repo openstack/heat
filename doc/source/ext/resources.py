@@ -14,6 +14,7 @@
 
 import itertools
 
+from docutils import core
 from docutils import nodes
 import pydoc
 from sphinx.util.compat import Directive
@@ -66,8 +67,9 @@ class ResourcePages(Directive):
 
             cls_doc = pydoc.getdoc(resource_class)
             if cls_doc:
-                para = nodes.paragraph('', cls_doc)
-                section.append(para)
+                # allow for rst in the class comments
+                cls_nodes = core.publish_doctree(cls_doc).children
+                section.extend(cls_nodes)
 
             self.contribute_properties(section)
             self.contribute_attributes(section)
