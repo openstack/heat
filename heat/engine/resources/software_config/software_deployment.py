@@ -196,22 +196,24 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
-    def _get_derived_config(self, action):
+    def _get_derived_config(self, action, source_config):
 
-        source_config_id = self.properties.get(self.CONFIG)
-        source_config = self.heat().software_configs.get(source_config_id)
         derived_params = self._build_derived_config_params(
             action, source_config.to_dict())
         derived_config = self.heat().software_configs.create(**derived_params)
         return derived_config.id
 
     def _handle_action(self, action):
-        if action not in self.properties[self.DEPLOY_ACTIONS]:
+        config_id = self.properties.get(self.CONFIG)
+        config = self.heat().software_configs.get(config_id)
+
+        if action not in self.properties[self.DEPLOY_ACTIONS]\
+                and not config.group == 'component':
             return
 
         props = self._build_properties(
             self.properties,
-            self._get_derived_config(action),
+            self._get_derived_config(action, config),
             action)
 
         if action == self.CREATE:
