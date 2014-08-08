@@ -125,7 +125,7 @@ class Stack(collections.Mapping):
     def stored_context(self):
         if self.user_creds_id:
             creds = db_api.user_creds_get(self.user_creds_id)
-            # Maintain request_id from self.context so we retain tracability
+            # Maintain request_id from self.context so we retain traceability
             # in situations where servicing a request requires switching from
             # the request context to the stored context
             creds['request_id'] = self.context.request_id
@@ -792,7 +792,7 @@ class Stack(collections.Mapping):
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
 
-        # If the stack delete suceeded, this is not a backup stack and it's
+        # If the stack delete succeeded, this is not a backup stack and it's
         # not a nested stack, we should delete the credentials
         if stack_status != self.FAILED and not backup and not self.owner_id:
             # Cleanup stored user_creds so they aren't accessible via
