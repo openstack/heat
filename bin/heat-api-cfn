@@ -36,10 +36,11 @@ from oslo.config import cfg
 
 from heat.common import config
 from heat.common import messaging
-from heat.common import notify
 from heat.common import wsgi
 from heat.openstack.common import gettextutils
+
 from heat.openstack.common import log as logging
+from heat.openstack.common import systemd
 
 gettextutils.enable_lazy()
 gettextutils.install('heat', lazy=True)
@@ -60,7 +61,7 @@ if __name__ == '__main__':
                  {'host': host, 'port': port})
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api_cfn, default_port=port)
-        notify.startup_notify(cfg.CONF.onready)
+        systemd.notify_once()
         server.wait()
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
