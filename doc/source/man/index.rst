@@ -24,3 +24,4 @@ Heat utilities
    heat-manage
    heat-db-setup
    heat-keystone-setup
+   heat-keystone-setup-domain
