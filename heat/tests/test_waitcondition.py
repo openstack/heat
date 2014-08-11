@@ -1006,7 +1006,7 @@ class HeatWaitConditionTest(HeatTestCase):
         self.assertEqual(expected, handle.FnGetAtt('endpoint'))
         self.m.VerifyAll()
 
-    def test_getatt_curl_cli_success(self):
+    def test_getatt_curl_cli(self):
         self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, 'get_heat_url')
         heat_plugin.HeatClientPlugin.get_heat_url().AndReturn(
             'foo/%s' % self.tenant_id)
@@ -1017,21 +1017,5 @@ class HeatWaitConditionTest(HeatTestCase):
                     "-H 'Accept: application/json' "
                     "foo/aprojectid/stacks/test_stack/%s/resources/wait_handle"
                     "/signal" % self.stack_id)
-        self.assertEqual(expected, handle.FnGetAtt('curl_cli_success'))
-        self.m.VerifyAll()
-
-    def test_getatt_curl_cli_failure(self):
-        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, 'get_heat_url')
-        heat_plugin.HeatClientPlugin.get_heat_url().AndReturn(
-            'foo/%s' % self.tenant_id)
-        self.m.ReplayAll()
-        handle = self._create_heat_handle()
-        expected = ("curl -i -X POST "
-                    "--data-binary '{\"status\": \"FAILURE\"}' "
-                    "-H 'X-Auth-Token: adomainusertoken' "
-                    "-H 'Content-Type: application/json' "
-                    "-H 'Accept: application/json' "
-                    "foo/aprojectid/stacks/test_stack/%s/resources/wait_handle"
-                    "/signal" % self.stack_id)
-        self.assertEqual(expected, handle.FnGetAtt('curl_cli_failure'))
+        self.assertEqual(expected, handle.FnGetAtt('curl_cli'))
         self.m.VerifyAll()
