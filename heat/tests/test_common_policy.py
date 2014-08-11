@@ -124,14 +124,6 @@ class TestPolicyEnforcer(HeatTestCase):
             # Everything should be allowed
             enforcer.enforce(ctx, action)
 
-    def test_clear(self):
-        self.stub_policyfile('deny_stack_user.json')
-
-        enforcer = policy.Enforcer()
-        enforcer.load_rules(force_reload=True)
-        enforcer.clear()
-        self.assertEqual({}, enforcer.enforcer.rules)
-
     def test_set_rules_overwrite_true(self):
         self.stub_policyfile('deny_stack_user.json')
 
