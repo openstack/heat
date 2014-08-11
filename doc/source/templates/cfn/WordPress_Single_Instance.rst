@@ -13,7 +13,7 @@
 
 Template
 --------
-_https://github.com/openstack/heat-templates/blob/master/cfn/WordPress_Single_Instance.template
+https://github.com/openstack/heat-templates/blob/master/cfn/F18/WordPress_Single_Instance.template
 
 Description
 -----------
