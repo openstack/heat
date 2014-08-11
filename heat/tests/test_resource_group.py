@@ -89,6 +89,28 @@ template_repl = {
     }
 }
 
+template_attr = {
+    "heat_template_version": "2014-10-16",
+    "resources": {
+        "group1": {
+            "type": "OS::Heat::ResourceGroup",
+            "properties": {
+                "count": 2,
+                "resource_def": {
+                    "type": "dummyattr.resource",
+                    "properties": {
+                    }
+                }
+            }
+        }
+    },
+    "outputs": {
+        "nested_strings": {
+            "value": {"get_attr": ["group1", "nested_dict", "string"]}
+        }
+    }
+}
+
 
 class ResourceWithPropsAndId(generic_resource.ResourceWithProps):
 
@@ -115,6 +137,9 @@ class ResourceGroupTest(common.HeatTestCase):
                                  ResourceWithPropsAndId)
         resource._register_class('dummy.listresource',
                                  ResourceWithListProp)
+        AttributeResource = generic_resource.ResourceWithComplexAttributes
+        resource._register_class("dummyattr.resource",
+                                 AttributeResource)
 
     def test_assemble_nested(self):
         """
@@ -307,6 +332,53 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(expected, resg.FnGetAtt('foo'))
         self.assertEqual(expected, resg.FnGetAtt('Foo'))
 
+    def test_index_dotted_attribs(self):
+        """
+        Test attribute aggregation and that we mimic the nested resource's
+        attributes.
+        """
+        resg = self._create_dummy_stack()
+        self.assertEqual('0', resg.FnGetAtt('resource.0.Foo'))
+        self.assertEqual('1', resg.FnGetAtt('resource.1.Foo'))
+
+    def test_index_path_attribs(self):
+        """
+        Test attribute aggregation and that we mimic the nested resource's
+        attributes.
+        """
+        resg = self._create_dummy_stack()
+        self.assertEqual('0', resg.FnGetAtt('resource.0', 'Foo'))
+        self.assertEqual('1', resg.FnGetAtt('resource.1', 'Foo'))
+
+    def test_index_deep_path_attribs(self):
+        """
+        Test attribute aggregation and that we mimic the nested resource's
+        attributes.
+        """
+        resg = self._create_dummy_stack(template_attr)
+        self.assertEqual(2, resg.FnGetAtt('resource.0',
+                                          'nested_dict', 'dict', 'b'))
+        self.assertEqual(2, resg.FnGetAtt('resource.1',
+                                          'nested_dict', 'dict', 'b'))
+
+    def test_aggregate_deep_path_attribs(self):
+        """
+        Test attribute aggregation and that we mimic the nested resource's
+        attributes.
+        """
+        resg = self._create_dummy_stack(template_attr)
+        expected = [3, 3]
+        self.assertEqual(expected, resg.FnGetAtt('nested_dict', 'list', 2))
+
+    def test_get_attr_path(self):
+        """
+        Test attribute aggregation and that we mimic the nested resource's
+        attributes.
+        """
+        resg = self._create_dummy_stack(template_attr)
+        expected = ['abc', 'abc']
+        self.assertEqual(expected, resg.stack.output('nested_strings'))
+
     def test_aggregate_refs(self):
         """
         Test resource id aggregation
@@ -323,10 +395,9 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
                           'resource.2')
 
-    def _create_dummy_stack(self):
-        stack = utils.parse_stack(template)
-        snip = stack.t.resource_definitions(stack)['group1']
-        resg = resource_group.ResourceGroup('test', snip, stack)
+    def _create_dummy_stack(self, template_data=template):
+        stack = utils.parse_stack(template_data)
+        resg = stack['group1']
         scheduler.TaskRunner(resg.create)()
         self.stack = resg.nested()
         self.assertEqual(2, len(resg.nested()))
