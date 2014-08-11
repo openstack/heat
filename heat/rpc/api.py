@@ -224,3 +224,19 @@ SOFTWARE_DEPLOYMENT_KEYS = (
     'status',
     'status_reason'
 )
+
+SNAPSHOT_KEYS = (
+    SNAPSHOT_ID,
+    SNAPSHOT_NAME,
+    SNAPSHOT_STACK_ID,
+    SNAPSHOT_DATA,
+    SNAPSHOT_STATUS,
+    SNAPSHOT_STATUS_REASON
+) = (
+    'id',
+    'name',
+    'stack_id',
+    'data',
+    'status',
+    'status_reason'
+)

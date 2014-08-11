@@ -297,6 +297,10 @@ def snapshot_delete(context, snapshot_id):
     return IMPL.snapshot_delete(context, snapshot_id)
 
 
+def snapshot_get_all(context, stack_id):
+    return IMPL.snapshot_get_all(context, stack_id)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

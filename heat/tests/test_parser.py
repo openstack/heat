@@ -3548,3 +3548,23 @@ class StackTest(HeatTestCase):
         # parameter value validation did not happen and FlavorConstraint was
         # not invoked
         self.m.VerifyAll()
+
+    def test_snapshot_delete(self):
+        snapshots = []
+
+        class ResourceDeleteSnapshot(generic_rsrc.ResourceWithProps):
+
+            def handle_delete_snapshot(self, data):
+                snapshots.append(data)
+
+        resource._register_class(
+            'ResourceDeleteSnapshot', ResourceDeleteSnapshot)
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'ResourceDeleteSnapshot'}}}
+
+        self.stack = parser.Stack(self.ctx, 'snapshot_stack',
+                                  template.Template(tmpl))
+        data = self.stack.prepare_abandon()
+        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+        self.stack.delete_snapshot(fake_snapshot)
+        self.assertEqual([data['resources']['AResource']], snapshots)
