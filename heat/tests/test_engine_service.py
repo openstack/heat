@@ -743,18 +743,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
         stack_lock.StackLock.acquire().AndReturn(None)
 
+        self.m.StubOutWithMock(self.man.thread_group_mgr, 'stop')
+        self.man.thread_group_mgr.stop(stack.id).AndReturn(None)
         self.m.ReplayAll()
 
-        with mock.patch.object(self.man.thread_group_mgr, 'stop',
-                               side_effect=self.man.thread_group_mgr.stop
-                               ) as stop_mock:
-
-            self.assertIsNone(self.man.delete_stack(self.ctx,
-                                                    stack.identifier()))
-
-            self.assertEqual(1, stop_mock.call_count)
-            self.assertEqual((stack.id,), stop_mock.call_args[0])
-
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
         self.m.VerifyAll()
 
     def test_stack_delete_other_engine_active_lock_failed(self):
