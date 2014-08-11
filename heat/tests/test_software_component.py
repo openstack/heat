@@ -217,6 +217,44 @@ class SoftwareComponentValidationTest(HeatTestCase):
                  err_msg='actions length (0) is out of range '
                          '(min: 1, max: None)')
         ),
+        (
+            'multiple_configs_per_action_single',
+            dict(snippet='''
+                 component:
+                   type: OS::Heat::SoftwareComponent
+                   properties:
+                     configs:
+                       - actions: [CREATE]
+                         config: #!/bin/bash
+                         tool: script
+                       - actions: [CREATE]
+                         config: #!/bin/bash
+                         tool: script
+                 ''',
+                 err=exception.StackValidationFailed,
+                 err_msg='Defining more than one configuration for the same '
+                         'action in SoftwareComponent "component" is not '
+                         'allowed.')
+        ),
+        (
+            'multiple_configs_per_action_overlapping_list',
+            dict(snippet='''
+                 component:
+                   type: OS::Heat::SoftwareComponent
+                   properties:
+                     configs:
+                       - actions: [CREATE, UPDATE, RESUME]
+                         config: #!/bin/bash
+                         tool: script
+                       - actions: [UPDATE]
+                         config: #!/bin/bash
+                         tool: script
+                 ''',
+                 err=exception.StackValidationFailed,
+                 err_msg='Defining more than one configuration for the same '
+                         'action in SoftwareComponent "component" is not '
+                         'allowed.')
+        ),
     ]
 
     def setUp(self):
