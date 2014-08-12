@@ -117,6 +117,23 @@ class API(wsgi.Router):
                                  action="abandon",
                                  conditions={'method': 'DELETE'})
 
+            stack_mapper.connect("stack_snapshot",
+                                 "/stacks/{stack_name}/{stack_id}/snapshots",
+                                 action="snapshot",
+                                 conditions={'method': 'POST'})
+
+            stack_mapper.connect("stack_snapshot_show",
+                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
+                                 "{snapshot_id}",
+                                 action="show_snapshot",
+                                 conditions={'method': 'GET'})
+
+            stack_mapper.connect("stack_snapshot_delete",
+                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
+                                 "{snapshot_id}",
+                                 action="delete_snapshot",
+                                 conditions={'method': 'DELETE'})
+
         # Resources
         resources_resource = resources.create_resource(conf)
         stack_path = "/{tenant_id}/stacks/{stack_name}/{stack_id}"
