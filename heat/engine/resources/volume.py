@@ -403,11 +403,13 @@ class VolumeAttachment(resource.Resource):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the instance to which the volume attaches.'),
+            immutable=True,
             required=True
         ),
         VOLUME_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
+            immutable=True,
             required=True
         ),
         DEVICE: properties.Schema(
@@ -415,6 +417,7 @@ class VolumeAttachment(resource.Resource):
             _('The device where the volume is exposed on the instance. This '
               'assignment may not be honored and it is advised that the path '
               '/dev/disk/by-id/virtio-<VolumeId> be used instead.'),
+            immutable=True,
             required=True,
             constraints=[
                 constraints.AllowedPattern('/dev/vd[b-z]'),

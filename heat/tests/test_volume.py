@@ -662,6 +662,36 @@ class VolumeTest(BaseVolumeTest):
             "Property error : DataVolume: Size 0 is out of "
             "range (min: 1, max: None)", six.text_type(error))
 
+    def test_volume_attachment_updates_not_supported(self):
+        fv = FakeVolume('creating', 'available')
+        fva = FakeVolume('attaching', 'in-use')
+        stack_name = 'test_volume_attach_stack'
+
+        self._mock_create_volume(fv, stack_name)
+        self._mock_create_server_volume_script(fva)
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        self.create_volume(self.t, stack, 'DataVolume')
+        self.assertEqual('available', fv.status)
+        rsrc = self.create_attachment(self.t, stack, 'MountPoint')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['InstanceId'] = 'some_other_instance_id'
+        props['VolumeId'] = 'some_other_volume_id'
+        props['Device'] = '/dev/vdz'
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        update_task = scheduler.TaskRunner(rsrc.update, after)
+        ex = self.assertRaises(exception.ResourceFailure, update_task)
+        self.assertIn('NotSupported: Update to properties Device, InstanceId, '
+                      'VolumeId of MountPoint (AWS::EC2::VolumeAttachment)',
+                      six.text_type(ex))
+        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
 
 class CinderVolumeTest(BaseVolumeTest):
 
