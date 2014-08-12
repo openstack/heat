@@ -357,7 +357,7 @@ class EngineService(service.Service):
 
         # Wait for all active threads to be finished
         for stack_id in self.thread_group_mgr.groups.keys():
-            # Ingore dummy service task
+            # Ignore dummy service task
             if stack_id == cfg.CONF.periodic_interval:
                 continue
             LOG.info(_("Waiting stack %s processing to be finished")
@@ -668,7 +668,7 @@ class EngineService(service.Service):
             if ResourceClass == resources.template_resource.TemplateResource:
                 # we can't validate a TemplateResource unless we instantiate
                 # it as we need to download the template and convert the
-                # paramerters into properties_schema.
+                # parameters into properties_schema.
                 continue
 
             props = properties.Properties(ResourceClass.properties_schema,
@@ -901,7 +901,7 @@ class EngineService(service.Service):
         - The user must map to a User resource defined in the requested stack
         - The user resource must validate OK against any Policy specified
         '''
-        # first check whether access is allowd by context user_id
+        # first check whether access is allowed by context user_id
         if stack.access_allowed(cnxt.user_id, resource_name):
             return True
 

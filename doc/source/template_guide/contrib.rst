@@ -52,7 +52,7 @@ Nova Flavor Resource
 
 .. rubric:: This resource is not enabled by default.
 
-This plugin enables dynamic creation of Nova flavours through Heat. You can
+This plugin enables dynamic creation of Nova flavors through Heat. You can
 find more information in the `README
 <https://github.com/openstack/heat/blob/master/contrib/nova_flavor/nova_flavor
 /README.md>`_.

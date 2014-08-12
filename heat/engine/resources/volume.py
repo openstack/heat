@@ -648,7 +648,7 @@ class CinderVolume(Volume):
             elif new_size > vol.size:
                 if vol.attachments:
                     # NOTE(pshchelo):
-                    # this relies on current behaviour of cinder attachments,
+                    # this relies on current behavior of cinder attachments,
                     # i.e. volume attachments is a list with len<=1,
                     # so the volume can be attached only to single instance,
                     # and id of attachment is the same as id of the volume
