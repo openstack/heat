@@ -19,14 +19,17 @@ from heat.rpc import api as engine_api
 
 _collection_name = 'stacks'
 
-basic_keys = (engine_api.STACK_ID,
-              engine_api.STACK_NAME,
-              engine_api.STACK_DESCRIPTION,
-              engine_api.STACK_STATUS,
-              engine_api.STACK_STATUS_DATA,
-              engine_api.STACK_CREATION_TIME,
-              engine_api.STACK_DELETION_TIME,
-              engine_api.STACK_UPDATED_TIME)
+basic_keys = (
+    engine_api.STACK_ID,
+    engine_api.STACK_NAME,
+    engine_api.STACK_DESCRIPTION,
+    engine_api.STACK_STATUS,
+    engine_api.STACK_STATUS_DATA,
+    engine_api.STACK_CREATION_TIME,
+    engine_api.STACK_DELETION_TIME,
+    engine_api.STACK_UPDATED_TIME,
+    engine_api.STACK_OWNER,
+)
 
 
 def format_stack(req, stack, keys=None, tenant_safe=True):

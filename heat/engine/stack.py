@@ -64,7 +64,7 @@ class Stack(collections.Mapping):
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
                  user_creds_id=None, tenant_id=None,
-                 use_stored_context=False):
+                 use_stored_context=False, username=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -107,6 +107,7 @@ class Stack(collections.Mapping):
         # This will use the provided tenant ID when loading the stack
         # from the DB or get it from the context for new stacks.
         self.tenant_id = tenant_id or self.context.tenant_id
+        self.username = username or self.context.username
 
         resources.initialise()
 
@@ -266,7 +267,8 @@ class Stack(collections.Mapping):
                    created_time=stack.created_at,
                    updated_time=stack.updated_at,
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
-                   use_stored_context=use_stored_context)
+                   use_stored_context=use_stored_context,
+                   username=stack.username)
 
     def store(self, backup=False):
         '''
@@ -278,7 +280,7 @@ class Stack(collections.Mapping):
             'raw_template_id': self.t.store(self.context),
             'parameters': self.env.user_env_as_dict(),
             'owner_id': self.owner_id,
-            'username': self.context.username,
+            'username': self.username,
             'tenant': self.tenant_id,
             'action': self.action,
             'status': self.status,

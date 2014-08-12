@@ -233,6 +233,7 @@ class FormatTest(HeatTestCase):
             'outputs': [],
             'stack_action': '',
             'stack_name': 'test_stack',
+            'stack_owner': 'test_username',
             'stack_status': '',
             'stack_status_reason': '',
             'template_description': 'No description',
