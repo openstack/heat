@@ -998,7 +998,7 @@ class EngineService(service.Service):
 
     @request_context
     def list_stack_resources(self, cnxt, stack_identity, nested_depth=0):
-        s = self._get_stack(cnxt, stack_identity)
+        s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         stack = parser.Stack.load(cnxt, stack=s)
         depth = min(nested_depth, cfg.CONF.max_nested_stack_depth)
 

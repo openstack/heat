@@ -2200,6 +2200,19 @@ class StackServiceTest(HeatTestCase):
         max_depth = cfg.CONF.max_nested_stack_depth
         self.stack.iter_resources.assert_called_once_with(max_depth)
 
+    @mock.patch.object(parser.Stack, 'load')
+    def test_stack_resources_list_deleted_stack(self, mock_load):
+        stack = setup_stack('resource_list_test_deleted_stack', self.ctx)
+        stack_id = stack.identifier()
+        mock_load.return_value = stack
+        clean_up_stack(stack)
+        resources = self.eng.list_stack_resources(self.ctx, stack_id)
+        self.assertEqual(1, len(resources))
+
+        res = resources[0]
+        self.assertEqual('DELETE', res['resource_action'])
+        self.assertEqual('COMPLETE', res['resource_status'])
+
     def test_stack_resources_list_nonexist_stack(self):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.tenant_id, 'wibble',
@@ -2207,8 +2220,9 @@ class StackServiceTest(HeatTestCase):
 
         stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
+        service.EngineService \
+            ._get_stack(self.ctx, non_exist_identifier, show_deleted=True) \
+            .AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
