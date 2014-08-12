@@ -1377,16 +1377,18 @@ class validateTest(HeatTestCase):
         template = parser.Template(t)
 
         # test with size parameter provided as string
-        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
-                                self.ctx, 'test_stack', template,
-                                environment.Environment({'size': '3'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': '3'}))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
         # test with size parameter provided as number
-        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
-                                self.ctx, 'test_stack', template,
-                                environment.Environment({'size': 3}))
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': 3}))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
@@ -1395,15 +1397,17 @@ class validateTest(HeatTestCase):
         template = parser.Template(t)
 
         # test with size parameter provided as string
-        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
-                                self.ctx, 'test_stack', template,
-                                environment.Environment({'size': '3'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': '3'}))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
         # test with size parameter provided as number
-        err = self.assertRaises(exception.StackValidationFailed, parser.Stack,
-                                self.ctx, 'test_stack', template,
-                                environment.Environment({'size': 3}))
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'size': 3}))
+        err = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))

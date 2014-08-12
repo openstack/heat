@@ -63,7 +63,7 @@ class Stack(collections.Mapping):
                  disable_rollback=True, parent_resource=None, owner_id=None,
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
-                 user_creds_id=None, tenant_id=None, validate_parameters=True,
+                 user_creds_id=None, tenant_id=None,
                  use_stored_context=False):
         '''
         Initialise from a context, name, Template object and (optionally)
@@ -113,8 +113,6 @@ class Stack(collections.Mapping):
         self.env = env or environment.Environment({})
         self.parameters = self.t.parameters(self.identifier(),
                                             user_params=self.env.params)
-        self.parameters.validate(validate_value=validate_parameters,
-                                 context=self.context)
         self._set_param_stackid()
 
         if resolve_data:
@@ -268,7 +266,6 @@ class Stack(collections.Mapping):
                    created_time=stack.created_at,
                    updated_time=stack.updated_at,
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
-                   validate_parameters=False,
                    use_stored_context=use_stored_context)
 
     def store(self, backup=False):
@@ -422,6 +419,9 @@ class Stack(collections.Mapping):
 
         # validate overall template (top-level structure)
         self.t.validate()
+
+        # Validate parameters
+        self.parameters.validate(context=self.context)
 
         # Validate Parameter Groups
         parameter_groups = ParameterGroups(self.t)
