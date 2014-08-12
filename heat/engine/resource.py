@@ -311,18 +311,33 @@ class Resource(object):
     def update_template_diff_properties(self, after_props, before_props):
         '''
         Returns the changed Properties between the before and after properties.
+        If any property having immutable as True is updated,
+        raises NotSupported error.
         If any properties have changed which are not in
         update_allowed_properties, raises UpdateReplace.
         '''
         update_allowed_set = set(self.update_allowed_properties)
+        immutable_set = set()
         for (psk, psv) in six.iteritems(self.properties.props):
             if psv.update_allowed():
                 update_allowed_set.add(psk)
+            if psv.immutable():
+                immutable_set.add(psk)
 
         # Create a set of keys which differ (or are missing/added)
         changed_properties_set = set(k for k in after_props
                                      if before_props.get(k) !=
                                      after_props.get(k))
+
+        # Create a list of updated properties offending property immutability
+        update_replace_forbidden = [k for k in changed_properties_set
+                                    if k in immutable_set]
+
+        if update_replace_forbidden:
+            mesg = _("Update to properties %(props)s of %(name)s (%(res)s)"
+                     ) % {'props': ", ".join(sorted(update_replace_forbidden)),
+                          'res': self.type(), 'name': self.name}
+            raise exception.NotSupported(feature=mesg)
 
         if not changed_properties_set.issubset(update_allowed_set):
             raise UpdateReplace(self.name)
