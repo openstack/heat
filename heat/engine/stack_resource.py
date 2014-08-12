@@ -99,7 +99,10 @@ class StackResource(resource.Resource):
         StackResource will be returned as if it were a regular Resource.
         '''
         try:
-            template = parser.Template(self.child_template())
+            if isinstance(self.child_template(), parser.Template):
+                template = parser.Template(self.child_template().t)
+            else:
+                template = parser.Template(self.child_template())
             params = self.child_params()
         except NotImplementedError:
             not_implemented_msg = _("Preview of '%s' not yet implemented")
