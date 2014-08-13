@@ -916,8 +916,6 @@ class StackTest(HeatTestCase):
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
 
-        self.m.ReplayAll()
-
     def test_stack_reads_tenant(self):
         stack = parser.Stack(self.ctx, 'test_stack', self.tmpl,
                              tenant_id='bar')
@@ -2720,11 +2718,8 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
 
-        self.m.ReplayAll()
-
         self.stack.store()
         self.stack.create()
-        self.m.VerifyAll()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
@@ -2770,12 +2765,8 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
 
-        self.m.ReplayAll()
-
         self.stack.store()
         self.stack.create()
-        self.m.VerifyAll()
-
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['CResource'].properties['Foo'])
@@ -2825,12 +2816,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl),
                                   disable_rollback=False)
 
-        self.m.ReplayAll()
-
         self.stack.store()
         self.stack.create()
-        self.m.VerifyAll()
-
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
@@ -2893,12 +2880,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl),
                                   disable_rollback=False)
 
-        self.m.ReplayAll()
-
         self.stack.store()
         self.stack.create()
-        self.m.VerifyAll()
-
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
