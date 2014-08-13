@@ -193,7 +193,7 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
         metadata is not mandatory, but if passed it must use the following
         format:
         {
-            "status" : "Status (must be SUCCESS or FAILURE)"
+            "status" : "Status (must be SUCCESS or FAILURE)",
             "data" : "Arbitrary data",
             "reason" : "Reason string"
         }
@@ -249,7 +249,7 @@ class WaitConditionHandle(BaseWaitConditionHandle):
         Validate and update the resource metadata
         metadata must use the following format:
         {
-            "Status" : "Status (must be SUCCESS or FAILURE)"
+            "Status" : "Status (must be SUCCESS or FAILURE)",
             "UniqueId" : "Some ID, should be unique for Count>1",
             "Data" : "Arbitrary Data",
             "Reason" : "Reason String"
