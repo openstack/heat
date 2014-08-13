@@ -11,10 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from cinderclient import client as cinderclient
-from cinderclient.v1 import volume_backups
 import json
-from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.engine import attributes
@@ -85,6 +82,8 @@ class Volume(resource.Resource):
 
     _volume_creating_status = ['creating', 'restoring-backup']
 
+    default_client_name = 'cinder'
+
     def _display_name(self):
         return self.physical_resource_name()
 
@@ -109,8 +108,6 @@ class Volume(resource.Resource):
         backup_id = self.properties.get(self.BACKUP_ID)
         cinder = self.cinder()
         if backup_id is not None:
-            if volume_backups is None:
-                raise exception.Error(_('Backups not supported.'))
             vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)
@@ -167,17 +164,17 @@ class Volume(resource.Resource):
                 while True:
                     yield
                     vol.get()
-            except cinderclient.exceptions.NotFound:
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
                 self.resource_id_set(None)
 
-    if volume_backups is not None:
-        def handle_snapshot_delete(self, state):
-            backup = state not in ((self.CREATE, self.FAILED),
-                                   (self.UPDATE, self.FAILED))
+    def handle_snapshot_delete(self, state):
+        backup = state not in ((self.CREATE, self.FAILED),
+                               (self.UPDATE, self.FAILED))
 
-            delete_task = scheduler.TaskRunner(self._delete, backup=backup)
-            delete_task.start()
-            return delete_task
+        delete_task = scheduler.TaskRunner(self._delete, backup=backup)
+        delete_task.start()
+        return delete_task
 
     def handle_delete(self):
         delete_task = scheduler.TaskRunner(self._delete)
@@ -212,10 +209,13 @@ class VolumeExtendTask(object):
 
         try:
             cinder.extend(self.volume_id, self.size)
-        except cinderclient.exceptions.ClientException as ex:
-            raise exception.Error(_(
-                "Failed to extend volume %(vol)s - %(err)s") % {
-                    'vol': vol.id, 'err': str(ex)})
+        except Exception as ex:
+            if self.clients.client_plugin('cinder').is_client_exception():
+                raise exception.Error(_(
+                    "Failed to extend volume %(vol)s - %(err)s") % {
+                        'vol': vol.id, 'err': str(ex)})
+            else:
+                raise
 
         yield
 
@@ -311,26 +311,34 @@ class VolumeDetachTask(object):
         """Return a co-routine which runs the task."""
         LOG.debug(str(self))
 
+        nova_plugin = self.clients.client_plugin('nova')
+        cinder_plugin = self.clients.client_plugin('cinder')
         server_api = self.clients.client('nova').volumes
-
         # get reference to the volume while it is attached
         try:
             nova_vol = server_api.get_server_volume(self.server_id,
                                                     self.attachment_id)
             vol = self.clients.client('cinder').volumes.get(nova_vol.id)
-        except (cinderclient.exceptions.NotFound,
-                nova_exceptions.BadRequest,
-                nova_exceptions.NotFound):
-            LOG.warning(_('%s - volume not found') % str(self))
-            return
+        except Exception as ex:
+            if (cinder_plugin.is_not_found(ex) or
+                    nova_plugin.is_not_found(ex) or
+                    nova_plugin.is_bad_request(ex)):
+
+                LOG.warning(_('%s - volume not found') % str(self))
+                return
+            else:
+                raise
 
         # detach the volume using volume_attachment
         try:
             server_api.delete_server_volume(self.server_id, self.attachment_id)
-        except (nova_exceptions.BadRequest,
-                nova_exceptions.NotFound) as e:
-            LOG.warning(_('%(res)s - %(err)s') % {'res': str(self),
-                                                  'err': e})
+        except Exception as ex:
+            if (nova_plugin.is_not_found(ex) or
+                    nova_plugin.is_bad_request(ex)):
+                LOG.warning(_('%(res)s - %(err)s') % {'res': str(self),
+                                                      'err': ex})
+            else:
+                raise
 
         yield
 
@@ -345,7 +353,8 @@ class VolumeDetachTask(object):
             if vol.status != 'available':
                 raise exception.Error(vol.status)
 
-        except cinderclient.exceptions.NotFound:
+        except Exception as ex:
+            cinder_plugin.ignore_not_found(ex)
             LOG.warning(_('%s - volume not found') % str(self))
 
         # The next check is needed for immediate reattachment when updating:
@@ -355,7 +364,8 @@ class VolumeDetachTask(object):
         def server_has_attachment(server_id, attachment_id):
             try:
                 server_api.get_server_volume(server_id, attachment_id)
-            except nova_exceptions.NotFound:
+            except Exception as ex:
+                nova_plugin.ignore_not_found(ex)
                 return False
             return True
 
