@@ -1081,6 +1081,18 @@ class EngineService(service.Service):
             stack.id, _delete_snapshot, stack, snapshot)
 
     @request_context
+    def stack_check(self, cnxt, stack_identity):
+        '''
+        Handle request to perform a check action on a stack
+        '''
+        s = self._get_stack(cnxt, stack_identity)
+        stack = parser.Stack.load(cnxt, stack=s)
+        LOG.info(_("Checking stack %s") % stack.name)
+
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              stack.check)
+
+    @request_context
     def metadata_update(self, cnxt, stack_identity,
                         resource_name, metadata):
         """
