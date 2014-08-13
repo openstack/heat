@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc as glance_exceptions
-
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -98,6 +96,8 @@ class GlanceImage(resource.Resource):
         ),
     }
 
+    default_client_name = 'glance'
+
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
@@ -115,8 +115,8 @@ class GlanceImage(resource.Resource):
 
         try:
             self.glance().images.delete(self.resource_id)
-        except glance_exceptions.NotFound:
-            pass
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
         self.resource_id_set(None)
 

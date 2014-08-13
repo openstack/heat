@@ -12,15 +12,11 @@
 #    under the License.
 
 from six.moves.urllib import parse as urlparse
-from swiftclient import exceptions as swift_exceptions
 
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.openstack.common import log as logging
-
-LOG = logging.getLogger(__name__)
 
 
 class S3Bucket(resource.Resource):
@@ -108,6 +104,8 @@ class S3Bucket(resource.Resource):
         ),
     }
 
+    default_client_name = 'swift'
+
     def tags_to_headers(self):
         if self.properties[self.TAGS] is None:
             return {}
@@ -119,8 +117,6 @@ class S3Bucket(resource.Resource):
         """Create a bucket."""
         container = self.physical_resource_name()
         headers = self.tags_to_headers()
-        LOG.debug('S3Bucket create container %(container)s with headers '
-                  '%(headers)s' % {'container': container, 'headers': headers})
         if self.properties[self.WEBSITE_CONFIGURATION] is not None:
             sc = self.properties[self.WEBSITE_CONFIGURATION]
             index_doc = sc[self.WEBSITE_CONFIGURATION_INDEX_DOCUMENT]
@@ -150,12 +146,12 @@ class S3Bucket(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        LOG.debug('S3Bucket delete container %s' % self.resource_id)
-        if self.resource_id is not None:
-            try:
-                self.swift().delete_container(self.resource_id)
-            except swift_exceptions.ClientException as ex:
-                LOG.warn(_("Delete container failed: %s") % ex)
+        if self.resource_id is None:
+            return
+        try:
+            self.swift().delete_container(self.resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def FnGetRefId(self):
         return unicode(self.resource_id)
