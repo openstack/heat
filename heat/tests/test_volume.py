@@ -510,6 +510,33 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_volume_update_not_supported(self):
+        stack_name = 'test_volume_stack'
+        fv = FakeVolume('creating', 'available')
+
+        self._mock_create_volume(fv, stack_name)
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        rsrc = self.create_volume(t, stack, 'DataVolume')
+
+        after_t = copy.deepcopy(t)
+        after_t['Resources']['DataVolume']['Properties']['Size'] = 2
+        after_t['Resources']['DataVolume']['Properties'].pop('Tags')
+        after_t['Resources']['DataVolume']['Properties'][
+            'AvailabilityZone'] = 'other'
+        after_defs = template.Template(after_t).resource_definitions(stack)
+
+        updater = scheduler.TaskRunner(rsrc.update, after_defs['DataVolume'])
+        ex = self.assertRaises(exception.ResourceFailure, updater)
+        self.assertIn("NotSupported: Update to properties "
+                      "AvailabilityZone, Size, Tags of DataVolume "
+                      "(AWS::EC2::Volume) is not supported",
+                      six.text_type(ex))
+        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+
     def test_volume_attachment_update_device(self):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')

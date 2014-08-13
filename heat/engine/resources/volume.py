@@ -46,11 +46,13 @@ class Volume(resource.Resource):
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
             _('The availability zone in which the volume will be created.'),
-            required=True
+            required=True,
+            immutable=True
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
             _('The size of the volume in GB. '),
+            immutable=True,
             constraints=[
                 constraints.Range(min=1),
             ]
@@ -58,11 +60,13 @@ class Volume(resource.Resource):
         BACKUP_ID: properties.Schema(
             properties.Schema.STRING,
             _('If specified, the backup used as the source to create the '
-              'volume.')
+              'volume.'),
+            immutable=True
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
             _('The list of tags to associate with the volume.'),
+            immutable=True,
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
