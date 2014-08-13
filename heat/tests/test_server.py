@@ -825,14 +825,11 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_validate_test',
                                 resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.ReplayAll()
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
+
         self.m.VerifyAll()
 
     def test_server_validate_with_invalid_ssh_key(self):
@@ -1232,15 +1229,15 @@ class ServersTest(HeatTestCase):
         image_id = self.getUniqueString()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = image_id
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
+
+        self.m.VerifyAll()
 
     def _test_server_update_image_rebuild(self, status, policy='REBUILD'):
         # Server.handle_update supports changing the image, and makes
@@ -1342,15 +1339,15 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'update_prop')
 
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'mustreplace'
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
+
+        self.m.VerifyAll()
 
     def test_server_status_build(self):
         return_server = self.fc.servers.list()[0]

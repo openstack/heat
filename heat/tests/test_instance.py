@@ -878,15 +878,15 @@ class InstancesTest(HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'in_update2')
 
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['ImageId'] = 'mustreplace'
         updater = scheduler.TaskRunner(instance.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
+
+        self.m.VerifyAll()
 
     def test_instance_status_build(self):
         return_server = self.fc.servers.list()[0]

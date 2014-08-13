@@ -17,11 +17,9 @@ from oslo.config import cfg
 
 from heat.common import identifier
 from heat.common import template_format
-from heat.engine.clients.os import glance
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import instance
-from heat.engine.resources import nova_keypair
 from heat.engine.resources import server
 from heat.engine.resources import wait_condition as wc
 from heat.engine import scheduler
@@ -164,12 +162,8 @@ class MetadataRefreshTest(HeatTestCase):
 
         self.stack_id = stack.store()
 
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -231,12 +225,8 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         self.stack_id = stack.store()
 
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -327,12 +317,8 @@ class MetadataRefreshTestServer(HeatTestCase):
 
         self.stack_id = stack.store()
 
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
 
         self.m.StubOutWithMock(server.Server, 'handle_create')
         self.m.StubOutWithMock(server.Server, 'check_create_complete')
