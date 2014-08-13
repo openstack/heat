@@ -23,13 +23,13 @@ from novaclient import exceptions as nova_exceptions
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
-from heat.engine.resources.software_config import software_config as sc
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
 from heat.tests.common import HeatTestCase
@@ -481,14 +481,14 @@ class ServersTest(HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(server, 'heat')
-        self.m.StubOutWithMock(sc.SoftwareConfig, 'get_software_config')
-        server.heat().AndReturn(None)
-        sc.SoftwareConfig.get_software_config(
-            None, '8c813873-f6ee-4809-8eec-959ef39acb55').AndReturn(
-                'wordpress from config')
+        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, '_create')
+        heat_client = mock.Mock()
+        heat_plugin.HeatClientPlugin._create().AndReturn(heat_client)
+        sc = mock.Mock()
+        sc.config = 'wordpress from config'
+        heat_client.software_configs.get.return_value = sc
 
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
@@ -522,14 +522,13 @@ class ServersTest(HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(server, 'heat')
-        self.m.StubOutWithMock(sc.SoftwareConfig, 'get_software_config')
-        server.heat().AndReturn(None)
-        sc.SoftwareConfig.get_software_config(
-            None, sc_id).AndRaise(exception.SoftwareConfigMissing(
-                software_config_id=sc_id))
+        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, '_create')
+        heat_client = mock.Mock()
+        heat_plugin.HeatClientPlugin._create().AndReturn(heat_client)
+        heat_client.software_configs.get.side_effect = \
+            heat_plugin.exc.HTTPNotFound()
 
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 

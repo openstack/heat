@@ -23,7 +23,6 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import subnet
 from heat.engine.resources import nova_utils
-from heat.engine.resources.software_config import software_config as sc
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support
@@ -456,11 +455,10 @@ class Server(stack_user.StackUser):
             if uuidutils.is_uuid_like(ud_content):
                 # attempt to load the userdata from software config
                 try:
-                    ud_content = sc.SoftwareConfig.get_software_config(
-                        self.heat(), ud_content)
-                except exception.SoftwareConfigMissing:
-                    # no config was found, so do not modify the user_data
-                    pass
+                    ud_content = self.heat().software_configs.get(
+                        ud_content).config
+                except Exception as ex:
+                    self.client_plugin('heat').ignore_not_found(ex)
 
         if self.user_data_software_config():
             self._create_transport_credentials()

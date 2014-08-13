@@ -11,9 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import heatclient.exc as heat_exp
-
-from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -152,6 +149,8 @@ class SoftwareConfig(resource.Resource):
         ),
     }
 
+    default_client_name = 'heat'
+
     def handle_create(self):
         props = dict(self.properties)
         props[self.NAME] = self.physical_resource_name()
@@ -166,9 +165,8 @@ class SoftwareConfig(resource.Resource):
 
         try:
             self.heat().software_configs.delete(self.resource_id)
-        except heat_exp.HTTPNotFound:
-            LOG.debug(
-                'Software config %s is not found.' % self.resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def _resolve_attribute(self, name):
         '''
@@ -177,25 +175,11 @@ class SoftwareConfig(resource.Resource):
         '''
         if name == self.CONFIG_ATTR and self.resource_id:
             try:
-                return self.get_software_config(self.heat(), self.resource_id)
-            except exception.SoftwareConfigMissing:
-                return ''
-
-    @staticmethod
-    def get_software_config(heat_client, software_config_id):
-        '''
-        Get the software config specified by :software_config_id:
-
-        :param heat_client: the heat client to use
-        :param software_config_id: the ID of the config to look for
-        :returns: the config script string for :software_config_id:
-        :raises: exception.NotFound
-        '''
-        try:
-            return heat_client.software_configs.get(software_config_id).config
-        except heat_exp.HTTPNotFound:
-            raise exception.SoftwareConfigMissing(
-                software_config_id=software_config_id)
+                return self.heat().software_configs.get(
+                    self.resource_id).config
+            except Exception as ex:
+                if self.client_plugin().is_not_found(ex):
+                    return None
 
 
 def resource_mapping():

@@ -13,9 +13,7 @@
 
 from heatclient.exc import HTTPNotFound
 import mock
-import six
 
-from heat.common import exception
 from heat.engine import parser
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import template
@@ -76,24 +74,6 @@ class SoftwareConfigTest(HeatTestCase):
         self.software_configs.delete.side_effect = HTTPNotFound()
         self.assertIsNone(self.config.handle_delete())
 
-    def test_get_software_config(self):
-        config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        value = mock.MagicMock()
-        value.config = '#!/bin/bash'
-        self.software_configs.get.return_value = value
-        heatclient = self.heatclient
-        config = sc.SoftwareConfig.get_software_config(heatclient, config_id)
-        self.assertEqual('#!/bin/bash', config)
-
-        self.software_configs.get.side_effect = HTTPNotFound()
-        err = self.assertRaises(
-            exception.SoftwareConfigMissing,
-            self.config.get_software_config,
-            heatclient, config_id)
-        self.assertEqual(
-            ('The config (c8a19429-7fde-47ea-a42f-40045488226c) '
-             'could not be found.'), six.text_type(err))
-
     def test_resolve_attribute(self):
         self.assertIsNone(self.config._resolve_attribute('others'))
         self.config.resource_id = None
@@ -105,4 +85,4 @@ class SoftwareConfigTest(HeatTestCase):
         self.assertEqual(
             '#!/bin/bash', self.config._resolve_attribute('config'))
         self.software_configs.get.side_effect = HTTPNotFound()
-        self.assertEqual('', self.config._resolve_attribute('config'))
+        self.assertEqual(None, self.config._resolve_attribute('config'))
