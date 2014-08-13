@@ -1001,6 +1001,8 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(u'lvm', rsrc.FnGetAtt('volume_type'))
         self.assertEqual(json.dumps({'key': 'value'}),
                          rsrc.FnGetAtt('metadata'))
+        self.assertEqual({'key': 'value'},
+                         rsrc.FnGetAtt('metadata_values'))
         self.assertEqual(u'None', rsrc.FnGetAtt('source_volid'))
         self.assertEqual(u'available', rsrc.FnGetAtt('status'))
         self.assertEqual(u'2013-02-25T02:40:21.000000',

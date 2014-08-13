@@ -475,11 +475,11 @@ class CinderVolume(Volume):
     ATTRIBUTES = (
         AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME,
         DISPLAY_DESCRIPTION, VOLUME_TYPE_ATTR, METADATA_ATTR,
-        SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE,
+        SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE, METADATA_VALUES_ATTR,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'display_name',
         'display_description', 'volume_type', 'metadata',
-        'source_volid', 'status', 'created_at', 'bootable',
+        'source_volid', 'status', 'created_at', 'bootable', 'metadata_values',
     )
 
     properties_schema = {
@@ -579,6 +579,9 @@ class CinderVolume(Volume):
         BOOTABLE: attributes.Schema(
             _('Boolean indicating if the volume can be booted or not.')
         ),
+        METADATA_VALUES_ATTR: attributes.Schema(
+            _('Key/value pairs associated with the volume in raw dict form.')
+        ),
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
@@ -613,6 +616,8 @@ class CinderVolume(Volume):
         vol = self.cinder().volumes.get(self.resource_id)
         if name == 'metadata':
             return unicode(json.dumps(vol.metadata))
+        elif name == 'metadata_values':
+            return vol.metadata
         return unicode(getattr(vol, name))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
