@@ -13,6 +13,7 @@
 
 import copy
 import mox
+from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
 import six
 
@@ -212,7 +213,7 @@ class VPNServiceTest(HeatTestCase):
         ).AndReturn('sub123')
 
         neutronclient.Client.create_vpnservice(self.VPN_SERVICE_CONF).AndRaise(
-            vpnservice.NeutronClientException())
+            exceptions.NeutronClientException())
         self.m.ReplayAll()
         snippet = template_format.parse(vpnservice_template)
         self.stack = utils.parse_stack(snippet)
@@ -231,7 +232,7 @@ class VPNServiceTest(HeatTestCase):
     def test_delete(self):
         neutronclient.Client.delete_vpnservice('vpn123')
         neutronclient.Client.show_vpnservice('vpn123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_vpnservice()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -241,7 +242,7 @@ class VPNServiceTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_vpnservice('vpn123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_vpnservice()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -251,7 +252,7 @@ class VPNServiceTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_vpnservice('vpn123').AndRaise(
-            vpnservice.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_vpnservice()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -358,7 +359,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
     def test_create_failed(self):
         neutronclient.Client.create_ipsec_site_connection(
             self.IPSEC_SITE_CONNECTION_CONF).AndRaise(
-                vpnservice.NeutronClientException())
+                exceptions.NeutronClientException())
         self.m.ReplayAll()
         snippet = template_format.parse(ipsec_site_connection_template)
         self.stack = utils.parse_stack(snippet)
@@ -378,7 +379,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
     def test_delete(self):
         neutronclient.Client.delete_ipsec_site_connection('con123')
         neutronclient.Client.show_ipsec_site_connection('con123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ipsec_site_connection()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -388,7 +389,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ipsec_site_connection()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -398,7 +399,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
-            vpnservice.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_ipsec_site_connection()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -504,7 +505,7 @@ class IKEPolicyTest(HeatTestCase):
     def test_create_failed(self):
         neutronclient.Client.create_ikepolicy(
             self.IKE_POLICY_CONF).AndRaise(
-                vpnservice.NeutronClientException())
+                exceptions.NeutronClientException())
         self.m.ReplayAll()
         snippet = template_format.parse(ikepolicy_template)
         self.stack = utils.parse_stack(snippet)
@@ -524,7 +525,7 @@ class IKEPolicyTest(HeatTestCase):
     def test_delete(self):
         neutronclient.Client.delete_ikepolicy('ike123')
         neutronclient.Client.show_ikepolicy('ike123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ikepolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -534,7 +535,7 @@ class IKEPolicyTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_ikepolicy('ike123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ikepolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -544,7 +545,7 @@ class IKEPolicyTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_ikepolicy('ike123').AndRaise(
-            vpnservice.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_ikepolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -645,7 +646,7 @@ class IPsecPolicyTest(HeatTestCase):
     def test_create_failed(self):
         neutronclient.Client.create_ipsecpolicy(
             self.IPSEC_POLICY_CONF).AndRaise(
-                vpnservice.NeutronClientException())
+                exceptions.NeutronClientException())
         self.m.ReplayAll()
         snippet = template_format.parse(ipsecpolicy_template)
         self.stack = utils.parse_stack(snippet)
@@ -665,7 +666,7 @@ class IPsecPolicyTest(HeatTestCase):
     def test_delete(self):
         neutronclient.Client.delete_ipsecpolicy('ips123')
         neutronclient.Client.show_ipsecpolicy('ips123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ipsecpolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -675,7 +676,7 @@ class IPsecPolicyTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_ipsecpolicy('ips123').AndRaise(
-            vpnservice.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ipsecpolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -685,7 +686,7 @@ class IPsecPolicyTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_ipsecpolicy('ips123').AndRaise(
-            vpnservice.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_ipsecpolicy()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()

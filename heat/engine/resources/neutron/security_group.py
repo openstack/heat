@@ -16,8 +16,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-import neutronclient.common.exceptions as neutron_exp
-
 
 class SecurityGroup(neutron.NeutronResource):
 
@@ -188,24 +186,23 @@ class SecurityGroup(neutron.NeutronResource):
             try:
                 self.neutron().create_security_group_rule(
                     {'security_group_rule': rule})
-            except neutron_exp.NeutronClientException as ex:
-                # ignore error if rule already exists
-                if ex.status_code != 409:
+            except Exception as ex:
+                if not self.client_plugin().is_conflict(ex):
                     raise
 
     def _delete_rules(self, to_delete=None):
         try:
             sec = self.neutron().show_security_group(
                 self.resource_id)['security_group']
-        except neutron_exp.NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             for rule in sec['security_group_rules']:
                 if to_delete is None or to_delete(rule):
                     try:
                         self.neutron().delete_security_group_rule(rule['id'])
-                    except neutron_exp.NeutronClientException as ex:
-                        self._handle_not_found_exception(ex)
+                    except Exception as ex:
+                        self.client_plugin().ignore_not_found(ex)
 
     def handle_delete(self):
 
@@ -215,8 +212,8 @@ class SecurityGroup(neutron.NeutronResource):
         self._delete_rules()
         try:
             self.neutron().delete_security_group(self.resource_id)
-        except neutron_exp.NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         self.resource_id_set(None)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):

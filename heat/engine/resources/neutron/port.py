@@ -19,8 +19,6 @@ from heat.engine.resources.neutron import subnet
 from heat.engine import support
 from heat.openstack.common import log as logging
 
-import neutronclient.common.exceptions as neutron_exp
-
 LOG = logging.getLogger(__name__)
 
 
@@ -269,16 +267,10 @@ class Port(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_port(self.resource_id)
-        except neutron_exp.NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
-
-    def _handle_not_found_exception(self, ex):
-        # raise any exception which is not for a not found port
-        if not (ex.status_code == 404 or
-                isinstance(ex, neutron_exp.PortNotFoundClient)):
-            raise ex
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)

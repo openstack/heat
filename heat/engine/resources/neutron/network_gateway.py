@@ -22,8 +22,6 @@ from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class NetworkGateway(neutron.NeutronResource):
     '''
@@ -199,13 +197,13 @@ class NetworkGateway(neutron.NeutronResource):
                 client.disconnect_network_gateway(
                     self.resource_id, connection
                 )
-            except NeutronClientException as ex:
-                self._handle_not_found_exception(ex)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
 
         try:
             client.delete_network_gateway(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -235,8 +233,8 @@ class NetworkGateway(neutron.NeutronResource):
                     self.neutron().disconnect_network_gateway(
                         self.resource_id, connection
                     )
-                except NeutronClientException as ex:
-                    self._handle_not_found_exception(ex)
+                except Exception as ex:
+                    self.client_plugin().ignore_not_found(ex)
             for connection in connections:
                 neutron_utils.resolve_network(
                     self.neutron(), connection, self.NETWORK, 'network_id')

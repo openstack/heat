@@ -16,8 +16,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class MeteringLabel(neutron.NeutronResource):
     """
@@ -73,8 +71,8 @@ class MeteringLabel(neutron.NeutronResource):
     def handle_delete(self):
         try:
             self.neutron().delete_metering_label(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -159,8 +157,8 @@ class MeteringRule(neutron.NeutronResource):
     def handle_delete(self):
         try:
             self.neutron().delete_metering_label_rule(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 

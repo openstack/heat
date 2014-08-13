@@ -16,6 +16,7 @@ import mox
 from oslo.config import cfg
 import six
 
+from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
@@ -254,7 +255,7 @@ class HealthMonitorTest(HeatTestCase):
             'health_monitor': {
                 'delay': 3, 'max_retries': 5, 'type': u'HTTP',
                 'timeout': 10, 'admin_state_up': True}}
-        ).AndRaise(loadbalancer.NeutronClientException())
+        ).AndRaise(exceptions.NeutronClientException())
         self.m.ReplayAll()
 
         snippet = template_format.parse(health_monitor_template)
@@ -273,7 +274,7 @@ class HealthMonitorTest(HeatTestCase):
     def test_delete(self):
         neutronclient.Client.delete_health_monitor('5678')
         neutronclient.Client.show_health_monitor('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         rsrc = self.create_health_monitor()
         self.m.ReplayAll()
@@ -284,7 +285,7 @@ class HealthMonitorTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_health_monitor('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         rsrc = self.create_health_monitor()
         self.m.ReplayAll()
@@ -295,7 +296,7 @@ class HealthMonitorTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_health_monitor('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
 
         rsrc = self.create_health_monitor()
         self.m.ReplayAll()
@@ -563,7 +564,7 @@ class PoolTest(HeatTestCase):
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName('test_stack', 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndRaise(loadbalancer.NeutronClientException())
+        ).AndRaise(exceptions.NeutronClientException())
         self.m.ReplayAll()
 
         snippet = template_format.parse(pool_template)
@@ -694,10 +695,10 @@ class PoolTest(HeatTestCase):
         rsrc = self.create_pool()
         neutronclient.Client.delete_vip('xyz')
         neutronclient.Client.show_vip('xyz').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         neutronclient.Client.delete_pool('5678')
         neutronclient.Client.show_pool('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
@@ -706,9 +707,9 @@ class PoolTest(HeatTestCase):
 
     def test_delete_already_gone(self):
         neutronclient.Client.delete_vip('xyz').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         neutronclient.Client.delete_pool('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         rsrc = self.create_pool()
         self.m.ReplayAll()
@@ -719,7 +720,7 @@ class PoolTest(HeatTestCase):
 
     def test_delete_vip_failed(self):
         neutronclient.Client.delete_vip('xyz').AndRaise(
-            loadbalancer.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
 
         rsrc = self.create_pool()
         self.m.ReplayAll()
@@ -734,9 +735,9 @@ class PoolTest(HeatTestCase):
 
     def test_delete_failed(self):
         neutronclient.Client.delete_vip('xyz').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
         neutronclient.Client.delete_pool('5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=400))
+            exceptions.NeutronClientException(status_code=400))
 
         rsrc = self.create_pool()
         self.m.ReplayAll()
@@ -923,7 +924,7 @@ class PoolMemberTest(HeatTestCase):
         rsrc = self.create_member()
         neutronclient.Client.delete_member(u'member5678')
         neutronclient.Client.show_member(u'member5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -934,7 +935,7 @@ class PoolMemberTest(HeatTestCase):
     def test_delete_missing_member(self):
         rsrc = self.create_member()
         neutronclient.Client.delete_member(u'member5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -995,7 +996,7 @@ class LoadBalancerTest(HeatTestCase):
     def test_update_missing_member(self):
         rsrc = self.create_load_balancer()
         neutronclient.Client.delete_member(u'member5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -1020,7 +1021,7 @@ class LoadBalancerTest(HeatTestCase):
     def test_delete_missing_member(self):
         rsrc = self.create_load_balancer()
         neutronclient.Client.delete_member(u'member5678').AndRaise(
-            loadbalancer.NeutronClientException(status_code=404))
+            exceptions.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()

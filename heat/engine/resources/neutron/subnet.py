@@ -18,8 +18,6 @@ from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class Subnet(neutron.NeutronResource):
 
@@ -217,8 +215,8 @@ class Subnet(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_subnet(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 

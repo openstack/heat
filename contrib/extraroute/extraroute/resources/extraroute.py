@@ -16,8 +16,6 @@ from heat.common import exception
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class ExtraRoute(neutron.NeutronResource):
 
@@ -90,8 +88,8 @@ class ExtraRoute(neutron.NeutronResource):
                 return
             self.neutron().update_router(router_id, {'router':
                                          {'routes': routes}})
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 def resource_mapping():

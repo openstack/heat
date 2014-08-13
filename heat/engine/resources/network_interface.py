@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutronclient.common.exceptions import NeutronClientException
-
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
@@ -90,6 +88,8 @@ class NetworkInterface(resource.Resource):
         ),
     }
 
+    default_client_name = 'neutron'
+
     @staticmethod
     def network_id_from_subnet_id(neutronclient, subnet_id):
         subnet_info = neutronclient.show_subnet(subnet_id)
@@ -127,9 +127,8 @@ class NetworkInterface(resource.Resource):
         client = self.neutron()
         try:
             client.delete_port(self.resource_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def _get_fixed_ip_address(self, ):
         if self.fixed_ip_address is None:
@@ -138,9 +137,8 @@ class NetworkInterface(resource.Resource):
                 port = client.show_port(self.resource_id)['port']
                 if port['fixed_ips'] and len(port['fixed_ips']) > 0:
                     self.fixed_ip_address = port['fixed_ips'][0]['ip_address']
-            except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
 
         return self.fixed_ip_address
 

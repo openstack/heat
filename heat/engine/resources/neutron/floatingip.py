@@ -18,8 +18,6 @@ from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import router
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class FloatingIP(neutron.NeutronResource):
     PROPERTIES = (
@@ -132,8 +130,8 @@ class FloatingIP(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_floatingip(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
@@ -182,8 +180,8 @@ class FloatingIPAssociation(neutron.NeutronResource):
             client.update_floatingip(
                 floatingip_id,
                 {'floatingip': {'port_id': None}})
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -196,8 +194,8 @@ class FloatingIPAssociation(neutron.NeutronResource):
                     neutron_client.update_floatingip(
                         floatingip_id,
                         {'floatingip': {'port_id': None}})
-                except NeutronClientException as ex:
-                    self._handle_not_found_exception(ex)
+                except Exception as ex:
+                    self.client_plugin().ignore_not_found(ex)
 
             # associate the floatingip with the new port
             floatingip_id = (prop_diff.get(self.FLOATINGIP_ID) or

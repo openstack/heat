@@ -22,8 +22,6 @@ from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.engine import support
 
-from neutronclient.common.exceptions import NeutronClientException
-
 
 class HealthMonitor(neutron.NeutronResource):
     """
@@ -162,8 +160,8 @@ class HealthMonitor(neutron.NeutronResource):
     def handle_delete(self):
         try:
             self.neutron().delete_health_monitor(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -463,8 +461,8 @@ class Pool(neutron.NeutronResource):
             try:
                 yield
                 client.show_vip(self.metadata_get()['vip'])
-            except NeutronClientException as ex:
-                self._handle_not_found_exception(ex)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
                 break
 
     def handle_delete(self):
@@ -472,14 +470,14 @@ class Pool(neutron.NeutronResource):
         if self.metadata_get():
             try:
                 self.neutron().delete_vip(self.metadata_get()['vip'])
-            except NeutronClientException as ex:
-                self._handle_not_found_exception(ex)
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
             else:
                 checkers.append(scheduler.TaskRunner(self._confirm_vip_delete))
         try:
             self.neutron().delete_pool(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             checkers.append(scheduler.TaskRunner(self._confirm_delete))
         return checkers
@@ -607,8 +605,8 @@ class PoolMember(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_member(self.resource_id)
-        except NeutronClientException as ex:
-            self._handle_not_found_exception(ex)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
 
@@ -644,6 +642,8 @@ class LoadBalancer(resource.Resource):
         ),
     }
 
+    default_client_name = 'neutron'
+
     def handle_create(self):
         pool = self.properties[self.POOL_ID]
         client = self.neutron()
@@ -669,9 +669,8 @@ class LoadBalancer(resource.Resource):
                 member_id = rd_members[member]
                 try:
                     client.delete_member(member_id)
-                except NeutronClientException as ex:
-                    if ex.status_code != 404:
-                        raise ex
+                except Exception as ex:
+                    self.client_plugin().ignore_not_found(ex)
                 self.data_delete(member)
             pool = self.properties[self.POOL_ID]
             nova_client = self.nova()
@@ -691,9 +690,8 @@ class LoadBalancer(resource.Resource):
             member_id = self.data().get(member)
             try:
                 client.delete_member(member_id)
-            except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
             self.data_delete(member)
 
 

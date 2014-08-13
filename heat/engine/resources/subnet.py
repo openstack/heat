@@ -77,6 +77,8 @@ class Subnet(resource.Resource):
         ),
     }
 
+    default_client_name = 'neutron'
+
     def handle_create(self):
         client = self.neutron()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
@@ -98,8 +100,6 @@ class Subnet(resource.Resource):
         self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
-        from neutronclient.common.exceptions import NeutronClientException
-
         client = self.neutron()
         network_id = self.properties.get(self.VPC_ID)
         subnet_id = self.resource_id
@@ -110,15 +110,13 @@ class Subnet(resource.Resource):
                 client.remove_interface_router(
                     router['id'],
                     {'subnet_id': subnet_id})
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
         try:
             client.delete_subnet(subnet_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
 
     def _resolve_attribute(self, name):
         if name == self.AVAILABILITY_ZONE:
