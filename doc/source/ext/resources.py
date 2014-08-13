@@ -28,7 +28,6 @@ from heat.engine import support
 from heat.openstack.common.gettextutils import _
 
 
-
 global_env = environment.Environment({}, user_env=False)
 
 
@@ -220,6 +219,11 @@ Resources:
         if prop.update_allowed:
             para = nodes.paragraph('',
                                    _('Can be updated without replacement.'))
+            definition.append(para)
+        elif prop.immutable:
+            para = nodes.paragraph('', _('Updates are not supported. '
+                                         'Resource update will fail on any '
+                                         'attempt to update this property.'))
             definition.append(para)
         else:
             para = nodes.paragraph('', _('Updates cause replacement.'))
