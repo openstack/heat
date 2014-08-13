@@ -1247,6 +1247,35 @@ class StackTest(HeatTestCase):
         stack = parser.Stack.load(self.ctx, stack_id=stack_id)
         self.assertEqual('foobar', stack.username)
 
+    def test_load_all(self):
+        stack1 = parser.Stack(self.ctx, 'stack1', self.tmpl)
+        stack1.store()
+        stack2 = parser.Stack(self.ctx, 'stack2', self.tmpl)
+        stack2.store()
+
+        stacks = list(parser.Stack.load_all(self.ctx))
+        self.assertEqual(2, len(stacks))
+
+        # Add another, nested, stack
+        stack3 = parser.Stack(self.ctx, 'stack3', self.tmpl,
+                              owner_id=stack2.id)
+        stack3.store()
+
+        # Should still be 2 without show_nested
+        stacks = list(parser.Stack.load_all(self.ctx))
+        self.assertEqual(2, len(stacks))
+
+        stacks = list(parser.Stack.load_all(self.ctx, show_nested=True))
+        self.assertEqual(3, len(stacks))
+
+        # A backup stack should not be returned
+        stack1._backup_stack()
+        stacks = list(parser.Stack.load_all(self.ctx))
+        self.assertEqual(2, len(stacks))
+
+        stacks = list(parser.Stack.load_all(self.ctx, show_nested=True))
+        self.assertEqual(3, len(stacks))
+
     def test_created_time(self):
         self.stack = parser.Stack(self.ctx, 'creation_time_test',
                                   self.tmpl)
