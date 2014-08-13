@@ -2967,6 +2967,50 @@ class StackTest(HeatTestCase):
 
         self.assertEqual(resource_id, self.stack['AResource'].id)
 
+    def test_update_template_format_version(self):
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'AParam': {'Type': 'String', 'Default': 'abc'}},
+            'Resources': {
+                'AResource': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {'Foo': {'Ref': 'AParam'}}
+                },
+            }
+        }
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+
+        tmpl2 = {
+            'heat_template_version': '2013-05-23',
+            'parameters': {
+                'AParam': {'type': 'string', 'default': 'foo'}},
+            'resources': {
+                'AResource': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {'Foo': {'get_param': 'AParam'}}
+                }
+            }
+        }
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('foo', self.stack['AResource'].properties['Foo'])
+        self.m.VerifyAll()
+
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')
