@@ -767,7 +767,10 @@ class LaunchConfiguration(resource.Resource):
         IMAGE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Glance image ID or name.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('glance.image')
+            ]
         ),
         INSTANCE_TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -776,7 +779,10 @@ class LaunchConfiguration(resource.Resource):
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Optional Nova keypair name.')
+            _('Optional Nova keypair name.'),
+            constraints=[
+                constraints.CustomConstraint("nova.keypair")
+            ]
         ),
         USER_DATA: properties.Schema(
             properties.Schema.STRING,

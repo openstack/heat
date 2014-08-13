@@ -25,9 +25,11 @@ import testscenarios
 import testtools
 
 from heat.common import messaging
+from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
 from heat.engine import environment
 from heat.engine import resources
+from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
 from heat.tests import fakes
 from heat.tests import utils
@@ -126,3 +128,19 @@ class HeatTestCase(testscenarios.WithScenarios,
         fkc = fake_client or fakes.FakeKeystoneClient(**kwargs)
         client.return_value = fkc
         return fkc
+
+    def stub_KeypairConstraint_validate(self):
+        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
+        nova_keypair.KeypairConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+    def stub_ImageConstraint_validate(self, num=None):
+        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
+        if num is None:
+            glance.ImageConstraint.validate(
+                mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().\
+                AndReturn(True)
+        else:
+            for x in range(num):
+                glance.ImageConstraint.validate(
+                    mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(True)

@@ -19,12 +19,10 @@ from testtools.matchers import MatchesRegex
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import function
 from heat.engine import parser
 from heat.engine.resources import instance
-from heat.engine.resources import nova_keypair
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -166,12 +164,8 @@ class InstanceGroupTest(HeatTestCase):
     def _stub_validate(self):
         self.m.StubOutWithMock(parser.Stack, 'validate')
         parser.Stack.validate().MultipleTimes()
-        self.m.StubOutWithMock(nova_keypair.KeypairConstraint, 'validate')
-        nova_keypair.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
 
     def _stub_grp_create(self, capacity):
         """
@@ -243,13 +237,22 @@ class InstanceGroupTest(HeatTestCase):
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_without_updt_policy)
         stack = utils.parse_stack(tmpl)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
+
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertFalse(grp.update_policy['RollingUpdate'])
+        self.m.VerifyAll()
 
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_updt_policy)
         stack = utils.parse_stack(tmpl)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
+
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
@@ -261,9 +264,15 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual(2, int(policy['MaxBatchSize']))
         self.assertEqual('PT1S', policy['PauseTime'])
 
+        self.m.VerifyAll()
+
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_default_updt_policy)
         stack = utils.parse_stack(tmpl)
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
+
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
@@ -274,6 +283,8 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual(0, int(policy['MinInstancesInService']))
         self.assertEqual(1, int(policy['MaxBatchSize']))
         self.assertEqual('PT0S', policy['PauseTime'])
+
+        self.m.VerifyAll()
 
     def test_parse_with_bad_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_bad_updt_policy)
@@ -351,7 +362,14 @@ class InstanceGroupTest(HeatTestCase):
         # setup stack from the initial template
         tmpl = template_format.parse(init_template)
         stack = utils.parse_stack(tmpl)
+        self.stub_KeypairConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
         stack.validate()
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
 
         # test stack create
         size = int(stack['JobServerGroup'].properties['Size'])
@@ -668,6 +686,10 @@ class InstanceGroupTest(HeatTestCase):
         config['Properties']['ImageId'] = 'bar'
         updated_tmpl = template_format.parse(json.dumps(updt_template))
         updated_stack = utils.parse_stack(updated_tmpl)
+
+        self.stub_KeypairConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
         stack.update(updated_stack)
         self.assertEqual(('UPDATE', 'FAILED'), stack.state)
 
@@ -683,3 +705,5 @@ class InstanceGroupTest(HeatTestCase):
         expected_error_message = ('The current UpdatePolicy will result '
                                   'in stack update timeout.')
         self.assertIn(expected_error_message, stack.status_reason)
+
+        self.m.VerifyAll()
