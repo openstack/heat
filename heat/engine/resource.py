@@ -438,6 +438,34 @@ class Resource(object):
         else:
             self.state_set(action, self.COMPLETE)
 
+    def action_handler_task(self, action, args=[], action_prefix=None):
+        '''
+        A task to call the Resource subclass's handler methods for an action.
+
+        Calls the handle_<ACTION>() method for the given action and then calls
+        the check_<ACTION>_complete() method with the result in a loop until it
+        returns True. If the methods are not provided, the call is omitted.
+
+        Any args provided are passed to the handler.
+
+        If a prefix is supplied, the handler method handle_<PREFIX>_<ACTION>()
+        is called instead.
+        '''
+        handler_action = action.lower()
+        check = getattr(self, 'check_%s_complete' % handler_action, None)
+
+        if action_prefix:
+            handler_action = '%s_%s' % (action_prefix.lower(), handler_action)
+        handler = getattr(self, 'handle_%s' % handler_action, None)
+
+        if callable(handler):
+            handler_data = handler(*args)
+            yield
+            if callable(check):
+                while not check(handler_data):
+                    yield
+
+    @scheduler.wrappertask
     def _do_action(self, action, pre_func=None, resource_data=None):
         '''
         Perform a transition to a new state via a specified action
@@ -456,21 +484,11 @@ class Resource(object):
         assert action in self.ACTIONS, 'Invalid action %s' % action
 
         with self._action_recorder(action):
-            action_l = action.lower()
-            handle = getattr(self, 'handle_%s' % action_l, None)
-            check = getattr(self, 'check_%s_complete' % action_l, None)
-
             if callable(pre_func):
                 pre_func()
 
-            handle_data = None
-            if callable(handle):
-                handle_data = (handle(resource_data) if resource_data else
-                               handle())
-                yield
-                if callable(check):
-                    while not check(handle_data):
-                        yield
+            handler_args = [resource_data] if resource_data is not None else []
+            yield self.action_handler_task(action, args=handler_args)
 
     def preview(self):
         '''
@@ -590,6 +608,7 @@ class Resource(object):
                 resource_data.get('resource_data'),
                 resource_data.get('metadata'))
 
+    @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
@@ -634,12 +653,8 @@ class Resource(object):
                                                   before)
             prop_diff = self.update_template_diff_properties(after_properties,
                                                              before_properties)
-            if callable(getattr(self, 'handle_update', None)):
-                handle_data = self.handle_update(after, tmpl_diff, prop_diff)
-                yield
-                if callable(getattr(self, 'check_update_complete', None)):
-                    while not self.check_update_complete(handle_data):
-                        yield
+            yield self.action_handler_task(action,
+                                           args=[after, tmpl_diff, prop_diff])
 
         self.t = after
         self.reparse()
@@ -754,6 +769,7 @@ class Resource(object):
                 msg = _('"%s" deletion policy not supported') % policy
                 raise exception.StackValidationFailed(message=msg)
 
+    @scheduler.wrappertask
     def delete(self):
         '''
         Delete the resource. Subclasses should provide a handle_delete() method
@@ -776,20 +792,13 @@ class Resource(object):
                 deletion_policy = self.t.RETAIN
             else:
                 deletion_policy = self.t.deletion_policy()
-            handle_data = None
-            if deletion_policy == self.t.DELETE:
-                if callable(getattr(self, 'handle_delete', None)):
-                    handle_data = self.handle_delete()
-                    yield
-            elif deletion_policy == self.t.SNAPSHOT:
-                if callable(getattr(self, 'handle_snapshot_delete', None)):
-                    handle_data = self.handle_snapshot_delete(initial_state)
-                    yield
 
-            if (deletion_policy != self.t.RETAIN and
-                    callable(getattr(self, 'check_delete_complete', None))):
-                while not self.check_delete_complete(handle_data):
-                    yield
+            if deletion_policy != self.t.RETAIN:
+                if deletion_policy == self.t.SNAPSHOT:
+                    action_args = [[initial_state], 'snapshot']
+                else:
+                    action_args = []
+                yield self.action_handler_task(action, *action_args)
 
     @scheduler.wrappertask
     def destroy(self):
