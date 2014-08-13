@@ -171,7 +171,10 @@ class FakeHTTPClient(base_client.HTTPClient):
                                          {"version": 4, "addr": "5.6.9.8"}],
                               "private": [{"version": 4,
                                            "addr": "10.13.12.13"}]},
-                          "metadata": {"Server Label": "DB 1"}},
+                          "metadata": {"Server Label": "DB 1"},
+                          "os-extended-volumes:volumes_attached":
+                              [{"id":
+                                    "66359157-dace-43ab-a7ed-a7e7cd7be59d"}]},
                          {"id": 56789,
                           "name": "server-with-metadata",
                           "OS-EXT-SRV-ATTR:instance_name":
@@ -218,7 +221,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (202, None)
 
     def get_servers_9999(self, **kw):
-        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        r = {'server': self.get_servers_detail()[1]['servers'][4]}
         return (200, r)
 
     def get_servers_9102(self, **kw):

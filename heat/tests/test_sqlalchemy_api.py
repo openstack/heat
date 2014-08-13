@@ -127,8 +127,9 @@ class SqlAlchemyTest(HeatTestCase):
                           security_groups=None,
                           userdata=mox.IgnoreArg(), scheduler_hints=None,
                           meta=None, nics=None,
-                          availability_zone=None).MultipleTimes().AndReturn(
-                              fc.servers.list()[4])
+                          availability_zone=None,
+                          block_device_mapping=None).MultipleTimes().\
+            AndReturn(fc.servers.list()[4])
         return fc
 
     def _mock_delete(self, mocks):

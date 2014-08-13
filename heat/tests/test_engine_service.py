@@ -230,7 +230,8 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
                       security_groups=None,
                       userdata=server_userdata, scheduler_hints=None,
                       meta=None, nics=None,
-                      availability_zone=None).AndReturn(
+                      availability_zone=None,
+                      block_device_mapping=None).AndReturn(
                           fc.servers.list()[4])
     return fc
 
