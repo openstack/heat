@@ -103,6 +103,7 @@ def format_stack(stack):
         api.STACK_DISABLE_ROLLBACK: stack.disable_rollback,
         api.STACK_TIMEOUT: stack.timeout_mins,
         api.STACK_OWNER: stack.username,
+        api.STACK_PARENT: stack.owner_id,
     }
 
     # allow users to view the outputs of stacks
