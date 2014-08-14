@@ -56,7 +56,7 @@ class MultipartMime(software_config.SoftwareConfig):
     properties_schema = {
         PARTS: properties.Schema(
             properties.Schema.LIST,
-            _('Parts belonging to this messsage.'),
+            _('Parts belonging to this message.'),
             default=[],
             schema=properties.Schema(
                 properties.Schema.MAP,

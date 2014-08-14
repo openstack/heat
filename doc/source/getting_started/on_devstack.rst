@@ -61,7 +61,7 @@ Preparing Nova for running stacks
 ---------------------------------
 
 Enabling Heat in devstack will replace the default Nova flavors with
-flavours that the Heat example templates expect. You can see what
+flavors that the Heat example templates expect. You can see what
 those flavors are by running::
 
     nova flavor-list

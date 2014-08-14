@@ -122,7 +122,7 @@ get_column_num() {
 get_user() {
     local username=$1
 
-    # Outut format of keystone user-list changed between essex and
+    # Output format of keystone user-list changed between essex and
     # folsom - the columns have been re-ordered (!?), so detect what
     # column to pass to get_data via get_column_num
     namecol=$(get_column_num name keystone user-list)

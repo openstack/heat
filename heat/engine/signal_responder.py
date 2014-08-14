@@ -76,7 +76,7 @@ class SignalResponder(stack_user.StackUser):
         path = self.identifier().arn_url_path()
 
         # Note the WSGI spec apparently means that the webob request we end up
-        # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
+        # processing in the CFN API (ec2token.py) has an unquoted path, so we
         # need to calculate the signature with the path component unquoted, but
         # ensure the actual URL contains the quoted version...
         unquoted_path = urlparse.unquote(host_url.path + path)

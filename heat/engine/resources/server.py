@@ -520,7 +520,7 @@ class Server(stack_user.StackUser):
                 files=personality_files,
                 admin_pass=admin_pass)
         finally:
-            # Avoid a race condition where the thread could be cancelled
+            # Avoid a race condition where the thread could be canceled
             # before the ID is stored
             if server is not None:
                 self.resource_id_set(server.id)
