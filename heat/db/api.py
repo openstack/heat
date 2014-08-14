@@ -135,10 +135,11 @@ def stack_get_all_by_owner_id(context, owner_id):
 
 
 def stack_count_all(context, filters=None, tenant_safe=True,
-                    show_deleted=False):
+                    show_deleted=False, show_nested=False):
     return IMPL.stack_count_all(context, filters=filters,
                                 tenant_safe=tenant_safe,
-                                show_deleted=show_deleted)
+                                show_deleted=show_deleted,
+                                show_nested=show_nested)
 
 
 def stack_create(context, values):
