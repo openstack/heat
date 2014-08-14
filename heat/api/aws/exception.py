@@ -270,6 +270,7 @@ def map_remote_error(ex):
             'ValueError',
             'InvalidTenant',
             'StackNotFound',
+            'ResourceActionNotSupported',
             'ResourceNotFound',
             'ResourceNotAvailable',
             'ResourceTypeNotFound',

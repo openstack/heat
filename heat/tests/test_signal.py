@@ -333,7 +333,7 @@ class SignalTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.assertRaises(exception.ResourceFailure, rsrc.signal,
+        self.assertRaises(exception.ResourceActionNotSupported, rsrc.signal,
                           details=err_metadata)
 
         self.m.VerifyAll()
