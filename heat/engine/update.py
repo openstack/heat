@@ -144,8 +144,10 @@ class StackUpdate(object):
 
         # Note the new resource snippet is resolved in the context
         # of the existing stack (which is the stack being updated)
+        # but with the template of the new stack (in case the update
+        # is switching template implementations)
         new_snippet = new_res.t.reparse(self.existing_stack,
-                                        self.existing_stack.t)
+                                        self.new_stack.t)
 
         return existing_res.update(new_snippet, existing_snippet,
                                    prev_resource=prev_res)
