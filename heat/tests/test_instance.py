@@ -16,6 +16,7 @@ import six
 import uuid
 
 from glanceclient import exc as glance_exceptions
+import mock
 import mox
 from neutronclient.v2_0 import client as neutronclient
 
@@ -409,6 +410,30 @@ class InstancesTest(HeatTestCase):
             six.text_type(error))
 
         self.m.VerifyAll()
+
+    def test_handle_check(self):
+        (tmpl, stack) = self._setup_test_stack('test_instance_check_active')
+        res_definitions = tmpl.resource_definitions(stack)
+
+        instance = instances.Instance('instance_create_image',
+                                      res_definitions['WebServer'], stack)
+        instance.nova = mock.Mock()
+        instance._check_active = mock.Mock(return_value=True)
+
+        self.assertIsNone(instance.handle_check())
+
+    def test_handle_check_raises_exception_if_instance_not_active(self):
+        (tmpl, stack) = self._setup_test_stack('test_instance_check_inactive')
+        res_definitions = tmpl.resource_definitions(stack)
+
+        instance = instances.Instance('instance_create_image',
+                                      res_definitions['WebServer'], stack)
+        instance.nova = mock.Mock()
+        instance.nova.return_value.servers.get.return_value.status = 'foo'
+        instance._check_active = mock.Mock(return_value=False)
+
+        exc = self.assertRaises(exception.Error, instance.handle_check)
+        self.assertIn('foo', str(exc))
 
     class FakeVolumeAttach:
         def started(self):
