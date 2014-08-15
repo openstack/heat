@@ -99,13 +99,11 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
     ATTRIBUTES = (
         TOKEN,
         ENDPOINT,
-        CURL_CLI_SUCCESS,
-        CURL_CLI_FAILURE,
+        CURL_CLI,
     ) = (
         'token',
         'endpoint',
-        'curl_cli_success',
-        'curl_cli_failure',
+        'curl_cli',
     )
 
     attributes_schema = {
@@ -117,14 +115,13 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
             _('Endpoint/url which can be used for signalling handle'),
             cache_mode=attributes.Schema.CACHE_NONE
         ),
-        CURL_CLI_SUCCESS: attributes.Schema(
+        CURL_CLI: attributes.Schema(
             _('Convenience attribute, provides curl CLI command '
-              'which can be used for signalling handle completion'),
-            cache_mode=attributes.Schema.CACHE_NONE
-        ),
-        CURL_CLI_FAILURE: attributes.Schema(
-            _('Convenience attribute, provides curl CLI command '
-              'which can be used for signalling handle failure'),
+              'prefix, which can be used for signalling handle completion or '
+              'failure.  You can signal success by adding '
+              '--data-binary \'{"status": "SUCCESS"}\' '
+              ', or signal failure by adding '
+              '--data-binary \'{"status": "FAILURE"}\''),
             cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
@@ -167,7 +164,7 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
                 return self.data().get('token')
             elif key == self.ENDPOINT:
                 return self.data().get('endpoint')
-            elif key == self.CURL_CLI_SUCCESS:
+            elif key == self.CURL_CLI:
                 # Construct curl command for template-author convenience
                 return ('curl -i -X POST '
                         '-H \'X-Auth-Token: %(token)s\' '
@@ -175,16 +172,6 @@ class HeatWaitConditionHandle(BaseWaitConditionHandle):
                         '-H \'Accept: application/json\' '
                         '%(endpoint)s' %
                         dict(token=self.data().get('token'),
-                             endpoint=self.data().get('endpoint')))
-            elif key == self.CURL_CLI_FAILURE:
-                return ('curl -i -X POST '
-                        '--data-binary \'{"status": "%(status)s"}\' '
-                        '-H \'X-Auth-Token: %(token)s\' '
-                        '-H \'Content-Type: application/json\' '
-                        '-H \'Accept: application/json\' '
-                        '%(endpoint)s' %
-                        dict(status=self.STATUS_FAILURE,
-                             token=self.data().get('token'),
                              endpoint=self.data().get('endpoint')))
 
     def handle_signal(self, details=None):
