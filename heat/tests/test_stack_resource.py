@@ -140,17 +140,14 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual({"foo": "bar"}, self.stack.t.files)
 
     @mock.patch.object(stack_resource.StackResource, '_nested_environment')
-    @mock.patch.object(stack_resource.parser, 'Template')
     @mock.patch.object(stack_resource.parser, 'Stack')
     def test_preview_with_implemented_child_resource(self, mock_stack_class,
-                                                     mock_template_class,
                                                      mock_env_class):
         nested_stack = mock.Mock()
         mock_stack_class.return_value = nested_stack
         nested_stack.preview_resources.return_value = 'preview_nested_stack'
-        mock_template_class.return_value = 'parsed_template'
         mock_env_class.return_value = 'environment'
-        template = template_format.parse(param_template)
+        template = parser.Template(template_format.parse(param_template))
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
         parent_resource = MyImplementedStackResource(
@@ -164,12 +161,47 @@ class StackResourceTest(HeatTestCase):
 
         result = parent_resource.preview()
         mock_env_class.assert_called_once_with(params)
-        mock_template_class.assert_called_once_with(template)
         self.assertEqual('preview_nested_stack', result)
         mock_stack_class.assert_called_once_with(
             mock.ANY,
             'test_stack-test',
-            'parsed_template',
+            template,
+            'environment',
+            disable_rollback=mock.ANY,
+            parent_resource=parent_resource,
+            owner_id=self.parent_stack.id,
+            user_creds_id=self.parent_stack.user_creds_id
+        )
+
+    @mock.patch.object(stack_resource.StackResource, '_nested_environment')
+    @mock.patch.object(stack_resource.parser, 'Stack')
+    def test_preview_with_implemented_dict_child_resource(self,
+                                                          mock_stack_class,
+                                                          mock_env_class):
+        nested_stack = mock.Mock()
+        mock_stack_class.return_value = nested_stack
+        nested_stack.preview_resources.return_value = 'preview_nested_stack'
+        mock_env_class.return_value = 'environment'
+        template_dict = template_format.parse(param_template)
+        template = parser.Template(template_dict)
+        parent_t = self.parent_stack.t
+        resource_defns = parent_t.resource_definitions(self.parent_stack)
+        parent_resource = MyImplementedStackResource(
+            'test',
+            resource_defns[self.ws_resname],
+            self.parent_stack)
+        params = {'KeyName': 'test'}
+        parent_resource.set_template(template_dict, params)
+        validation_mock = mock.Mock(return_value=None)
+        parent_resource._validate_nested_resources = validation_mock
+
+        result = parent_resource.preview()
+        mock_env_class.assert_called_once_with(params)
+        self.assertEqual('preview_nested_stack', result)
+        mock_stack_class.assert_called_once_with(
+            mock.ANY,
+            'test_stack-test',
+            template,
             'environment',
             disable_rollback=mock.ANY,
             parent_resource=parent_resource,
@@ -185,7 +217,24 @@ class StackResourceTest(HeatTestCase):
             resource_defns[self.ws_resname],
             self.parent_stack)
         stack_resource.child_template = \
-            mock.Mock(return_value={'HeatTemplateFormatVersion': '2012-12-12'})
+            mock.Mock(return_value=parser.Template(self.simple_template))
+        stack_resource.child_params = mock.Mock()
+        exc = exception.RequestLimitExceeded(message='Validation Failed')
+        validation_mock = mock.Mock(side_effect=exc)
+        stack_resource._validate_nested_resources = validation_mock
+
+        self.assertRaises(exception.RequestLimitExceeded,
+                          stack_resource.preview)
+
+    def test_preview_dict_validates_nested_resources(self):
+        parent_t = self.parent_stack.t
+        resource_defns = parent_t.resource_definitions(self.parent_stack)
+        stack_resource = MyImplementedStackResource(
+            'test',
+            resource_defns[self.ws_resname],
+            self.parent_stack)
+        stack_resource.child_template = \
+            mock.Mock(return_value=self.simple_template)
         stack_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
