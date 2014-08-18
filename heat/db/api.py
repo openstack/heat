@@ -51,8 +51,8 @@ def raw_template_create(context, values):
     return IMPL.raw_template_create(context, values)
 
 
-def raw_template_update_template(context, template_id, template):
-    return IMPL.raw_template_update_template(context, template_id, template)
+def raw_template_update(context, template_id, values):
+    return IMPL.raw_template_update(context, template_id, values)
 
 
 def resource_data_get_all(resource, data=None):

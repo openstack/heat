@@ -92,10 +92,15 @@ def raw_template_create(context, values):
     return raw_template_ref
 
 
-def raw_template_update_template(context, template_id, template):
+def raw_template_update(context, template_id, values):
     raw_template_ref = raw_template_get(context, template_id)
-    if raw_template_ref.template != template:
-        raw_template_ref.update_and_save({'template': template})
+    # get only the changed values
+    values = dict((k, v) for k, v in values.items()
+                  if getattr(raw_template_ref, k) != v)
+
+    if values:
+        raw_template_ref.update_and_save(values)
+
     return raw_template_ref
 
 
