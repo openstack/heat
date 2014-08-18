@@ -117,6 +117,15 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                 if ip['version'] == ip_version:
                     return ip['addr']
 
+    def get_status(self, server):
+        '''
+        Return the server's status.
+        :param server: server object
+        :returns: status as a string
+        '''
+        # Some clouds append extra (STATUS) strings to the status, strip it
+        return server.status.split('(')[0]
+
     def get_flavor_id(self, flavor):
         '''
         Get the id for the specified flavor name.

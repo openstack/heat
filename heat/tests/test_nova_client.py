@@ -95,6 +95,17 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                           self.nova_plugin.get_keypair, 'notakey')
         self.m.VerifyAll()
 
+    def test_get_status(self):
+        server = self.m.CreateMockAnything()
+        server.status = 'ACTIVE'
+
+        observed = self.nova_plugin.get_status(server)
+        self.assertEqual('ACTIVE', observed)
+
+        server.status = 'ACTIVE(STATUS)'
+        observed = self.nova_plugin.get_status(server)
+        self.assertEqual('ACTIVE', observed)
+
 
 class NovaUtilsRefreshServerTests(NovaClientPluginTestCase):
 

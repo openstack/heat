@@ -531,21 +531,20 @@ class Server(stack_user.StackUser):
         return self._check_active(server)
 
     def _check_active(self, server):
-
         cp = self.client_plugin()
-        if server.status != 'ACTIVE':
+        status = cp.get_status(server)
+        if status != 'ACTIVE':
             cp.refresh_server(server)
+            status = cp.get_status(server)
 
-        # Some clouds append extra (STATUS) strings to the status
-        short_server_status = server.status.split('(')[0]
-        if short_server_status in cp.deferred_server_statuses:
+        if status in cp.deferred_server_statuses:
             return False
-        elif server.status == 'ACTIVE':
+        elif status == 'ACTIVE':
             return True
-        elif server.status == 'ERROR':
+        elif status == 'ERROR':
             fault = getattr(server, 'fault', {})
             raise resource.ResourceInError(
-                resource_status=server.status,
+                resource_status=status,
                 status_reason=_("Message: %(message)s, Code: %(code)s") % {
                     'message': fault.get('message', _('Unknown')),
                     'code': fault.get('code', _('Unknown'))
