@@ -20,6 +20,7 @@ import six
 from heat.api.aws import utils as aws_utils
 from heat.common import exception
 from heat.engine import function
+from heat.engine import resource
 
 
 class FindInMap(function.Function):
@@ -172,6 +173,15 @@ class GetAtt(function.Function):
     def dependencies(self, path):
         return itertools.chain(super(GetAtt, self).dependencies(path),
                                [self._resource(path)])
+
+    def validate(self):
+        super(GetAtt, self).validate()
+        res = self._resource()
+        attr = function.resolve(self._attribute)
+        if (type(res).FnGetAtt == resource.Resource.FnGetAtt and
+                attr not in res.attributes_schema.keys()):
+            raise exception.InvalidTemplateAttribute(
+                resource=self._resource_name, key=attr)
 
     def result(self):
         attribute = function.resolve(self._attribute)
