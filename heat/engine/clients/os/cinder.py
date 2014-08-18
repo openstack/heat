@@ -32,6 +32,8 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'username': None,
             'api_key': None,
             'endpoint_type': endpoint_type,
+            'http_log_debug': self._get_client_option('cinder',
+                                                      'http_log_debug'),
             'cacert': self._get_client_option('cinder', 'ca_file'),
             'insecure': self._get_client_option('cinder', 'insecure')
         }

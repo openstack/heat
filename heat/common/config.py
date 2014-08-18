@@ -180,7 +180,7 @@ heat_client_opts = [
                help=_('Optional heat url in format like'
                       ' http://0.0.0.0:8004/v1/%(tenant_id)s.'))]
 
-nova_client_opts = [
+client_http_log_debug_opts = [
     cfg.BoolOpt('http_log_debug',
                 default=False,
                 help=_("Allow client's debug log output."))]
@@ -210,7 +210,8 @@ def list_opts():
         yield client_specific_group, clients_opts
 
     yield 'clients_heat', heat_client_opts
-    yield 'clients_nova', nova_client_opts
+    yield 'clients_nova', client_http_log_debug_opts
+    yield 'clients_cinder', client_http_log_debug_opts
 
 
 cfg.CONF.register_group(paste_deploy_group)
