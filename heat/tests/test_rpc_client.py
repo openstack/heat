@@ -18,6 +18,7 @@ Unit Tests for heat.rpc.client
 """
 
 
+import copy
 import mock
 import stubout
 import testtools
@@ -47,7 +48,12 @@ class EngineRpcAPITestCase(testtools.TestCase):
         expected_retval = 'foo' if method == 'call' else None
 
         kwargs.pop('version', None)
-        expected_msg = self.rpcapi.make_msg(method, **kwargs)
+
+        if 'expected_message' in kwargs:
+            expected_message = kwargs['expected_message']
+            del kwargs['expected_message']
+        else:
+            expected_message = self.rpcapi.make_msg(method, **kwargs)
 
         cast_and_call = ['delete_stack']
         if rpc_method == 'call' and method in cast_and_call:
@@ -59,7 +65,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
             retval = getattr(self.rpcapi, method)(ctxt, **kwargs)
 
             self.assertEqual(expected_retval, retval)
-            expected_args = [ctxt, expected_msg, mock.ANY]
+            expected_args = [ctxt, expected_message, mock.ANY]
             actual_args, _ = mock_rpc_method.call_args
             for expected_arg, actual_arg in zip(expected_args,
                                                 actual_args):
@@ -103,11 +109,16 @@ class EngineRpcAPITestCase(testtools.TestCase):
                               args={'timeout_mins': u'30'})
 
     def test_create_stack(self):
-        self._test_engine_api('create_stack', 'call', stack_name='wordpress',
-                              template={u'Foo': u'bar'},
-                              params={u'InstanceType': u'm1.xlarge'},
-                              files={u'a_file': u'the contents'},
-                              args={'timeout_mins': u'30'})
+        kwargs = dict(stack_name='wordpress',
+                      template={u'Foo': u'bar'},
+                      params={u'InstanceType': u'm1.xlarge'},
+                      files={u'a_file': u'the contents'},
+                      args={'timeout_mins': u'30'})
+        call_kwargs = copy.deepcopy(kwargs)
+        call_kwargs['owner_id'] = None
+        expected_message = self.rpcapi.make_msg('create_stack', **call_kwargs)
+        kwargs['expected_message'] = expected_message
+        self._test_engine_api('create_stack', 'call', **kwargs)
 
     def test_update_stack(self):
         self._test_engine_api('update_stack', 'call',
