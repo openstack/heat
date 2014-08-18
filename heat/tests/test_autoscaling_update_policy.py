@@ -13,6 +13,7 @@
 
 import copy
 import json
+import six
 
 import mox
 from oslo.config import cfg
@@ -367,17 +368,27 @@ class AutoScalingGroupTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_parse_with_bad_update_policy(self):
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy)
         stack = utils.parse_stack(tmpl)
-        self.assertRaises(exception.StackValidationFailed, stack.validate)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("foo", six.text_type(error))
 
     def test_parse_with_bad_pausetime_in_update_policy(self):
+        self.stub_ImageConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
         group = tmpl['Resources']['WebServerGroup']
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
         policy['PauseTime'] = 'P1YT1H'
         stack = utils.parse_stack(tmpl)
-        self.assertRaises(exception.StackValidationFailed, stack.validate)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("Only ISO 8601 duration format", six.text_type(error))
 
     def validate_update_policy_diff(self, current, updated):
 
