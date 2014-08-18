@@ -302,7 +302,8 @@ class Join(function.Function):
             if s is None:
                 return ''
             if not isinstance(s, basestring):
-                raise TypeError(_('Items to join must be strings'))
+                raise TypeError(
+                    _('Items to join must be strings %s') % (repr(s)[:200]))
             return s
 
         return delim.join(ensure_string(s) for s in strings)

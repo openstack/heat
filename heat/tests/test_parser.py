@@ -852,6 +852,14 @@ class ResolveDataTest(HeatTestCase):
                                    [' ', ['foo', 'bar']]}, 'baz']]}
         self.assertEqual('foo bar\nbaz', self.resolve(raw))
 
+    def test_join_not_string(self):
+        snippet = {'Fn::Join': ['\n', [{'Fn::Join':
+                                        [' ', ['foo', 45]]}, 'baz']]}
+        error = self.assertRaises(TypeError,
+                                  self.resolve,
+                                  snippet)
+        self.assertIn('45', six.text_type(error))
+
     def test_base64_replace(self):
         raw = {'Fn::Base64': {'Fn::Replace': [
             {'foo': 'bar'}, 'Meet at the foo']}}
