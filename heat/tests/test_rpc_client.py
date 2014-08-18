@@ -39,29 +39,24 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self.identity = dict(identifier.HeatIdentifier('engine_test_tenant',
                                                        '6',
                                                        'wordpress'))
+        self.rpcapi = rpc_client.EngineClient()
         super(EngineRpcAPITestCase, self).setUp()
 
     def _test_engine_api(self, method, rpc_method, **kwargs):
         ctxt = utils.dummy_context()
-        if 'rpcapi_class' in kwargs:
-            rpcapi_class = kwargs['rpcapi_class']
-            del kwargs['rpcapi_class']
-        else:
-            rpcapi_class = rpc_client.EngineClient
-        rpcapi = rpcapi_class()
         expected_retval = 'foo' if method == 'call' else None
 
         kwargs.pop('version', None)
-        expected_msg = rpcapi.make_msg(method, **kwargs)
+        expected_msg = self.rpcapi.make_msg(method, **kwargs)
 
         cast_and_call = ['delete_stack']
         if rpc_method == 'call' and method in cast_and_call:
             kwargs['cast'] = False
 
-        with mock.patch.object(rpcapi, rpc_method) as mock_rpc_method:
+        with mock.patch.object(self.rpcapi, rpc_method) as mock_rpc_method:
             mock_rpc_method.return_value = expected_retval
 
-            retval = getattr(rpcapi, method)(ctxt, **kwargs)
+            retval = getattr(self.rpcapi, method)(ctxt, **kwargs)
 
             self.assertEqual(expected_retval, retval)
             expected_args = [ctxt, expected_msg, mock.ANY]
