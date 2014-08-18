@@ -929,7 +929,6 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.delete)()
-        self.assertIsNone(server.resource_id)
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
@@ -947,12 +946,6 @@ class ServersTest(HeatTestCase):
         get().AndRaise(fakes_v1_1.fake_exception())
         mox.Replay(get)
 
-        scheduler.TaskRunner(server.delete)()
-        self.assertIsNone(server.resource_id)
-        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
-        self.m.VerifyAll()
-
-        server.state_set(server.CREATE, server.COMPLETE, 'to delete again')
         scheduler.TaskRunner(server.delete)()
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
         self.m.VerifyAll()

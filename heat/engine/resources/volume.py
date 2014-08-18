@@ -166,7 +166,6 @@ class Volume(resource.Resource):
                     vol.get()
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
-                self.resource_id_set(None)
 
     def handle_snapshot_delete(self, state):
         backup = state not in ((self.CREATE, self.FAILED),

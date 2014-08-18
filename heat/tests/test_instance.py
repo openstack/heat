@@ -541,7 +541,6 @@ class InstancesTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.delete)()
-        self.assertIsNone(instance.resource_id)
         self.assertEqual((instance.DELETE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 

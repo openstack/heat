@@ -214,7 +214,6 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_delete_overlimit(self):
@@ -237,7 +236,6 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_delete_resource_none(self):
@@ -265,7 +263,6 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_invalid_attribute(self):

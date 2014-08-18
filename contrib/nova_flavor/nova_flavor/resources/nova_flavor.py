@@ -118,8 +118,6 @@ class NovaFlavor(resource.Resource):
         except Exception as e:
             self.client_plugin('nova').ignore_not_found(e)
 
-        self.resource_id_set(None)
-
 
 def resource_mapping():
     return {

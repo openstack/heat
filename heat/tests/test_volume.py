@@ -217,10 +217,6 @@ class VolumeTest(HeatTestCase):
         fv.status = 'available'
         scheduler.TaskRunner(rsrc.destroy)()
 
-        # Test when volume already deleted
-        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
-        scheduler.TaskRunner(rsrc.destroy)()
-
         self.m.VerifyAll()
 
     def test_volume_default_az(self):

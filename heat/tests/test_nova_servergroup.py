@@ -96,7 +96,6 @@ class NovaServerGroupTest(HeatTestCase):
         self.sg_mgr.delete.assert_called_once_with('test')
         self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),
                          self.sg.state)
-        self.assertIsNone(self.sg.resource_id)
 
     def test_sg_delete_not_found(self):
         self._create_sg('test')
@@ -105,4 +104,3 @@ class NovaServerGroupTest(HeatTestCase):
         self.sg_mgr.delete.assert_called_once_with('test')
         self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),
                          self.sg.state)
-        self.assertIsNone(self.sg.resource_id)

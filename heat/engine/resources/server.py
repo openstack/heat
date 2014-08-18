@@ -984,7 +984,6 @@ class Server(stack_user.StackUser):
 
     def check_delete_complete(self, deleter):
         if deleter is None or deleter.step():
-            self.resource_id_set(None)
             return True
         return False
 

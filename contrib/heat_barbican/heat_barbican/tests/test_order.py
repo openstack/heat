@@ -143,7 +143,6 @@ class TestOrder(HeatTestCase):
         self.assertEqual('foo', res.resource_id)
 
         scheduler.TaskRunner(res.delete)()
-        self.assertIsNone(res.resource_id)
         self.barbican.orders.delete.assert_called_once_with('foo')
 
     @mock.patch.object(client, 'barbican_client', new=mock.Mock())
