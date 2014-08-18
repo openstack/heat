@@ -79,6 +79,11 @@ def main():
             logger.error("Unexpected filtered list response, please upgrade "
                          "keystoneclient to >= 0.5")
             sys.exit(1)
+    except kc_exception.Forbidden:
+        logger.error("User '%s' is not authorized to perform this "
+                     "operation, please try with other OS_USERNAME setting." %
+                     USERNAME)
+        sys.exit(1)
 
     # Create heat domain admin user
     if not HEAT_DOMAIN_PASSWORD:
