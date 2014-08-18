@@ -108,11 +108,12 @@ class FaultWrapper(wsgi.Middleware):
 
         ex_type = ex.__class__.__name__
 
-        if ex_type.endswith('_Remote'):
+        is_remote = ex_type.endswith('_Remote')
+        if is_remote:
             ex_type = ex_type[:-len('_Remote')]
 
         full_message = unicode(ex)
-        if full_message.find('\n') > -1:
+        if full_message.find('\n') > -1 and is_remote:
             message, msg_trace = full_message.split('\n', 1)
         else:
             msg_trace = traceback.format_exc()
