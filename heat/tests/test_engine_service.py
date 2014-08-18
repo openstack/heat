@@ -443,7 +443,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, owner_id=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -493,7 +493,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     stack.env).AndReturn(stack)
+                     stack.env,
+                     owner_id=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -548,19 +549,19 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_pwd, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, owner_id=None).AndReturn(stack)
 
         parser.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_user, stack.name,
-                     stack.t, stack.env).AndReturn(stack)
+                     stack.t, stack.env, owner_id=None).AndReturn(stack)
 
         self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.create_stack,
                                ctx_no_pwd, stack_name,
-                               template, params, None, {})
+                               template, params, None, {}, None)
         self.assertEqual(ex.exc_info[0], exception.MissingCredentialError)
         self.assertEqual(
             'Missing required credential: X-Auth-Key',
@@ -598,7 +599,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     stack.env).AndReturn(stack)
+                     stack.env,
+                     owner_id=None).AndReturn(stack)
 
         self.m.ReplayAll()
 

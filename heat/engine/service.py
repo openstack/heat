@@ -500,13 +500,15 @@ class EngineService(service.Service):
             raise exception.RequestLimitExceeded(message=message)
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
-                                           params, files, args):
+                                           params, files, args, owner_id=None):
         tmpl = parser.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
         common_params = api.extract_args(args)
         env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl, env, **common_params)
+        stack = parser.Stack(cnxt, stack_name, tmpl, env,
+                             owner_id=owner_id,
+                             **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
         stack.validate()
@@ -539,7 +541,8 @@ class EngineService(service.Service):
         return api.format_stack_preview(stack)
 
     @request_context
-    def create_stack(self, cnxt, stack_name, template, params, files, args):
+    def create_stack(self, cnxt, stack_name, template, params, files, args,
+                     owner_id=None):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -552,6 +555,8 @@ class EngineService(service.Service):
         :param params: Stack Input Params
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
+        :param owner_id: parent stack ID for nested stacks, only expected when
+                         called from another heat-engine (not a user option)
         """
         LOG.info(_('Creating stack %s') % stack_name)
 
@@ -575,7 +580,8 @@ class EngineService(service.Service):
                                                         template,
                                                         params,
                                                         files,
-                                                        args)
+                                                        args,
+                                                        owner_id)
 
         stack.store()
 
