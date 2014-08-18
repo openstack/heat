@@ -1196,7 +1196,7 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv2)
 
         self.cinder_fc.volumes.extend(fv.id, 2).AndRaise(
-            cinder_exp.OverLimit)
+            cinder_exp.OverLimit(413))
 
         self.m.ReplayAll()
 
@@ -1215,7 +1215,8 @@ class VolumeTest(HeatTestCase):
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
-        self.assertRaises(exception.ResourceFailure, update_task)
+        ex = self.assertRaises(exception.ResourceFailure, update_task)
+        self.assertIn('Over limit', six.text_type(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
