@@ -17,13 +17,13 @@
 import mox
 from mox import IgnoreArg
 from neutronclient.common import exceptions as qe
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 import six
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import network_gateway
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -104,8 +104,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
-        self.m.StubOutWithMock(neutron_utils.neutronV20,
-                               'find_resourceid_by_name_or_id')
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
     def prepare_create_network_gateway(self, resolve_neutron=True):
@@ -142,7 +141,7 @@ class NeutronNetworkGatewayTest(HeatTestCase):
             }
         })
         if resolve_neutron:
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
                 '6af055d3-26f6-48dd-a597-7611d7e58d35'
@@ -161,12 +160,12 @@ class NeutronNetworkGatewayTest(HeatTestCase):
     def _test_network_gateway_create(self, resolve_neutron=True):
         rsrc = self.prepare_create_network_gateway(resolve_neutron)
         if resolve_neutron:
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
                 '6af055d3-26f6-48dd-a597-7611d7e58d35'
             ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
                 '6af055d3-26f6-48dd-a597-7611d7e58d35'
@@ -231,32 +230,32 @@ class NeutronNetworkGatewayTest(HeatTestCase):
 
     def test_network_gateway_update(self):
         rsrc = self.prepare_create_network_gateway()
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'
         ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
             '6af055d3-26f6-48dd-a597-7611d7e58d35'

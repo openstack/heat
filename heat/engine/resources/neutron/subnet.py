@@ -15,7 +15,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
 
@@ -204,8 +203,7 @@ class Subnet(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        neutron_utils.resolve_network(
-            self.neutron(), props, self.NETWORK, 'network_id')
+        self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
         self._null_gateway_ip(props)
 
         subnet = self.neutron().create_subnet({'subnet': props})['subnet']

@@ -14,7 +14,6 @@
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
 from heat.openstack.common import log as logging
@@ -223,8 +222,7 @@ class Port(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        neutron_utils.resolve_network(self.neutron(),
-                                      props, self.NETWORK, 'network_id')
+        self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
         self._prepare_list_properties(props)
 
         port = self.neutron().create_port({'port': props})['port']
@@ -236,9 +234,8 @@ class Port(neutron.NeutronResource):
                 if value is None:
                     fixed_ip.pop(key)
             if fixed_ip.get(self.FIXED_IP_SUBNET):
-                neutron_utils.resolve_subnet(
-                    self.neutron(), fixed_ip,
-                    self.FIXED_IP_SUBNET, 'subnet_id')
+                self.client_plugin().resolve_subnet(
+                    fixed_ip, self.FIXED_IP_SUBNET, 'subnet_id')
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
         for pair in props.get(self.ALLOWED_ADDRESS_PAIRS, []):
