@@ -446,6 +446,16 @@ class Instance(resource.Resource):
                  {'name': self.name, 'attname': name, 'res': res})
         return unicode(res) if res else None
 
+    def _port_data_delete(self):
+        # delete the port data which implicit-created
+        port_id = self.data().get('port_id')
+        if port_id:
+            try:
+                self.neutron().delete_port(port_id)
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
+            self.data_delete('port_id')
+
     def _build_nics(self, network_interfaces,
                     security_groups=None, subnet_id=None):
 
@@ -487,6 +497,12 @@ class Instance(resource.Resource):
                                 security_groups, self.neutron())
 
                     port = neutronclient.create_port({'port': props})['port']
+
+                    # after create the port, set the port-id to
+                    # resource data, so that the port can be deleted on
+                    # instance delete.
+                    self.data_set('port_id', port['id'])
+
                     nics = [{'port-id': port['id']}]
 
         return nics
@@ -566,6 +582,7 @@ class Instance(resource.Resource):
         nics = self._build_nics(self.properties[self.NETWORK_INTERFACES],
                                 security_groups=security_groups,
                                 subnet_id=self.properties[self.SUBNET_ID])
+
         block_device_mapping = self._build_block_device_mapping(
             self.properties.get(self.BLOCK_DEVICE_MAPPINGS))
 
@@ -734,6 +751,8 @@ class Instance(resource.Resource):
                     checker = scheduler.TaskRunner(server.interface_detach,
                                                    iface.port_id)
                     checkers.append(checker)
+                # first to delete the port which implicit-created by heat
+                self._port_data_delete()
                 nics = self._build_nics(new_network_ifaces,
                                         security_groups=security_groups,
                                         subnet_id=subnet_id)
@@ -816,6 +835,9 @@ class Instance(resource.Resource):
         return scheduler.PollingTaskGroup(detach_tasks)
 
     def handle_delete(self):
+        # make sure to delete the port which implicit-created by heat
+        self._port_data_delete()
+
         if self.resource_id is None:
             return
         try:
