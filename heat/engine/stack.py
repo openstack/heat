@@ -931,11 +931,8 @@ class Stack(collections.Mapping):
     def delete_snapshot(self, snapshot):
         '''Remove a snapshot from the backends.'''
         for name, rsrc in self.resources.iteritems():
-            handle_delete_snapshot = getattr(
-                rsrc, 'handle_delete_snapshot', None)
-            if callable(handle_delete_snapshot):
-                data = snapshot.data['resources'].get(name)
-                handle_delete_snapshot(data)
+            data = snapshot.data['resources'].get(name)
+            scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
     def output(self, key):
         '''

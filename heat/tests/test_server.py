@@ -22,6 +22,7 @@ from novaclient import exceptions as nova_exceptions
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import nova
@@ -2517,7 +2518,19 @@ class ServersTest(HeatTestCase):
         self.assertEqual('StackValidationFailed: Property error : WebServer: '
                          'image The Image (Update Image) could not be found.',
                          six.text_type(err))
+        self.m.VerifyAll()
 
+    def test_server_snapshot(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        server = self._create_test_server(return_server,
+                                          'test_server_snapshot')
+        scheduler.TaskRunner(server.snapshot)()
+
+        self.assertEqual((server.SNAPSHOT, server.COMPLETE), server.state)
+
+        self.assertEqual({'snapshot_image_id': '1'},
+                         db_api.resource_data_get_all(server))
         self.m.VerifyAll()
 
     def test_server_dont_validate_personality_if_personality_isnt_set(self):
