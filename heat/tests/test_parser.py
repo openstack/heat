@@ -3396,6 +3396,22 @@ class StackTest(HeatTestCase):
         db_stack = db_api.stack_get(self.ctx, self.stack.id)
         self.assertEqual('foobar', db_stack.username)
 
+    def test_store_backup_true(self):
+        self.stack = parser.Stack(self.ctx, 'username_stack',
+                                  self.tmpl, username='foobar')
+        self.ctx.username = 'not foobar'
+        self.stack.store(backup=True)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertTrue(db_stack.backup)
+
+    def test_store_backup_false(self):
+        self.stack = parser.Stack(self.ctx, 'username_stack',
+                                  self.tmpl, username='foobar')
+        self.ctx.username = 'not foobar'
+        self.stack.store(backup=False)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertFalse(db_stack.backup)
+
     def test_init_stored_context_false(self):
         ctx_init = utils.dummy_context(user='mystored_user',
                                        password='mystored_pass')

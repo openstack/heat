@@ -289,7 +289,8 @@ class Stack(collections.Mapping):
             'disable_rollback': self.disable_rollback,
             'stack_user_project_id': self.stack_user_project_id,
             'updated_at': self.updated_time,
-            'user_creds_id': self.user_creds_id
+            'user_creds_id': self.user_creds_id,
+            'backup': backup
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)

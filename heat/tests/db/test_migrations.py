@@ -250,3 +250,45 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_040(self, engine, data):
         self.assertColumnNotExists(engine, 'software_deployment', 'signal_id')
+
+    def _pre_upgrade_045(self, engine):
+        raw_template = get_table(engine, 'raw_template')
+        templ = [dict(id=5, template='{}')]
+        engine.execute(raw_template.insert(), templ)
+
+        user_creds = get_table(engine, 'user_creds')
+        user = [dict(id=6, username='steve', password='notthis',
+                     tenant='mine', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='')]
+        engine.execute(user_creds.insert(), user)
+
+        stack = get_table(engine, 'stack')
+        stack_ids = [('s1', '967aaefb-152e-505d-b13a-35d4c816390c'),
+                     ('s2', '9e9deba9-a303-5f29-84d3-c8165647c47e'),
+                     ('s1*', '9a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9')]
+        data = [dict(id=ll_id, name=name,
+                     raw_template_id=templ[0]['id'],
+                     user_creds_id=user[0]['id'],
+                     username='steve', disable_rollback=True)
+                for name, ll_id in stack_ids]
+        data[2]['owner_id'] = '967aaefb-152e-505d-b13a-35d4c816390c'
+
+        engine.execute(stack.insert(), data)
+        return data
+
+    def _check_045(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'backup')
+        stack_table = get_table(engine, 'stack')
+        stacks_in_db = list(stack_table.select().execute())
+        stack_names_in_db = [s.name for s in stacks_in_db]
+        # Assert the expected stacks are still there
+        for stack in data:
+            self.assertIn(stack['name'], stack_names_in_db)
+        # And that the backup flag is set as expected
+        for stack in stacks_in_db:
+            if stack.name.endswith('*'):
+                self.assertTrue(stack.backup)
+            else:
+                self.assertFalse(stack.backup)
