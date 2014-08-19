@@ -855,6 +855,12 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         'min_in_service', 'max_batch_size', 'pause_time',
     )
 
+    ATTRIBUTES = (
+        OUTPUTS, OUTPUTS_LIST,
+    ) = (
+        'outputs', 'outputs_list',
+    )
+
     properties_schema = {
         RESOURCE: properties.Schema(
             properties.Schema.MAP,
@@ -916,9 +922,15 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         ),
     }
 
-    # Override the InstanceGroup attributes_schema; we don't want any
-    # attributes.
-    attributes_schema = {}
+    attributes_schema = {
+        OUTPUTS: attributes.Schema(
+            _("A map of resource names to the specified attribute of each "
+              "individual resource.")
+        ),
+        OUTPUTS_LIST: attributes.Schema(
+            _("A list of the specified attribute of each individual resource.")
+        ),
+    }
 
     def _get_instance_definition(self):
         rsrc = self.properties[self.RESOURCE]
@@ -948,6 +960,18 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         return super(AutoScalingResourceGroup,
                      self)._create_template(num_instances, num_replace,
                                             template_version=template_version)
+
+    def FnGetAtt(self, key, *path):
+        if path:
+            attrs = ((rsrc.name,
+                      rsrc.FnGetAtt(*path)) for rsrc in self.get_instances())
+            if key == self.OUTPUTS:
+                return dict(attrs)
+            if key == self.OUTPUTS_LIST:
+                return [value for name, value in attrs]
+
+        raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                 key=key)
 
 
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):

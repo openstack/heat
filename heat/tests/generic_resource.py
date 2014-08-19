@@ -74,6 +74,10 @@ class ResourceWithProps(GenericResource):
     properties_schema = {'Foo': {'Type': 'String'}}
 
 
+class ResourceWithPropsAndAttrs(ResourceWithProps):
+    attributes_schema = {'Bar': attributes.Schema('Something.')}
+
+
 class ResourceWithResourceID(GenericResource):
     properties_schema = {'ID': {'Type': 'String'}}
 
