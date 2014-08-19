@@ -152,10 +152,22 @@ class EngineClient(object):
         :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
         """
+        return self._create_stack(ctxt, stack_name, template, params, files,
+                                  args)
+
+    def _create_stack(self, ctxt, stack_name, template, params, files, args,
+                      owner_id=None):
+        """
+        Internal create_stack interface for engine-to-engine communication via
+        RPC.  Allows some additional options which should not be exposed to
+        users via the API:
+        :param owner_id: parent stack ID for nested stacks
+        """
         return self.call(ctxt,
                          self.make_msg('create_stack', stack_name=stack_name,
                                        template=template,
-                                       params=params, files=files, args=args))
+                                       params=params, files=files, args=args,
+                                       owner_id=owner_id))
 
     def update_stack(self, ctxt, stack_identity, template, params,
                      files, args):
