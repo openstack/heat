@@ -831,7 +831,11 @@ class LaunchConfiguration(resource.Resource):
             raise resource.UpdateReplace(self.name)
 
     def FnGetRefId(self):
-        return unicode(self.physical_resource_name())
+        res_name = self.physical_resource_name()
+        if res_name is not None:
+            return unicode(res_name)
+        else:
+            return super(LaunchConfiguration, self).FnGetRefId()
 
 
 class AutoScalingResourceGroup(AutoScalingGroup):
