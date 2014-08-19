@@ -12,14 +12,19 @@
 #    under the License.
 
 from neutronclient.neutron import v2_0 as neutronV20
+import warnings
 
 
 def find_neutron_resource(neutron_client, props, key, key_type):
+    warnings.warn('neutron_utils.find_neutron_resource is deprecated. '
+                  'Use self.client_plugin("neutron").find_neutron_resource')
     return neutronV20.find_resourceid_by_name_or_id(
         neutron_client, key_type, props.get(key))
 
 
 def resolve_network(neutron_client, props, net_key, net_id_key):
+    warnings.warn('neutron_utils.resolve_network is deprecated. '
+                  'Use self.client_plugin("neutron").resolve_network')
     if props.get(net_key):
         props[net_id_key] = find_neutron_resource(
             neutron_client, props, net_key, 'network')
@@ -28,6 +33,8 @@ def resolve_network(neutron_client, props, net_key, net_id_key):
 
 
 def resolve_subnet(neutron_client, props, subnet_key, subnet_id_key):
+    warnings.warn('neutron_utils.resolve_subnet is deprecated. '
+                  'Use self.client_plugin("neutron").resolve_subnet')
     if props.get(subnet_key):
         props[subnet_id_key] = find_neutron_resource(
             neutron_client, props, subnet_key, 'subnet')
