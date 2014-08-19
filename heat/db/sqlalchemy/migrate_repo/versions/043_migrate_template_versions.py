@@ -52,6 +52,7 @@ def upgrade(migrate_engine):
                     template[key] = date
                     raw_template.template = template
                     session.commit()
+    session.close()
 
 
 def downgrade(migrate_engine):

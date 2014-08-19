@@ -22,99 +22,78 @@ if possible.
 
 import datetime
 import os
-import shutil
-import subprocess
-import tempfile
 import uuid
 
 from migrate.versioning import repository
+from oslo.db.sqlalchemy import test_base
 from oslo.db.sqlalchemy import test_migrations
-from six.moves.urllib import parse as urlparse
-import sqlalchemy
+from oslo.db.sqlalchemy import utils
+import pkg_resources as pkg
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
-from heat.openstack.common import log as logging
 from heat.tests import common
 
-LOG = logging.getLogger(__name__)
 
-
-def get_table(engine, name):
-    """Returns an sqlalchemy table dynamically from db.
-
-    Needed because the models don't work for us in migrations
-    as models will be far out of sync with the current data.
-    """
-    metadata = sqlalchemy.MetaData()
-    metadata.bind = engine
-    return sqlalchemy.Table(name, metadata, autoload=True)
-
-
-class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
-                         test_migrations.WalkVersionsMixin,
-                         common.FakeLogMixin):
+class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
+                             common.FakeLogMixin):
     """Test sqlalchemy-migrate migrations."""
 
-    def __init__(self, *args, **kwargs):
-        super(TestHeatMigrations, self).__init__(*args, **kwargs)
+    snake_walk = False
+    downgrade = False
 
-        self.DEFAULT_CONFIG_FILE = os.path.join(os.path.dirname(__file__),
-                                                'test_migrations.conf')
-        # Test machines can set the TEST_MIGRATIONS_CONF variable
-        # to override the location of the config file for migration testing
-        self.CONFIG_FILE_PATH = os.environ.get('TEST_MIGRATIONS_CONF',
-                                               self.DEFAULT_CONFIG_FILE)
-        self.MIGRATE_FILE = migrate_repo.__file__
-        self.REPOSITORY = repository.Repository(
-            os.path.abspath(os.path.dirname(self.MIGRATE_FILE)))
+    @property
+    def INIT_VERSION(self):
+        return migration.INIT_VERSION
 
-    def setUp(self):
-        lock_dir = tempfile.mkdtemp()
-        os.environ["OSLO_LOCK_PATH"] = lock_dir
+    @property
+    def REPOSITORY(self):
+        migrate_file = migrate_repo.__file__
+        return repository.Repository(
+            os.path.abspath(os.path.dirname(migrate_file))
+        )
 
-        super(TestHeatMigrations, self).setUp()
-        self.setup_logging()
+    @property
+    def migration_api(self):
+        temp = __import__('oslo.db.sqlalchemy.migration', globals(),
+                          locals(), ['versioning_api'], -1)
+        return temp.versioning_api
 
-        def clean_lock_dir():
-            shutil.rmtree(lock_dir, ignore_errors=True)
-
-        self.addCleanup(clean_lock_dir)
-        self.snake_walk = False
-        self.downgrade = False
-        self.INIT_VERSION = migration.INIT_VERSION
-        if self.migration_api is None:
-            temp = __import__('oslo.db.sqlalchemy.migration',
-                              globals(), locals(),
-                              ['versioning_api'], -1)
-            self.migration_api = temp.versioning_api
+    @property
+    def migrate_engine(self):
+        return self.engine
 
     def test_walk_versions(self):
-        for key, engine in self.engines.items():
-            self._walk_versions(engine, self.snake_walk, self.downgrade)
+        # TODO(viktors): Refactor this method, when we will be totally sure,
+        #                that Heat use oslo.db>=0.4.0
+        try:
+            pkg.require('oslo.db>=0.4.0')
+            self._walk_versions(self.snake_walk, self.downgrade)
+        except pkg.VersionConflict:
+            self._walk_versions(self.engine, self.snake_walk, self.downgrade)
 
     def assertColumnExists(self, engine, table, column):
-        t = get_table(engine, table)
+        t = utils.get_table(engine, table)
         self.assertIn(column, t.c)
 
     def assertColumnNotExists(self, engine, table, column):
-        t = get_table(engine, table)
+        t = utils.get_table(engine, table)
         self.assertNotIn(column, t.c)
 
     def assertColumnIsNullable(self, engine, table, column):
-        t = get_table(engine, table)
+        t = utils.get_table(engine, table)
         col = getattr(t.c, column)
         self.assertTrue(col.nullable)
 
     def assertIndexExists(self, engine, table, index):
-        t = get_table(engine, table)
+        t = utils.get_table(engine, table)
         index_names = [idx.name for idx in t.indexes]
         self.assertIn(index, index_names)
 
     def assertIndexMembers(self, engine, table, index, members):
         self.assertIndexExists(engine, table, index)
 
-        t = get_table(engine, table)
+        t = utils.get_table(engine, table)
         index_columns = None
         for idx in t.indexes:
             if idx.name == index:
@@ -123,38 +102,12 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
         self.assertEqual(sorted(members), sorted(index_columns))
 
-    def _load_mysql_dump_file(self, engine, file_name):
-        for key, eng in self.engines.items():
-            if eng is engine:
-                conn_string = self.test_databases[key]
-                conn_pieces = urlparse.urlparse(conn_string)
-                if conn_string.startswith('mysql'):
-                    break
-                else:
-                    return
-
-        (user, password, database, host) = \
-            test_migrations.get_db_connection_info(conn_pieces)
-        cmd = ('mysql -u \"%(user)s\" -p\"%(password)s\" -h %(host)s %(db)s '
-               ) % {'user': user, 'password': password,
-                    'host': host, 'db': database}
-        file_path = os.path.join(os.path.dirname(__file__),
-                                 file_name)
-        with open(file_path) as sql_file:
-            process = subprocess.Popen(cmd, shell=True,
-                                       stdout=subprocess.PIPE,
-                                       stdin=sql_file,
-                                       stderr=subprocess.STDOUT)
-            output = process.communicate()[0]
-            self.assertEqual(0, process.returncode,
-                             "Failed to run: %s\n%s" % (cmd, output))
-
     def _pre_upgrade_031(self, engine):
-        raw_template = get_table(engine, 'raw_template')
+        raw_template = utils.get_table(engine, 'raw_template')
         templ = [dict(id=3, template='{}')]
         engine.execute(raw_template.insert(), templ)
 
-        user_creds = get_table(engine, 'user_creds')
+        user_creds = utils.get_table(engine, 'user_creds')
         user = [dict(id=4, username='angus', password='notthis',
                      tenant='mine', auth_url='bla',
                      tenant_id=str(uuid.uuid4()),
@@ -162,7 +115,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
                      trustor_user_id='')]
         engine.execute(user_creds.insert(), user)
 
-        stack = get_table(engine, 'stack')
+        stack = utils.get_table(engine, 'stack')
         stack_ids = ['967aaefb-152e-405d-b13a-35d4c816390c',
                      '9e9deba9-a303-4f29-84d3-c8165647c47e',
                      '9a4bd1ec-8b21-46cd-964a-f66cb1cfa2f9']
@@ -186,7 +139,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _pre_upgrade_035(self, engine):
         #The stacks id are for the 33 version migration
-        event_table = get_table(engine, 'event')
+        event_table = utils.get_table(engine, 'event')
         data = [{
             'id': '22222222-152e-405d-b13a-35d4c816390c',
             'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',
@@ -216,7 +169,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         self.assertColumnExists(engine, 'event', 'id')
         self.assertColumnExists(engine, 'event', 'uuid')
 
-        event_table = get_table(engine, 'event')
+        event_table = utils.get_table(engine, 'event')
         events_in_db = list(event_table.select().execute())
         last_id = 0
         for index, event in enumerate(data):
@@ -252,11 +205,11 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         self.assertColumnNotExists(engine, 'software_deployment', 'signal_id')
 
     def _pre_upgrade_045(self, engine):
-        raw_template = get_table(engine, 'raw_template')
+        raw_template = utils.get_table(engine, 'raw_template')
         templ = [dict(id=5, template='{}')]
         engine.execute(raw_template.insert(), templ)
 
-        user_creds = get_table(engine, 'user_creds')
+        user_creds = utils.get_table(engine, 'user_creds')
         user = [dict(id=6, username='steve', password='notthis',
                      tenant='mine', auth_url='bla',
                      tenant_id=str(uuid.uuid4()),
@@ -264,7 +217,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
                      trustor_user_id='')]
         engine.execute(user_creds.insert(), user)
 
-        stack = get_table(engine, 'stack')
+        stack = utils.get_table(engine, 'stack')
         stack_ids = [('s1', '967aaefb-152e-505d-b13a-35d4c816390c'),
                      ('s2', '9e9deba9-a303-5f29-84d3-c8165647c47e'),
                      ('s1*', '9a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9')]
@@ -280,7 +233,7 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_045(self, engine, data):
         self.assertColumnExists(engine, 'stack', 'backup')
-        stack_table = get_table(engine, 'stack')
+        stack_table = utils.get_table(engine, 'stack')
         stacks_in_db = list(stack_table.select().execute())
         stack_names_in_db = [s.name for s in stacks_in_db]
         # Assert the expected stacks are still there
@@ -292,3 +245,18 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
                 self.assertTrue(stack.backup)
             else:
                 self.assertFalse(stack.backup)
+
+
+class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
+                              test_base.MySQLOpportunisticTestCase):
+    pass
+
+
+class TestHeatMigrationsPostgreSQL(HeatMigrationsCheckers,
+                                   test_base.PostgreSQLOpportunisticTestCase):
+    pass
+
+
+class TestHeatMigrationsSQLite(HeatMigrationsCheckers,
+                               test_base.DbTestCase):
+    pass
