@@ -14,6 +14,7 @@
 import collections
 import copy
 import six
+from six.moves.urllib import parse as urlparse
 import uuid
 
 import mock
@@ -26,12 +27,14 @@ from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import nova
+from heat.engine.clients.os import swift
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import server as servers
 from heat.engine import scheduler
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
@@ -667,6 +670,77 @@ class ServersTest(HeatTestCase):
                                         resource_defns['WebServer'], stack)
         self.assertEqual('1234', created_server._get_user_id())
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
+
+        self.m.VerifyAll()
+
+    def test_server_create_software_config_poll_temp_url(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'software_config_s'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        props = tmpl.t['Resources']['WebServer']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('WebServer',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        self.m.StubOutWithMock(swift.SwiftClientPlugin, '_create')
+
+        sc = mock.Mock()
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.2'
+
+        swift.SwiftClientPlugin._create().AndReturn(sc)
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 744)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=[],
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None, files={},
+            admin_pass=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+
+        metadata_put_url = server.data().get('metadata_put_url')
+        md = server.metadata_get()
+        metadata_url = md['os-collect-config']['request']['metadata_url']
+        self.assertNotEqual(metadata_url, metadata_put_url)
+
+        container_name = server.physical_resource_name()
+        object_name = server.data().get('metadata_object_name')
+        self.assertTrue(uuidutils.is_uuid_like(object_name))
+        test_path = '/v1/AUTH_test_tenant_id/%s/%s' % (
+            server.physical_resource_name(), object_name)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
+
+        self.assertEqual({
+            'os-collect-config': {
+                'request': {
+                    'metadata_url': metadata_url
+                }
+            },
+            'deployments': []
+        }, server.metadata_get())
+
+        sc.head_container.return_value = {'x-container-object-count': '0'}
+        server._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container_name, object_name)
+        sc.head_container.assert_called_once_with(container_name)
+        sc.delete_container.assert_called_once_with(container_name)
 
         self.m.VerifyAll()
 

@@ -26,6 +26,7 @@ from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 
@@ -77,9 +78,9 @@ class Server(stack_user.StackUser):
     )
 
     _SOFTWARE_CONFIG_TRANSPORTS = (
-        POLL_SERVER_CFN, POLL_SERVER_HEAT
+        POLL_SERVER_CFN, POLL_SERVER_HEAT, POLL_TEMP_URL
     ) = (
-        'POLL_SERVER_CFN', 'POLL_SERVER_HEAT'
+        'POLL_SERVER_CFN', 'POLL_SERVER_HEAT', 'POLL_TEMP_URL'
     )
 
     ATTRIBUTES = (
@@ -262,7 +263,8 @@ class Server(stack_user.StackUser):
               'the cfn API action DescribeStackResource authenticated with '
               'the provided keypair. POLL_SERVER_HEAT will allow calls to '
               'the Heat API resource-show using the provided keystone '
-              'credentials.'),
+              'credentials. POLL_TEMP_URL will create and populate a '
+              'Swift TempURL with metadata for polling.'),
             default=POLL_SERVER_CFN,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
@@ -364,8 +366,7 @@ class Server(stack_user.StackUser):
         # This method is overridden by the derived CloudServer resource
         return self.properties.get(self.CONFIG_DRIVE)
 
-    def _populate_deployments_metadata(self):
-        meta = self.metadata_get(True) or {}
+    def _populate_deployments_metadata(self, meta):
         meta['deployments'] = meta.get('deployments', [])
         if self.transport_poll_server_heat():
             meta['os-collect-config'] = {'heat': {
@@ -384,6 +385,24 @@ class Server(stack_user.StackUser):
                 'stack_name': self.stack.name,
                 'path': '%s.Metadata' % self.name}
             }
+        elif self.transport_poll_temp_url():
+            container = self.physical_resource_name()
+            object_name = str(uuid.uuid4())
+
+            self.client('swift').put_container(container)
+
+            url = self.client_plugin('swift').get_temp_url(
+                container, object_name, method='GET')
+            put_url = self.client_plugin('swift').get_temp_url(
+                container, object_name)
+            self.data_set('metadata_put_url', put_url)
+            self.data_set('metadata_object_name', object_name)
+
+            meta['os-collect-config'] = {'request': {
+                'metadata_url': url}
+            }
+            self.client('swift').put_object(
+                container, object_name, jsonutils.dumps(meta))
         self.metadata_set(meta)
 
     def _register_access_key(self):
@@ -445,6 +464,10 @@ class Server(stack_user.StackUser):
         return self.properties.get(
             self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_SERVER_HEAT
 
+    def transport_poll_temp_url(self):
+        return self.properties.get(
+            self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_TEMP_URL
+
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
@@ -459,9 +482,11 @@ class Server(stack_user.StackUser):
                 except Exception as ex:
                     self.client_plugin('heat').ignore_not_found(ex)
 
+        metadata = self.metadata_get(True) or {}
+
         if self.user_data_software_config():
             self._create_transport_credentials()
-            self._populate_deployments_metadata()
+            self._populate_deployments_metadata(metadata)
 
         if self.properties[self.ADMIN_USER]:
             instance_user = self.properties[self.ADMIN_USER]
@@ -471,7 +496,7 @@ class Server(stack_user.StackUser):
             instance_user = None
 
         userdata = self.client_plugin().build_userdata(
-            self.metadata_get(),
+            metadata,
             ud_content,
             instance_user=instance_user,
             user_data_format=user_data_format)
@@ -963,6 +988,20 @@ class Server(stack_user.StackUser):
                 self._check_maximum(len(bytes(contents)),
                                     limits['maxPersonalitySize'], msg)
 
+    def _delete_temp_url(self):
+        object_name = self.data().get('metadata_object_name')
+        if not object_name:
+            return
+        try:
+            container = self.physical_resource_name()
+            swift = self.client('swift')
+            swift.delete_object(container, object_name)
+            headers = swift.head_container(container)
+            if int(headers['x-container-object-count']) == 0:
+                swift.delete_container(container)
+        except Exception as ex:
+            self.client_plugin('swift').ignore_not_found(ex)
+
     def handle_delete(self):
 
         if self.resource_id is None:
@@ -970,6 +1009,7 @@ class Server(stack_user.StackUser):
 
         if self.user_data_software_config():
             self._delete_user()
+            self._delete_temp_url()
 
         try:
             server = self.nova().servers.get(self.resource_id)
