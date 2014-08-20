@@ -713,7 +713,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -770,7 +771,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'files': {},
               'args': {'timeout_mins': 30,
                        'adopt_stack_data': str(adopt_data)},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -830,7 +832,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {'my.yaml': 'This is the file contents.'},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -868,7 +871,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndRaise(to_remote_error(AttributeError()))
         rpc_client.EngineClient.call(
             req.context,
@@ -879,7 +883,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndRaise(to_remote_error(unknown_parameter))
         rpc_client.EngineClient.call(
             req.context,
@@ -890,7 +895,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndRaise(to_remote_error(missing_parameter))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
@@ -938,7 +944,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -992,7 +999,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
-              'owner_id': None})
+              'owner_id': None,
+              'nested_depth': 0})
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
