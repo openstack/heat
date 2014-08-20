@@ -195,7 +195,6 @@ class CloudDns(resource.Resource):
                 dom.delete()
             except NotFound:
                 pass
-        self.resource_id_set(None)
 
 
 def resource_mapping():

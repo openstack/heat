@@ -118,8 +118,6 @@ class GlanceImage(resource.Resource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
-        self.resource_id_set(None)
-
 
 def resource_mapping():
     return {

@@ -233,7 +233,6 @@ class SecurityGroup(resource.Resource):
                         self.client_plugin('nova').ignore_not_found(e)
 
                 self.nova().security_groups.delete(self.resource_id)
-            self.resource_id_set(None)
 
     def _handle_delete_neutron(self):
         client = self.neutron()
@@ -255,7 +254,6 @@ class SecurityGroup(resource.Resource):
                     client.delete_security_group(self.resource_id)
                 except Exception as ex:
                     self.client_plugin('neutron').ignore_not_found(ex)
-            self.resource_id_set(None)
 
     def FnGetRefId(self):
         if self.properties[self.VPC_ID]:

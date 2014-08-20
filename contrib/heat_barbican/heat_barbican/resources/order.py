@@ -132,13 +132,10 @@ class Order(resource.Resource):
 
         try:
             self.barbican().orders.delete(self.resource_id)
-            self.resource_id_set(None)
         except client.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
-            if 'Not Found' in six.text_type(exc):
-                self.resource_id_set(None)
-            else:
+            if 'Not Found' not in six.text_type(exc):
                 raise
 
     def _resolve_attribute(self, name):

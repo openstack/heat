@@ -59,7 +59,6 @@ class ServerGroup(resource.Resource):
                 self.nova().server_groups.delete(self.resource_id)
             except Exception as e:
                 self.client_plugin('nova').ignore_not_found(e)
-            self.resource_id_set(None)
 
     def physical_resource_name(self):
         name = self.properties.get(self.NAME)

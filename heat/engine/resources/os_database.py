@@ -309,7 +309,6 @@ class OSDBInstance(resource.Resource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
             LOG.debug("Database instance %s not found." % self.resource_id)
-            self.resource_id_set(None)
         else:
             instance.delete()
             return instance
@@ -326,7 +325,6 @@ class OSDBInstance(resource.Resource):
             self._refresh_instance(instance)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-            self.resource_id_set(None)
             return True
 
         return False

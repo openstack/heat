@@ -160,7 +160,6 @@ class TestSecret(HeatTestCase):
         mock_delete = self.barbican.secrets.delete
         scheduler.TaskRunner(self.res.delete)()
 
-        self.assertIsNone(self.res.resource_id)
         mock_delete.assert_called_once_with('foo_id')
 
     @mock.patch.object(client, 'barbican_client', new=mock.Mock())

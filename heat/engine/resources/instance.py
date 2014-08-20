@@ -836,7 +836,6 @@ class Instance(resource.Resource):
                     deleter.start()
                 if not deleter.step():
                     return False
-        self.resource_id_set(None)
         return True
 
     def handle_suspend(self):

@@ -214,7 +214,6 @@ class SecurityGroup(neutron.NeutronResource):
             self.neutron().delete_security_group(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-        self.resource_id_set(None)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)

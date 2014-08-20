@@ -574,7 +574,6 @@ class CloudLoadBalancer(resource.Resource):
         else:
             if loadbalancer.status != 'DELETED':
                 loadbalancer.delete()
-                self.resource_id_set(None)
 
     def _remove_none(self, property_dict):
         """Remove None values that would cause schema validation problems.
