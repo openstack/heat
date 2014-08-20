@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the heat project.
 #
 # Translators:
+# Andi Chandler <andi@gowling.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-07-04 06:02+0000\n"
-"PO-Revision-Date: 2014-06-30 05:01+0000\n"
-"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
+"POT-Creation-Date: 2014-08-20 06:00+0000\n"
+"PO-Revision-Date: 2014-08-07 07:52+0000\n"
+"Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/"
 "heat/language/en_GB/)\n"
 "Language: en_GB\n"
@@ -32,7 +33,7 @@ msgstr "Created lock path: %s"
 #: heat/openstack/common/lockutils.py:250
 #, python-format
 msgid "Failed to remove file %(file)s"
-msgstr ""
+msgstr "Failed to remove file %(file)s"
 
 #: heat/openstack/common/service.py:176
 #, python-format
@@ -46,7 +47,7 @@ msgstr "Parent process has died unexpectedly, exiting"
 #: heat/openstack/common/service.py:271
 #, python-format
 msgid "Child caught %s, exiting"
-msgstr ""
+msgstr "Child caught %s, exiting"
 
 #: heat/openstack/common/service.py:310
 msgid "Forking too fast, sleeping"
@@ -79,14 +80,9 @@ msgstr "Caught %s, stopping children"
 
 #: heat/openstack/common/service.py:408
 msgid "Wait called after thread killed.  Cleaning up."
-msgstr ""
+msgstr "Wait called after thread killed.  Cleaning up."
 
 #: heat/openstack/common/service.py:424
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "Waiting on %d children to exit"
-
-#: heat/openstack/common/db/sqlalchemy/utils.py:387
-#, python-format
-msgid "Deleting duplicated row with id: %(id)s from table: %(table)s"
-msgstr "Deleting duplicated row with id: %(id)s from table: %(table)s"

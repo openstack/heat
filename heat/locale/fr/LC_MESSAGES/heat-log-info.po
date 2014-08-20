@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-07-04 06:02+0000\n"
-"PO-Revision-Date: 2014-06-30 05:01+0000\n"
+"POT-Creation-Date: 2014-08-20 06:00+0000\n"
+"PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -79,14 +79,9 @@ msgstr "%s interceptée, arrêt de l'enfant"
 
 #: heat/openstack/common/service.py:408
 msgid "Wait called after thread killed.  Cleaning up."
-msgstr ""
+msgstr "Pause demandée après suppression de thread. Nettoyage."
 
 #: heat/openstack/common/service.py:424
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "En attente %d enfants pour sortie"
-
-#: heat/openstack/common/db/sqlalchemy/utils.py:387
-#, python-format
-msgid "Deleting duplicated row with id: %(id)s from table: %(table)s"
-msgstr "Suppression ligne en double avec l'ID : %(id)s de la table : %(table)s"

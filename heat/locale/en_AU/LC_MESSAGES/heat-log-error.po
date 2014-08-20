@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-07-04 06:02+0000\n"
-"PO-Revision-Date: 2014-06-30 05:01+0000\n"
+"POT-Creation-Date: 2014-08-20 06:01+0000\n"
+"PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: English (Australia) (http://www.transifex.com/projects/p/heat/"
 "language/en_AU/)\n"
@@ -64,20 +64,3 @@ msgstr "Exception during rpc cleanup."
 #: heat/openstack/common/service.py:277
 msgid "Unhandled exception"
 msgstr "Unhandled exception"
-
-#: heat/openstack/common/db/api.py:72
-msgid "DB exceeded retry limit."
-msgstr ""
-
-#: heat/openstack/common/db/api.py:76
-msgid "DB connection error."
-msgstr ""
-
-#: heat/openstack/common/db/sqlalchemy/session.py:460
-msgid "DB exception wrapped."
-msgstr "DB exception wrapped."
-
-#: heat/openstack/common/db/sqlalchemy/test_migrations.py:267
-#, python-format
-msgid "Failed to migrate to version %(version)s on engine %(engine)s"
-msgstr "Failed to migrate to version %(version)s on engine %(engine)s"

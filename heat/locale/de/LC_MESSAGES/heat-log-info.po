@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-07-04 06:02+0000\n"
-"PO-Revision-Date: 2014-06-30 20:07+0000\n"
+"POT-Creation-Date: 2014-08-20 06:00+0000\n"
+"PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/heat/language/"
 "de/)\n"
@@ -87,8 +87,3 @@ msgstr "Warten aufgerufen nach dem der Thread abgebrochen wurde. Bereinige."
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "Warten auf Beenden von %d untergeordneten Elementen"
-
-#: heat/openstack/common/db/sqlalchemy/utils.py:387
-#, python-format
-msgid "Deleting duplicated row with id: %(id)s from table: %(table)s"
-msgstr "Lösche doppelte Zeile mit der ID %(id)s aus der Tabelle %(table)s"
