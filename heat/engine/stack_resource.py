@@ -13,6 +13,7 @@
 
 from oslo.config import cfg
 
+from heat.common import environment_format
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import environment
@@ -137,10 +138,10 @@ class StackResource(resource.Resource):
         """
         nested_env = environment.Environment()
         nested_env.registry = self.stack.env.registry
-        user_env = {environment.PARAMETERS: {}}
+        user_env = {environment_format.PARAMETERS: {}}
         if user_params is not None:
-            if environment.PARAMETERS not in user_params:
-                user_env[environment.PARAMETERS] = user_params
+            if environment_format.PARAMETERS not in user_params:
+                user_env[environment_format.PARAMETERS] = user_params
             else:
                 user_env.update(user_params)
         nested_env.load(user_env)

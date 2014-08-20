@@ -18,7 +18,7 @@ import os.path
 from oslo.config import cfg
 import six
 
-from heat.common import environment_format
+from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log
@@ -333,10 +333,6 @@ class ResourceRegistry(object):
                 if is_resource(name) and status_matches(cls)]
 
 
-SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
-           ('parameters', 'resource_registry')
-
-
 class Environment(object):
 
     def __init__(self, env=None, user_env=True):
@@ -356,23 +352,23 @@ class Environment(object):
             global_registry = None
 
         self.registry = ResourceRegistry(global_registry)
-        self.registry.load(env.get(RESOURCE_REGISTRY, {}))
+        self.registry.load(env.get(env_fmt.RESOURCE_REGISTRY, {}))
 
-        if 'parameters' in env:
-            self.params = env['parameters']
+        if env_fmt.PARAMETERS in env:
+            self.params = env[env_fmt.PARAMETERS]
         else:
             self.params = dict((k, v) for (k, v) in six.iteritems(env)
-                               if k != RESOURCE_REGISTRY)
+                               if k != env_fmt.RESOURCE_REGISTRY)
         self.constraints = {}
 
     def load(self, env_snippet):
-        self.registry.load(env_snippet.get(RESOURCE_REGISTRY, {}))
-        self.params.update(env_snippet.get('parameters', {}))
+        self.registry.load(env_snippet.get(env_fmt.RESOURCE_REGISTRY, {}))
+        self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
 
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""
-        return {RESOURCE_REGISTRY: self.registry.as_dict(),
-                PARAMETERS: self.params}
+        return {env_fmt.RESOURCE_REGISTRY: self.registry.as_dict(),
+                env_fmt.PARAMETERS: self.params}
 
     def register_class(self, resource_type, resource_class):
         self.registry.register_class(resource_type, resource_class)
@@ -411,8 +407,8 @@ def read_global_environment(env, env_dir=None):
         try:
             with open(file_path) as env_fd:
                 LOG.info(_('Loading %s') % file_path)
-                env_body = environment_format.parse(env_fd.read())
-                environment_format.default_for_missing(env_body)
+                env_body = env_fmt.parse(env_fd.read())
+                env_fmt.default_for_missing(env_body)
                 env.load(env_body)
         except ValueError as vex:
             LOG.error(_('Failed to parse %(file_path)s') % {
