@@ -82,7 +82,8 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
                     parts[3] and
                     parts[4].strip('/'))
 
-    def get_temp_url(self, container_name, obj_name, timeout=None):
+    def get_temp_url(self, container_name, obj_name, timeout=None,
+                     method='PUT'):
         '''
         Return a Swift TempURL.
         '''
@@ -93,7 +94,6 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
             key = hashlib.sha224(str(random.getrandbits(256))).hexdigest()[:32]
             self.client().post_account({key_header: key})
 
-        method = 'PUT'
         path = '/v1/AUTH_%s/%s/%s' % (self.context.tenant_id, container_name,
                                       obj_name)
         if timeout is None:
