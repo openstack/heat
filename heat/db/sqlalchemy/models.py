@@ -135,6 +135,7 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
     backup = sqlalchemy.Column('backup', sqlalchemy.Boolean)
+    nested_depth = sqlalchemy.Column('nested_depth', sqlalchemy.Integer)
 
     # Override timestamp column to store the correct value: it should be the
     # time the create/update call was issued, not the time the DB entry is

@@ -249,6 +249,62 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
     def _check_046(self, engine, data):
         self.assertColumnExists(engine, 'resource', 'properties_data')
 
+    def _pre_upgrade_047(self, engine):
+        raw_template = utils.get_table(engine, 'raw_template')
+        templ = [dict(id=6, template='{}', files='{}')]
+        engine.execute(raw_template.insert(), templ)
+
+        user_creds = utils.get_table(engine, 'user_creds')
+        user = [dict(id=7, username='steve', password='notthis',
+                     tenant='mine', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='')]
+        engine.execute(user_creds.insert(), user)
+
+        stack = utils.get_table(engine, 'stack')
+        stack_ids = [('s9', '167aaefb-152e-505d-b13a-35d4c816390c'),
+                     ('n1', '1e9deba9-a303-5f29-84d3-c8165647c47e'),
+                     ('n2', '1e9deba9-a304-5f29-84d3-c8165647c47e'),
+                     ('n3', '1e9deba9-a305-5f29-84d3-c8165647c47e'),
+                     ('s9*', '1a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9')]
+        data = [dict(id=ll_id, name=name,
+                     raw_template_id=templ[0]['id'],
+                     user_creds_id=user[0]['id'],
+                     owner_id=None,
+                     backup=False,
+                     username='steve', disable_rollback=True)
+                for name, ll_id in stack_ids]
+        # Make a nested tree s1->s2->s3->s4 with a s1 backup
+        data[1]['owner_id'] = '167aaefb-152e-505d-b13a-35d4c816390c'
+        data[2]['owner_id'] = '1e9deba9-a303-5f29-84d3-c8165647c47e'
+        data[3]['owner_id'] = '1e9deba9-a304-5f29-84d3-c8165647c47e'
+        data[4]['owner_id'] = '167aaefb-152e-505d-b13a-35d4c816390c'
+        data[4]['backup'] = True
+        engine.execute(stack.insert(), data)
+        return data
+
+    def _check_047(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'nested_depth')
+        stack_table = utils.get_table(engine, 'stack')
+        stacks_in_db = list(stack_table.select().execute())
+        stack_ids_in_db = [s.id for s in stacks_in_db]
+
+        # Assert the expected stacks are still there
+        for stack in data:
+            self.assertIn(stack['id'], stack_ids_in_db)
+
+        # And that the depth is set as expected
+        def n_depth(sid):
+            s = [s for s in stacks_in_db if s.id == sid][0]
+            return s.nested_depth
+
+        self.assertEqual(0, n_depth('167aaefb-152e-505d-b13a-35d4c816390c'))
+        self.assertEqual(1, n_depth('1e9deba9-a303-5f29-84d3-c8165647c47e'))
+        self.assertEqual(2, n_depth('1e9deba9-a304-5f29-84d3-c8165647c47e'))
+        self.assertEqual(3, n_depth('1e9deba9-a305-5f29-84d3-c8165647c47e'))
+        self.assertEqual(0, n_depth('1a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9'))
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
