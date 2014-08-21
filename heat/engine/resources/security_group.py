@@ -70,7 +70,7 @@ class SecurityGroup(resource.Resource):
         ),
         VPC_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Physical ID of the VPC.')
+            _('Physical ID of the VPC. Not implemented.')
         ),
         SECURITY_GROUP_INGRESS: properties.Schema(
             properties.Schema.LIST,
@@ -91,7 +91,7 @@ class SecurityGroup(resource.Resource):
     }
 
     def handle_create(self):
-        if self.properties[self.VPC_ID]:
+        if self.is_using_neutron():
             self._handle_create_neutron()
         else:
             self._handle_create_nova()
@@ -214,7 +214,7 @@ class SecurityGroup(resource.Resource):
                         raise
 
     def handle_delete(self):
-        if self.properties[self.VPC_ID]:
+        if self.is_using_neutron():
             self._handle_delete_neutron()
         else:
             self._handle_delete_nova()
@@ -256,7 +256,7 @@ class SecurityGroup(resource.Resource):
                     self.client_plugin('neutron').ignore_not_found(ex)
 
     def FnGetRefId(self):
-        if self.properties[self.VPC_ID]:
+        if self.is_using_neutron():
             return super(SecurityGroup, self).FnGetRefId()
         else:
             return self.physical_resource_name()
@@ -266,8 +266,8 @@ class SecurityGroup(resource.Resource):
         if res:
             return res
 
-        if self.properties[self.SECURITY_GROUP_EGRESS] and not \
-                self.properties[self.VPC_ID]:
+        if (self.properties[self.SECURITY_GROUP_EGRESS] and
+                not self.is_using_neutron()):
             raise exception.EgressRuleNotAllowed()
 
 
