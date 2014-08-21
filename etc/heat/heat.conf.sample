@@ -73,6 +73,10 @@
 # Deprecated. (string value)
 #onready=<None>
 
+# Select OpenStack component responsible for networking - nova
+# or neutron. (string value)
+#networking_service=<None>
+
 
 #
 # Options defined in heat.common.config

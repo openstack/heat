@@ -46,11 +46,30 @@ gettextutils.install('heat', lazy=True)
 
 LOG = logging.getLogger('heat.engine')
 
+
+def discover_networking_service():
+    from heat.common import heat_keystoneclient as hkc
+
+    # create empty context
+    ctxt = hkc.context.RequestContext()
+    # create admin client
+    admin_client = hkc.KeystoneClient(ctxt).admin_client
+    services = admin_client.services.list()
+
+    if 'network' in [s.type for s in services]:
+        cfg.CONF.set_override('networking_service', 'neutron')
+    else:
+        cfg.CONF.set_override('networking_service', 'nova')
+
+
 if __name__ == '__main__':
 
     cfg.CONF(project='heat', prog='heat-engine')
     logging.setup('heat')
     messaging.setup()
+
+    if not cfg.CONF.networking_service:
+        discover_networking_service()
 
     from heat.engine import service as engine
 

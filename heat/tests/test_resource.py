@@ -995,6 +995,15 @@ class ResourceTest(HeatTestCase):
                          TestResource.resource_to_template(
                              'Test::Resource::resource'))
 
+    def test_is_using_neutron(self):
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        res = resource.Resource('aresource', snippet, self.stack)
+        cfg.CONF.set_override('networking_service', 'neutron')
+        self.assertTrue(res.is_using_neutron())
+        cfg.CONF.set_override('networking_service', 'nova')
+        self.assertFalse(res.is_using_neutron())
+
 
 class ResourceAdoptTest(HeatTestCase):
     def setUp(self):
