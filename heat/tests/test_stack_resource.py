@@ -24,6 +24,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_resource
+from heat.engine import template as templatem
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -147,7 +148,7 @@ class StackResourceTest(HeatTestCase):
         mock_stack_class.return_value = nested_stack
         nested_stack.preview_resources.return_value = 'preview_nested_stack'
         mock_env_class.return_value = 'environment'
-        template = parser.Template(template_format.parse(param_template))
+        template = templatem.Template(template_format.parse(param_template))
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
         parent_resource = MyImplementedStackResource(
@@ -183,7 +184,7 @@ class StackResourceTest(HeatTestCase):
         nested_stack.preview_resources.return_value = 'preview_nested_stack'
         mock_env_class.return_value = 'environment'
         template_dict = template_format.parse(param_template)
-        template = parser.Template(template_dict)
+        template = templatem.Template(template_dict)
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
         parent_resource = MyImplementedStackResource(
@@ -217,7 +218,7 @@ class StackResourceTest(HeatTestCase):
             resource_defns[self.ws_resname],
             self.parent_stack)
         stk_resource.child_template = \
-            mock.Mock(return_value=parser.Template(self.simple_template))
+            mock.Mock(return_value=templatem.Template(self.simple_template))
         stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
@@ -247,7 +248,7 @@ class StackResourceTest(HeatTestCase):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': [1]}
-        template = stack_resource.parser.Template(tmpl)
+        template = stack_resource.template.Template(tmpl)
         root_resources = mock.Mock(return_value=2)
         self.parent_resource.stack.root_stack.total_resources = root_resources
 
@@ -576,7 +577,7 @@ class StackResourceTest(HeatTestCase):
 
         ctx = self.parent_resource.context
         phy_id = "cb2f2b28-a663-4683-802c-4b40c916e1ff"
-        templ = parser.Template(self.templ)
+        templ = templatem.Template(self.templ)
         env = environment.Environment({"KeyName": "test"})
         self.stack = parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
                                   disable_rollback=True,

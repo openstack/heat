@@ -42,6 +42,7 @@ from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.engine import stack_lock
+from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.rpc import api as engine_api
@@ -175,7 +176,7 @@ resources:
 
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
-    template = parser.Template(t)
+    template = templatem.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment({'KeyName': 'test'}))
     return stack
@@ -183,7 +184,7 @@ def get_wordpress_stack(stack_name, ctx):
 
 def get_stack(stack_name, ctx, template):
     t = template_format.parse(template)
-    template = parser.Template(t)
+    template = templatem.Template(t)
     stack = parser.Stack(ctx, stack_name, template)
     return stack
 
@@ -344,7 +345,7 @@ class StackCreateTest(HeatTestCase):
 
     def test_wordpress_single_instance_stack_adopt(self):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
+        template = templatem.Template(t)
         ctx = utils.dummy_context()
         adopt_data = {
             'resources': {
@@ -369,7 +370,7 @@ class StackCreateTest(HeatTestCase):
 
     def test_wordpress_single_instance_stack_adopt_fail(self):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
+        template = templatem.Template(t)
         ctx = utils.dummy_context()
         adopt_data = {
             'resources': {
@@ -436,11 +437,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, owner_id=None).AndReturn(stack)
@@ -485,11 +486,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
@@ -539,19 +540,19 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         # force check for credentials on create
         stack['WebServer'].requires_deferred_auth = True
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
         ctx_no_pwd = utils.dummy_context(password=None)
         ctx_no_user = utils.dummy_context(user=None)
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_pwd, stack.name,
                      stack.t, stack.env, owner_id=None).AndReturn(stack)
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_user, stack.name,
                      stack.t, stack.env, owner_id=None).AndReturn(stack)
@@ -587,15 +588,15 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
 
-        template = parser.Template(tpl)
+        template = templatem.Template(tpl)
         stack = parser.Stack(self.ctx, stack_name, template,
                              environment.Environment({}))
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
@@ -861,10 +862,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, timeout_mins=60).AndReturn(stack)
@@ -896,7 +897,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
 
-        template = parser.Template(tpl)
+        template = templatem.Template(tpl)
 
         old_stack = parser.Stack(self.ctx, stack_name, template)
         sid = old_stack.store()
@@ -908,10 +909,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, timeout_mins=60).AndReturn(stack)
@@ -951,7 +952,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
             }
         }
 
-        template = parser.Template(tpl)
+        template = templatem.Template(tpl)
 
         create_stack = parser.Stack(self.ctx, stack_name, template)
         sid = create_stack.store()
@@ -1029,7 +1030,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
             AndReturn(json.dumps(nested_tpl))
         mox.Replay(urlfetch.get)
 
-        template = parser.Template(tpl)
+        template = templatem.Template(tpl)
 
         create_env = environment.Environment({'some_param': 'foo'})
         create_stack = parser.Stack(self.ctx, stack_name, template, create_env)
@@ -1081,7 +1082,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                'B': {'Type': 'GenericResourceType'},
                'C': {'Type': 'GenericResourceType'}}}
 
-        template = parser.Template(tpl)
+        template = templatem.Template(tpl)
         old_stack = parser.Stack(self.ctx, stack_name, template)
         sid = old_stack.store()
         self.assertIsNotNone(sid)
@@ -1112,10 +1113,10 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
 
-        parser.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, timeout_mins=60).AndReturn(stack)
@@ -1166,7 +1167,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.StubOutWithMock(parser, 'Stack')
         self.m.StubOutWithMock(parser.Stack, 'load')
-        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(self.man, '_get_stack')
 
@@ -1174,7 +1175,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
-        parser.Template(template, files=None).AndReturn(old_stack.t)
+        templatem.Template(template, files=None).AndReturn(old_stack.t)
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
                      old_stack.t, old_stack.env,
@@ -2662,7 +2663,7 @@ class StackServiceTest(HeatTestCase):
                 }
             }
         }
-        templ = parser.Template(lazy_load_template)
+        templ = templatem.Template(lazy_load_template)
         stack = parser.Stack(self.ctx, stack_name, templ,
                              environment.Environment({}))
 
@@ -2749,7 +2750,7 @@ class StackServiceTest(HeatTestCase):
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
-        template = service.parser.Template(
+        template = service.templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12'})
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
@@ -2759,7 +2760,7 @@ class StackServiceTest(HeatTestCase):
         cfg.CONF.set_override('max_resources_per_stack', 5)
         template = {'HeatTemplateFormatVersion': '2012-12-12',
                     'Resources': [1, 2, 3, 4, 5, 6]}
-        parsed_template = service.parser.Template(template)
+        parsed_template = service.templatem.Template(template)
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', parsed_template)

@@ -50,7 +50,7 @@ from heat.tests.v1_1 import fakes
 
 
 def join(raw):
-    tmpl = parser.Template(mapping_template)
+    tmpl = template.Template(mapping_template)
     return function.resolve(tmpl.parse(None, raw))
 
 

@@ -22,6 +22,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import template
 from heat.openstack.common import uuidutils
 from heat.tests import common
 from heat.tests import utils
@@ -89,11 +90,11 @@ class CloudServersTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
-        stack = parser.Stack(self.ctx, stack_name, template,
+        templ = template.Template(t)
+        stack = parser.Stack(self.ctx, stack_name, templ,
                              environment.Environment({'key_name': 'test'}),
                              stack_id=uuidutils.generate_uuid())
-        return (template, stack)
+        return (templ, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
                            override_name=False, stub_create=True, exit_code=0):

@@ -80,7 +80,7 @@ class MarconiMessageQueueTest(HeatTestCase):
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         self.stack = parser.Stack(self.ctx, stack_name, tmpl)
         self.stack.validate()
         self.stack.store()

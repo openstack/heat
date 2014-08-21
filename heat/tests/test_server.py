@@ -31,6 +31,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import server as servers
 from heat.engine import scheduler
+from heat.engine import template
 from heat.openstack.common.gettextutils import _
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -88,12 +89,12 @@ class ServersTest(HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        templ = template.Template(t)
+        stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              environment.Environment({'key_name': 'test'}),
                              stack_id=str(uuid.uuid4()),
                              stack_user_project_id='8888')
-        return (template, stack)
+        return (templ, stack)
 
     def _get_test_template(self, stack_name, server_name=None,
                            image_id=None):
@@ -812,11 +813,11 @@ class ServersTest(HeatTestCase):
 }
 '''
         t = template_format.parse(nova_keypair_template)
-        template = parser.Template(t)
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        templ = template.Template(t)
+        stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              stack_id=str(uuid.uuid4()))
 
-        resource_defns = template.resource_definitions(stack)
+        resource_defns = templ.resource_definitions(stack)
         server = servers.Server('server_validate_test',
                                 resource_defns['WebServer'], stack)
 

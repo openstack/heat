@@ -19,6 +19,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
@@ -97,16 +98,16 @@ class RackspaceDnsTest(common.HeatTestCase):
     def _setup_test_cloud_dns_instance(self, name, parsed_t):
         stack_name = '%s_stack' % name
         t = parsed_t
-        template = parser.Template(t)
+        templ = template.Template(t)
         stack = parser.Stack(utils.dummy_context(),
                              stack_name,
-                             template,
+                             templ,
                              environment.Environment({'name': 'test'}),
                              stack_id=str(uuid.uuid4()))
 
         instance = cloud_dns.CloudDns(
             '%s_name' % name,
-            template.resource_definitions(stack)['domain'],
+            templ.resource_definitions(stack)['domain'],
             stack)
         return instance
 

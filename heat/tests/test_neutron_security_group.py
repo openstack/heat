@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
@@ -101,15 +102,15 @@ Resources:
         self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
         self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
 
-    def create_stack(self, template):
-        t = template_format.parse(template)
+    def create_stack(self, templ):
+        t = template_format.parse(templ)
         self.stack = self.parse_stack(t)
         self.assertIsNone(self.stack.create())
         return self.stack
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         stack.store()
         return stack
