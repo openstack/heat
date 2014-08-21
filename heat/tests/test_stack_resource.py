@@ -212,36 +212,36 @@ class StackResourceTest(HeatTestCase):
     def test_preview_validates_nested_resources(self):
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
-        stack_resource = MyImplementedStackResource(
+        stk_resource = MyImplementedStackResource(
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
-        stack_resource.child_template = \
+        stk_resource.child_template = \
             mock.Mock(return_value=parser.Template(self.simple_template))
-        stack_resource.child_params = mock.Mock()
+        stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
-        stack_resource._validate_nested_resources = validation_mock
+        stk_resource._validate_nested_resources = validation_mock
 
         self.assertRaises(exception.RequestLimitExceeded,
-                          stack_resource.preview)
+                          stk_resource.preview)
 
     def test_preview_dict_validates_nested_resources(self):
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
-        stack_resource = MyImplementedStackResource(
+        stk_resource = MyImplementedStackResource(
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
-        stack_resource.child_template = \
+        stk_resource.child_template = \
             mock.Mock(return_value=self.simple_template)
-        stack_resource.child_params = mock.Mock()
+        stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
-        stack_resource._validate_nested_resources = validation_mock
+        stk_resource._validate_nested_resources = validation_mock
 
         self.assertRaises(exception.RequestLimitExceeded,
-                          stack_resource.preview)
+                          stk_resource.preview)
 
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
