@@ -2468,3 +2468,75 @@ class NetworkConstraintTest(HeatTestCase):
         self.assertFalse(constraint.validate("bar", ctx))
 
         self.m.VerifyAll()
+
+
+class PortConstraintTest(HeatTestCase):
+
+    def test_validate(self):
+        nc = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().AndReturn(nc)
+        self.m.StubOutWithMock(neutron.neutronV20,
+                               'find_resourceid_by_name_or_id')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'port', 'foo'
+        ).AndReturn('foo')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'port', 'bar'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.m.ReplayAll()
+
+        constraint = neutron.PortConstraint()
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
+
+        self.m.VerifyAll()
+
+
+class RouterConstraintTest(HeatTestCase):
+
+    def test_validate(self):
+        nc = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().AndReturn(nc)
+        self.m.StubOutWithMock(neutron.neutronV20,
+                               'find_resourceid_by_name_or_id')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'router', 'foo'
+        ).AndReturn('foo')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'router', 'bar'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.m.ReplayAll()
+
+        constraint = neutron.RouterConstraint()
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
+
+        self.m.VerifyAll()
+
+
+class SubnetConstraintTest(HeatTestCase):
+
+    def test_validate(self):
+        nc = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().AndReturn(nc)
+        self.m.StubOutWithMock(neutron.neutronV20,
+                               'find_resourceid_by_name_or_id')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'subnet', 'foo'
+        ).AndReturn('foo')
+        neutron.neutronV20.find_resourceid_by_name_or_id(
+            nc, 'subnet', 'bar'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.m.ReplayAll()
+
+        constraint = neutron.SubnetConstraint()
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
+
+        self.m.VerifyAll()
