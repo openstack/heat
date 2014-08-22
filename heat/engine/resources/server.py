@@ -929,7 +929,7 @@ class Server(stack_user.StackUser):
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties.get(self.METADATA)
         personality = self._personality()
-        if metadata is not None or personality is not None:
+        if metadata is not None or personality:
             limits = nova_utils.absolute_limits(self.nova())
 
         # if 'security_groups' present for the server and explict 'port'
@@ -951,7 +951,7 @@ class Server(stack_user.StackUser):
 
         # verify the number of personality files and the size of each
         # personality file against the provider's absolute limits
-        if personality is not None:
+        if personality:
             msg = _("The personality property may not contain "
                     "greater than %s entries.") % limits['maxPersonality']
             self._check_maximum(len(personality),
