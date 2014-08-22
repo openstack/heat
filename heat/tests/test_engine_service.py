@@ -485,7 +485,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, owner_id=None,
-                     nested_depth=0).AndReturn(stack)
+                     nested_depth=0, user_creds_id=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -536,7 +536,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      stack.env,
-                     owner_id=None, nested_depth=0).AndReturn(stack)
+                     owner_id=None,
+                     nested_depth=0,
+                     user_creds_id=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -626,13 +628,13 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_pwd, stack.name,
                      stack.t, stack.env, owner_id=None,
-                     nested_depth=0).AndReturn(stack)
+                     nested_depth=0, user_creds_id=None).AndReturn(stack)
 
         templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_user, stack.name,
                      stack.t, stack.env, owner_id=None,
-                     nested_depth=0).AndReturn(stack)
+                     nested_depth=0, user_creds_id=None).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -679,7 +681,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      stack.t,
                      stack.env,
                      owner_id=None,
-                     nested_depth=0).AndReturn(stack)
+                     nested_depth=0,
+                     user_creds_id=None).AndReturn(stack)
 
         self.m.ReplayAll()
 
