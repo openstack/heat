@@ -53,11 +53,12 @@ class StackResource(resource.Resource):
                                                     self.attributes_schema,
                                                     self._resolve_attribute)
 
-    def nested(self, force_reload=False):
+    def nested(self, force_reload=False, show_deleted=False):
         '''
         Return a Stack object representing the nested (child) stack.
         :param force_reload: Forces reloading from the DB instead of returning
                              the locally cached Stack object
+        :param show_deleted: Returns the stack even if it's been deleted
         '''
         if force_reload:
             self._nested = None
@@ -66,7 +67,7 @@ class StackResource(resource.Resource):
             self._nested = parser.Stack.load(self.context,
                                              self.resource_id,
                                              parent_resource=self,
-                                             show_deleted=False,
+                                             show_deleted=show_deleted,
                                              force_reload=force_reload)
 
             if self._nested is None:

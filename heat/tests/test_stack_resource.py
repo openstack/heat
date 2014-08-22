@@ -502,6 +502,20 @@ class StackResourceTest(common.HeatTestCase):
         self.assertEqual(expected_state,
                          self.parent_resource.nested(force_reload=True).state)
 
+    def test_load_nested_deleted(self):
+        create_creator = self.parent_resource.create_with_template(
+            self.templ, {"KeyName": "key"})
+        create_creator.run_to_completion()
+        expected_state = (parser.Stack.CREATE, parser.Stack.COMPLETE)
+        self.assertEqual(expected_state, self.parent_resource.nested().state)
+
+        delete_deletor = self.parent_resource.delete_nested()
+        delete_deletor.run_to_completion()
+        expected_state = (parser.Stack.DELETE, parser.Stack.COMPLETE)
+        self.assertEqual(expected_state,
+                         self.parent_resource.nested(force_reload=True,
+                                                     show_deleted=True).state)
+
     def test_load_nested_non_exist(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
