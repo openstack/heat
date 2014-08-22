@@ -28,6 +28,12 @@ def _register_constraints(env, type_pairs):
         env.register_constraint(constraint_name, constraint)
 
 
+def _register_stack_lifecycle_plugins(env, type_pairs):
+    for stack_lifecycle_name, stack_lifecycle_class in type_pairs:
+        env.register_stack_lifecycle_plugin(stack_lifecycle_name,
+                                            stack_lifecycle_class)
+
+
 def _get_mapping(namespace):
     mgr = extension.ExtensionManager(
         namespace=namespace,
@@ -64,6 +70,9 @@ def _load_global_environment(env):
 
 def _load_global_resources(env):
     _register_constraints(env, _get_mapping('heat.constraints'))
+    _register_stack_lifecycle_plugins(
+        env,
+        _get_mapping('heat.stack_lifecycle_plugins'))
 
     manager = plugin_manager.PluginManager(__name__)
     # Sometimes resources should not be available for registration in Heat due

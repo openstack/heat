@@ -364,6 +364,7 @@ class Environment(object):
             self.params = dict((k, v) for (k, v) in six.iteritems(env)
                                if k != RESOURCE_REGISTRY)
         self.constraints = {}
+        self.stack_lifecycle_plugins = []
 
     def load(self, env_snippet):
         self.registry.load(env_snippet.get(RESOURCE_REGISTRY, {}))
@@ -380,6 +381,11 @@ class Environment(object):
     def register_constraint(self, constraint_name, constraint):
         self.constraints[constraint_name] = constraint
 
+    def register_stack_lifecycle_plugin(self, stack_lifecycle_name,
+                                        stack_lifecycle_class):
+        self.stack_lifecycle_plugins.append((stack_lifecycle_name,
+                                             stack_lifecycle_class))
+
     def get_class(self, resource_type, resource_name=None):
         return self.registry.get_class(resource_type, resource_name)
 
@@ -393,6 +399,9 @@ class Environment(object):
 
     def get_constraint(self, name):
         return self.constraints.get(name)
+
+    def get_stack_lifecycle_plugins(self):
+        return self.stack_lifecycle_plugins
 
 
 def read_global_environment(env, env_dir=None):

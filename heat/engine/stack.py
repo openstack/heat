@@ -24,6 +24,7 @@ from heat.common import context as common_context
 from heat.common import exception
 from heat.common.exception import StackValidationFailed
 from heat.common import identifier
+from heat.common import lifecycle_plugin_utils
 from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import environment
@@ -545,6 +546,15 @@ class Stack(collections.Mapping):
         A task to perform an action on the stack and all of the resources
         in forward or reverse dependency order as specified by reverse
         '''
+        try:
+            lifecycle_plugin_utils.do_pre_ops(self.context, self,
+                                              None, action)
+        except Exception as e:
+            self.state_set(action, self.FAILED, e.args[0] if e.args else
+                           'Failed stack pre-ops: %s' % six.text_type(e))
+            if callable(post_func):
+                post_func()
+            return
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
@@ -581,6 +591,8 @@ class Stack(collections.Mapping):
 
         if callable(post_func):
             post_func()
+        lifecycle_plugin_utils.do_post_ops(self.context, self, None, action,
+                                           (self.status == self.FAILED))
 
     def check(self):
         self.updated_time = datetime.utcnow()
@@ -667,6 +679,13 @@ class Stack(collections.Mapping):
                            "Invalid action %s" % action)
             return
 
+        try:
+            lifecycle_plugin_utils.do_pre_ops(self.context, self,
+                                              newstack, action)
+        except Exception as e:
+            self.state_set(action, self.FAILED, e.args[0] if e.args else
+                           'Failed stack pre-ops: %s' % six.text_type(e))
+            return
         if self.status == self.IN_PROGRESS:
             if action == self.ROLLBACK:
                 LOG.debug("Starting update rollback for %s" % self.name)
@@ -739,6 +758,9 @@ class Stack(collections.Mapping):
         self.status_reason = reason
 
         self.store()
+        lifecycle_plugin_utils.do_post_ops(self.context, self,
+                                           newstack, action,
+                                           (self.status == self.FAILED))
 
         notification.send(self)
 
@@ -756,6 +778,8 @@ class Stack(collections.Mapping):
                            "Invalid action %s" % action)
             return
 
+        # Note abandon is a delete with
+        # stack.set_deletion_policy(resource.RETAIN)
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
         self.state_set(action, self.IN_PROGRESS, 'Stack %s started' %
@@ -810,6 +834,15 @@ class Stack(collections.Mapping):
         for snapshot in snapshots:
             self.delete_snapshot(snapshot)
 
+        if not backup:
+            try:
+                lifecycle_plugin_utils.do_pre_ops(self.context, self,
+                                                  None, action)
+            except Exception as e:
+                self.state_set(action, self.FAILED,
+                               e.args[0] if e.args else
+                               'Failed stack pre-ops: %s' % six.text_type(e))
+                return
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource.Resource.destroy,
                                                     reverse=True)
@@ -874,6 +907,10 @@ class Stack(collections.Mapping):
             LOG.info(_("Tried to delete stack that does not exist "
                        "%s ") % self.id)
 
+        if not backup:
+            lifecycle_plugin_utils.do_post_ops(self.context, self,
+                                               None, action,
+                                               (self.status == self.FAILED))
         if stack_status != self.FAILED:
             # delete the stack
             try:
