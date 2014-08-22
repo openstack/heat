@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import copy
 
 from keystoneclient import exceptions as keystone_exc
 from neutronclient.common.exceptions import NeutronClientException
@@ -23,6 +24,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine import parser
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
 from heat.tests.common import HeatTestCase
@@ -137,6 +139,7 @@ Resources:
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'get')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'list')
+        self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'update')
         self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
         self.m.StubOutWithMock(
             neutronclient.Client, 'create_security_group_rule')
@@ -144,6 +147,7 @@ Resources:
         self.m.StubOutWithMock(
             neutronclient.Client, 'delete_security_group_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
 
     def mock_no_neutron(self):
         mock_create = self.patch(
@@ -179,6 +183,13 @@ Resources:
             description='FAKE_SECURITY_GROUP',
             rules=[],
         )])
+        nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
+            id=1,
+            name='test',
+            description='FAKE_SECURITY_GROUP',
+            rules=[],
+        )])
+
         sg_name = utils.PhysName('test_stack', 'the_sg')
         nova_sg.SecurityGroupManager.create(
             sg_name,
@@ -189,9 +200,9 @@ Resources:
                 rules=[]))
 
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '22', '22', '0.0.0.0/0', None).AndReturn(None)
+            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(None)
+            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
@@ -304,9 +315,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -315,9 +326,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'bbbb'
@@ -328,9 +339,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '80',
+                'port_range_min': 80,
                 'ethertype': 'IPv4',
-                'port_range_max': '80',
+                'port_range_max': 80,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -339,9 +350,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '80',
+                'port_range_min': 80,
                 'ethertype': 'IPv4',
-                'port_range_max': '80',
+                'port_range_max': 80,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'cccc'
@@ -376,9 +387,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -387,9 +398,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'eeee'
@@ -477,7 +488,7 @@ Resources:
                     'id': 'ffff',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
-                    'remote_group_id': None,
+                    'remote_group_id': 'xxxx',
                     'remote_ip_prefix': None,
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': None
@@ -494,7 +505,6 @@ Resources:
 
     def test_security_group_nova(self):
         #create script
-        #nova.NovaClientPlugin._create().AndReturn(self.fc)
         sg_name = self.stubout_nova_create_security_group()
 
         # delete script
@@ -515,7 +525,7 @@ Resources:
         #create script
         self.mock_no_neutron()
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
+        nova_sg.SecurityGroupManager.list().MultipleTimes().AndReturn([NovaSG(
             id=1,
             name='test',
             description='FAKE_SECURITY_GROUP',
@@ -529,11 +539,6 @@ Resources:
                 name=sg_name,
                 description='HTTP and SSH access',
                 rules=[]))
-
-        nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '22', '22', '0.0.0.0/0', None).AndReturn(None)
-        nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(None)
 
         # delete script
         nova_sg.SecurityGroupManager.get(2).AndReturn(NovaSG(
@@ -581,7 +586,7 @@ Resources:
         self.mock_no_neutron()
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         sg_name = utils.PhysName('test_stack', 'the_sg')
-        nova_sg.SecurityGroupManager.list().AndReturn([
+        nova_sg.SecurityGroupManager.list().MultipleTimes().AndReturn([
             NovaSG(
                 id=2,
                 name=sg_name,
@@ -597,10 +602,10 @@ Resources:
         ])
 
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '22', '22', '0.0.0.0/0', None).AndRaise(
+            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndRaise(
                 fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(
+            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(
                 fakes.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(
@@ -735,9 +740,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -748,9 +753,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '80',
+                'port_range_min': 80,
                 'ethertype': 'IPv4',
-                'port_range_max': '80',
+                'port_range_max': 80,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -774,9 +779,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -887,5 +892,187 @@ Resources:
         sg.state_set(sg.CREATE, sg.COMPLETE, 'to delete again')
         sg.resource_id = 'aaaa'
         stack.delete()
+
+        self.m.VerifyAll()
+
+    def test_security_group_nova_update(self):
+        #create script
+        sg_name = self.stubout_nova_create_security_group()
+        # update script
+        nova_sg.SecurityGroupManager.list().MultipleTimes().AndReturn([
+            NovaSG(id='1',
+                   name='test',
+                   description='FAKE_SECURITY_GROUP',
+                   rules=[]),
+            NovaSG(id='2',
+                   name=sg_name,
+                   description='HTTPS access',
+                   rules=[]),
+            NovaSG(id='3',
+                   name='test2',
+                   description='FAKE_SECURITY_GROUP',
+                   rules=[]),
+        ])
+
+        # remove deleted groups
+        self.stubout_nova_get_security_group(sg_name)
+        nova_sgr.SecurityGroupRuleManager.delete(131).AndReturn(None)
+        nova_sgr.SecurityGroupRuleManager.delete(132).AndReturn(None)
+
+        # create missing groups
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'tcp', 443, 443, '0.0.0.0/0', None).AndReturn(None)
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'tcp', None, None, None, '3').AndReturn(None)
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template_nova)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, utils.PhysName('test_stack', 'the_sg'))
+
+        # make updated template
+        props = copy.deepcopy(sg.properties.data)
+        props['SecurityGroupIngress'] = [
+            {'IpProtocol': 'tcp',
+             'FromPort': '22',
+             'ToPort': '22',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'FromPort': '443',
+             'ToPort': '443',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'SourceSecurityGroupName': 'test2'},
+            {'IpProtocol': 'icmp',
+             'SourceSecurityGroupId': '1'},
+        ]
+        after = rsrc_defn.ResourceDefinition(sg.name, sg.type(), props)
+
+        scheduler.TaskRunner(sg.update, after)()
+
+        self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
+        self.m.VerifyAll()
+
+    def test_security_group_neutron_update(self):
+        #create script
+        self.stubout_neutron_create_security_group()
+
+        # update script
+        # delete old not needed rules
+        self.stubout_neutron_get_security_group()
+        neutronclient.Client.delete_security_group_rule(
+            'bbbb').InAnyOrder().AndReturn(None)
+        neutronclient.Client.delete_security_group_rule(
+            'dddd').InAnyOrder().AndReturn(None)
+        neutronclient.Client.delete_security_group_rule(
+            'eeee').InAnyOrder().AndReturn(None)
+
+        # create missing rules
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'port_range_min': 443,
+                'ethertype': 'IPv4',
+                'port_range_max': 443,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).InAnyOrder().AndReturn({
+            'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'port_range_min': 443,
+                'ethertype': 'IPv4',
+                'port_range_max': 443,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa',
+                'id': 'bbbb'
+            }
+        })
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': 'zzzz',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).InAnyOrder().AndReturn({
+            'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': 'zzzz',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa',
+                'id': 'dddd'
+            }
+        })
+
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
+                'direction': 'egress',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'port_range_min': 22,
+                'ethertype': 'IPv4',
+                'port_range_max': 22,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).InAnyOrder().AndReturn({
+            'security_group_rule': {
+                'direction': 'egress',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'port_range_min': 22,
+                'ethertype': 'IPv4',
+                'port_range_max': 22,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa',
+                'id': 'eeee'
+            }
+        })
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template_neutron)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        # make updated template
+        props = copy.deepcopy(sg.properties.data)
+        props['SecurityGroupIngress'] = [
+            {'IpProtocol': 'tcp',
+             'FromPort': '80',
+             'ToPort': '80',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'FromPort': '443',
+             'ToPort': '443',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'SourceSecurityGroupId': 'zzzz'},
+        ]
+        props['SecurityGroupEgress'] = [
+            {'IpProtocol': 'tcp',
+             'FromPort': '22',
+             'ToPort': '22',
+             'CidrIp': '0.0.0.0/0'},
+            {'SourceSecurityGroupName': 'xxxx'},
+        ]
+        after = rsrc_defn.ResourceDefinition(sg.name, sg.type(), props)
+        scheduler.TaskRunner(sg.update, after)()
+
+        self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
 
         self.m.VerifyAll()
