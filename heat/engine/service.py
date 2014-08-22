@@ -18,6 +18,7 @@ import os
 
 from oslo.config import cfg
 from oslo import messaging
+import requests
 import six
 import warnings
 import webob
@@ -40,6 +41,7 @@ from heat.engine import resources
 from heat.engine import stack_lock
 from heat.engine import watchrule
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
@@ -1275,11 +1277,21 @@ class EngineService(service.Service):
 
     def _push_metadata_software_deployments(self, cnxt, server_id):
         rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
-        if rs:
-            deployments = self.metadata_software_deployments(cnxt, server_id)
-            md = rs.rsrc_metadata or {}
-            md['deployments'] = deployments
-            rs.update_and_save({'rsrc_metadata': md})
+        if not rs:
+            return
+        deployments = self.metadata_software_deployments(cnxt, server_id)
+        md = rs.rsrc_metadata or {}
+        md['deployments'] = deployments
+        rs.update_and_save({'rsrc_metadata': md})
+
+        metadata_put_url = None
+        for rd in rs.data:
+            if rd.key == 'metadata_put_url':
+                metadata_put_url = rd.value
+                break
+        if metadata_put_url:
+            json_md = jsonutils.dumps(md)
+            requests.put(metadata_put_url, json_md)
 
     @request_context
     def show_software_deployment(self, cnxt, deployment_id):
