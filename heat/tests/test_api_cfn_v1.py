@@ -513,7 +513,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -561,7 +562,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -609,7 +611,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -657,7 +660,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -705,7 +709,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -791,7 +796,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndRaise(AttributeError())
 
         policy.Enforcer.enforce(dummy_req.context, 'CreateStack'
@@ -805,7 +811,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndRaise(heat_exception.UnknownUserParameter(key='test'))
 
         policy.Enforcer.enforce(dummy_req.context, 'CreateStack'
@@ -819,7 +826,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndRaise(heat_exception.UserParameterMissing(key='test'))
 
         self.m.ReplayAll()
@@ -860,7 +868,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndRaise(heat_exception.StackExists(stack_name='test'))
 
         self.m.ReplayAll()
@@ -895,7 +904,8 @@ class CfnStackControllerTest(common.HeatTestCase):
               'files': {},
               'args': engine_args,
               'owner_id': None,
-              'nested_depth': 0})
+              'nested_depth': 0,
+              'user_creds_id': None})
         ).AndRaise(heat_exception.StackValidationFailed(
             message='Something went wrong'))
 
