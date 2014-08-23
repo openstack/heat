@@ -1098,6 +1098,23 @@ class StackTest(HeatTestCase):
         self.assertEqual(
             self.stack, self.stack['A'].nested().root_stack)
 
+    def test_nested_stack_abandon(self):
+        self._setup_nested('nestedstack')
+        ret = self.stack.prepare_abandon()
+        self.assertIsNotNone(self.stack['A'].nested())
+        self.assertEqual(
+            self.stack, self.stack['A'].nested().root_stack)
+
+        keys = ['name', 'id', 'action', 'status', 'template', 'resources',
+                'project_id', 'stack_user_project_id']
+
+        self.assertEqual(8, len(ret))
+        nested_stack_data = ret['resources']['A']
+        self.assertEqual(8, len(nested_stack_data))
+        for key in keys:
+            self.assertIn(key, ret)
+            self.assertIn(key, nested_stack_data)
+
     def test_load_parent_resource(self):
         self.stack = parser.Stack(self.ctx, 'load_parent_resource',
                                   self.tmpl)
@@ -1155,7 +1172,9 @@ class StackTest(HeatTestCase):
         "resource_id": null, "action": "INIT", "type": "GenericResourceType",
         "metadata": {}}}'''
         self.stack = parser.Stack(self.ctx, 'stack_details_test',
-                                  parser.Template(tpl))
+                                  parser.Template(tpl),
+                                  tenant_id='123',
+                                  stack_user_project_id='234')
         self.stack.store()
         info = self.stack.prepare_abandon()
         self.assertIsNone(info['action'])
@@ -1164,6 +1183,8 @@ class StackTest(HeatTestCase):
         self.assertEqual(json.loads(resources), info['resources'])
         self.assertIsNone(info['status'])
         self.assertEqual(tpl, info['template'])
+        self.assertEqual('123', info['project_id'])
+        self.assertEqual('234', info['stack_user_project_id'])
 
     def test_set_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_arn_test',

@@ -996,7 +996,9 @@ class Stack(collections.Mapping):
             'status': self.status,
             'template': self.t.t,
             'resources': dict((res.name, res.prepare_abandon())
-                              for res in self.resources.values())
+                              for res in self.resources.values()),
+            'project_id': self.tenant_id,
+            'stack_user_project_id': self.stack_user_project_id
         }
 
     def resolve_static_data(self, snippet):
