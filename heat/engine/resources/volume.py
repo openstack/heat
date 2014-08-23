@@ -48,7 +48,7 @@ class Volume(resource.Resource):
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
-            _('The size of the volume in GB. '),
+            _('The size of the volume in GB.'),
             immutable=True,
             constraints=[
                 constraints.Range(min=1),
