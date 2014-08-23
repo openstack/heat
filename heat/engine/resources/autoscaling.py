@@ -31,7 +31,7 @@ from heat.engine import signal_responder
 from heat.engine import stack_resource
 from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
-from heat.openstack.common import timeutils
+from heat.scaling import cooldown
 from heat.scaling import template
 
 LOG = logging.getLogger(__name__)
@@ -42,36 +42,6 @@ LOG = logging.getLogger(__name__)
 
 (EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY) = (
     'ExactCapacity', 'ChangeInCapacity', 'PercentChangeInCapacity')
-
-
-class CooldownMixin(object):
-    '''
-    Utility class to encapsulate Cooldown related logic which is shared
-    between AutoScalingGroup and ScalingPolicy
-    '''
-    def _cooldown_inprogress(self):
-        inprogress = False
-        try:
-            # Negative values don't make sense, so they are clamped to zero
-            cooldown = max(0, self.properties[self.COOLDOWN])
-        except TypeError:
-            # If not specified, it will be None, same as cooldown == 0
-            cooldown = 0
-
-        metadata = self.metadata_get()
-        if metadata and cooldown != 0:
-            last_adjust = metadata.keys()[0]
-            if not timeutils.is_older_than(last_adjust, cooldown):
-                inprogress = True
-        return inprogress
-
-    def _cooldown_timestamp(self, reason):
-        # Save resource metadata with a timestamp and reason
-        # If we wanted to implement the AutoScaling API like AWS does,
-        # we could maintain event history here, but since we only need
-        # the latest event for cooldown, just store that for now
-        metadata = {timeutils.strtime(): reason}
-        self.metadata_set(metadata)
 
 
 def _calculate_new_capacity(current, adjustment, adjustment_type,
@@ -473,7 +443,7 @@ class InstanceGroup(stack_resource.StackResource):
         return self._environment()
 
 
-class AutoScalingGroup(InstanceGroup, CooldownMixin):
+class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
 
     PROPERTIES = (
         AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, MAX_SIZE, MIN_SIZE,
@@ -946,7 +916,7 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                                             template_version=template_version)
 
 
-class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
+class ScalingPolicy(signal_responder.SignalResponder, cooldown.CooldownMixin):
     PROPERTIES = (
         AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
         COOLDOWN,
