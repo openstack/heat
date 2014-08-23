@@ -59,6 +59,24 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             return False
         return ex.status_code == 413
 
+    def find_neutron_resource(self, props, key, key_type):
+        return neutronV20.find_resourceid_by_name_or_id(
+            self.client(), key_type, props.get(key))
+
+    def resolve_network(self, props, net_key, net_id_key):
+        if props.get(net_key):
+            props[net_id_key] = self.find_neutron_resource(
+                props, net_key, 'network')
+            props.pop(net_key)
+        return props[net_id_key]
+
+    def resolve_subnet(self, props, subnet_key, subnet_id_key):
+        if props.get(subnet_key):
+            props[subnet_id_key] = self.find_neutron_resource(
+                props, subnet_key, 'subnet')
+            props.pop(subnet_key)
+        return props[subnet_id_key]
+
 
 class NetworkConstraint(constraints.BaseCustomConstraint):
 
