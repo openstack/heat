@@ -114,7 +114,7 @@ class NovaFloatingIpAssociation(resource.Resource):
     }
 
     def FnGetRefId(self):
-        return unicode(self.physical_resource_name())
+        return self.physical_resource_name_or_FnGetRefId()
 
     def handle_create(self):
         server = self.nova().servers.get(self.properties[self.SERVER])

@@ -940,6 +940,13 @@ class Resource(object):
         else:
             return unicode(self.name)
 
+    def physical_resource_name_or_FnGetRefId(self):
+        res_name = self.physical_resource_name()
+        if res_name is not None:
+            return unicode(res_name)
+        else:
+            return Resource.FnGetRefId(self)
+
     def FnGetAtt(self, key, *path):
         '''
         For the intrinsic function Fn::GetAtt.

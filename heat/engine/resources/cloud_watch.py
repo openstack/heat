@@ -169,7 +169,7 @@ class CloudWatchAlarm(resource.Resource):
         wr.state_set(wr.NODATA)
 
     def FnGetRefId(self):
-        return unicode(self.physical_resource_name())
+        return self.physical_resource_name_or_FnGetRefId()
 
     def physical_resource_name(self):
         return '%s-%s' % (self.stack.name, self.name)

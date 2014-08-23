@@ -175,7 +175,7 @@ class ElasticIpAssociation(resource.Resource):
     }
 
     def FnGetRefId(self):
-        return unicode(self.physical_resource_name())
+        return self.physical_resource_name_or_FnGetRefId()
 
     def handle_create(self):
         """Add a floating IP address to a server."""

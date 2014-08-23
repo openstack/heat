@@ -20,6 +20,7 @@ from oslo.config import cfg
 import six
 
 from heat.common import exception
+from heat.common import short_id
 from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine import attributes
@@ -141,6 +142,25 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(res.COMPLETE, res.status)
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
         self.assertEqual('wibble', res.status_reason)
+
+    def test_physical_resource_name_or_FnGetRefId(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        # use physical_resource_name when res.id is not None
+        self.assertIsNotNone(res.id)
+        expected = '%s-%s-%s' % (self.stack.name,
+                                 res.name,
+                                 short_id.get_id(res.id))
+        self.assertEqual(expected, res.physical_resource_name_or_FnGetRefId())
+
+        # otherwise use parent method
+        res.id = None
+        self.assertIsNone(res.resource_id)
+        self.assertEqual('test_resource',
+                         res.physical_resource_name_or_FnGetRefId())
 
     def test_prepare_abandon(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
