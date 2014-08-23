@@ -55,10 +55,11 @@ logger.debug("AUTH_URL=%s" % AUTH_URL)
 
 
 def main():
-    log_lvl = logging.DEBUG if DEBUG else logging.INFO
+    log_lvl = logging.DEBUG if DEBUG else logging.WARNING
     logging.basicConfig(
         format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
         level=log_lvl)
+    logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
     c = client.Client(debug=DEBUG,
                       username=USERNAME,
