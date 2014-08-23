@@ -442,7 +442,7 @@ class Stack(collections.Mapping):
             try:
                 result = res.validate()
             except exception.HeatException as ex:
-                LOG.exception(ex)
+                LOG.info(ex)
                 raise ex
             except Exception as ex:
                 LOG.exception(ex)
