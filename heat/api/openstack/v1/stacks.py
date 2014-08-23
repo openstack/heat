@@ -414,6 +414,13 @@ class StackController(object):
         self.rpc_client.delete_snapshot(req.context, identity, snapshot_id)
         raise exc.HTTPNoContent()
 
+    @util.identified_stack
+    def list_snapshots(self, req, identity):
+        return {
+            'snapshots': self.rpc_client.stack_list_snapshots(
+                req.context, identity)
+        }
+
 
 class StackSerializer(serializers.JSONResponseSerializer):
     """Handles serialization of specific controller method responses."""

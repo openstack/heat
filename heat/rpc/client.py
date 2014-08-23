@@ -512,3 +512,7 @@ class EngineClient(object):
         return self.call(cnxt, self.make_msg('delete_snapshot',
                                              stack_identity=stack_identity,
                                              snapshot_id=snapshot_id))
+
+    def stack_list_snapshots(self, cnxt, stack_identity):
+        return self.call(cnxt, self.make_msg('stack_list_snapshots',
+                                             stack_identity=stack_identity))

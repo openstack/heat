@@ -1101,6 +1101,12 @@ class EngineService(service.Service):
                                               stack.check)
 
     @request_context
+    def stack_list_snapshots(self, cnxt, stack_identity):
+        s = self._get_stack(cnxt, stack_identity)
+        data = db_api.snapshot_get_all(cnxt, s.id)
+        return [api.format_snapshot(snapshot) for snapshot in data]
+
+    @request_context
     def metadata_update(self, cnxt, stack_identity,
                         resource_name, metadata):
         """
