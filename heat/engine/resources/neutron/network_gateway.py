@@ -19,7 +19,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import support
 
 
@@ -172,8 +171,8 @@ class NetworkGateway(neutron.NeutronResource):
             {'network_gateway': props})['network_gateway']
 
         for connection in connections:
-            neutron_utils.resolve_network(
-                self.neutron(), connection, self.NETWORK, 'network_id')
+            self.client_plugin().resolve_network(
+                connection, self.NETWORK, 'network_id')
             if self.NETWORK in connection.keys():
                 connection.pop(self.NETWORK)
             self.neutron().connect_network_gateway(
@@ -190,8 +189,8 @@ class NetworkGateway(neutron.NeutronResource):
         connections = self.properties[self.CONNECTIONS]
         for connection in connections:
             try:
-                neutron_utils.resolve_network(
-                    self.neutron(), connection, self.NETWORK, 'network_id')
+                self.client_plugin().resolve_network(
+                    connection, self.NETWORK, 'network_id')
                 if self.NETWORK in connection.keys():
                     connection.pop(self.NETWORK)
                 client.disconnect_network_gateway(
@@ -226,8 +225,8 @@ class NetworkGateway(neutron.NeutronResource):
         if self.CONNECTIONS in prop_diff:
             for connection in self.properties[self.CONNECTIONS]:
                 try:
-                    neutron_utils.resolve_network(
-                        self.neutron(), connection, self.NETWORK, 'network_id')
+                    self.client_plugin().resolve_network(
+                        connection, self.NETWORK, 'network_id')
                     if self.NETWORK in connection.keys():
                         connection.pop(self.NETWORK)
                     self.neutron().disconnect_network_gateway(
@@ -236,8 +235,8 @@ class NetworkGateway(neutron.NeutronResource):
                 except Exception as ex:
                     self.client_plugin().ignore_not_found(ex)
             for connection in connections:
-                neutron_utils.resolve_network(
-                    self.neutron(), connection, self.NETWORK, 'network_id')
+                self.client_plugin().resolve_network(
+                    connection, self.NETWORK, 'network_id')
                 if self.NETWORK in connection.keys():
                     connection.pop(self.NETWORK)
                 self.neutron().connect_network_gateway(

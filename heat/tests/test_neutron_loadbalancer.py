@@ -17,13 +17,13 @@ from oslo.config import cfg
 import six
 
 from neutronclient.common import exceptions
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.neutron import loadbalancer
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -358,8 +358,7 @@ class PoolTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'disassociate_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
-        self.m.StubOutWithMock(neutron_utils.neutronV20,
-                               'find_resourceid_by_name_or_id')
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.stub_keystoneclient()
@@ -386,12 +385,12 @@ class PoolTest(HeatTestCase):
         stvippsn['vip']['subnet_id'] = 'sub123'
 
         if resolve_neutron and with_vip_subnet:
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
             ).AndReturn('sub123')
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub9999'
@@ -401,7 +400,7 @@ class PoolTest(HeatTestCase):
                                             ).AndReturn({'vip': {'id': 'xyz'}})
 
         elif resolve_neutron and not with_vip_subnet:
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
@@ -439,7 +438,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_pending(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -479,7 +478,7 @@ class PoolTest(HeatTestCase):
     def test_create_failed_error_status(self):
         cfg.CONF.set_override('action_retry_limit', 0)
 
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -515,7 +514,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed_unexpected_vip_status(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -553,7 +552,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -581,7 +580,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_with_session_persistence(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -645,7 +644,7 @@ class PoolTest(HeatTestCase):
         self.assertIsNone(resource.validate())
 
     def test_properties_are_prepared_for_session_persistence(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
@@ -796,7 +795,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_monitors(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'

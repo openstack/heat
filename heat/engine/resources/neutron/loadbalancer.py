@@ -17,7 +17,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine import scheduler
 from heat.engine import support
 
@@ -370,8 +369,8 @@ class Pool(neutron.NeutronResource):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        neutron_utils.resolve_subnet(
-            self.neutron(), properties, self.SUBNET, 'subnet_id')
+        self.client_plugin().resolve_subnet(
+            properties, self.SUBNET, 'subnet_id')
         vip_properties = properties.pop(self.VIP)
         monitors = properties.pop(self.MONITORS)
         client = self.neutron()
@@ -396,8 +395,7 @@ class Pool(neutron.NeutronResource):
         if vip_arguments.get(self.VIP_SUBNET) is None:
             vip_arguments['subnet_id'] = properties[self.SUBNET_ID]
         else:
-            vip_arguments['subnet_id'] = neutron_utils.resolve_subnet(
-                self.neutron(),
+            vip_arguments['subnet_id'] = self.client_plugin().resolve_subnet(
                 vip_arguments, self.VIP_SUBNET, 'subnet_id')
 
         vip_arguments['pool_id'] = pool['id']

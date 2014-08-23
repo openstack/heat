@@ -14,12 +14,12 @@
 import copy
 import mox
 from neutronclient.common import exceptions
+from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.neutron import neutron_utils
 from heat.engine.resources.neutron import vpnservice
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -169,13 +169,12 @@ class VPNServiceTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
-        self.m.StubOutWithMock(neutron_utils.neutronV20,
-                               'find_resourceid_by_name_or_id')
+        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
     def create_vpnservice(self, resolve_neutron=True):
         if resolve_neutron:
-            neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+            neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 'sub123'
@@ -206,7 +205,7 @@ class VPNServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed(self):
-        neutron_utils.neutronV20.find_resourceid_by_name_or_id(
+        neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
