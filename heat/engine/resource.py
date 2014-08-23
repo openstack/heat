@@ -425,7 +425,9 @@ class Resource(object):
             with excutils.save_and_reraise_exception():
                 LOG.debug('%s', six.text_type(ex))
         except Exception as ex:
-            LOG.exception('%s: %s' % (action, str(self)))  # noqa
+            LOG.info('%(action)s: %(info)s', {"action": action,
+                                              "info": str(self)},
+                     exc_info=True)
             failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
             raise failure
