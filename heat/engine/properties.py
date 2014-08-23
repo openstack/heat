@@ -153,6 +153,24 @@ class Schema(constr.Schema):
                    update_allowed=True,
                    immutable=False)
 
+    def allowed_param_prop_type(self):
+        """
+        Return allowed type of Property Schema converted from parameter.
+
+        Especially, when generating Schema from parameter, Integer Property
+        Schema will be supplied by Number parameter.
+        """
+        param_type_map = {
+            self.INTEGER: self.NUMBER,
+            self.STRING: self.STRING,
+            self.NUMBER: self.NUMBER,
+            self.BOOLEAN: self.BOOLEAN,
+            self.LIST: self.LIST,
+            self.MAP: self.MAP
+        }
+
+        return param_type_map[self.type]
+
     def __getitem__(self, key):
         if key == self.UPDATE_ALLOWED:
             return self.update_allowed

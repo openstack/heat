@@ -361,6 +361,37 @@ class ProviderTemplateTest(HeatTestCase):
                          "DummyResource (Map) and provider (String)",
                          six.text_type(ex))
 
+    def test_properties_type_match(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'Length': {'Type': 'Number'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {"Length":
+                                 properties.Schema(properties.Schema.INTEGER)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(
+                                 {'HeatTemplateFormatVersion': '2012-12-12'},
+                                 files=files), env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  "DummyResource",
+                                                  {"Length": 10})
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition, stack)
+        self.assertIsNone(temp_res.validate())
+
     def test_boolean_type_provider(self):
         provider = {
             'HeatTemplateFormatVersion': '2012-12-12',

@@ -192,7 +192,7 @@ class TemplateResource(stack_resource.StackResource):
 
             ps = self.properties_schema.get(n)
             if (n in self.properties_schema and
-                    (fs.type != ps.type)):
+                    (fs.allowed_param_prop_type() != ps.type)):
                 # Type mismatch
                 msg = (_("Property %(n)s type mismatch between facade %(type)s"
                        " (%(fs_type)s) and provider (%(ps_type)s)") % {
