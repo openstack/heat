@@ -16,5 +16,5 @@
 
 from heat.openstack.common import gettextutils
 
-
-gettextutils.install('heat')
+gettextutils.enable_lazy()
+gettextutils.install('heat', lazy=True)
