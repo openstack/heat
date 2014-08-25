@@ -23,12 +23,12 @@ All of these functions (except *Ref*) start with *Fn::*.
 ---
 Ref
 ---
-Return the value of the named parameter or Resource.
+Returns the value of the named parameter or resource.
 
 Parameters
 ~~~~~~~~~~
 name : String
-    The name of the Resource or Parameter.
+    The name of the resource or parameter.
 
 Usage
 ~~~~~
@@ -36,7 +36,7 @@ Usage
 
   {Ref: my_server}
 
-Returns the nova instance ID. For example, ``d8093de0-850f-4513-b202-7979de6c0d55``
+Returns the nova instance ID. For example, ``d8093de0-850f-4513-b202-7979de6c0d55``.
 
 ----------
 Fn::Base64
@@ -88,17 +88,17 @@ Usage
 
   {"Fn::FindInMap": ["MyContacts", "jim", "phone" ] }
 
-Returns ``908``
+Returns ``908``.
 
 ----------
 Fn::GetAtt
 ----------
-Returns an attribute of a Resource within the template.
+Returns an attribute of a resource within the template.
 
 Parameters
 ~~~~~~~~~~
 resource : String
-    The name of the Resource.
+    The name of the resource.
 
 attribute : String
     The name of the attribute.
@@ -110,12 +110,12 @@ Usage
 
   {Fn::GetAtt: [my_server, PublicIp]}
 
-Returns an IP address such as ``10.0.0.2``
+Returns an IP address such as ``10.0.0.2``.
 
 ----------
 Fn::GetAZs
 ----------
-Return the Availability Zones within the given region.
+Returns the Availability Zones within the given region.
 
 *Note: AZ's and regions are not fully implemented in Heat.*
 
@@ -130,7 +130,7 @@ Usage
 
   {Fn::GetAZs: ""}
 
-Returns the list provided by ``nova availability-zone-list``
+Returns the list provided by ``nova availability-zone-list``.
 
 --------
 Fn::Join
@@ -152,7 +152,7 @@ Usage
 
   {Fn::Join: [",", ["beer", "wine", "more beer"]]}
 
-Returns ``beer, wine, more beer``
+Returns ``beer, wine, more beer``.
 
 ----------
 Fn::Select
@@ -177,14 +177,14 @@ For a list lookup:
 
   { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
 
-Returns ``mangoes``
+Returns ``mangoes``.
 
 For a map lookup:
 ::
 
   { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
 
-Returns ``a``
+Returns ``a``.
 
 ---------
 Fn::Split
@@ -206,12 +206,12 @@ Usage
 
   { "Fn::Split" : [ ",", "str1,str2,str3,str4"]}
 
-Returns ``{["str1", "str2", "str3", "str4"]}``
+Returns ``{["str1", "str2", "str3", "str4"]}``.
 
 -----------
 Fn::Replace
 -----------
-Find an replace one string with another.
+Find and replace one string with another.
 
 Parameters
 ~~~~~~~~~~
@@ -228,8 +228,8 @@ Usage
    {'$var1': 'foo', '%var2%': 'bar'},
     '$var1 is %var2%'
   ]}
-  returns
-  "foo is bar"
+
+Returns ``"foo is bar"``.
 
 ------------------
 Fn::ResourceFacade
@@ -289,7 +289,7 @@ To use it
 
 ::
 
-  heat stack-create -f top.yaml -e env.yaml
+  $ heat stack-create -f top.yaml -e env.yaml
 
 
 What happened is the metadata in ``top.yaml`` (key: value, some: more
@@ -304,10 +304,10 @@ Convert an AWS style member list into a map.
 Parameters
 ~~~~~~~~~~
 key name: string
-    The name of the key (normally "Name" or "Key")
+    The name of the key (normally "Name" or "Key").
 
 value name: string
-    The name of the value (normally "Value")
+    The name of the value (normally "Value").
 
 list: A list of strings
     The string to convert.
@@ -321,5 +321,5 @@ Usage
                                              '.member.1.Name=colour',
                                              '.member.1.Value=green']]}
 
-  returns
-  {'key': 'door', 'colour': 'green'}
+
+Returns ``{'key': 'door', 'colour': 'green'}``.
