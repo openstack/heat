@@ -77,6 +77,10 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             props.pop(subnet_key)
         return props[subnet_id_key]
 
+    def network_id_from_subnet_id(self, subnet_id):
+        subnet_info = self.client().show_subnet(subnet_id)
+        return subnet_info['subnet']['network_id']
+
 
 class NetworkConstraint(constraints.BaseCustomConstraint):
 

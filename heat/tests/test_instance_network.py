@@ -15,6 +15,7 @@ import uuid
 
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
@@ -179,6 +180,10 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(instance, 'neutron')
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(
+            FakeNeutron())
+
         # need to resolve the template functions
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
@@ -230,6 +235,10 @@ class instancesTest(HeatTestCase):
         self._mock_get_image_id_success(image_id, 1)
         self.m.StubOutWithMock(nic, 'neutron')
         nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
+
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
+        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(
+            FakeNeutron())
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
