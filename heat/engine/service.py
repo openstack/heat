@@ -462,7 +462,7 @@ class EngineService(service.Service):
                      show_deleted=False):
         """
         Return the number of stacks that match the given filters
-        :param ctxt: RPC context.
+        :param cnxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
         :param tenant_safe: if true, scope the request by the current tenant
         :param show_deleted: if true, count will include the deleted stacks
