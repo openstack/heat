@@ -123,6 +123,18 @@ class CloudNetworkTest(common.HeatTestCase):
                                 self.stack.validate)
         self.assertIn("Invalid cidr", six.text_type(exc))
 
+    def test_check(self, mock_client):
+        self._setup_stack(mock_client)
+        res = self.stack['cnw']
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+        self.fake_cnw.networks = []
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('No network', str(exc))
+
     def test_delete(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']

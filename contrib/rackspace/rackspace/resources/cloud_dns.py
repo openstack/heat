@@ -163,6 +163,9 @@ class CloudDns(resource.Resource):
         dom = self.cloud_dns().create(**args)
         self.resource_id_set(dom.id)
 
+    def handle_check(self):
+        self.cloud_dns().get(self.resource_id)
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update a Rackspace CloudDns Instance."""
         LOG.debug("CloudDns handle_update called.")
