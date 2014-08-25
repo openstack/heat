@@ -31,7 +31,7 @@ class PropertySchemaTest(common.HeatTestCase):
             'type': 'string',
             'description': 'A string',
             'default': 'wibble',
-            'required': True,
+            'required': False,
             'update_allowed': False,
             'immutable': False,
             'constraints': [
@@ -39,7 +39,7 @@ class PropertySchemaTest(common.HeatTestCase):
             ]
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
-                              default='wibble', required=True,
+                              default='wibble',
                               constraints=[constraints.Length(4, 8)])
         self.assertEqual(d, dict(s))
 
@@ -52,7 +52,7 @@ class PropertySchemaTest(common.HeatTestCase):
                     'type': 'string',
                     'description': 'A string',
                     'default': 'wibble',
-                    'required': True,
+                    'required': False,
                     'update_allowed': False,
                     'immutable': False,
                     'constraints': [
@@ -65,7 +65,7 @@ class PropertySchemaTest(common.HeatTestCase):
             'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
-                              default='wibble', required=True,
+                              default='wibble',
                               constraints=[constraints.Length(4, 8)])
         l = properties.Schema(properties.Schema.LIST, 'A list', schema=s)
         self.assertEqual(d, dict(l))
@@ -79,7 +79,7 @@ class PropertySchemaTest(common.HeatTestCase):
                     'type': 'string',
                     'description': 'A string',
                     'default': 'wibble',
-                    'required': True,
+                    'required': False,
                     'update_allowed': False,
                     'immutable': False,
                     'constraints': [
@@ -92,7 +92,7 @@ class PropertySchemaTest(common.HeatTestCase):
             'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
-                              default='wibble', required=True,
+                              default='wibble',
                               constraints=[constraints.Length(4, 8)])
         m = properties.Schema(properties.Schema.MAP, 'A map',
                               schema={'Foo': s})
@@ -111,7 +111,7 @@ class PropertySchemaTest(common.HeatTestCase):
                             'type': 'string',
                             'description': 'A string',
                             'default': 'wibble',
-                            'required': True,
+                            'required': False,
                             'update_allowed': False,
                             'immutable': False,
                             'constraints': [
@@ -129,7 +129,7 @@ class PropertySchemaTest(common.HeatTestCase):
             'immutable': False,
         }
         s = properties.Schema(properties.Schema.STRING, 'A string',
-                              default='wibble', required=True,
+                              default='wibble',
                               constraints=[constraints.Length(4, 8)])
         m = properties.Schema(properties.Schema.MAP, 'A map',
                               schema={'Foo': s})
@@ -162,7 +162,6 @@ class PropertySchemaTest(common.HeatTestCase):
             'Type': 'String',
             'Description': 'a string',
             'Default': 'wibble',
-            'Required': True,
             'Implemented': False,
             'MinLength': 4,
             'MaxLength': 8,
@@ -172,7 +171,7 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual(properties.Schema.STRING, s.type)
         self.assertEqual('a string', s.description)
         self.assertEqual('wibble', s.default)
-        self.assertTrue(s.required)
+        self.assertFalse(s.required)
         self.assertEqual(3, len(s.constraints))
         self.assertFalse(s.immutable)
 
@@ -1618,7 +1617,6 @@ class PropertiesValidationTest(common.HeatTestCase):
         nested_schema = {'Key': {'Type': 'String',
                          'Required': True},
                          'Value': {'Type': 'String',
-                                   'Required': True,
                                    'Default': 'fewaf'}}
         schema = {'foo': {'Type': 'Map', 'Schema': nested_schema}}
 
@@ -1707,7 +1705,6 @@ class PropertiesValidationTest(common.HeatTestCase):
         child_schema = {'Key': {'Type': 'String',
                                 'Required': True},
                         'Value': {'Type': 'Boolean',
-                                  'Required': True,
                                   'Default': True}}
         list_schema = {'Type': 'Map', 'Schema': child_schema}
         schema = {'foo': {'Type': 'List', 'Schema': list_schema}}
@@ -1727,7 +1724,6 @@ class PropertiesValidationTest(common.HeatTestCase):
         child_schema = {'Key': {'Type': 'String',
                                 'Required': True},
                         'Value': {'Type': 'Boolean',
-                                  'Required': True,
                                   'Default': True}}
         map_schema = {'boo': {'Type': 'Map', 'Schema': child_schema}}
         schema = {'foo': {'Type': 'Map', 'Schema': map_schema}}
