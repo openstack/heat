@@ -623,14 +623,14 @@ class Server(stack_user.StackUser):
         if name == self.FIRST_ADDRESS:
             return self.client_plugin().server_to_ipaddress(
                 self.resource_id) or ''
+        if name == self.NAME_ATTR:
+            return self._server_name()
         try:
             server = self.nova().servers.get(self.resource_id)
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             LOG.warn(_('Instance (%s) not found') % self.resource_id)
             return ''
-        if name == self.NAME_ATTR:
-            return self._server_name()
         if name == self.ADDRESSES:
             return self._add_port_for_address(server)
         if name == self.NETWORKS_ATTR:
