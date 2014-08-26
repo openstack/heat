@@ -617,6 +617,18 @@ class Resource(object):
                 resource_data.get('resource_data'),
                 resource_data.get('metadata'))
 
+    def _needs_update(self, after, before, prev_resource):
+        if prev_resource is not None:
+            cur_class_def, cur_ver = self.implementation_signature()
+            prev_class_def, prev_ver = prev_resource.implementation_signature()
+
+            if prev_class_def != cur_class_def:
+                raise UpdateReplace(self.name)
+            if prev_ver != cur_ver:
+                return True
+
+        return before != after
+
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
         '''
@@ -627,17 +639,10 @@ class Resource(object):
 
         assert isinstance(after, rsrc_defn.ResourceDefinition)
 
-        (cur_class_def, cur_ver) = self.implementation_signature()
-        prev_ver = cur_ver
-        if prev_resource is not None:
-            (prev_class_def,
-             prev_ver) = prev_resource.implementation_signature()
-            if prev_class_def != cur_class_def:
-                raise UpdateReplace(self.name)
-
         if before is None:
             before = self.parsed_template()
-        if prev_ver == cur_ver and before == after:
+
+        if not self._needs_update(after, before, prev_resource):
             return
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
