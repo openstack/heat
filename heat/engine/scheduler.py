@@ -74,6 +74,29 @@ class Timeout(BaseException):
     def expired(self):
         return wallclock() > self._endtime
 
+    def trigger(self, generator):
+        """Trigger the timeout on a given generator."""
+        try:
+            generator.throw(self)
+        except StopIteration:
+            return True
+        else:
+            # Clean up in case task swallows exception without exiting
+            generator.close()
+            return False
+
+    def __cmp__(self, other):
+        if not isinstance(other, Timeout):
+            return NotImplemented
+        return cmp(self._endtime, other._endtime)
+
+
+class TimedCancel(Timeout):
+    def trigger(self, generator):
+        """Trigger the timeout on a given generator."""
+        generator.close()
+        return False
+
 
 class ExceptionGroup(Exception):
     '''
@@ -179,14 +202,9 @@ class TaskRunner(object):
 
             if self._timeout is not None and self._timeout.expired():
                 LOG.info(_('%s timed out') % str(self))
+                self._done = True
 
-                try:
-                    self._runner.throw(self._timeout)
-                except StopIteration:
-                    self._done = True
-                else:
-                    # Clean up in case task swallows exception without exiting
-                    self.cancel()
+                self._timeout.trigger(self._runner)
             else:
                 LOG.debug('%s running' % str(self))
 
@@ -208,15 +226,20 @@ class TaskRunner(object):
         while not self.step():
             self._sleep(wait_time)
 
-    def cancel(self):
+    def cancel(self, grace_period=None):
         """Cancel the task and mark it as done."""
-        if not self.done():
+        if self.done():
+            return
+
+        if not self.started() or grace_period is None:
             LOG.debug('%s cancelled' % str(self))
-            try:
-                if self.started():
-                    self._runner.close()
-            finally:
-                self._done = True
+            self._done = True
+            if self.started():
+                self._runner.close()
+        else:
+            timeout = TimedCancel(self, grace_period)
+            if self._timeout is None or timeout < self._timeout:
+                self._timeout = timeout
 
     def started(self):
         """Return True if the task has been started."""
