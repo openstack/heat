@@ -956,6 +956,32 @@ class validateTest(HeatTestCase):
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)
 
+    def test_validate_hot_parameter_type(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            parameters:
+              param1:
+                type: string
+              param2:
+                type: number
+              param3:
+                type: json
+              param4:
+                type: comma_delimited_list
+              param5:
+                type: boolean
+            """)
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, {}))
+        parameters = res['Parameters']
+        # make sure all the types are reported correctly
+        self.assertEqual('String', parameters["param1"]["Type"])
+        self.assertEqual('Number', parameters["param2"]["Type"])
+        self.assertEqual('Json', parameters["param3"]["Type"])
+        self.assertEqual('CommaDelimitedList', parameters["param4"]["Type"])
+        self.assertEqual('Boolean', parameters["param5"]["Type"])
+
     def test_validate_hot_empty_resources_valid(self):
         t = template_format.parse(
             """

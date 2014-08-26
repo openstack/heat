@@ -286,7 +286,8 @@ def format_validate_parameter(param):
         param.schema.STRING: api.PARAM_TYPE_STRING,
         param.schema.NUMBER: api.PARAM_TYPE_NUMBER,
         param.schema.LIST: api.PARAM_TYPE_COMMA_DELIMITED_LIST,
-        param.schema.MAP: api.PARAM_TYPE_JSON
+        param.schema.MAP: api.PARAM_TYPE_JSON,
+        param.schema.BOOLEAN: api.PARAM_TYPE_BOOLEAN
     }
 
     res = {
