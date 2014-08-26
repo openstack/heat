@@ -195,6 +195,8 @@ class StackResource(resource.Resource):
         return stack_creator
 
     def check_create_complete(self, stack_creator):
+        if stack_creator is None:
+            return True
         done = stack_creator.step()
         if done:
             if self._nested.state != (self._nested.CREATE,
