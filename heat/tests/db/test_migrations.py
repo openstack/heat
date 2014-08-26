@@ -246,6 +246,9 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             else:
                 self.assertFalse(stack.backup)
 
+    def _check_046(self, engine, data):
+        self.assertColumnExists(engine, 'resource', 'properties_data')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

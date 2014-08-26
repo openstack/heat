@@ -177,6 +177,7 @@ class Resource(object):
         self.id = None
         self._data = {}
         self._rsrc_metadata = None
+        self._stored_properties_data = None
         self.created_time = None
         self.updated_time = None
 
@@ -196,6 +197,7 @@ class Resource(object):
         except exception.NotFound:
             self._data = {}
         self._rsrc_metadata = resource.rsrc_metadata
+        self._stored_properties_data = resource.properties_data
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
 
@@ -492,6 +494,9 @@ class Resource(object):
             handler_args = [resource_data] if resource_data is not None else []
             yield self.action_handler_task(action, args=handler_args)
 
+    def _update_stored_properties(self):
+        self._stored_properties_data = function.resolve(self.properties.data)
+
     def preview(self):
         '''
         Default implementation of Resource.preview.
@@ -520,6 +525,7 @@ class Resource(object):
         # the parser.Stack is stored (which is after the resources
         # are __init__'d, but before they are create()'d)
         self.reparse()
+        self._update_stored_properties()
 
         def pause():
             try:
@@ -581,6 +587,7 @@ class Resource(object):
         Adopt the existing resource. Resource subclasses can provide
         a handle_adopt() method to customise adopt.
         '''
+        self._update_stored_properties()
         return self._do_action(self.ADOPT, resource_data=resource_data)
 
     def handle_adopt(self, resource_data=None):
@@ -658,8 +665,9 @@ class Resource(object):
             yield self.action_handler_task(action,
                                            args=[after, tmpl_diff, prop_diff])
 
-        self.t = after
-        self.reparse()
+            self.t = after
+            self.reparse()
+            self._update_stored_properties()
 
     def check(self):
         """Checks that the physical resource is in its expected state
@@ -851,6 +859,7 @@ class Resource(object):
                   'nova_instance': self.resource_id,
                   'name': self.name,
                   'rsrc_metadata': metadata,
+                  'properties_data': self._stored_properties_data,
                   'stack_name': self.stack.name}
 
             new_rs = db_api.resource_create(self.context, rs)

@@ -1795,6 +1795,9 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertEqual('AResource', self.stack.output('TestOutput'))
 
+        loaded_stack = parser.Stack.load(self.ctx, self.stack.id)
+        self.assertEqual({}, loaded_stack['AResource']._stored_properties_data)
+
     def test_adopt_stack_fails(self):
         adopt_data = '''{
                 "action": "CREATE",
@@ -2030,6 +2033,11 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+
+        loaded_stack = parser.Stack.load(self.ctx, self.stack.id)
+        stored_props = loaded_stack['AResource']._stored_properties_data
+        self.assertEqual({'Foo': 'xyz'}, stored_props)
+
         self.m.VerifyAll()
 
     def test_update_modify_param_ok_replace(self):
