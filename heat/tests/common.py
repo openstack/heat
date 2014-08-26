@@ -31,6 +31,7 @@ from heat.engine import environment
 from heat.engine import resources
 from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
+from heat.engine import stack
 from heat.tests import fakes
 from heat.tests import utils
 
@@ -98,6 +99,14 @@ class HeatTestCase(testscenarios.WithScenarios,
                                                      templ_path)
         utils.setup_dummy_db()
         self.addCleanup(utils.reset_dummy_db)
+
+        cached_wait_time = stack.ERROR_WAIT_TIME
+        stack.ERROR_WAIT_TIME = None
+
+        def replace_wait_time():
+            stack.ERROR_WAIT_TIME = cached_wait_time
+
+        self.addCleanup(replace_wait_time)
 
     def stub_wallclock(self):
         """

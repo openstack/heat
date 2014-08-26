@@ -29,13 +29,14 @@ class StackUpdate(object):
     """
 
     def __init__(self, existing_stack, new_stack, previous_stack,
-                 rollback=False):
+                 rollback=False, error_wait_time=None):
         """Initialise with the existing stack and the new stack."""
         self.existing_stack = existing_stack
         self.new_stack = new_stack
         self.previous_stack = previous_stack
 
         self.rollback = rollback
+        self.error_wait_time = error_wait_time
 
         self.existing_snippets = dict((n, r.frozen_definition())
                                       for n, r in self.existing_stack.items())
@@ -53,7 +54,8 @@ class StackUpdate(object):
         cleanup_prev = scheduler.DependencyTaskGroup(
             self.previous_stack.dependencies,
             self._remove_backup_resource,
-            reverse=True)
+            reverse=True,
+            error_wait_time=self.error_wait_time)
 
         update = scheduler.DependencyTaskGroup(self.dependencies(),
                                                self._resource_update)

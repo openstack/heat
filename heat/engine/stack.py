@@ -41,6 +41,8 @@ from heat.openstack.common import strutils
 
 LOG = logging.getLogger(__name__)
 
+ERROR_WAIT_TIME = 240
+
 
 class Stack(collections.Mapping):
 
@@ -527,7 +529,8 @@ class Stack(collections.Mapping):
         creator = scheduler.TaskRunner(self.stack_task,
                                        action=self.CREATE,
                                        reverse=False,
-                                       post_func=rollback)
+                                       post_func=rollback,
+                                       error_wait_time=ERROR_WAIT_TIME)
         creator(timeout=self.timeout_secs())
 
     def _adopt_kwargs(self, resource):
@@ -539,6 +542,7 @@ class Stack(collections.Mapping):
 
     @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None,
+                   error_wait_time=None,
                    aggregate_exceptions=False):
         '''
         A task to perform an action on the stack and all of the resources
@@ -565,6 +569,7 @@ class Stack(collections.Mapping):
             self.dependencies,
             resource_action,
             reverse,
+            error_wait_time=error_wait_time,
             aggregate_exceptions=aggregate_exceptions)
 
         try:
@@ -685,7 +690,8 @@ class Stack(collections.Mapping):
         backup_stack = self._backup_stack()
         try:
             update_task = update.StackUpdate(self, newstack, backup_stack,
-                                             rollback=action == self.ROLLBACK)
+                                             rollback=action == self.ROLLBACK,
+                                             error_wait_time=ERROR_WAIT_TIME)
             updater = scheduler.TaskRunner(update_task)
 
             self.env = newstack.env
