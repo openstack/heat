@@ -440,6 +440,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             status_reasons[self.STATUS_CODE] = _(
                 'Deployment exited with non-zero status code: %s'
             ) % details.get(self.STATUS_CODE)
+            event_reason = 'deployment failed (%s)' % status_code
+        else:
+            event_reason = 'deployment succeeded'
 
         for output in sc.outputs or []:
             out_key = output['name']
@@ -448,6 +451,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 if output.get('error_output', False):
                     status = self.FAILED
                     status_reasons[out_key] = details[out_key]
+                    event_reason = 'deployment failed'
 
         for out_key in self.ATTRIBUTES:
             ov[out_key] = details.get(out_key)
@@ -461,6 +465,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             status = self.COMPLETE
             status_reason = _('Outputs received')
         sd.update(output_values=ov, status=status, status_reason=status_reason)
+        # Return a string describing the outcome of handling the signal data
+        return event_reason
 
     def FnGetAtt(self, key, *path):
         '''
