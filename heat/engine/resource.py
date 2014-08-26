@@ -297,6 +297,13 @@ class Resource(object):
             template = self.t.get(section, default)
         return function.resolve(template)
 
+    def frozen_definition(self):
+        if self._stored_properties_data is not None:
+            args = {'properties': self._stored_properties_data}
+        else:
+            args = {}
+        return self.t.freeze(**args)
+
     def update_template_diff(self, after, before):
         '''
         Returns the difference between the before and after json snippets. If
@@ -631,7 +638,7 @@ class Resource(object):
             if prev_ver != cur_ver:
                 return True
 
-        if before != after:
+        if before != after.freeze():
             return True
 
         try:
@@ -650,13 +657,10 @@ class Resource(object):
         assert isinstance(after, rsrc_defn.ResourceDefinition)
 
         if before is None:
-            before = self.parsed_template()
+            before = self.frozen_definition()
 
-        before_props = Properties(self.properties_schema,
-                                  before.get('Properties', {}),
-                                  function.resolve,
-                                  self.name,
-                                  self.context)
+        before_props = before.properties(self.properties_schema,
+                                         self.context)
         after_props = after.properties(self.properties_schema,
                                        self.context)
 
