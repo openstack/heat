@@ -195,6 +195,7 @@ class DependencyTaskGroupTest(HeatTestCase):
         super(DependencyTaskGroupTest, self).setUp()
         self.addCleanup(self.m.VerifyAll)
         self.aggregate_exceptions = False
+        self.error_wait_time = None
         self.reverse_order = False
 
     @contextlib.contextmanager
@@ -204,8 +205,9 @@ class DependencyTaskGroupTest(HeatTestCase):
         deps = dependencies.Dependencies(edges)
 
         tg = scheduler.DependencyTaskGroup(
-            deps, dummy, aggregate_exceptions=self.aggregate_exceptions,
-            reverse=self.reverse_order)
+            deps, dummy, reverse=self.reverse_order,
+            error_wait_time=self.error_wait_time,
+            aggregate_exceptions=self.aggregate_exceptions)
 
         self.m.StubOutWithMock(dummy, 'do_step')
 
@@ -399,6 +401,44 @@ class DependencyTaskGroupTest(HeatTestCase):
                                 run_tasks_with_exceptions, e1)
         self.assertEqual([e1], exc.exceptions)
 
+    def test_exception_grace_period(self):
+        e1 = Exception('e1')
+
+        def run_tasks_with_exceptions():
+            self.error_wait_time = 5
+            tasks = (('A', None), ('B', None), ('C', 'A'))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'A').InAnyOrder('1')
+                dummy.do_step(1, 'B').InAnyOrder('1')
+                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
+                dummy.do_step(2, 'B').InAnyOrder('2')
+                dummy.do_step(3, 'B')
+
+        exc = self.assertRaises(Exception, run_tasks_with_exceptions)
+        self.assertEqual(e1, exc)
+
+    def test_exception_grace_period_expired(self):
+        e1 = Exception('e1')
+
+        def run_tasks_with_exceptions():
+            self.steps = 5
+            self.error_wait_time = 0.05
+
+            def sleep():
+                eventlet.sleep(self.error_wait_time)
+
+            tasks = (('A', None), ('B', None), ('C', 'A'))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'A').InAnyOrder('1')
+                dummy.do_step(1, 'B').InAnyOrder('1')
+                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
+                dummy.do_step(2, 'B').InAnyOrder('2')
+                dummy.do_step(3, 'B')
+                dummy.do_step(4, 'B').WithSideEffects(sleep)
+
+        exc = self.assertRaises(Exception, run_tasks_with_exceptions)
+        self.assertEqual(e1, exc)
+
 
 class TaskTest(HeatTestCase):
 
@@ -568,6 +608,12 @@ class TaskTest(HeatTestCase):
         runner = scheduler.TaskRunner(DummyTask())
 
         runner.start()
+        self.assertRaises(AssertionError, runner.start)
+
+    def test_start_cancelled(self):
+        runner = scheduler.TaskRunner(DummyTask())
+
+        runner.cancel()
         self.assertRaises(AssertionError, runner.start)
 
     def test_call_double_start(self):
