@@ -356,3 +356,8 @@ class ActionInProgress(HeatException):
 class StopActionFailed(HeatException):
     msg_fmt = _("Failed to stop stack (%(stack_name)s) on other engine "
                 "(%(engine_id)s)")
+
+
+class EventSendFailed(HeatException):
+    msg_fmt = _("Failed to send message to stack (%(stack_name)s) "
+                "on other engine (%(engine_id)s)")

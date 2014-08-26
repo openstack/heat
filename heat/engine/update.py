@@ -57,14 +57,14 @@ class StackUpdate(object):
             reverse=True,
             error_wait_time=self.error_wait_time)
 
-        update = scheduler.DependencyTaskGroup(self.dependencies(),
-                                               self._resource_update)
+        self.updater = scheduler.DependencyTaskGroup(self.dependencies(),
+                                                     self._resource_update)
 
         if not self.rollback:
             yield cleanup_prev()
 
         try:
-            yield update()
+            yield self.updater()
         finally:
             self.previous_stack.reset_dependencies()
 

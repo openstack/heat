@@ -242,3 +242,5 @@ SNAPSHOT_KEYS = (
     'status',
     'status_reason'
 )
+
+THREAD_MESSAGES = (THREAD_CANCEL,) = ('cancel',)

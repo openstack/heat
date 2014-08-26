@@ -193,6 +193,10 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self._test_engine_api('stack_resume', 'call',
                               stack_identity=self.identity)
 
+    def test_stack_cancel_update(self):
+        self._test_engine_api('stack_cancel_update', 'call',
+                              stack_identity=self.identity)
+
     def test_metadata_update(self):
         self._test_engine_api('metadata_update', 'call',
                               stack_identity=self.identity,
