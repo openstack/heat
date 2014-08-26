@@ -2682,8 +2682,12 @@ class StackTest(HeatTestCase):
                                      disable_rollback=False)
 
         # patch in a dummy delete making the destroy fail
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
         generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
+        # replace the failed resource on rollback
+        generic_rsrc.ResourceWithProps.handle_create()
+        generic_rsrc.ResourceWithProps.handle_delete()
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
