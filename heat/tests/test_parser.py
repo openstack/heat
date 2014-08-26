@@ -3586,6 +3586,25 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
+    def test_stack_user_project_id_create(self):
+        self.stub_keystoneclient()
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'user_project_init',
+                                  self.tmpl)
+        self.stack.store()
+        self.assertIsNone(self.stack.stack_user_project_id)
+        self.stack.create_stack_user_project_id()
+
+        self.assertEqual('aprojectid', self.stack.stack_user_project_id)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('aprojectid', db_stack.stack_user_project_id)
+
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
     def test_preview_resources_returns_list_of_resource_previews(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}

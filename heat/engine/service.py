@@ -561,6 +561,10 @@ class EngineService(service.Service):
         LOG.info(_('Creating stack %s') % stack_name)
 
         def _stack_create(stack):
+
+            if not stack.stack_user_project_id:
+                stack.create_stack_user_project_id()
+
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
                 stack.adopt()

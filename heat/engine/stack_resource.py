@@ -167,6 +167,8 @@ class StackResource(resource.Resource):
         if timeout_mins is None:
             timeout_mins = self.stack.timeout_mins
 
+        stack_user_project_id = self.stack.stack_user_project_id
+
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
         nested = parser.Stack(self.context,
@@ -178,7 +180,8 @@ class StackResource(resource.Resource):
                               parent_resource=self,
                               owner_id=self.stack.id,
                               user_creds_id=self.stack.user_creds_id,
-                              adopt_stack_data=adopt_data)
+                              adopt_stack_data=adopt_data,
+                              stack_user_project_id=stack_user_project_id)
         nested.validate()
         self._nested = nested
         nested_id = self._nested.store()
