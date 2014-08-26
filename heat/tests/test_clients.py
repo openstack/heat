@@ -12,6 +12,7 @@
 #    under the License.
 
 from ceilometerclient import exc as ceil_exc
+from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
 from heatclient import exc as heat_exc
@@ -235,6 +236,13 @@ class TestIsNotFound(HeatTestCase):
             is_client_exception=True,
             plugin='ceilometer',
             exception=lambda: ceil_exc.HTTPNotFound(details='gone'),
+        )),
+        ('ceilometer_not_found_apiclient', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            plugin='ceilometer',
+            exception=lambda: c_a_exc.NotFound(details='gone'),
         )),
         ('ceilometer_exception', dict(
             is_not_found=False,
@@ -491,5 +499,6 @@ class TestIsNotFound(HeatTestCase):
             raise self.exception()
         except Exception as e:
             ice = self.is_client_exception
-            if ice != client_plugin.is_client_exception(e):
+            actual = client_plugin.is_client_exception(e)
+            if ice != actual:
                 raise
