@@ -405,7 +405,7 @@ class ServersTest(HeatTestCase):
                               server.check_create_complete,
                               return_server)
         self.assertEqual(
-            'Unknown status BOGUS',
+            'Server is not active - Unknown status BOGUS',
             str(e))
 
     def test_server_create_error_status(self):

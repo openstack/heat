@@ -551,7 +551,8 @@ class Server(stack_user.StackUser):
                 })
         else:
             raise resource.ResourceUnknownStatus(
-                resource_status=server.status)
+                resource_status=server.status,
+                result=_('Server is not active'))
 
     @classmethod
     def _build_block_device_mapping(cls, bdm):

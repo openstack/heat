@@ -513,7 +513,7 @@ class NeutronTest(HeatTestCase):
             'status': 'FROBULATING'
         })
         self.assertEqual(
-            'Unknown status FROBULATING',
+            'Resource is not built - Unknown status FROBULATING',
             str(e))
 
     def test_resolve_attribute(self):

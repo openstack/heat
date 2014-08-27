@@ -112,7 +112,9 @@ class NeutronResource(resource.Resource):
             raise resource.ResourceInError(
                 resource_status=status)
         else:
-            raise resource.ResourceUnknownStatus(resource_status=status)
+            raise resource.ResourceUnknownStatus(
+                resource_status=status,
+                result=_('Resource is not built'))
 
     def _resolve_attribute(self, name):
         try:
