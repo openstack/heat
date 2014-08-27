@@ -323,7 +323,7 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
 
 
 class ScalingPolicyTest(HeatTestCase):
-
+    # TODO(Qiming): Add more tests to the scaling policy
     as_template = '''
         heat_template_version: 2013-05-23
         resources:
