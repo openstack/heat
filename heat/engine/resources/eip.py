@@ -71,7 +71,6 @@ class ElasticIp(resource.Resource):
                     ips = self.neutron().show_floatingip(self.resource_id)
                 except Exception as ex:
                     self.client_plugin('neutron').ignore_not_found(ex)
-                    LOG.warn(_("Floating IPs not found"))
                 else:
                     self.ipaddress = ips['floatingip']['floating_ip_address']
             else:
@@ -79,7 +78,6 @@ class ElasticIp(resource.Resource):
                     ips = self.nova().floating_ips.get(self.resource_id)
                 except Exception as e:
                     self.client_plugin('nova').ignore_not_found(e)
-                    LOG.warn(_("Floating IPs not found"))
                 else:
                     self.ipaddress = ips.ip
         return self.ipaddress or ''
@@ -187,7 +185,7 @@ class ElasticIpAssociation(resource.Resource):
 
         if self.properties[self.EIP]:
             if not self.properties[self.INSTANCE_ID]:
-                LOG.warn(_('Skipping association, InstanceId not specified'))
+                LOG.debug('Skipping association, InstanceId not specified')
                 return
             server = self.nova().servers.get(self.properties[self.INSTANCE_ID])
             server.add_floating_ip(self.properties[self.EIP])
@@ -208,7 +206,7 @@ class ElasticIpAssociation(resource.Resource):
                 port_rsrc = ports['ports'][0]
                 port_id = port_rsrc['id']
             else:
-                LOG.warn(_('Skipping association, resource not specified'))
+                LOG.debug('Skipping association, resource not specified')
                 return
 
             float_id = self.properties[self.ALLOCATION_ID]

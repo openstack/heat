@@ -219,13 +219,7 @@ class Template(collections.Mapping):
                 raise exception.InvalidTemplateSection(section=k)
 
         # check resources
-        tmpl_resources = self[self.RESOURCES]
-        if len(tmpl_resources) == 0:
-            LOG.warn(_('Template does not contain any resources, so '
-                       'the template would not really do anything when '
-                       'being instantiated.'))
-
-        for res in tmpl_resources.values():
+        for res in self[self.RESOURCES].values():
             try:
                 if not res.get('Type'):
                     message = _('Every Resource object must '

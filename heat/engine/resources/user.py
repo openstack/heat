@@ -76,20 +76,20 @@ class User(stack_user.StackUser):
             # ignore the policy (don't reject it because we previously ignored
             # and we don't want to break templates which previously worked
             if not isinstance(policy, basestring):
-                LOG.warning(_("Ignoring policy %s, must be string "
-                              "resource name") % policy)
+                LOG.debug("Ignoring policy %s, must be string "
+                          "resource name" % policy)
                 continue
 
             try:
                 policy_rsrc = self.stack[policy]
             except KeyError:
-                LOG.error(_("Policy %(policy)s does not exist in stack "
-                            "%(stack)s")
+                LOG.debug("Policy %(policy)s does not exist in stack "
+                          "%(stack)s"
                           % {'policy': policy, 'stack': self.stack.name})
                 return False
 
             if not callable(getattr(policy_rsrc, 'access_allowed', None)):
-                LOG.error(_("Policy %s is not an AccessPolicy resource")
+                LOG.debug("Policy %s is not an AccessPolicy resource"
                           % policy)
                 return False
 
@@ -115,8 +115,8 @@ class User(stack_user.StackUser):
         policies = (self.properties[self.POLICIES] or [])
         for policy in policies:
             if not isinstance(policy, basestring):
-                LOG.warning(_("Ignoring policy %s, must be string "
-                              "resource name") % policy)
+                LOG.debug("Ignoring policy %s, must be string "
+                          "resource name" % policy)
                 continue
             policy_rsrc = self.stack[policy]
             if not policy_rsrc.access_allowed(resource_name):
@@ -212,7 +212,7 @@ class AccessKey(resource.Resource):
 
         user = self._get_user()
         if user is None:
-            LOG.warning(_('Error deleting %s - user not found') % str(self))
+            LOG.debug('Error deleting %s - user not found' % str(self))
             return
         user._delete_keypair()
 
@@ -222,7 +222,7 @@ class AccessKey(resource.Resource):
         '''
         if self._secret is None:
             if not self.resource_id:
-                LOG.warn(_('could not get secret for %(username)s '
+                LOG.info(_('could not get secret for %(username)s '
                            'Error:%(msg)s')
                          % {'username': self.properties[self.USER_NAME],
                             'msg': "resource_id not yet set"})
@@ -242,7 +242,7 @@ class AccessKey(resource.Resource):
                         # And the ID of the v3 credential
                         self.data_set('credential_id', kp.id, redact=True)
                     except Exception as ex:
-                        LOG.warn(_('could not get secret for %(username)s '
+                        LOG.info(_('could not get secret for %(username)s '
                                    'Error:%(msg)s') % {
                                  'username': self.properties[self.USER_NAME],
                                  'msg': ex})
@@ -291,7 +291,6 @@ class AccessPolicy(resource.Resource):
         for resource in resources:
             if resource not in self.stack:
                 msg = _("AccessPolicy resource %s not in stack") % resource
-                LOG.error(msg)
                 raise exception.StackValidationFailed(message=msg)
 
     def access_allowed(self, resource_name):

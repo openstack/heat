@@ -573,7 +573,7 @@ class EngineService(service.Service):
                     # Schedule a periodic watcher task for this stack
                     self.stack_watch.start_watch_task(stack.id, cnxt)
             else:
-                LOG.warning(_("Stack create failed, status %s") % stack.status)
+                LOG.info(_("Stack create failed, status %s") % stack.status)
 
         stack = self._parse_template_and_validate_stack(cnxt,
                                                         stack_name,
