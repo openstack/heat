@@ -747,15 +747,9 @@ class Resource(object):
         LOG.info(_('snapshotting %s') % str(self))
         return self._do_action(self.SNAPSHOT)
 
+    @scheduler.wrappertask
     def delete_snapshot(self, data):
-        handle_delete_snapshot = getattr(
-            self, 'handle_delete_snapshot', None)
-        if callable(handle_delete_snapshot):
-            handle_data = handle_delete_snapshot(data)
-            check = getattr(self, 'check_delete_snapshot_complete', None)
-            if callable(check):
-                while not check(handle_data):
-                    yield
+        yield self.action_handler_task('delete_snapshot', args=[data])
 
     def physical_resource_name(self):
         if self.id is None:
