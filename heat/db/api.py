@@ -124,10 +124,10 @@ def stack_get_by_name(context, stack_name):
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None, tenant_safe=True,
-                  show_deleted=False):
+                  show_deleted=False, show_nested=False):
     return IMPL.stack_get_all(context, limit, sort_keys,
                               marker, sort_dir, filters, tenant_safe,
-                              show_deleted)
+                              show_deleted, show_nested)
 
 
 def stack_get_all_by_owner_id(context, owner_id):
