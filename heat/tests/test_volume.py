@@ -211,8 +211,9 @@ class VolumeTest(HeatTestCase):
         self.assertEqual('available', fv.status)
 
         fv.status = 'in-use'
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.destroy))
+        ex = self.assertRaises(exception.ResourceFailure,
+                               scheduler.TaskRunner(rsrc.destroy))
+        self.assertIn("Volume in use", six.text_type(ex))
 
         self._stubout_delete_volume(fv)
         fv.status = 'available'
@@ -270,6 +271,7 @@ class VolumeTest(HeatTestCase):
     def test_volume_create_error(self):
         fv = FakeVolume('creating', 'error')
         stack_name = 'test_volume_create_error_stack'
+        cfg.CONF.set_override('action_retry_limit', 0)
 
         self._mock_create_volume(fv, stack_name)
 
@@ -284,7 +286,9 @@ class VolumeTest(HeatTestCase):
                           resource_defns['DataVolume'],
                           stack)
         create = scheduler.TaskRunner(rsrc.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        ex = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn('Went to status error due to "Unknown"',
+                      six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -297,7 +301,8 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.Volume('DataVolume',
                           resource_defns['DataVolume'],
                           stack)
-        self.assertRaises(exception.StackValidationFailed, rsrc.validate)
+        ex = self.assertRaises(exception.StackValidationFailed, rsrc.validate)
+        self.assertIn('Tags Property error', six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -776,8 +781,9 @@ class VolumeTest(HeatTestCase):
 
         rsrc = self.create_volume(t, stack, 'DataVolume')
 
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.destroy))
+        ex = self.assertRaises(exception.ResourceFailure,
+                               scheduler.TaskRunner(rsrc.destroy))
+        self.assertIn('Unknown status error', six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -803,7 +809,9 @@ class VolumeTest(HeatTestCase):
                           stack)
 
         create = scheduler.TaskRunner(rsrc.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        ex = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn('Went to status error due to "Unknown"',
+                      six.text_type(ex))
 
         self._stubout_delete_volume(fv)
         scheduler.TaskRunner(rsrc.destroy)()
@@ -840,6 +848,7 @@ class VolumeTest(HeatTestCase):
 
     def test_create_from_snapshot_error(self):
         stack_name = 'test_volume_stack'
+        cfg.CONF.set_override('action_retry_limit', 0)
         fv = FakeVolumeWithStateTransition('restoring-backup', 'error')
         fvbr = FakeBackupRestore('vol-123')
 
@@ -867,7 +876,9 @@ class VolumeTest(HeatTestCase):
                           resource_defns['DataVolume'],
                           stack)
         create = scheduler.TaskRunner(rsrc.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        ex = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn('Went to status error due to "Unknown"',
+                      six.text_type(ex))
 
         self.m.VerifyAll()
 
