@@ -308,7 +308,6 @@ class OSDBInstance(resource.Resource):
             instance = self.trove().instances.get(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-            LOG.debug("Database instance %s not found." % self.resource_id)
         else:
             instance.delete()
             return instance

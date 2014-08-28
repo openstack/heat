@@ -119,7 +119,6 @@ class NeutronResource(resource.Resource):
             attributes = self._show_resource()
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-            LOG.warn(_("failed to fetch resource attributes: %s") % ex)
             return None
         if name == 'show':
             return attributes

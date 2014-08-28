@@ -157,7 +157,6 @@ class Volume(resource.Resource):
                     vol.get()
 
                 if vol.status == 'in-use':
-                    LOG.warn(_('can not delete volume when in-use'))
                     raise exception.Error(_('Volume in use'))
 
                 vol.delete()
@@ -322,8 +321,6 @@ class VolumeDetachTask(object):
             if (cinder_plugin.is_not_found(ex) or
                     nova_plugin.is_not_found(ex) or
                     nova_plugin.is_bad_request(ex)):
-
-                LOG.warning(_('%s - volume not found') % str(self))
                 return
             else:
                 raise
@@ -332,10 +329,8 @@ class VolumeDetachTask(object):
         try:
             server_api.delete_server_volume(self.server_id, self.attachment_id)
         except Exception as ex:
-            if (nova_plugin.is_not_found(ex) or
-                    nova_plugin.is_bad_request(ex)):
-                LOG.warning(_('%(res)s - %(err)s') % {'res': str(self),
-                                                      'err': ex})
+            if nova_plugin.is_not_found(ex) or nova_plugin.is_bad_request(ex):
+                pass
             else:
                 raise
 
@@ -354,7 +349,6 @@ class VolumeDetachTask(object):
 
         except Exception as ex:
             cinder_plugin.ignore_not_found(ex)
-            LOG.warning(_('%s - volume not found') % str(self))
 
         # The next check is needed for immediate reattachment when updating:
         # there might be some time between cinder marking volume as 'available'

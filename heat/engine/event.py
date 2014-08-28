@@ -87,9 +87,6 @@ class Event(object):
         if self.timestamp is not None:
             ev['created_at'] = self.timestamp
 
-        if self.id is not None:
-            LOG.warning(_('Duplicating event'))
-
         new_ev = db_api.event_create(self.context, ev)
         self.id = new_ev.id
         return self.id
