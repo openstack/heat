@@ -323,7 +323,9 @@ class VolumeTest(HeatTestCase):
                                     resource_defns['MountPoint'],
                                     stack)
         create = scheduler.TaskRunner(rsrc.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        ex = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn("Volume attachment failed - Unknown status error",
+                      six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -490,7 +492,9 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_attachment(t, stack, 'MountPoint')
         detach_task = scheduler.TaskRunner(rsrc.delete)
 
-        self.assertRaises(exception.ResourceFailure, detach_task)
+        ex = self.assertRaises(exception.ResourceFailure, detach_task)
+        self.assertIn('Volume detachment failed - Unknown status error',
+                      six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -1250,8 +1254,8 @@ class VolumeTest(HeatTestCase):
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertEqual("Error: Resize failed: Volume vol-123 is in "
-                         "error_extending state.", six.text_type(ex))
+        self.assertIn("Volume resize failed - Unknown status error_extending",
+                      six.text_type(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

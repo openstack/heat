@@ -226,9 +226,11 @@ class VolumeExtendTask(object):
             vol.get()
 
         if vol.status != 'available':
-            raise exception.Error(_("Resize failed: Volume %(vol)s is in "
-                                    "%(status)s state.") % {
-                                        'vol': vol.id, 'status': vol.status})
+            LOG.info(_("Resize failed: Volume %(vol)s is in %(status)s state."
+                       ) % {'vol': vol.id, 'status': vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume resize failed'))
 
         LOG.info(_('%s - complete') % str(self))
 
@@ -279,7 +281,12 @@ class VolumeAttachTask(object):
             vol.get()
 
         if vol.status != 'in-use':
-            raise exception.Error(vol.status)
+            LOG.info(_("Attachment failed - volume %(vol)s "
+                       "is in %(status)s status") % {"vol": vol.id,
+                                                     "status": vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume attachment failed'))
 
         LOG.info(_('%s - complete') % str(self))
 
@@ -347,7 +354,13 @@ class VolumeDetachTask(object):
             LOG.info(_('%(name)s - status: %(status)s')
                      % {'name': str(self), 'status': vol.status})
             if vol.status != 'available':
-                raise exception.Error(vol.status)
+                LOG.info(_("Detachment failed - volume %(vol)s "
+                           "is in %(status)s status") % {
+                               "vol": vol.id,
+                               "status": vol.status})
+                raise resource.ResourceUnknownStatus(
+                    resource_status=vol.status,
+                    result=_('Volume detachment failed'))
 
         except Exception as ex:
             cinder_plugin.ignore_not_found(ex)
