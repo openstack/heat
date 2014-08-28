@@ -1787,6 +1787,7 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
+                                                   mock.ANY,
                                                    )
 
     @mock.patch.object(db_api, 'stack_get_all')
@@ -1799,6 +1800,7 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    filters,
+                                                   mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
                                                    )
@@ -1814,6 +1816,7 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    True,
                                                    mock.ANY,
+                                                   mock.ANY,
                                                    )
 
     @mock.patch.object(db_api, 'stack_get_all')
@@ -1826,6 +1829,7 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    False,
+                                                   mock.ANY,
                                                    mock.ANY,
                                                    )
 
