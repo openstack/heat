@@ -18,7 +18,7 @@ import mock
 import six
 import uuid
 
-from heat.common.exception import StackValidationFailed
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import rsrc_defn
@@ -307,6 +307,34 @@ class LoadBalancerTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
 
+    def test_validate_vip(self):
+        snippet = {
+            "nodes": [],
+            "protocol": 'HTTP',
+            "port": 80,
+            "halfClosed": None,
+            "algorithm": u'LEAST_CONNECTIONS',
+            "virtualIps": [{"id": "1234"}]
+        }
+        stack = mock.Mock()
+        stack.db_resource_get.return_value = None
+        # happy path
+        resdef = rsrc_defn.ResourceDefinition("testvip",
+                                              lb.CloudLoadBalancer,
+                                              properties=snippet)
+        rsrc = lb.CloudLoadBalancer("testvip", resdef, stack)
+        self.assertIsNone(rsrc.validate())
+        # make sure the vip id prop is exclusive
+        snippet["virtualIps"][0]["type"] = "PUBLIC"
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn("Cannot specify type or version", str(exc))
+        # make sure you have to specify type and version if no id
+        snippet["virtualIps"] = [{}]
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn("Must specify VIP type and version", str(exc))
+
     def test_validate_half_closed(self):
         #test failure (invalid protocol)
         template = self._set_template(self.lb_template, halfClosed=True)
@@ -314,11 +342,10 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(
-            {'Error':
-             'The halfClosed property is only available for the '
-             'TCP or TCP_CLIENT_FIRST protocols'},
-            rsrc.validate())
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn('The halfClosed property is only available for the TCP'
+                      ' or TCP_CLIENT_FIRST protocols', str(exc))
 
         #test TCP protocol
         template = self._set_template(template, protocol='TCP')
@@ -366,8 +393,9 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual({'Error': 'Unknown Property bodyRegex'},
-                         rsrc.validate())
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn('Unknown Property bodyRegex', str(exc))
 
         #test http fields
         health_monitor['type'] = 'HTTP'
@@ -401,7 +429,8 @@ class LoadBalancerTest(common.HeatTestCase):
                                                           self.lb_name,
                                                           expected)
 
-        exc = self.assertRaises(StackValidationFailed, rsrc.validate)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
         self.assertIn("Property certificate not assigned", six.text_type(exc))
 
         ssl_termination['certificate'] = 'dfaewfwef'

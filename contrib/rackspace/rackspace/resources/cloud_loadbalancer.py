@@ -87,9 +87,9 @@ class CloudLoadBalancer(resource.Resource):
     )
 
     _VIRTUAL_IP_KEYS = (
-        VIRTUAL_IP_TYPE, VIRTUAL_IP_IP_VERSION,
+        VIRTUAL_IP_TYPE, VIRTUAL_IP_IP_VERSION, VIRTUAL_IP_ID
     ) = (
-        'type', 'ipVersion',
+        'type', 'ipVersion', 'id'
     )
 
     _HEALTH_MONITOR_KEYS = (
@@ -119,9 +119,9 @@ class CloudLoadBalancer(resource.Resource):
     )
 
     ATTRIBUTES = (
-        PUBLIC_IP,
+        PUBLIC_IP, VIPS
     ) = (
-        'PublicIp',
+        'PublicIp', 'virtualIps'
     )
 
     ALGORITHMS = ["LEAST_CONNECTIONS", "RANDOM", "ROUND_ROBIN",
@@ -317,7 +317,9 @@ class CloudLoadBalancer(resource.Resource):
                 schema={
                     VIRTUAL_IP_TYPE: properties.Schema(
                         properties.Schema.STRING,
-                        required=True,
+                        "The type of VIP (public or internal). This property"
+                        " cannot be specified if 'id' is specified. This "
+                        "property must be specified if id is not specified.",
                         constraints=[
                             constraints.AllowedValues(['SERVICENET',
                                                        'PUBLIC']),
@@ -325,14 +327,25 @@ class CloudLoadBalancer(resource.Resource):
                     ),
                     VIRTUAL_IP_IP_VERSION: properties.Schema(
                         properties.Schema.STRING,
-                        default='IPV6',
+                        "IP version of the VIP. This property cannot be "
+                        "specified if 'id' is specified. This property must "
+                        "be specified if id is not specified.",
                         constraints=[
                             constraints.AllowedValues(['IPV6', 'IPV4']),
                         ]
                     ),
+                    VIRTUAL_IP_ID: properties.Schema(
+                        properties.Schema.NUMBER,
+                        "ID of a shared VIP to use instead of creating a "
+                        "new one. This property cannot be specified if type"
+                        " or version is specified."
+                    )
                 },
             ),
-            required=True
+            required=True,
+            constraints=[
+                constraints.Length(min=1)
+            ]
         ),
         CONTENT_CACHING: properties.Schema(
             properties.Schema.STRING,
@@ -380,6 +393,9 @@ class CloudLoadBalancer(resource.Resource):
         PUBLIC_IP: attributes.Schema(
             _('Public IP address of the specified instance.')
         ),
+        VIPS: attributes.Schema(
+            _("A list of assigned virtual ip addresses")
+        )
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -392,7 +408,8 @@ class CloudLoadBalancer(resource.Resource):
     def _setup_properties(self, properties, function):
         """Use defined schema properties as kwargs for loadbalancer objects."""
         if properties and function:
-            return [function(**item_dict) for item_dict in properties]
+            return [function(**self._remove_none(item_dict))
+                    for item_dict in properties]
         elif function:
             return [function()]
 
@@ -479,6 +496,7 @@ class CloudLoadBalancer(resource.Resource):
         node_list = self._process_nodes(self.properties.get(self.NODES))
         nodes = [self.clb.Node(**node) for node in node_list]
         vips = self.properties.get(self.VIRTUAL_IPS)
+
         virtual_ips = self._setup_properties(vips, self.clb.VirtualIP)
 
         (session_persistence, connection_logging, metadata) = \
@@ -582,7 +600,7 @@ class CloudLoadBalancer(resource.Resource):
         """
         return dict((key, value)
                     for (key, value) in six.iteritems(property_dict)
-                    if value)
+                    if value is not None)
 
     def validate(self):
         """Validate any of the provided params."""
@@ -593,38 +611,56 @@ class CloudLoadBalancer(resource.Resource):
         if self.properties.get(self.HALF_CLOSED):
             if not (self.properties[self.PROTOCOL] == 'TCP' or
                     self.properties[self.PROTOCOL] == 'TCP_CLIENT_FIRST'):
-                return {'Error':
-                        'The %s property is only available for the TCP or '
-                        'TCP_CLIENT_FIRST protocols' % self.HALF_CLOSED}
+                message = (_('The %s property is only available for the TCP '
+                             'or TCP_CLIENT_FIRST protocols')
+                           % self.HALF_CLOSED)
+                raise exception.StackValidationFailed(message=message)
 
         #health_monitor connect and http types require completely different
         #schema
         if self.properties.get(self.HEALTH_MONITOR):
-            health_monitor = \
-                self._remove_none(self.properties[self.HEALTH_MONITOR])
+            prop_val = self.properties[self.HEALTH_MONITOR]
+            health_monitor = self._remove_none(prop_val)
 
             schema = self._health_monitor_schema
             if health_monitor[self.HEALTH_MONITOR_TYPE] == 'CONNECT':
                 schema = dict((k, v) for k, v in schema.items()
                               if k in self._HEALTH_MONITOR_CONNECT_KEYS)
-            try:
-                Properties(schema,
-                           health_monitor,
-                           function.resolve,
-                           self.name).validate()
-            except exception.StackValidationFailed as svf:
-                return {'Error': str(svf)}
+            Properties(schema,
+                       health_monitor,
+                       function.resolve,
+                       self.name).validate()
 
-    def _public_ip(self):
-        #TODO(andrew-plunk) return list here and let caller choose ip
-        for ip in self.clb.get(self.resource_id).virtual_ips:
+        # if a vip specifies and id, it can't specify version or type;
+        # otherwise version and type are required
+        for vip in self.properties.get(self.VIRTUAL_IPS, []):
+            has_id = vip.get(self.VIRTUAL_IP_ID) is not None
+            has_version = vip.get(self.VIRTUAL_IP_IP_VERSION) is not None
+            has_type = vip.get(self.VIRTUAL_IP_TYPE) is not None
+            if has_id:
+                if (has_version or has_type):
+                    message = _("Cannot specify type or version if VIP id is"
+                                " specified.")
+                    raise exception.StackValidationFailed(message=message)
+            elif not (has_version and has_type):
+                message = _("Must specify VIP type and version if no id "
+                            "specified.")
+                raise exception.StackValidationFailed(message=message)
+
+    def _public_ip(self, lb):
+        for ip in lb.virtual_ips:
             if ip.type == 'PUBLIC':
-                return ip.address
+                return unicode(ip.address)
 
     def _resolve_attribute(self, key):
         if self.resource_id:
+            lb = self.clb.get(self.resource_id)
             attribute_function = {
-                'PublicIp': self._public_ip()
+                self.PUBLIC_IP: self._public_ip(lb),
+                self.VIPS: [{"id": vip.id,
+                             "type": vip.type,
+                             "ip_version": vip.ip_version}
+                            for vip in lb.virtual_ips]
             }
             if key not in attribute_function:
                 raise exception.InvalidTemplateAttribute(resource=self.name,
@@ -632,7 +668,7 @@ class CloudLoadBalancer(resource.Resource):
             function = attribute_function[key]
             LOG.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
                      {'name': self.name, 'key': key, 'function': function})
-            return unicode(function)
+            return function
 
 
 def resource_mapping():
