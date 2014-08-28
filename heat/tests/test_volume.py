@@ -1107,7 +1107,7 @@ class CinderVolumeTest(BaseVolumeTest):
 
     def test_cinder_snapshot(self):
         fv = FakeVolume('creating', 'available')
-        fs = FakeSnapshot('creating', 'available')
+        fb = FakeBackup('creating', 'available')
         stack_name = 'test_volume_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
@@ -1116,9 +1116,8 @@ class CinderVolumeTest(BaseVolumeTest):
             size=1, availability_zone='nova', display_name='CustomName',
             display_description='CustomDescription').AndReturn(fv)
 
-        self.m.StubOutWithMock(self.cinder_fc.volume_snapshots, 'create')
-        self.cinder_fc.volume_snapshots.create(
-            'vol-123', force=True).AndReturn(fs)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
+        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
 
         self.m.ReplayAll()
 
@@ -1141,14 +1140,14 @@ class CinderVolumeTest(BaseVolumeTest):
 
         self.assertEqual((rsrc.SNAPSHOT, rsrc.COMPLETE), rsrc.state)
 
-        self.assertEqual({'snapshot_id': 'snapshot-123'},
+        self.assertEqual({'backup_id': 'backup-123'},
                          db_api.resource_data_get_all(rsrc))
 
         self.m.VerifyAll()
 
     def test_cinder_snapshot_error(self):
         fv = FakeVolume('creating', 'available')
-        fs = FakeSnapshot('creating', 'error')
+        fb = FakeBackup('creating', 'error')
         stack_name = 'test_volume_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
@@ -1157,9 +1156,8 @@ class CinderVolumeTest(BaseVolumeTest):
             size=1, availability_zone='nova', display_name='CustomName',
             display_description='CustomDescription').AndReturn(fv)
 
-        self.m.StubOutWithMock(self.cinder_fc.volume_snapshots, 'create')
-        self.cinder_fc.volume_snapshots.create(
-            'vol-123', force=True).AndReturn(fs)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
+        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
 
         self.m.ReplayAll()
 
@@ -1378,11 +1376,6 @@ class FakeLatencyVolume(object):
 class FakeBackup(FakeVolume):
     status = 'creating'
     id = 'backup-123'
-
-
-class FakeSnapshot(FakeVolume):
-    status = 'creating'
-    id = 'snapshot-123'
 
 
 class FakeBackupRestore(object):
