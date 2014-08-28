@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import six
 import uuid
 
 from heat.common import exception
@@ -459,8 +460,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         if status == self.FAILED:
             # build a status reason out of all of the values of outputs
             # flagged as error_output
-            status_reason = ', '.join([' : '.join((k, str(status_reasons[k])))
-                                       for k in status_reasons])
+            status_reasons = [' : '.join((k, six.text_type(status_reasons[k])))
+                              for k in status_reasons]
+            status_reason = ', '.join(status_reasons)
         else:
             status = self.COMPLETE
             status_reason = _('Outputs received')
