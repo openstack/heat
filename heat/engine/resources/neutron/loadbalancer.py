@@ -423,13 +423,17 @@ class Pool(neutron.NeutronResource):
                 raise resource.ResourceInError(
                     resource_status=vip_status,
                     status_reason=_('error in vip'))
-            raise resource.ResourceUnknownStatus(resource_status=vip_status)
+            raise resource.ResourceUnknownStatus(
+                resource_status=vip_status,
+                result=_('Pool creation failed due to vip'))
         elif status == 'ERROR':
             raise resource.ResourceInError(
                 resource_status=status,
                 status_reason=_('error in pool'))
         else:
-            raise resource.ResourceUnknownStatus(resource_status=status)
+            raise resource.ResourceUnknownStatus(
+                resource_status=status,
+                result=_('Pool creation failed'))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

@@ -449,7 +449,7 @@ class InstancesTest(HeatTestCase):
                               instance.check_create_complete,
                               (return_server, self.FakeVolumeAttach()))
         self.assertEqual(
-            'Unknown status BOGUS',
+            'Instance is not active - Unknown status BOGUS',
             str(e))
 
     def test_instance_create_error_status(self):

@@ -72,7 +72,10 @@ class ResourceInError(exception.HeatException):
 
 
 class ResourceUnknownStatus(exception.HeatException):
-    msg_fmt = _('Unknown status %(resource_status)s')
+    msg_fmt = _('%(result)s - Unknown status %(resource_status)s')
+
+    def __init__(self, result=_('Resource failed'), **kwargs):
+        super(ResourceUnknownStatus, self).__init__(result=result, **kwargs)
 
 
 class Resource(object):

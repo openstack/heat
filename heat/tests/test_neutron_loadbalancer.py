@@ -546,7 +546,8 @@ class PoolTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'ResourceUnknownStatus: Unknown status SOMETHING',
+            'ResourceUnknownStatus: Pool creation failed due to vip - '
+            'Unknown status SOMETHING',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()

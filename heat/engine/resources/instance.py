@@ -644,7 +644,9 @@ class Instance(resource.Resource):
                     'code': fault.get('code', _('Unknown'))
                 })
 
-        raise resource.ResourceUnknownStatus(resource_status=server.status)
+        raise resource.ResourceUnknownStatus(
+            resource_status=server.status,
+            result=_('Instance is not active'))
 
     def volumes(self):
         """
