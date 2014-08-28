@@ -689,6 +689,9 @@ class ResourceTest(HeatTestCase):
 
         scheduler.TaskRunner(res.update, utmpl)()
         self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
+
+        self.assertEqual({'Foo': 'xyz'}, res._stored_properties_data)
+
         self.m.VerifyAll()
 
     def test_update_replace_with_resource_name(self):

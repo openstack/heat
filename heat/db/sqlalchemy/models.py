@@ -248,6 +248,7 @@ class Resource(BASE, HeatBase, StateAware):
     # time the create/update call was issued, not the time the DB entry is
     # created/modified. (bug #1193269)
     updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
+    properties_data = sqlalchemy.Column('properties_data', Json)
 
 
 class WatchRule(BASE, HeatBase):
