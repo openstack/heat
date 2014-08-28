@@ -116,6 +116,12 @@ class ElasticIp(resource.Resource):
             server.add_floating_ip(self._ipaddress())
 
     def handle_delete(self):
+        if self.resource_id is None:
+            return
+        # may be just create an eip when creation, or create the association
+        # failed when creation, there will no association, if we attempt to
+        # disassociate, an exception will raised, we need
+        # to catch and ignore it, and then to deallocate the eip
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
             try:
@@ -123,20 +129,24 @@ class ElasticIp(resource.Resource):
                 if server:
                     server.remove_floating_ip(self._ipaddress())
             except Exception as e:
-                self.client_plugin('nova').ignore_not_found(e)
+                is_not_found = self.client_plugin('nova').is_not_found(e)
+                is_unprocessable_entity = self.client_plugin('nova').\
+                    is_unprocessable_entity(e)
 
-        """De-allocate a floating IP."""
-        if self.resource_id is not None:
-            if self.properties[self.DOMAIN]:
-                try:
-                    self.neutron().delete_floatingip(self.resource_id)
-                except Exception as ex:
-                    self.client_plugin('neutron').ignore_not_found(ex)
-            else:
-                try:
-                    self.nova().floating_ips.delete(self.resource_id)
-                except Exception as e:
-                    self.client_plugin('nova').ignore_not_found(e)
+                if (not is_not_found and not is_unprocessable_entity):
+                    raise
+
+        # deallocate the eip
+        if self.properties[self.DOMAIN]:
+            try:
+                self.neutron().delete_floatingip(self.resource_id)
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
+        else:
+            try:
+                self.nova().floating_ips.delete(self.resource_id)
+            except Exception as e:
+                self.client_plugin('nova').ignore_not_found(e)
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
