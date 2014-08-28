@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources.random_string import RandomString
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -87,15 +88,14 @@ Resources:
         super(TestRandomString, self).setUp()
         self.ctx = utils.dummy_context()
 
-    def create_stack(self, template):
-        t = template_format.parse(template)
-        self.stack = self.parse_stack(t)
+    def create_stack(self, templ):
+        self.stack = self.parse_stack(template_format.parse(templ))
         self.assertIsNone(self.stack.create())
         return self.stack
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         stack.validate()
         stack.store()

@@ -38,6 +38,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import stack_lock
+from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -501,7 +502,7 @@ class EngineService(service.Service):
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, args, owner_id=None):
-        tmpl = parser.Template(template, files=files)
+        tmpl = templatem.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
         common_params = api.extract_args(args)
@@ -618,7 +619,7 @@ class EngineService(service.Service):
 
         # Now parse the template and any parameters for the updated
         # stack definition.
-        tmpl = parser.Template(template, files=files)
+        tmpl = templatem.Template(template, files=files)
         if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
@@ -656,7 +657,7 @@ class EngineService(service.Service):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        tmpl = parser.Template(template)
+        tmpl = templatem.Template(template)
 
         # validate overall template
         try:

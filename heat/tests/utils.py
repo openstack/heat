@@ -24,6 +24,7 @@ from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import template
 
 get_engine = db_api.get_engine
 
@@ -85,8 +86,8 @@ def parse_stack(t, params=None, stack_name='test_stack', stack_id=None,
                 timeout_mins=None):
     params = params or {}
     ctx = dummy_context()
-    template = parser.Template(t)
-    stack = parser.Stack(ctx, stack_name, template,
+    templ = template.Template(t)
+    stack = parser.Stack(ctx, stack_name, templ,
                          environment.Environment(params), stack_id,
                          timeout_mins=timeout_mins)
     stack.store()

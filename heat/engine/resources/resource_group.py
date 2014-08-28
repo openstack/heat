@@ -17,9 +17,9 @@ import copy
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import constraints
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine import stack_resource
+from heat.engine import template
 from heat.openstack.common.gettextutils import _
 
 template_template = {
@@ -136,7 +136,7 @@ class ResourceGroup(stack_resource.StackResource):
         super(ResourceGroup, self).validate()
         # make sure the nested resource is valid
         test_tmpl = self._assemble_nested(1, include_all=True)
-        val_templ = parser.Template(test_tmpl)
+        val_templ = template.Template(test_tmpl)
         res_def = val_templ.resource_definitions(self.stack)["0"]
         res_class = self.stack.env.get_class(res_def.resource_type)
         res_inst = res_class("%s:resource_def" % self.name, res_def,

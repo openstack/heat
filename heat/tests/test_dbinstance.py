@@ -17,6 +17,7 @@ from heat.engine import constraints
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -154,7 +155,7 @@ class DBInstanceTest(HeatTestCase):
         """test that the Template is parsable and
         publishes the correct properties.
         """
-        templ = parser.Template(template_format.parse(rds_template))
+        templ = template.Template(template_format.parse(rds_template))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              templ)
 

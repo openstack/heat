@@ -15,6 +15,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.engine import template
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -57,8 +58,8 @@ class VPCTestBase(HeatTestCase):
             neutronclient.Client, 'delete_security_group_rule')
         self.stub_keystoneclient()
 
-    def create_stack(self, template):
-        t = template_format.parse(template)
+    def create_stack(self, templ):
+        t = template_format.parse(templ)
         stack = self.parse_stack(t)
         self.assertIsNone(stack.validate())
         self.assertIsNone(stack.create())
@@ -66,7 +67,7 @@ class VPCTestBase(HeatTestCase):
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         stack.store()
         return stack

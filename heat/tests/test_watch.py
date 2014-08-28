@@ -19,6 +19,7 @@ import mox
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import parser
+from heat.engine import template
 from heat.engine import watchrule
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
@@ -47,7 +48,7 @@ class WatchRuleTest(HeatTestCase):
         ctx = utils.dummy_context()
         ctx.auth_token = 'abcd1234'
         empty_tmpl = {'HeatTemplateFormatVersion': '2012-12-12'}
-        tmpl = parser.Template(empty_tmpl)
+        tmpl = template.Template(empty_tmpl)
         stack_name = 'dummystack'
         dummy_stack = parser.Stack(ctx, stack_name, tmpl)
         dummy_stack.state_set(dummy_stack.CREATE, dummy_stack.COMPLETE,
