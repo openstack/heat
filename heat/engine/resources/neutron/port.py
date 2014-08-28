@@ -50,11 +50,11 @@ class Port(neutron.NeutronResource):
     ATTRIBUTES = (
         ADMIN_STATE_UP_ATTR, DEVICE_ID_ATTR, DEVICE_OWNER_ATTR, FIXED_IPS_ATTR,
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
-        STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SHOW,
+        STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SHOW, SUBNETS_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
-        'status', 'tenant_id', 'allowed_address_pairs', 'show',
+        'status', 'tenant_id', 'allowed_address_pairs', 'show', 'subnets',
     )
 
     properties_schema = {
@@ -194,6 +194,9 @@ class Port(neutron.NeutronResource):
         SHOW: attributes.Schema(
             _("All attributes.")
         ),
+        SUBNETS_ATTR: attributes.Schema(
+            _("A list of all subnet attributes for the port.")
+        ),
     }
 
     def validate(self):
@@ -268,6 +271,22 @@ class Port(neutron.NeutronResource):
             self.client_plugin().ignore_not_found(ex)
         else:
             return self._delete_task()
+
+    def _resolve_attribute(self, name):
+        if name == self.SUBNETS_ATTR:
+            subnets = []
+            try:
+                fixed_ips = self._show_resource().get('fixed_ips', [])
+                for fixed_ip in fixed_ips:
+                    subnet_id = fixed_ip.get('subnet_id')
+                    if subnet_id:
+                        subnets.append(self.neutron().show_subnet(
+                            subnet_id)['subnet'])
+            except Exception as ex:
+                LOG.warn(_("Failed to fetch resource attributes: %s") % ex)
+                return
+            return subnets
+        return super(Port, self)._resolve_attribute(name)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)

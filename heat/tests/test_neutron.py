@@ -2158,6 +2158,7 @@ class NeutronPortTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronclient.Client, 'update_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
@@ -2440,6 +2441,125 @@ class NeutronPortTest(HeatTestCase):
                                                       new_props)
         self.assertIsNone(port.handle_update(update_snippet, {}, {}))
 
+        self.m.VerifyAll()
+
+    def test_get_port_attributes(self):
+        subnet_dict = {'name': 'test-subnet', 'enable_dhcp': True,
+                       'network_id': 'net1234', 'dns_nameservers': [],
+                       'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
+                       'ipv6_ra_mode': None, 'cidr': '10.0.0.0/24',
+                       'allocation_pools': [{'start': '10.0.0.2',
+                                             'end': u'10.0.0.254'}],
+                       'gateway_ip': '10.0.0.1', 'ipv6_address_mode': None,
+                       'ip_version': 4, 'host_routes': [],
+                       'id': '6dd609ad-d52a-4587-b1a0-b335f76062a5'}
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).AndReturn('net1234')
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'net1234',
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp'}}
+        ).AndReturn({'port': {
+            'status': 'BUILD',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        }})
+        neutronclient.Client.show_subnet(
+            'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e'
+        ).AndReturn({'subnet': subnet_dict})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({'port': {
+            'status': 'DOWN',
+            'name': utils.PhysName('test_stack', 'port'),
+            'allowed_address_pairs': [],
+            'admin_state_up': True,
+            'network_id': 'net1234',
+            'device_id': 'dc68eg2c-b60g-4b3f-bd82-67ec87650532',
+            'mac_address': 'fa:16:3e:75:67:60',
+            'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
+            'security_groups': ['5b15d80c-6b70-4a1c-89c9-253538c5ade6'],
+            'fixed_ips': [{'subnet_id': 'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e',
+                           'ip_address': '10.0.0.2'}]
+        }})
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.assertEqual('DOWN', port.FnGetAtt('status'))
+        self.assertEqual([], port.FnGetAtt('allowed_address_pairs'))
+        self.assertEqual(True, port.FnGetAtt('admin_state_up'))
+        self.assertEqual('net1234', port.FnGetAtt('network_id'))
+        self.assertEqual('fa:16:3e:75:67:60', port.FnGetAtt('mac_address'))
+        self.assertEqual(utils.PhysName('test_stack', 'port'),
+                         port.FnGetAtt('name'))
+        self.assertEqual('dc68eg2c-b60g-4b3f-bd82-67ec87650532',
+                         port.FnGetAtt('device_id'))
+        self.assertEqual('58a61fc3992944ce971404a2ece6ff98',
+                         port.FnGetAtt('tenant_id'))
+        self.assertEqual(['5b15d80c-6b70-4a1c-89c9-253538c5ade6'],
+                         port.FnGetAtt('security_groups'))
+        self.assertEqual([{'subnet_id': 'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e',
+                           'ip_address': '10.0.0.2'}],
+                         port.FnGetAtt('fixed_ips'))
+        self.assertEqual([subnet_dict], port.FnGetAtt('subnets'))
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          port.FnGetAtt, 'Foo')
+        self.m.VerifyAll()
+
+    def test_subnet_attribute_exception(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).AndReturn('net1234')
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'net1234',
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp'}}
+        ).AndReturn({'port': {
+            'status': 'BUILD',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({'port': {
+            'status': 'DOWN',
+            'name': utils.PhysName('test_stack', 'port'),
+            'allowed_address_pairs': [],
+            'admin_state_up': True,
+            'network_id': 'net1234',
+            'device_id': 'dc68eg2c-b60g-4b3f-bd82-67ec87650532',
+            'mac_address': 'fa:16:3e:75:67:60',
+            'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
+            'security_groups': ['5b15d80c-6b70-4a1c-89c9-253538c5ade6'],
+            'fixed_ips': [{'subnet_id': 'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e',
+                           'ip_address': '10.0.0.2'}]
+        }})
+        neutronclient.Client.show_subnet(
+            'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e'
+        ).AndRaise(qe.NeutronClientException('ConnectionFailed: Connection '
+                                             'to neutron failed: Maximum '
+                                             'attempts reached'))
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.assertIsNone(port.FnGetAtt('subnets'))
+        log_msg = ('Failed to fetch resource attributes: ConnectionFailed: '
+                   'Connection to neutron failed: Maximum attempts reached')
+        self.assertIn(log_msg, self.LOG.output)
         self.m.VerifyAll()
 
 
