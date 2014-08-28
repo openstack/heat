@@ -620,7 +620,8 @@ class Resource(object):
                 resource_data.get('resource_data'),
                 resource_data.get('metadata'))
 
-    def _needs_update(self, after, before, prev_resource):
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource):
         if prev_resource is not None:
             cur_class_def, cur_ver = self.implementation_signature()
             prev_class_def, prev_ver = prev_resource.implementation_signature()
@@ -630,7 +631,13 @@ class Resource(object):
             if prev_ver != cur_ver:
                 return True
 
-        return before != after
+        if before != after:
+            return True
+
+        try:
+            return before_props != after_props
+        except ValueError:
+            return True
 
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None):
@@ -645,7 +652,16 @@ class Resource(object):
         if before is None:
             before = self.parsed_template()
 
-        if not self._needs_update(after, before, prev_resource):
+        before_props = Properties(self.properties_schema,
+                                  before.get('Properties', {}),
+                                  function.resolve,
+                                  self.name,
+                                  self.context)
+        after_props = after.properties(self.properties_schema,
+                                       self.context)
+
+        if not self._needs_update(after, before, after_props, before_props,
+                                  prev_resource):
             return
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
@@ -658,18 +674,11 @@ class Resource(object):
 
         self.updated_time = datetime.utcnow()
         with self._action_recorder(action, UpdateReplace):
-            before_properties = Properties(self.properties_schema,
-                                           before.get('Properties', {}),
-                                           function.resolve,
-                                           self.name,
-                                           self.context)
-            after_properties = after.properties(self.properties_schema,
-                                                self.context)
-            after_properties.validate()
+            after_props.validate()
             tmpl_diff = self.update_template_diff(function.resolve(after),
                                                   before)
-            prop_diff = self.update_template_diff_properties(after_properties,
-                                                             before_properties)
+            prop_diff = self.update_template_diff_properties(after_props,
+                                                             before_props)
             yield self.action_handler_task(action,
                                            args=[after, tmpl_diff, prop_diff])
 
