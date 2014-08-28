@@ -1086,3 +1086,7 @@ class Resource(object):
             # force fetch all resource data from the database again
             self._data = None
             return True
+
+    @staticmethod
+    def is_using_neutron():
+        return cfg.CONF.networking_service == 'neutron'
