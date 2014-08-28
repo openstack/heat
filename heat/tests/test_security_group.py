@@ -17,6 +17,7 @@ from neutronclient.common.exceptions import NeutronClientException
 from neutronclient.v2_0 import client as neutronclient
 from novaclient.v1_1 import security_group_rules as nova_sgr
 from novaclient.v1_1 import security_groups as nova_sg
+from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
@@ -436,6 +437,7 @@ Resources:
         self.assertRaises(exception.EgressRuleNotAllowed, sg.validate)
 
     def test_security_group_neutron(self):
+        cfg.CONF.set_override('networking_service', 'neutron')
         #create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
@@ -681,6 +683,7 @@ Resources:
         self.m.VerifyAll()
 
     def test_security_group_neutron_exception(self):
+        cfg.CONF.set_override('networking_service', 'neutron')
         #create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
