@@ -622,6 +622,9 @@ class Resource(object):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
+        if self.status == self.FAILED:
+            raise UpdateReplace(self)
+
         if prev_resource is not None:
             cur_class_def, cur_ver = self.implementation_signature()
             prev_class_def, prev_ver = prev_resource.implementation_signature()
