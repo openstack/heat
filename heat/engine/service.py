@@ -349,7 +349,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.1'
+    RPC_API_VERSION = '1.2'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -573,7 +573,8 @@ class EngineService(service.Service):
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, args, owner_id=None,
-                                           nested_depth=0, user_creds_id=None):
+                                           nested_depth=0, user_creds_id=None,
+                                           stack_user_project_id=None):
         tmpl = templatem.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -590,6 +591,7 @@ class EngineService(service.Service):
                              owner_id=owner_id,
                              nested_depth=nested_depth,
                              user_creds_id=user_creds_id,
+                             stack_user_project_id=stack_user_project_id,
                              **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
@@ -624,7 +626,8 @@ class EngineService(service.Service):
 
     @request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args,
-                     owner_id=None, nested_depth=0, user_creds_id=None):
+                     owner_id=None, nested_depth=0, user_creds_id=None,
+                     stack_user_project_id=None):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -642,6 +645,8 @@ class EngineService(service.Service):
         :param nested_depth: the nested depth for nested stacks, only expected
                          when called from another heat-engine
         :param user_creds_id: the parent user_creds record for nested stacks
+        :param stack_user_project_id: the parent stack_user_project_id for
+                         nested stacks
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
@@ -675,7 +680,8 @@ class EngineService(service.Service):
                                                         args,
                                                         owner_id,
                                                         nested_depth,
-                                                        user_creds_id)
+                                                        user_creds_id,
+                                                        stack_user_project_id)
 
         stack.store()
 
