@@ -62,7 +62,12 @@ class ClientPlugin():
     def is_client_exception(self, ex):
         '''Returns True if the current exception comes from the client.'''
         if self.exceptions_module:
-            return type(ex) in self.exceptions_module.__dict__.values()
+            if isinstance(self.exceptions_module, list):
+                for m in self.exceptions_module:
+                    if type(ex) in m.__dict__.values():
+                        return True
+            else:
+                return type(ex) in self.exceptions_module.__dict__.values()
         return False
 
     def is_not_found(self, ex):
