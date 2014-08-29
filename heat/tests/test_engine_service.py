@@ -44,6 +44,7 @@ from heat.engine import service
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
+from heat.openstack.common import jsonutils
 from heat.openstack.common import threadgroup
 from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase
@@ -3095,6 +3096,56 @@ class SoftwareConfigServiceTest(HeatTestCase):
             self.ctx, server_id=None)
         deployment_ids = [x['id'] for x in deployments]
         self.assertNotIn(deployment_id, deployment_ids)
+
+    @mock.patch.object(service.EngineService, 'metadata_software_deployments')
+    @mock.patch.object(service.db_api, 'resource_get_by_physical_resource_id')
+    @mock.patch.object(service.requests, 'put')
+    def test_push_metadata_software_deployments(self, put, res_get, md_sd):
+        rs = mock.Mock()
+        rs.rsrc_metadata = {'original': 'metadata'}
+        rs.data = []
+        res_get.return_value = rs
+
+        deployments = {'deploy': 'this'}
+        md_sd.return_value = deployments
+
+        result_metadata = {
+            'original': 'metadata',
+            'deployments': {'deploy': 'this'}
+        }
+
+        self.engine._push_metadata_software_deployments(self.ctx, '1234')
+        rs.update_and_save.assert_called_once_with(
+            {'rsrc_metadata': result_metadata})
+        put.side_effect = Exception('Unexpected requests.put')
+
+    @mock.patch.object(service.EngineService, 'metadata_software_deployments')
+    @mock.patch.object(service.db_api, 'resource_get_by_physical_resource_id')
+    @mock.patch.object(service.requests, 'put')
+    def test_push_metadata_software_deployments_temp_url(
+            self, put, res_get, md_sd):
+        rs = mock.Mock()
+        rs.rsrc_metadata = {'original': 'metadata'}
+        rd = mock.Mock()
+        rd.key = 'metadata_put_url'
+        rd.value = 'http://192.168.2.2/foo/bar'
+        rs.data = [rd]
+        res_get.return_value = rs
+
+        deployments = {'deploy': 'this'}
+        md_sd.return_value = deployments
+
+        result_metadata = {
+            'original': 'metadata',
+            'deployments': {'deploy': 'this'}
+        }
+
+        self.engine._push_metadata_software_deployments(self.ctx, '1234')
+        rs.update_and_save.assert_called_once_with(
+            {'rsrc_metadata': result_metadata})
+
+        put.assert_called_once_with(
+            'http://192.168.2.2/foo/bar', jsonutils.dumps(result_metadata))
 
 
 class ThreadGroupManagerTest(HeatTestCase):
