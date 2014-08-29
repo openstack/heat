@@ -338,6 +338,12 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertIsNone(resgrp.validate())
 
+    def test_zero_resources(self):
+        noresources = copy.deepcopy(template)
+        noresources['resources']['group1']['properties']['count'] = 0
+        resg = self._create_dummy_stack(noresources, expect_count=0)
+        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
+
     def test_delete(self):
         """Test basic delete."""
         resg = self._create_dummy_stack()
@@ -430,12 +436,15 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
                           'resource.2')
 
-    def _create_dummy_stack(self, template_data=template):
+    def _create_dummy_stack(self, template_data=template, expect_count=2):
         stack = utils.parse_stack(template_data)
         resg = stack['group1']
         scheduler.TaskRunner(resg.create)()
         self.stack = resg.nested()
-        self.assertEqual(2, len(resg.nested()))
+        if expect_count > 0:
+            self.assertEqual(expect_count, len(resg.nested()))
+        else:
+            self.assertIsNone(resg.nested())
         self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
         return resg
 

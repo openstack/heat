@@ -89,7 +89,7 @@ class ResourceGroup(stack_resource.StackResource):
             _('The number of instances to create.'),
             default=1,
             constraints=[
-                constraints.Range(min=1),
+                constraints.Range(min=0),
             ],
             update_allowed=True
         ),
@@ -145,13 +145,14 @@ class ResourceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         count = self.properties[self.COUNT]
-        return self.create_with_template(self._assemble_nested(count),
-                                         {},
-                                         self.stack.timeout_mins)
+        if count > 0:
+            return self.create_with_template(self._assemble_nested(count),
+                                             {},
+                                             self.stack.timeout_mins)
 
     def handle_update(self, new_snippet, tmpl_diff, prop_diff):
         count = prop_diff.get(self.COUNT)
-        if count:
+        if count is not None:
             return self.update_with_template(self._assemble_nested(count),
                                              {},
                                              self.stack.timeout_mins)
