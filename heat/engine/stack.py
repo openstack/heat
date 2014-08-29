@@ -989,6 +989,11 @@ class Stack(collections.Mapping):
         self.stack_user_project_id = project_id
         self.store()
 
+    def create_stack_user_project_id(self):
+        project_id = self.clients.client(
+            'keystone').create_stack_domain_project(self.id)
+        self.set_stack_user_project_id(project_id)
+
     def prepare_abandon(self):
         return {
             'name': self.name,
