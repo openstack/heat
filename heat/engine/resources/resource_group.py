@@ -185,8 +185,7 @@ class ResourceGroup(stack_resource.StackResource):
             count = self.properties[self.COUNT]
             return [get_rsrc_attr(str(n), *path) for n in range(count)]
 
-    def _assemble_nested(self, count, include_all=False):
-        child_template = copy.deepcopy(template_template)
+    def _build_resource_definition(self, include_all=False):
         res_def = self.properties[self.RESOURCE_DEF]
         if res_def[self.RESOURCE_DEF_PROPERTIES] is None:
             res_def[self.RESOURCE_DEF_PROPERTIES] = {}
@@ -194,6 +193,10 @@ class ResourceGroup(stack_resource.StackResource):
             resource_def_props = res_def[self.RESOURCE_DEF_PROPERTIES]
             clean = dict((k, v) for k, v in resource_def_props.items() if v)
             res_def[self.RESOURCE_DEF_PROPERTIES] = clean
+        return res_def
+
+    def _assemble_nested(self, count, include_all=False):
+        res_def = self._build_resource_definition(include_all)
 
         def handle_repl_val(repl_var, idx, val):
             recurse = lambda x: handle_repl_val(repl_var, idx, x)
@@ -216,6 +219,7 @@ class ResourceGroup(stack_resource.StackResource):
         resources = dict((str(k), do_prop_replace(repl_var, k,
                                                   copy.deepcopy(res_def)))
                          for k in range(count))
+        child_template = copy.deepcopy(template_template)
         child_template['resources'] = resources
         return child_template
 

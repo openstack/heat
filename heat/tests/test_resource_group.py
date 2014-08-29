@@ -141,6 +141,41 @@ class ResourceGroupTest(common.HeatTestCase):
         resource._register_class("dummyattr.resource",
                                  AttributeResource)
 
+    def test_build_resource_definition(self):
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        expect = {
+            "type": "dummy.resource",
+            "properties": {
+                "Foo": "Bar"
+            },
+        }
+        self.assertEqual(
+            expect, resg._build_resource_definition())
+        self.assertEqual(
+            expect, resg._build_resource_definition(include_all=True))
+
+    def test_build_resource_definition_include(self):
+        templ = copy.deepcopy(template)
+        res_def = templ["resources"]["group1"]["properties"]['resource_def']
+        res_def['properties']['Foo'] = None
+        stack = utils.parse_stack(templ)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        expect = {
+            "type": "dummy.resource",
+            "properties": {}
+        }
+        self.assertEqual(
+            expect, resg._build_resource_definition())
+        expect = {
+            "type": "dummy.resource",
+            "properties": {"Foo": None}
+        }
+        self.assertEqual(
+            expect, resg._build_resource_definition(include_all=True))
+
     def test_assemble_nested(self):
         """
         Tests that the nested stack that implements the group is created
