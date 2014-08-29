@@ -112,6 +112,20 @@ class ResourceDefinitionTest(HeatTestCase):
         up = rd.update_policy(schema)
         self.assertEqual('bar', up['SomePolicy']['Foo'])
 
+    def test_freeze(self):
+        rd = self.make_me_one_with_everything()
+
+        frozen = rd.freeze()
+        self.assertEqual('bar', frozen._properties['Foo'])
+        self.assertEqual('quux', frozen._metadata['Baz'])
+
+    def test_freeze_override(self):
+        rd = self.make_me_one_with_everything()
+
+        frozen = rd.freeze(metadata={'Baz': 'wibble'})
+        self.assertEqual('bar', frozen._properties['Foo'])
+        self.assertEqual('wibble', frozen._metadata['Baz'])
+
     def test_render_hot(self):
         rd = self.make_me_one_with_everything()
 

@@ -92,6 +92,33 @@ class ResourceDefinitionCore(object):
                                               function.Function))
             self._hash ^= _hash_data(update_policy)
 
+    def freeze(self, **overrides):
+        """
+        Return a frozen resource definition, with all functions resolved.
+
+        This return a new resource definition with fixed data (containing no
+        intrinsic functions). Named arguments passed to this method override
+        the values passed as arguments to the constructor.
+        """
+        def arg_item(attr_name):
+            name = attr_name.lstrip('_')
+            if name in overrides:
+                value = overrides[name]
+                if not value and getattr(self, attr_name) is None:
+                    value = None
+            else:
+                value = function.resolve(getattr(self, attr_name))
+
+            return name, value
+
+        args = ('name', 'resource_type', '_properties', '_metadata',
+                '_depends', '_deletion_policy', '_update_policy',
+                'description')
+
+        defn = type(self)(**dict(arg_item(a) for a in args))
+        defn._frozen = True
+        return defn
+
     def reparse(self, stack, template):
         """
         Reinterpret the resource definition in the context of a new stack.
@@ -99,6 +126,9 @@ class ResourceDefinitionCore(object):
         This returns a new resource definition, with all of the functions
         parsed in the context of the specified stack and template.
         """
+        assert not getattr(self, '_frozen', False), \
+            "Cannot re-parse a frozen definition"
+
         def reparse_snippet(snippet):
             return template.parse(stack, copy.deepcopy(snippet))
 
