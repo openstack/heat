@@ -53,7 +53,7 @@ class CfnStackControllerTest(HeatTestCase):
                          u'Foo': u'bar'}
 
         # Create WSGI controller instance
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8000
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)

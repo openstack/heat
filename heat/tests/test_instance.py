@@ -435,7 +435,7 @@ class InstancesTest(HeatTestCase):
         exc = self.assertRaises(exception.Error, instance.handle_check)
         self.assertIn('foo', str(exc))
 
-    class FakeVolumeAttach:
+    class FakeVolumeAttach(object):
         def started(self):
             return False
 
@@ -633,7 +633,7 @@ class InstancesTest(HeatTestCase):
         self.m.VerifyAll()
 
     def create_fake_iface(self, port, net, ip):
-        class fake_interface():
+        class fake_interface(object):
             def __init__(self, port_id, net_id, fixed_ip):
                 self.port_id = port_id
                 self.net_id = net_id

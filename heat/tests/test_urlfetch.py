@@ -22,7 +22,7 @@ from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
 
 
-class Response:
+class Response(object):
     def __init__(self, buf=''):
         self.buf = buf
 

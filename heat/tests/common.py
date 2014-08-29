@@ -38,7 +38,7 @@ from heat.tests import utils
 TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN}
 
 
-class FakeLogMixin:
+class FakeLogMixin(object):
     def setup_logging(self):
         # Assign default logs to self.LOG so we can still
         # assert on heat logs.

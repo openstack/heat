@@ -320,7 +320,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         super(StackControllerTest, self).setUp()
         # Create WSGI controller instance
 
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8004
 
         cfgopts = DummyConfig()
@@ -1696,7 +1696,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         super(ResourceControllerTest, self).setUp()
         # Create WSGI controller instance
 
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8004
 
         cfgopts = DummyConfig()
@@ -2201,7 +2201,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         super(EventControllerTest, self).setUp()
         # Create WSGI controller instance
 
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8004
 
         cfgopts = DummyConfig()
@@ -3245,7 +3245,7 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         super(ActionControllerTest, self).setUp()
         # Create WSGI controller instance
 
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8004
 
         cfgopts = DummyConfig()

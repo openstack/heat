@@ -17,7 +17,7 @@ import six
 
 
 @six.add_metaclass(abc.ABCMeta)
-class ClientPlugin():
+class ClientPlugin(object):
 
     # Module which contains all exceptions classes which the client
     # may emit

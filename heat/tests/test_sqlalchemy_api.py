@@ -1448,7 +1448,7 @@ class DBAPIStackTest(HeatTestCase):
         stacks = [create_stack(self.ctx, templates[i], creds[i],
                                deleted_at=deleted[i]) for i in range(5)]
 
-        class MyDatetime():
+        class MyDatetime(object):
             def now(self):
                 return now
         self.useFixture(fixtures.MonkeyPatch('heat.db.sqlalchemy.api.datetime',

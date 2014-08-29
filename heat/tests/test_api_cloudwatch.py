@@ -503,7 +503,7 @@ class WatchControllerTest(HeatTestCase):
         self.api_version = '1.0'
 
         # Create WSGI controller instance
-        class DummyConfig():
+        class DummyConfig(object):
             bind_port = 8003
         cfgopts = DummyConfig()
         self.controller = watches.WatchController(options=cfgopts)

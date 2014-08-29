@@ -156,7 +156,7 @@ class ServersTest(HeatTestCase):
         return server
 
     def _create_fake_iface(self, port, mac, ip):
-        class fake_interface():
+        class fake_interface(object):
             def __init__(self, port_id, mac_addr, fixed_ip):
                 self.port_id = port_id
                 self.mac_addr = mac_addr
@@ -2151,7 +2151,7 @@ class ServersTest(HeatTestCase):
         return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': None}
 
     def create_fake_iface(self, port, net, ip):
-        class fake_interface():
+        class fake_interface(object):
             def __init__(self, port_id, net_id, fixed_ip):
                 self.port_id = port_id
                 self.net_id = net_id
