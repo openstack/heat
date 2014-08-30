@@ -355,8 +355,8 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         self.schema.validate_value(parsed, context)
 
 
-class JsonParam(Parameter, collections.Mapping):
-    """A template parameter who's value is valid map."""
+class JsonParam(Parameter):
+    """A template parameter who's value is map or list."""
 
     def __init__(self, name, schema, value=None):
         super(JsonParam, self).__init__(name, schema, value)
@@ -365,7 +365,7 @@ class JsonParam(Parameter, collections.Mapping):
     def parse(self, value):
         try:
             val = value
-            if isinstance(val, collections.Mapping):
+            if not isinstance(val, basestring):
                 val = json.dumps(val)
             if val:
                 return json.loads(val)
