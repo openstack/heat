@@ -376,7 +376,6 @@ class AllocTest(HeatTestCase):
                                'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
         self.m.StubOutWithMock(neutronclient.Client, 'list_ports')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_subnets')
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
         self.m.StubOutWithMock(neutronclient.Client, 'list_routers')
         self.m.StubOutWithMock(neutronclient.Client,
@@ -405,7 +404,7 @@ class AllocTest(HeatTestCase):
     def mock_show_network(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
         neutronclient.Client.show_network(
-            'aaaa-netid'
+            '22c26451-cf27-4d48-9031-51f5e397b84e'
         ).AndReturn({"network": {
             "status": "BUILD",
             "subnets": [],
@@ -413,7 +412,7 @@ class AllocTest(HeatTestCase):
             "admin_state_up": False,
             "shared": False,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "aaaa-netid"
+            "id": "22c26451-cf27-4d48-9031-51f5e397b84e"
         }})
 
     def create_eip(self, t, stack, resource_name):
@@ -523,24 +522,6 @@ class AllocTest(HeatTestCase):
                 "device_id": refid
             }]})
 
-    def mock_list_subnets(self):
-        neutronclient.Client.list_subnets(
-            id='mysubnetid-70ec').AndReturn(
-                {'subnets': [{
-                    u'name': u'wp-Subnet-pyjm7bvoi4xw',
-                    u'enable_dhcp': True,
-                    u'network_id': u'aaaa-netid',
-                    u'tenant_id': u'ecf538ec1729478fa1f97f1bf4fdcf7b',
-                    u'dns_nameservers': [],
-                    u'allocation_pools': [{u'start': u'192.168.9.2',
-                                           u'end': u'192.168.9.254'}],
-                    u'host_routes': [],
-                    u'ip_version': 4,
-                    u'gateway_ip': u'192.168.9.1',
-                    u'cidr': u'192.168.9.0/24',
-                    u'id': u'2c339ccd-734a-4acc-9f64-6f0dfe427e2d'
-                }]})
-
     def mock_router_for_vpc(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
         neutronclient.Client.list_routers(name=vpc_name).AndReturn({
@@ -597,7 +578,6 @@ class AllocTest(HeatTestCase):
 
         self.mock_create_floatingip()
         self.mock_list_ports()
-        self.mock_list_subnets()
 
         self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.mock_update_floatingip()
@@ -623,7 +603,6 @@ class AllocTest(HeatTestCase):
 
         self.mock_create_floatingip()
         self.mock_list_instance_ports('1fafbe59-2332-4f5f-bfa4-517b4d6c1b65')
-        self.mock_list_subnets()
 
         self.mock_no_router_for_vpc()
         self.mock_update_floatingip(
