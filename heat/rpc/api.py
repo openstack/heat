@@ -15,10 +15,10 @@ ENGINE_TOPIC = 'engine'
 
 PARAM_KEYS = (
     PARAM_TIMEOUT, PARAM_DISABLE_ROLLBACK, PARAM_ADOPT_STACK_DATA,
-    PARAM_SHOW_DELETED
+    PARAM_SHOW_DELETED, PARAM_SHOW_NESTED
 ) = (
     'timeout_mins', 'disable_rollback', 'adopt_stack_data',
-    'show_deleted'
+    'show_deleted', 'show_nested'
 )
 
 STACK_KEYS = (

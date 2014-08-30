@@ -71,7 +71,7 @@ class EngineClient(object):
 
     def list_stacks(self, ctxt, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None, tenant_safe=True,
-                    show_deleted=False):
+                    show_deleted=False, show_nested=False):
         """
         The list_stacks method returns attributes of all stacks.  It supports
         pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
@@ -85,6 +85,7 @@ class EngineClient(object):
         :param filters: a dict with attribute:value to filter the list
         :param tenant_safe: if true, scope the request by the current tenant
         :param show_deleted: if true, show soft-deleted stacks
+        :param show_nested: if true, show nested stacks
         :returns: a list of stacks
         """
         return self.call(ctxt,
@@ -92,7 +93,8 @@ class EngineClient(object):
                                        sort_keys=sort_keys, marker=marker,
                                        sort_dir=sort_dir, filters=filters,
                                        tenant_safe=tenant_safe,
-                                       show_deleted=show_deleted))
+                                       show_deleted=show_deleted,
+                                       show_nested=show_nested))
 
     def count_stacks(self, ctxt, filters=None, tenant_safe=True,
                      show_deleted=False):

@@ -160,7 +160,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
-                        'show_deleted': False}
+                        'show_deleted': False, 'show_nested': False}
         mock_call.assert_called_once_with(
             dummy_req.context, ('list_stacks', default_args))
 
