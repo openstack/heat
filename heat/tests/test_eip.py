@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mox
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
@@ -20,6 +21,7 @@ from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine import parser
 from heat.engine.resources import eip
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -188,6 +190,38 @@ class EIPTest(HeatTestCase):
         finally:
             scheduler.TaskRunner(rsrc.destroy)()
 
+        self.m.VerifyAll()
+
+    def test_eip_update(self):
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        server_old = self.fc.servers.list()[0]
+        self.fc.servers.get('WebServer').AndReturn(server_old)
+
+        server_update = self.fc.servers.list()[1]
+        self.fc.servers.get('5678').MultipleTimes().AndReturn(server_update)
+
+        self.m.ReplayAll()
+        t = template_format.parse(eip_template)
+        stack = utils.parse_stack(t)
+
+        rsrc = self.create_eip(t, stack, 'IPAddress')
+        self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
+        # update with the new InstanceId
+        props = copy.deepcopy(rsrc.properties.data)
+        update_server_id = '5678'
+        props['InstanceId'] = update_server_id
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
+        # update without InstanceId
+        props = copy.deepcopy(rsrc.properties.data)
+        props.pop('InstanceId')
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
     def test_association_eip(self):

@@ -48,7 +48,8 @@ class ElasticIp(resource.Resource):
         ),
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Instance ID to associate with EIP.')
+            _('Instance ID to associate with EIP.'),
+            update_allowed=True
         ),
     }
 
@@ -147,6 +148,23 @@ class ElasticIp(resource.Resource):
                 self.nova().floating_ips.delete(self.resource_id)
             except Exception as e:
                 self.client_plugin('nova').ignore_not_found(e)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            if self.INSTANCE_ID in prop_diff:
+                instance_id = prop_diff.get(self.INSTANCE_ID)
+                if instance_id:
+                    # no need to remove the floating ip from the old instance,
+                    # nova does this automatically when calling
+                    # add_floating_ip().
+                    server = self.nova().servers.get(instance_id)
+                    server.add_floating_ip(self._ipaddress())
+                else:
+                    # to remove the floating_ip from the old instance
+                    instance_id_old = self.properties[self.INSTANCE_ID]
+                    if instance_id_old:
+                        server = self.nova().servers.get(instance_id_old)
+                        server.remove_floating_ip(self._ipaddress())
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
