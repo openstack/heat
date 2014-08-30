@@ -35,7 +35,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('data', Json),
-        sqlalchemy.Column('tenant', sqlalchemy.String(256),
+        sqlalchemy.Column('tenant', sqlalchemy.String(64),
                           nullable=False,
                           index=True),
         mysql_engine='InnoDB',
