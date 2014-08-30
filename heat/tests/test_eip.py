@@ -661,3 +661,31 @@ class AllocTest(HeatTestCase):
         expected = ("Must specify at least one of 'InstanceId' "
                     "or 'NetworkInterfaceId'.")
         self._validate_properties(stack, template, expected)
+
+    def test_delete_association_successful_if_create_failed(self):
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        server = self.fc.servers.list()[0]
+        self.fc.servers.get('WebServer').MultipleTimes() \
+            .AndReturn(server)
+        self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
+        self.fc.servers.add_floating_ip(server, '11.0.0.1').AndRaise(
+            fakes.fake_exception(400))
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+
+        self.create_eip(t, stack, 'IPAddress')
+        resource_defns = stack.t.resource_definitions(stack)
+        rsrc = eip.ElasticIpAssociation('IPAssoc',
+                                        resource_defns['IPAssoc'],
+                                        stack)
+        self.assertIsNone(rsrc.validate())
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
