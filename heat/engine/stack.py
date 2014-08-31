@@ -667,9 +667,8 @@ class Stack(collections.Mapping):
                            "Invalid action %s" % action)
             return
 
-        if self.status != self.COMPLETE:
-            if (action == self.ROLLBACK and
-                    self.state == (self.UPDATE, self.IN_PROGRESS)):
+        if self.status == self.IN_PROGRESS:
+            if action == self.ROLLBACK:
                 LOG.debug("Starting update rollback for %s" % self.name)
             else:
                 self.state_set(action, self.FAILED,
