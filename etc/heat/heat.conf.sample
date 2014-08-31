@@ -384,15 +384,15 @@
 # Options defined in heat.engine.notification
 #
 
-# Default notification level for outgoing notifications
+# Default notification level for outgoing notifications.
 # (string value)
 #default_notification_level=INFO
 
-# Default publisher_id for outgoing notifications (string
+# Default publisher_id for outgoing notifications. (string
 # value)
 #default_publisher_id=<None>
 
-# List of drivers to send notifications (DEPRECATED) (multi
+# List of drivers to send notifications (DEPRECATED). (multi
 # valued)
 #list_notifier_drivers=<None>
 
