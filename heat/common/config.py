@@ -138,11 +138,7 @@ engine_opts = [
                help=_('RPC timeout for the engine liveness check that is used'
                       ' for stack locking.')),
     cfg.StrOpt('onready',
-               help=_('Deprecated.')),
-    cfg.StrOpt('networking_service',
-               choices=['nova', 'neutron'],
-               help=_('Select OpenStack component '
-                      'responsible for networking - nova or neutron.'))]
+               help=_('Deprecated.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',

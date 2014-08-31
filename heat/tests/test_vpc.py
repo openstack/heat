@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
@@ -577,7 +575,6 @@ Resources:
         neutronclient.Client.delete_port('dddd').AndReturn(None)
 
     def test_network_interface(self):
-        cfg.CONF.set_override('networking_service', 'neutron')
         self.mock_create_security_group()
         self.mock_create_network()
         self.mock_create_subnet()
@@ -603,7 +600,6 @@ Resources:
         self.m.VerifyAll()
 
     def test_network_interface_existing_groupset(self):
-        cfg.CONF.set_override('networking_service', 'neutron')
         self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
 
         self.mock_create_security_group()

@@ -1002,9 +1002,17 @@ class ResourceTest(HeatTestCase):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'GenericResourceType')
         res = resource.Resource('aresource', snippet, self.stack)
-        cfg.CONF.set_override('networking_service', 'neutron')
+        self.patch(
+            'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
         self.assertTrue(res.is_using_neutron())
-        cfg.CONF.set_override('networking_service', 'nova')
+
+    def test_is_not_using_neutron(self):
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        res = resource.Resource('aresource', snippet, self.stack)
+        mock_create = self.patch(
+            'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
+        mock_create.side_effect = Exception()
         self.assertFalse(res.is_using_neutron())
 
 

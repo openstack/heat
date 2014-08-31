@@ -1120,6 +1120,10 @@ class Resource(object):
             self._data = None
             return True
 
-    @staticmethod
-    def is_using_neutron():
-        return cfg.CONF.networking_service == 'neutron'
+    def is_using_neutron(self):
+        try:
+            self.client('neutron')
+        except Exception:
+            return False
+        else:
+            return True

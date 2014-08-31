@@ -13,11 +13,11 @@
 
 import collections
 
+from keystoneclient import exceptions as keystone_exc
 from neutronclient.common.exceptions import NeutronClientException
 from neutronclient.v2_0 import client as neutronclient
 from novaclient.v1_1 import security_group_rules as nova_sgr
 from novaclient.v1_1 import security_groups as nova_sg
-from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
@@ -145,6 +145,11 @@ Resources:
             neutronclient.Client, 'delete_security_group_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
 
+    def mock_no_neutron(self):
+        mock_create = self.patch(
+            'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
+        mock_create.side_effect = keystone_exc.EndpointNotFound()
+
     def create_stack(self, templ):
         self.stack = self.parse_stack(template_format.parse(templ))
         self.assertIsNone(self.stack.create())
@@ -166,6 +171,7 @@ Resources:
 
     def test_security_group_nova(self):
         #create script
+        self.mock_no_neutron()
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
             id=1,
@@ -258,6 +264,7 @@ Resources:
 
     def test_security_group_nova_bad_source_group(self):
         #create script
+        self.mock_no_neutron()
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
             id=1,
@@ -322,6 +329,7 @@ Resources:
 
     def test_security_group_client_exception(self):
         #create script
+        self.mock_no_neutron()
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         sg_name = utils.PhysName('test_stack', 'the_sg')
         nova_sg.SecurityGroupManager.list().AndReturn([
@@ -430,6 +438,7 @@ Resources:
         self.m.VerifyAll()
 
     def test_security_group_nova_with_egress_rules(self):
+        self.mock_no_neutron()
         t = template_format.parse(self.test_template_nova_with_egress)
         stack = self.parse_stack(t)
 
@@ -437,7 +446,6 @@ Resources:
         self.assertRaises(exception.EgressRuleNotAllowed, sg.validate)
 
     def test_security_group_neutron(self):
-        cfg.CONF.set_override('networking_service', 'neutron')
         #create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
@@ -683,7 +691,6 @@ Resources:
         self.m.VerifyAll()
 
     def test_security_group_neutron_exception(self):
-        cfg.CONF.set_override('networking_service', 'neutron')
         #create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
