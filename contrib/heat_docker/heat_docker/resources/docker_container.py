@@ -496,11 +496,15 @@ class DockerContainer(resource.Resource):
             return True
         try:
             status = self._get_container_status(container_id)
+            if not status['Running']:
+                client = self.get_client()
+                client.remove_container(container_id)
         except docker.errors.APIError as ex:
             if ex.response.status_code == 404:
                 return True
             raise
-        return (not status['Running'])
+
+        return False
 
     def handle_suspend(self):
         if not self.resource_id:
