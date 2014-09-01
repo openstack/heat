@@ -669,29 +669,28 @@ class CinderVolume(Volume):
         return True
 
     def handle_snapshot(self):
-        return self.cinder().volume_snapshots.create(
-            self.resource_id, force=True)
+        return self.cinder().backups.create(self.resource_id)
 
-    def check_snapshot_complete(self, snapshot):
-        if snapshot.status == 'creating':
-            snapshot.get()
+    def check_snapshot_complete(self, backup):
+        if backup.status == 'creating':
+            backup.get()
             return False
-        if snapshot.status == 'available':
-            self.data_set('snapshot_id', snapshot.id)
+        if backup.status == 'available':
+            self.data_set('backup_id', backup.id)
             return True
-        raise exception.Error(snapshot.status)
+        raise exception.Error(backup.status)
 
     def handle_delete_snapshot(self, snapshot):
-        snapshot_id = snapshot['resource_data']['snapshot_id']
+        backup_id = snapshot['resource_data']['backup_id']
 
         def delete():
             client = self.cinder()
             try:
-                snap = client.volume_snapshots.get(snapshot_id)
-                snap.delete()
+                backup = client.backups.get(backup_id)
+                backup.delete()
                 while True:
                     yield
-                    snap.get()
+                    backup.get()
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 
