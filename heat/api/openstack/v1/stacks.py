@@ -164,6 +164,7 @@ class StackController(object):
             'sort_dir': 'single',
             'sort_keys': 'multi',
             'show_deleted': 'single',
+            'show_nested': 'single',
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
@@ -173,6 +174,11 @@ class StackController(object):
             params[engine_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
                 params[engine_api.PARAM_SHOW_DELETED])
             show_deleted = params[engine_api.PARAM_SHOW_DELETED]
+        show_nested = False
+        if engine_api.PARAM_SHOW_NESTED in params:
+            params[engine_api.PARAM_SHOW_NESTED] = param_utils.extract_bool(
+                params[engine_api.PARAM_SHOW_NESTED])
+            show_nested = params[engine_api.PARAM_SHOW_NESTED]
         # get the with_count value, if invalid, raise ValueError
         with_count = False
         if req.params.get('with_count'):
@@ -195,7 +201,8 @@ class StackController(object):
                 count = self.rpc_client.count_stacks(req.context,
                                                      filters=filter_params,
                                                      tenant_safe=tenant_safe,
-                                                     show_deleted=show_deleted)
+                                                     show_deleted=show_deleted,
+                                                     show_nested=show_nested)
             except AttributeError as exc:
                 LOG.warning(_("Old Engine Version: %s") % exc)
 

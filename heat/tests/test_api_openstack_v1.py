@@ -519,7 +519,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                                        tenant_safe=True,
                                                        show_deleted=False)
 
-    def test_global_index_show_deleted_True(self, mock_enforce):
+    def test_global_index_show_deleted_true(self, mock_enforce):
         rpc_client = self.controller.rpc_client
         rpc_client.list_stacks = mock.Mock(return_value=[])
         rpc_client.count_stacks = mock.Mock()
@@ -531,6 +531,32 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                                        filters=mock.ANY,
                                                        tenant_safe=True,
                                                        show_deleted=True)
+
+    def test_global_index_show_nested_false(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_nested': 'False'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=True,
+                                                       show_nested=False)
+
+    def test_global_index_show_nested_true(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_nested': 'True'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=True,
+                                                       show_nested=True)
 
     def test_index_show_deleted_True_with_count_True(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -549,7 +575,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         rpc_client.count_stacks.assert_called_once_with(mock.ANY,
                                                         filters=mock.ANY,
                                                         tenant_safe=True,
-                                                        show_deleted=True)
+                                                        show_deleted=True,
+                                                        show_nested=False)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_detail(self, mock_call, mock_enforce):
