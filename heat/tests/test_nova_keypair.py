@@ -13,7 +13,9 @@
 
 import collections
 import copy
+import six
 
+from heat.common import exception
 from heat.engine.clients.os import nova
 from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
@@ -89,6 +91,38 @@ class NovaKeyPairTest(HeatTestCase):
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
+        self.m.VerifyAll()
+
+    def test_create_key_empty_name(self):
+        """Test creation of a keypair whose name is of length zero."""
+        key_name = ""
+        template = copy.deepcopy(self.kp_template)
+        template['resources']['kp']['properties']['name'] = key_name
+        stack = utils.parse_stack(template)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = nova_keypair.KeyPair('kp', definition, stack)
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(kp_res.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn("Property error", six.text_type(error))
+        self.assertIn("name length (0) is out of range (min: 1, max: 255)",
+                      six.text_type(error))
+        self.m.VerifyAll()
+
+    def test_create_key_excess_name_length(self):
+        """Test creation of a keypair whose name is of excess length."""
+        key_name = 'k' * 256
+        template = copy.deepcopy(self.kp_template)
+        template['resources']['kp']['properties']['name'] = key_name
+        stack = utils.parse_stack(template)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = nova_keypair.KeyPair('kp', definition, stack)
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(kp_res.create)
+        error = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn("Property error", six.text_type(error))
+        self.assertIn("name length (256) is out of range (min: 1, max: 255)",
+                      six.text_type(error))
         self.m.VerifyAll()
 
     def test_delete_key(self):
