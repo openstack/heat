@@ -173,7 +173,7 @@ class instancesTest(HeatTestCase):
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
-        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicDnsName'))
 
         d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
         d1['server']['status'] = vm_status
@@ -328,6 +328,6 @@ class instancesTest(HeatTestCase):
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
-        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicDnsName'))
 
         self.m.VerifyAll()
