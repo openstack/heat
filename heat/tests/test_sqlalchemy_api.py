@@ -582,6 +582,21 @@ class SqlAlchemyTest(HeatTestCase):
         st_db = db_api.stack_count_all(self.ctx, filters=filters)
         self.assertEqual(2, st_db)
 
+    def test_stack_count_all_show_nested(self):
+        stack1 = self._setup_test_stack('stack1', UUID1)[1]
+        self._setup_test_stack('stack2', UUID2,
+                               owner_id=stack1.id)
+        # Backup stack should not be counted
+        self._setup_test_stack('stack1*', UUID3,
+                               owner_id=stack1.id,
+                               backup=True)
+
+        st_db = db_api.stack_count_all(self.ctx)
+        self.assertEqual(1, st_db)
+
+        st_db = db_api.stack_count_all(self.ctx, show_nested=True)
+        self.assertEqual(2, st_db)
+
     def test_event_get_all_by_stack(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
 

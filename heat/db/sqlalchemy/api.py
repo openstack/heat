@@ -381,9 +381,10 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
 
 
 def stack_count_all(context, filters=None, tenant_safe=True,
-                    show_deleted=False):
+                    show_deleted=False, show_nested=False):
     query = _query_stack_get_all(context, tenant_safe=tenant_safe,
-                                 show_deleted=show_deleted)
+                                 show_deleted=show_deleted,
+                                 show_nested=show_nested)
     query = db_filters.exact_filter(query, models.Stack, filters)
     return query.count()
 
