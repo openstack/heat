@@ -464,18 +464,20 @@ class EngineService(service.Service):
 
     @request_context
     def count_stacks(self, cnxt, filters=None, tenant_safe=True,
-                     show_deleted=False):
+                     show_deleted=False, show_nested=False):
         """
         Return the number of stacks that match the given filters
         :param cnxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
         :param tenant_safe: if true, scope the request by the current tenant
         :param show_deleted: if true, count will include the deleted stacks
+        :param show_nested: if true, count will include nested stacks
         :returns: a integer representing the number of matched stacks
         """
         return db_api.stack_count_all(cnxt, filters=filters,
                                       tenant_safe=tenant_safe,
-                                      show_deleted=show_deleted)
+                                      show_deleted=show_deleted,
+                                      show_nested=show_nested)
 
     def _validate_deferred_auth_context(self, cnxt, stack):
         if cfg.CONF.deferred_auth_method != 'password':

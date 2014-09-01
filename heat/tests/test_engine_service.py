@@ -1840,7 +1840,8 @@ class StackServiceTest(HeatTestCase):
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters={'foo': 'bar'},
                                                      tenant_safe=mock.ANY,
-                                                     show_deleted=False)
+                                                     show_deleted=False,
+                                                     show_nested=False)
 
     @mock.patch.object(db_api, 'stack_count_all')
     def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
@@ -1848,7 +1849,8 @@ class StackServiceTest(HeatTestCase):
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
                                                      tenant_safe=True,
-                                                     show_deleted=False)
+                                                     show_deleted=False,
+                                                     show_nested=False)
 
     @mock.patch.object(db_api, 'stack_count_all')
     def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
@@ -1856,7 +1858,17 @@ class StackServiceTest(HeatTestCase):
         mock_stack_count_all.assert_called_once_with(mock.ANY,
                                                      filters=mock.ANY,
                                                      tenant_safe=False,
-                                                     show_deleted=False)
+                                                     show_deleted=False,
+                                                     show_nested=False)
+
+    @mock.patch.object(db_api, 'stack_count_all')
+    def test_count_stacks_show_nested(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx, show_nested=True)
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters=mock.ANY,
+                                                     tenant_safe=True,
+                                                     show_deleted=False,
+                                                     show_nested=True)
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):
