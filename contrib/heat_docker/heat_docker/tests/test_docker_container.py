@@ -15,7 +15,6 @@
 #    under the License.
 
 import mock
-from oslo_utils import importutils
 import six
 
 from heat.common import exception
@@ -30,9 +29,9 @@ from heat.tests import utils
 import testtools
 
 from heat_docker.resources import docker_container
-from heat_docker.tests import fake_docker_client as fakeclient
+from heat_docker.tests import fake_docker_client as docker
 
-docker = importutils.try_import('docker')
+docker_container.docker = docker
 
 
 template = '''
@@ -72,7 +71,7 @@ class DockerContainerTest(common.HeatTestCase):
             self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
-            fakeclient.FakeDockerClient())
+            docker.Client())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -102,7 +101,7 @@ class DockerContainerTest(common.HeatTestCase):
             'Blog', definition, self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
-            fakeclient.FakeDockerClient())
+            docker.Client())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -144,7 +143,7 @@ class DockerContainerTest(common.HeatTestCase):
             'Blog', definition, self.stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(
-            fakeclient.FakeDockerClient())
+            docker.Client())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -171,21 +170,23 @@ class DockerContainerTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute,
                           container.FnGetAtt, 'invalid_attribute')
 
+    @testtools.skipIf(docker is None, 'docker-py not available')
     def test_resource_delete(self):
         container = self.create_container('Blog')
         scheduler.TaskRunner(container.delete)()
         self.assertEqual((container.DELETE, container.COMPLETE),
                          container.state)
-        running = self.get_container_state(container)['Running']
-        self.assertIs(False, running)
 
-    def test_resource_already_deleted(self):
-        container = self.create_container('Blog')
-        scheduler.TaskRunner(container.delete)()
-        running = self.get_container_state(container)['Running']
-        self.assertIs(False, running)
+        exists = True
+        try:
+            self.get_container_state(container)['Running']
+        except docker.errors.APIError as error:
+            if error.response.status_code == 404:
+                exists = False
+            else:
+                raise
 
-        scheduler.TaskRunner(container.delete)()
+        self.assertIs(False, exists)
         self.m.VerifyAll()
 
     @testtools.skipIf(docker is None, 'docker-py not available')
@@ -232,7 +233,7 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
@@ -251,7 +252,7 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
@@ -270,7 +271,7 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
@@ -289,7 +290,7 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(resource.validate())
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
@@ -307,7 +308,7 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         get_client_mock.return_value.set_api_version('1.17')
         self.assertIsNone(resource.validate())
         scheduler.TaskRunner(resource.create)()
@@ -325,7 +326,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         get_client_mock.return_value.set_api_version(low_version)
         msg = self.assertRaises(docker_container.InvalidArgForVersion,
                                 my_resource.validate)
@@ -351,7 +352,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
         scheduler.TaskRunner(my_resource.create)()
         self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
@@ -377,7 +378,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
         scheduler.TaskRunner(my_resource.create)()
         self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
@@ -400,7 +401,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
         scheduler.TaskRunner(my_resource.create)()
         self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
@@ -425,7 +426,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
         scheduler.TaskRunner(my_resource.create)()
         self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
@@ -443,7 +444,7 @@ class DockerContainerTest(common.HeatTestCase):
         my_resource = docker_container.DockerContainer(
             'Blog', definition, self.stack)
         get_client_mock = self.patchobject(my_resource, 'get_client')
-        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value = docker.Client()
         self.assertIsNone(my_resource.validate())
         scheduler.TaskRunner(my_resource.create)()
         self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
