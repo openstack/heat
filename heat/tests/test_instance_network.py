@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import uuid
 
 from heat.common import template_format
@@ -144,6 +145,9 @@ class FakeNeutron(object):
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
             }}
 
+    def delete_port(self, port_id):
+        return None
+
 
 class instancesTest(HeatTestCase):
     def setUp(self):
@@ -154,6 +158,42 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
         glance.GlanceClientPlugin.get_image_id(
             imageId_input).MultipleTimes().AndReturn(imageId)
+
+    def _test_instance_create_delete(self, vm_status='ACTIVE',
+                                     vm_delete_status='NotFound'):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server, 'in_create')
+
+        instance.resource_id = '1234'
+        instance.status = vm_status
+        # this makes sure the auto increment worked on instance creation
+        self.assertTrue(instance.id > 0)
+
+        expected_ip = return_server.networks['public'][0]
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+
+        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d1['server']['status'] = vm_status
+
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d1))
+
+        d2 = copy.deepcopy(d1)
+        if vm_delete_status == 'DELETED':
+            d2['server']['status'] = vm_delete_status
+            get().AndReturn((200, d2))
+        else:
+            get().AndRaise(fakes.fake_exception())
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.delete)()
+        self.assertEqual((instance.DELETE, instance.COMPLETE), instance.state)
+        self.m.VerifyAll()
 
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name
@@ -273,20 +313,8 @@ class instancesTest(HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         return instance
 
-    def test_instance_create(self):
-        return_server = self.fc.servers.list()[1]
-        instance = self._create_test_instance(return_server,
-                                              'in_create')
-        # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
-
-        expected_ip = return_server.networks['public'][0]
-        self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
-        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
-        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
-        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
-
-        self.m.VerifyAll()
+    def test_instance_create_delete_with_SubnetId(self):
+        self._test_instance_create_delete(vm_delete_status='DELETED')
 
     def test_instance_create_with_nic(self):
         return_server = self.fc.servers.list()[1]
