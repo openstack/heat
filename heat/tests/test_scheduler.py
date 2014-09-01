@@ -670,6 +670,195 @@ class TaskTest(HeatTestCase):
         self.assertFalse(runner)
         self.assertTrue(runner.step())
 
+    def test_cancel_not_started(self):
+        task = DummyTask(1)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+
+        runner.cancel()
+
+        self.assertTrue(runner.done())
+
+    def test_cancel_done(self):
+        task = DummyTask(1)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        task.do_step(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+        runner.start()
+        self.assertTrue(runner.started())
+        self.assertTrue(runner.step())
+        self.assertTrue(runner.done())
+
+        runner.cancel()
+
+        self.assertTrue(runner.done())
+        self.assertTrue(runner.step())
+
+    def test_cancel(self):
+        task = DummyTask(3)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        task.do_step(1).AndReturn(None)
+        task.do_step(2).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+        runner.start()
+        self.assertTrue(runner.started())
+
+        self.assertFalse(runner.step())
+        runner.cancel()
+        self.assertTrue(runner.step())
+
+    def test_cancel_grace_period(self):
+        st = scheduler.wallclock()
+        task = DummyTask(5)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        task.do_step(1).AndReturn(None)
+        task.do_step(2).AndReturn(None)
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        task.do_step(3).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.0)
+        task.do_step(4).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+        runner.start()
+        self.assertTrue(runner.started())
+
+        self.assertFalse(runner.step())
+        runner.cancel(grace_period=1.0)
+        self.assertFalse(runner.step())
+        self.assertFalse(runner.step())
+        self.assertTrue(runner.step())
+
+    def test_cancel_grace_period_before_timeout(self):
+        st = scheduler.wallclock()
+        task = DummyTask(5)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.1)
+        task.do_step(1).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 0.2)
+        task.do_step(2).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 0.2)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        task.do_step(3).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.0)
+        task.do_step(4).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+        runner.start(timeout=10)
+        self.assertTrue(runner.started())
+
+        self.assertFalse(runner.step())
+        runner.cancel(grace_period=1.0)
+        self.assertFalse(runner.step())
+        self.assertFalse(runner.step())
+        self.assertTrue(runner.step())
+
+    def test_cancel_grace_period_after_timeout(self):
+        st = scheduler.wallclock()
+        task = DummyTask(5)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.1)
+        task.do_step(1).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 0.2)
+        task.do_step(2).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 0.2)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        task.do_step(3).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.0)
+        task.do_step(4).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+        runner.start(timeout=1.25)
+        self.assertTrue(runner.started())
+
+        self.assertFalse(runner.step())
+        runner.cancel(grace_period=3)
+        self.assertFalse(runner.step())
+        self.assertFalse(runner.step())
+        self.assertRaises(scheduler.Timeout, runner.step)
+
+    def test_cancel_grace_period_not_started(self):
+        task = DummyTask(1)
+
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        self.m.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        self.assertFalse(runner.started())
+
+        runner.cancel(grace_period=0.5)
+
+        self.assertTrue(runner.done())
+
+
+class TimeoutTest(HeatTestCase):
+    def test_compare(self):
+        task = scheduler.TaskRunner(DummyTask())
+
+        earlier = scheduler.Timeout(task, 10)
+        eventlet.sleep(0.01)
+        later = scheduler.Timeout(task, 10)
+
+        self.assertTrue(earlier < later)
+        self.assertTrue(later > earlier)
+        self.assertEqual(earlier, earlier)
+        self.assertNotEqual(earlier, later)
+
 
 class DescriptionTest(HeatTestCase):
 
