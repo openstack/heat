@@ -138,7 +138,7 @@ class DockerContainer(resource.Resource):
             default={}
         ),
         VOLUMES_FROM: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.LIST,
             _('Mount all specified volumes.'),
             default=''
         ),
@@ -246,7 +246,7 @@ class DockerContainer(resource.Resource):
             return logs.split('\n').pop()
 
     def handle_create(self):
-        args = {
+        create_args = {
             'image': self.properties[self.IMAGE],
             'command': self.properties[self.CMD],
             'hostname': self.properties[self.HOSTNAME],
@@ -258,26 +258,28 @@ class DockerContainer(resource.Resource):
             'environment': self.properties[self.ENV],
             'dns': self.properties[self.DNS],
             'volumes': self.properties[self.VOLUMES],
-            'volumes_from': self.properties[self.VOLUMES_FROM],
             'name': self.properties[self.NAME]
         }
         client = self.get_client()
         client.pull(self.properties[self.IMAGE])
-        result = client.create_container(**args)
+        result = client.create_container(**create_args)
         container_id = result['Id']
         self.resource_id_set(container_id)
 
-        kwargs = {}
-        if self.properties[self.PRIVILEGED]:
-            kwargs[self.PRIVILEGED] = True
-        if self.properties[self.VOLUMES]:
-            kwargs['binds'] = self.properties[self.VOLUMES]
-        if self.properties[self.PORT_BINDINGS]:
-            kwargs['port_bindings'] = self.properties[self.PORT_BINDINGS]
-        if self.properties[self.LINKS]:
-            kwargs['links'] = self.properties[self.LINKS]
+        start_args = {}
 
-        client.start(container_id, **kwargs)
+        if self.properties[self.PRIVILEGED]:
+            start_args[self.PRIVILEGED] = True
+        if self.properties[self.VOLUMES]:
+            start_args['binds'] = self.properties[self.VOLUMES]
+        if self.properties[self.VOLUMES_FROM]:
+            start_args['volumes_from'] = self.properties[self.VOLUMES_FROM]
+        if self.properties[self.PORT_BINDINGS]:
+            start_args['port_bindings'] = self.properties[self.PORT_BINDINGS]
+        if self.properties[self.LINKS]:
+            start_args['links'] = self.properties[self.LINKS]
+
+        client.start(container_id, **start_args)
         return container_id
 
     def _get_container_status(self, container_id):
