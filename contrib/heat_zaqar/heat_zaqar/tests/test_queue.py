@@ -27,10 +27,10 @@ from ..resources import queue  # noqa
 wp_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "openstack Marconi queue service as a resource",
+  "Description" : "openstack Zaqar queue service as a resource",
   "Resources" : {
     "MyQueue2" : {
-      "Type" : "OS::Marconi::Queue",
+      "Type" : "OS::Zaqar::Queue",
       "Properties" : {
         "name": "myqueue",
         "metadata": { "key1": { "key2": "value", "key3": [1, 2] } }
@@ -70,13 +70,13 @@ class FakeQueue(object):
         pass
 
 
-class MarconiMessageQueueTest(HeatTestCase):
+class ZaqarMessageQueueTest(HeatTestCase):
     def setUp(self):
-        super(MarconiMessageQueueTest, self).setUp()
+        super(ZaqarMessageQueueTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
         self.ctx = utils.dummy_context()
-        resource._register_class("OS::Marconi::Queue",
-                                 queue.MarconiQueue)
+        resource._register_class("OS::Zaqar::Queue",
+                                 queue.ZaqarQueue)
 
     def parse_stack(self, t):
         stack_name = 'test_stack'
@@ -90,8 +90,8 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue(queue.physical_resource_name(), auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -120,8 +120,8 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -141,8 +141,8 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -167,8 +167,8 @@ class MarconiMessageQueueTest(HeatTestCase):
 
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -188,8 +188,8 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.parse_stack(t)
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
         fake_q = FakeQueue('myqueue', auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
         self.fc.queue('myqueue',
@@ -216,8 +216,8 @@ class MarconiMessageQueueTest(HeatTestCase):
         self.parse_stack(t)
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'marconi')
-        queue.marconi().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'zaqar')
+        queue.zaqar().MultipleTimes().AndReturn(self.fc)
         fake_q = FakeQueue('myqueue', auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
         self.fc.queue('myqueue',

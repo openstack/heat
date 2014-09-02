@@ -16,20 +16,20 @@ from heat.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 
 try:
-    from marconiclient.queues.v1 import client as marconiclient
+    from zaqarclient.queues.v1 import client as zaqarclient
 except ImportError:
-    marconiclient = None
+    zaqarclient = None
 
 from heat.engine.clients import client_plugin
 
 
-class MarconiClientPlugin(client_plugin.ClientPlugin):
+class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
 
         con = self.context
         if self.auth_token is None:
-            LOG.error(_("Marconi connection failed, no auth_token!"))
+            LOG.error(_("Zaqar connection failed, no auth_token!"))
             return None
 
         opts = {
@@ -43,6 +43,6 @@ class MarconiClientPlugin(client_plugin.ClientPlugin):
         conf = {'auth_opts': auth_opts}
         endpoint = self.url_for(service_type='queuing')
 
-        client = marconiclient.Client(url=endpoint, conf=conf)
+        client = zaqarclient.Client(url=endpoint, conf=conf)
 
         return client

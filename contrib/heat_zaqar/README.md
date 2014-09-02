@@ -1,10 +1,10 @@
-Marconi plugin for OpenStack Heat
+Zaqar plugin for OpenStack Heat
 ================================
 
-This plugin enable using Marconi queuing service as a resource in a Heat template.
+This plugin enable using Zaqar queuing service as a resource in a Heat template.
 
 
-### 1. Install the Marconi plugin in Heat
+### 1. Install the Zaqar plugin in Heat
 
 NOTE: These instructions assume the value of heat.conf plugin_dirs includes the
 default directory /usr/lib/heat.
