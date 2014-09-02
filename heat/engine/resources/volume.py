@@ -160,8 +160,10 @@ class Volume(resource.Resource):
 
                 if vol.status == 'in-use':
                     raise exception.Error(_('Volume in use'))
-
-                vol.delete()
+                # if the volume is already in deleting status,
+                # just wait for the deletion to complete
+                if vol.status != 'deleting':
+                    vol.delete()
                 while True:
                     yield
                     vol.get()
