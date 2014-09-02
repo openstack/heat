@@ -477,11 +477,30 @@ class StackResourceTest(common.HeatTestCase):
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
                           parent_resource=self.parent_resource,
-                          show_deleted=False).AndReturn('s')
+                          show_deleted=False,
+                          force_reload=False).AndReturn('s')
         self.m.ReplayAll()
 
         self.parent_resource.nested()
         self.m.VerifyAll()
+
+    def test_load_nested_force_reload(self):
+        create_creator = self.parent_resource.create_with_template(
+            self.templ, {"KeyName": "key"})
+        create_creator.run_to_completion()
+        expected_state = (parser.Stack.CREATE, parser.Stack.COMPLETE)
+        self.assertEqual(expected_state, self.parent_resource.nested().state)
+
+        stack = parser.Stack.load(
+            self.parent_resource.context,
+            self.parent_resource.resource_id,
+            parent_resource=self.parent_resource,
+            show_deleted=False)
+        stack.state_set(parser.Stack.CREATE, parser.Stack.FAILED, "foo")
+        self.assertEqual(expected_state, self.parent_resource.nested().state)
+        expected_state = (parser.Stack.CREATE, parser.Stack.FAILED)
+        self.assertEqual(expected_state,
+                         self.parent_resource.nested(force_reload=True).state)
 
     def test_load_nested_non_exist(self):
         self.parent_resource.create_with_template(self.templ,
@@ -493,7 +512,8 @@ class StackResourceTest(common.HeatTestCase):
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
                           parent_resource=self.parent_resource,
-                          show_deleted=False)
+                          show_deleted=False,
+                          force_reload=False)
         self.m.ReplayAll()
 
         self.assertRaises(exception.NotFound, self.parent_resource.nested)
@@ -520,7 +540,8 @@ class StackResourceTest(common.HeatTestCase):
             self.parent_resource.context,
             self.parent_resource.resource_id,
             parent_resource=self.parent_resource,
-            show_deleted=False).AndRaise(exception.NotFound(''))
+            show_deleted=False, force_reload=False
+        ).AndRaise(exception.NotFound(''))
         self.m.ReplayAll()
 
         self.assertIsNone(self.parent_resource.delete_nested())
