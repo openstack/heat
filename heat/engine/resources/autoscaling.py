@@ -16,11 +16,11 @@ import math
 
 import six
 
+from heat.common import environment_format
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import constraints
-from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
@@ -210,8 +210,8 @@ class InstanceGroup(stack_resource.StackResource):
     def _environment(self):
         """Return the environment for the nested stack."""
         return {
-            environment.PARAMETERS: {},
-            environment.RESOURCE_REGISTRY: {
+            environment_format.PARAMETERS: {},
+            environment_format.RESOURCE_REGISTRY: {
                 SCALED_RESOURCE_TYPE: 'AWS::EC2::Instance',
             },
         }
