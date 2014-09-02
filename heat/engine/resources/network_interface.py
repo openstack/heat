@@ -46,7 +46,7 @@ class NetworkInterface(resource.Resource):
         GROUP_SET: properties.Schema(
             properties.Schema.LIST,
             _('List of security group IDs associated with this interface.'),
-            default=[]
+            update_allowed=True
         ),
         PRIVATE_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING
@@ -115,8 +115,11 @@ class NetworkInterface(resource.Resource):
             'network_id': network_id,
             'fixed_ips': [fixed_ip]
         }
-
-        if self.properties[self.GROUP_SET]:
+        # if without group_set, don't set the 'security_groups' property,
+        # neutron will create the port with the 'default' securityGroup,
+        # if has the group_set and the value is [], which means to create the
+        # port without securityGroup(same as the behavior of neutron)
+        if self.properties[self.GROUP_SET] is not None:
             sgs = self.client_plugin().get_secgroup_uuids(
                 self.properties.get(self.GROUP_SET))
             props['security_groups'] = sgs
@@ -124,11 +127,33 @@ class NetworkInterface(resource.Resource):
         self.resource_id_set(port['id'])
 
     def handle_delete(self):
+        if self.resource_id is None:
+            return
+
         client = self.neutron()
         try:
             client.delete_port(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            update_props = {}
+            if self.GROUP_SET in prop_diff:
+                group_set = prop_diff.get(self.GROUP_SET)
+                # update should keep the same behavior as creation,
+                # if without the GroupSet in update template, we should
+                # update the security_groups property to referent
+                # the 'default' security group
+                if group_set is not None:
+                    sgs = self.client_plugin().get_secgroup_uuids(group_set)
+                else:
+                    sgs = self.client_plugin().get_secgroup_uuids(['default'])
+
+                update_props['security_groups'] = sgs
+
+                self.neutron().update_port(self.resource_id,
+                                           {'port': update_props})
 
     def _get_fixed_ip_address(self, ):
         if self.fixed_ip_address is None:
