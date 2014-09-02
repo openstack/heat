@@ -49,7 +49,10 @@ class KeyPair(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('The name of the key pair.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.Length(min=1, max=255)
+            ]
         ),
         SAVE_PRIVATE_KEY: properties.Schema(
             properties.Schema.BOOLEAN,
