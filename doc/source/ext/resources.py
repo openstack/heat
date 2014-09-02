@@ -115,14 +115,17 @@ class ResourcePages(Directive):
                 props.append('%s: %s' % (prop_key,
                                          self._prop_syntax_example(prop)))
 
+        props_str = ''
+        if props:
+            props_str = '''\n    properties:
+      %s''' % ('\n      '.join(props))
+
         template = '''heat_template_version: 2013-05-23
 ...
 resources:
   ...
   the_resource:
-    type: %s
-    properties:
-      %s''' % (self.resource_type, '\n      '.join(props))
+    type: %s%s''' % (self.resource_type, props_str)
 
         block = nodes.literal_block('', template, language="hot")
         section.append(block)
@@ -137,14 +140,17 @@ resources:
                 props.append('%s: %s' % (prop_key,
                                          self._prop_syntax_example(prop)))
 
+        props_str = ''
+        if props:
+            props_str = '''\n    Properties:
+      %s''' % ('\n      '.join(props))
+
         template = '''HeatTemplateFormatVersion: '2012-12-12'
 ...
 Resources:
   ...
   TheResource:
-    Type: %s
-    Properties:
-      %s''' % (self.resource_type, '\n      '.join(props))
+    Type: %s%s''' % (self.resource_type, props_str)
 
         block = nodes.literal_block('', template, language='yaml')
         section.append(block)
@@ -159,18 +165,23 @@ Resources:
                     and prop.support_status.status == support.SUPPORTED):
                 props.append('"%s": %s' % (prop_key,
                                            self._prop_syntax_example(prop)))
+
+        props_str = ''
+        if props:
+            props_str = ''',\n      "Properties": {
+        %s
+      }''' % (',\n        '.join(props))
+
         template = '''{
   "AWSTemplateFormatVersion" : "2010-09-09",
   ...
   "Resources" : {
     "TheResource": {
-      "Type": "%s",
-      "Properties": {
-        %s
-      }
+      "Type": "%s"%s
     }
   }
-}''' % (self.resource_type, ',\n        '.join(props))
+}''' % (self.resource_type, props_str)
+
         block = nodes.literal_block('', template, language="json")
         section.append(block)
 
