@@ -29,6 +29,7 @@ basic_keys = (
     engine_api.STACK_DELETION_TIME,
     engine_api.STACK_UPDATED_TIME,
     engine_api.STACK_OWNER,
+    engine_api.STACK_PARENT,
 )
 
 
