@@ -14,7 +14,6 @@
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.neutron import neutron
 
 
 class NetworkInterface(resource.Resource):
@@ -118,8 +117,8 @@ class NetworkInterface(resource.Resource):
         }
 
         if self.properties[self.GROUP_SET]:
-            sgs = neutron.NeutronResource.get_secgroup_uuids(
-                self.properties.get(self.GROUP_SET), self.neutron())
+            sgs = self.client_plugin().get_secgroup_uuids(
+                self.properties.get(self.GROUP_SET))
             props['security_groups'] = sgs
         port = client.create_port({'port': props})['port']
         self.resource_id_set(port['id'])

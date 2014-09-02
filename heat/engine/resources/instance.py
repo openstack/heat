@@ -21,7 +21,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.neutron import neutron
 from heat.engine.resources import volume
 from heat.engine import scheduler
 from heat.engine import signal_responder
@@ -493,8 +492,8 @@ class Instance(resource.Resource):
 
                     if security_groups:
                         props['security_groups'] = \
-                            neutron.NeutronResource.get_secgroup_uuids(
-                                security_groups, self.neutron())
+                            self.client_plugin('neutron').get_secgroup_uuids(
+                                security_groups)
 
                     port = neutronclient.create_port({'port': props})['port']
 

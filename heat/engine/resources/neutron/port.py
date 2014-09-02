@@ -247,8 +247,8 @@ class Port(neutron.NeutronResource):
                 del pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
 
         if props.get(self.SECURITY_GROUPS):
-            props[self.SECURITY_GROUPS] = self.get_secgroup_uuids(
-                props.get(self.SECURITY_GROUPS), self.neutron())
+            props[self.SECURITY_GROUPS] = self.client_plugin().\
+                get_secgroup_uuids(props.get(self.SECURITY_GROUPS))
         else:
             props.pop(self.SECURITY_GROUPS, None)
 
