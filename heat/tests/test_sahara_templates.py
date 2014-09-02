@@ -43,11 +43,30 @@ resources:
           - jobtracker
 """
 
+cluster_template = """
+heat_template_version: 2013-05-23
+description: Sahara Cluster Template
+resources:
+  cluster-template:
+    type: OS::Sahara::ClusterTemplate
+    properties:
+      name: test-cluster-template
+      plugin_name: vanilla
+      hadoop_version: 2.3.0
+      neutron_management_network: some_network
+"""
+
 
 class FakeNodeGroupTemplate(object):
     def __init__(self):
         self.id = "some_ng_id"
         self.name = "test-cluster-template"
+
+
+class FakeClusterTemplate(object):
+    def __init__(self):
+        self.id = "some_ct_id"
+        self.name = "node-group-template"
 
 
 class SaharaNodeGroupTemplateTest(HeatTestCase):
@@ -130,4 +149,87 @@ class SaharaNodeGroupTemplateTest(HeatTestCase):
         self.patchobject(ngt, 'is_using_neutron').return_value = True
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
         self.assertEqual('floating_ip_pool must be provided.',
+                         six.text_type(ex))
+
+
+class SaharaClusterTemplateTest(HeatTestCase):
+    def setUp(self):
+        super(SaharaClusterTemplateTest, self).setUp()
+        self.patchobject(st.constraints.CustomConstraint, '_is_valid'
+                         ).return_value = True
+        self.patchobject(neutron.NeutronClientPlugin, '_create')
+        self.patchobject(neutron.NeutronClientPlugin, 'find_neutron_resource'
+                         ).return_value = 'some_network_id'
+        sahara_mock = mock.MagicMock()
+        self.ct_mgr = sahara_mock.cluster_templates
+        self.patchobject(sahara.SaharaClientPlugin,
+                         '_create').return_value = sahara_mock
+        self.fake_ct = FakeClusterTemplate()
+
+        self.t = template_format.parse(cluster_template)
+
+    def _init_ct(self, template):
+        stack = utils.parse_stack(template)
+        return stack['cluster-template']
+
+    def test_ct_resource_mapping(self):
+        ct = self._init_ct(self.t)
+        mapping = st.resource_mapping()
+        self.assertEqual(st.SaharaClusterTemplate,
+                         mapping['OS::Sahara::ClusterTemplate'])
+        self.assertIsInstance(ct,
+                              st.SaharaClusterTemplate)
+
+    def _create_ct(self, template):
+        ct = self._init_ct(template)
+        self.ct_mgr.create.return_value = self.fake_ct
+        scheduler.TaskRunner(ct.create)()
+        self.assertEqual((ct.CREATE, ct.COMPLETE), ct.state)
+        self.assertEqual(self.fake_ct.id, ct.resource_id)
+        return ct
+
+    def test_ct_create(self):
+        self._create_ct(self.t)
+        expected_args = ('test-cluster-template', 'vanilla',
+                         '2.3.0')
+        expected_kwargs = {'description': '',
+                           'default_image_id': None,
+                           'net_id': 'some_network_id',
+                           'anti_affinity': None,
+                           'node_groups': None,
+                           'cluster_configs': None
+                           }
+        self.ct_mgr.create.assert_called_once_with(*expected_args,
+                                                   **expected_kwargs)
+
+    def test_ct_delete(self):
+        ct = self._create_ct(self.t)
+        scheduler.TaskRunner(ct.delete)()
+        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
+        self.assertEqual((ct.DELETE, ct.COMPLETE), ct.state)
+
+    def test_ngt_delete_ignores_not_found(self):
+        ct = self._create_ct(self.t)
+        self.ct_mgr.delete.side_effect = sahara.sahara_base.APIException(
+            error_code=404)
+        scheduler.TaskRunner(ct.delete)()
+        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
+
+    def test_ngt_delete_fails(self):
+        ct = self._create_ct(self.t)
+        self.ct_mgr.delete.side_effect = sahara.sahara_base.APIException()
+        delete_task = scheduler.TaskRunner(ct.delete)
+        ex = self.assertRaises(exception.ResourceFailure, delete_task)
+        expected = "APIException: None"
+        self.assertEqual(expected, six.text_type(ex))
+        self.ct_mgr.delete.assert_called_once_with(self.fake_ct.id)
+
+    def test_ct_validate_no_network_on_neutron_fails(self):
+        self.t['resources']['cluster-template']['properties'].pop(
+            'neutron_management_network')
+        ct = self._init_ct(self.t)
+        self.patchobject(ct, 'is_using_neutron', return_value=True)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               ct.validate)
+        self.assertEqual("neutron_management_network must be provided",
                          six.text_type(ex))
