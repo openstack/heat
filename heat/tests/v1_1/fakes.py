@@ -298,6 +298,18 @@ class FakeHTTPClient(base_client.HTTPClient):
             raise AssertionError("Unexpected server action: %s" % action)
         return (resp, _body)
 
+    def post_servers_5678_action(self, body, **kw):
+        _body = None
+        resp = 202
+        assert len(body.keys()) == 1
+        action = body.keys()[0]
+        if action == 'addFloatingIp':
+            assert body[action].keys() == ['address']
+        elif action == 'removeFloatingIp':
+            assert body[action].keys() == ['address']
+
+        return (resp, _body)
+
     #
     # Flavors
     #
