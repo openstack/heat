@@ -184,19 +184,23 @@ class ElasticIpAssociation(resource.Resource):
     properties_schema = {
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Instance ID to associate with EIP specified by EIP property.')
+            _('Instance ID to associate with EIP specified by EIP property.'),
+            update_allowed=True
         ),
         EIP: properties.Schema(
             properties.Schema.STRING,
-            _('EIP address to associate with instance.')
+            _('EIP address to associate with instance.'),
+            update_allowed=True
         ),
         ALLOCATION_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Allocation ID for VPC EIP address.')
+            _('Allocation ID for VPC EIP address.'),
+            update_allowed=True
         ),
         NETWORK_INTERFACE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Network interface ID to associate with EIP.')
+            _('Network interface ID to associate with EIP.'),
+            update_allowed=True
         ),
     }
 
@@ -276,6 +280,93 @@ class ElasticIpAssociation(resource.Resource):
 
         return server
 
+    def _floatingIp_detach(self,
+                           nova_ignore_not_found=False,
+                           neutron_ignore_not_found=False):
+        eip = self.properties[self.EIP]
+        allocation_id = self.properties[self.ALLOCATION_ID]
+        instance_id = self.properties[self.INSTANCE_ID]
+        server = None
+        if eip:
+            # if has eip_old, to remove the eip_old from the instance
+            server = self._nova_remove_floating_ip(instance_id,
+                                                   eip,
+                                                   nova_ignore_not_found)
+        else:
+            # if hasn't eip_old, to update neutron floatingIp
+            self._neutron_update_floating_ip(allocation_id,
+                                             None,
+                                             neutron_ignore_not_found)
+
+        return server
+
+    def _handle_update_eipInfo(self, prop_diff):
+        eip_update = prop_diff.get(self.EIP)
+        allocation_id_update = prop_diff.get(self.ALLOCATION_ID)
+        instance_id = self.properties[self.INSTANCE_ID]
+        ni_id = self.properties[self.NETWORK_INTERFACE_ID]
+        if eip_update:
+            server = self._floatingIp_detach(neutron_ignore_not_found=True)
+            if server:
+                # then to attach the eip_update to the instance
+                server.add_floating_ip(eip_update)
+                self.resource_id_set(eip_update)
+        elif allocation_id_update:
+            self._floatingIp_detach(nova_ignore_not_found=True)
+            port_id, port_rsrc = self._get_port_info(ni_id, instance_id)
+            if not port_id or not port_rsrc:
+                LOG.error(_('Port not specified.'))
+                raise exception.NotFound(_('Failed to update, can not found '
+                                           'port info.'))
+
+            network_id = port_rsrc['network_id']
+            self._neutron_add_gateway_router(allocation_id_update, network_id)
+            self._neutron_update_floating_ip(allocation_id_update, port_id)
+            self.resource_id_set(allocation_id_update)
+
+    def _handle_update_portInfo(self, prop_diff):
+        instance_id_update = prop_diff.get(self.INSTANCE_ID)
+        ni_id_update = prop_diff.get(self.NETWORK_INTERFACE_ID)
+        eip = self.properties[self.EIP]
+        allocation_id = self.properties[self.ALLOCATION_ID]
+        # if update portInfo, no need to detach the port from
+        # old instance/floatingip.
+        if eip:
+            server = self.nova().servers.get(instance_id_update)
+            server.add_floating_ip(eip)
+        else:
+            port_id, port_rsrc = self._get_port_info(ni_id_update,
+                                                     instance_id_update)
+            if not port_id or not port_rsrc:
+                LOG.error(_('Port not specified.'))
+                raise exception.NotFound(_('Failed to update, can not found '
+                                           'port info.'))
+
+            network_id = port_rsrc['network_id']
+            self._neutron_add_gateway_router(allocation_id, network_id)
+            self._neutron_update_floating_ip(allocation_id, port_id)
+
+    def _validate_update_properties(self, prop_diff):
+        # according to aws doc, when update allocation_id or eip,
+        # if you also change the InstanceId or NetworkInterfaceId,
+         # should go to Replacement flow
+        if self.ALLOCATION_ID in prop_diff or self.EIP in prop_diff:
+            instance_id = prop_diff.get(self.INSTANCE_ID)
+            ni_id = prop_diff.get(self.NETWORK_INTERFACE_ID)
+
+            if instance_id or ni_id:
+                raise resource.UpdateReplace(self.name)
+
+        # according to aws doc, when update the instance_id or
+        # network_interface_id, if you also change the EIP or
+        # ALLOCATION_ID, should go to Replacement flow
+        if (self.INSTANCE_ID in prop_diff or
+                self.NETWORK_INTERFACE_ID in prop_diff):
+            eip = prop_diff.get(self.EIP)
+            allocation_id = prop_diff.get(self.ALLOCATION_ID)
+            if eip or allocation_id:
+                raise resource.UpdateReplace(self.name)
+
     def handle_create(self):
         """Add a floating IP address to a server."""
         if self.properties[self.EIP]:
@@ -318,6 +409,15 @@ class ElasticIpAssociation(resource.Resource):
             self._neutron_update_floating_ip(float_id,
                                              port_id=None,
                                              ignore_not_found=True)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self._validate_update_properties(prop_diff)
+            if self.ALLOCATION_ID in prop_diff or self.EIP in prop_diff:
+                self._handle_update_eipInfo(prop_diff)
+            elif (self.INSTANCE_ID in prop_diff or
+                  self.NETWORK_INTERFACE_ID in prop_diff):
+                self._handle_update_portInfo(prop_diff)
 
 
 def resource_mapping():

@@ -482,8 +482,8 @@ class AllocTest(HeatTestCase):
         id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         neutronclient.Client.delete_floatingip(id).AndReturn(None)
 
-    def mock_list_ports(self):
-        neutronclient.Client.list_ports(id='the_nic').AndReturn(
+    def mock_list_ports(self, id='the_nic'):
+        neutronclient.Client.list_ports(id=id).AndReturn(
             {"ports": [{
                 "status": "DOWN",
                 "binding:host_id": "null",
@@ -687,5 +687,154 @@ class AllocTest(HeatTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_update_association_with_InstanceId(self):
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        server = self.fc.servers.list()[0]
+        self.fc.servers.get('WebServer').MultipleTimes() \
+            .AndReturn(server)
+        server_update = self.fc.servers.list()[1]
+        self.fc.servers.get('5678').AndReturn(server_update)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'IPAddress')
+        ass = self.create_association(t, stack, 'IPAssoc')
+        self.assertEqual('11.0.0.1', ass.properties['EIP'])
+
+        # update with the new InstanceId
+        props = copy.deepcopy(ass.properties.data)
+        update_server_id = '5678'
+        props['InstanceId'] = update_server_id
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+
+        self.m.VerifyAll()
+
+    def test_update_association_with_EIP(self):
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        server = self.fc.servers.list()[0]
+        self.fc.servers.get('WebServer').MultipleTimes() \
+            .AndReturn(server)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'IPAddress')
+        ass = self.create_association(t, stack, 'IPAssoc')
+
+        # update with the new EIP
+        props = copy.deepcopy(ass.properties.data)
+        update_eip = '11.0.0.2'
+        props['EIP'] = update_eip
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+
+        self.m.VerifyAll()
+
+    def test_update_association_with_AllocationId_or_EIP(self):
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        server = self.fc.servers.list()[0]
+        self.fc.servers.get('WebServer').MultipleTimes()\
+            .AndReturn(server)
+
+        self.mock_list_instance_ports('WebServer')
+        self.mock_show_network()
+        self.mock_no_router_for_vpc()
+        self.mock_update_floatingip(
+            port='a000228d-b40b-4124-8394-a4082ae1b76c')
+
+        self.mock_update_floatingip(port=None)
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'IPAddress')
+        ass = self.create_association(t, stack, 'IPAssoc')
+        self.assertEqual('11.0.0.1', ass.properties['EIP'])
+
+        # change EIP to AllocationId
+        props = copy.deepcopy(ass.properties.data)
+        update_allocationId = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        props['AllocationId'] = update_allocationId
+        props.pop('EIP')
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+
+        # change AllocationId to EIP
+        props = copy.deepcopy(ass.properties.data)
+        update_eip = '11.0.0.2'
+        props['EIP'] = update_eip
+        props.pop('AllocationId')
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+
+        self.m.VerifyAll()
+
+    def test_update_association_with_NetworkInterfaceId_or_InstanceId(self):
+        self.mock_create_floatingip()
+        self.mock_list_ports()
+        self.mock_show_network()
+        self.mock_no_router_for_vpc()
+        self.mock_update_floatingip()
+
+        self.mock_list_ports(id='a000228d-b40b-4124-8394-a4082ae1b76b')
+        self.mock_show_network()
+        self.mock_no_router_for_vpc()
+        self.mock_update_floatingip(
+            port='a000228d-b40b-4124-8394-a4082ae1b76b')
+
+        self.mock_list_instance_ports('5678')
+        self.mock_show_network()
+        self.mock_no_router_for_vpc()
+        self.mock_update_floatingip(
+            port='a000228d-b40b-4124-8394-a4082ae1b76c')
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc2)
+        stack = utils.parse_stack(t)
+        self.create_eip(t, stack, 'the_eip')
+        ass = self.create_association(t, stack, 'IPAssoc')
+
+        # update with the new NetworkInterfaceId
+        props = copy.deepcopy(ass.properties.data)
+        update_networkInterfaceId = 'a000228d-b40b-4124-8394-a4082ae1b76b'
+        props['NetworkInterfaceId'] = update_networkInterfaceId
+
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+
+        # update with the InstanceId
+        props = copy.deepcopy(ass.properties.data)
+        instance_id = '5678'
+        props.pop('NetworkInterfaceId')
+        props['InstanceId'] = instance_id
+
+        update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
+                                                      stack.t.parse(stack,
+                                                                    props))
+        scheduler.TaskRunner(ass.update, update_snippet)()
+        self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
         self.m.VerifyAll()
