@@ -14,13 +14,16 @@
 import routes
 from webob import Request
 
+from oslo import i18n
+
 from heat.api.cloudwatch import versions
 from heat.api.cloudwatch import watch
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.common import wsgi
-from heat.openstack.common import gettextutils
 
-gettextutils.install('heat')
+# FIXME(elynn): Since install() is deprecated, we should remove it in the
+# future.
+i18n.install('heat')
 
 
 class API(wsgi.Router):

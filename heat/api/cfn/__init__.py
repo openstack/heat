@@ -13,9 +13,6 @@
 
 from heat.api.cfn import versions
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat')
 
 
 def version_negotiation_filter(app, conf, **local_conf):

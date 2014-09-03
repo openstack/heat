@@ -16,8 +16,8 @@ from functools import wraps
 import six
 from webob import exc
 
+from heat.common.i18n import _
 from heat.common import identifier
-from heat.openstack.common.gettextutils import _
 
 
 def policy_enforce(handler):
