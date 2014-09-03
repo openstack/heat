@@ -31,16 +31,16 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
 from oslo.config import cfg
+from oslo import i18n
 
 from heat.common import config
+from heat.common.i18n import _
 from heat.common import messaging
 from heat.common import wsgi
-from heat.openstack.common import gettextutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import systemd
 
-gettextutils.enable_lazy()
-gettextutils.install('heat', lazy=True)
+i18n.enable_lazy()
 
 LOG = logging.getLogger('heat.api')
 
