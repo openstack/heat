@@ -1004,6 +1004,7 @@ class Stack(collections.Mapping):
             'name': self.name,
             'id': self.id,
             'action': self.action,
+            'environment': self.env.user_env_as_dict(),
             'status': self.status,
             'template': self.t.t,
             'resources': dict((res.name, res.prepare_abandon())
