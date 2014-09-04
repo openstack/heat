@@ -15,6 +15,7 @@ from heat.common.template_format import yaml
 from heat.common.template_format import yaml_dumper
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
+from heat.engine import support
 
 
 class CloudConfig(software_config.SoftwareConfig):
@@ -30,6 +31,8 @@ class CloudConfig(software_config.SoftwareConfig):
     configuration, any changes to the definition will result in the
     replacement of all servers which reference it.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         CLOUD_CONFIG

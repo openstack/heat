@@ -17,12 +17,15 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
 
 class NovaFloatingIp(resource.Resource):
+    support_status = support.SupportStatus(version='2014.1')
+
     PROPERTIES = (POOL,) = ('pool',)
 
     ATTRIBUTES = (
@@ -93,6 +96,8 @@ class NovaFloatingIp(resource.Resource):
 
 
 class NovaFloatingIpAssociation(resource.Resource):
+    support_status = support.SupportStatus(version='2014.1')
+
     PROPERTIES = (
         SERVER, FLOATING_IP
     ) = (

@@ -17,6 +17,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class KeyPair(resource.Resource):
@@ -32,6 +33,8 @@ class KeyPair(resource.Resource):
     `save_private_key` setting since there will be no private key data to
     save.
     """
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY,

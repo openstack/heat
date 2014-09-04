@@ -17,6 +17,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 
@@ -27,6 +28,8 @@ class OSDBInstance(resource.Resource):
     '''
     OpenStack cloud database instance resource.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     TROVE_STATUS = (
         ERROR, FAILED, ACTIVE,

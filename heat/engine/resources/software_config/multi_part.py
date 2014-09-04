@@ -20,6 +20,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
+from heat.engine import support
 
 
 class MultipartMime(software_config.SoftwareConfig):
@@ -40,6 +41,8 @@ class MultipartMime(software_config.SoftwareConfig):
     cloud-init is boot-only configuration, any changes to the definition
     will result in the replacement of all servers which reference it.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         PARTS, CONFIG, FILENAME, TYPE, SUBTYPE

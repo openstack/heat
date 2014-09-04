@@ -17,6 +17,7 @@ from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.engine import watchrule
 
 
@@ -242,6 +243,8 @@ class CeilometerAlarm(resource.Resource):
 
 
 class CombinationAlarm(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         ALARM_IDS, OPERATOR,

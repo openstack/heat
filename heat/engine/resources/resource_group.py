@@ -20,6 +20,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import stack_resource
+from heat.engine import support
 from heat.engine import template
 
 template_template = {
@@ -64,6 +65,8 @@ class ResourceGroup(stack_resource.StackResource):
     but names of `my_server_0`, `my_server_1`, and `my_server_2`. The variable
     used for substitution can be customized by using the `index_var` property.
     """
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         COUNT, INDEX_VAR, RESOURCE_DEF,

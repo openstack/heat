@@ -14,12 +14,15 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class ServerGroup(resource.Resource):
     """
     A resource for managing a Nova server group.
     """
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         NAME, POLICIES

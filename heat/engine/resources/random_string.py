@@ -31,6 +31,9 @@ class RandomString(resource.Resource):
 
     This is useful for configuring passwords and secrets on services.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
+
     PROPERTIES = (
         LENGTH, SEQUENCE, CHARACTER_CLASSES, CHARACTER_SEQUENCES,
         SALT,
