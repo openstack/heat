@@ -400,8 +400,26 @@ class KeystoneClientV3(object):
             logger.warning(_('Falling back to legacy non-domain project, '
                              'configure domain in heat.conf'))
             return
+
+        # If stacks are created before configuring the heat domain, they
+        # exist in the default domain, in the user's project, which we
+        # do *not* want to delete!  However, if the keystone v3cloudsample
+        # policy is used, it's possible that we'll get Forbidden when trying
+        # to get the project, so again we should do nothing
         try:
-            self.domain_admin_client.projects.delete(project=project_id)
+            project = self.domain_admin_client.projects.get(project=project_id)
+        except kc_exception.Forbidden:
+            logger.warning(_('Unable to get details for project %s, '
+                             'not deleting')
+                           % project_id)
+            return
+
+        if project.domain_id != self.stack_domain_id:
+            logger.warning(_('Not deleting non heat-domain project'))
+            return
+
+        try:
+            project.delete()
         except kc_exception.NotFound:
             pass
 
