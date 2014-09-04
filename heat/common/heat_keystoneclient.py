@@ -422,10 +422,8 @@ class KeystoneClientV3(object):
 
         return user.id
 
-    def _check_stack_domain_user(self, user_id, project_id, action):
-        """Sanity check that domain/project is correct."""
-        user = self.domain_admin_client.users.get(user_id)
-
+    @property
+    def stack_domain_id(self):
         if not self._stack_domain_id:
             if self._stack_domain_is_id:
                 self._stack_domain_id = self.stack_domain
@@ -433,8 +431,13 @@ class KeystoneClientV3(object):
                 domain = self.domain_admin_client.domains.get(
                     self.stack_domain)
                 self._stack_domain_id = domain.id
+        return self._stack_domain_id
 
-        if user.domain_id != self._stack_domain_id:
+    def _check_stack_domain_user(self, user_id, project_id, action):
+        """Sanity check that domain/project is correct."""
+        user = self.domain_admin_client.users.get(user_id)
+
+        if user.domain_id != self.stack_domain_id:
             raise ValueError(_('User %s in invalid domain') % action)
         if user.default_project_id != project_id:
             raise ValueError(_('User %s in invalid project') % action)
@@ -484,8 +487,25 @@ class KeystoneClientV3(object):
             LOG.warning(_('Falling back to legacy non-domain project, '
                           'configure domain in heat.conf'))
             return
+
+        # If stacks are created before configuring the heat domain, they
+        # exist in the default domain, in the user's project, which we
+        # do *not* want to delete!  However, if the keystone v3cloudsample
+        # policy is used, it's possible that we'll get Forbidden when trying
+        # to get the project, so again we should do nothing
         try:
-            self.domain_admin_client.projects.delete(project=project_id)
+            project = self.domain_admin_client.projects.get(project=project_id)
+        except kc_exception.Forbidden:
+            LOG.warning(_('Unable to get details for project %s, not deleting')
+                        % project_id)
+            return
+
+        if project.domain_id != self.stack_domain_id:
+            LOG.warning(_('Not deleting non heat-domain project'))
+            return
+
+        try:
+            project.delete()
         except kc_exception.NotFound:
             pass
 
