@@ -27,6 +27,9 @@ from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
 
+_CODE_NAMES = {'2014.1': 'Icehouse',
+               '2014.2': 'Juno',
+               '2015.1': 'Kilo'}
 
 global_env = environment.Environment({}, user_env=False)
 
@@ -56,19 +59,23 @@ class ResourcePages(Directive):
                 self.resource_class.attributes_schema)
 
             if resource_class.support_status.status == support.DEPRECATED:
-                sstatus = resource_class.support_status.to_dict()
-                msg = _('%(status)s')
-                if sstatus['message'] is not None:
-                    msg = _('%(status)s - %(message)s')
-                para = nodes.inline('', msg % sstatus)
-                warning = nodes.note('', para)
-                section.append(warning)
+                para = nodes.paragraph('', self._status_str(
+                                       resource_class.support_status))
+                note = nodes.note('', para)
+                section.append(note)
 
             cls_doc = pydoc.getdoc(resource_class)
             if cls_doc:
                 # allow for rst in the class comments
                 cls_nodes = core.publish_doctree(cls_doc).children
                 section.extend(cls_nodes)
+
+            if (resource_class.support_status.status == support.SUPPORTED and
+               resource_class.support_status.version is not None):
+                tag = resource_class.support_status.version.title()
+                message = (_('Available since %s.') % self._version_str(tag))
+                para = nodes.paragraph('', message)
+                section.append(para)
 
             self.contribute_properties(section)
             self.contribute_attributes(section)
@@ -78,6 +85,23 @@ class ResourcePages(Directive):
             self.contribute_json_syntax(section)
 
         return content
+
+    def _version_str(self, version):
+        if version in _CODE_NAMES:
+            return "%(version)s (%(code)s)" % {'version': version,
+                                               'code': _CODE_NAMES[version]}
+        else:
+            return version
+
+    def _status_str(self, support_status):
+        sstatus = support_status.to_dict()
+        msg = sstatus['status']
+        if sstatus['version'] is not None:
+            msg += ' since %s' % self._version_str(sstatus['version'])
+        if sstatus['message'] is not None:
+            msg += ' - %s' % sstatus['message']
+
+        return msg
 
     def _section(self, parent, title, id_pattern):
         id = id_pattern % self.resource_type
@@ -209,18 +233,14 @@ Resources:
         prop_item.append(definition)
 
         if prop.support_status.status != support.SUPPORTED:
-            sstatus = prop.support_status.to_dict()
-            msg = _('%(status)s')
-            if sstatus['message'] is not None:
-                msg = _('%(status)s - %(message)s')
-            para = nodes.inline('', msg % sstatus)
-            warning = nodes.note('', para)
-            definition.append(warning)
+            para = nodes.paragraph('', self._status_str(prop.support_status))
+            note = nodes.note('', para)
+            definition.append(note)
 
         if not prop.implemented:
-            para = nodes.inline('', _('Not implemented.'))
-            warning = nodes.note('', para)
-            definition.append(warning)
+            para = nodes.paragraph('', _('Not implemented.'))
+            note = nodes.note('', para)
+            definition.append(note)
             return
 
         if prop.description:
@@ -304,13 +324,10 @@ Resources:
             prop_item.append(definition)
 
             if prop.support_status.status != support.SUPPORTED:
-                sstatus = prop.support_status.to_dict()
-                msg = _('%(status)s')
-                if sstatus['message'] is not None:
-                    msg = _('%(status)s - %(message)s')
-                para = nodes.inline('', msg % sstatus)
-                warning = nodes.note('', para)
-                definition.append(warning)
+                para = nodes.paragraph('',
+                                       self._status_str(prop.support_status))
+                note = nodes.note('', para)
+                definition.append(note)
 
             if description:
                 def_para = nodes.paragraph('', description)
