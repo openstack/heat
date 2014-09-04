@@ -20,6 +20,7 @@ import os
 from eventlet.green import socket
 from oslo.config import cfg
 
+from heat.common.i18n import _
 from heat.common import wsgi
 from heat.openstack.common import log as logging
 
@@ -34,70 +35,70 @@ paste_deploy_opts = [
 service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
-               help='Seconds between running periodic tasks.'),
+               help=_('Seconds between running periodic tasks.')),
     cfg.StrOpt('heat_metadata_server_url',
                default="",
-               help='URL of the Heat metadata server.'),
+               help=_('URL of the Heat metadata server.')),
     cfg.StrOpt('heat_waitcondition_server_url',
                default="",
-               help='URL of the Heat waitcondition server.'),
+               help=_('URL of the Heat waitcondition server.')),
     cfg.StrOpt('heat_watch_server_url',
                default="",
-               help='URL of the Heat CloudWatch server.'),
+               help=_('URL of the Heat CloudWatch server.')),
     cfg.StrOpt('instance_connection_is_secure',
                default="0",
-               help='Instance connection to CFN/CW API via https.'),
+               help=_('Instance connection to CFN/CW API via https.')),
     cfg.StrOpt('instance_connection_https_validate_certificates',
                default="1",
-               help='Instance connection to CFN/CW API validate certs if SSL '
-                    'is used.'),
+               help=_('Instance connection to CFN/CW API validate certs if '
+                      'SSL is used.')),
     cfg.StrOpt('region_name_for_services',
-               help='Default region name used to get services endpoints.'),
+               help=_('Default region name used to get services endpoints.')),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
-               help='Keystone role for heat template-defined users.'),
+               help=_('Keystone role for heat template-defined users.')),
     cfg.StrOpt('stack_user_domain_id',
                deprecated_opts=[cfg.DeprecatedOpt('stack_user_domain',
                                                   group=None)],
-               help='Keystone domain ID which contains heat template-defined '
-                    'users. If this option is set, stack_user_domain_name '
-                    'option will be ignored.'),
+               help=_('Keystone domain ID which contains heat '
+                      'template-defined users. If this option is set, '
+                      'stack_user_domain_name option will be ignored.')),
     cfg.StrOpt('stack_user_domain_name',
-               help='Keystone domain name which contains heat '
-                    'template-defined users. If `stack_user_domain_id` option '
-                    'is set, this option is ignored.'),
+               help=_('Keystone domain name which contains heat '
+                      'template-defined users. If `stack_user_domain_id` '
+                      'option is set, this option is ignored.')),
     cfg.StrOpt('stack_domain_admin',
-               help='Keystone username, a user with roles sufficient to '
-                    'manage users and projects in the stack_user_domain.'),
+               help=_('Keystone username, a user with roles sufficient to '
+                      'manage users and projects in the stack_user_domain.')),
     cfg.StrOpt('stack_domain_admin_password',
-               help='Keystone password for stack_domain_admin user.'),
+               help=_('Keystone password for stack_domain_admin user.')),
     cfg.IntOpt('max_template_size',
                default=524288,
-               help='Maximum raw byte size of any template.'),
+               help=_('Maximum raw byte size of any template.')),
     cfg.IntOpt('max_nested_stack_depth',
                default=3,
-               help='Maximum depth allowed when using nested stacks.'),
+               help=_('Maximum depth allowed when using nested stacks.')),
     cfg.IntOpt('num_engine_workers',
                default=1,
-               help='Number of heat-engine processes to fork and run.')]
+               help=_('Number of heat-engine processes to fork and run.'))]
 
 engine_opts = [
     cfg.StrOpt('instance_user',
                default='ec2-user',
-               help="The default user for new instances. This option "
-                    "is deprecated and will be removed in the Juno release. "
-                    "If it's empty, Heat will use the default user set up "
-                    "with your cloud image (for OS::Nova::Server) or "
-                    "'ec2-user' (for AWS::EC2::Instance)."),
+               help=_("The default user for new instances. This option "
+                      "is deprecated and will be removed in the Juno release. "
+                      "If it's empty, Heat will use the default user set up "
+                      "with your cloud image (for OS::Nova::Server) or "
+                      "'ec2-user' (for AWS::EC2::Instance).")),
     cfg.StrOpt('instance_driver',
                default='heat.engine.nova',
-               help='Driver to use for controlling instances.'),
+               help=_('Driver to use for controlling instances.')),
     cfg.ListOpt('plugin_dirs',
                 default=['/usr/lib64/heat', '/usr/lib/heat'],
-                help='List of directories to search for plug-ins.'),
+                help=_('List of directories to search for plug-ins.')),
     cfg.StrOpt('environment_dir',
                default='/etc/heat/environment.d',
-               help='The directory to search for environment files.'),
+               help=_('The directory to search for environment files.')),
     cfg.StrOpt('deferred_auth_method',
                choices=['password', 'trusts'],
                default='password',
@@ -108,7 +109,7 @@ engine_opts = [
                 help=_('Subset of trustor roles to be delegated to heat.')),
     cfg.IntOpt('max_resources_per_stack',
                default=1000,
-               help='Maximum resources allowed per top-level stack.'),
+               help=_('Maximum resources allowed per top-level stack.')),
     cfg.IntOpt('max_stacks_per_tenant',
                default=100,
                help=_('Maximum number of stacks any one tenant may have'
@@ -152,9 +153,10 @@ engine_opts = [
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),
-               help='Name of the engine node. '
-                    'This can be an opaque identifier. '
-                    'It is not necessarily a hostname, FQDN, or IP address.')]
+               help=_('Name of the engine node. '
+                      'This can be an opaque identifier. '
+                      'It is not necessarily a hostname, FQDN, '
+                      'or IP address.'))]
 
 profiler_group = cfg.OptGroup('profiler')
 profiler_opts = [
