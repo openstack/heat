@@ -295,11 +295,22 @@ class DockerContainer(resource.Resource):
         if self.resource_id is None:
             return
         client = self.get_client()
-        client.kill(self.resource_id)
+        try:
+            client.kill(self.resource_id)
+        except docker.errors.APIError as ex:
+            if ex.response.status_code != 404:
+                raise
         return self.resource_id
 
     def check_delete_complete(self, container_id):
-        status = self._get_container_status(container_id)
+        if container_id is None:
+            return True
+        try:
+            status = self._get_container_status(container_id)
+        except docker.errors.APIError as ex:
+            if ex.response.status_code == 404:
+                return True
+            raise
         return (not status['Running'])
 
     def handle_suspend(self):

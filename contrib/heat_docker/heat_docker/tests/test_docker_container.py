@@ -14,15 +14,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
+from testtools import skipIf
+
 from ..resources import docker_container  # noqa
 from .fake_docker_client import FakeDockerClient  # noqa
+
+docker = try_import('docker')
 
 
 template = '''
@@ -143,6 +150,35 @@ class DockerContainerTest(HeatTestCase):
                          container.state)
         running = self.get_container_state(container)['Running']
         self.assertIs(False, running)
+
+    def test_resource_already_deleted(self):
+        container = self.create_container('Blog')
+        scheduler.TaskRunner(container.delete)()
+        running = self.get_container_state(container)['Running']
+        self.assertIs(False, running)
+
+        scheduler.TaskRunner(container.delete)()
+        self.m.VerifyAll()
+
+    @skipIf(docker is None, 'docker-py not available')
+    def test_resource_delete_exception(self):
+        response = mock.MagicMock()
+        response.status_code = 404
+        response.content = 'some content'
+
+        container = self.create_container('Blog')
+        self.m.StubOutWithMock(container.get_client(), 'kill')
+        container.get_client().kill(container.resource_id).AndRaise(
+            docker.errors.APIError('Not found', response))
+
+        self.m.StubOutWithMock(container, '_get_container_status')
+        container._get_container_status(container.resource_id).AndRaise(
+            docker.errors.APIError('Not found', response))
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(container.delete)()
+        self.m.VerifyAll()
 
     def test_resource_suspend_resume(self):
         container = self.create_container('Blog')
