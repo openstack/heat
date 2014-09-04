@@ -255,13 +255,8 @@ class ElasticIpAssociation(resource.Resource):
             float_id = self.properties[self.ALLOCATION_ID]
             self.resource_id_set(float_id)
 
-            # assuming only one fixed_ip
-            subnet_id = port_rsrc['fixed_ips'][0]['subnet_id']
-            subnets = self.neutron().list_subnets(id=subnet_id)
-            subnet_rsrc = subnets['subnets'][0]
-            netid = subnet_rsrc['network_id']
-
-            router = VPC.router_for_vpc(self.neutron(), netid)
+            network_id = port_rsrc['network_id']
+            router = VPC.router_for_vpc(self.neutron(), network_id)
             if router is not None:
                 floatingip = self.neutron().show_floatingip(float_id)
                 floating_net_id = \
