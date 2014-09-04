@@ -954,7 +954,7 @@ class StackTest(HeatTestCase):
 
     def test_state_defaults(self):
         stack = parser.Stack(self.ctx, 'test_stack', self.tmpl)
-        self.assertEqual((None, None), stack.state)
+        self.assertEqual(('CREATE', 'IN_PROGRESS'), stack.state)
         self.assertEqual('', stack.status_reason)
 
     def test_timeout_secs_default(self):
@@ -1177,11 +1177,11 @@ class StackTest(HeatTestCase):
                                   stack_user_project_id='234')
         self.stack.store()
         info = self.stack.prepare_abandon()
-        self.assertIsNone(info['action'])
+        self.assertEqual('CREATE', info['action'])
         self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
         self.assertEqual(json.loads(resources), info['resources'])
-        self.assertIsNone(info['status'])
+        self.assertEqual('IN_PROGRESS', info['status'])
         self.assertEqual(tpl, info['template'])
         self.assertEqual('123', info['project_id'])
         self.assertEqual('234', info['stack_user_project_id'])

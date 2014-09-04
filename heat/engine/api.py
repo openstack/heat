@@ -81,7 +81,7 @@ def format_stack_outputs(stack, outputs):
     return [format_stack_output(key) for key in outputs]
 
 
-def format_stack(stack):
+def format_stack(stack, preview=False):
     '''
     Return a representation of the given stack that matches the API output
     expectations.
@@ -96,15 +96,20 @@ def format_stack(stack):
         api.STACK_PARAMETERS: stack.parameters.map(str),
         api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         api.STACK_TMPL_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
-        api.STACK_ACTION: stack.action or '',
-        api.STACK_STATUS: stack.status or '',
-        api.STACK_STATUS_DATA: stack.status_reason,
         api.STACK_CAPABILITIES: [],   # TODO Not implemented yet
         api.STACK_DISABLE_ROLLBACK: stack.disable_rollback,
         api.STACK_TIMEOUT: stack.timeout_mins,
         api.STACK_OWNER: stack.username,
         api.STACK_PARENT: stack.owner_id,
     }
+
+    if not preview:
+        update_info = {
+            api.STACK_ACTION: stack.action or '',
+            api.STACK_STATUS: stack.status or '',
+            api.STACK_STATUS_DATA: stack.status_reason,
+        }
+        info.update(update_info)
 
     # allow users to view the outputs of stacks
     if (stack.action != stack.DELETE and stack.status != stack.IN_PROGRESS):
@@ -167,7 +172,7 @@ def format_stack_preview(stack):
             return map(format_resource, res)
         return format_stack_resource(res, with_props=True)
 
-    fmt_stack = format_stack(stack)
+    fmt_stack = format_stack(stack, preview=True)
     fmt_resources = map(format_resource, stack.preview_resources())
     fmt_stack['resources'] = fmt_resources
 
