@@ -15,6 +15,7 @@ import copy
 import mox
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
+import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -129,6 +130,23 @@ eip_template_ipassoc3 = '''
       "Type" : "AWS::EC2::EIPAssociation",
       "Properties" : {
         "AllocationId" : 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+        "InstanceId" : '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
+      }
+    }
+  }
+}
+'''
+
+ipassoc_template_validate = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "EIP Test",
+  "Parameters" : {},
+  "Resources" : {
+    "IPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "EIP" : '11.0.0.1',
         "InstanceId" : '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
       }
     }
@@ -364,6 +382,25 @@ class AllocTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'remove_gateway_router')
         self.stub_keystoneclient()
+
+    def _setup_test_stack(self, stack_name):
+        t = template_format.parse(ipassoc_template_validate)
+        template = parser.Template(t)
+        stack = parser.Stack(utils.dummy_context(), stack_name,
+                             template, stack_id='12233',
+                             stack_user_project_id='8888')
+
+        return template, stack
+
+    def _validate_properties(self, stack, template, expected):
+        resource_defns = template.resource_definitions(stack)
+        rsrc = eip.ElasticIpAssociation('validate_eip_ass',
+                                        resource_defns['IPAssoc'],
+                                        stack)
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(expected, six.text_type(exc))
 
     def mock_show_network(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
@@ -607,3 +644,41 @@ class AllocTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
+
+    def test_validate_properties_EIP_and_AllocationId(self):
+        template, stack = self._setup_test_stack(
+            stack_name='validate_EIP_AllocationId')
+
+        properties = template.t['Resources']['IPAssoc']['Properties']
+        # test with EIP and AllocationId
+        properties['AllocationId'] = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        expected = ("Either 'EIP' or 'AllocationId' must be provided.")
+        self._validate_properties(stack, template, expected)
+
+        # test without EIP and AllocationId
+        properties.pop('AllocationId')
+        properties.pop('EIP')
+        self._validate_properties(stack, template, expected)
+
+    def test_validate_EIP_and_InstanceId(self):
+        template, stack = self._setup_test_stack(
+            stack_name='validate_EIP_InstanceId')
+        properties = template.t['Resources']['IPAssoc']['Properties']
+        # test with EIP and no InstanceId
+        properties.pop('InstanceId')
+        expected = ("Must specify 'InstanceId' if you specify 'EIP'.")
+        self._validate_properties(stack, template, expected)
+
+    def test_validate_without_NetworkInterfaceId_and_InstanceId(self):
+        template, stack = self._setup_test_stack(
+            stack_name='validate_EIP_InstanceId')
+
+        properties = template.t['Resources']['IPAssoc']['Properties']
+        # test without NetworkInterfaceId and InstanceId
+        properties.pop('InstanceId')
+        properties.pop('EIP')
+        allocation_id = '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
+        properties['AllocationId'] = allocation_id
+        expected = ("Must specify at least one of 'InstanceId' "
+                    "or 'NetworkInterfaceId'.")
+        self._validate_properties(stack, template, expected)
