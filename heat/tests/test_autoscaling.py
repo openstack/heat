@@ -89,6 +89,12 @@ as_template = '''
       "Properties": {
         "ImageId" : {"Ref": "ImageId"},
         "InstanceType"   : "bar",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "vdb",
+                "Ebs": {"SnapshotId": "9ef5496e-7426-446a-bbc8-01f84d9c9972",
+                        "DeleteOnTermination": "True"}
+            }]
       }
     }
   }
@@ -133,12 +139,19 @@ class AutoScalingTest(HeatTestCase):
         self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+        # check bdm in configuration
+        self.assertIsNotNone(conf.properties['BlockDeviceMappings'])
 
         # create the group resource
         rsrc = stack[resource_name]
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        # check bdm in instance_definition
+        instance_definition = rsrc._get_instance_definition()
+        self.assertIn('BlockDeviceMappings',
+                      instance_definition['Properties'])
+
         return rsrc
 
     def create_scaling_policy(self, t, stack, resource_name):
@@ -1737,6 +1750,85 @@ class AutoScalingTest(HeatTestCase):
         rsrc.id = None
         self.assertIsNone(rsrc.resource_id)
         self.assertEqual('LaunchConfig', rsrc.FnGetRefId())
+
+    def test_validate_BlockDeviceMappings_VolumeSize_invalid_str(self):
+        t = template_format.parse(as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        bdm = [{'DeviceName': 'vdb',
+                'Ebs': {'SnapshotId': '1234',
+                        'VolumeSize': 10}}]
+        lcp['BlockDeviceMappings'] = bdm
+        stack = utils.parse_stack(t, params=self.params)
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'LaunchConfig')
+
+        expected_msg = "Value must be a string"
+        self.assertIn(expected_msg, six.text_type(e))
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_Ebs_property(self):
+        t = template_format.parse(as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        bdm = [{'DeviceName': 'vdb'}]
+        lcp['BlockDeviceMappings'] = bdm
+        stack = utils.parse_stack(t, params=self.params)
+
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'LaunchConfig')
+
+        self.assertIn("Ebs is missing, this is required",
+                      six.text_type(e))
+
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_SnapshotId_property(self):
+        t = template_format.parse(as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        bdm = [{'DeviceName': 'vdb',
+                'Ebs': {'VolumeSize': '1'}}]
+        lcp['BlockDeviceMappings'] = bdm
+        stack = utils.parse_stack(t, params=self.params)
+
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'LaunchConfig')
+
+        self.assertIn("SnapshotId is missing, this is required",
+                      six.text_type(e))
+        self.m.VerifyAll()
+
+    def test_validate_BlockDeviceMappings_without_DeviceName_property(self):
+        t = template_format.parse(as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        bdm = [{'Ebs': {'SnapshotId': '1234',
+                        'VolumeSize': '1'}}]
+        lcp['BlockDeviceMappings'] = bdm
+        stack = utils.parse_stack(t, params=self.params)
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'LaunchConfig')
+
+        excepted_error = ('Property error : LaunchConfig: BlockDeviceMappings '
+                          'Property error : BlockDeviceMappings: 0 Property '
+                          'error : 0: Property DeviceName not assigned')
+        self.assertIn(excepted_error, six.text_type(e))
+
+        self.m.VerifyAll()
 
 
 class TestInstanceGroup(HeatTestCase):

@@ -48,7 +48,13 @@ ig_template = '''
         "InstanceType"      : "m1.large",
         "KeyName"           : "test",
         "SecurityGroups"    : [ "sg-1" ],
-        "UserData"          : "jsconfig data"
+        "UserData"          : "jsconfig data",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "vdb",
+                "Ebs": {"SnapshotId": "9ef5496e-7426-446a-bbc8-01f84d9c9972",
+                        "DeleteOnTermination": "True"}
+            }]
       }
     }
   }
@@ -102,11 +108,18 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
 
         self.m.ReplayAll()
-        self.create_resource(t, stack, 'JobServerConfig')
+        lc_rsrc = self.create_resource(t, stack, 'JobServerConfig')
+        # check bdm in configuration
+        self.assertIsNotNone(lc_rsrc.properties['BlockDeviceMappings'])
+
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
+        # check bdm in instance_definition
+        instance_definition = rsrc._get_instance_definition()
+        self.assertIn('BlockDeviceMappings',
+                      instance_definition['Properties'])
 
         nested = rsrc.nested()
         self.assertEqual(nested.id, rsrc.resource_id)
