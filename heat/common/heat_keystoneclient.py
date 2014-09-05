@@ -273,11 +273,17 @@ class KeystoneClientV3(object):
         trustor_user_id = self.client.auth_ref.user_id
         trustor_project_id = self.client.auth_ref.project_id
         roles = cfg.CONF.trusts_delegated_roles
-        trust = self.client.trusts.create(trustor_user=trustor_user_id,
-                                          trustee_user=trustee_user_id,
-                                          project=trustor_project_id,
-                                          impersonation=True,
-                                          role_names=roles)
+        try:
+            trust = self.client.trusts.create(trustor_user=trustor_user_id,
+                                              trustee_user=trustee_user_id,
+                                              project=trustor_project_id,
+                                              impersonation=True,
+                                              role_names=roles)
+        except kc_exception.NotFound:
+            LOG.debug("Failed to find roles %s for user %s"
+                      % (roles, trustor_user_id))
+            raise exception.MissingCredentialError(
+                required=_("roles %s") % roles)
 
         trust_context = context.RequestContext.from_dict(
             self.context.to_dict())
