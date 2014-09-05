@@ -101,32 +101,69 @@ class StackResource(resource.Resource):
         StackResource will be returned as if it were a regular Resource.
         '''
         try:
-            if isinstance(self.child_template(), template.Template):
-                templ = template.Template(self.child_template().t)
-            else:
-                templ = template.Template(self.child_template())
+            child_template = self.child_template()
             params = self.child_params()
         except NotImplementedError:
             not_implemented_msg = _("Preview of '%s' not yet implemented")
             LOG.warning(not_implemented_msg % self.__class__.__name__)
             return self
 
-        self._validate_nested_resources(templ)
         name = "%s-%s" % (self.stack.name, self.name)
+        self._nested = self._parse_nested_stack(name, child_template, params)
+
+        return self.nested().preview_resources()
+
+    def _parse_child_template(self, child_template):
+        parsed_child_template = child_template
+        if isinstance(parsed_child_template, template.Template):
+            parsed_child_template = parsed_child_template.t
+        return parser.Template(parsed_child_template, files=self.stack.t.files)
+
+    def _parse_nested_stack(self, stack_name, child_template, child_params,
+                            timeout_mins=None, adopt_data=None):
+        if self.recursion_depth >= cfg.CONF.max_nested_stack_depth:
+            msg = _("Recursion depth exceeds %d.") % \
+                cfg.CONF.max_nested_stack_depth
+            raise exception.RequestLimitExceeded(message=msg)
+
+        parsed_template = self._parse_child_template(child_template)
+        self._validate_nested_resources(parsed_template)
+
+        # Don't overwrite the attributes_schema for subclasses that
+        # define their own attributes_schema.
+        if not hasattr(type(self), 'attributes_schema'):
+            self.attributes = None
+            self._outputs_to_attribs(parsed_template)
+
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
+
+        stack_user_project_id = self.stack.stack_user_project_id
+
+        # Note we disable rollback for nested stacks, since they
+        # should be rolled back by the parent stack on failure
         nested = parser.Stack(self.context,
-                              name,
-                              templ,
-                              self._nested_environment(params),
+                              stack_name,
+                              parsed_template,
+                              self._nested_environment(child_params),
+                              timeout_mins=timeout_mins,
                               disable_rollback=True,
                               parent_resource=self,
                               owner_id=self.stack.id,
-                              user_creds_id=self.stack.user_creds_id)
-
-        return nested.preview_resources()
+                              user_creds_id=self.stack.user_creds_id,
+                              stack_user_project_id=stack_user_project_id,
+                              adopt_stack_data=adopt_data)
+        nested.validate()
+        return nested
 
     def _validate_nested_resources(self, templ):
         total_resources = (len(templ[templ.RESOURCES]) +
                            self.stack.root_stack.total_resources())
+
+        if self.nested():
+            # It's an update and these resources will be deleted
+            total_resources -= len(self.nested().resources)
+
         if (total_resources > cfg.CONF.max_resources_per_stack):
             message = exception.StackResourceLimitExceeded.msg_fmt
             raise exception.RequestLimitExceeded(message=message)
@@ -150,42 +187,11 @@ class StackResource(resource.Resource):
 
     def create_with_template(self, child_template, user_params,
                              timeout_mins=None, adopt_data=None):
-        '''
-        Handle the creation of the nested stack from a given JSON template.
-        '''
-        if self.recursion_depth >= cfg.CONF.max_nested_stack_depth:
-            msg = _("Recursion depth exceeds %d.") % \
-                cfg.CONF.max_nested_stack_depth
-            raise exception.RequestLimitExceeded(message=msg)
-        if isinstance(child_template, template.Template):
-            templ = child_template
-            templ.files = self.stack.t.files
-        else:
-            templ = template.Template(child_template,
-                                      files=self.stack.t.files)
-        self._validate_nested_resources(templ)
-        self._outputs_to_attribs(templ)
-
-        if timeout_mins is None:
-            timeout_mins = self.stack.timeout_mins
-
-        stack_user_project_id = self.stack.stack_user_project_id
-
-        # Note we disable rollback for nested stacks, since they
-        # should be rolled back by the parent stack on failure
-        nested = parser.Stack(self.context,
-                              self.physical_resource_name(),
-                              templ,
-                              self._nested_environment(user_params),
-                              timeout_mins=timeout_mins,
-                              disable_rollback=True,
-                              parent_resource=self,
-                              owner_id=self.stack.id,
-                              user_creds_id=self.stack.user_creds_id,
-                              adopt_stack_data=adopt_data,
-                              stack_user_project_id=stack_user_project_id)
-        nested.validate()
-        self._nested = nested
+        """Create the nested stack with the given template."""
+        name = self.physical_resource_name()
+        self._nested = self._parse_nested_stack(name, child_template,
+                                                user_params, timeout_mins,
+                                                adopt_data)
         nested_id = self._nested.store()
         self.resource_id_set(nested_id)
 
@@ -212,45 +218,15 @@ class StackResource(resource.Resource):
     def update_with_template(self, child_template, user_params,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
-        if isinstance(child_template, template.Template):
-            templ = child_template
-            templ.files = self.stack.t.files
-        else:
-            templ = template.Template(child_template,
-                                      files=self.stack.t.files)
         nested_stack = self.nested()
         if nested_stack is None:
             raise exception.Error(_('Cannot update %s, stack not created')
                                   % self.name)
-        res_diff = (
-            len(templ[templ.RESOURCES]) - len(nested_stack.resources))
-        new_size = nested_stack.root_stack.total_resources() + res_diff
-        if new_size > cfg.CONF.max_resources_per_stack:
-            raise exception.RequestLimitExceeded(
-                message=exception.StackResourceLimitExceeded.msg_fmt)
 
-        if timeout_mins is None:
-            timeout_mins = self.stack.timeout_mins
-
-        # Note we disable rollback for nested stacks, since they
-        # should be rolled back by the parent stack on failure
-        stack = parser.Stack(self.context,
-                             self.physical_resource_name(),
-                             templ,
-                             self._nested_environment(user_params),
-                             timeout_mins=timeout_mins,
-                             disable_rollback=True,
-                             parent_resource=self,
-                             owner_id=self.stack.id,
-                             user_creds_id=self.stack.user_creds_id)
+        name = self.physical_resource_name()
+        stack = self._parse_nested_stack(name, child_template, user_params,
+                                         timeout_mins)
         stack.parameters.set_stack_id(nested_stack.identifier())
-        stack.validate()
-
-        # Don't overwrite the attributes_schema on update for subclasses that
-        # define their own attributes_schema.
-        if not hasattr(type(self), 'attributes_schema'):
-            self.attributes = None
-            self._outputs_to_attribs(templ)
 
         updater = scheduler.TaskRunner(nested_stack.update_task, stack)
         updater.start()

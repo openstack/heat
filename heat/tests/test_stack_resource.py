@@ -167,12 +167,15 @@ class StackResourceTest(HeatTestCase):
         mock_stack_class.assert_called_once_with(
             mock.ANY,
             'test_stack-test',
-            template,
+            mock.ANY,
             'environment',
-            disable_rollback=mock.ANY,
+            timeout_mins=None,
+            disable_rollback=True,
             parent_resource=parent_resource,
             owner_id=self.parent_stack.id,
-            user_creds_id=self.parent_stack.user_creds_id
+            user_creds_id=self.parent_stack.user_creds_id,
+            stack_user_project_id=self.parent_stack.stack_user_project_id,
+            adopt_stack_data=None,
         )
 
     @mock.patch.object(stack_resource.StackResource, '_nested_environment')
@@ -185,7 +188,6 @@ class StackResourceTest(HeatTestCase):
         nested_stack.preview_resources.return_value = 'preview_nested_stack'
         mock_env_class.return_value = 'environment'
         template_dict = template_format.parse(param_template)
-        template = templatem.Template(template_dict)
         parent_t = self.parent_stack.t
         resource_defns = parent_t.resource_definitions(self.parent_stack)
         parent_resource = MyImplementedStackResource(
@@ -203,13 +205,25 @@ class StackResourceTest(HeatTestCase):
         mock_stack_class.assert_called_once_with(
             mock.ANY,
             'test_stack-test',
-            template,
+            mock.ANY,
             'environment',
-            disable_rollback=mock.ANY,
+            timeout_mins=None,
+            disable_rollback=True,
             parent_resource=parent_resource,
             owner_id=self.parent_stack.id,
-            user_creds_id=self.parent_stack.user_creds_id
+            user_creds_id=self.parent_stack.user_creds_id,
+            stack_user_project_id=self.parent_stack.stack_user_project_id,
+            adopt_stack_data=None,
         )
+
+    def test_preview_propagates_files(self):
+        self.parent_stack.t.files["foo"] = "bar"
+        tmpl = self.parent_stack.t.t
+        self.parent_resource.child_template = mock.Mock(return_value=tmpl)
+        self.parent_resource.child_params = mock.Mock(return_value={})
+        self.parent_resource.preview()
+        self.stack = self.parent_resource.nested()
+        self.assertEqual({"foo": "bar"}, self.stack.t.files)
 
     def test_preview_validates_nested_resources(self):
         parent_t = self.parent_stack.t
