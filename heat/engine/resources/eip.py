@@ -253,7 +253,6 @@ class ElasticIpAssociation(resource.Resource):
                 return
 
             float_id = self.properties[self.ALLOCATION_ID]
-            self.resource_id_set(float_id)
 
             network_id = port_rsrc['network_id']
             router = VPC.router_for_vpc(self.neutron(), network_id)
@@ -267,8 +266,13 @@ class ElasticIpAssociation(resource.Resource):
             self.neutron().update_floatingip(
                 float_id, {'floatingip': {'port_id': port_id}})
 
+            self.resource_id_set(float_id)
+
     def handle_delete(self):
         """Remove a floating IP address from a server or port."""
+        if self.resource_id is None:
+            return
+
         if self.properties[self.EIP]:
             try:
                 instance_id = self.properties[self.INSTANCE_ID]
@@ -276,7 +280,12 @@ class ElasticIpAssociation(resource.Resource):
                 if server:
                     server.remove_floating_ip(self.properties[self.EIP])
             except Exception as e:
-                self.client_plugin('nova').ignore_not_found(e)
+                is_not_found = self.client_plugin('nova').is_not_found(e)
+                is_unprocessable_entity = self.client_plugin('nova').\
+                    is_unprocessable_entity(e)
+
+                if (not is_not_found and not is_unprocessable_entity):
+                    raise
         elif self.properties[self.ALLOCATION_ID]:
             float_id = self.properties[self.ALLOCATION_ID]
             try:
