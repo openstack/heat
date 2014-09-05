@@ -16,6 +16,7 @@
 
 
 import fixtures
+import six
 
 from heat.common import exception
 from heat.tests import common
@@ -32,3 +33,8 @@ class TestHeatException(common.HeatTestCase):
             'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',
             True))
         self.assertRaises(KeyError, TestException)
+
+    def test_format_string_error_message(self):
+        message = "This format %(message)s should work"
+        err = exception.Error(message)
+        self.assertEqual(message, six.text_type(err))
