@@ -346,6 +346,13 @@ Resources:
     Properties: {CidrBlock: '10.0.0.0/16'}
 '''
 
+    def mock_create_network_failed(self):
+        self.vpc_name = utils.PhysName('test_stack', 'the_vpc')
+        neutronclient.Client.create_network(
+            {
+                'network': {'name': self.vpc_name}
+            }).AndRaise(NeutronClientException())
+
     def test_vpc(self):
         self.mock_create_network()
         self.mock_delete_network()
@@ -356,6 +363,18 @@ Resources:
         self.assertResourceState(vpc, 'aaaa')
 
         scheduler.TaskRunner(vpc.delete)()
+        self.m.VerifyAll()
+
+    def test_vpc_delete_successful_if_created_failed(self):
+        self.mock_create_network_failed()
+        self.m.ReplayAll()
+
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        scheduler.TaskRunner(stack.create)()
+        self.assertEqual(stack.state, (stack.CREATE, stack.FAILED))
+        scheduler.TaskRunner(stack.delete)()
+
         self.m.VerifyAll()
 
 
