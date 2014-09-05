@@ -99,7 +99,7 @@ class FakeAutoScale(object):
         """Update the launch configuration on a scaling group."""
         allowed = ['launch_config_type', 'server_name', 'image', 'flavor',
                    'disk_config', 'metadata', 'personality', 'networks',
-                   'load_balancers', 'key_name']
+                   'load_balancers', 'key_name', 'user_data', 'config_drive']
         self._check_args(kwargs, allowed)
         self._get_group(group_id).kwargs = kwargs
 
@@ -223,6 +223,8 @@ class ScalingGroupTest(common.HeatTestCase):
         self.assertEqual(
             {
                 'cooldown': 60,
+                'config_drive': False,
+                'user_data': None,
                 'disk_config': None,
                 'flavor': 'flavor-ref',
                 'image': 'image-ref',
@@ -287,6 +289,8 @@ Resources:
         self.assertEqual(
             {
                 'cooldown': 60,
+                'config_drive': False,
+                'user_data': None,
                 'disk_config': None,
                 'flavor': 'flavor-ref',
                 'image': 'image-ref',
