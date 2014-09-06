@@ -203,29 +203,29 @@ class ResourceGroup(stack_resource.StackResource):
             res_def[self.RESOURCE_DEF_PROPERTIES] = clean
         return res_def
 
+    def _handle_repl_val(self, res_name, val):
+        repl_var = self.properties[self.INDEX_VAR]
+        recurse = lambda x: self._handle_repl_val(res_name, x)
+        if isinstance(val, basestring):
+            return val.replace(repl_var, res_name)
+        elif isinstance(val, collections.Mapping):
+            return dict(zip(val, map(recurse, val.values())))
+        elif isinstance(val, collections.Sequence):
+            return map(recurse, val)
+        return val
+
+    def _do_prop_replace(self, res_name, res_def_template):
+        res_def = copy.deepcopy(res_def_template)
+        props = res_def[self.RESOURCE_DEF_PROPERTIES]
+        if props:
+            props = self._handle_repl_val(res_name, props)
+            res_def[self.RESOURCE_DEF_PROPERTIES] = props
+        return res_def
+
     def _assemble_nested(self, names, include_all=False):
         res_def = self._build_resource_definition(include_all)
 
-        def handle_repl_val(repl_var, res_name, val):
-            recurse = lambda x: handle_repl_val(repl_var, res_name, x)
-            if isinstance(val, basestring):
-                return val.replace(repl_var, res_name)
-            elif isinstance(val, collections.Mapping):
-                return dict(zip(val, map(recurse, val.values())))
-            elif isinstance(val, collections.Sequence):
-                return map(recurse, val)
-            return val
-
-        def do_prop_replace(repl_var, res_name, res_def):
-            props = res_def[self.RESOURCE_DEF_PROPERTIES]
-            if props:
-                props = handle_repl_val(repl_var, res_name, props)
-                res_def[self.RESOURCE_DEF_PROPERTIES] = props
-            return res_def
-
-        repl_var = self.properties[self.INDEX_VAR]
-        resources = dict((k, do_prop_replace(repl_var, k,
-                                             copy.deepcopy(res_def)))
+        resources = dict((k, self._do_prop_replace(k, res_def))
                          for k in names)
         child_template = copy.deepcopy(template_template)
         child_template['resources'] = resources
