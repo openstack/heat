@@ -50,11 +50,13 @@ class StructuredConfigTestJSON(HeatTestCase):
 
     def test_resource_mapping(self):
         mapping = sc.resource_mapping()
-        self.assertEqual(2, len(mapping))
+        self.assertEqual(3, len(mapping))
         self.assertEqual(sc.StructuredConfig,
                          mapping['OS::Heat::StructuredConfig'])
         self.assertEqual(sc.StructuredDeployment,
                          mapping['OS::Heat::StructuredDeployment'])
+        self.assertEqual(sc.StructuredDeployments,
+                         mapping['OS::Heat::StructuredDeployments'])
         self.assertIsInstance(self.config, sc.StructuredConfig)
 
     def test_handle_create(self):
@@ -193,3 +195,99 @@ class StructuredDeploymentParseTest(HeatTestCase):
         self.assertEqual(
             self.result,
             parse(self.inputs, self.input_key, self.config))
+
+
+class StructuredDeploymentsTest(HeatTestCase):
+
+    template = {
+        'heat_template_version': '2013-05-23',
+        'resources': {
+            'deploy_mysql': {
+                'type': 'OS::Heat::StructuredDeployments',
+                'properties': {
+                    'config': 'config_uuid',
+                    'servers': {'server1': 'uuid1', 'server2': 'uuid2'},
+                }
+            }
+        }
+    }
+
+    def setUp(self):
+        HeatTestCase.setUp(self)
+        heat = mock.MagicMock()
+        self.deployments = heat.return_value.software_deployments
+
+    def test_build_resource_definition(self):
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sc.StructuredDeployments('test', snip, stack)
+        expect = {
+            'type': 'OS::Heat::StructuredDeployment',
+            'properties': {
+                'actions': ['CREATE', 'UPDATE'],
+                'config': 'config_uuid',
+                'input_key': 'get_input',
+                'input_values': None,
+                'name': None,
+                'signal_transport': 'CFN_SIGNAL'
+            }
+        }
+        self.assertEqual(
+            expect, resg._build_resource_definition())
+        self.assertEqual(
+            expect, resg._build_resource_definition(include_all=True))
+
+    def test_resource_names(self):
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sc.StructuredDeployments('test', snip, stack)
+        self.assertEqual(
+            set(('server1', 'server2')),
+            set(resg._resource_names())
+        )
+
+        self.assertEqual(
+            set(('s1', 's2', 's3')),
+            set(resg._resource_names({
+                'servers': {'s1': 'u1', 's2': 'u2', 's3': 'u3'}}))
+        )
+
+    def test_assemble_nested(self):
+        """
+        Tests that the nested stack that implements the group is created
+        appropriately based on properties.
+        """
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sc.StructuredDeployments('test', snip, stack)
+        templ = {
+            "heat_template_version": "2013-05-23",
+            "resources": {
+                "server1": {
+                    'type': 'OS::Heat::StructuredDeployment',
+                    'properties': {
+                        'server': 'uuid1',
+                        'actions': ['CREATE', 'UPDATE'],
+                        'config': 'config_uuid',
+                        'input_key': 'get_input',
+                        'input_values': None,
+                        'name': None,
+                        'signal_transport': 'CFN_SIGNAL'
+                    }
+                },
+                "server2": {
+                    'type': 'OS::Heat::StructuredDeployment',
+                    'properties': {
+                        'server': 'uuid2',
+                        'actions': ['CREATE', 'UPDATE'],
+                        'config': 'config_uuid',
+                        'input_key': 'get_input',
+                        'input_values': None,
+                        'name': None,
+                        'signal_transport': 'CFN_SIGNAL'
+                    }
+                }
+            }
+        }
+
+        self.assertEqual(templ, resg._assemble_nested(['server1', 'server2']))
