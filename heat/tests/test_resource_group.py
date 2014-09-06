@@ -429,6 +429,22 @@ class ResourceGroupTest(common.HeatTestCase):
         expected = ['ID-0', 'ID-1']
         self.assertEqual(expected, resg.FnGetAtt("refs"))
 
+    def test_aggregate_outputs(self):
+        """
+        Test outputs aggregation
+        """
+        resg = self._create_dummy_stack(template_attr)
+        expected = {'0': ['foo', 'bar'], '1': ['foo', 'bar']}
+        self.assertEqual(expected, resg.FnGetAtt('attributes', 'list'))
+
+    def test_aggregate_outputs_no_path(self):
+        """
+        Test outputs aggregation with missing path
+        """
+        resg = self._create_dummy_stack(template_attr)
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          resg.FnGetAtt, 'attributes')
+
     def test_index_refs(self):
         """Tests getting ids of individual resources."""
         resg = self._create_dummy_stack()

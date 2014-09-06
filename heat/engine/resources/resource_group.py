@@ -78,9 +78,9 @@ class ResourceGroup(stack_resource.StackResource):
     )
 
     ATTRIBUTES = (
-        REFS,
+        REFS, ATTR_ATTRIBUTES,
     ) = (
-        'refs',
+        'refs', 'attributes',
     )
 
     properties_schema = {
@@ -129,6 +129,10 @@ class ResourceGroup(stack_resource.StackResource):
         REFS: attributes.Schema(
             _("A list of resource IDs for the resources in the group")
         ),
+        ATTR_ATTRIBUTES: attributes.Schema(
+            _("A map of resource names to the specified attribute of each "
+              "individual resource.")
+        ),
     }
 
     def validate(self):
@@ -170,27 +174,38 @@ class ResourceGroup(stack_resource.StackResource):
     def FnGetAtt(self, key, *path):
         nested_stack = self.nested()
 
-        def get_rsrc_attr(resource_name, *attr_path):
+        def get_resource(resource_name):
             try:
-                resource = nested_stack[resource_name]
+                return nested_stack[resource_name]
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
-            if not attr_path:
-                return resource.FnGetRefId()
-            else:
-                return resource.FnGetAtt(*attr_path)
+
+        def get_rsrc_attr(resource_name, *attr_path):
+            resource = get_resource(resource_name)
+            return resource.FnGetAtt(*attr_path)
+
+        def get_rsrc_id(resource_name):
+            resource = get_resource(resource_name)
+            return resource.FnGetRefId()
 
         if key.startswith("resource."):
             path = key.split(".", 2)[1:] + list(path)
-            return get_rsrc_attr(*path)
-        else:
-            if key == self.REFS:
-                path = []
+            if len(path) > 1:
+                return get_rsrc_attr(*path)
             else:
-                path = [key] + list(path)
+                return get_rsrc_id(*path)
 
         names = self._resource_names()
+        if key == self.REFS:
+            return [get_rsrc_id(n) for n in names]
+        if key == self.ATTR_ATTRIBUTES:
+            if not path:
+                raise exception.InvalidTemplateAttribute(
+                    resource=self.name, key=key)
+            return dict((n, get_rsrc_attr(n, *path)) for n in names)
+
+        path = [key] + list(path)
         return [get_rsrc_attr(n, *path) for n in names]
 
     def _build_resource_definition(self, include_all=False):
