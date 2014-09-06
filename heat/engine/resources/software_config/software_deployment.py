@@ -22,6 +22,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources import resource_group
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import signal_responder
 from heat.openstack.common import log as logging
@@ -506,7 +507,99 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                         "deployments on it.") % server)
 
 
+class SoftwareDeployments(resource_group.ResourceGroup):
+
+    PROPERTIES = (
+        SERVERS,
+        CONFIG,
+        INPUT_VALUES,
+        DEPLOY_ACTIONS,
+        NAME,
+        SIGNAL_TRANSPORT,
+    ) = (
+        'servers',
+        SoftwareDeployment.CONFIG,
+        SoftwareDeployment.INPUT_VALUES,
+        SoftwareDeployment.DEPLOY_ACTIONS,
+        SoftwareDeployment.NAME,
+        SoftwareDeployment.SIGNAL_TRANSPORT,
+    )
+
+    ATTRIBUTES = (
+        STDOUTS, STDERRS, STATUS_CODES
+    ) = (
+        'deploy_stdouts', 'deploy_stderrs', 'deploy_status_codes'
+    )
+
+    _sd_ps = SoftwareDeployment.properties_schema
+    _rg_ps = resource_group.ResourceGroup.properties_schema
+
+    properties_schema = {
+        SERVERS: properties.Schema(
+            properties.Schema.MAP,
+            _('A map of Nova names and IDs to apply configuration to.'),
+        ),
+        CONFIG: _sd_ps[CONFIG],
+        INPUT_VALUES: _sd_ps[INPUT_VALUES],
+        DEPLOY_ACTIONS: _sd_ps[DEPLOY_ACTIONS],
+        NAME: _sd_ps[NAME],
+        SIGNAL_TRANSPORT: _sd_ps[SIGNAL_TRANSPORT]
+    }
+
+    attributes_schema = {
+        STDOUTS: attributes.Schema(
+            _("A map of Nova names and captured stdouts from the "
+              "configuration execution to each server.")
+        ),
+        STDERRS: attributes.Schema(
+            _("A map of Nova names and captured stderrs from the "
+              "configuration execution to each server.")
+        ),
+        STATUS_CODES: attributes.Schema(
+            _("A map of Nova names and returned status code from the "
+              "configuration execution")
+        ),
+    }
+
+    def _resource_names(self, properties=None):
+        p = properties or self.properties
+        return p.get(self.SERVERS, {}).keys()
+
+    def _do_prop_replace(self, res_name, res_def_template):
+        res_def = copy.deepcopy(res_def_template)
+        props = res_def[self.RESOURCE_DEF_PROPERTIES]
+        servers = self.properties.get(self.SERVERS, {})
+        props[SoftwareDeployment.SERVER] = servers.get(res_name)
+        return res_def
+
+    def _build_resource_definition(self, include_all=False):
+        p = self.properties
+        return {
+            self.RESOURCE_DEF_TYPE: 'OS::Heat::SoftwareDeployment',
+            self.RESOURCE_DEF_PROPERTIES: {
+                self.CONFIG: p[self.CONFIG],
+                self.INPUT_VALUES: p[self.INPUT_VALUES],
+                self.DEPLOY_ACTIONS: p[self.DEPLOY_ACTIONS],
+                self.SIGNAL_TRANSPORT: p[self.SIGNAL_TRANSPORT],
+                self.NAME: p[self.NAME],
+            }
+        }
+
+    def FnGetAtt(self, key, *path):
+        rg = super(SoftwareDeployments, self)
+        if key == self.STDOUTS:
+            return rg.FnGetAtt(
+                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STDOUT)
+        if key == self.STDERRS:
+            return rg.FnGetAtt(
+                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STDERR)
+        if key == self.STATUS_CODES:
+            return rg.FnGetAtt(
+                rg.ATTR_ATTRIBUTES, SoftwareDeployment.STATUS_CODE)
+
+
 def resource_mapping():
     return {
         'OS::Heat::SoftwareDeployment': SoftwareDeployment,
+        'OS::Heat::SoftwareDeployments': SoftwareDeployments,
     }
