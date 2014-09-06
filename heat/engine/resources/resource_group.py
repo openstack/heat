@@ -135,7 +135,7 @@ class ResourceGroup(stack_resource.StackResource):
         # validate our basic properties
         super(ResourceGroup, self).validate()
         # make sure the nested resource is valid
-        test_tmpl = self._assemble_nested(1, include_all=True)
+        test_tmpl = self._assemble_nested(["0"], include_all=True)
         val_templ = template.Template(test_tmpl)
         res_def = val_templ.resource_definitions(self.stack)["0"]
         res_class = self.stack.env.get_class(res_def.resource_type)
@@ -143,19 +143,26 @@ class ResourceGroup(stack_resource.StackResource):
                              self.stack)
         res_inst.validate()
 
+    def _resource_names(self, properties=None):
+        p = properties or self.properties
+        return [str(n) for n in range(p.get(self.COUNT, 0))]
+
     def handle_create(self):
-        count = self.properties[self.COUNT]
-        if count > 0:
-            return self.create_with_template(self._assemble_nested(count),
-                                             {},
-                                             self.stack.timeout_mins)
+        names = self._resource_names()
+        if names:
+            return self.create_with_template(
+                self._assemble_nested(names),
+                {},
+                self.stack.timeout_mins)
 
     def handle_update(self, new_snippet, tmpl_diff, prop_diff):
-        count = prop_diff.get(self.COUNT)
-        if count is not None:
-            return self.update_with_template(self._assemble_nested(count),
-                                             {},
-                                             self.stack.timeout_mins)
+        old_names = self._resource_names()
+        new_names = self._resource_names(prop_diff)
+        if old_names != new_names:
+            return self.update_with_template(
+                self._assemble_nested(new_names),
+                {},
+                self.stack.timeout_mins)
 
     def handle_delete(self):
         return self.delete_nested()
@@ -183,8 +190,8 @@ class ResourceGroup(stack_resource.StackResource):
             else:
                 path = [key] + list(path)
 
-            count = self.properties[self.COUNT]
-            return [get_rsrc_attr(str(n), *path) for n in range(count)]
+        names = self._resource_names()
+        return [get_rsrc_attr(n, *path) for n in names]
 
     def _build_resource_definition(self, include_all=False):
         res_def = self.properties[self.RESOURCE_DEF]
@@ -196,37 +203,37 @@ class ResourceGroup(stack_resource.StackResource):
             res_def[self.RESOURCE_DEF_PROPERTIES] = clean
         return res_def
 
-    def _assemble_nested(self, count, include_all=False):
+    def _assemble_nested(self, names, include_all=False):
         res_def = self._build_resource_definition(include_all)
 
-        def handle_repl_val(repl_var, idx, val):
-            recurse = lambda x: handle_repl_val(repl_var, idx, x)
+        def handle_repl_val(repl_var, res_name, val):
+            recurse = lambda x: handle_repl_val(repl_var, res_name, x)
             if isinstance(val, basestring):
-                return val.replace(repl_var, str(idx))
+                return val.replace(repl_var, res_name)
             elif isinstance(val, collections.Mapping):
                 return dict(zip(val, map(recurse, val.values())))
             elif isinstance(val, collections.Sequence):
                 return map(recurse, val)
             return val
 
-        def do_prop_replace(repl_var, idx, res_def):
+        def do_prop_replace(repl_var, res_name, res_def):
             props = res_def[self.RESOURCE_DEF_PROPERTIES]
             if props:
-                props = handle_repl_val(repl_var, idx, props)
+                props = handle_repl_val(repl_var, res_name, props)
                 res_def[self.RESOURCE_DEF_PROPERTIES] = props
             return res_def
 
         repl_var = self.properties[self.INDEX_VAR]
-        resources = dict((str(k), do_prop_replace(repl_var, k,
-                                                  copy.deepcopy(res_def)))
-                         for k in range(count))
+        resources = dict((k, do_prop_replace(repl_var, k,
+                                             copy.deepcopy(res_def)))
+                         for k in names)
         child_template = copy.deepcopy(template_template)
         child_template['resources'] = resources
         return child_template
 
     def child_template(self):
-        count = self.properties[self.COUNT]
-        return self._assemble_nested(count)
+        names = self._resource_names()
+        return self._assemble_nested(names)
 
     def child_params(self):
         return {}
