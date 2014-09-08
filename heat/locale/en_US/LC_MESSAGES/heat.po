@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat 2013.2.a430.gd264018\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-20 06:00+0000\n"
+"POT-Creation-Date: 2014-09-08 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -18,54 +18,54 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: heat/api/aws/ec2token.py:36
+#: heat/api/aws/ec2token.py:33
 msgid "Authentication Endpoint URI."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:39 heat/common/config.py:154
+#: heat/api/aws/ec2token.py:36 heat/common/config.py:154
 msgid "Allow orchestration of multiple clouds."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:42 heat/common/config.py:157
+#: heat/api/aws/ec2token.py:39 heat/common/config.py:157
 msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:142
+#: heat/api/aws/ec2token.py:139
 msgid "Checking AWS credentials.."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:149
+#: heat/api/aws/ec2token.py:146
 msgid "No AWS Signature found."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:157
+#: heat/api/aws/ec2token.py:154
 msgid "No AWSAccessKeyId/Authorization Credential"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:160
+#: heat/api/aws/ec2token.py:157
 msgid "AWS credentials found, checking against keystone."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:163
+#: heat/api/aws/ec2token.py:160
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:165
+#: heat/api/aws/ec2token.py:162
 msgid "Service misconfigured"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:188
+#: heat/api/aws/ec2token.py:185
 #, python-format
 msgid "Authenticating with %s"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:196
+#: heat/api/aws/ec2token.py:193
 msgid "AWS authentication successful."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:198
+#: heat/api/aws/ec2token.py:195
 msgid "AWS authentication failure."
 msgstr ""
 
@@ -196,7 +196,7 @@ msgstr ""
 msgid "stack not not found"
 msgstr ""
 
-#: heat/api/cfn/v1/stacks.py:424 heat/engine/service.py:654
+#: heat/api/cfn/v1/stacks.py:424 heat/engine/service.py:665
 msgid "validate_template"
 msgstr ""
 
@@ -260,7 +260,7 @@ msgstr ""
 msgid "No template specified"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:200
+#: heat/api/openstack/v1/stacks.py:207
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
@@ -599,30 +599,30 @@ msgid ""
 "property is set."
 msgstr ""
 
-#: heat/common/exception.py:333
+#: heat/common/exception.py:334
 msgid "Not found"
 msgstr ""
 
-#: heat/common/exception.py:339
+#: heat/common/exception.py:340
 #, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr ""
 
-#: heat/common/exception.py:343
+#: heat/common/exception.py:344
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr ""
 
-#: heat/common/exception.py:347
+#: heat/common/exception.py:348
 msgid "Maximum resources per stack exceeded."
 msgstr ""
 
-#: heat/common/exception.py:351
+#: heat/common/exception.py:352
 #, python-format
 msgid "Stack %(stack_name)s already has an action (%(action)s) in progress."
 msgstr ""
 
-#: heat/common/exception.py:356
+#: heat/common/exception.py:357
 #, python-format
 msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
@@ -760,8 +760,13 @@ msgstr ""
 msgid "Unknown attribute \"%s\""
 msgstr ""
 
-#: heat/common/identifier.py:178 heat/engine/resource.py:156
+#: heat/common/identifier.py:178 heat/engine/resource.py:159
 msgid "Resource name may not contain \"/\""
+msgstr ""
+
+#: heat/common/lifecycle_plugin_utils.py:115
+#, python-format
+msgid "done with class=%(c)s, stackid=%(sid)s, action=%(a)s"
 msgstr ""
 
 #: heat/common/param_utils.py:24
@@ -905,27 +910,32 @@ msgid ""
 "bytes)."
 msgstr ""
 
-#: heat/common/wsgi.py:627
+#: heat/common/wsgi.py:626
+#, python-format
+msgid "Calling %(controller)s : %(action)s"
+msgstr ""
+
+#: heat/common/wsgi.py:632
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr ""
 
-#: heat/common/wsgi.py:628
+#: heat/common/wsgi.py:633
 msgid ""
 "The server could not comply with the request since it is either malformed"
 " or otherwise incorrect."
 msgstr ""
 
-#: heat/common/wsgi.py:649
+#: heat/common/wsgi.py:654
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr ""
 
-#: heat/common/wsgi.py:688
+#: heat/common/wsgi.py:693
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/common/wsgi.py:723
+#: heat/common/wsgi.py:728
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -957,55 +967,55 @@ msgstr ""
 msgid "no resources for stack_id %s were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:395
+#: heat/db/sqlalchemy/api.py:403
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:407
+#: heat/db/sqlalchemy/api.py:415
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:488
+#: heat/db/sqlalchemy/api.py:496
 #, python-format
 msgid "Attempt to delete user creds with id %(id)s that does not exist"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:641
+#: heat/db/sqlalchemy/api.py:649
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:652
+#: heat/db/sqlalchemy/api.py:660
 #, python-format
 msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:691
+#: heat/db/sqlalchemy/api.py:699
 #, python-format
 msgid "Software config with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:718
+#: heat/db/sqlalchemy/api.py:726
 #, python-format
 msgid "Deployment with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:764
+#: heat/db/sqlalchemy/api.py:772
 #, python-format
 msgid "Snapshot with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:792
+#: heat/db/sqlalchemy/api.py:800
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:794
+#: heat/db/sqlalchemy/api.py:802
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:798
+#: heat/db/sqlalchemy/api.py:806
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
@@ -1037,7 +1047,7 @@ msgstr ""
 msgid "Unexpected adopt data \"%s\". Adopt data must be a dict."
 msgstr ""
 
-#: heat/engine/api.py:260
+#: heat/engine/api.py:261
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
@@ -1203,7 +1213,7 @@ msgstr ""
 msgid "Registering %(path)s -> %(value)s"
 msgstr ""
 
-#: heat/engine/environment.py:289 heat/tests/test_resource.py:96
+#: heat/engine/environment.py:289 heat/tests/test_resource.py:97
 #, python-format
 msgid "Resource \"%s\" has no type"
 msgstr ""
@@ -1223,22 +1233,22 @@ msgstr ""
 msgid "Unknown resource Type : %s"
 msgstr ""
 
-#: heat/engine/environment.py:406
+#: heat/engine/environment.py:411
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:413
+#: heat/engine/environment.py:418
 #, python-format
 msgid "Loading %s"
 msgstr ""
 
-#: heat/engine/environment.py:418
+#: heat/engine/environment.py:423
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:422
+#: heat/engine/environment.py:427
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -1248,11 +1258,7 @@ msgstr ""
 msgid "No event exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/event.py:91
-msgid "Duplicating event"
-msgstr ""
-
-#: heat/engine/parameter_groups.py:52 heat/tests/test_validate.py:1344
+#: heat/engine/parameter_groups.py:52 heat/tests/test_validate.py:1370
 msgid "Parameters must be provided for each Parameter Group."
 msgstr ""
 
@@ -1339,56 +1345,56 @@ msgstr ""
 msgid "%(schema)s supplied for %(type)s %(data)s"
 msgstr ""
 
-#: heat/engine/properties.py:214
+#: heat/engine/properties.py:232
 #, python-format
 msgid "Value '%s' is not an integer"
 msgstr ""
 
-#: heat/engine/properties.py:227
+#: heat/engine/properties.py:245
 msgid "Value must be a string"
 msgstr ""
 
-#: heat/engine/properties.py:249
+#: heat/engine/properties.py:267
 #, python-format
 msgid "\"%s\" is not a map"
 msgstr ""
 
-#: heat/engine/properties.py:259
+#: heat/engine/properties.py:277
 #, python-format
 msgid "\"%s\" is not a list"
 msgstr ""
 
-#: heat/engine/properties.py:272
+#: heat/engine/properties.py:290
 #, python-format
 msgid "\"%s\" is not a valid boolean"
 msgstr ""
 
-#: heat/engine/properties.py:334
+#: heat/engine/properties.py:352
 #, python-format
 msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
 msgstr ""
 
-#: heat/engine/properties.py:345
+#: heat/engine/properties.py:363
 #, python-format
 msgid "Property error : %s"
 msgstr ""
 
-#: heat/engine/properties.py:350
+#: heat/engine/properties.py:368
 #, python-format
 msgid "Property %s not implemented yet"
 msgstr ""
 
-#: heat/engine/properties.py:355
+#: heat/engine/properties.py:373
 #, python-format
 msgid "Unknown Property %s"
 msgstr ""
 
-#: heat/engine/properties.py:360
+#: heat/engine/properties.py:378
 #, python-format
 msgid "%(prefix)sInvalid Property %(key)s"
 msgstr ""
 
-#: heat/engine/properties.py:377
+#: heat/engine/properties.py:395
 #, python-format
 msgid "%(prefix)sProperty %(key)s not assigned"
 msgstr ""
@@ -1403,129 +1409,133 @@ msgstr ""
 msgid "Went to status %(resource_status)s due to \"%(status_reason)s\""
 msgstr ""
 
-#: heat/engine/resource.py:69 heat/engine/resources/instance.py:643
-#: heat/engine/resources/instance.py:644 heat/engine/resources/server.py:549
-#: heat/engine/resources/server.py:550
+#: heat/engine/resource.py:69 heat/engine/resources/instance.py:659
+#: heat/engine/resources/instance.py:660 heat/engine/resources/server.py:574
+#: heat/engine/resources/server.py:575
 msgid "Unknown"
 msgstr ""
 
 #: heat/engine/resource.py:75
 #, python-format
-msgid "Unknown status %(resource_status)s"
+msgid "%(result)s - Unknown status %(resource_status)s"
 msgstr ""
 
-#: heat/engine/resource.py:340
+#: heat/engine/resource.py:77
+msgid "Resource failed"
+msgstr ""
+
+#: heat/engine/resource.py:352
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr ""
 
-#: heat/engine/resource.py:437
+#: heat/engine/resource.py:451
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:510
+#: heat/engine/resource.py:527
 #, python-format
 msgid "State %s invalid for create"
 msgstr ""
 
-#: heat/engine/resource.py:514
+#: heat/engine/resource.py:531
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:588
+#: heat/engine/resource.py:607
 msgid "Resource ID was not provided."
 msgstr ""
 
-#: heat/engine/resource.py:637
+#: heat/engine/resource.py:677
 msgid "Resource update already requested"
 msgstr ""
 
-#: heat/engine/resource.py:640
+#: heat/engine/resource.py:680
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:671
+#: heat/engine/resource.py:705
 #, python-format
 msgid "Checking %s"
 msgstr ""
 
-#: heat/engine/resource.py:688
+#: heat/engine/resource.py:722
 #, python-format
 msgid "State %s invalid for suspend"
 msgstr ""
 
-#: heat/engine/resource.py:692
+#: heat/engine/resource.py:726
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:704
+#: heat/engine/resource.py:738
 #, python-format
 msgid "State %s invalid for resume"
 msgstr ""
 
-#: heat/engine/resource.py:708
+#: heat/engine/resource.py:742
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:713
+#: heat/engine/resource.py:747
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:759
+#: heat/engine/resource.py:793
 msgid "limit cannot be less than 4"
 msgstr ""
 
-#: heat/engine/resource.py:765
+#: heat/engine/resource.py:799
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:774
+#: heat/engine/resource.py:808
 #, python-format
 msgid "Invalid deletion policy \"%s\""
 msgstr ""
 
-#: heat/engine/resource.py:779
+#: heat/engine/resource.py:813
 #, python-format
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:798
+#: heat/engine/resource.py:832
 #, python-format
 msgid "deleting %s"
 msgstr ""
 
-#: heat/engine/resource.py:839
+#: heat/engine/resource.py:873
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:859 heat/engine/resource.py:884
+#: heat/engine/resource.py:894 heat/engine/resource.py:919
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:913 heat/engine/stack.py:473
+#: heat/engine/resource.py:948 heat/engine/stack.py:477
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:916 heat/engine/stack.py:476
+#: heat/engine/resource.py:951 heat/engine/stack.py:480
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
 
-#: heat/engine/resource.py:1008
+#: heat/engine/resource.py:1043
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/resource.py:1022
+#: heat/engine/resource.py:1057
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -1535,109 +1545,109 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/scheduler.py:181
+#: heat/engine/scheduler.py:205
 #, python-format
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:216
+#: heat/engine/service.py:219
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:230
+#: heat/engine/service.py:233
 #, python-format
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/service.py:352
+#: heat/engine/service.py:355
 msgid "Attempting to stop engine service..."
 msgstr ""
 
-#: heat/engine/service.py:363
+#: heat/engine/service.py:366
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:367
+#: heat/engine/service.py:370
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:370
+#: heat/engine/service.py:373
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:493
+#: heat/engine/service.py:500
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:533
+#: heat/engine/service.py:540
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:561
+#: heat/engine/service.py:568
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:576
+#: heat/engine/service.py:587
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:611
+#: heat/engine/service.py:622
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:616
+#: heat/engine/service.py:627
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:656
+#: heat/engine/service.py:667
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:750
+#: heat/engine/service.py:761
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:798
+#: heat/engine/service.py:809
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:933
+#: heat/engine/service.py:944
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1098
+#: heat/engine/service.py:1109
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1177
+#: heat/engine/service.py:1199
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1200
+#: heat/engine/service.py:1222
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service.py:1206
+#: heat/engine/service.py:1228
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1268
+#: heat/engine/service.py:1290
 msgid "server_id must be specified"
 msgstr ""
 
@@ -1645,79 +1655,79 @@ msgstr ""
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/stack.py:76
+#: heat/engine/stack.py:79
 #, python-format
 msgid ""
 "Invalid stack name %s must contain only alphanumeric or \"_-.\" "
 "characters, must start with alpha"
 msgstr ""
 
-#: heat/engine/stack.py:136
+#: heat/engine/stack.py:139
 msgid "Attempt to use stored_context with no user_creds"
 msgstr ""
 
-#: heat/engine/stack.py:220
+#: heat/engine/stack.py:223
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
-#: heat/engine/stack.py:240
+#: heat/engine/stack.py:243
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:438
+#: heat/engine/stack.py:442
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:490
+#: heat/engine/stack.py:494
 #, python-format
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:664
+#: heat/engine/stack.py:682
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:754
+#: heat/engine/stack.py:782
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:849
+#: heat/engine/stack.py:888
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s "
 "user_creds_id=%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:857
+#: heat/engine/stack.py:896
 #, python-format
 msgid "Tried to store a stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:874 heat/engine/stack.py:882
+#: heat/engine/stack.py:913 heat/engine/stack.py:925
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:897
+#: heat/engine/stack.py:940
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:916
+#: heat/engine/stack.py:959
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
 
-#: heat/engine/stack.py:961
+#: heat/engine/stack.py:1004
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:970
+#: heat/engine/stack.py:1013
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -1753,45 +1763,45 @@ msgstr ""
 msgid "Lock was already released on stack %s!"
 msgstr ""
 
-#: heat/engine/stack_resource.py:68
+#: heat/engine/stack_resource.py:70
 msgid "Nested stack not found in DB"
 msgstr ""
 
-#: heat/engine/stack_resource.py:108
+#: heat/engine/stack_resource.py:107
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
 
-#: heat/engine/stack_resource.py:155
+#: heat/engine/stack_resource.py:125
 #, python-format
 msgid "Recursion depth exceeds %d."
 msgstr ""
 
-#: heat/engine/stack_resource.py:216
+#: heat/engine/stack_resource.py:223
 #, python-format
 msgid "Cannot update %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:262
+#: heat/engine/stack_resource.py:245
 #, python-format
 msgid "Nested stack UPDATE failed: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:273
+#: heat/engine/stack_resource.py:256
 msgid "Stack not found to delete"
 msgstr ""
 
-#: heat/engine/stack_resource.py:296
+#: heat/engine/stack_resource.py:279
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:318
+#: heat/engine/stack_resource.py:301
 #, python-format
 msgid "Cannot resume %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:340
+#: heat/engine/stack_resource.py:323
 #, python-format
 msgid "Cannot check %s, stack not created"
 msgstr ""
@@ -1837,22 +1847,16 @@ msgstr ""
 msgid "\"%(version)s\". \"%(version_type)s\" should be: %(available)s"
 msgstr ""
 
-#: heat/engine/template.py:224
-msgid ""
-"Template does not contain any resources, so the template would not really"
-" do anything when being instantiated."
-msgstr ""
-
-#: heat/engine/template.py:231
+#: heat/engine/template.py:225
 msgid "Every Resource object must contain a Type member."
 msgstr ""
 
-#: heat/engine/template.py:238
+#: heat/engine/template.py:232
 #, python-format
 msgid "Resources must contain Resource. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/update.py:133
+#: heat/engine/update.py:135
 #, python-format
 msgid "Resource %(res_name)s for stack %(stack_name)s updated"
 msgstr ""
@@ -1923,91 +1927,91 @@ msgid "Arguments to %s not fully resolved"
 msgstr ""
 
 #: heat/engine/cfn/functions.py:291 heat/engine/cfn/functions.py:297
-#: heat/engine/cfn/functions.py:343 heat/engine/cfn/functions.py:349
-#: heat/engine/cfn/functions.py:402 heat/engine/cfn/functions.py:408
+#: heat/engine/cfn/functions.py:345 heat/engine/cfn/functions.py:351
+#: heat/engine/cfn/functions.py:404 heat/engine/cfn/functions.py:410
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:304
+#: heat/engine/cfn/functions.py:306
 #, python-format
 msgid "\"%s\" must operate on a list"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:308
+#: heat/engine/cfn/functions.py:310
 #, python-format
 msgid "\"%s\" delimiter must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:316
+#: heat/engine/cfn/functions.py:318
 #, python-format
 msgid "Items to join must be strings %s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:356
+#: heat/engine/cfn/functions.py:358
 #, python-format
 msgid "Delimiter for %s must be string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:359
+#: heat/engine/cfn/functions.py:361
 #, python-format
 msgid "String to split must be string; got %s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:390
+#: heat/engine/cfn/functions.py:392
 #, python-format
 msgid "\"%s\" parameters must be a mapping"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:418
+#: heat/engine/cfn/functions.py:420
 #, python-format
 msgid "\"%s\" template must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:421
+#: heat/engine/cfn/functions.py:423
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:427
+#: heat/engine/cfn/functions.py:429
 #, python-format
 msgid "\"%s\" param placeholders must be strings"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:434
+#: heat/engine/cfn/functions.py:436
 #, python-format
 msgid "\"%s\" params must be strings or numbers"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:458
+#: heat/engine/cfn/functions.py:460
 #, python-format
 msgid "\"%s\" argument must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:493
+#: heat/engine/cfn/functions.py:495
 #, python-format
 msgid "Wrong Arguments try: \"%s\""
 msgstr ""
 
-#: heat/engine/cfn/functions.py:496
+#: heat/engine/cfn/functions.py:498
 #, python-format
 msgid "%s Key Name must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:499
+#: heat/engine/cfn/functions.py:501
 #, python-format
 msgid "%s Value Name must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:505
+#: heat/engine/cfn/functions.py:507
 msgid "Member list must be a list"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:509
+#: heat/engine/cfn/functions.py:511
 msgid "Member list items must be strings"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:544
+#: heat/engine/cfn/functions.py:546
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be one of: %(allowed)s"
 msgstr ""
@@ -2053,36 +2057,36 @@ msgstr ""
 msgid "Multiple images %s were found in glance with name"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:97 heat/engine/resources/nova_utils.py:58
+#: heat/engine/clients/os/nova.py:103 heat/engine/resources/nova_utils.py:58
 #, python-format
 msgid ""
 "Server %(name)s (%(id)s) received an OverLimit response during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:105 heat/engine/resources/nova_utils.py:67
+#: heat/engine/clients/os/nova.py:111 heat/engine/resources/nova_utils.py:67
 #, python-format
 msgid ""
 "Server \"%(name)s\" (%(id)s) received the following exception during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:310 heat/engine/resources/nova_utils.py:280
+#: heat/engine/clients/os/nova.py:316 heat/engine/resources/nova_utils.py:280
 #, python-format
 msgid "Server %(name)s delete failed: (%(code)s) %(message)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:339 heat/engine/resources/nova_utils.py:318
+#: heat/engine/clients/os/nova.py:345 heat/engine/resources/nova_utils.py:318
 #, python-format
 msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:359 heat/engine/resources/nova_utils.py:344
+#: heat/engine/clients/os/nova.py:365 heat/engine/resources/nova_utils.py:344
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:389 heat/engine/resources/nova_utils.py:382
+#: heat/engine/clients/os/nova.py:395 heat/engine/resources/nova_utils.py:382
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
@@ -2170,27 +2174,24 @@ msgstr ""
 msgid "\"%s\" is not a valid keyword inside an output definition"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:100
+#: heat/engine/resources/autoscaling.py:68
 #, python-format
 msgid "truncating growth to %s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:104
+#: heat/engine/resources/autoscaling.py:72
 #, python-format
 msgid "truncating shrinkage to %s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:143
-#: heat/engine/resources/autoscaling.py:509
-#: heat/engine/resources/autoscaling.py:542
-#: heat/engine/resources/autoscaling.py:547
-#: heat/engine/resources/autoscaling.py:797
-#: heat/engine/resources/autoscaling.py:802
-#: heat/engine/resources/autoscaling.py:807
-#: heat/engine/resources/instance.py:202 heat/engine/resources/instance.py:207
-#: heat/engine/resources/instance.py:212 heat/engine/resources/instance.py:217
-#: heat/engine/resources/instance.py:222 heat/engine/resources/instance.py:227
-#: heat/engine/resources/instance.py:245 heat/engine/resources/instance.py:290
+#: heat/engine/resources/autoscaling.py:111
+#: heat/engine/resources/autoscaling.py:477
+#: heat/engine/resources/autoscaling.py:510
+#: heat/engine/resources/autoscaling.py:515
+#: heat/engine/resources/instance.py:200 heat/engine/resources/instance.py:205
+#: heat/engine/resources/instance.py:210 heat/engine/resources/instance.py:215
+#: heat/engine/resources/instance.py:220 heat/engine/resources/instance.py:225
+#: heat/engine/resources/instance.py:243 heat/engine/resources/instance.py:288
 #: heat/engine/resources/loadbalancer.py:316
 #: heat/engine/resources/loadbalancer.py:321
 #: heat/engine/resources/loadbalancer.py:330
@@ -2199,222 +2200,150 @@ msgstr ""
 #: heat/engine/resources/loadbalancer.py:345 heat/engine/resources/user.py:47
 #: heat/engine/resources/user.py:51 heat/engine/resources/user.py:143
 #: heat/engine/resources/user.py:153
+#: heat/engine/resources/aws/launch_config.py:82
+#: heat/engine/resources/aws/launch_config.py:87
 msgid "Not Implemented."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:148
-#: heat/engine/resources/autoscaling.py:514
+#: heat/engine/resources/autoscaling.py:116
+#: heat/engine/resources/autoscaling.py:482
 msgid "Name of LaunchConfiguration resource."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:154
+#: heat/engine/resources/autoscaling.py:122
 msgid "Desired number of instances."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:160
-#: heat/engine/resources/autoscaling.py:555
+#: heat/engine/resources/autoscaling.py:128
+#: heat/engine/resources/autoscaling.py:523
 msgid "List of LoadBalancer resources."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:164
-#: heat/engine/resources/autoscaling.py:571
+#: heat/engine/resources/autoscaling.py:132
+#: heat/engine/resources/autoscaling.py:539
 msgid "Tags to attach to this group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:183
+#: heat/engine/resources/autoscaling.py:151
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:444
+#: heat/engine/resources/autoscaling.py:412
 #, python-format
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:520
+#: heat/engine/resources/autoscaling.py:488
 msgid "Maximum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:526
+#: heat/engine/resources/autoscaling.py:494
 msgid "Minimum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:532
-#: heat/engine/resources/autoscaling.py:884
-#: heat/engine/resources/autoscaling.py:996
-#: heat/engine/resources/autoscaling.py:1137
+#: heat/engine/resources/autoscaling.py:500
+#: heat/engine/resources/autoscaling.py:767
+#: heat/engine/resources/aws/scaling_policy.py:70
+#: heat/engine/resources/openstack/scaling_policy.py:78
 msgid "Cooldown period, in seconds."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:537
+#: heat/engine/resources/autoscaling.py:505
 msgid "Desired initial number of instances."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:559
+#: heat/engine/resources/autoscaling.py:527
 msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be "
 "exactly 1."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:565
+#: heat/engine/resources/autoscaling.py:533
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:648
+#: heat/engine/resources/autoscaling.py:616
 #, python-format
 msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:672
+#: heat/engine/resources/autoscaling.py:640
 #, python-format
 msgid "Start resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:687
+#: heat/engine/resources/autoscaling.py:655
 msgid "Failed sending error notification"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:692
+#: heat/engine/resources/autoscaling.py:660
 #, python-format
 msgid "End resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:720
+#: heat/engine/resources/autoscaling.py:688
 msgid "MinSize can not be greater than MaxSize"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:724
+#: heat/engine/resources/autoscaling.py:692
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:730
+#: heat/engine/resources/autoscaling.py:698
 msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:739
+#: heat/engine/resources/autoscaling.py:707
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:769
-#: heat/engine/resources/instance.py:175
-msgid "Glance image ID or name."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:777
-#: heat/engine/resources/instance.py:185
-msgid "Nova instance type (flavor)."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:782
-#: heat/engine/resources/instance.py:191
-msgid "Optional Nova keypair name."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:789
-#: heat/engine/resources/instance.py:298
-msgid "User data to pass to instance."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:793
-#: heat/engine/resources/instance.py:232
-msgid "Security group names to assign."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:812
-#: heat/engine/resources/instance.py:273
-msgid "Scheduler hints to pass to Nova (Heat extension)."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:861
+#: heat/engine/resources/autoscaling.py:744
 msgid ""
 "Resource definition for the resources in the group, in HOT format. The "
 "value of this property is the definition of a resource just as if it had "
 "been declared in the template itself."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:870
+#: heat/engine/resources/autoscaling.py:753
 msgid "Maximum number of resources in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:877
+#: heat/engine/resources/autoscaling.py:760
 msgid "Minimum number of resources in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:889
+#: heat/engine/resources/autoscaling.py:772
 msgid "Desired initial number of resources."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:894
+#: heat/engine/resources/autoscaling.py:777
 msgid "Policy for rolling updates for this scaling group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:900
+#: heat/engine/resources/autoscaling.py:783
 msgid ""
 "The minimum number of resources in service while rolling updates are "
 "being executed."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:906
+#: heat/engine/resources/autoscaling.py:789
 msgid "The maximum number of resources to replace at once."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:911
+#: heat/engine/resources/autoscaling.py:794
 msgid "The number of seconds to wait between batches of updates."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:974
-msgid "AutoScaling group name to apply policy to."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:979
-#: heat/engine/resources/autoscaling.py:1120
-msgid "Size of adjustment."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:985
-#: heat/engine/resources/autoscaling.py:1126
-msgid "Type of adjustment (absolute or percentage)."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1003
-msgid "A signed url to handle the alarm. (Heat extension)."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1025
-#: heat/engine/resources/instance.py:80 heat/tests/generic_resource.py:131
-#, python-format
-msgid "Cannot signal resource during %s"
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1042
-#: heat/engine/resources/instance.py:88
-#, python-format
-msgid "%(name)s Alarm, new state %(state)s"
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1048
-#, python-format
-msgid "%(name)s NOT performing scaling action, cooldown %(cooldown)s"
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1057
-#, python-format
-msgid "Alarm %(alarm)s could not find scaling group named \"%(group)s\""
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1062
-#, python-format
+#: heat/engine/resources/autoscaling.py:804
+#: heat/engine/resources/resource_group.py:133
 msgid ""
-"%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by "
-"%(filter)s"
+"A map of resource names to the specified attribute of each individual "
+"resource."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:1115
-msgid "AutoScaling group ID to apply policy to."
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:1144
-msgid "A signed url to handle the alarm."
+#: heat/engine/resources/autoscaling.py:808
+msgid "A list of the specified attribute of each individual resource."
 msgstr ""
 
 #: heat/engine/resources/cloud_watch.py:37
@@ -2483,48 +2412,52 @@ msgstr ""
 msgid "Instance ID to associate with EIP."
 msgstr ""
 
-#: heat/engine/resources/eip.py:57
+#: heat/engine/resources/eip.py:58
 msgid ""
 "ID that AWS assigns to represent the allocation of the address for use "
 "with Amazon VPC. Returned only for VPC elastic IP addresses."
 msgstr ""
 
-#: heat/engine/resources/eip.py:74 heat/engine/resources/eip.py:82
-msgid "Floating IPs not found"
-msgstr ""
-
-#: heat/engine/resources/eip.py:99 heat/engine/resources/eip.py:113
+#: heat/engine/resources/eip.py:98 heat/engine/resources/eip.py:112
 #, python-format
 msgid "ElasticIp create %s"
 msgstr ""
 
-#: heat/engine/resources/eip.py:106
+#: heat/engine/resources/eip.py:105
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in "
 "nova.conf."
 msgstr ""
 
-#: heat/engine/resources/eip.py:161
+#: heat/engine/resources/eip.py:187
 msgid "Instance ID to associate with EIP specified by EIP property."
 msgstr ""
 
-#: heat/engine/resources/eip.py:165
+#: heat/engine/resources/eip.py:191
 msgid "EIP address to associate with instance."
 msgstr ""
 
-#: heat/engine/resources/eip.py:169
+#: heat/engine/resources/eip.py:195
 msgid "Allocation ID for VPC EIP address."
 msgstr ""
 
-#: heat/engine/resources/eip.py:173
+#: heat/engine/resources/eip.py:199
 msgid "Network interface ID to associate with EIP."
 msgstr ""
 
-#: heat/engine/resources/eip.py:190
-msgid "Skipping association, InstanceId not specified"
+#: heat/engine/resources/eip.py:217
+msgid "Either 'EIP' or 'AllocationId' must be provided."
 msgstr ""
 
-#: heat/engine/resources/eip.py:211
+#: heat/engine/resources/eip.py:221
+msgid "Must specify 'InstanceId' if you specify 'EIP'."
+msgstr ""
+
+#: heat/engine/resources/eip.py:226
+msgid "Must specify at least one of 'InstanceId' or 'NetworkInterfaceId'."
+msgstr ""
+
+#: heat/engine/resources/eip.py:294
 msgid "Skipping association, resource not specified"
 msgstr ""
 
@@ -2577,170 +2510,230 @@ msgid ""
 "\"swift://example.com/container/obj\"."
 msgstr ""
 
-#: heat/engine/resources/instance.py:53
+#: heat/engine/resources/instance.py:51
 msgid "Instance ID to be restarted."
 msgstr ""
 
-#: heat/engine/resources/instance.py:60
+#: heat/engine/resources/instance.py:58
 msgid "A signed url to handle the alarm (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/instance.py:96
+#: heat/engine/resources/instance.py:78
+#: heat/engine/resources/aws/scaling_policy.py:99
+#: heat/engine/resources/openstack/scaling_policy.py:108
+#: heat/tests/generic_resource.py:135
+#, python-format
+msgid "Cannot signal resource during %s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:86
+#: heat/engine/resources/aws/scaling_policy.py:116
+#, python-format
+msgid "%(name)s Alarm, new state %(state)s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:94
 #, python-format
 msgid "%(name)s Alarm, can not find instance %(instance)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:101
+#: heat/engine/resources/instance.py:99
 #, python-format
 msgid "%(name)s Alarm, restarting resource: %(victim)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:198
+#: heat/engine/resources/instance.py:173
+#: heat/engine/resources/aws/launch_config.py:54
+msgid "Glance image ID or name."
+msgstr ""
+
+#: heat/engine/resources/instance.py:183
+#: heat/engine/resources/aws/launch_config.py:62
+msgid "Nova instance type (flavor)."
+msgstr ""
+
+#: heat/engine/resources/instance.py:189
+#: heat/engine/resources/aws/launch_config.py:67
+msgid "Optional Nova keypair name."
+msgstr ""
+
+#: heat/engine/resources/instance.py:196
 msgid "Availability zone to launch the instance in."
 msgstr ""
 
-#: heat/engine/resources/instance.py:236
+#: heat/engine/resources/instance.py:230
+#: heat/engine/resources/aws/launch_config.py:78
+msgid "Security group names to assign."
+msgstr ""
+
+#: heat/engine/resources/instance.py:234
 msgid "Security group IDs to assign."
 msgstr ""
 
-#: heat/engine/resources/instance.py:240
+#: heat/engine/resources/instance.py:238
 msgid "Network interfaces to associate with instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:250
+#: heat/engine/resources/instance.py:248
 msgid "Subnet ID to launch instance in."
 msgstr ""
 
-#: heat/engine/resources/instance.py:255
+#: heat/engine/resources/instance.py:253
 msgid "Tags to attach to instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:302
+#: heat/engine/resources/instance.py:271
+#: heat/engine/resources/aws/launch_config.py:156
+msgid "Scheduler hints to pass to Nova (Heat extension)."
+msgstr ""
+
+#: heat/engine/resources/instance.py:296
+#: heat/engine/resources/aws/launch_config.py:74
+msgid "User data to pass to instance."
+msgstr ""
+
+#: heat/engine/resources/instance.py:300
 msgid "Volumes to attach to instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:309 heat/engine/resources/volume.py:400
+#: heat/engine/resources/instance.py:307 heat/engine/resources/volume.py:411
 msgid ""
 "The device where the volume is exposed on the instance. This assignment "
 "may not be honored and it is advised that the path /dev/disk/by-"
 "id/virtio-<VolumeId> be used instead."
 msgstr ""
 
-#: heat/engine/resources/instance.py:318 heat/engine/resources/volume.py:395
-#: heat/engine/resources/volume.py:714
+#: heat/engine/resources/instance.py:316 heat/engine/resources/volume.py:405
+#: heat/engine/resources/volume.py:725
 msgid "The ID of the volume to be attached."
 msgstr ""
 
-#: heat/engine/resources/instance.py:326
+#: heat/engine/resources/instance.py:324
+#: heat/engine/resources/aws/launch_config.py:92
 msgid "Block device mappings to attach to instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:332
+#: heat/engine/resources/instance.py:330
+#: heat/engine/resources/aws/launch_config.py:98
 msgid ""
 "A device name where the volume will be attached in the system at "
 "/dev/device_name.e.g. vdb"
 msgstr ""
 
-#: heat/engine/resources/instance.py:339
+#: heat/engine/resources/instance.py:337
+#: heat/engine/resources/aws/launch_config.py:105
 msgid "The ebs volume to attach to the instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:343
+#: heat/engine/resources/instance.py:341
+#: heat/engine/resources/aws/launch_config.py:109
 msgid ""
 "Indicate whether the volume should be deleted when the instance is "
 "terminated."
 msgstr ""
 
-#: heat/engine/resources/instance.py:349
+#: heat/engine/resources/instance.py:347
+#: heat/engine/resources/aws/launch_config.py:115
 msgid "The number of I/O operations per second that the volume supports."
 msgstr ""
 
-#: heat/engine/resources/instance.py:355 heat/engine/resources/server.py:128
+#: heat/engine/resources/instance.py:353 heat/engine/resources/server.py:129
+#: heat/engine/resources/aws/launch_config.py:121
 msgid "The ID of the snapshot to create a volume from."
 msgstr ""
 
-#: heat/engine/resources/instance.py:360
+#: heat/engine/resources/instance.py:358
+#: heat/engine/resources/aws/launch_config.py:126
 msgid ""
 "The size of the volume, in GB. Must be equal or greater than the size of "
 "the snapshot. It is safe to leave this blank and have the Compute service"
 " infer the size."
 msgstr ""
 
-#: heat/engine/resources/instance.py:368
+#: heat/engine/resources/instance.py:366
+#: heat/engine/resources/aws/launch_config.py:134
 msgid "The volume type."
 msgstr ""
 
-#: heat/engine/resources/instance.py:375
+#: heat/engine/resources/instance.py:373
+#: heat/engine/resources/aws/launch_config.py:141
 msgid "The can be used to unmap a defined device."
 msgstr ""
 
-#: heat/engine/resources/instance.py:380
+#: heat/engine/resources/instance.py:378
+#: heat/engine/resources/aws/launch_config.py:146
 msgid ""
 "The name of the virtual device. The name must be in the form ephemeralX "
 "where X is a number starting from zero (0); for example, ephemeral0."
 msgstr ""
 
-#: heat/engine/resources/instance.py:392
+#: heat/engine/resources/instance.py:390
 msgid "The Availability Zone where the specified instance is launched."
 msgstr ""
 
-#: heat/engine/resources/instance.py:396
+#: heat/engine/resources/instance.py:394
 msgid "Private DNS name of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:399
+#: heat/engine/resources/instance.py:397
 msgid "Public DNS name of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:402
+#: heat/engine/resources/instance.py:400
 msgid "Private IP address of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:405
+#: heat/engine/resources/instance.py:403
 msgid "Public IP address of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:446
+#: heat/engine/resources/instance.py:444
 #, python-format
 msgid "%(name)s._resolve_attribute(%(attname)s) == %(res)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:642 heat/engine/resources/server.py:548
+#: heat/engine/resources/instance.py:658 heat/engine/resources/server.py:573
 #, python-format
 msgid "Message: %(message)s, Code: %(code)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:670
+#: heat/engine/resources/instance.py:665
+msgid "Instance is not active"
+msgstr ""
+
+#: heat/engine/resources/instance.py:688
 #, python-format
 msgid "Instance is not ACTIVE (was: %s)"
 msgstr ""
 
-#: heat/engine/resources/instance.py:798
+#: heat/engine/resources/instance.py:818
+#: heat/engine/resources/aws/launch_config.py:193
 msgid ""
 "SnapshotId is missing, this is required when specifying "
 "BlockDeviceMappings."
 msgstr ""
 
-#: heat/engine/resources/instance.py:802
+#: heat/engine/resources/instance.py:822
+#: heat/engine/resources/aws/launch_config.py:197
 msgid "Ebs is missing, this is required when specifying BlockDeviceMappings."
 msgstr ""
 
-#: heat/engine/resources/instance.py:848 heat/engine/resources/server.py:996
+#: heat/engine/resources/instance.py:871 heat/engine/resources/server.py:1036
 #, python-format
 msgid "Cannot suspend %s, resource_id not set"
 msgstr ""
 
-#: heat/engine/resources/instance.py:855 heat/engine/resources/instance.py:912
+#: heat/engine/resources/instance.py:878 heat/engine/resources/instance.py:935
 #, python-format
 msgid "Failed to find instance %s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:888
+#: heat/engine/resources/instance.py:911
 #, python-format
 msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
 msgstr ""
 
-#: heat/engine/resources/instance.py:905 heat/engine/resources/server.py:1045
+#: heat/engine/resources/instance.py:928 heat/engine/resources/server.py:1085
 #, python-format
 msgid "Cannot resume %s, resource_id not set"
 msgstr ""
@@ -2847,27 +2840,27 @@ msgstr ""
 msgid "Custom LoadBalancer template can not be found"
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:45
+#: heat/engine/resources/network_interface.py:44
 msgid "Description for this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:49
+#: heat/engine/resources/network_interface.py:48
 msgid "List of security group IDs associated with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:57
+#: heat/engine/resources/network_interface.py:56
 msgid "Flag indicating if traffic to or from instance is validated."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:62
+#: heat/engine/resources/network_interface.py:61
 msgid "Subnet ID to associate with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:69
+#: heat/engine/resources/network_interface.py:68
 msgid "List of tags associated with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:87
+#: heat/engine/resources/network_interface.py:86
 msgid "Private IP address of the network interface."
 msgstr ""
 
@@ -2901,24 +2894,24 @@ msgstr ""
 msgid "The name of the key pair."
 msgstr ""
 
-#: heat/engine/resources/nova_keypair.py:56
+#: heat/engine/resources/nova_keypair.py:59
 msgid ""
 "True if the system should remember a generated private key; False "
 "otherwise."
 msgstr ""
 
-#: heat/engine/resources/nova_keypair.py:62
+#: heat/engine/resources/nova_keypair.py:65
 msgid ""
 "The optional public key. This allows users to supply the public key from "
 "a pre-existing key pair. If not supplied, a new key pair will be "
 "generated."
 msgstr ""
 
-#: heat/engine/resources/nova_keypair.py:70
+#: heat/engine/resources/nova_keypair.py:73
 msgid "The public key."
 msgstr ""
 
-#: heat/engine/resources/nova_keypair.py:73
+#: heat/engine/resources/nova_keypair.py:76
 msgid "The private key if it has been saved."
 msgstr ""
 
@@ -2930,19 +2923,19 @@ msgstr ""
 msgid "A list of string policies to apply.Defaults to anti-affinity."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:67
+#: heat/engine/resources/os_database.py:74
 msgid "Name of the DB instance to create."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:74
+#: heat/engine/resources/os_database.py:81
 msgid "Reference to a flavor for creating DB instance."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:79
+#: heat/engine/resources/os_database.py:86
 msgid "Name of registered datastore type."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:86
+#: heat/engine/resources/os_database.py:93
 msgid ""
 "Name of the registered datastore version. It must exist for provided "
 "datastore type. Defaults to using single active version. If several "
@@ -2950,70 +2943,92 @@ msgid ""
 "this parameter must be specified."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:95
+#: heat/engine/resources/os_database.py:102
 msgid "Database volume size in GB."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:103
+#: heat/engine/resources/os_database.py:110
+msgid "List of network interfaces to create on instance."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:117
+#, python-format
+msgid ""
+"Name or UUID of the network to attach this NIC to. Either %(port)s or "
+"%(net)s must be specified."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:123
+#, python-format
+msgid ""
+"Name or UUID of Neutron port to attach this NIC to. Either %(port)s or "
+"%(net)s must be specified."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:130
+msgid "Fixed IPv4 address for this NIC."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:137
 msgid "List of databases to be created on DB instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:110
+#: heat/engine/resources/os_database.py:144
 msgid "Set of symbols and encodings."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:115
+#: heat/engine/resources/os_database.py:149
 msgid "Set of rules for comparing characters in a character set."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:121
+#: heat/engine/resources/os_database.py:155
 msgid "Specifies database names for creating databases on instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:136
+#: heat/engine/resources/os_database.py:170
 msgid "List of users to be created on DB instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:143
+#: heat/engine/resources/os_database.py:177
 msgid "User name to create a user on instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:155
+#: heat/engine/resources/os_database.py:189
 msgid "Password for those users on instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:166
+#: heat/engine/resources/os_database.py:200
 msgid "The host from which a user is allowed to connect to the database."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:172
+#: heat/engine/resources/os_database.py:206
 msgid "Names of databases that those users can access on instance creation."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:187
+#: heat/engine/resources/os_database.py:221
 msgid "Name of the availability zone for DB instance."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:191
+#: heat/engine/resources/os_database.py:225
 msgid "DB instance restore point."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:197
-msgid "Hostname of the instance"
+#: heat/engine/resources/os_database.py:231
+msgid "Hostname of the instance."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:200
-msgid "Api endpoint reference of the instance"
+#: heat/engine/resources/os_database.py:234
+msgid "Api endpoint reference of the instance."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:268
+#: heat/engine/resources/os_database.py:327
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
 "instance.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/resources/os_database.py:288
+#: heat/engine/resources/os_database.py:347
 #, python-format
 msgid ""
 "Database instance %(database)s created (flavor:%(flavor)s, "
@@ -3021,14 +3036,14 @@ msgid ""
 "datastore_version:%(datastore_version)s)"
 msgstr ""
 
-#: heat/engine/resources/os_database.py:350
+#: heat/engine/resources/os_database.py:408
 #, python-format
 msgid ""
 "Datastore version %(dsversion)s for datastore type %(dstype)s is not "
 "valid. Allowed versions are %(allowed)s."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:359
+#: heat/engine/resources/os_database.py:417
 #, python-format
 msgid ""
 "Multiple active datastore versions exist for datastore type %(dstype)s. "
@@ -3036,23 +3051,33 @@ msgid ""
 "%(allowed)s."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:368
+#: heat/engine/resources/os_database.py:426
 #, python-format
 msgid "Not allowed - %(dsver)s without %(dstype)s."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:380
+#: heat/engine/resources/os_database.py:436
 #, python-format
 msgid ""
 "Databases property is required if users property is provided for resource"
 " %s."
 msgstr ""
 
-#: heat/engine/resources/os_database.py:390
+#: heat/engine/resources/os_database.py:446
 #, python-format
 msgid ""
 "Database %(dbs)s specified for user does not exist in databases for "
 "resource %(name)s."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:456
+#, python-format
+msgid "Can not use %s property on Nova-network."
+msgstr ""
+
+#: heat/engine/resources/os_database.py:460
+#, python-format
+msgid "Either %(net)s or %(port)s must be provided."
 msgstr ""
 
 #: heat/engine/resources/random_string.py:63
@@ -3064,16 +3089,16 @@ msgid "Sequence of characters to build the random string from."
 msgstr ""
 
 #: heat/engine/resources/random_string.py:80
-#: heat/engine/resources/server.py:211 heat/engine/resources/volume.py:502
-#: heat/engine/resources/neutron/floatingip.py:44
-#: heat/engine/resources/neutron/loadbalancer.py:218
-#: heat/engine/resources/neutron/network_gateway.py:97
-#: heat/engine/resources/neutron/port.py:66
-#: heat/engine/resources/neutron/port.py:102
-#: heat/engine/resources/neutron/router.py:210
-#: heat/engine/resources/neutron/router.py:305
-#: heat/engine/resources/neutron/subnet.py:61
-#: heat/engine/resources/neutron/vpnservice.py:64
+#: heat/engine/resources/server.py:212 heat/engine/resources/volume.py:514
+#: heat/engine/resources/neutron/floatingip.py:43
+#: heat/engine/resources/neutron/loadbalancer.py:217
+#: heat/engine/resources/neutron/network_gateway.py:96
+#: heat/engine/resources/neutron/port.py:65
+#: heat/engine/resources/neutron/port.py:101
+#: heat/engine/resources/neutron/router.py:208
+#: heat/engine/resources/neutron/router.py:303
+#: heat/engine/resources/neutron/subnet.py:60
+#: heat/engine/resources/neutron/vpnservice.py:63
 #, python-format
 msgid "Use property %s."
 msgstr ""
@@ -3227,13 +3252,175 @@ msgstr ""
 msgid "The website endpoint for the specified bucket."
 msgstr ""
 
+#: heat/engine/resources/sahara_cluster.py:46
+msgid "Hadoop cluster name."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:50
+#: heat/engine/resources/sahara_templates.py:59
+#: heat/engine/resources/sahara_templates.py:207
+msgid "Plugin name."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:55
+#: heat/engine/resources/sahara_templates.py:64
+#: heat/engine/resources/sahara_templates.py:212
+msgid "Version of Hadoop running on instances."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:60
+msgid "ID of the Cluster Template used for Node Groups and configurations."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:66
+msgid "Keypair added to instances to make them accessible for user."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:73
+msgid "Name or UUID of the image used to boot Hadoop nodes."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:80
+#: heat/engine/resources/sahara_templates.py:224
+msgid "Name or UUID of Neutron network."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:89
+msgid "Cluster status."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:92
+msgid "Cluster information."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:117
+#, python-format
+msgid ""
+"%(img)s must be provided: Referenced cluster template %(tmpl)s has no "
+"default_image_id defined."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:135
+#, python-format
+msgid "Cluster \"%s\" is being started."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:147
+#, python-format
+msgid "Cluster '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:159
+#, python-format
+msgid "Cluster '%s' has been deleted"
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:177
+#: heat/engine/resources/sahara_templates.py:328
+#, python-format
+msgid "%s must be provided"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:46
+msgid "Name for the Sahara Node Group Template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:54
+msgid "Description of the Node Group Template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:69
+msgid "Name or ID Nova flavor for the nodes."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:74
+msgid "Volumes per node."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:81
+msgid "Size of the volumes, in GB."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:88
+msgid "List of processes to run on every node."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:99
+msgid "Name or UUID of the Neutron floating IP network to use."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:106
+msgid "Dictionary of node configurations."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:146
+#, python-format
+msgid "Node Group Template '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:159
+#, python-format
+msgid "Node Group Template '%s' has been deleted."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:169
+#, python-format
+msgid "%s must be provided."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:194
+msgid "Name for the Sahara Cluster Template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:202
+msgid "Description of the Sahara Group Template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:217
+msgid "ID of the default image to use for the template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:231
+msgid "List of processes to enable anti-affinity for."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:238
+msgid "Cluster configs dictionary."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:242
+msgid "Node groups."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:248
+msgid "Name of the Node group."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:253
+msgid "Number of instances in the Node group."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:261
+msgid "ID of the Node Group Template."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:302
+#, python-format
+msgid "Cluster Template '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:315
+#, python-format
+msgid "Cluster Template '%s' has been deleted."
+msgstr ""
+
 #: heat/engine/resources/security_group.py:68
 #: heat/engine/resources/neutron/security_group.py:110
 msgid "Description of the security group."
 msgstr ""
 
 #: heat/engine/resources/security_group.py:73
-msgid "Physical ID of the VPC."
+msgid "Physical ID of the VPC. Not implemented."
 msgstr ""
 
 #: heat/engine/resources/security_group.py:79
@@ -3249,63 +3436,63 @@ msgstr ""
 msgid "Security Group \"%(group_name)s\" not found"
 msgstr ""
 
-#: heat/engine/resources/server.py:96
+#: heat/engine/resources/server.py:97
 msgid "Server name."
 msgstr ""
 
-#: heat/engine/resources/server.py:101
+#: heat/engine/resources/server.py:102
 msgid "The ID or name of the image to boot with."
 msgstr ""
 
-#: heat/engine/resources/server.py:109
+#: heat/engine/resources/server.py:110
 msgid "Block device mappings for this server."
 msgstr ""
 
-#: heat/engine/resources/server.py:115
+#: heat/engine/resources/server.py:116
 msgid ""
 "A device name where the volume will be attached in the system at "
 "/dev/device_name. This value is typically vda."
 msgstr ""
 
-#: heat/engine/resources/server.py:122
+#: heat/engine/resources/server.py:123
 msgid ""
 "The ID of the volume to boot from. Only one of volume_id or snapshot_id "
 "should be provided."
 msgstr ""
 
-#: heat/engine/resources/server.py:133
+#: heat/engine/resources/server.py:134
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have "
 "the Compute service infer the size."
 msgstr ""
 
-#: heat/engine/resources/server.py:139
+#: heat/engine/resources/server.py:140
 msgid ""
 "Indicate whether the volume should be deleted when the server is "
 "terminated."
 msgstr ""
 
-#: heat/engine/resources/server.py:147
+#: heat/engine/resources/server.py:148
 msgid "The ID or name of the flavor to boot onto."
 msgstr ""
 
-#: heat/engine/resources/server.py:153
+#: heat/engine/resources/server.py:154
 msgid ""
 "Policy on how to apply a flavor update; either by requesting a server "
 "resize or by replacing the entire server."
 msgstr ""
 
-#: heat/engine/resources/server.py:163
+#: heat/engine/resources/server.py:164
 msgid ""
 "Policy on how to apply an image-id update; either by requesting a server "
 "rebuild or by replacing the entire server"
 msgstr ""
 
-#: heat/engine/resources/server.py:174
+#: heat/engine/resources/server.py:175
 msgid "Name of keypair to inject into the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:181
+#: heat/engine/resources/server.py:182
 msgid ""
 "Name of the administrative user to use on the server. This property will "
 "be removed from Juno in favor of the default cloud-init user set up for "
@@ -3313,43 +3500,43 @@ msgid ""
 "and \"cloud-user\" for CentOS/RHEL 6.5)."
 msgstr ""
 
-#: heat/engine/resources/server.py:190
+#: heat/engine/resources/server.py:191
 msgid "Name of the availability zone for server placement."
 msgstr ""
 
-#: heat/engine/resources/server.py:194
+#: heat/engine/resources/server.py:195
 msgid ""
 "List of security group names or IDs. Cannot be used if neutron ports are "
 "associated with this server; assign security groups to the ports instead."
 msgstr ""
 
-#: heat/engine/resources/server.py:201
+#: heat/engine/resources/server.py:202
 msgid ""
 "An ordered list of nics to be added to this server, with information "
 "about connected networks, fixed ips, port etc."
 msgstr ""
 
-#: heat/engine/resources/server.py:208
+#: heat/engine/resources/server.py:209
 msgid "ID of network to create a port on."
 msgstr ""
 
-#: heat/engine/resources/server.py:215
+#: heat/engine/resources/server.py:216
 msgid "Name or ID of network to create a port on."
 msgstr ""
 
-#: heat/engine/resources/server.py:219
+#: heat/engine/resources/server.py:220
 msgid "Fixed IP address to specify for the port created on the requested network."
 msgstr ""
 
-#: heat/engine/resources/server.py:224
+#: heat/engine/resources/server.py:225
 msgid "ID of an existing port to associate with this server."
 msgstr ""
 
-#: heat/engine/resources/server.py:233
+#: heat/engine/resources/server.py:234
 msgid "Arbitrary key-value pairs specified by the client to help boot a server."
 msgstr ""
 
-#: heat/engine/resources/server.py:238
+#: heat/engine/resources/server.py:239
 msgid ""
 "Arbitrary key/value metadata to store for this server. Both keys and "
 "values must be 255 characters or less.  Non-string values will be "
@@ -3357,7 +3544,7 @@ msgid ""
 "less)."
 msgstr ""
 
-#: heat/engine/resources/server.py:246
+#: heat/engine/resources/server.py:247
 msgid ""
 "How the user_data should be formatted for the server. For HEAT_CFNTOOLS, "
 "the user_data is bundled as part of the heat-cfntools cloud-init boot "
@@ -3367,100 +3554,100 @@ msgid ""
 "resources."
 msgstr ""
 
-#: heat/engine/resources/server.py:260
+#: heat/engine/resources/server.py:261
 msgid ""
 "How the server should receive the metadata required for software "
 "configuration. POLL_SERVER_CFN will allow calls to the cfn API action "
 "DescribeStackResource authenticated with the provided keypair. "
 "POLL_SERVER_HEAT will allow calls to the Heat API resource-show using the"
-" provided keystone credentials."
+" provided keystone credentials. POLL_TEMP_URL will create and populate a "
+"Swift TempURL with metadata for polling."
 msgstr ""
 
-#: heat/engine/resources/server.py:273
+#: heat/engine/resources/server.py:275
 msgid "User data script to be executed by cloud-init."
 msgstr ""
 
-#: heat/engine/resources/server.py:278
+#: heat/engine/resources/server.py:280
 msgid "A UUID for the set of servers being requested."
 msgstr ""
 
-#: heat/engine/resources/server.py:282
+#: heat/engine/resources/server.py:284
 msgid "If True, enable config drive on the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:286
+#: heat/engine/resources/server.py:288
 msgid "Control how the disk is partitioned when the server is created."
 msgstr ""
 
-#: heat/engine/resources/server.py:294
+#: heat/engine/resources/server.py:296
 msgid ""
 "A map of files to create/overwrite on the server upon boot. Keys are file"
 " names and values are the file contents."
 msgstr ""
 
-#: heat/engine/resources/server.py:300
+#: heat/engine/resources/server.py:302
 msgid "The administrator password for the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:308
+#: heat/engine/resources/server.py:310
 msgid "Name of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:311
+#: heat/engine/resources/server.py:313
 msgid "A dict of all server details as returned by the API."
 msgstr ""
 
-#: heat/engine/resources/server.py:314
+#: heat/engine/resources/server.py:316
 msgid "A dict of all network addresses with corresponding port_id."
 msgstr ""
 
-#: heat/engine/resources/server.py:317
+#: heat/engine/resources/server.py:319
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4]}."
 msgstr ""
 
-#: heat/engine/resources/server.py:321
+#: heat/engine/resources/server.py:323
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be"
 " predictable if the server has addresses from more than one network."
 msgstr ""
 
-#: heat/engine/resources/server.py:327
+#: heat/engine/resources/server.py:329
 msgid ""
 "Use the networks attribute instead of first_address. For example: "
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
 msgstr ""
 
-#: heat/engine/resources/server.py:333
+#: heat/engine/resources/server.py:335
 msgid "AWS compatible instance name."
 msgstr ""
 
-#: heat/engine/resources/server.py:336
+#: heat/engine/resources/server.py:338
 msgid "The manually assigned alternative public IPv4 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:340
+#: heat/engine/resources/server.py:342
 msgid "The manually assigned alternative public IPv6 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:630
-#, python-format
-msgid "Instance (%s) not found"
+#: heat/engine/resources/server.py:580
+msgid "Server is not active"
 msgstr ""
 
-#: heat/engine/resources/server.py:887
+#: heat/engine/resources/server.py:912
 #, python-format
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:894
+#: heat/engine/resources/server.py:919
 #, python-format
 msgid "Neither image nor bootable volume is specified for instance %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:907
+#: heat/engine/resources/server.py:932
 #, python-format
 msgid ""
 "Properties \"%(uuid)s\" and \"%(id)s\" are both set to the network "
@@ -3468,7 +3655,7 @@ msgid ""
 "is deprecated. Use only \"%(id)s\" property."
 msgstr ""
 
-#: heat/engine/resources/server.py:917
+#: heat/engine/resources/server.py:942
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network"
@@ -3476,31 +3663,31 @@ msgid ""
 "property instead."
 msgstr ""
 
-#: heat/engine/resources/server.py:943
+#: heat/engine/resources/server.py:968
 #, python-format
 msgid ""
 "Instance metadata must not contain greater than %s entries.  This is the "
 "maximum number allowed by your service provider"
 msgstr ""
 
-#: heat/engine/resources/server.py:952
+#: heat/engine/resources/server.py:977
 #, python-format
 msgid "The personality property may not contain greater than %s entries."
 msgstr ""
 
-#: heat/engine/resources/server.py:958
+#: heat/engine/resources/server.py:983
 #, python-format
 msgid ""
 "The contents of personality file \"%(path)s\" is larger than the maximum "
 "allowed personality file size (%(max_size)s bytes)."
 msgstr ""
 
-#: heat/engine/resources/server.py:1003 heat/engine/resources/server.py:1052
+#: heat/engine/resources/server.py:1043 heat/engine/resources/server.py:1092
 #, python-format
 msgid "Failed to find server %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:1032
+#: heat/engine/resources/server.py:1072
 #, python-format
 msgid "Suspend of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
@@ -3734,21 +3921,6 @@ msgstr ""
 msgid "Access policies to apply to the user."
 msgstr ""
 
-#: heat/engine/resources/user.py:79 heat/engine/resources/user.py:118
-#, python-format
-msgid "Ignoring policy %s, must be string resource name"
-msgstr ""
-
-#: heat/engine/resources/user.py:86
-#, python-format
-msgid "Policy %(policy)s does not exist in stack %(stack)s"
-msgstr ""
-
-#: heat/engine/resources/user.py:92
-#, python-format
-msgid "Policy %s is not an AccessPolicy resource"
-msgstr ""
-
 #: heat/engine/resources/user.py:148
 msgid "The name of the user that the new key will belong to."
 msgstr ""
@@ -3764,11 +3936,6 @@ msgstr ""
 #: heat/engine/resources/user.py:195
 #, python-format
 msgid "could not find user %s"
-msgstr ""
-
-#: heat/engine/resources/user.py:215
-#, python-format
-msgid "Error deleting %s - user not found"
 msgstr ""
 
 #: heat/engine/resources/user.py:225 heat/engine/resources/user.py:245
@@ -3787,12 +3954,12 @@ msgstr ""
 msgid "AccessPolicy resource %s not in stack"
 msgstr ""
 
-#: heat/engine/resources/volume.py:45 heat/engine/resources/volume.py:458
+#: heat/engine/resources/volume.py:45 heat/engine/resources/volume.py:470
 msgid "The availability zone in which the volume will be created."
 msgstr ""
 
-#: heat/engine/resources/volume.py:51
-msgid "The size of the volume in GB. "
+#: heat/engine/resources/volume.py:51 heat/engine/resources/volume.py:535
+msgid "The size of the volume in GB."
 msgstr ""
 
 #: heat/engine/resources/volume.py:59
@@ -3803,167 +3970,179 @@ msgstr ""
 msgid "The list of tags to associate with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:160
-msgid "can not delete volume when in-use"
+#: heat/engine/resources/volume.py:139
+msgid "Volume create failed"
 msgstr ""
 
-#: heat/engine/resources/volume.py:161
+#: heat/engine/resources/volume.py:149
+msgid "Volume backup failed"
+msgstr ""
+
+#: heat/engine/resources/volume.py:162
 msgid "Volume in use"
 msgstr ""
 
-#: heat/engine/resources/volume.py:196
+#: heat/engine/resources/volume.py:197
 #, python-format
 msgid "Resizing volume %(vol)s to size %(size)i"
 msgstr ""
 
-#: heat/engine/resources/volume.py:213
+#: heat/engine/resources/volume.py:214
 #, python-format
 msgid "Failed to extend volume %(vol)s - %(err)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:228
+#: heat/engine/resources/volume.py:229
 #, python-format
 msgid "Resize failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/resources/volume.py:232 heat/engine/resources/volume.py:283
+#: heat/engine/resources/volume.py:233
+msgid "Volume resize failed"
+msgstr ""
+
+#: heat/engine/resources/volume.py:235 heat/engine/resources/volume.py:291
 #, python-format
 msgid "%s - complete"
 msgstr ""
 
-#: heat/engine/resources/volume.py:300
+#: heat/engine/resources/volume.py:284
+#, python-format
+msgid "Attachment failed - volume %(vol)s is in %(status)s status"
+msgstr ""
+
+#: heat/engine/resources/volume.py:289
+msgid "Volume attachment failed"
+msgstr ""
+
+#: heat/engine/resources/volume.py:308
 #, python-format
 msgid "Removing attachment %(att)s from Instance %(srv)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:326 heat/engine/resources/volume.py:357
-#, python-format
-msgid "%s - volume not found"
-msgstr ""
-
-#: heat/engine/resources/volume.py:337
-#, python-format
-msgid "%(res)s - %(err)s"
-msgstr ""
-
-#: heat/engine/resources/volume.py:350
+#: heat/engine/resources/volume.py:354
 #, python-format
 msgid "%(name)s - status: %(status)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:372
+#: heat/engine/resources/volume.py:357
+#, python-format
+msgid "Detachment failed - volume %(vol)s is in %(status)s status"
+msgstr ""
+
+#: heat/engine/resources/volume.py:363
+msgid "Volume detachment failed"
+msgstr ""
+
+#: heat/engine/resources/volume.py:381
 #, python-format
 msgid "Server %(srv)s still has attachment %(att)s."
 msgstr ""
 
-#: heat/engine/resources/volume.py:376
+#: heat/engine/resources/volume.py:385
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:390
+#: heat/engine/resources/volume.py:399
 msgid "The ID of the instance to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/volume.py:462
+#: heat/engine/resources/volume.py:474
 msgid ""
 "The size of the volume in GB. On update only increase in size is "
 "supported."
 msgstr ""
 
-#: heat/engine/resources/volume.py:471
+#: heat/engine/resources/volume.py:483
 msgid "If specified, the snapshot to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:475
+#: heat/engine/resources/volume.py:487
 msgid "If specified, the backup to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:479
+#: heat/engine/resources/volume.py:491
 msgid "A name used to distinguish the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:484
+#: heat/engine/resources/volume.py:496
 msgid "A description of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:489
+#: heat/engine/resources/volume.py:501
 msgid "If specified, the type of volume to use, mapping to a specific backend."
 msgstr ""
 
-#: heat/engine/resources/volume.py:494
+#: heat/engine/resources/volume.py:506
 msgid "Key/value pairs to associate with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:499
+#: heat/engine/resources/volume.py:511
 msgid "The ID of the image to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:506
+#: heat/engine/resources/volume.py:518
 msgid "If specified, the name or ID of the image to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:514
+#: heat/engine/resources/volume.py:526
 msgid "If specified, the volume to use as source."
 msgstr ""
 
-#: heat/engine/resources/volume.py:520
+#: heat/engine/resources/volume.py:532
 msgid "The availability zone in which the volume is located."
 msgstr ""
 
-#: heat/engine/resources/volume.py:523
-msgid "The size of the volume in GB."
-msgstr ""
-
-#: heat/engine/resources/volume.py:526
+#: heat/engine/resources/volume.py:538
 msgid "The snapshot the volume was created from, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:529
+#: heat/engine/resources/volume.py:541
 msgid "Name of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:532
+#: heat/engine/resources/volume.py:544
 msgid "Description of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:535
+#: heat/engine/resources/volume.py:547
 msgid "The type of the volume mapping to a backend, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:538
+#: heat/engine/resources/volume.py:550
 msgid "Key/value pairs associated with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:541
+#: heat/engine/resources/volume.py:553
 msgid "The volume used as source, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:544
+#: heat/engine/resources/volume.py:556
 msgid "The current status of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:547
+#: heat/engine/resources/volume.py:559
 msgid "The timestamp indicating volume creation."
 msgstr ""
 
-#: heat/engine/resources/volume.py:550
+#: heat/engine/resources/volume.py:562
 msgid "Boolean indicating if the volume can be booted or not."
 msgstr ""
 
-#: heat/engine/resources/volume.py:553
+#: heat/engine/resources/volume.py:565
 msgid "Key/value pairs associated with the volume in raw dict form."
 msgstr ""
 
-#: heat/engine/resources/volume.py:621
+#: heat/engine/resources/volume.py:633
 msgid "Shrinking volume"
 msgstr ""
 
-#: heat/engine/resources/volume.py:708
+#: heat/engine/resources/volume.py:719
 msgid "The ID of the server to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/volume.py:720
+#: heat/engine/resources/volume.py:731
 msgid ""
 "The location where the volume is exposed on the instance. This assignment"
 " may not be honored and it is advised that the path /dev/disk/by-"
@@ -4047,6 +4226,44 @@ msgstr ""
 #: heat/engine/resources/wait_condition.py:475
 #, python-format
 msgid "WaitCondition invalid Handle %s"
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:48
+msgid "AutoScaling group name to apply policy to."
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:53
+#: heat/engine/resources/openstack/scaling_policy.py:61
+msgid "Size of adjustment."
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:59
+#: heat/engine/resources/openstack/scaling_policy.py:67
+msgid "Type of adjustment (absolute or percentage)."
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:77
+msgid "A signed url to handle the alarm. (Heat extension)."
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:122
+#: heat/engine/resources/openstack/scaling_policy.py:131
+#, python-format
+msgid "%(name)s NOT performing scaling action, cooldown %(cooldown)s"
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:131
+#: heat/engine/resources/openstack/scaling_policy.py:140
+#, python-format
+msgid "Alarm %(alarm)s could not find scaling group named \"%(group)s\""
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:136
+#: heat/engine/resources/openstack/scaling_policy.py:145
+#, python-format
+msgid ""
+"%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by "
+"%(filter)s"
 msgstr ""
 
 #: heat/engine/resources/ceilometer/alarm.py:38
@@ -4142,16 +4359,16 @@ msgid "Id of the tenant owning the firewall."
 msgstr ""
 
 #: heat/engine/resources/neutron/firewall.py:88
-#: heat/engine/resources/neutron/floatingip.py:91
-#: heat/engine/resources/neutron/loadbalancer.py:138
-#: heat/engine/resources/neutron/loadbalancer.py:570
+#: heat/engine/resources/neutron/floatingip.py:90
+#: heat/engine/resources/neutron/loadbalancer.py:137
+#: heat/engine/resources/neutron/loadbalancer.py:572
 #: heat/engine/resources/neutron/net.py:96
-#: heat/engine/resources/neutron/network_gateway.py:134
-#: heat/engine/resources/neutron/port.py:196
+#: heat/engine/resources/neutron/network_gateway.py:133
+#: heat/engine/resources/neutron/port.py:195
 #: heat/engine/resources/neutron/provider_net.py:78
-#: heat/engine/resources/neutron/router.py:111
-#: heat/engine/resources/neutron/subnet.py:182
-#: heat/engine/resources/neutron/vpnservice.py:105
+#: heat/engine/resources/neutron/router.py:110
+#: heat/engine/resources/neutron/subnet.py:181
+#: heat/engine/resources/neutron/vpnservice.py:104
 msgid "All attributes."
 msgstr ""
 
@@ -4295,264 +4512,272 @@ msgstr ""
 msgid "Position of the rule within the firewall policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:49
+#: heat/engine/resources/neutron/floatingip.py:48
 msgid "Network to allocate floating IP from."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:54
+#: heat/engine/resources/neutron/floatingip.py:53
 msgid ""
 "Extra parameters to include in the \"floatingip\" object in the creation "
 "request. Parameters are often specific to installed hardware or "
 "extensions."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:61
-#: heat/engine/resources/neutron/floatingip.py:153
+#: heat/engine/resources/neutron/floatingip.py:60
+#: heat/engine/resources/neutron/floatingip.py:151
 msgid ""
 "ID of an existing port with at least one IP address to associate with "
 "this floating IP."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:66
-#: heat/engine/resources/neutron/floatingip.py:160
+#: heat/engine/resources/neutron/floatingip.py:65
+#: heat/engine/resources/neutron/floatingip.py:158
 msgid "IP address to use if the port has multiple addresses."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:72
+#: heat/engine/resources/neutron/floatingip.py:71
 msgid "ID of the router used as gateway, set when associated with a port."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:76
+#: heat/engine/resources/neutron/floatingip.py:75
 msgid "The tenant owning this floating IP."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:79
+#: heat/engine/resources/neutron/floatingip.py:78
 msgid "ID of the network in which this IP is allocated."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:82
+#: heat/engine/resources/neutron/floatingip.py:81
 msgid "IP address of the associated port, if specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:85
+#: heat/engine/resources/neutron/floatingip.py:84
 msgid "The allocated address of this IP."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:88
+#: heat/engine/resources/neutron/floatingip.py:87
 msgid "ID of the port associated with this IP."
 msgstr ""
 
-#: heat/engine/resources/neutron/floatingip.py:147
+#: heat/engine/resources/neutron/floatingip.py:145
 msgid "ID of the floating IP to associate."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:51
-#: heat/engine/resources/neutron/loadbalancer.py:109
+#: heat/engine/resources/neutron/loadbalancer.py:50
+#: heat/engine/resources/neutron/loadbalancer.py:108
 msgid "The minimum time in seconds between regular connections of the member."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:58
-#: heat/engine/resources/neutron/loadbalancer.py:128
+#: heat/engine/resources/neutron/loadbalancer.py:57
+#: heat/engine/resources/neutron/loadbalancer.py:127
 msgid "One of predefined health monitor types."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:66
-#: heat/engine/resources/neutron/loadbalancer.py:120
+#: heat/engine/resources/neutron/loadbalancer.py:65
+#: heat/engine/resources/neutron/loadbalancer.py:119
 msgid ""
 "Number of permissible connection failures before changing the member "
 "status to INACTIVE."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:73
-#: heat/engine/resources/neutron/loadbalancer.py:124
+#: heat/engine/resources/neutron/loadbalancer.py:72
+#: heat/engine/resources/neutron/loadbalancer.py:123
 msgid ""
 "Maximum number of seconds for a monitor to wait for a connection to be "
 "established before it times out."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:80
+#: heat/engine/resources/neutron/loadbalancer.py:79
 msgid "The administrative state of the health monitor."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:86
-#: heat/engine/resources/neutron/loadbalancer.py:117
+#: heat/engine/resources/neutron/loadbalancer.py:85
+#: heat/engine/resources/neutron/loadbalancer.py:116
 msgid "The HTTP method used for requests by the monitor of type HTTP."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:92
-#: heat/engine/resources/neutron/loadbalancer.py:113
+#: heat/engine/resources/neutron/loadbalancer.py:91
+#: heat/engine/resources/neutron/loadbalancer.py:112
 msgid ""
 "The list of HTTP status codes expected in response from the member to "
 "declare it healthy."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:98
-#: heat/engine/resources/neutron/loadbalancer.py:131
+#: heat/engine/resources/neutron/loadbalancer.py:97
+#: heat/engine/resources/neutron/loadbalancer.py:130
 msgid ""
 "The HTTP path used in the HTTP request used by the monitor to test a "
 "member health."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:106
+#: heat/engine/resources/neutron/loadbalancer.py:105
 msgid "The administrative state of this health monitor."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:135
+#: heat/engine/resources/neutron/loadbalancer.py:134
 msgid "Tenant owning the health monitor."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:208
+#: heat/engine/resources/neutron/loadbalancer.py:207
 msgid "Protocol for balancing."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:223
-#: heat/engine/resources/neutron/loadbalancer.py:331
+#: heat/engine/resources/neutron/loadbalancer.py:222
+#: heat/engine/resources/neutron/loadbalancer.py:330
 msgid ""
 "The subnet for the port on which the members of the pool will be "
 "connected."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:229
-#: heat/engine/resources/neutron/loadbalancer.py:335
+#: heat/engine/resources/neutron/loadbalancer.py:228
+#: heat/engine/resources/neutron/loadbalancer.py:334
 msgid "The algorithm used to distribute load between the members of the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:240
-#: heat/engine/resources/neutron/loadbalancer.py:325
+#: heat/engine/resources/neutron/loadbalancer.py:239
+#: heat/engine/resources/neutron/loadbalancer.py:324
 msgid "Name of the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:244
-#: heat/engine/resources/neutron/loadbalancer.py:339
+#: heat/engine/resources/neutron/loadbalancer.py:243
+#: heat/engine/resources/neutron/loadbalancer.py:338
 msgid "Description of the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:249
-#: heat/engine/resources/neutron/loadbalancer.py:322
+#: heat/engine/resources/neutron/loadbalancer.py:248
+#: heat/engine/resources/neutron/loadbalancer.py:321
 msgid "The administrative state of this pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:255
+#: heat/engine/resources/neutron/loadbalancer.py:254
 msgid "IP address and port of the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:259
+#: heat/engine/resources/neutron/loadbalancer.py:258
 msgid "Name of the vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:263
+#: heat/engine/resources/neutron/loadbalancer.py:262
 msgid "Description of the vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:267
+#: heat/engine/resources/neutron/loadbalancer.py:266
 msgid "Subnet of the vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:271
+#: heat/engine/resources/neutron/loadbalancer.py:270
 msgid "IP address of the vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:275
+#: heat/engine/resources/neutron/loadbalancer.py:274
 msgid "The maximum number of connections per second allowed for the vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:280
+#: heat/engine/resources/neutron/loadbalancer.py:279
 msgid ""
 "TCP port on which to listen for client traffic that is associated with "
 "the vip address."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:286
+#: heat/engine/resources/neutron/loadbalancer.py:285
 msgid "Configuration of session persistence."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:290
+#: heat/engine/resources/neutron/loadbalancer.py:289
 msgid "Method of implementation of session persistence feature."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:299
+#: heat/engine/resources/neutron/loadbalancer.py:298
 msgid "Name of the cookie, required if type is APP_COOKIE."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:306
+#: heat/engine/resources/neutron/loadbalancer.py:305
 msgid "The administrative state of this vip."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:314
+#: heat/engine/resources/neutron/loadbalancer.py:313
 msgid "List of health monitors associated with the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:328
+#: heat/engine/resources/neutron/loadbalancer.py:327
 msgid "Protocol to balance."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:342
+#: heat/engine/resources/neutron/loadbalancer.py:341
 msgid "Tenant owning the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:345
+#: heat/engine/resources/neutron/loadbalancer.py:344
 msgid "Vip associated with the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:365
+#: heat/engine/resources/neutron/loadbalancer.py:364
 #: heat/tests/test_neutron_loadbalancer.py:620
 msgid ""
 "Property cookie_name is required, when session_persistence type is set to"
 " APP_COOKIE."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:427
+#: heat/engine/resources/neutron/loadbalancer.py:425
 msgid "error in vip"
+msgstr ""
+
+#: heat/engine/resources/neutron/loadbalancer.py:428
+msgid "Pool creation failed due to vip"
 msgstr ""
 
 #: heat/engine/resources/neutron/loadbalancer.py:432
 msgid "error in pool"
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:516
-#: heat/engine/resources/neutron/loadbalancer.py:563
-#: heat/engine/resources/neutron/loadbalancer.py:627
+#: heat/engine/resources/neutron/loadbalancer.py:436
+msgid "Pool creation failed"
+msgstr ""
+
+#: heat/engine/resources/neutron/loadbalancer.py:518
+#: heat/engine/resources/neutron/loadbalancer.py:565
+#: heat/engine/resources/neutron/loadbalancer.py:629
 msgid "The ID of the load balancing pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:522
+#: heat/engine/resources/neutron/loadbalancer.py:524
 msgid "IP address of the pool member on the pool network."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:527
-#: heat/engine/resources/neutron/loadbalancer.py:566
+#: heat/engine/resources/neutron/loadbalancer.py:529
+#: heat/engine/resources/neutron/loadbalancer.py:568
 msgid "TCP port on which the pool member listens for requests or connections."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:536
+#: heat/engine/resources/neutron/loadbalancer.py:538
 msgid "Weight of pool member in the pool (default to 1)."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:544
+#: heat/engine/resources/neutron/loadbalancer.py:546
 msgid "The administrative state of the pool member."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:551
+#: heat/engine/resources/neutron/loadbalancer.py:553
 msgid "The administrative state of this pool member."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:554
+#: heat/engine/resources/neutron/loadbalancer.py:556
 msgid "Tenant owning the pool member."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:557
+#: heat/engine/resources/neutron/loadbalancer.py:559
 msgid "Weight of the pool member in the pool."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:560
+#: heat/engine/resources/neutron/loadbalancer.py:562
 msgid "IP address of the pool member."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:633
+#: heat/engine/resources/neutron/loadbalancer.py:635
 msgid "Port number on which the servers are running on the members."
 msgstr ""
 
-#: heat/engine/resources/neutron/loadbalancer.py:638
+#: heat/engine/resources/neutron/loadbalancer.py:640
 msgid "The list of Nova server IDs load balanced."
 msgstr ""
 
@@ -4658,161 +4883,169 @@ msgstr ""
 msgid "The tenant owning this network."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:58
+#: heat/engine/resources/neutron/network_gateway.py:57
 msgid "The name of the network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:63
+#: heat/engine/resources/neutron/network_gateway.py:62
 msgid "Device info for this network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:72
+#: heat/engine/resources/neutron/network_gateway.py:71
 msgid "The device id for the network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:78
+#: heat/engine/resources/neutron/network_gateway.py:77
 msgid "The interface name for the network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:87
+#: heat/engine/resources/neutron/network_gateway.py:86
 msgid "Connection info for this network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:102
+#: heat/engine/resources/neutron/network_gateway.py:101
 msgid "The internal network to connect on the network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:109
+#: heat/engine/resources/neutron/network_gateway.py:108
 msgid "L2 segmentation strategy on the external side of the network gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:118
+#: heat/engine/resources/neutron/network_gateway.py:117
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must "
 "be specified when using vlan."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:131
+#: heat/engine/resources/neutron/network_gateway.py:130
 msgid "A boolean value of default flag."
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:156
+#: heat/engine/resources/neutron/network_gateway.py:155
 msgid "segmentation_id must be specified for using vlan"
 msgstr ""
 
-#: heat/engine/resources/neutron/network_gateway.py:160
+#: heat/engine/resources/neutron/network_gateway.py:159
 msgid "segmentation_id cannot be specified except 0 for using flat"
 msgstr ""
 
-#: heat/engine/resources/neutron/neutron.py:61
+#: heat/engine/resources/neutron/neutron.py:63
 #, python-format
 msgid "Either %(prop_key)s or %(depr_prop_key)s should be specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/neutron.py:122
-#, python-format
-msgid "failed to fetch resource attributes: %s"
+#: heat/engine/resources/neutron/neutron.py:119
+msgid "Resource is not built"
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:71
+#: heat/engine/resources/neutron/port.py:70
 msgid "Network this port belongs to."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:76
+#: heat/engine/resources/neutron/port.py:75
 msgid "A symbolic name for this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:81
+#: heat/engine/resources/neutron/port.py:80
 msgid ""
 "Extra parameters to include in the \"port\" object in the creation "
 "request."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:87
-#: heat/engine/resources/neutron/port.py:162
+#: heat/engine/resources/neutron/port.py:86
+#: heat/engine/resources/neutron/port.py:161
 msgid "The administrative state of this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:93
+#: heat/engine/resources/neutron/port.py:92
 msgid "Desired IPs for this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:106
+#: heat/engine/resources/neutron/port.py:105
 msgid "Subnet in which to allocate the IP address for this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:111
+#: heat/engine/resources/neutron/port.py:110
 msgid "IP address desired in the subnet for this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:119
+#: heat/engine/resources/neutron/port.py:118
 msgid "MAC address to give to this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:123
+#: heat/engine/resources/neutron/port.py:122
 msgid "Device ID of this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:128
+#: heat/engine/resources/neutron/port.py:127
 msgid "Security group IDs to associate with this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:134
+#: heat/engine/resources/neutron/port.py:133
 msgid "Additional MAC/IP address pairs allowed to pass through the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:141
+#: heat/engine/resources/neutron/port.py:140
 msgid "MAC address to allow through this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:145
+#: heat/engine/resources/neutron/port.py:144
 msgid "IP address to allow through this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:153
+#: heat/engine/resources/neutron/port.py:152
 msgid ""
 "Name of the network owning the port. The value is typically "
 "network:floatingip or network:router_interface or network:dhcp"
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:165
+#: heat/engine/resources/neutron/port.py:164
 msgid "Unique identifier for the device."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:168
+#: heat/engine/resources/neutron/port.py:167
 msgid "Name of the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:171
+#: heat/engine/resources/neutron/port.py:170
 msgid "Fixed IP addresses."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:174
+#: heat/engine/resources/neutron/port.py:173
 msgid "MAC address of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:177
+#: heat/engine/resources/neutron/port.py:176
 msgid "Friendly name of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:180
+#: heat/engine/resources/neutron/port.py:179
 msgid "Unique identifier for the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:183
+#: heat/engine/resources/neutron/port.py:182
 msgid "A list of security groups for the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:186
+#: heat/engine/resources/neutron/port.py:185
 msgid "The status of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:189
+#: heat/engine/resources/neutron/port.py:188
 msgid "Tenant owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:192
+#: heat/engine/resources/neutron/port.py:191
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
+msgstr ""
+
+#: heat/engine/resources/neutron/port.py:198
+msgid "A list of all subnet attributes for the port."
+msgstr ""
+
+#: heat/engine/resources/neutron/port.py:286
+#, python-format
+msgid "Failed to fetch resource attributes: %s"
 msgstr ""
 
 #: heat/engine/resources/neutron/provider_net.py:40
@@ -4835,84 +5068,84 @@ msgstr ""
 msgid "segmentation_id not allowed for flat network type."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:50
+#: heat/engine/resources/neutron/router.py:49
 msgid "The name of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:55
+#: heat/engine/resources/neutron/router.py:54
 msgid "External network gateway configuration for a router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:59
+#: heat/engine/resources/neutron/router.py:58
 msgid "ID or name of the external network for the gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:65
+#: heat/engine/resources/neutron/router.py:64
 msgid ""
 "Enables Source NAT on the router gateway. NOTE: The default policy "
 "setting in Neutron restricts usage of this property to administrative "
 "users only."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:75
-#: heat/engine/resources/neutron/subnet.py:76
+#: heat/engine/resources/neutron/router.py:74
+#: heat/engine/resources/neutron/subnet.py:75
 msgid "Extra parameters to include in the creation request."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:81
+#: heat/engine/resources/neutron/router.py:80
 msgid "The administrative state of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:87
+#: heat/engine/resources/neutron/router.py:86
 msgid ""
 "ID of the L3 agent. NOTE: The default policy setting in Neutron restricts"
 " usage of this property to administrative users only."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:96
+#: heat/engine/resources/neutron/router.py:95
 msgid "The status of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:99
+#: heat/engine/resources/neutron/router.py:98
 msgid "Gateway network for the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:102
+#: heat/engine/resources/neutron/router.py:101
 msgid "Friendly name of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:105
+#: heat/engine/resources/neutron/router.py:104
 msgid "Administrative state of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:108
+#: heat/engine/resources/neutron/router.py:107
 msgid "Tenant owning the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:203
+#: heat/engine/resources/neutron/router.py:201
 msgid "The router id."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:214
+#: heat/engine/resources/neutron/router.py:212
 msgid "The subnet, either subnet or port_id should be specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:219
+#: heat/engine/resources/neutron/router.py:217
 msgid "The port id, either subnet or port_id should be specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:284
+#: heat/engine/resources/neutron/router.py:282
 msgid ""
 "RouterGateway resource is deprecated and should not be used. Instead use "
 "the `external_gateway_info` property in the router resource to set up the"
 " gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:298
+#: heat/engine/resources/neutron/router.py:296
 msgid "ID of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:310
+#: heat/engine/resources/neutron/router.py:308
 msgid "external network for the gateway."
 msgstr ""
 
@@ -4980,426 +5213,439 @@ msgstr ""
 msgid "Security groups cannot be assigned the name \"default\"."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:66
+#: heat/engine/resources/neutron/subnet.py:65
 msgid "The ID of the attached network."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:71
+#: heat/engine/resources/neutron/subnet.py:70
 msgid "The CIDR."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:82
+#: heat/engine/resources/neutron/subnet.py:81
 msgid "The name of the subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:87
+#: heat/engine/resources/neutron/subnet.py:86
 msgid "The IP version, which is 4 or 6."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:95
+#: heat/engine/resources/neutron/subnet.py:94
 msgid "A specified set of DNS name servers to be used."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:101
+#: heat/engine/resources/neutron/subnet.py:100
 msgid "The gateway IP address."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:106
+#: heat/engine/resources/neutron/subnet.py:105
 msgid "Set to true if DHCP is enabled and false if DHCP is disabled."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:112
+#: heat/engine/resources/neutron/subnet.py:111
 msgid "The start and end addresses for the allocation pools."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:129
+#: heat/engine/resources/neutron/subnet.py:128
 msgid ""
 "The ID of the tenant who owns the network. Only administrative users can "
 "specify a tenant ID other than their own."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:152
+#: heat/engine/resources/neutron/subnet.py:151
 msgid "Friendly name of the subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:155
+#: heat/engine/resources/neutron/subnet.py:154
 msgid "Parent network of the subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:158
+#: heat/engine/resources/neutron/subnet.py:157
 msgid "Tenant owning the subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:161
+#: heat/engine/resources/neutron/subnet.py:160
 msgid "Ip allocation pools and their ranges."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:164
+#: heat/engine/resources/neutron/subnet.py:163
 msgid "Ip of the subnet's gateway."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:167
+#: heat/engine/resources/neutron/subnet.py:166
 msgid "Additional routes for this subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:170
+#: heat/engine/resources/neutron/subnet.py:169
 msgid "Ip version for the subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:173
+#: heat/engine/resources/neutron/subnet.py:172
 msgid "CIDR block notation for this subnet."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:176
+#: heat/engine/resources/neutron/subnet.py:175
 msgid "List of dns nameservers."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:179
+#: heat/engine/resources/neutron/subnet.py:178
 msgid "'true' if DHCP is enabled for this subnet; 'false' otherwise."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:46
+#: heat/engine/resources/neutron/vpnservice.py:45
 msgid "Name for the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:51
+#: heat/engine/resources/neutron/vpnservice.py:50
 msgid "Description for the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:56
+#: heat/engine/resources/neutron/vpnservice.py:55
 msgid "Administrative state for the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:69
+#: heat/engine/resources/neutron/vpnservice.py:68
 msgid "Subnet in which the vpn service will be created."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:74
+#: heat/engine/resources/neutron/vpnservice.py:73
 msgid ""
 "Unique identifier for the router to which the vpn service will be "
 "inserted."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:82
+#: heat/engine/resources/neutron/vpnservice.py:81
 msgid "The administrative state of the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:85
+#: heat/engine/resources/neutron/vpnservice.py:84
 msgid "The description of the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:88
+#: heat/engine/resources/neutron/vpnservice.py:87
 msgid "The name of the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:91
+#: heat/engine/resources/neutron/vpnservice.py:90
 msgid "The unique identifier of the router to which the vpn service was inserted."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:95
+#: heat/engine/resources/neutron/vpnservice.py:94
 msgid "The status of the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:98
+#: heat/engine/resources/neutron/vpnservice.py:97
 msgid "The unique identifier of the subnet in which the vpn service was created."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:102
+#: heat/engine/resources/neutron/vpnservice.py:101
 msgid "The unique identifier of the tenant owning the vpn service."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:179
+#: heat/engine/resources/neutron/vpnservice.py:176
 msgid "Name for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:184
+#: heat/engine/resources/neutron/vpnservice.py:181
 msgid "Description for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:189
+#: heat/engine/resources/neutron/vpnservice.py:186
 msgid "Remote branch router public IPv4 address or IPv6 address or FQDN."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:195
+#: heat/engine/resources/neutron/vpnservice.py:192
 msgid "Remote branch router identity."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:200
+#: heat/engine/resources/neutron/vpnservice.py:197
 msgid "Remote subnet(s) in CIDR format."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:205
+#: heat/engine/resources/neutron/vpnservice.py:202
 msgid "Maximum transmission unit size (in bytes) for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:211
+#: heat/engine/resources/neutron/vpnservice.py:208
 msgid "Dead Peer Detection protocol configuration for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:216
+#: heat/engine/resources/neutron/vpnservice.py:213
 msgid "Controls DPD protocol mode."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:226
+#: heat/engine/resources/neutron/vpnservice.py:223
 msgid "Number of seconds for the DPD delay."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:231
+#: heat/engine/resources/neutron/vpnservice.py:228
 msgid "Number of seconds for the DPD timeout."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:238
+#: heat/engine/resources/neutron/vpnservice.py:235
 msgid "Pre-shared key string for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:243
+#: heat/engine/resources/neutron/vpnservice.py:240
 msgid "Initiator state in lowercase for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:251
+#: heat/engine/resources/neutron/vpnservice.py:248
 msgid "Administrative state for the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:257
+#: heat/engine/resources/neutron/vpnservice.py:254
 msgid ""
 "Unique identifier for the ike policy associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:263
+#: heat/engine/resources/neutron/vpnservice.py:260
 msgid ""
 "Unique identifier for the ipsec policy associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:269
+#: heat/engine/resources/neutron/vpnservice.py:266
 msgid ""
 "Unique identifier for the vpn service associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:277
+#: heat/engine/resources/neutron/vpnservice.py:274
 msgid "The administrative state of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:280
+#: heat/engine/resources/neutron/vpnservice.py:277
 msgid "The authentication mode of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:283
+#: heat/engine/resources/neutron/vpnservice.py:280
 msgid "The description of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:286
+#: heat/engine/resources/neutron/vpnservice.py:283
 msgid ""
 "The dead peer detection protocol configuration of the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:290
+#: heat/engine/resources/neutron/vpnservice.py:287
 msgid ""
 "The unique identifier of ike policy associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:294
+#: heat/engine/resources/neutron/vpnservice.py:291
 msgid "The initiator of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:297
+#: heat/engine/resources/neutron/vpnservice.py:294
 msgid ""
 "The unique identifier of ipsec policy associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:301
+#: heat/engine/resources/neutron/vpnservice.py:298
 msgid ""
 "The maximum transmission unit size (in bytes) of the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:305
+#: heat/engine/resources/neutron/vpnservice.py:302
 msgid "The name of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:308
+#: heat/engine/resources/neutron/vpnservice.py:305
 msgid "The remote branch router public IPv4 address or IPv6 address or FQDN."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:312
+#: heat/engine/resources/neutron/vpnservice.py:309
 msgid "The remote subnet(s) in CIDR format of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:316
+#: heat/engine/resources/neutron/vpnservice.py:313
 msgid "The remote branch router identity of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:320
+#: heat/engine/resources/neutron/vpnservice.py:317
 msgid "The pre-shared key string of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:323
+#: heat/engine/resources/neutron/vpnservice.py:320
 msgid "The route mode of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:326
+#: heat/engine/resources/neutron/vpnservice.py:323
 msgid "The status of the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:329
+#: heat/engine/resources/neutron/vpnservice.py:326
 msgid "The unique identifier of the tenant owning the ipsec site connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:333
+#: heat/engine/resources/neutron/vpnservice.py:330
 msgid ""
 "The unique identifier of vpn service associated with the ipsec site "
 "connection."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:397
+#: heat/engine/resources/neutron/vpnservice.py:394
 msgid "Name for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:402
+#: heat/engine/resources/neutron/vpnservice.py:399
 msgid "Description for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:407
+#: heat/engine/resources/neutron/vpnservice.py:404
 msgid "Authentication hash algorithm for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:415
+#: heat/engine/resources/neutron/vpnservice.py:412
 msgid "Encryption algorithm for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:424
+#: heat/engine/resources/neutron/vpnservice.py:421
 msgid "Negotiation mode for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:432
+#: heat/engine/resources/neutron/vpnservice.py:429
 msgid "Safety assessment lifetime configuration for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:436
-#: heat/engine/resources/neutron/vpnservice.py:605
+#: heat/engine/resources/neutron/vpnservice.py:433
+#: heat/engine/resources/neutron/vpnservice.py:602
 msgid "Safety assessment lifetime units."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:444
-#: heat/engine/resources/neutron/vpnservice.py:614
+#: heat/engine/resources/neutron/vpnservice.py:441
+#: heat/engine/resources/neutron/vpnservice.py:611
 msgid "Safety assessment lifetime value in specified units."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:452
+#: heat/engine/resources/neutron/vpnservice.py:449
 msgid "Perfect forward secrecy in lowercase for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:460
+#: heat/engine/resources/neutron/vpnservice.py:457
 msgid "Version for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:470
+#: heat/engine/resources/neutron/vpnservice.py:467
 msgid "The authentication hash algorithm used by the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:473
+#: heat/engine/resources/neutron/vpnservice.py:470
 msgid "The description of the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:476
+#: heat/engine/resources/neutron/vpnservice.py:473
 msgid "The encryption algorithm used by the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:479
+#: heat/engine/resources/neutron/vpnservice.py:476
 msgid "The version of the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:482
+#: heat/engine/resources/neutron/vpnservice.py:479
 msgid "The safety assessment lifetime configuration for the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:486
+#: heat/engine/resources/neutron/vpnservice.py:483
 msgid "The name of the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:489
+#: heat/engine/resources/neutron/vpnservice.py:486
 msgid "The perfect forward secrecy of the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:492
+#: heat/engine/resources/neutron/vpnservice.py:489
 msgid "The negotiation mode of the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:495
+#: heat/engine/resources/neutron/vpnservice.py:492
 msgid "The unique identifier of the tenant owning the ike policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:557
+#: heat/engine/resources/neutron/vpnservice.py:554
 msgid "Name for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:562
+#: heat/engine/resources/neutron/vpnservice.py:559
 msgid "Description for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:567
+#: heat/engine/resources/neutron/vpnservice.py:564
 msgid "Transform protocol for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:575
+#: heat/engine/resources/neutron/vpnservice.py:572
 msgid "Encapsulation mode for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:583
+#: heat/engine/resources/neutron/vpnservice.py:580
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:591
+#: heat/engine/resources/neutron/vpnservice.py:588
 msgid "Encryption algorithm for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:600
+#: heat/engine/resources/neutron/vpnservice.py:597
 msgid "Safety assessment lifetime configuration for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:622
+#: heat/engine/resources/neutron/vpnservice.py:619
 msgid "Perfect forward secrecy for the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:632
+#: heat/engine/resources/neutron/vpnservice.py:629
 msgid "The authentication hash algorithm of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:635
+#: heat/engine/resources/neutron/vpnservice.py:632
 msgid "The description of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:638
+#: heat/engine/resources/neutron/vpnservice.py:635
 msgid "The encapsulation mode of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:641
+#: heat/engine/resources/neutron/vpnservice.py:638
 msgid "The encryption algorithm of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:644
+#: heat/engine/resources/neutron/vpnservice.py:641
 msgid "The safety assessment lifetime configuration of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:648
+#: heat/engine/resources/neutron/vpnservice.py:645
 msgid "The name of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:651
+#: heat/engine/resources/neutron/vpnservice.py:648
 msgid "The perfect forward secrecy of the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:654
+#: heat/engine/resources/neutron/vpnservice.py:651
 msgid "The unique identifier of the tenant owning the ipsec policy."
 msgstr ""
 
-#: heat/engine/resources/neutron/vpnservice.py:657
+#: heat/engine/resources/neutron/vpnservice.py:654
 msgid "The transform protocol of the ipsec policy."
+msgstr ""
+
+#: heat/engine/resources/openstack/scaling_policy.py:56
+msgid "AutoScaling group ID to apply policy to."
+msgstr ""
+
+#: heat/engine/resources/openstack/scaling_policy.py:85
+msgid "A signed url to handle the alarm."
+msgstr ""
+
+#: heat/engine/resources/openstack/scaling_policy.py:125
+#, python-format
+msgid "Alarm %(name)s, new state %(state)s"
 msgstr ""
 
 #: heat/engine/resources/software_config/cloud_config.py:43
@@ -5495,32 +5741,32 @@ msgstr ""
 msgid "The config value of the software config."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:106
+#: heat/engine/resources/software_config/software_deployment.py:108
 msgid ""
 "ID of software configuration resource to execute when applying to the "
 "server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:112
+#: heat/engine/resources/software_config/software_deployment.py:114
 msgid "ID of Nova server to apply configuration to."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:116
+#: heat/engine/resources/software_config/software_deployment.py:118
 msgid "Input values to apply to the software configuration on this server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:122
+#: heat/engine/resources/software_config/software_deployment.py:124
 msgid "Which stack actions will result in this deployment being triggered."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:130
+#: heat/engine/resources/software_config/software_deployment.py:132
 msgid ""
 "Name of the derived config associated with this deployment. This is used "
 "to apply a sort order to the list of configurations currently deployed to"
 " a server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:136
+#: heat/engine/resources/software_config/software_deployment.py:138
 msgid ""
 "How the server should signal to heat with the deployment output values. "
 "CFN_SIGNAL will allow an HTTP POST to a CFN keypair signed URL. "
@@ -5529,94 +5775,116 @@ msgid ""
 "going to the COMPLETE state without waiting for any signal."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:151
+#: heat/engine/resources/software_config/software_deployment.py:153
 msgid "Captured stdout from the configuration execution."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:154
+#: heat/engine/resources/software_config/software_deployment.py:156
 msgid "Captured stderr from the configuration execution."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:157
+#: heat/engine/resources/software_config/software_deployment.py:159
 msgid "Returned status code from the configuration execution"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:185
+#: heat/engine/resources/software_config/software_deployment.py:187
 msgid "Not waiting for outputs signal"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:188
+#: heat/engine/resources/software_config/software_deployment.py:190
 msgid "Deploy data available"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:240
+#: heat/engine/resources/software_config/software_deployment.py:242
 #, python-format
 msgid "Deployment to server failed: %s"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:290
+#: heat/engine/resources/software_config/software_deployment.py:292
 msgid "ID of the server being deployed to"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:295
+#: heat/engine/resources/software_config/software_deployment.py:297
 msgid "Name of the current action being deployed"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:300
+#: heat/engine/resources/software_config/software_deployment.py:302
 msgid "ID of the stack this deployment belongs to"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:305
+#: heat/engine/resources/software_config/software_deployment.py:307
 msgid "Name of this deployment resource in the stack"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:313
+#: heat/engine/resources/software_config/software_deployment.py:315
 msgid "ID of signal to use for signalling output values"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:321
+#: heat/engine/resources/software_config/software_deployment.py:323
 msgid "URL for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:326
+#: heat/engine/resources/software_config/software_deployment.py:328
 msgid "Username for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:331
+#: heat/engine/resources/software_config/software_deployment.py:333
 msgid "User ID for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:336
+#: heat/engine/resources/software_config/software_deployment.py:338
 msgid "Password for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:341
+#: heat/engine/resources/software_config/software_deployment.py:343
 msgid "ID of project for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:440
+#: heat/engine/resources/software_config/software_deployment.py:442
 #, python-format
 msgid "Deployment exited with non-zero status code: %s"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:462
+#: heat/engine/resources/software_config/software_deployment.py:469
 msgid "Outputs received"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:495
+#: heat/engine/resources/software_config/software_deployment.py:504
 #, python-format
 msgid ""
 "Resource %s's property user_data_format should be set to SOFTWARE_CONFIG "
 "since there are software deployments on it."
 msgstr ""
 
-#: heat/engine/resources/software_config/structured_config.py:54
+#: heat/engine/resources/software_config/software_deployment.py:540
+msgid "A map of Nova names and IDs to apply configuration to."
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:551
+msgid ""
+"A map of Nova names and captured stdouts from the configuration execution"
+" to each server."
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:555
+msgid ""
+"A map of Nova names and captured stderrs from the configuration execution"
+" to each server."
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:559
+msgid ""
+"A map of Nova names and returned status code from the configuration "
+"execution"
+msgstr ""
+
+#: heat/engine/resources/software_config/structured_config.py:56
 msgid ""
 "Map representing the configuration data structure which will be "
 "serialized to JSON format."
 msgstr ""
 
-#: heat/engine/resources/software_config/structured_config.py:93
+#: heat/engine/resources/software_config/structured_config.py:107
 msgid "Name of key to use for substituting inputs during deployment"
 msgstr ""
 
@@ -5792,12 +6060,12 @@ msgstr ""
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:134
+#: heat/tests/generic_resource.py:138
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
 
-#: heat/tests/test_exception.py:25
+#: heat/tests/test_exception.py:26
 #, python-format
 msgid "Testing message %(text)s"
 msgstr ""
@@ -5806,13 +6074,13 @@ msgstr ""
 msgid "Need more arguments"
 msgstr ""
 
-#: heat/tests/test_provider_template.py:444
-#: heat/tests/test_provider_template.py:559
-#: heat/tests/test_provider_template.py:587
+#: heat/tests/test_provider_template.py:475
+#: heat/tests/test_provider_template.py:590
+#: heat/tests/test_provider_template.py:618
 msgid "Failed to retrieve template"
 msgstr ""
 
-#: heat/tests/test_server.py:879
+#: heat/tests/test_server.py:954
 #, python-format
 msgid ""
 "Properties \"uuid\" and \"network\" are both set to the network "
@@ -5820,11 +6088,11 @@ msgid ""
 "deprecated. Use only \"network\" property."
 msgstr ""
 
-#: heat/tests/test_validate.py:1318
+#: heat/tests/test_validate.py:1344
 msgid "The InstanceType parameter must be assigned to one Parameter Group only."
 msgstr ""
 
-#: heat/tests/test_validate.py:1333
+#: heat/tests/test_validate.py:1359
 msgid ""
 "The Parameter name (SomethingNotHere) does not reference an existing "
 "parameter."
