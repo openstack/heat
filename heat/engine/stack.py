@@ -770,13 +770,17 @@ class Stack(collections.Mapping):
 
         notification.send(self)
 
-    def delete(self, action=DELETE, backup=False):
+    def delete(self, action=DELETE, backup=False, abandon=False):
         '''
         Delete all of the resources, and then the stack itself.
         The action parameter is used to differentiate between a user
         initiated delete and an automatic stack rollback after a failed
         create, which amount to the same thing, but the states are recorded
         differently.
+
+        Note abandon is a delete where all resources have been set to a
+        RETAIN deletion policy, but we also don't want to delete anything
+        required for those resources, e.g the stack_user_project.
         '''
         if action not in (self.DELETE, self.ROLLBACK):
             LOG.error(_("Unexpected action %s passed to delete!") % action)
@@ -784,8 +788,6 @@ class Stack(collections.Mapping):
                            "Invalid action %s" % action)
             return
 
-        # Note abandon is a delete with
-        # stack.set_deletion_policy(resource.RETAIN)
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
         self.state_set(action, self.IN_PROGRESS, 'Stack %s started' %
@@ -897,7 +899,7 @@ class Stack(collections.Mapping):
                                "%s ") % self.id)
 
             # If the stack has a domain project, delete it
-            if self.stack_user_project_id:
+            if self.stack_user_project_id and not abandon:
                 try:
                     keystone = self.clients.client('keystone')
                     keystone.delete_stack_domain_project(

@@ -1522,6 +1522,57 @@ class StackTest(HeatTestCase):
                          self.stack.state)
         self.assertIn('Error deleting trust', self.stack.status_reason)
 
+    def test_delete_deletes_project(self):
+        fkc = FakeKeystoneClient()
+        fkc.delete_stack_domain_project = mock.Mock()
+
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().AndReturn(fkc)
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            self.ctx, 'delete_trust', self.tmpl)
+        stack_id = self.stack.store()
+
+        self.stack.set_stack_user_project_id(project_id='aproject456')
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        fkc.delete_stack_domain_project.assert_called_once_with(
+            project_id='aproject456')
+
+    def test_abandon_nodelete_project(self):
+        fkc = FakeKeystoneClient()
+        fkc.delete_stack_domain_project = mock.Mock()
+
+        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
+        keystone.KeystoneClientPlugin._create().AndReturn(fkc)
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            self.ctx, 'delete_trust', self.tmpl)
+        stack_id = self.stack.store()
+
+        self.stack.set_stack_user_project_id(project_id='aproject456')
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        self.stack.delete(abandon=True)
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertFalse(fkc.delete_stack_domain_project.called)
+
     def test_suspend_resume(self):
         self.m.ReplayAll()
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
