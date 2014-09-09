@@ -15,6 +15,7 @@
 import collections
 import six
 
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 from heat.engine import parameters
 from heat.engine import rsrc_defn
@@ -40,6 +41,16 @@ class CfnTemplate(template.Template):
                 )
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION, ALTERNATE_VERSION])
+
+    functions = {
+        'Fn::FindInMap': cfn_funcs.FindInMap,
+        'Fn::GetAZs': cfn_funcs.GetAZs,
+        'Ref': cfn_funcs.Ref,
+        'Fn::GetAtt': cfn_funcs.GetAtt,
+        'Fn::Select': cfn_funcs.Select,
+        'Fn::Join': cfn_funcs.Join,
+        'Fn::Base64': cfn_funcs.Base64,
+    }
 
     def __getitem__(self, section):
         '''Get the relevant section in the template.'''
@@ -152,3 +163,19 @@ class CfnTemplate(template.Template):
         if self.t.get(self.RESOURCES) is None:
             self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = cfn_tmpl
+
+
+class HeatTemplate(CfnTemplate):
+    functions = {
+        'Fn::FindInMap': cfn_funcs.FindInMap,
+        'Fn::GetAZs': cfn_funcs.GetAZs,
+        'Ref': cfn_funcs.Ref,
+        'Fn::GetAtt': cfn_funcs.GetAtt,
+        'Fn::Select': cfn_funcs.Select,
+        'Fn::Join': cfn_funcs.Join,
+        'Fn::Split': cfn_funcs.Split,
+        'Fn::Replace': cfn_funcs.Replace,
+        'Fn::Base64': cfn_funcs.Base64,
+        'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
+        'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
+    }

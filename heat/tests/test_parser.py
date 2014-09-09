@@ -212,8 +212,8 @@ class TemplateTest(HeatTestCase):
             "heat_template_version" : "2012-12-12",
             }''')
         versions = {
-            ('heat_template_version', '2013-05-23'): hot_t.HOTemplate,
-            ('heat_template_version', '2013-06-23'): hot_t.HOTemplate
+            ('heat_template_version', '2013-05-23'): hot_t.HOTemplate20130523,
+            ('heat_template_version', '2013-06-23'): hot_t.HOTemplate20130523
         }
 
         temp_copy = copy.deepcopy(template._template_classes)

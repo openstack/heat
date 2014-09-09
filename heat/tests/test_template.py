@@ -12,38 +12,80 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fixtures
+from oslotest import mockpatch
 import six
+from stevedore import extension
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.cfn.template import CfnTemplate
-from heat.engine import plugin_manager
+from heat.engine import function
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestTemplatePluginManager(HeatTestCase):
+class TemplatePluginFixture(fixtures.Fixture):
+    def __init__(self, templates={}):
+        super(TemplatePluginFixture, self).__init__()
+        self.templates = [extension.Extension(k, None, v, None)
+                          for (k, v) in templates.items()]
 
-    def test_pkg_name(self):
-        cfn_tmpl_pkg = template.TemplatePluginManager.package_name(CfnTemplate)
-        self.assertEqual('heat.engine.cfn', cfn_tmpl_pkg)
+    def _get_template_extension_manager(self):
+        return extension.ExtensionManager.make_test_instance(self.templates)
 
-    def test_get(self):
+    def setUp(self):
+        super(TemplatePluginFixture, self).setUp()
 
-        tpm = template.TemplatePluginManager()
+        def clear_template_classes():
+            template._template_classes = None
 
-        self.assertFalse(tpm.plugin_managers)
-
-        class Test(object):
-            plugins = tpm
-
-        test_pm = Test().plugins
-
-        self.assertTrue(isinstance(test_pm, plugin_manager.PluginManager))
-        self.assertEqual(tpm.plugin_managers['heat.tests'], test_pm)
+        clear_template_classes()
+        self.useFixture(mockpatch.PatchObject(
+            template,
+            '_get_template_extension_manager',
+            new=self._get_template_extension_manager))
+        self.addCleanup(clear_template_classes)
 
 
-class TestTemplateVersion(HeatTestCase):
+class TestTemplatePluginManager(common.HeatTestCase):
+    def test_template_NEW_good(self):
+        class NewTemplate(template.Template):
+            SECTIONS = (VERSION, MAPPINGS) = ('NEWTemplateFormatVersion',
+                                              '__undefined__')
+            RESOURCES = 'thingies'
+
+            def param_schemata(self):
+                pass
+
+            def parameters(self, stack_identifier, user_params):
+                pass
+
+            def resource_definitions(self, stack):
+                pass
+
+            def add_resource(self, definition, name=None):
+                pass
+
+            def __getitem__(self, section):
+                return {}
+
+            def functions(self):
+                return {}
+
+        class NewTemplatePrint(function.Function):
+            def result(self):
+                return 'always this'
+
+        self.useFixture(TemplatePluginFixture(
+            {'NEWTemplateFormatVersion.2345-01-01': NewTemplate}))
+
+        t = {'NEWTemplateFormatVersion': '2345-01-01'}
+        tmpl = template.Template(t)
+        err = tmpl.validate()
+        self.assertIsNone(err)
+
+
+class TestTemplateVersion(common.HeatTestCase):
 
     versions = (('heat_template_version', '2013-05-23'),
                 ('HeatTemplateFormatVersion', '2012-12-12'),
@@ -97,7 +139,7 @@ class TestTemplateVersion(HeatTestCase):
                           template.get_version, tmpl, self.versions)
 
 
-class TestTemplateValidate(HeatTestCase):
+class TestTemplateValidate(common.HeatTestCase):
 
     def test_template_validate_cfn_good(self):
         t = {

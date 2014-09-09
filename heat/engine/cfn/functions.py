@@ -557,35 +557,3 @@ class ResourceFacade(function.Function):
         elif attr == self.DELETION_POLICY:
             dp = self.stack.parent_resource.t.deletion_policy()
             return function.resolve(dp)
-
-
-def function_mapping(version_key, version):
-    if version_key == 'AWSTemplateFormatVersion':
-        return {
-            'Fn::FindInMap': FindInMap,
-            'Fn::GetAZs': GetAZs,
-            'Ref': Ref,
-            'Fn::GetAtt': GetAtt,
-            'Fn::Select': Select,
-            'Fn::Join': Join,
-            'Fn::Base64': Base64,
-        }
-    elif version_key != 'HeatTemplateFormatVersion':
-        return {}
-
-    if version == '2012-12-12':
-        return {
-            'Fn::FindInMap': FindInMap,
-            'Fn::GetAZs': GetAZs,
-            'Ref': Ref,
-            'Fn::GetAtt': GetAtt,
-            'Fn::Select': Select,
-            'Fn::Join': Join,
-            'Fn::Split': Split,
-            'Fn::Replace': Replace,
-            'Fn::Base64': Base64,
-            'Fn::MemberListToMap': MemberListToMap,
-            'Fn::ResourceFacade': ResourceFacade,
-        }
-
-    return {}
