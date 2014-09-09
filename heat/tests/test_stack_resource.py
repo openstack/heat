@@ -20,9 +20,9 @@ import mox
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import stack_resource
 from heat.engine import template as templatem
 from heat.tests.common import HeatTestCase

@@ -22,8 +22,8 @@ import sqlalchemy
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 
 get_engine = db_api.get_engine
@@ -87,12 +87,12 @@ def parse_stack(t, params=None, stack_name='test_stack', stack_id=None,
     params = params or {}
     ctx = dummy_context()
     templ = template.Template(t)
-    stack = parser.Stack(ctx, stack_name, templ,
-                         environment.Environment(params), stack_id,
-                         timeout_mins=timeout_mins)
-    stack.store()
+    stk = stack.Stack(ctx, stack_name, templ,
+                      environment.Environment(params), stack_id,
+                      timeout_mins=timeout_mins)
+    stk.store()
 
-    return stack
+    return stk
 
 
 class PhysName(object):
@@ -109,7 +109,7 @@ class PhysName(object):
 
     def __eq__(self, physical_name):
         try:
-            stack, res, short_id = str(physical_name).rsplit('-', 2)
+            stk, res, short_id = str(physical_name).rsplit('-', 2)
         except ValueError:
             return False
 

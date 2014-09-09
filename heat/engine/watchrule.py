@@ -16,7 +16,7 @@ import datetime
 
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine import parser
+from heat.engine import stack
 from heat.engine import timestamp
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -256,11 +256,11 @@ class WatchRule(object):
         else:
             s = db_api.stack_get(self.context, self.stack_id,
                                  eager_load=True)
-            stack = parser.Stack.load(self.context, stack=s)
-            if (stack.action != stack.DELETE
-                    and stack.status == stack.COMPLETE):
+            stk = stack.Stack.load(self.context, stack=s)
+            if (stk.action != stk.DELETE
+                    and stk.status == stk.COMPLETE):
                 for refid in self.rule[self.ACTION_MAP[new_state]]:
-                    actions.append(stack.resource_by_refid(refid).signal)
+                    actions.append(stk.resource_by_refid(refid).signal)
             else:
                 LOG.warning(_("Could not process watch state %s for stack")
                             % new_state)

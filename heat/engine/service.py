@@ -34,10 +34,10 @@ from heat.engine import clients
 from heat.engine import environment
 from heat.engine.event import Event
 from heat.engine import parameter_groups
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
