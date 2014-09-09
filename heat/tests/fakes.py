@@ -135,7 +135,7 @@ class FakeKeystoneClient(object):
                                       password=self.password,
                                       is_admin=False,
                                       trust_id='atrust',
-                                      trustor_user_id='auser123')
+                                      trustor_user_id=self.user_id)
 
     def delete_trust(self, trust_id):
         pass

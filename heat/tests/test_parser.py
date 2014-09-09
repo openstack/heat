@@ -3630,7 +3630,7 @@ class StackTest(HeatTestCase):
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
         keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClient())
+            FakeKeystoneClient(user_id='auser123'))
         self.m.ReplayAll()
 
         self.stack = parser.Stack(
