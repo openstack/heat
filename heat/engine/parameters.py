@@ -386,6 +386,11 @@ class JsonParam(Parameter):
     def __len__(self):
         return len(self.parsed)
 
+    def __str__(self):
+        if self.hidden():
+            return super(JsonParam, self).__str__()
+        return strutils.safe_decode(json.dumps(self.value()))
+
     def _validate(self, val, context):
         val = self.parse(val)
         self.schema.validate_value(val, context)

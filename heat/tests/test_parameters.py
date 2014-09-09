@@ -50,6 +50,16 @@ class ParameterTest(testtools.TestCase):
         p = self.new_parameter('p', {'Type': 'Json'}, validate_value=False)
         self.assertIsInstance(p, parameters.JsonParam)
 
+    def test_json_return(self):
+        p = self.new_parameter('p', {'Type': 'Json'}, {"a": 1, "b": "a"})
+        self.assertEqual('{"a": 1, "b": "a"}', str(p))
+
+    def test_json_return_no_echo_true(self):
+        p = self.new_parameter(
+            'p', {'Type': 'Json', 'NoEcho': 'true'}, {"a": 1})
+        self.assertTrue(p.hidden())
+        self.assertEqual(str(p), '******')
+
     def test_new_bad_type(self):
         self.assertRaises(exception.InvalidSchemaError, self.new_parameter,
                           'p', {'Type': 'List'}, validate_value=False)
