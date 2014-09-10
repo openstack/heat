@@ -804,7 +804,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        body=body)
         self.assertEqual(400, resp.status_code)
         self.assertEqual('400 Bad Request', resp.status)
-        self.assertIn('Adopt data must be a dict.', resp.text)
+        self.assertIn('Invalid adopt data', resp.text)
         self.m.VerifyAll()
 
     def test_create_with_files(self, mock_enforce):

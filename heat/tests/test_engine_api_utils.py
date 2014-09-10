@@ -944,11 +944,9 @@ class TestExtractArgs(HeatTestCase):
         self.assertTrue(args.get('adopt_stack_data'))
 
     def test_invalid_adopt_stack_data(self):
-        p = {'adopt_stack_data': json.dumps("foo")}
-        error = self.assertRaises(ValueError, api.extract_args, p)
-        self.assertEqual(
-            'Unexpected adopt data "foo". Adopt data must be a dict.',
-            six.text_type(error))
+        params = {'adopt_stack_data': json.dumps("foo")}
+        exc = self.assertRaises(ValueError, api.extract_args, params)
+        self.assertIn('Invalid adopt data', six.text_type(exc))
 
     def test_adopt_stack_data_extract_not_present(self):
         args = api.extract_args({})
