@@ -118,100 +118,93 @@ class SecurityGroup(resource.Resource):
             'description': self.properties[self.GROUP_DESCRIPTION]}
         })['security_group']
 
-        def sanitize_security_group(i):
-            # Neutron only accepts positive ints
-            if (i.get(self.RULE_FROM_PORT) is not None and
-                    int(i[self.RULE_FROM_PORT]) < 0):
-                i[self.RULE_FROM_PORT] = None
-            if (i.get(self.RULE_TO_PORT) is not None and
-                    int(i[self.RULE_TO_PORT]) < 0):
-                i[self.RULE_TO_PORT] = None
-            if (i.get(self.RULE_FROM_PORT) is None and
-                    i.get(self.RULE_TO_PORT) is None):
-                i[self.RULE_CIDR_IP] = None
-
         self.resource_id_set(sec['id'])
-        if self.properties[self.SECURITY_GROUP_INGRESS]:
-            for i in self.properties[self.SECURITY_GROUP_INGRESS]:
-                sanitize_security_group(i)
-                try:
-                    rule = client.create_security_group_rule({
-                        'security_group_rule':
-                        self._convert_to_neutron_rule('ingress', i)
-                    })
-                except Exception as ex:
-                    if self.client_plugin('neutron').is_conflict(ex):
-                        # no worries, the rule is already there
-                        pass
-                    else:
-                        # unexpected error
-                        raise
+        self._delete_default_egress_rules_neutron(client, sec)
+        self._create_rules_neutron(client, sec, self.properties)
+
+    def _delete_default_egress_rules_neutron(self, client, sec):
+        """Delete the default rules which allow all egress traffic."""
         if self.properties[self.SECURITY_GROUP_EGRESS]:
-            # Delete the default rules which allow all egress traffic
             for rule in sec['security_group_rules']:
                 if rule['direction'] == 'egress':
                     client.delete_security_group_rule(rule['id'])
 
-            for i in self.properties[self.SECURITY_GROUP_EGRESS]:
-                sanitize_security_group(i)
-                try:
-                    rule = client.create_security_group_rule({
-                        'security_group_rule':
-                        self._convert_to_neutron_rule('egress', i)
-                    })
-                except Exception as ex:
-                    if self.client_plugin('neutron').is_conflict(ex):
-                        # no worries, the rule is already there
-                        pass
-                    else:
-                        # unexpected error
-                        raise
+    def _create_rules_neutron(self, client, sec, props):
+
+        def create_rule(rule, direction):
+            # Neutron only accepts positive ints
+            if (rule.get(self.RULE_FROM_PORT) is not None and
+                    int(rule[self.RULE_FROM_PORT]) < 0):
+                rule[self.RULE_FROM_PORT] = None
+            if (rule.get(self.RULE_TO_PORT) is not None and
+                    int(rule[self.RULE_TO_PORT]) < 0):
+                rule[self.RULE_TO_PORT] = None
+            if (rule.get(self.RULE_FROM_PORT) is None and
+                    rule.get(self.RULE_TO_PORT) is None):
+                rule[self.RULE_CIDR_IP] = None
+
+            try:
+                client.create_security_group_rule({
+                    'security_group_rule':
+                    self._convert_to_neutron_rule(direction, rule)
+                })
+            except Exception as ex:
+                # ignore error if the group already exists
+                if not self.client_plugin('neutron').is_conflict(ex):
+                    raise
+
+        if props[self.SECURITY_GROUP_INGRESS]:
+            for i in props[self.SECURITY_GROUP_INGRESS]:
+                create_rule(i, 'ingress')
+
+        if props[self.SECURITY_GROUP_EGRESS]:
+            for i in props[self.SECURITY_GROUP_EGRESS]:
+                create_rule(i, 'egress')
 
     def _handle_create_nova(self):
         sec = None
-
-        groups = self.nova().security_groups.list()
+        client = self.nova()
+        groups = client.security_groups.list()
         for group in groups:
             if group.name == self.physical_resource_name():
                 sec = group
                 break
 
         if not sec:
-            sec = self.nova().security_groups.create(
+            sec = client.security_groups.create(
                 self.physical_resource_name(),
                 self.properties[self.GROUP_DESCRIPTION])
 
         self.resource_id_set(sec.id)
         if self.properties[self.SECURITY_GROUP_INGRESS]:
-            rules_client = self.nova().security_group_rules
-            for i in self.properties[self.SECURITY_GROUP_INGRESS]:
-                source_group_id = None
-                if i.get(self.RULE_SOURCE_SECURITY_GROUP_ID) is not None:
-                    source_group_id = i[self.RULE_SOURCE_SECURITY_GROUP_ID]
-                elif i.get(self.RULE_SOURCE_SECURITY_GROUP_NAME) is not None:
-                    rule_name = i[self.RULE_SOURCE_SECURITY_GROUP_NAME]
-                    for group in groups:
-                        if group.name == rule_name:
-                            source_group_id = group.id
-                            break
-                    else:
-                        raise SecurityGroupNotFound(group_name=rule_name)
-                try:
-                    rules_client.create(
-                        sec.id,
-                        i.get(self.RULE_IP_PROTOCOL),
-                        i.get(self.RULE_FROM_PORT),
-                        i.get(self.RULE_TO_PORT),
-                        i.get(self.RULE_CIDR_IP),
-                        source_group_id)
-                except Exception as ex:
-                    if self.client_plugin('nova').is_bad_request(ex) and \
-                            six.text_type(ex).find('already exists') >= 0:
-                        # no worries, the rule is already there
-                        pass
-                    else:
-                        # unexpected error
-                        raise
+            self._create_rules_nova(client, groups, sec, self.properties)
+
+    def _create_rules_nova(self, client, groups, sec, props):
+        for i in props[self.SECURITY_GROUP_INGRESS]:
+            source_group_id = None
+            if i.get(self.RULE_SOURCE_SECURITY_GROUP_ID) is not None:
+                source_group_id = i[self.RULE_SOURCE_SECURITY_GROUP_ID]
+            elif i.get(self.RULE_SOURCE_SECURITY_GROUP_NAME) is not None:
+                rule_name = i[self.RULE_SOURCE_SECURITY_GROUP_NAME]
+                for group in groups:
+                    if group.name == rule_name:
+                        source_group_id = group.id
+                        break
+                else:
+                    raise SecurityGroupNotFound(group_name=rule_name)
+            try:
+                client.security_group_rules.create(
+                    sec.id,
+                    i.get(self.RULE_IP_PROTOCOL),
+                    i.get(self.RULE_FROM_PORT),
+                    i.get(self.RULE_TO_PORT),
+                    i.get(self.RULE_CIDR_IP),
+                    source_group_id)
+            except Exception as ex:
+                # ignore error if the group already exists
+                if not (self.client_plugin('nova').is_bad_request(ex) and
+                        'already exists' in six.text_type(ex)):
+                    raise
 
     def handle_delete(self):
         if self.is_using_neutron():
@@ -220,19 +213,22 @@ class SecurityGroup(resource.Resource):
             self._handle_delete_nova()
 
     def _handle_delete_nova(self):
+        client = self.nova()
         if self.resource_id is not None:
             try:
-                sec = self.nova().security_groups.get(self.resource_id)
+                sec = client.security_groups.get(self.resource_id)
             except Exception as e:
                 self.client_plugin('nova').ignore_not_found(e)
             else:
-                for rule in sec.rules:
-                    try:
-                        self.nova().security_group_rules.delete(rule['id'])
-                    except Exception as e:
-                        self.client_plugin('nova').ignore_not_found(e)
+                self._delete_rules_nova(client, sec)
+                client.security_groups.delete(self.resource_id)
 
-                self.nova().security_groups.delete(self.resource_id)
+    def _delete_rules_nova(self, client, sec):
+        for rule in sec.rules:
+            try:
+                client.security_group_rules.delete(rule['id'])
+            except Exception as e:
+                self.client_plugin('nova').ignore_not_found(e)
 
     def _handle_delete_neutron(self):
         client = self.neutron()
@@ -244,16 +240,18 @@ class SecurityGroup(resource.Resource):
             except Exception as ex:
                 self.client_plugin('neutron').ignore_not_found(ex)
             else:
-                for rule in sec['security_group_rules']:
-                    try:
-                        client.delete_security_group_rule(rule['id'])
-                    except Exception as ex:
-                        self.client_plugin('neutron').ignore_not_found(ex)
-
+                self._delete_rules_neutron(client, sec)
                 try:
                     client.delete_security_group(self.resource_id)
                 except Exception as ex:
                     self.client_plugin('neutron').ignore_not_found(ex)
+
+    def _delete_rules_neutron(self, client, sec):
+        for rule in sec['security_group_rules']:
+            try:
+                client.delete_security_group_rule(rule['id'])
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
 
     def FnGetRefId(self):
         if self.is_using_neutron():
