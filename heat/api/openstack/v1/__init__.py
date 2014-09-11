@@ -12,6 +12,7 @@
 #    under the License.
 
 import routes
+import six
 
 from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
@@ -32,248 +33,368 @@ class API(wsgi.Router):
     def __init__(self, conf, **local_conf):
         self.conf = conf
         mapper = routes.Mapper()
+        default_resource = wsgi.Resource(wsgi.DefaultMethodController(),
+                                         wsgi.JSONRequestDeserializer())
+
+        def connect(controller, path_prefix, routes):
+            """
+            This function connects the list of routes to the given
+            controller, prepending the given path_prefix. Then for each URL it
+            finds which request methods aren't handled and configures those
+            to return a 405 error. Finally, it adds a handler for the
+            OPTIONS method to all URLs that returns the list of allowed
+            methods with 204 status code.
+            """
+            # register the routes with the mapper, while keeping track of which
+            # methods are defined for each URL
+            urls = {}
+            for r in routes:
+                url = path_prefix + r['url']
+                methods = r['method']
+                if isinstance(methods, six.string_types):
+                    methods = [methods]
+                methods_str = ','.join(methods)
+                mapper.connect(r['name'], url, controller=controller,
+                               action=r['action'],
+                               conditions={'method': methods_str})
+                if url not in urls:
+                    urls[url] = methods
+                else:
+                    urls[url] += methods
+
+            # now register the missing methods to return 405s, and register
+            # a handler for OPTIONS that returns the list of allowed methods
+            for url, methods in urls.items():
+                all_methods = ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+                missing_methods = [m for m in all_methods if m not in methods]
+                allowed_methods_str = ','.join(methods)
+                mapper.connect(url,
+                               controller=default_resource,
+                               action='reject',
+                               allowed_methods=allowed_methods_str,
+                               conditions={'method': missing_methods})
+                if 'OPTIONS' not in methods:
+                    mapper.connect(url,
+                                   controller=default_resource,
+                                   action='options',
+                                   allowed_methods=allowed_methods_str,
+                                   conditions={'method': 'OPTIONS'})
 
         # Stacks
         stacks_resource = stacks.create_resource(conf)
-        with mapper.submapper(controller=stacks_resource,
-                              path_prefix="/{tenant_id}") as stack_mapper:
-            # Template handling
-            stack_mapper.connect("template_validate",
-                                 "/validate",
-                                 action="validate_template",
-                                 conditions={'method': 'POST'})
-            stack_mapper.connect("resource_types",
-                                 "/resource_types",
-                                 action="list_resource_types",
-                                 conditions={'method': 'GET'})
-            stack_mapper.connect("resource_schema",
-                                 "/resource_types/{type_name}",
-                                 action="resource_schema",
-                                 conditions={'method': 'GET'})
-            stack_mapper.connect("generate_template",
-                                 "/resource_types/{type_name}/template",
-                                 action="generate_template",
-                                 conditions={'method': 'GET'})
+        connect(controller=stacks_resource,
+                path_prefix='/{tenant_id}',
+                routes=[
+                    # Template handling
+                    {
+                        'name': 'template_validate',
+                        'url': '/validate',
+                        'action': 'validate_template',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'resource_types',
+                        'url': '/resource_types',
+                        'action': 'list_resource_types',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'resource_schema',
+                        'url': '/resource_types/{type_name}',
+                        'action': 'resource_schema',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'generate_template',
+                        'url': '/resource_types/{type_name}/template',
+                        'action': 'generate_template',
+                        'method': 'GET'
+                    },
 
-            # Stack collection
-            stack_mapper.connect("stack_index",
-                                 "/stacks",
-                                 action="index",
-                                 conditions={'method': 'GET'})
-            stack_mapper.connect("stack_create",
-                                 "/stacks",
-                                 action="create",
-                                 conditions={'method': 'POST'})
-            stack_mapper.connect("stack_preview",
-                                 "/stacks/preview",
-                                 action="preview",
-                                 conditions={'method': 'POST'})
-            stack_mapper.connect("stack_detail",
-                                 "/stacks/detail",
-                                 action="detail",
-                                 conditions={'method': 'GET'})
+                    # Stack collection
+                    {
+                        'name': 'stack_index',
+                        'url': '/stacks',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_create',
+                        'url': '/stacks',
+                        'action': 'create',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'stack_preview',
+                        'url': '/stacks/preview',
+                        'action': 'preview',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'stack_detail',
+                        'url': '/stacks/detail',
+                        'action': 'detail',
+                        'method': 'GET'
+                    },
 
-            # Stack data
-            stack_mapper.connect("stack_lookup",
-                                 "/stacks/{stack_name}",
-                                 action="lookup")
-            # \x3A matches on a colon.
-            # Routes treats : specially in its regexp
-            stack_mapper.connect("stack_lookup",
-                                 r"/stacks/{stack_name:arn\x3A.*}",
-                                 action="lookup")
-            subpaths = ['resources', 'events', 'template', 'actions']
-            path = "{path:%s}" % '|'.join(subpaths)
-            stack_mapper.connect("stack_lookup_subpath",
-                                 "/stacks/{stack_name}/" + path,
-                                 action="lookup",
-                                 conditions={'method': 'GET'})
-            stack_mapper.connect("stack_lookup_subpath_post",
-                                 "/stacks/{stack_name}/" + path,
-                                 action="lookup",
-                                 conditions={'method': 'POST'})
-            stack_mapper.connect("stack_show",
-                                 "/stacks/{stack_name}/{stack_id}",
-                                 action="show",
-                                 conditions={'method': 'GET'})
-            stack_mapper.connect("stack_template",
-                                 "/stacks/{stack_name}/{stack_id}/template",
-                                 action="template",
-                                 conditions={'method': 'GET'})
+                    # Stack data
+                    {
+                        'name': 'stack_lookup',
+                        'url': '/stacks/{stack_name}',
+                        'action': 'lookup',
+                        'method': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+                    },
+                    # \x3A matches on a colon.
+                    # Routes treats : specially in its regexp
+                    {
+                        'name': 'stack_lookup',
+                        'url': r'/stacks/{stack_name:arn\x3A.*}',
+                        'action': 'lookup',
+                        'method': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+                    },
+                    {
+                        'name': 'stack_lookup_subpath',
+                        'url': '/stacks/{stack_name}/'
+                               '{path:resources|events|template|actions}',
+                        'action': 'lookup',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_lookup_subpath_post',
+                        'url': '/stacks/{stack_name}/'
+                               '{path:resources|events|template|actions}',
+                        'action': 'lookup',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'stack_show',
+                        'url': '/stacks/{stack_name}/{stack_id}',
+                        'action': 'show',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_lookup',
+                        'url': '/stacks/{stack_name}/{stack_id}/template',
+                        'action': 'template',
+                        'method': 'GET'
+                    },
 
-            # Stack update/delete
-            stack_mapper.connect("stack_update",
-                                 "/stacks/{stack_name}/{stack_id}",
-                                 action="update",
-                                 conditions={'method': 'PUT'})
-            stack_mapper.connect("stack_update_patch",
-                                 "/stacks/{stack_name}/{stack_id}",
-                                 action="update_patch",
-                                 conditions={'method': 'PATCH'})
-            stack_mapper.connect("stack_delete",
-                                 "/stacks/{stack_name}/{stack_id}",
-                                 action="delete",
-                                 conditions={'method': 'DELETE'})
+                    # Stack update/delete
+                    {
+                        'name': 'stack_update',
+                        'url': '/stacks/{stack_name}/{stack_id}',
+                        'action': 'update',
+                        'method': 'PUT'
+                    },
+                    {
+                        'name': 'stack_update_patch',
+                        'url': '/stacks/{stack_name}/{stack_id}',
+                        'action': 'update_patch',
+                        'method': 'PATCH'
+                    },
+                    {
+                        'name': 'stack_delete',
+                        'url': '/stacks/{stack_name}/{stack_id}',
+                        'action': 'delete',
+                        'method': 'DELETE'
+                    },
 
-            # Stack abandon
-            stack_mapper.connect("stack_abandon",
-                                 "/stacks/{stack_name}/{stack_id}/abandon",
-                                 action="abandon",
-                                 conditions={'method': 'DELETE'})
-
-            stack_mapper.connect("stack_snapshot",
-                                 "/stacks/{stack_name}/{stack_id}/snapshots",
-                                 action="snapshot",
-                                 conditions={'method': 'POST'})
-
-            stack_mapper.connect("stack_snapshot_show",
-                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
-                                 "{snapshot_id}",
-                                 action="show_snapshot",
-                                 conditions={'method': 'GET'})
-
-            stack_mapper.connect("stack_snapshot_delete",
-                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
-                                 "{snapshot_id}",
-                                 action="delete_snapshot",
-                                 conditions={'method': 'DELETE'})
-
-            stack_mapper.connect("stack_list_snapshots",
-                                 "/stacks/{stack_name}/{stack_id}/snapshots",
-                                 action="list_snapshots",
-                                 conditions={'method': 'GET'})
-
-            stack_mapper.connect("stack_snapshot_restore",
-                                 "/stacks/{stack_name}/{stack_id}/snapshots/"
-                                 "{snapshot_id}/restore",
-                                 action="restore_snapshot",
-                                 conditions={'method': 'POST'})
+                    # Stack abandon
+                    {
+                        'name': 'stack_abandon',
+                        'url': '/stacks/{stack_name}/{stack_id}/abandon',
+                        'action': 'abandon',
+                        'method': 'DELETE'
+                    },
+                    {
+                        'name': 'stack_snapshot',
+                        'url': '/stacks/{stack_name}/{stack_id}/snapshots',
+                        'action': 'snapshot',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'stack_snapshot_show',
+                        'url': '/stacks/{stack_name}/{stack_id}/snapshots/'
+                               '{snapshot_id}',
+                        'action': 'show_snapshot',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_snapshot_delete',
+                        'url': '/stacks/{stack_name}/{stack_id}/snapshots/'
+                               '{snapshot_id}',
+                        'action': 'delete_snapshot',
+                        'method': 'DELETE'
+                    },
+                    {
+                        'name': 'stack_list_snapshots',
+                        'url': '/stacks/{stack_name}/{stack_id}/snapshots',
+                        'action': 'list_snapshots',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'stack_snapshot_restore',
+                        'url': '/stacks/{stack_name}/{stack_id}/snapshots/'
+                               '{snapshot_id}/restore',
+                        'action': 'restore_snapshot',
+                        'method': 'POST'
+                    }
+                ])
 
         # Resources
         resources_resource = resources.create_resource(conf)
-        stack_path = "/{tenant_id}/stacks/{stack_name}/{stack_id}"
-        with mapper.submapper(controller=resources_resource,
-                              path_prefix=stack_path) as res_mapper:
+        stack_path = '/{tenant_id}/stacks/{stack_name}/{stack_id}'
+        connect(controller=resources_resource, path_prefix=stack_path,
+                routes=[
+                    # Resource collection
+                    {
+                        'name': 'resource_index',
+                        'url': '/resources',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
 
-            # Resource collection
-            res_mapper.connect("resource_index",
-                               "/resources",
-                               action="index",
-                               conditions={'method': 'GET'})
-
-            # Resource data
-            res_mapper.connect("resource_show",
-                               "/resources/{resource_name}",
-                               action="show",
-                               conditions={'method': 'GET'})
-            res_mapper.connect("resource_metadata_show",
-                               "/resources/{resource_name}/metadata",
-                               action="metadata",
-                               conditions={'method': 'GET'})
-            res_mapper.connect("resource_signal",
-                               "/resources/{resource_name}/signal",
-                               action="signal",
-                               conditions={'method': 'POST'})
+                    # Resource data
+                    {
+                        'name': 'resource_show',
+                        'url': '/resources/{resource_name}',
+                        'action': 'show',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'resource_metadata_show',
+                        'url': '/resources/{resource_name}/metadata',
+                        'action': 'metadata',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'resource_signal',
+                        'url': '/resources/{resource_name}/signal',
+                        'action': 'signal',
+                        'method': 'POST'
+                    }
+                ])
 
         # Events
         events_resource = events.create_resource(conf)
-        with mapper.submapper(controller=events_resource,
-                              path_prefix=stack_path) as ev_mapper:
+        connect(controller=events_resource, path_prefix=stack_path,
+                routes=[
+                    # Stack event collection
+                    {
+                        'name': 'event_index_stack',
+                        'url': '/events',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
 
-            # Stack event collection
-            ev_mapper.connect("event_index_stack",
-                              "/events",
-                              action="index",
-                              conditions={'method': 'GET'})
-            # Resource event collection
-            ev_mapper.connect("event_index_resource",
-                              "/resources/{resource_name}/events",
-                              action="index",
-                              conditions={'method': 'GET'})
+                    # Resource event collection
+                    {
+                        'name': 'event_index_resource',
+                        'url': '/resources/{resource_name}/events',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
 
-            # Event data
-            ev_mapper.connect("event_show",
-                              "/resources/{resource_name}/events/{event_id}",
-                              action="show",
-                              conditions={'method': 'GET'})
+                    # Event data
+                    {
+                        'name': 'event_show',
+                        'url': '/resources/{resource_name}/events/{event_id}',
+                        'action': 'show',
+                        'method': 'GET'
+                    }
+                ])
 
         # Actions
         actions_resource = actions.create_resource(conf)
-        with mapper.submapper(controller=actions_resource,
-                              path_prefix=stack_path) as ac_mapper:
-
-            ac_mapper.connect("action_stack",
-                              "/actions",
-                              action="action",
-                              conditions={'method': 'POST'})
+        connect(controller=actions_resource, path_prefix=stack_path,
+                routes=[
+                    {
+                        'name': 'action_stack',
+                        'url': '/actions',
+                        'action': 'action',
+                        'method': 'POST'
+                    }
+                ])
 
         # Info
         info_resource = build_info.create_resource(conf)
-        with mapper.submapper(controller=info_resource,
-                              path_prefix="/{tenant_id}") as info_mapper:
-
-            info_mapper.connect('build_info',
-                                '/build_info',
-                                action='build_info',
-                                conditions={'method': 'GET'})
+        connect(controller=info_resource, path_prefix='/{tenant_id}',
+                routes=[
+                    {
+                        'name': 'build_info',
+                        'url': '/build_info',
+                        'action': 'build_info',
+                        'method': 'GET'
+                    }
+                ])
 
         # Software configs
         software_config_resource = software_configs.create_resource(conf)
-        with mapper.submapper(
-            controller=software_config_resource,
-            path_prefix="/{tenant_id}/software_configs"
-        ) as sc_mapper:
-
-            sc_mapper.connect("software_config_create",
-                              "",
-                              action="create",
-                              conditions={'method': 'POST'})
-
-            sc_mapper.connect("software_config_show",
-                              "/{config_id}",
-                              action="show",
-                              conditions={'method': 'GET'})
-
-            sc_mapper.connect("software_config_delete",
-                              "/{config_id}",
-                              action="delete",
-                              conditions={'method': 'DELETE'})
+        connect(controller=software_config_resource,
+                path_prefix='/{tenant_id}/software_configs',
+                routes=[
+                    {
+                        'name': 'software_config_create',
+                        'url': '',
+                        'action': 'create',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'software_config_show',
+                        'url': '/{config_id}',
+                        'action': 'show',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'software_config_delete',
+                        'url': '/{config_id}',
+                        'action': 'delete',
+                        'method': 'DELETE'
+                    }
+                ])
 
         # Software deployments
         sd_resource = software_deployments.create_resource(conf)
-        with mapper.submapper(
-            controller=sd_resource,
-            path_prefix='/{tenant_id}/software_deployments'
-        ) as sa_mapper:
+        connect(controller=sd_resource,
+                path_prefix='/{tenant_id}/software_deployments',
+                routes=[
+                    {
+                        'name': 'software_deployment_index',
+                        'url': '',
+                        'action': 'index',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'software_deployment_metadata',
+                        'url': '/metadata/{server_id}',
+                        'action': 'metadata',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'software_deployment_create',
+                        'url': '',
+                        'action': 'create',
+                        'method': 'POST'
+                    },
+                    {
+                        'name': 'software_deployment_show',
+                        'url': '/{deployment_id}',
+                        'action': 'show',
+                        'method': 'GET'
+                    },
+                    {
+                        'name': 'software_deployment_update',
+                        'url': '/{deployment_id}',
+                        'action': 'update',
+                        'method': 'PUT'
+                    },
+                    {
+                        'name': 'software_deployment_delete',
+                        'url': '/{deployment_id}',
+                        'action': 'delete',
+                        'method': 'DELETE'
+                    }
+                ])
 
-            sa_mapper.connect("software_deployment_index",
-                              "",
-                              action="index",
-                              conditions={'method': 'GET'})
-
-            sa_mapper.connect("software_deployment_metadata",
-                              "/metadata/{server_id}",
-                              action="metadata",
-                              conditions={'method': 'GET'})
-
-            sa_mapper.connect("software_deployment_create",
-                              "",
-                              action="create",
-                              conditions={'method': 'POST'})
-
-            sa_mapper.connect("software_deployment_show",
-                              "/{deployment_id}",
-                              action="show",
-                              conditions={'method': 'GET'})
-
-            sa_mapper.connect("software_deployment_update",
-                              "/{deployment_id}",
-                              action="update",
-                              conditions={'method': 'PUT'})
-
-            sa_mapper.connect("software_deployment_delete",
-                              "/{deployment_id}",
-                              action="delete",
-                              conditions={'method': 'DELETE'})
-
+        # now that all the routes are defined, add a handler for
         super(API, self).__init__(mapper)

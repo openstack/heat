@@ -440,6 +440,28 @@ def debug_filter(app, conf, **local_conf):
     return Debug(app)
 
 
+class DefaultMethodController(object):
+    """
+    This controller handles the OPTIONS request method and any of the
+    HTTP methods that are not explicitly implemented by the application.
+    """
+    def options(self, req, allowed_methods, *args, **kwargs):
+        """
+        Return a response that includes the 'Allow' header listing the methods
+        that are implemented. A 204 status code is used for this response.
+        """
+        raise webob.exc.HTTPNoContent(headers=[('Allow', allowed_methods)])
+
+    def reject(self, req, allowed_methods, *args, **kwargs):
+        """
+        Return a 405 method not allowed error. As a convenience, the 'Allow'
+        header with the list of implemented methods is included in the
+        response as well.
+        """
+        raise webob.exc.HTTPMethodNotAllowed(
+            headers=[('Allow', allowed_methods)])
+
+
 class Router(object):
     """
     WSGI middleware that maps incoming requests to WSGI apps.
@@ -535,12 +557,12 @@ def is_json_content_type(request):
             aws_content_type = request.params.get("ContentType")
         except Exception:
             aws_content_type = None
-        #respect aws_content_type when both available
+        # respect aws_content_type when both available
         content_type = aws_content_type or request.content_type
     else:
         content_type = request.content_type
-    #bug #1887882
-    #for back compatible for null or plain content type
+    # bug #1887882
+    # for back compatible for null or plain content type
     if not content_type or content_type.startswith('text/plain'):
         content_type = 'application/json'
     if content_type in ('JSON', 'application/json')\
