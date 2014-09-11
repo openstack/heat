@@ -47,7 +47,6 @@ python-swiftclient>=2.2.0
 python-troveclient>=1.0.9
 python-zaqarclient>=0.1.1
 PyYAML>=3.1.0
-qpid-python;python_version=='2.7'
 requests>=2.5.2
 Routes!=2.0,!=2.1,>=1.12.3
 six>=1.9.0
