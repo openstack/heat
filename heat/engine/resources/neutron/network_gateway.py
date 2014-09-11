@@ -172,6 +172,8 @@ class NetworkGateway(neutron.NeutronResource):
         ret = self.neutron().create_network_gateway(
             {'network_gateway': props})['network_gateway']
 
+        self.resource_id_set(ret['id'])
+
         for connection in connections:
             self.client_plugin().resolve_network(
                 connection, self.NETWORK, 'network_id')
@@ -180,8 +182,6 @@ class NetworkGateway(neutron.NeutronResource):
             self.neutron().connect_network_gateway(
                 ret['id'], connection
             )
-
-        self.resource_id_set(ret['id'])
 
     def handle_delete(self):
         if not self.resource_id:
