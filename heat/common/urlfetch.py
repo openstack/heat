@@ -20,7 +20,8 @@ from requests import exceptions
 from six.moves import urllib
 
 from heat.common import exception
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
@@ -40,7 +41,7 @@ def get(url, allowed_schemes=('http', 'https')):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     """
-    LOG.info(_('Fetching data from %s') % url)
+    LOG.info(_LI('Fetching data from %s'), url)
 
     components = urllib.parse.urlparse(url)
 
