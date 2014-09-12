@@ -21,6 +21,7 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import environment_format
+from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import param_utils
 from heat.common import serializers
@@ -204,7 +205,7 @@ class StackController(object):
                                                      show_deleted=show_deleted,
                                                      show_nested=show_nested)
             except AttributeError as exc:
-                LOG.warning(_("Old Engine Version: %s") % exc)
+                LOG.warn(_LW("Old Engine Version: %s") % exc)
 
         return stacks_view.collection(req, stacks=stacks, count=count,
                                       tenant_safe=tenant_safe)
