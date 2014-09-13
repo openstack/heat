@@ -78,9 +78,8 @@ class VPC(resource.Resource):
         router_props = {'name': self.physical_resource_name()}
 
         net = client.create_network({'network': net_props})['network']
-        client.create_router({'router': router_props})['router']
-
         self.resource_id_set(net['id'])
+        client.create_router({'router': router_props})['router']
 
     @staticmethod
     def network_for_vpc(client, network_id):
@@ -109,10 +108,14 @@ class VPC(resource.Resource):
         return neutron.NeutronResource.is_built(router)
 
     def handle_delete(self):
+        if self.resource_id is None:
+            return
         client = self.neutron()
-        router = self.router_for_vpc(client, self.resource_id)
+
         try:
-            client.delete_router(router['id'])
+            router = self.router_for_vpc(client, self.resource_id)
+            if router:
+                client.delete_router(router['id'])
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
