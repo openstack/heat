@@ -9,7 +9,7 @@ argparse
 lxml>=2.3
 netaddr>=0.7.6
 six>=1.6.0
-sqlalchemy-migrate>=0.8.2,!=0.8.4
+sqlalchemy-migrate>=0.8.2,!=0.8.4,!=0.9.2
 python-novaclient>=2.17.0
 PasteDeploy>=1.5.0
 requests>=1.1
