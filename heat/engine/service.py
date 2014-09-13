@@ -637,6 +637,8 @@ class EngineService(service.Service):
         common_params = api.extract_args(args)
         common_params.setdefault(rpc_api.PARAM_TIMEOUT,
                                  current_stack.timeout_mins)
+        common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
+                                 current_stack.disable_rollback)
         env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)

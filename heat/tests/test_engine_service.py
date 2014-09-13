@@ -848,28 +848,32 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.man.thread_group_mgr.groups[sid].wait()
         self.m.VerifyAll()
 
+    def _stub_update_mocks(self, stack_to_load, stack_to_return):
+        self.m.StubOutWithMock(parser, 'Stack')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=stack_to_load
+                          ).AndReturn(stack_to_return)
+
+        self.m.StubOutWithMock(templatem, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+
     def test_stack_update(self):
         stack_name = 'service_update_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
-
         old_stack = get_wordpress_stack(stack_name, self.ctx)
         sid = old_stack.store()
         s = db_api.stack_get(self.ctx, sid)
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
-        self.m.StubOutWithMock(parser, 'Stack')
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
+        self._stub_update_mocks(s, old_stack)
 
         templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
+                     stack.t, stack.env,
+                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -880,6 +884,43 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.ReplayAll()
 
         api_args = {'timeout_mins': 60}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       template, params, None, api_args)
+        self.assertEqual(old_stack.identifier(), result)
+        self.assertIsInstance(result, dict)
+        self.assertTrue(result['stack_id'])
+        self.m.VerifyAll()
+
+    def test_stack_update_reuses_api_params(self):
+        stack_name = 'service_update_test_stack'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack.timeout_mins = 1
+        old_stack.disable_rollback = False
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        self._stub_update_mocks(s, old_stack)
+
+        templatem.Template(template, files=None).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t, stack.env,
+                     timeout_mins=1, disable_rollback=False).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+
+        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+
+        self.m.ReplayAll()
+
+        api_args = {}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
         self.assertEqual(old_stack.identifier(), result)
@@ -906,17 +947,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = parser.Stack(self.ctx, stack_name, template)
 
-        self.m.StubOutWithMock(parser, 'Stack')
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
+        self._stub_update_mocks(s, old_stack)
 
         templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
+                     stack.t, stack.env,
+                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1110,17 +1147,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
-        self.m.StubOutWithMock(parser, 'Stack')
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
-
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
+        self._stub_update_mocks(s, old_stack)
 
         templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env, timeout_mins=60).AndReturn(stack)
+                     stack.t, stack.env,
+                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -1166,21 +1199,18 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.ctx = utils.dummy_context(password=None)
 
-        self.m.StubOutWithMock(parser, 'Stack')
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        self.m.StubOutWithMock(templatem, 'Template')
-        self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(self.man, '_get_stack')
 
         self.man._get_stack(self.ctx, old_stack.identifier()).AndReturn(s)
 
-        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
+        self._stub_update_mocks(s, old_stack)
 
         templatem.Template(template, files=None).AndReturn(old_stack.t)
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
                      old_stack.t, old_stack.env,
-                     timeout_mins=60).AndReturn(old_stack)
+                     timeout_mins=60, disable_rollback=True
+                     ).AndReturn(old_stack)
 
         self.m.ReplayAll()
 
