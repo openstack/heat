@@ -158,6 +158,9 @@ class StackController(object):
             'status': 'mixed',
             'name': 'mixed',
             'action': 'mixed',
+            'tenant': 'mixed',
+            'username': 'mixed',
+            'owner_id': 'mixed',
         }
         whitelist = {
             'limit': 'single',
