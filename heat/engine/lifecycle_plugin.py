@@ -1,4 +1,3 @@
-
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -15,12 +14,12 @@
 
 class LifecyclePlugin(object):
     '''
-    base class for pre-op and post-op work on a stack
-    Implementations should extend this class and override the methods
+    Base class for pre-op and post-op work on a stack.
+    Implementations should extend this class and override the methods.
     '''
     def do_pre_op(self, cnxt, stack, current_stack=None, action=None):
         '''
-        method to be run by heat before stack operations
+        Method to be run by heat before stack operations.
         '''
         pass
 
