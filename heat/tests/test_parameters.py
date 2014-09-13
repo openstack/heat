@@ -54,6 +54,11 @@ class ParameterTest(testtools.TestCase):
         self.assertRaises(exception.InvalidSchemaError, self.new_parameter,
                           'p', {'Type': 'List'}, validate_value=False)
 
+    def test_list_as_str(self):
+        p = self.new_parameter('p', {'Type': 'CommaDelimitedList'}, 'a,b,c')
+        self.assertEqual(['a', 'b', 'c'], p.value())
+        self.assertEqual('a,b,c', str(p))
+
     def test_default_no_override(self):
         p = self.new_parameter('defaulted', {'Type': 'String',
                                              'Default': 'blarg'})

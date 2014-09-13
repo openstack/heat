@@ -350,6 +350,11 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         '''Return an item from the list.'''
         return self.parsed[index]
 
+    def __str__(self):
+        if self.hidden():
+            return super(CommaDelimitedListParam, self).__str__()
+        return ",".join(self.value())
+
     def _validate(self, val, context):
         parsed = self.parse(val)
         self.schema.validate_value(parsed, context)
