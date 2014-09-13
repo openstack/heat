@@ -525,6 +525,40 @@ class KeystoneClientTest(HeatTestCase):
         self.assertEqual('atrust123', trust_context.trust_id)
         self.assertEqual('5678', trust_context.trustor_user_id)
 
+    def test_create_trust_context_trust_create_norole(self):
+
+        """Test create_trust_context when creating a trust."""
+
+        class MockTrust(object):
+            id = 'atrust123'
+
+        self._stub_admin_client()
+
+        self._stubs_v3()
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
+
+        self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.auth_ref.user_id = '5678'
+        self.mock_ks_v3_client.auth_ref.project_id = '42'
+        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.trusts.create(
+            trustor_user='5678',
+            trustee_user='1234',
+            project='42',
+            impersonation=True,
+            role_names=['heat_stack_owner']).AndRaise(kc_exception.NotFound())
+
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        exc = self.assertRaises(exception.MissingCredentialError,
+                                heat_ks_client.create_trust_context)
+        expected = 'Missing required credential: roles [\'heat_stack_owner\']'
+        self.assertIn(expected, six.text_type(exc))
+
     def test_init_domain_cfg_not_set_fallback(self):
 
         """Test error path when config lacks domain config."""
