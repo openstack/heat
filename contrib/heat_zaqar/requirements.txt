@@ -1,0 +1,1 @@
+python-zaqarclient>=0.0.3

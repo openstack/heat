@@ -19,14 +19,14 @@ from heat.engine import resource
 
 
 def resource_mapping():
-    if not clients.has_client('marconi'):
+    if not clients.has_client('zaqar'):
         return {}
     return {
-        'OS::Marconi::Queue': MarconiQueue,
+        'OS::Zaqar::Queue': ZaqarQueue,
     }
 
 
-class MarconiQueue(resource.Resource):
+class ZaqarQueue(resource.Resource):
 
     PROPERTIES = (
         NAME, METADATA,
@@ -62,17 +62,17 @@ class MarconiQueue(resource.Resource):
         ),
     }
 
-    def marconi(self):
-        return self.clients.client('marconi')
+    def zaqar(self):
+        return self.clients.client('zaqar')
 
     def physical_resource_name(self):
         return self.properties[self.NAME]
 
     def handle_create(self):
-        """Create a marconi message queue."""
+        """Create a zaqar message queue."""
         queue_name = self.physical_resource_name()
-        queue = self.marconi().queue(queue_name, auto_create=False)
-        # Marconi client doesn't report an error if an queue with the same
+        queue = self.zaqar().queue(queue_name, auto_create=False)
+        # Zaqar client doesn't report an error if an queue with the same
         # id/name already exists, which can cause issue with stack update.
         if queue.exists():
             raise exception.Error(_('Message queue %s already exists.')
@@ -96,20 +96,20 @@ class MarconiQueue(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update queue metadata."""
         if 'metadata' in prop_diff:
-            queue = self.marconi().queue(self.resource_id, auto_create=False)
+            queue = self.zaqar().queue(self.resource_id, auto_create=False)
             metadata = prop_diff['metadata']
             queue.metadata(new_meta=metadata)
 
     def handle_delete(self):
-        """Delete a marconi message queue."""
+        """Delete a zaqar message queue."""
         if not self.resource_id:
             return
 
-        queue = self.marconi().queue(self.resource_id, auto_create=False)
+        queue = self.zaqar().queue(self.resource_id, auto_create=False)
         queue.delete()
 
     def href(self):
-        api_endpoint = self.marconi().api_url
+        api_endpoint = self.zaqar().api_url
         queue_name = self.physical_resource_name()
         if api_endpoint.endswith('/'):
             return '%squeues/%s' % (api_endpoint, queue_name)
