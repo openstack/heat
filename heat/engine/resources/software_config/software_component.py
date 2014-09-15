@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import constraints as constr
 from heat.engine import properties
 from heat.engine import resource
@@ -134,6 +135,23 @@ class SoftwareComponent(sc.SoftwareConfig):
             except Exception as ex:
                 if self.client_plugin().is_not_found(ex):
                     return None
+
+    def validate(self):
+        '''Validate SoftwareComponent properties consistency.'''
+        super(SoftwareComponent, self).validate()
+
+        # One lifecycle action (e.g. CREATE) can only be associated with one
+        # config; otherwise a way to define ordering would be required.
+        configs = self.properties.get(self.CONFIGS, [])
+        config_actions = set()
+        for config in configs:
+            actions = config.get(self.CONFIG_ACTIONS)
+            if any(action in config_actions for action in actions):
+                msg = _('Defining more than one configuration for the same '
+                        'action in SoftwareComponent "%s" is not allowed.')\
+                    % self.name
+                raise exception.StackValidationFailed(message=msg)
+            config_actions.update(actions)
 
 
 def resource_mapping():
