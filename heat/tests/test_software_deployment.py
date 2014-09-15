@@ -150,7 +150,7 @@ class SoftwareDeploymentTest(HeatTestCase):
 
     def mock_software_config(self):
         sc = mock.MagicMock()
-        sc.to_dict.return_value = {
+        config = {
             'id': '48e8ade1-9196-42d5-89a2-f709fde42632',
             'group': 'Test::Group',
             'name': 'myconfig',
@@ -167,6 +167,62 @@ class SoftwareDeploymentTest(HeatTestCase):
             }],
             'outputs': [],
         }
+        sc.to_dict.return_value = config
+        sc.group = 'Test::Group'
+        sc.config = config['config']
+        self.software_configs.get.return_value = sc
+        return sc
+
+    def mock_software_component(self):
+        sc = mock.MagicMock()
+        config = {
+            'id': '48e8ade1-9196-42d5-89a2-f709fde42632',
+            'group': 'component',
+            'name': 'myconfig',
+            'config': {
+                'configs': [
+                    {
+                        'actions': ['CREATE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['DELETE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['UPDATE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['SUSPEND'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['RESUME'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    }
+                ]
+            },
+            'options': {},
+            'inputs': [{
+                'name': 'foo',
+                'type': 'String',
+                'default': 'baa',
+            }, {
+                'name': 'bar',
+                'type': 'String',
+                'default': 'baz',
+            }],
+            'outputs': [],
+        }
+        sc.to_dict.return_value = config
+        sc.group = 'component'
+        sc.config = config['config']
         self.software_configs.get.return_value = sc
         return sc
 
@@ -195,6 +251,97 @@ class SoftwareDeploymentTest(HeatTestCase):
         self.assertEqual({
             'config': 'the config',
             'group': 'Test::Group',
+            'name': '00_run_me_first',
+            'inputs': [{
+                'default': 'baa',
+                'name': 'foo',
+                'type': 'String',
+                'value': 'bar'
+            }, {
+                'default': 'baz',
+                'name': 'bar',
+                'type': 'String',
+                'value': 'baz'
+            }, {
+                'name': 'bink',
+                'type': 'String',
+                'value': 'bonk'
+            }, {
+                'description': 'ID of the server being deployed to',
+                'name': 'deploy_server_id',
+                'type': 'String',
+                'value': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0'
+            }, {
+                'description': 'Name of the current action being deployed',
+                'name': 'deploy_action',
+                'type': 'String',
+                'value': 'CREATE'
+            }, {
+                'description': 'ID of the stack this deployment belongs to',
+                'name': 'deploy_stack_id',
+                'type': 'String',
+                'value': ('software_deployment_test_stack'
+                          '/42f6f66b-631a-44e7-8d01-e22fb54574a9')
+            }, {
+                'description': 'Name of this deployment resource in the stack',
+                'name': 'deploy_resource_name',
+                'type': 'String',
+                'value': 'deployment_mysql'
+            }],
+            'options': {},
+            'outputs': []
+        }, self.software_configs.create.call_args[1])
+
+        self.assertEqual(
+            {'action': 'CREATE',
+             'config_id': derived_sc.id,
+             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
+             'status': 'COMPLETE',
+             'status_reason': 'Not waiting for outputs signal'},
+            self.deployments.create.call_args[1])
+
+    def test_handle_create_for_component(self):
+        self._create_stack(self.template_no_signal)
+
+        self.mock_software_component()
+        derived_sc = self.mock_derived_software_config()
+        sd = self.mock_deployment()
+
+        self.deployment.handle_create()
+
+        self.assertEqual(sd.id, self.deployment.resource_id)
+        self.assertEqual({
+            'config': {
+                'configs': [
+                    {
+                        'actions': ['CREATE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['DELETE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['UPDATE'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['SUSPEND'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    },
+                    {
+                        'actions': ['RESUME'],
+                        'config': 'the config',
+                        'tool': 'a_tool'
+                    }
+                ]
+            },
+            'group': 'component',
             'name': '00_run_me_first',
             'inputs': [{
                 'default': 'baa',
@@ -373,6 +520,8 @@ class SoftwareDeploymentTest(HeatTestCase):
 
     def test_handle_update(self):
         self._create_stack(self.template)
+
+        self.mock_software_config()
 
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
@@ -619,9 +768,20 @@ class SoftwareDeploymentTest(HeatTestCase):
 
     def test_handle_action(self):
         self._create_stack(self.template)
+
+        self.mock_software_config()
+
         for action in ('DELETE', 'SUSPEND', 'RESUME'):
             self.assertIsNone(self.deployment._handle_action(action))
         for action in ('CREATE', 'UPDATE'):
+            self.assertIsNotNone(self.deployment._handle_action(action))
+
+    def test_handle_action_for_component(self):
+        self._create_stack(self.template)
+
+        self.mock_software_component()
+
+        for action in ('CREATE', 'UPDATE', 'DELETE', 'SUSPEND', 'RESUME'):
             self.assertIsNotNone(self.deployment._handle_action(action))
 
 
