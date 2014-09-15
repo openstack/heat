@@ -567,8 +567,8 @@ class Instance(resource.Resource):
         if self.properties[self.NOVA_SCHEDULER_HINTS]:
             for tm in self.properties[self.NOVA_SCHEDULER_HINTS]:
                 # adopted from novaclient shell
-                hint = tm[self.TAG_KEY]
-                hint_value = tm[self.TAG_VALUE]
+                hint = tm[self.NOVA_SCHEDULER_HINT_KEY]
+                hint_value = tm[self.NOVA_SCHEDULER_HINT_VALUE]
                 if hint in scheduler_hints:
                     if isinstance(scheduler_hints[hint], six.string_types):
                         scheduler_hints[hint] = [scheduler_hints[hint]]
