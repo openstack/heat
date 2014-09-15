@@ -20,7 +20,6 @@ from stevedore import extension
 
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine import plugin_manager
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -29,31 +28,6 @@ __all__ = ['Template']
 
 
 _template_classes = None
-
-
-class TemplatePluginManager(object):
-    '''A Descriptor class for caching PluginManagers.
-
-    Keeps a cache of PluginManagers with the search directories corresponding
-    to the package containing the owner class.
-    '''
-
-    def __init__(self):
-        self.plugin_managers = {}
-
-    @staticmethod
-    def package_name(obj_class):
-        '''Return the package containing the given class.'''
-        module_name = obj_class.__module__
-        return module_name.rsplit('.', 1)[0]
-
-    def __get__(self, obj, obj_class):
-        '''Get a PluginManager for a class.'''
-        pkg = self.package_name(obj_class)
-        if pkg not in self.plugin_managers:
-            self.plugin_managers[pkg] = plugin_manager.PluginManager(pkg)
-
-        return self.plugin_managers[pkg]
 
 
 def get_version(template_data, available_versions):
@@ -74,14 +48,18 @@ def get_version(template_data, available_versions):
     return version_key, template_data[version_key]
 
 
-def get_template_class(plugin_mgr, template_data):
+def _get_template_extension_manager():
+    return extension.ExtensionManager(
+        namespace='heat.templates',
+        invoke_on_load=False,
+        verify_requirements=True)
+
+
+def get_template_class(template_data):
     global _template_classes
 
     if _template_classes is None:
-        mgr = extension.ExtensionManager(
-            namespace='heat.templates',
-            invoke_on_load=False,
-            verify_requirements=True)
+        mgr = _get_template_extension_manager()
         _template_classes = dict((tuple(name.split('.')), mgr[name].plugin)
                                  for name in mgr.names())
 
@@ -108,16 +86,13 @@ def get_template_class(plugin_mgr, template_data):
 class Template(collections.Mapping):
     '''A stack template.'''
 
-    _plugins = TemplatePluginManager()
-    _functionmaps = {}
-
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
 
         if cls != Template:
             TemplateClass = cls
         else:
-            TemplateClass = get_template_class(cls._plugins, template)
+            TemplateClass = get_template_class(template)
 
         return super(Template, cls).__new__(TemplateClass)
 
@@ -191,17 +166,8 @@ class Template(collections.Mapping):
         '''Remove a resource from the template.'''
         self.t.get(self.RESOURCES, {}).pop(name)
 
-    def functions(self):
-        '''Return a dict of template functions keyed by name.'''
-        if self.version not in self._functionmaps:
-            mappings = plugin_manager.PluginMapping('function', *self.version)
-            funcs = dict(mappings.load_all(self._plugins))
-            self._functionmaps[self.version] = funcs
-
-        return self._functionmaps[self.version]
-
     def parse(self, stack, snippet):
-        return parse(self.functions(), stack, snippet)
+        return parse(self.functions, stack, snippet)
 
     def validate(self):
         '''Validate the template.

@@ -13,8 +13,10 @@
 import collections
 import six
 
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_template
 from heat.engine import function
+from heat.engine.hot import functions as hot_funcs
 from heat.engine.hot import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template
@@ -30,7 +32,7 @@ _RESOURCE_KEYS = (
 )
 
 
-class HOTemplate(template.Template):
+class HOTemplate20130523(template.Template):
     """
     A Heat Orchestration Template format stack template.
     """
@@ -49,13 +51,32 @@ class HOTemplate(template.Template):
                             cfn_template.CfnTemplate.RESOURCES: RESOURCES,
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
+    functions = {
+        'Fn::GetAZs': cfn_funcs.GetAZs,
+        'get_param': hot_funcs.GetParam,
+        'get_resource': cfn_funcs.ResourceRef,
+        'Ref': cfn_funcs.Ref,
+        'get_attr': hot_funcs.GetAttThenSelect,
+        'Fn::Select': cfn_funcs.Select,
+        'Fn::Join': cfn_funcs.Join,
+        'list_join': hot_funcs.Join,
+        'Fn::Split': cfn_funcs.Split,
+        'str_replace': hot_funcs.Replace,
+        'Fn::Replace': cfn_funcs.Replace,
+        'Fn::Base64': cfn_funcs.Base64,
+        'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
+        'resource_facade': hot_funcs.ResourceFacade,
+        'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
+        'get_file': hot_funcs.GetFile,
+    }
+
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         #first translate from CFN into HOT terminology if necessary
         if section not in self.SECTIONS:
-            section = HOTemplate._translate(section, self._CFN_TO_HOT_SECTIONS,
-                                            _('"%s" is not a valid template '
-                                              'section'))
+            section = HOTemplate20130523._translate(
+                section, self._CFN_TO_HOT_SECTIONS,
+                _('"%s" is not a valid template section'))
 
         if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
@@ -226,3 +247,27 @@ class HOTemplate(template.Template):
         if self.t.get(self.RESOURCES) is None:
             self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = definition.render_hot()
+
+
+class HOTemplate20141016(HOTemplate20130523):
+    functions = {
+        'get_attr': hot_funcs.GetAtt,
+        'get_file': hot_funcs.GetFile,
+        'get_param': hot_funcs.GetParam,
+        'get_resource': cfn_funcs.ResourceRef,
+        'list_join': hot_funcs.Join,
+        'resource_facade': hot_funcs.ResourceFacade,
+        'str_replace': hot_funcs.Replace,
+
+        'Fn::Select': cfn_funcs.Select,
+
+        # functions removed from 20130523
+        'Fn::GetAZs': hot_funcs.Removed,
+        'Fn::Join': hot_funcs.Removed,
+        'Fn::Split': hot_funcs.Removed,
+        'Fn::Replace': hot_funcs.Removed,
+        'Fn::Base64': hot_funcs.Removed,
+        'Fn::MemberListToMap': hot_funcs.Removed,
+        'Fn::ResourceFacade': hot_funcs.Removed,
+        'Ref': hot_funcs.Removed,
+    }
