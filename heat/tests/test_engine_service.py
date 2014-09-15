@@ -18,6 +18,7 @@ import json
 import sys
 import uuid
 
+from eventlet import event as grevent
 import mock
 import mox
 from oslo.config import cfg
@@ -878,6 +879,9 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
+        evt_mock = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(grevent, 'Event')
+        grevent.Event().AndReturn(evt_mock)
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
         threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
 
@@ -889,6 +893,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
+        self.assertEqual(self.man.thread_group_mgr.events[sid], [evt_mock])
         self.m.VerifyAll()
 
     def test_stack_update_reuses_api_params(self):
@@ -927,6 +932,40 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
+
+    def test_stack_cancel_update_same_engine(self):
+        stack_name = 'service_update_cancel_test_stack'
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack.state_set(old_stack.UPDATE, old_stack.IN_PROGRESS,
+                            'test_override')
+        old_stack.disable_rollback = False
+        old_stack.store()
+        load_mock = self.patchobject(parser.Stack, 'load')
+        load_mock.return_value = old_stack
+        lock_mock = self.patchobject(stack_lock.StackLock, 'try_acquire')
+        lock_mock.return_value = self.man.engine_id
+        self.patchobject(self.man.thread_group_mgr, 'send')
+        self.man.stack_cancel_update(self.ctx, old_stack.identifier())
+        self.man.thread_group_mgr.send.assert_called_once_with(old_stack.id,
+                                                               'cancel')
+
+    def test_stack_cancel_update_wrong_state_fails(self):
+        stack_name = 'service_update_cancel_test_stack'
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack.state_set(old_stack.UPDATE, old_stack.COMPLETE,
+                            'test_override')
+        old_stack.store()
+        load_mock = self.patchobject(parser.Stack, 'load')
+        load_mock.return_value = old_stack
+
+        ex = self.assertRaises(
+            dispatcher.ExpectedException,
+            self.man.stack_cancel_update, self.ctx, old_stack.identifier())
+
+        self.assertEqual(ex.exc_info[0], exception.NotSupported)
+        self.assertIn("Cancelling update when stack is "
+                      "('UPDATE', 'COMPLETE')",
+                      six.text_type(ex.exc_info[1]))
 
     def test_stack_update_equals(self):
         stack_name = 'test_stack_update_equals_resource_limit'
@@ -1638,7 +1677,7 @@ class StackServiceTest(HeatTestCase):
         thread = self.m.CreateMockAnything()
         thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
 
-        def run(stack_id, func, *args):
+        def run(stack_id, func, *args, **kwargs):
             func(*args)
             return thread
         self.eng.thread_group_mgr.start = run
@@ -3246,6 +3285,22 @@ class ThreadGroupManagerTest(HeatTestCase):
             self.cfg_mock.CONF.periodic_interval,
             self.f, *self.fargs, **self.fkwargs)
 
+    def test_tgm_add_event(self):
+        stack_id = 'add_events_test'
+        e1, e2 = mock.Mock(), mock.Mock()
+        thm = service.ThreadGroupManager()
+        thm.add_event(stack_id, e1)
+        thm.add_event(stack_id, e2)
+        self.assertEqual(thm.events[stack_id], [e1, e2])
+
+    def test_tgm_send(self):
+        stack_id = 'send_test'
+        e1, e2 = mock.MagicMock(), mock.Mock()
+        thm = service.ThreadGroupManager()
+        thm.add_event(stack_id, e1)
+        thm.add_event(stack_id, e2)
+        thm.send(stack_id, 'test_message')
+
 
 class ThreadGroupManagerStopTest(HeatTestCase):
     def test_tgm_stop(self):
@@ -3262,6 +3317,7 @@ class ThreadGroupManagerStopTest(HeatTestCase):
             done.append(thread)
 
         thm = service.ThreadGroupManager()
+        thm.add_event(stack_id, mock.Mock())
         thread = thm.start(stack_id, function)
         thread.link(linked, thread)
 
@@ -3269,6 +3325,7 @@ class ThreadGroupManagerStopTest(HeatTestCase):
 
         self.assertIn(thread, done)
         self.assertNotIn(stack_id, thm.groups)
+        self.assertNotIn(stack_id, thm.events)
 
 
 class SnapshotServiceTest(HeatTestCase):

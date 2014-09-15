@@ -39,10 +39,18 @@ from heat.engine import update
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import strutils
+from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
 ERROR_WAIT_TIME = 240
+
+
+class ForcedCancel(BaseException):
+    """Exception raised to cancel task execution."""
+
+    def __str__(self):
+        return "Operation cancelled"
 
 
 class Stack(collections.Mapping):
@@ -660,7 +668,7 @@ class Stack(collections.Mapping):
             post_func=rollback)
         creator(timeout=self.timeout_secs())
 
-    def update(self, newstack):
+    def update(self, newstack, event=None):
         '''
         Compare the current stack with newstack,
         and where necessary create/update/delete the resources until
@@ -673,11 +681,12 @@ class Stack(collections.Mapping):
         60 minutes, set in the constructor
         '''
         self.updated_time = datetime.utcnow()
-        updater = scheduler.TaskRunner(self.update_task, newstack)
+        updater = scheduler.TaskRunner(self.update_task, newstack,
+                                       event=event)
         updater()
 
     @scheduler.wrappertask
-    def update_task(self, newstack, action=UPDATE):
+    def update_task(self, newstack, action=UPDATE, event=None):
         if action not in (self.UPDATE, self.ROLLBACK):
             LOG.error(_("Unexpected action %s passed to update!") % action)
             self.state_set(self.UPDATE, self.FAILED,
@@ -725,7 +734,12 @@ class Stack(collections.Mapping):
                 updater.start(timeout=self.timeout_secs())
                 yield
                 while not updater.step():
-                    yield
+                    if event is None or not event.ready():
+                        yield
+                    else:
+                        message = event.wait()
+                        if message == rpc_api.THREAD_CANCEL:
+                            raise ForcedCancel()
             finally:
                 self.reset_dependencies()
 
@@ -738,6 +752,15 @@ class Stack(collections.Mapping):
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = 'Timed out'
+        except ForcedCancel as e:
+            reason = six.text_type(e)
+
+            stack_status = self.FAILED
+            if action == self.UPDATE:
+                update_task.updater.cancel_all()
+                yield self.update_task(oldstack, action=self.ROLLBACK)
+                return
+
         except exception.ResourceFailure as e:
             reason = six.text_type(e)
 

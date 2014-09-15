@@ -2605,6 +2605,39 @@ class StackTest(HeatTestCase):
                              mock_state.call_args_list[1][0][:2])
         self.m.VerifyAll()
 
+    def test_update_rollback_on_cancel_event(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                            'Properties': {'Foo': 'abc'}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                             'Properties': {'Foo': 'xyz'}},
+                               }}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2),
+                                     disable_rollback=False)
+        evt_mock = mock.MagicMock()
+        evt_mock.ready.return_value = True
+        evt_mock.wait.return_value = 'cancel'
+
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack, event=evt_mock)
+        self.assertEqual((parser.Stack.ROLLBACK, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.m.VerifyAll()
+
     def test_update_rollback_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Parameters': {'AParam': {'Type': 'String'}},

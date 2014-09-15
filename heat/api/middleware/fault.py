@@ -76,6 +76,7 @@ class FaultWrapper(wsgi.Middleware):
         'UnknownUserParameter': webob.exc.HTTPBadRequest,
         'RevertFailed': webob.exc.HTTPInternalServerError,
         'StopActionFailed': webob.exc.HTTPInternalServerError,
+        'EventSendFailed': webob.exc.HTTPInternalServerError,
         'ServerBuildFailed': webob.exc.HTTPInternalServerError,
         'NotSupported': webob.exc.HTTPBadRequest,
         'MissingCredentialError': webob.exc.HTTPBadRequest,
