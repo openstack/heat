@@ -52,8 +52,9 @@ class KeystoneClientV3(object):
 
     Note this is intended to be initialized from a resource on a per-session
     basis, so the session context is passed in on initialization
-    Also note that a copy of this is created every resource as self.keystone()
-    via the code in engine/client.py, so there should not be any need to
+    Also note that an instance of this is created in each request context as
+    part of a lazy-loaded cloud backend and it can be easily referenced in
+    each resource as ``self.keystone()``, so there should not be any need to
     directly instantiate instances of this class inside resources themselves.
     """
 
