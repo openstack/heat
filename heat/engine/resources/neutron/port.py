@@ -12,7 +12,9 @@
 #    under the License.
 
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
@@ -27,12 +29,12 @@ class Port(neutron.NeutronResource):
         NETWORK_ID, NETWORK, NAME, VALUE_SPECS,
         ADMIN_STATE_UP, FIXED_IPS, MAC_ADDRESS,
         DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
-        DEVICE_OWNER,
+        DEVICE_OWNER, REPLACEMENT_POLICY,
     ) = (
         'network_id', 'network', 'name', 'value_specs',
         'admin_state_up', 'fixed_ips', 'mac_address',
         'device_id', 'security_groups', 'allowed_address_pairs',
-        'device_owner',
+        'device_owner', 'replacement_policy',
     )
 
     _FIXED_IP_KEYS = (
@@ -154,6 +156,18 @@ class Port(neutron.NeutronResource):
               'or network:router_interface or network:dhcp'),
             update_allowed=True
         ),
+        REPLACEMENT_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Policy on how to respond to a stack-update for this resource. '
+              'REPLACE_ALWAYS will replace the port regardless of any '
+              'property changes. AUTO will update the existing port for any '
+              'changed update-allowed property.'),
+            default='REPLACE_ALWAYS',
+            constraints=[
+                constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
+            ],
+            update_allowed=True
+        ),
     }
 
     attributes_schema = {
@@ -211,27 +225,27 @@ class Port(neutron.NeutronResource):
         # It is not known which subnet a port might be assigned
         # to so all subnets in a network should be created before
         # the ports in that network.
-        for resource in self.stack.itervalues():
-            if resource.has_interface('OS::Neutron::Subnet'):
-                dep_network = resource.properties.get(
-                    subnet.Subnet.NETWORK) or resource.properties.get(
+        for res in self.stack.itervalues():
+            if res.has_interface('OS::Neutron::Subnet'):
+                dep_network = res.properties.get(
+                    subnet.Subnet.NETWORK) or res.properties.get(
                         subnet.Subnet.NETWORK_ID)
                 network = self.properties.get(
                     self.NETWORK) or self.properties.get(self.NETWORK_ID)
                 if dep_network == network:
-                    deps += (self, resource)
+                    deps += (self, res)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
         self.client_plugin().resolve_network(props, self.NETWORK, 'network_id')
-        self._prepare_list_properties(props)
+        self._prepare_port_properties(props)
 
         port = self.neutron().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
-    def _prepare_list_properties(self, props):
+    def _prepare_port_properties(self, props):
         for fixed_ip in props.get(self.FIXED_IPS, []):
             for key, value in fixed_ip.items():
                 if value is None:
@@ -254,6 +268,8 @@ class Port(neutron.NeutronResource):
 
         if not props[self.FIXED_IPS]:
             del(props[self.FIXED_IPS])
+
+        del(props[self.REPLACEMENT_POLICY])
 
     def _show_resource(self):
         return self.neutron().show_port(
@@ -288,10 +304,19 @@ class Port(neutron.NeutronResource):
             return subnets
         return super(Port, self)._resolve_attribute(name)
 
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource):
+
+        if after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS':
+            raise resource.UpdateReplace(self.name)
+
+        return super(Port, self)._needs_update(
+            after, before, after_props, before_props, prev_resource)
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
 
-        self._prepare_list_properties(props)
+        self._prepare_port_properties(props)
         LOG.debug('updating port with %s' % props)
         self.neutron().update_port(self.resource_id, {'port': props})
 

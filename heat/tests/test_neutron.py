@@ -2533,6 +2533,64 @@ class NeutronPortTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_port_needs_update(self):
+        props = {'network_id': u'net1234',
+                 'name': utils.PhysName('test_stack', 'port'),
+                 'admin_state_up': True,
+                 'device_owner': u'network:dhcp'}
+
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).AndReturn('net1234')
+        neutronclient.Client.create_port(
+            {'port': props}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "fixed_ips": {
+                "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
+                "ip_address": "10.0.0.2"
+            }
+        }})
+
+        self.m.ReplayAll()
+
+        # create port
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+
+        new_props = props.copy()
+
+        # test always replace
+        new_props['replacement_policy'] = 'REPLACE_ALWAYS'
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertRaises(resource.UpdateReplace, port._needs_update,
+                          update_snippet, port.frozen_definition(),
+                          new_props, props, None)
+
+        # test deferring to Resource._needs_update
+        new_props['replacement_policy'] = 'AUTO'
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props)
+        self.assertTrue(port._needs_update(update_snippet,
+                                           port.frozen_definition(),
+                                           new_props, props, None))
+
+        self.m.VerifyAll()
+
     def test_get_port_attributes(self):
         subnet_dict = {'name': 'test-subnet', 'enable_dhcp': True,
                        'network_id': 'net1234', 'dns_nameservers': [],
