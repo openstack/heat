@@ -19,8 +19,9 @@ Template Guide
 
    hot_guide
    hot_spec
+   environment
+   composition
    openstack
    cfn
    contrib
-   environment
    functions

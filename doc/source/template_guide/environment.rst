@@ -18,11 +18,12 @@ Environments
 ============
 
 The environment is used to affect the runtime behaviour of the
-template. It provides a way to override the default resource
-implementation and the parameters passed to Heat.
+template. It provides a way to override the resource
+implementations and provide a mechanism to place parameters
+that the service needs.
 
 To fully understand the runtime behavior you also have to consider
-what plug-ins the cloud provider has installed.
+what plug-ins the cloud operator has installed.
 
 ------
 Format
@@ -44,21 +45,21 @@ Global and effective environments
 
 The environment used for a stack is the combination of (1) the
 environment given by the user with the template for the stack and (2)
-a global environment that is determined by the cloud provider.
-Combination is asymmetric: an entry in the first environment takes
-precedence over an entry in the second.  The OpenStack software
+a global environment that is determined by the cloud operator.
+Combination is asymmetric: an entry in the user environment takes
+precedence over the global environment.  The OpenStack software
 includes a default global environment, which supplies some resource
 types that are included in the standard documentation.  The cloud
-provider can add additional environment entries.
+operator can add additional environment entries.
 
-The cloud provider can add to the global environment
+The cloud operator can add to the global environment
 by putting environment files in a configurable directory wherever
 the heat engine runs.  The configuration variable is named
-"environment_dir" and is found in the "heat.common.config" module (AKA
-the "[DEFAULT]" section) of "/etc/heat/heat.conf".  The default for
-that directory is "/etc/heat/environment.d".  Its contents are
-combined in whatever order the shell delivers them when the heat
-engine starts up, which is the time when these files are read.
+"environment_dir" is found in the "[DEFAULT]" section
+of "/etc/heat/heat.conf".  The default for that directory is
+"/etc/heat/environment.d".  Its contents are combined in whatever
+order the shell delivers them when the service starts up,
+which is the time when these files are read.
 
 If the "my_env.yaml" file from the example above had been put in the
 "environment_dir" then the user's command line could be this:
@@ -100,7 +101,7 @@ will be mapped to "OS::Quantum*" accordingly.
 
 Please note that the template resource URL here must end with ".yaml"
 or ".template", or it will not be treated as a custom template
-resource.
+resource. The supported URL types are "http, https and file".
 
 4) Always map resource type X to Y
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
