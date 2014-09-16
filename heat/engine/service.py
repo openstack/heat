@@ -876,7 +876,8 @@ class EngineService(service.Service):
             stack_info = stack.prepare_abandon()
             self.thread_group_mgr.start_with_acquired_lock(stack,
                                                            lock,
-                                                           stack.delete)
+                                                           stack.delete,
+                                                           abandon=True)
             return stack_info
 
     def list_resource_types(self, cnxt, support_status=None):
