@@ -56,9 +56,15 @@ class InstantiationData(object):
         'files',
     )
 
-    def __init__(self, data):
-        """Initialise from the request object."""
+    def __init__(self, data, patch=False):
+        """
+        Initialise from the request object.
+        If called from the PATCH api, insert a flag for the engine code
+        to distinguish.
+        """
         self.data = data
+        if patch:
+            self.data[engine_api.PARAM_EXISTING] = True
 
     @staticmethod
     def format_parse(data, data_type):
@@ -334,6 +340,22 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
+        self.rpc_client.update_stack(req.context,
+                                     identity,
+                                     data.template(),
+                                     data.environment(),
+                                     data.files(),
+                                     data.args())
+
+        raise exc.HTTPAccepted()
+
+    @util.identified_stack
+    def update_patch(self, req, identity, body):
+        """
+        Update an existing stack with a new template by patching the parameters
+        Add the flag patch to the args so the engine code can distinguish
+        """
+        data = InstantiationData(body, patch=True)
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
