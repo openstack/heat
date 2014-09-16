@@ -896,8 +896,21 @@ class Stack(collections.Mapping):
                     trust_id = user_creds.get('trust_id')
                     if trust_id:
                         try:
-                            self.clients.client('keystone').delete_trust(
-                                trust_id)
+                            # If the trustor doesn't match the context user the
+                            # we have to use the stored context to cleanup the
+                            # trust, as although the user evidently has
+                            # permission to delete the stack, they don't have
+                            # rights to delete the trust unless an admin
+                            trustor_id = user_creds.get('trustor_user_id')
+                            if self.context.user_id != trustor_id:
+                                LOG.debug('Context user_id doesn\'t match '
+                                          'trustor, using stored context')
+                                sc = self.stored_context()
+                                sc.clients.client('keystone').delete_trust(
+                                    trust_id)
+                            else:
+                                self.clients.client('keystone').delete_trust(
+                                    trust_id)
                         except Exception as ex:
                             LOG.exception(ex)
                             stack_status = self.FAILED

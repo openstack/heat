@@ -25,6 +25,7 @@ import warnings
 
 from heat.common import context
 from heat.common import exception
+from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
 from heat.common import urlfetch
 import heat.db.api as db_api
@@ -1438,6 +1439,72 @@ class StackTest(HeatTestCase):
         self.assertIsNone(db_s)
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
+
+    def test_delete_trust_trustor(self):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        trustor_ctx = utils.dummy_context(user_id='thetrustor')
+        self.m.StubOutWithMock(hkc, 'KeystoneClient')
+        hkc.KeystoneClient(trustor_ctx).AndReturn(
+            FakeKeystoneClient(user_id='thetrustor'))
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            trustor_ctx, 'delete_trust_nt', self.tmpl)
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        user_creds_id = db_s.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(trustor_ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+    def test_delete_trust_not_trustor(self):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        # Stack gets created with trustor_ctx, deleted with other_ctx
+        # then the trust delete should be with stored_ctx
+        trustor_ctx = utils.dummy_context(user_id='thetrustor')
+        other_ctx = utils.dummy_context(user_id='nottrustor')
+        stored_ctx = utils.dummy_context(trust_id='thetrust')
+
+        self.m.StubOutWithMock(hkc, 'KeystoneClient')
+        hkc.KeystoneClient(trustor_ctx).AndReturn(
+            FakeKeystoneClient(user_id='thetrustor'))
+        self.m.StubOutWithMock(parser.Stack, 'stored_context')
+        parser.Stack.stored_context().AndReturn(stored_ctx)
+        hkc.KeystoneClient(stored_ctx).AndReturn(
+            FakeKeystoneClient(user_id='nottrustor'))
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            trustor_ctx, 'delete_trust_nt', self.tmpl)
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        user_creds_id = db_s.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
+
+        loaded_stack = parser.Stack.load(other_ctx, self.stack.id)
+        loaded_stack.delete()
+
+        db_s = db_api.stack_get(other_ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         loaded_stack.state)
 
     def test_delete_trust_backup(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
