@@ -211,6 +211,9 @@ class FormatTest(HeatTestCase):
 
         stack = api.format_stack_preview(self.stack)
         self.assertIsInstance(stack, dict)
+        self.assertIsNone(stack.get('status'))
+        self.assertIsNone(stack.get('action'))
+        self.assertIsNone(stack.get('status_reason'))
         self.assertEqual('test_stack', stack['stack_name'])
         self.assertIn('resources', stack)
         self.assertEqual(['fmt1', ['fmt2', ['fmt3']]], stack['resources'])
@@ -230,11 +233,10 @@ class FormatTest(HeatTestCase):
             'description': 'No description',
             'disable_rollback': True,
             'notification_topics': [],
-            'outputs': [],
-            'stack_action': '',
+            'stack_action': 'CREATE',
             'stack_name': 'test_stack',
             'stack_owner': 'test_username',
-            'stack_status': '',
+            'stack_status': 'IN_PROGRESS',
             'stack_status_reason': '',
             'template_description': 'No description',
             'timeout_mins': None,
