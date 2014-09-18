@@ -458,11 +458,11 @@ class CinderVolume(Volume):
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
         DESCRIPTION, VOLUME_TYPE, METADATA, IMAGE_REF, IMAGE,
-        SOURCE_VOLID,
+        SOURCE_VOLID, CINDER_SCHEDULER_HINTS,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'backup_id', 'name',
         'description', 'volume_type', 'metadata', 'imageRef', 'image',
-        'source_volid',
+        'source_volid', 'scheduler_hints',
     )
 
     ATTRIBUTES = (
@@ -538,6 +538,12 @@ class CinderVolume(Volume):
             properties.Schema.STRING,
             _('If specified, the volume to use as source.')
         ),
+        CINDER_SCHEDULER_HINTS: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary key-value pairs specified by the client to help '
+              'the Cinder scheduler creating a volume.'),
+            support_status=support.SupportStatus(version='2015.1')
+        ),
     }
 
     attributes_schema = {
@@ -608,9 +614,10 @@ class CinderVolume(Volume):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
         optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
-                     self.METADATA)
+                     self.METADATA, self.CINDER_SCHEDULER_HINTS)
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop])
+
         return arguments
 
     def _resolve_attribute(self, name):
@@ -731,6 +738,19 @@ class CinderVolume(Volume):
 
     def check_delete_snapshot_complete(self, delete_task):
         return delete_task.step()
+
+    def validate(self):
+        """Validate provided params."""
+        res = super(CinderVolume, self).validate()
+        if res is not None:
+            return res
+
+        # Scheduler hints are only supported from Cinder API v2
+        if self.properties.get(self.CINDER_SCHEDULER_HINTS) \
+                and self.cinder().volume_api_version == 1:
+            raise exception.StackValidationFailed(
+                message=_('Scheduler hints are not supported by the current '
+                          'volume API.'))
 
 
 class CinderVolumeAttachment(VolumeAttachment):

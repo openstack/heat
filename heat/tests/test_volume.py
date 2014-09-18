@@ -89,6 +89,13 @@ resources:
     properties:
       availability_zone: nova
       size: 2
+  volume3:
+    type: OS::Cinder::Volume
+    properties:
+      availability_zone: nova
+      size: 1
+      name: test_name
+      scheduler_hints: {"hint1": "good_advice"}
   attachment:
     type: OS::Cinder::VolumeAttachment
     properties:
@@ -1387,6 +1394,39 @@ class CinderVolumeTest(BaseVolumeTest):
         scheduler.TaskRunner(rsrc.update, after)()
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_cinder_create_with_scheduler_hints(self):
+        fv = FakeVolume('creating', 'available')
+
+        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=1, name='test_name', description=None,
+            availability_zone='nova',
+            scheduler_hints={'hint1': 'good_advice'}).AndReturn(fv)
+
+        self.m.ReplayAll()
+
+        stack_name = 'test_volume_scheduler_hints_stack'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        self.create_volume(self.t, stack, 'volume3')
+        self.assertEqual('available', fv.status)
+
+        self.m.VerifyAll()
+
+    def test_cinder_create_with_scheduler_hints_and_cinder_api_v1(self):
+        cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
+        self.cinder_fc.volume_api_version = 1
+
+        self.m.ReplayAll()
+
+        stack_name = 'test_volume_scheduler_hints_api_v1_stack'
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.create_volume, self.t, stack, 'volume3')
+        self.assertIn('Scheduler hints are not supported by the current '
+                      'volume API.', six.text_type(ex))
+
         self.m.VerifyAll()
 
 
