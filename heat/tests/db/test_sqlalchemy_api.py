@@ -25,6 +25,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
+from heat.db.sqlalchemy import models
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
@@ -2602,3 +2603,57 @@ class DBAPISyncPointTest(common.HeatTestCase):
             self.ctx, self.stack.id, self.stack.current_traversal, True
         )
         self.assertEqual(None, ret_sync_point_stack)
+
+
+class DBAPICryptParamsPropsTest(common.HeatTestCase):
+    def setUp(self):
+        super(DBAPICryptParamsPropsTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        t = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        template = {
+            'template': t,
+            'files': {'foo': 'bar'},
+            'environment': {'parameters': {'param1': 'foo',
+                                           'param2': 'bar'}}}
+        self.template = db_api.raw_template_create(self.ctx, template)
+
+    def test_db_encrypt_decrypt(self):
+        session = db_api.get_session()
+
+        env = session.query(models.RawTemplate).all()[0].environment
+        self.assertEqual('bar', env['parameters']['param2'])
+
+        db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key)
+
+        env = session.query(models.RawTemplate).all()[0].environment
+        self.assertEqual('oslo_decrypt_v1',
+                         env['parameters']['param2'][0])
+
+        db_api.db_decrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key)
+
+        env = session.query(models.RawTemplate).all()[0].environment
+        self.assertEqual('bar', env['parameters']['param2'])
+
+        # Use a different encryption key to decrypt
+        db_api.db_encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key)
+        db_api.db_decrypt_parameters_and_properties(
+            self.ctx, '774c15be099ea74123a9b9592ff12680')
+
+        env = session.query(models.RawTemplate).all()[0].environment
+        self.assertNotEqual('bar', env['parameters']['param2'])

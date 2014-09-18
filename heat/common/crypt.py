@@ -32,24 +32,36 @@ auth_opts = [
 cfg.CONF.register_opts(auth_opts)
 
 
-def encrypt(auth_info):
+def encrypt(auth_info, encryption_key=None):
     if auth_info is None:
         return None, None
+
+    encryption_key = get_valid_encryption_key(encryption_key)
     sym = utils.SymmetricCrypto()
-    res = sym.encrypt(cfg.CONF.auth_encryption_key[:32],
+    res = sym.encrypt(encryption_key,
                       auth_info, b64encode=True)
     return 'oslo_decrypt_v1', res
 
 
-def oslo_decrypt_v1(auth_info):
+def oslo_decrypt_v1(auth_info, encryption_key=None):
     if auth_info is None:
         return None
+
+    encryption_key = get_valid_encryption_key(encryption_key)
     sym = utils.SymmetricCrypto()
-    return sym.decrypt(cfg.CONF.auth_encryption_key[:32],
+    return sym.decrypt(encryption_key,
                        auth_info, b64decode=True)
 
 
-def heat_decrypt(auth_info):
+def get_valid_encryption_key(encryption_key):
+    if encryption_key is None:
+        encryption_key = cfg.CONF.auth_encryption_key[:32]
+    else:
+        encryption_key = encryption_key[0:32]
+    return encryption_key
+
+
+def heat_decrypt(auth_info, encryption_key=None):
     """Decrypt function for data that has been encrypted using an older
     version of Heat.
     Note: the encrypt function returns the function that is needed to
@@ -60,9 +72,11 @@ def heat_decrypt(auth_info):
     """
     if auth_info is None:
         return None
+
+    encryption_key = get_valid_encryption_key(encryption_key)
     auth = base64.b64decode(auth_info)
     iv = auth[:AES.block_size]
-    cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
+    cipher = AES.new(encryption_key, AES.MODE_CFB, iv)
     res = cipher.decrypt(auth[AES.block_size:])
     return res
 
