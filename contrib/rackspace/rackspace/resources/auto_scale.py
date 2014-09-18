@@ -89,6 +89,8 @@ class Group(resource.Resource):
         LAUNCH_CONFIG_ARGS_SERVER_NETWORKS,
         LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG,
         LAUNCH_CONFIG_ARGS_SERVER_KEY_NAME,
+        LAUNCH_CONFIG_ARGS_SERVER_USER_DATA,
+        LAUNCH_CONFIG_ARGS_SERVER_CDRIVE
     ) = (
         'name', 'flavorRef',
         'imageRef',
@@ -97,6 +99,8 @@ class Group(resource.Resource):
         'networks',
         'diskConfig',  # technically maps to OS-DCF:diskConfig
         'key_name',
+        'user_data',
+        'config_drive'
     )
 
     _LAUNCH_CONFIG_ARGS_SERVER_NETWORK_KEYS = (
@@ -154,6 +158,14 @@ class Group(resource.Resource):
                 LAUNCH_CONFIG_ARGS_SERVER_PERSONALITY: properties.Schema(
                     properties.Schema.MAP,
                     _('File path and contents.')
+                ),
+                LAUNCH_CONFIG_ARGS_SERVER_CDRIVE: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('Enable config drive on the instance.')
+                ),
+                LAUNCH_CONFIG_ARGS_SERVER_USER_DATA: properties.Schema(
+                    properties.Schema.STRING,
+                    _('User data for bootstrapping the instance.')
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_NETWORKS: properties.Schema(
                     properties.Schema.LIST,
@@ -278,6 +290,10 @@ class Group(resource.Resource):
         if personality:
             personality = [{'path': k, 'contents': v} for k, v in
                            personality.items()]
+        user_data = server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_USER_DATA)
+        cdrive = (server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_CDRIVE) or
+                  bool(user_data is not None and len(user_data.strip())))
+
         return dict(
             launch_config_type=launchconf[self.LAUNCH_CONFIG_TYPE],
             server_name=server_args[self.GROUP_CONFIGURATION_NAME],
@@ -286,6 +302,8 @@ class Group(resource.Resource):
             disk_config=server_args.get(
                 self.LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG),
             metadata=server_args.get(self.GROUP_CONFIGURATION_METADATA),
+            config_drive=cdrive,
+            user_data=user_data,
             personality=personality,
             networks=server_args.get(self.LAUNCH_CONFIG_ARGS_SERVER_NETWORKS),
             load_balancers=lbs,
