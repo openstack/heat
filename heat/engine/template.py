@@ -118,15 +118,15 @@ class Template(collections.Mapping):
 
     def store(self, context=None):
         '''Store the Template in the database and return its ID.'''
+        rt = {
+            'template': self.t,
+            'files': self.files
+        }
         if self.id is None:
-            rt = {
-                'template': self.t,
-                'files': self.files
-            }
             new_rt = db_api.raw_template_create(context, rt)
             self.id = new_rt.id
         else:
-            db_api.raw_template_update_template(context, self.id, self.t)
+            db_api.raw_template_update(context, self.id, rt)
         return self.id
 
     def __iter__(self):

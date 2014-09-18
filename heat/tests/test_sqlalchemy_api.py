@@ -1191,6 +1191,48 @@ class DBAPIRawTemplateTest(HeatTestCase):
         self.assertEqual(tp.id, template.id)
         self.assertEqual(tp.template, template.template)
 
+    def test_raw_template_update(self):
+        another_wp_template = '''
+        {
+          "AWSTemplateFormatVersion" : "2010-09-09",
+          "Description" : "WordPress",
+          "Parameters" : {
+            "KeyName" : {
+              "Description" : "KeyName",
+              "Type" : "String",
+              "Default" : "test"
+            }
+          },
+          "Resources" : {
+            "WebServer": {
+              "Type": "AWS::EC2::Instance",
+              "Properties": {
+                "ImageId" : "fedora-20.x86_64.qcow2",
+                "InstanceType"   : "m1.xlarge",
+                "KeyName"        : "test",
+                "UserData"       : "wordpress"
+              }
+            }
+          }
+        }
+        '''
+        new_t = template_format.parse(another_wp_template)
+        new_files = {
+            'foo': 'bar',
+            'myfile': 'file:///home/somefile'
+        }
+        new_values = {
+            'template': new_t,
+            'files': new_files
+        }
+        orig_tp = create_raw_template(self.ctx)
+        updated_tp = db_api.raw_template_update(self.ctx,
+                                                orig_tp.id, new_values)
+
+        self.assertEqual(updated_tp.id, orig_tp.id)
+        self.assertEqual(updated_tp.template, new_t)
+        self.assertEqual(updated_tp.files, new_files)
+
 
 class DBAPIUserCredsTest(HeatTestCase):
     def setUp(self):
