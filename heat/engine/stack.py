@@ -19,6 +19,7 @@ import warnings
 
 from oslo.config import cfg
 from oslo.utils import encodeutils
+from osprofiler import profiler
 import six
 
 from heat.common import context as common_context
@@ -282,6 +283,7 @@ class Stack(collections.Mapping):
                    use_stored_context=use_stored_context,
                    username=stack.username)
 
+    @profiler.trace('Stack.store', hide_args=False)
     def store(self, backup=False):
         '''
         Store the stack in the database and return its ID
@@ -426,6 +428,7 @@ class Stack(collections.Mapping):
         handler = self._access_allowed_handlers.get(credential_id)
         return handler and handler(resource_name)
 
+    @profiler.trace('Stack.validate', hide_args=False)
     def validate(self):
         '''
         Validates the template.
@@ -479,6 +482,7 @@ class Stack(collections.Mapping):
         '''
         return any(res.requires_deferred_auth for res in self.values())
 
+    @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''
         if action not in self.ACTIONS:
@@ -527,6 +531,7 @@ class Stack(collections.Mapping):
         return [resource.preview()
                 for resource in self.resources.itervalues()]
 
+    @profiler.trace('Stack.create', hide_args=False)
     def create(self):
         '''
         Create the stack and all of the resources.
@@ -607,6 +612,7 @@ class Stack(collections.Mapping):
         lifecycle_plugin_utils.do_post_ops(self.context, self, None, action,
                                            (self.status == self.FAILED))
 
+    @profiler.trace('Stack.check', hide_args=False)
     def check(self):
         self.updated_time = datetime.utcnow()
         checker = scheduler.TaskRunner(self.stack_task, self.CHECK,
@@ -631,6 +637,7 @@ class Stack(collections.Mapping):
 
         return all(supported)
 
+    @profiler.trace('Stack._backup_stack', hide_args=False)
     def _backup_stack(self, create_if_missing=True):
         '''
         Get a Stack containing any in-progress resources from the previous
@@ -652,6 +659,7 @@ class Stack(collections.Mapping):
         else:
             return None
 
+    @profiler.trace('Stack.adopt', hide_args=False)
     def adopt(self):
         '''
         Adopt a stack (create stack with all the existing resources).
@@ -668,6 +676,7 @@ class Stack(collections.Mapping):
             post_func=rollback)
         creator(timeout=self.timeout_secs())
 
+    @profiler.trace('Stack.update', hide_args=False)
     def update(self, newstack, event=None):
         '''
         Compare the current stack with newstack,
@@ -795,6 +804,7 @@ class Stack(collections.Mapping):
 
         notification.send(self)
 
+    @profiler.trace('Stack.delete', hide_args=False)
     def delete(self, action=DELETE, backup=False, abandon=False):
         '''
         Delete all of the resources, and then the stack itself.
@@ -969,6 +979,7 @@ class Stack(collections.Mapping):
                            "%s ") % self.id)
             self.id = None
 
+    @profiler.trace('Stack.suspend', hide_args=False)
     def suspend(self):
         '''
         Suspend the stack, which invokes handle_suspend for all stack resources
@@ -988,6 +999,7 @@ class Stack(collections.Mapping):
                                         reverse=True)
         sus_task(timeout=self.timeout_secs())
 
+    @profiler.trace('Stack.resume', hide_args=False)
     def resume(self):
         '''
         Resume the stack, which invokes handle_resume for all stack resources
@@ -1007,6 +1019,7 @@ class Stack(collections.Mapping):
                                         reverse=False)
         sus_task(timeout=self.timeout_secs())
 
+    @profiler.trace('Stack.snapshot', hide_args=False)
     def snapshot(self):
         '''Snapshot the stack, invoking handle_snapshot on all resources.'''
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -1014,12 +1027,14 @@ class Stack(collections.Mapping):
                                         reverse=False)
         sus_task(timeout=self.timeout_secs())
 
+    @profiler.trace('Stack.delete_snapshot', hide_args=False)
     def delete_snapshot(self, snapshot):
         '''Remove a snapshot from the backends.'''
         for name, rsrc in self.resources.iteritems():
             data = snapshot.data['resources'].get(name)
             scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
+    @profiler.trace('Stack.output', hide_args=False)
     def output(self, key):
         '''
         Get the value of the specified stack output.
@@ -1074,11 +1089,13 @@ class Stack(collections.Mapping):
         self.stack_user_project_id = project_id
         self.store()
 
+    @profiler.trace('Stack.create_stack_user_project_id', hide_args=False)
     def create_stack_user_project_id(self):
         project_id = self.clients.client(
             'keystone').create_stack_domain_project(self.id)
         self.set_stack_user_project_id(project_id)
 
+    @profiler.trace('Stack.prepare_abandon', hide_args=False)
     def prepare_abandon(self):
         return {
             'name': self.name,

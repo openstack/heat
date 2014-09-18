@@ -1270,6 +1270,19 @@
 #api_paste_config=api-paste.ini
 
 
+[profiler]
+
+#
+# Options defined in heat.common.config
+#
+
+# If False fully disable profiling feature. (boolean value)
+#profiler_enabled=false
+
+# If False do not trace SQL requests. (boolean value)
+#trace_sqlalchemy=false
+
+
 [revision]
 
 #

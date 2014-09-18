@@ -41,6 +41,32 @@ Adding the following lines to your `localrc` file will enable the ceilometer ser
     enable_service ceilometer-acompute ceilometer-acentral ceilometer-collector ceilometer-api
     enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
 
+Configure Devstack to enable OSprofiler
+---------------------------------------
+
+Add the profiler notifier to your Ceilometer to your config::
+
+  CEILOMETER_NOTIFICATION_TOPICS=notifications,profiler
+
+Enable the profiler in /etc/heat/heat.conf::
+
+  $ echo -e "[profiler]\nprofiler_enabled = True\ntrace_sqlalchemy = True\n" >> /etc/heat/heat.conf
+
+Change the default hmac_key in /etc/heat/api-paste.ini::
+
+  $ sed -i "s/hmac_keys =.*/hmac_keys = SECRET_KEY/" /etc/heat/api-paste.ini
+
+Run any command with --profile SECRET_KEY::
+
+  $ heat --profile SECRET_KEY stack-list
+  # it will print <Trace ID>
+
+Get pretty HTML with traces::
+
+  $ osprofiler trace show --html <Profile ID>
+
+Note that osprofiler should be run with the admin user name & tenant.
+
 
 Confirming Heat is responding
 -----------------------------
