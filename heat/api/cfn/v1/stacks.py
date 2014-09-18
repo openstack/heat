@@ -365,6 +365,20 @@ class StackController(object):
 
         return api_utils.format_response(action, response)
 
+    def cancel_update(self, req):
+        action = 'CancelUpdateStack'
+        self._enforce(req, action)
+        con = req.context
+        stack_name = req.params['StackName']
+        stack_identity = self._get_identity(con, stack_name)
+        try:
+            self.rpc_client.stack_cancel_update(
+                con, stack_identity=stack_identity)
+        except Exception as ex:
+            return exception.map_remote_error(ex)
+
+        return api_utils.format_response(action, {})
+
     def get_template(self, req):
         """
         Implements the GetTemplate API action.

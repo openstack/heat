@@ -31,6 +31,7 @@ class API(wsgi.Router):
         'describe': 'DescribeStacks',
         'delete': 'DeleteStack',
         'update': 'UpdateStack',
+        'cancel_update': 'CancelUpdateStack',
         'events_list': 'DescribeStackEvents',
         'validate_template': 'ValidateTemplate',
         'get_template': 'GetTemplate',
