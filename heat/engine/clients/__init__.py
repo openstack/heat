@@ -15,7 +15,7 @@ from oslo.config import cfg
 from stevedore import extension
 import warnings
 
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 

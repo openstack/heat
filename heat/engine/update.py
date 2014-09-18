@@ -13,11 +13,11 @@
 
 import six
 
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

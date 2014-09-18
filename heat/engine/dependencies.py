@@ -18,7 +18,7 @@ import six
 from six.moves import xrange
 
 from heat.common import exception
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 
 
 class CircularDependencyException(exception.HeatException):

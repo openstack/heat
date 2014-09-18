@@ -14,8 +14,8 @@
 import keystoneclient.exceptions as kc_exception
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import resource
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 

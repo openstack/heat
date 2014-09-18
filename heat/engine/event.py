@@ -14,9 +14,9 @@
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import identifier
 from heat.db import api as db_api
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

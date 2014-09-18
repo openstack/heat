@@ -21,7 +21,7 @@ import six
 
 from heat.common import environment_format as env_fmt
 from heat.common import exception
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 from heat.openstack.common import log
 
 

@@ -15,10 +15,10 @@
 import datetime
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import timestamp
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.rpc import api as rpc_api

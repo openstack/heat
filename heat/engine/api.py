@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.i18n import _
 from heat.common import param_utils
 from heat.common import template_format
 from heat.engine import constraints as constr
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.rpc import api
