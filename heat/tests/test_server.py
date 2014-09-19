@@ -410,7 +410,7 @@ class ServersTest(HeatTestCase):
                               return_server)
         self.assertEqual(
             'Server is not active - Unknown status BOGUS',
-            str(e))
+            six.text_type(e))
 
     def test_server_create_error_status(self):
         return_server = self.fc.servers.list()[1]
@@ -431,7 +431,7 @@ class ServersTest(HeatTestCase):
                               return_server)
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
-            str(e))
+            six.text_type(e))
 
         self.m.VerifyAll()
 

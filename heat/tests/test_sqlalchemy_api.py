@@ -844,12 +844,12 @@ class SqlAlchemyTest(HeatTestCase):
             db_api.software_config_get,
             self.ctx,
             config_id)
-        self.assertIn(config_id, str(err))
+        self.assertIn(config_id, six.text_type(err))
 
         err = self.assertRaises(
             exception.NotFound, db_api.software_config_delete,
             self.ctx, config_id)
-        self.assertIn(config_id, str(err))
+        self.assertIn(config_id, six.text_type(err))
 
     def _deployment_values(self):
         tenant_id = self.ctx.tenant_id

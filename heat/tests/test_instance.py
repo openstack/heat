@@ -433,7 +433,7 @@ class InstancesTest(HeatTestCase):
         instance._check_active = mock.Mock(return_value=False)
 
         exc = self.assertRaises(exception.Error, instance.handle_check)
-        self.assertIn('foo', str(exc))
+        self.assertIn('foo', six.text_type(exc))
 
     class FakeVolumeAttach(object):
         def started(self):
@@ -450,7 +450,7 @@ class InstancesTest(HeatTestCase):
                               (return_server, self.FakeVolumeAttach()))
         self.assertEqual(
             'Instance is not active - Unknown status BOGUS',
-            str(e))
+            six.text_type(e))
 
     def test_instance_create_error_status(self):
         return_server = self.fc.servers.list()[1]
@@ -471,7 +471,7 @@ class InstancesTest(HeatTestCase):
                               (return_server, self.FakeVolumeAttach()))
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
-            str(e))
+            six.text_type(e))
 
         self.m.VerifyAll()
 

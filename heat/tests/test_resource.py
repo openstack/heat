@@ -573,7 +573,7 @@ class ResourceTest(HeatTestCase):
         estr = ('ResourceInError: Went to status ERROR due to "just because"')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual(estr, str(err))
+        self.assertEqual(estr, six.text_type(err))
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
         self.m.VerifyAll()

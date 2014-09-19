@@ -4192,7 +4192,7 @@ class StackTest(HeatTestCase):
 
         self.assertEqual('Output validation error: The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
-                         str(ex))
+                         six.text_type(ex))
 
     def test_incorrect_outputs_hot_get_attr(self):
         tmpl = {'heat_template_version': '2013-05-23',
@@ -4212,4 +4212,4 @@ class StackTest(HeatTestCase):
 
         self.assertEqual('Output validation error: The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
-                         str(ex))
+                         six.text_type(ex))
