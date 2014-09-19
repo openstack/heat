@@ -11,9 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine.resources import subnet as sn
 from heat.engine import scheduler
 from heat.engine import template
 from heat.tests.common import HeatTestCase
@@ -426,6 +429,49 @@ Resources:
         subnet.state_set(subnet.CREATE, subnet.COMPLETE, 'to delete again')
         scheduler.TaskRunner(subnet.delete)()
         scheduler.TaskRunner(stack['the_vpc'].delete)()
+        self.m.VerifyAll()
+
+    def _mock_create_subnet_failed(self):
+        self.subnet_name = utils.PhysName('test_stack', 'the_subnet')
+        neutronclient.Client.create_subnet(
+            {'subnet': {
+                'network_id': u'aaaa',
+                'cidr': u'10.0.0.0/24',
+                'ip_version': 4,
+                'name': self.subnet_name}}).AndReturn({
+                    'subnet': {
+                        'status': 'ACTIVE',
+                        'name': self.subnet_name,
+                        'admin_state_up': True,
+                        'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                        'id': 'cccc'}})
+
+        neutronclient.Client.show_network(
+            'aaaa'
+        ).MultipleTimes().AndRaise(NeutronClientException(status_code=404))
+
+    def test_create_failed_delete_success(self):
+        self._mock_create_subnet_failed()
+        neutronclient.Client.delete_subnet('cccc').AndReturn(None)
+        self.m.ReplayAll()
+
+        t = template_format.parse(self.test_template)
+        tmpl = parser.Template(t)
+        stack = parser.Stack(utils.dummy_context(), 'test_subnet_', tmpl,
+                             stack_id=str(uuid.uuid4()))
+        tmpl.t['Resources']['the_subnet']['Properties']['VpcId'] = 'aaaa'
+        resource_defns = tmpl.resource_definitions(stack)
+        rsrc = sn.Subnet('the_subnet',
+                         resource_defns['the_subnet'],
+                         stack)
+        rsrc.validate()
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual(u'cccc', ref_id)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
 
