@@ -18,11 +18,11 @@ import mock
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import template
-from heat.openstack.common import gettextutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -687,7 +687,7 @@ class SoftwareDeploymentTest(HeatTestCase):
         }, args)
 
         # Test bug 1332355, where details contains a translateable message
-        details = {'failed': gettextutils.Message('need more memory.')}
+        details = {'failed': _('need more memory.')}
         self.deployment.handle_signal(details)
         args = sd.update.call_args[1]
         self.assertEqual({

@@ -19,13 +19,13 @@ from docutils import nodes
 import pydoc
 from sphinx.util.compat import Directive
 
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
-from heat.openstack.common.gettextutils import _
 
 
 global_env = environment.Environment({}, user_env=False)

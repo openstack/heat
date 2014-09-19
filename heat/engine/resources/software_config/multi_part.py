@@ -16,10 +16,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 
+from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
-from heat.openstack.common.gettextutils import _
 
 
 class MultipartMime(software_config.SoftwareConfig):

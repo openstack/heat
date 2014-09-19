@@ -27,8 +27,8 @@ from six.moves.urllib import parse as urlparse
 import warnings
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import scheduler
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

@@ -14,7 +14,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.openstack.common import gettextutils
+from oslo import i18n
 
-gettextutils.enable_lazy()
-gettextutils.install('heat', lazy=True)
+i18n.enable_lazy()
+# fixme(elynn): Since install() is deprecated, we should remove it in
+# the future
+i18n.install('heat')

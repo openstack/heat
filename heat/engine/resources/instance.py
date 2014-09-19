@@ -17,6 +17,7 @@ from oslo.config import cfg
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -24,7 +25,6 @@ from heat.engine import resource
 from heat.engine.resources import volume
 from heat.engine import scheduler
 from heat.engine import signal_responder
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
