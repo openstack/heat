@@ -269,6 +269,13 @@ neutron_floating_template_deprecated = '''
     "router": {
       "Type": "OS::Neutron::Router"
     },
+    "router_interface": {
+      "Type": "OS::Neutron::RouterInterface",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "subnet": "sub1234"
+      }
+    },
     "gateway": {
       "Type": "OS::Neutron::RouterGateway",
       "Properties": {
@@ -311,6 +318,13 @@ neutron_floating_template = '''
     },
     "router": {
       "Type": "OS::Neutron::Router"
+    },
+    "router_interface": {
+      "Type": "OS::Neutron::RouterInterface",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "subnet": "sub1234"
+      }
     },
     "gateway": {
       "Type": "OS::Neutron::RouterGateway",
@@ -1925,6 +1939,9 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         deps = stack.dependencies[stack['gateway']]
 
+        self.assertIn(stack['floating_ip'], deps)
+
+        deps = stack.dependencies[stack['router_interface']]
         self.assertIn(stack['floating_ip'], deps)
 
         fip = stack['floating_ip']
