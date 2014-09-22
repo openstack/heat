@@ -34,6 +34,14 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
         }
 
         endpoint = self.get_heat_url()
+        if self._get_client_option('heat', 'url'):
+            # assume that the heat API URL is manually configured because
+            # it is not in the keystone catalog, so include the credentials
+            # for the standalone auth_password middleware
+            args['username'] = self.context.username
+            args['password'] = self.context.password
+            del(args['token'])
+
         return hc.Client('1', endpoint, **args)
 
     def is_not_found(self, ex):
