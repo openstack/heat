@@ -33,74 +33,12 @@ from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine.resources import server
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests.autoscaling import inline_templates
+from heat.tests import common
 from heat.tests import utils
 
 
-as_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "AutoScaling Test",
-  "Parameters" : {
-  "ImageId": {"Type": "String"},
-  "KeyName": {"Type": "String"}
-  },
-  "Resources" : {
-    "WebServerGroup" : {
-      "Type" : "AWS::AutoScaling::AutoScalingGroup",
-      "Properties" : {
-        "AvailabilityZones" : ["nova"],
-        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
-        "MinSize" : "1",
-        "MaxSize" : "5",
-        "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
-      }
-    },
-    "WebServerScaleUpPolicy" : {
-      "Type" : "AWS::AutoScaling::ScalingPolicy",
-      "Properties" : {
-        "AdjustmentType" : "ChangeInCapacity",
-        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
-        "Cooldown" : "60",
-        "ScalingAdjustment" : "1"
-      }
-    },
-    "WebServerScaleDownPolicy" : {
-      "Type" : "AWS::AutoScaling::ScalingPolicy",
-      "Properties" : {
-        "AdjustmentType" : "ChangeInCapacity",
-        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
-        "Cooldown" : "60",
-        "ScalingAdjustment" : "-1"
-      }
-    },
-    "ElasticLoadBalancer" : {
-        "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
-        "Properties" : {
-            "AvailabilityZones" : ["nova"],
-            "Listeners" : [ {
-                "LoadBalancerPort" : "80",
-                "InstancePort" : "80",
-                "Protocol" : "HTTP"
-            }]
-        }
-    },
-    "LaunchConfig" : {
-      "Type" : "AWS::AutoScaling::LaunchConfiguration",
-      "Properties": {
-        "ImageId" : {"Ref": "ImageId"},
-        "InstanceType"   : "bar",
-        "BlockDeviceMappings": [
-            {
-                "DeviceName": "vdb",
-                "Ebs": {"SnapshotId": "9ef5496e-7426-446a-bbc8-01f84d9c9972",
-                        "DeleteOnTermination": "True"}
-            }]
-      }
-    }
-  }
-}
-'''
+as_template = inline_templates.as_template
 
 as_template_HoT = '''
 {
@@ -171,7 +109,7 @@ as_template_bad_group = '''
 '''
 
 
-class AutoScalingTest(HeatTestCase):
+class AutoScalingTest(common.HeatTestCase):
     dummy_instance_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
     params = {'KeyName': 'test', 'ImageId': 'foo'}
     params_HoT = {'flavor': 'test', 'image': 'foo'}
@@ -1928,28 +1866,3 @@ class AutoScalingTest(HeatTestCase):
         self.assertIn(excepted_error, six.text_type(e))
 
         self.m.VerifyAll()
-
-
-class TestInstanceGroup(HeatTestCase):
-    params = {'KeyName': 'test', 'ImageId': 'foo'}
-
-    def setUp(self):
-        super(TestInstanceGroup, self).setUp()
-
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=self.params)
-
-        defn = rsrc_defn.ResourceDefinition('ig', 'OS::Heat::InstanceGroup',
-                                            {'Size': 2,
-                                             'LaunchConfigurationName': 'foo'})
-        self.instance_group = asc.InstanceGroup('ig', defn, stack)
-
-    def test_child_template(self):
-        self.instance_group._create_template = mock.Mock(return_value='tpl')
-
-        self.assertEqual('tpl', self.instance_group.child_template())
-        self.instance_group._create_template.assert_called_once_with(2)
-
-    def test_child_params(self):
-        self.instance_group._environment = mock.Mock(return_value='env')
-        self.assertEqual('env', self.instance_group.child_params())
