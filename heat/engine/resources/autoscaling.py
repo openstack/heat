@@ -733,9 +733,9 @@ class AutoScalingResourceGroup(AutoScalingGroup):
     )
 
     ATTRIBUTES = (
-        OUTPUTS, OUTPUTS_LIST,
+        OUTPUTS, OUTPUTS_LIST, CURRENT_SIZE,
     ) = (
-        'outputs', 'outputs_list',
+        'outputs', 'outputs_list', 'current_size',
     )
 
     properties_schema = {
@@ -807,6 +807,9 @@ class AutoScalingResourceGroup(AutoScalingGroup):
         OUTPUTS_LIST: attributes.Schema(
             _("A list of the specified attribute of each individual resource.")
         ),
+        CURRENT_SIZE: attributes.Schema(
+            _("The current size of AutoscalingResourceGroup.")
+        ),
     }
 
     def _get_instance_definition(self):
@@ -846,6 +849,8 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                 return dict(attrs)
             if key == self.OUTPUTS_LIST:
                 return [value for name, value in attrs]
+            if key == self.CURRENT_SIZE:
+                return len(list(attrs))
 
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
