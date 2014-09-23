@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -306,7 +307,7 @@ class Port(neutron.NeutronResource):
                         subnets.append(self.neutron().show_subnet(
                             subnet_id)['subnet'])
             except Exception as ex:
-                LOG.warn(_("Failed to fetch resource attributes: %s") % ex)
+                LOG.warn(_LW("Failed to fetch resource attributes: %s"), ex)
                 return
             return subnets
         return super(Port, self)._resolve_attribute(name)

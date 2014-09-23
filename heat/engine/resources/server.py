@@ -19,6 +19,7 @@ from oslo.serialization import jsonutils
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -939,14 +940,14 @@ class Server(stack_user.StackUser):
                                    server=self.name)
                 raise exception.StackValidationFailed(message=msg)
             elif network.get(self.NETWORK_UUID):
-                LOG.info(_('For the server "%(server)s" the "%(uuid)s" '
-                           'property is set to network "%(network)s". '
-                           '"%(uuid)s" property is deprecated. Use '
-                           '"%(id)s"  property instead.')
-                         % dict(uuid=self.NETWORK_UUID,
-                                id=self.NETWORK_ID,
-                                network=network[self.NETWORK_ID],
-                                server=self.name))
+                LOG.info(_LI('For the server "%(server)s" the "%(uuid)s" '
+                             'property is set to network "%(network)s". '
+                             '"%(uuid)s" property is deprecated. Use '
+                             '"%(id)s"  property instead.'),
+                         dict(uuid=self.NETWORK_UUID,
+                              id=self.NETWORK_ID,
+                              network=network[self.NETWORK_ID],
+                              server=self.name))
 
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties.get(self.METADATA)

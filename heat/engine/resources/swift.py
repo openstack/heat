@@ -14,6 +14,7 @@
 from six.moves.urllib import parse as urlparse
 
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
@@ -168,7 +169,7 @@ class SwiftContainer(resource.Resource):
                 headers = self.swift().head_container(self.resource_id)
             except Exception as ex:
                 if self.client_plugin().is_client_exception(ex):
-                    LOG.warn(_("Head container failed: %s") % ex)
+                    LOG.warn(_LW("Head container failed: %s"), ex)
                     return None
                 raise
             else:
