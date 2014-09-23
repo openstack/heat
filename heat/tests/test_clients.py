@@ -29,6 +29,7 @@ from testtools.testcase import skip
 from heat.engine import clients
 from heat.engine.clients import client_plugin
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
 
@@ -527,3 +528,24 @@ class TestIsNotFound(HeatTestCase):
                 iue = self.is_unprocessable_entity
                 if iue != client_plugin.is_unprocessable_entity(e):
                     raise
+
+
+class ClientAPIVersionTest(HeatTestCase):
+
+    def test_cinder_api_v1_and_v2(self):
+        self.stub_keystoneclient()
+        ctx = utils.dummy_context()
+        client = clients.Clients(ctx).client('cinder')
+        self.assertEqual(2, client.volume_api_version)
+
+    def test_cinder_api_v1_only(self):
+        self.stub_keystoneclient(only_services=['volume'])
+        ctx = utils.dummy_context()
+        client = clients.Clients(ctx).client('cinder')
+        self.assertEqual(1, client.volume_api_version)
+
+    def test_cinder_api_v2_only(self):
+        self.stub_keystoneclient(only_services=['volumev2'])
+        ctx = utils.dummy_context()
+        client = clients.Clients(ctx).client('cinder')
+        self.assertEqual(2, client.volume_api_version)

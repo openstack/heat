@@ -15,7 +15,7 @@ import copy
 import json
 
 from cinderclient import exceptions as cinder_exp
-from cinderclient.v1 import client as cinderclient
+from cinderclient.v2 import client as cinderclient
 import mox
 from oslo.config import cfg
 import six
@@ -103,6 +103,7 @@ class BaseVolumeTest(HeatTestCase):
         super(BaseVolumeTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
+        self.cinder_fc.volume_api_version = 2
         self.m.StubOutWithMock(cinder.CinderClientPlugin, '_create')
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'create')
@@ -178,8 +179,8 @@ class VolumeTest(BaseVolumeTest):
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name,
+            description=vol_name,
+            name=vol_name,
             metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
 
     def test_volume(self):
@@ -233,8 +234,8 @@ class VolumeTest(BaseVolumeTest):
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
-            display_description=vol_name,
-            display_name=vol_name,
+            description=vol_name,
+            name=vol_name,
             metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
         vol.VolumeAttachment.handle_create().AndReturn(None)
         vol.VolumeAttachment.check_create_complete(None).AndReturn(True)
@@ -609,9 +610,7 @@ class VolumeTest(BaseVolumeTest):
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(fv, 'update')
         vol_name = utils.PhysName(stack_name, 'DataVolume')
-        fv.update(
-            display_description=vol_name,
-            display_name=vol_name)
+        fv.update(description=vol_name, name=vol_name)
 
         self.m.ReplayAll()
 
@@ -638,9 +637,7 @@ class VolumeTest(BaseVolumeTest):
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(fv, 'update')
         vol_name = utils.PhysName(stack_name, 'DataVolume')
-        fv.update(
-            display_description=vol_name,
-            display_name=vol_name)
+        fv.update(description=vol_name, name=vol_name)
 
         self.m.ReplayAll()
 
@@ -708,8 +705,8 @@ class CinderVolumeTest(BaseVolumeTest):
             self.cinder_fc)
         self.cinder_fc.volumes.create(
             size=size, availability_zone='nova',
-            display_description='test_description',
-            display_name='test_name',
+            description='test_description',
+            name='test_name',
             metadata={'key': 'value'}).AndReturn(fv)
 
     def test_cinder_volume_size_constraint(self):
@@ -730,8 +727,8 @@ class CinderVolumeTest(BaseVolumeTest):
             self.cinder_fc)
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
-            display_description='test_description',
-            display_name='test_name',
+            description='test_description',
+            name='test_name',
             imageRef='46988116-6703-4623-9dbc-2bc6d284021b',
             snapshot_id='snap-123',
             metadata={'key': 'value'},
@@ -767,8 +764,8 @@ class CinderVolumeTest(BaseVolumeTest):
 
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
-            display_description='ImageVolumeDescription',
-            display_name='ImageVolume',
+            description='ImageVolumeDescription',
+            name='ImageVolume',
             imageRef=image_id).AndReturn(fv)
 
         self.m.ReplayAll()
@@ -795,8 +792,8 @@ class CinderVolumeTest(BaseVolumeTest):
         vol_name = utils.PhysName(stack_name, 'volume')
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
-            display_description=None,
-            display_name=vol_name).AndReturn(fv)
+            description=None,
+            name=vol_name).AndReturn(fv)
 
         self.m.ReplayAll()
 
@@ -812,8 +809,8 @@ class CinderVolumeTest(BaseVolumeTest):
 
     def test_cinder_fn_getatt(self):
         fv = FakeVolume('creating', 'available', availability_zone='zone1',
-                        size=1, snapshot_id='snap-123', display_name='name',
-                        display_description='desc', volume_type='lvm',
+                        size=1, snapshot_id='snap-123', name='name',
+                        description='desc', volume_type='lvm',
                         metadata={'key': 'value'}, source_volid=None,
                         status='available', bootable=False,
                         created_at='2013-02-25T02:40:21.000000',
@@ -1081,9 +1078,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(fv, 'update')
         vol_name = utils.PhysName(stack_name, 'volume')
-        fv.update(
-            display_description=None,
-            display_name=vol_name)
+        fv.update(description=None, name=vol_name)
 
         # update script
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -1118,8 +1113,8 @@ class CinderVolumeTest(BaseVolumeTest):
         meta = {'Key': 'New Value'}
         update_description = 'update_description'
         kwargs = {
-            'display_name': update_name,
-            'display_description': update_description
+            'name': update_name,
+            'description': update_description
         }
 
         self._mock_create_volume(fv, stack_name)
@@ -1149,8 +1144,8 @@ class CinderVolumeTest(BaseVolumeTest):
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            size=1, availability_zone='nova', display_name='CustomName',
-            display_description='CustomDescription').AndReturn(fv)
+            size=1, availability_zone='nova', name='CustomName',
+            description='CustomDescription').AndReturn(fv)
 
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
@@ -1189,8 +1184,8 @@ class CinderVolumeTest(BaseVolumeTest):
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            size=1, availability_zone='nova', display_name='CustomName',
-            display_description='CustomDescription').AndReturn(fv)
+            size=1, availability_zone='nova', name='CustomName',
+            description='CustomDescription').AndReturn(fv)
 
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
@@ -1280,8 +1275,8 @@ class CinderVolumeTest(BaseVolumeTest):
         vol2_name = utils.PhysName(stack_name, 'volume2')
         self.cinder_fc.volumes.create(
             size=2, availability_zone='nova',
-            display_description=None,
-            display_name=vol2_name).AndReturn(fv2)
+            description=None,
+            name=vol2_name).AndReturn(fv2)
 
         self._mock_create_server_volume_script(fva)
 
