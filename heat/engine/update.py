@@ -13,7 +13,7 @@
 
 import six
 
-from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import resource
@@ -132,10 +132,10 @@ class StackUpdate(object):
             except resource.UpdateReplace:
                 pass
             else:
-                LOG.info(_("Resource %(res_name)s for stack %(stack_name)s "
-                           "updated")
-                         % {'res_name': res_name,
-                            'stack_name': self.existing_stack.name})
+                LOG.info(_LI("Resource %(res_name)s for stack %(stack_name)s "
+                             "updated"),
+                         {'res_name': res_name,
+                          'stack_name': self.existing_stack.name})
                 return
 
         yield self._create_resource(new_res)

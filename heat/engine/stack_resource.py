@@ -16,6 +16,8 @@ from oslo.config import cfg
 from heat.common import environment_format
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import resource
@@ -104,8 +106,8 @@ class StackResource(resource.Resource):
             child_template = self.child_template()
             params = self.child_params()
         except NotImplementedError:
-            not_implemented_msg = _("Preview of '%s' not yet implemented")
-            LOG.warning(not_implemented_msg % self.__class__.__name__)
+            LOG.warn(_LW("Preview of '%s' not yet implemented"),
+                     self.__class__.__name__)
             return self
 
         name = "%s-%s" % (self.stack.name, self.name)
@@ -253,7 +255,7 @@ class StackResource(resource.Resource):
         try:
             stack = self.nested()
         except exception.NotFound:
-            LOG.info(_("Stack not found to delete"))
+            LOG.info(_LI("Stack not found to delete"))
         else:
             if stack is not None:
                 delete_task = scheduler.TaskRunner(stack.delete)

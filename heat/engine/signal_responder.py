@@ -15,7 +15,7 @@ from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo.config import cfg
 from six.moves.urllib import parse as urlparse
 
-from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import stack_user
 from heat.openstack.common import log as logging
 
@@ -65,8 +65,8 @@ class SignalResponder(stack_user.StackUser):
         secret_key = self.data().get('secret_key')
 
         if not access_key or not secret_key:
-            LOG.warning(_('Cannot generate signed url, '
-                          'no stored access/secret key'))
+            LOG.warn(_LW('Cannot generate signed url, '
+                         'no stored access/secret key'))
             return
 
         waitcond_url = cfg.CONF.heat_waitcondition_server_url

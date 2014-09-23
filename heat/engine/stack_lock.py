@@ -19,7 +19,8 @@ from oslo import messaging
 from oslo.utils import excutils
 
 from heat.common import exception
-from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
 from heat.openstack.common import log as logging
@@ -80,32 +81,32 @@ class StackLock(object):
             raise exception.ActionInProgress(stack_name=self.stack.name,
                                              action=self.stack.action)
         else:
-            LOG.info(_("Stale lock detected on stack %(stack)s.  Engine "
-                       "%(engine)s will attempt to steal the lock")
-                     % {'stack': self.stack.id, 'engine': self.engine_id})
+            LOG.info(_LI("Stale lock detected on stack %(stack)s.  Engine "
+                         "%(engine)s will attempt to steal the lock"),
+                     {'stack': self.stack.id, 'engine': self.engine_id})
 
             result = db_api.stack_lock_steal(self.stack.id, lock_engine_id,
                                              self.engine_id)
 
             if result is None:
-                LOG.info(_("Engine %(engine)s successfully stole the lock "
-                           "on stack %(stack)s")
-                         % {'engine': self.engine_id,
-                            'stack': self.stack.id})
+                LOG.info(_LI("Engine %(engine)s successfully stole the lock "
+                             "on stack %(stack)s"),
+                         {'engine': self.engine_id,
+                          'stack': self.stack.id})
                 return
             elif result is True:
                 if retry:
-                    LOG.info(_("The lock on stack %(stack)s was released "
-                               "while engine %(engine)s was stealing it. "
-                               "Trying again") % {'stack': self.stack.id,
-                                                  'engine': self.engine_id})
+                    LOG.info(_LI("The lock on stack %(stack)s was released "
+                                 "while engine %(engine)s was stealing it. "
+                                 "Trying again"), {'stack': self.stack.id,
+                                                   'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
-                LOG.info(_("Failed to steal lock on stack %(stack)s. "
-                           "Engine %(engine)s stole the lock first")
-                         % {'stack': self.stack.id,
-                            'engine': new_lock_engine_id})
+                LOG.info(_LI("Failed to steal lock on stack %(stack)s. "
+                             "Engine %(engine)s stole the lock first"),
+                         {'stack': self.stack.id,
+                          'engine': new_lock_engine_id})
 
             raise exception.ActionInProgress(
                 stack_name=self.stack.name, action=self.stack.action)
@@ -115,7 +116,7 @@ class StackLock(object):
         # Only the engine that owns the lock will be releasing it.
         result = db_api.stack_lock_release(stack_id, self.engine_id)
         if result is True:
-            LOG.warning(_("Lock was already released on stack %s!") % stack_id)
+            LOG.warn(_LW("Lock was already released on stack %s!"), stack_id)
         else:
             LOG.debug("Engine %(engine)s released lock on stack "
                       "%(stack)s" % {'engine': self.engine_id,

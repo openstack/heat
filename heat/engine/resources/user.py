@@ -13,6 +13,7 @@
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -223,10 +224,10 @@ class AccessKey(resource.Resource):
         '''
         if self._secret is None:
             if not self.resource_id:
-                LOG.info(_('could not get secret for %(username)s '
-                           'Error:%(msg)s')
-                         % {'username': self.properties[self.USER_NAME],
-                            'msg': "resource_id not yet set"})
+                LOG.info(_LI('could not get secret for %(username)s '
+                             'Error:%(msg)s'),
+                         {'username': self.properties[self.USER_NAME],
+                          'msg': "resource_id not yet set"})
             else:
                 # First try to retrieve the secret from resource_data, but
                 # for backwards compatibility, fall back to requesting from
@@ -243,8 +244,8 @@ class AccessKey(resource.Resource):
                         # And the ID of the v3 credential
                         self.data_set('credential_id', kp.id, redact=True)
                     except Exception as ex:
-                        LOG.info(_('could not get secret for %(username)s '
-                                   'Error:%(msg)s') % {
+                        LOG.info(_LI('could not get secret for %(username)s '
+                                     'Error:%(msg)s'), {
                                  'username': self.properties[self.USER_NAME],
                                  'msg': ex})
 
