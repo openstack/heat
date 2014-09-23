@@ -458,10 +458,12 @@ class CinderVolume(Volume):
         AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME,
         DISPLAY_DESCRIPTION, VOLUME_TYPE_ATTR, METADATA_ATTR,
         SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE, METADATA_VALUES_ATTR,
+        ENCRYPTED_ATTR, ATTACHMENTS,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'display_name',
         'display_description', 'volume_type', 'metadata',
         'source_volid', 'status', 'created_at', 'bootable', 'metadata_values',
+        'encrypted', 'attachments',
     )
 
     properties_schema = {
@@ -564,6 +566,12 @@ class CinderVolume(Volume):
         METADATA_VALUES_ATTR: attributes.Schema(
             _('Key/value pairs associated with the volume in raw dict form.')
         ),
+        ENCRYPTED_ATTR: attributes.Schema(
+            _('Boolean indicating if the volume is encrypted or not.')
+        ),
+        ATTACHMENTS: attributes.Schema(
+            _('The list of attachments of the volume.')
+        ),
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
@@ -596,9 +604,9 @@ class CinderVolume(Volume):
 
     def _resolve_attribute(self, name):
         vol = self.cinder().volumes.get(self.resource_id)
-        if name == 'metadata':
+        if name == self.METADATA_ATTR:
             return unicode(json.dumps(vol.metadata))
-        elif name == 'metadata_values':
+        elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
         return unicode(getattr(vol, name))
 
