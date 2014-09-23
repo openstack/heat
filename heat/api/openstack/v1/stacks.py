@@ -15,6 +15,7 @@
 Stack endpoint for Heat v1 ReST API.
 """
 
+import six
 from six.moves.urllib import parse
 from webob import exc
 
@@ -79,7 +80,7 @@ class InstantiationData(object):
             else:
                 return template_format.parse(data)
         except ValueError as parse_ex:
-            mdict = {'type': data_type, 'error': parse_ex}
+            mdict = {'type': data_type, 'error': six.text_type(parse_ex)}
             msg = _("%(type)s not in valid format: %(error)s") % mdict
             raise exc.HTTPBadRequest(msg)
 
