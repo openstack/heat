@@ -1428,21 +1428,24 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                          six.text_type(ex))
 
 
-class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):
+class StackServiceUpdateActionsNotSupportedTest(HeatTestCase):
 
     scenarios = [
         ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
         ('suspend_complete', dict(action='SUSPEND', status='COMPLETE')),
         ('suspend_failed', dict(action='SUSPEND', status='FAILED')),
+        ('delete_in_progress', dict(action='DELETE', status='IN_PROGRESS')),
+        ('delete_complete', dict(action='DELETE', status='COMPLETE')),
+        ('delete_failed', dict(action='DELETE', status='FAILED')),
     ]
 
     def setUp(self):
-        super(StackServiceUpdateSuspendedNotSupportedTest, self).setUp()
+        super(StackServiceUpdateActionsNotSupportedTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
 
-    def test_stack_update_suspended(self):
+    def test_stack_update_actions_not_supported(self):
         stack_name = '%s-%s' % (self.action, self.status)
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
