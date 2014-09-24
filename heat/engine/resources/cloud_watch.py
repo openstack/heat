@@ -11,10 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
+
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.engine import watchrule
 
 
@@ -129,6 +132,11 @@ class CloudWatchAlarm(resource.Resource):
 
     strict_dependency = False
 
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        message=_('OS::Heat::CWLiteAlarm is deprecated, '
+                  'use OS::Ceilometer::Alarm instead.'))
+
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,
                                  watch_name=self.physical_resource_name(),
@@ -176,6 +184,10 @@ class CloudWatchAlarm(resource.Resource):
 
 
 def resource_mapping():
-    return {
-        'OS::Heat::CWLiteAlarm': CloudWatchAlarm,
-    }
+    cfg.CONF.import_opt('enable_cloud_watch_lite', 'heat.common.config')
+    if cfg.CONF.enable_cloud_watch_lite:
+        return {
+            'OS::Heat::CWLiteAlarm': CloudWatchAlarm,
+        }
+    else:
+        return {}

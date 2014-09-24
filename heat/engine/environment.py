@@ -15,6 +15,7 @@ import copy
 import glob
 import itertools
 import os.path
+import warnings
 
 from oslo.config import cfg
 import six
@@ -22,6 +23,7 @@ import six
 from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine import support
 from heat.openstack.common import log
 
 
@@ -215,6 +217,11 @@ class ResourceRegistry(object):
             LOG.info(_('Registering %(path)s -> %(value)s') % {
                 'path': descriptive_path,
                 'value': str(info.value)})
+
+        if isinstance(info, ClassResourceInfo):
+            if info.value.support_status.status != support.SUPPORTED:
+                warnings.warn(six.text_type(info.value.support_status.message))
+
         info.user_resource = (self.global_registry is not None)
         registry[name] = info
 

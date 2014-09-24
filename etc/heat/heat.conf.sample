@@ -70,6 +70,10 @@
 # stack locking. (integer value)
 #engine_life_check_timeout=2
 
+# Enable the legacy OS::Heat::CWLiteAlarm resource. (boolean
+# value)
+#enable_cloud_watch_lite=true
+
 # Deprecated. (string value)
 #onready=<None>
 
