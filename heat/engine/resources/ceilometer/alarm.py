@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
@@ -66,6 +68,23 @@ common_properties_schema = {
         update_allowed=True
     )
 }
+
+
+NOVA_METERS = ['instance', 'memory', 'memory.usage',
+               'cpu', 'cpu_util', 'vcpus',
+               'disk.read.requests', 'disk.read.requests.rate',
+               'disk.write.requests', 'disk.write.requests.rate',
+               'disk.read.bytes', 'disk.read.bytes.rate',
+               'disk.write.bytes', 'disk.write.bytes.rate',
+               'disk.device.read.requests', 'disk.device.read.requests.rate',
+               'disk.device.write.requests', 'disk.device.write.requests.rate',
+               'disk.device.read.bytes', 'disk.device.read.bytes.rate',
+               'disk.device.write.bytes', 'disk.device.write.bytes.rate',
+               'disk.root.size', 'disk.ephemeral.size',
+               'network.incoming.bytes', 'network.incoming.bytes.rate',
+               'network.outgoing.bytes', 'network.outgoing.bytes.rate',
+               'network.incoming.packets', 'network.incoming.packets.rate',
+               'network.outgoing.packets', 'network.outgoing.packets.rate']
 
 
 def actions_to_urls(stack, properties):
@@ -151,8 +170,29 @@ class CeilometerAlarm(resource.Resource):
 
     default_client_name = 'ceilometer'
 
+    def cfn_to_ceilometer(self, stack, properties):
+        kwargs = actions_to_urls(stack, properties)
+        if kwargs.get(self.METER_NAME) in NOVA_METERS:
+            prefix = 'user_metadata.'
+        else:
+            prefix = 'metering.'
+        for k, v in iter(properties.items()):
+            if k == self.MATCHING_METADATA:
+                # make sure we have matching_metadata that looks like this:
+                # matching_metadata: {metadata.$prefix.x}
+                kwargs[k] = {}
+                for m_k, m_v in six.iteritems(v):
+                    if m_k.startswith('metadata.%s' % prefix):
+                        kwargs[k][m_k] = m_v
+                    elif m_k.startswith(prefix):
+                        kwargs[k]['metadata.%s' % m_k] = m_v
+                    else:
+                        kwargs[k]['metadata.%s%s' % (prefix, m_k)] = m_v
+        return kwargs
+
     def handle_create(self):
-        props = actions_to_urls(self.stack, self.parsed_template('Properties'))
+        props = self.cfn_to_ceilometer(self.stack,
+                                       self.parsed_template('Properties'))
         props['name'] = self.physical_resource_name()
 
         alarm = self.ceilometer().alarms.create(**props)
@@ -174,7 +214,7 @@ class CeilometerAlarm(resource.Resource):
             kwargs = {'alarm_id': self.resource_id}
             kwargs.update(prop_diff)
             alarms_client = self.ceilometer().alarms
-            alarms_client.update(**actions_to_urls(self.stack, kwargs))
+            alarms_client.update(**self.cfn_to_ceilometer(self.stack, kwargs))
 
     def handle_suspend(self):
         if self.resource_id is not None:
