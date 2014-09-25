@@ -195,7 +195,7 @@ class ValidateGetAttTest(HeatTestCase):
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                func.validate)
         self.assertEqual('The specified reference "test_rsrc" (in unknown) '
-                         'is incorrect.', str(ex))
+                         'is incorrect.', six.text_type(ex))
 
     def test_resource_no_attribute_with_default_fn_get_att(self):
         func = functions.GetAtt(self.stack, 'Fn::GetAtt',
@@ -203,7 +203,7 @@ class ValidateGetAttTest(HeatTestCase):
         ex = self.assertRaises(exception.InvalidTemplateAttribute,
                                func.validate)
         self.assertEqual('The Referenced Attribute (test_rsrc Bar) '
-                         'is incorrect.', str(ex))
+                         'is incorrect.', six.text_type(ex))
 
     def test_resource_no_attribute_with_overwritten_fn_get_att(self):
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
