@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-08-20 06:01+0000\n"
+"POT-Creation-Date: 2014-09-25 06:13+0000\n"
 "PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Telugu (India) (http://www.transifex.com/projects/p/heat/"
@@ -18,6 +18,58 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: heat/api/cloudwatch/watch.py:219
+#, python-format
+msgid "Invalid filter key %s, ignoring"
+msgstr ""
+
+#: heat/api/openstack/v1/stacks.py:217
+#, python-format
+msgid "Old Engine Version: %s"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:113
+msgid ""
+"stack_user_domain_id or stack_user_domain_name not set in heat.conf falling "
+"back to using default"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:306
+#, python-format
+msgid "Truncating the username %s to the last 64 characters."
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:404
+msgid ""
+"Falling back to legacy non-domain user create, configure domain in heat.conf"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:458
+msgid ""
+"Falling back to legacy non-domain user delete, configure domain in heat.conf"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:479
+#: heat/common/heat_keystoneclient.py:496
+msgid ""
+"Falling back to legacy non-domain project, configure domain in heat.conf"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:587
+#: heat/common/heat_keystoneclient.py:604
+msgid ""
+"Falling back to legacy non-domain keypair, configure domain in heat.conf"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:623
+msgid ""
+"Falling back to legacy non-domain disable, configure domain in heat.conf"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:633
+msgid "Falling back to legacy non-domain enable, configure domain in heat.conf"
+msgstr ""
 
 #: heat/openstack/common/loopingcall.py:82
 #, python-format
@@ -40,3 +92,33 @@ msgstr "tcp_keepknt మీ సిస్టమ్ నందు లభించల
 #, python-format
 msgid "pid %d not in child list"
 msgstr "pid %d  బాల జాబితా లేదు "
+
+#: heat/tests/generic_resource.py:34
+#, python-format
+msgid "Creating generic resource (Type \"%s\")"
+msgstr ""
+
+#: heat/tests/generic_resource.py:38
+#, python-format
+msgid "Updating generic resource (Type \"%s\")"
+msgstr ""
+
+#: heat/tests/generic_resource.py:42
+#, python-format
+msgid "Deleting generic resource (Type \"%s\")"
+msgstr ""
+
+#: heat/tests/generic_resource.py:49
+#, python-format
+msgid "Suspending generic resource (Type \"%s\")"
+msgstr ""
+
+#: heat/tests/generic_resource.py:53
+#, python-format
+msgid "Resuming generic resource (Type \"%s\")"
+msgstr ""
+
+#: heat/tests/generic_resource.py:139
+#, python-format
+msgid "Signaled resource (Type \"%(type)s\") %(details)s"
+msgstr ""
