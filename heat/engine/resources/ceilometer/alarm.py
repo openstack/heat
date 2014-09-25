@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from ceilometerclient import exc as ceilometerclient_exc
+
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
@@ -195,7 +197,10 @@ class CeilometerAlarm(resource.Resource):
             pass
 
         if self.resource_id is not None:
-            self.ceilometer().alarms.delete(self.resource_id)
+            try:
+                self.ceilometer().alarms.delete(self.resource_id)
+            except ceilometerclient_exc.HTTPNotFound:
+                pass
 
 
 class CombinationAlarm(resource.Resource):
@@ -260,7 +265,10 @@ class CombinationAlarm(resource.Resource):
             alarm_id=self.resource_id, enabled=True)
 
     def handle_delete(self):
-        self.ceilometer().alarms.delete(self.resource_id)
+        try:
+            self.ceilometer().alarms.delete(self.resource_id)
+        except ceilometerclient_exc.HTTPNotFound:
+            pass
 
 
 def resource_mapping():
