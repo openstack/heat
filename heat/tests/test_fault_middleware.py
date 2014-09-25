@@ -11,7 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import inspect
 from oslo.config import cfg
+import re
 import six
 import webob
 
@@ -110,6 +112,62 @@ class FaultMiddlewareTest(HeatTestCase):
                     'explanation': 'The resource could not be found.',
                     'title': 'Not Found'}
         self.assertEqual(expected, msg)
+
+    def remote_exception_helper(self, name, error):
+        exc_info = (type(error), error, None)
+
+        serialized = rpc_common.serialize_remote_exception(exc_info)
+        remote_error = rpc_common.deserialize_remote_exception(
+            serialized, name)
+        wrapper = fault.FaultWrapper(None)
+        msg = wrapper._error(remote_error)
+        expected = {'code': 500,
+                    'error': {'message': msg['error']['message'],
+                              'traceback': None,
+                              'type': 'RemoteError'},
+                    'explanation': msg['explanation'],
+                    'title': 'Internal Server Error'}
+        self.assertEqual(expected, msg)
+
+    def test_all_remote_exceptions(self):
+        for name, obj in inspect.getmembers(
+                heat_exc, lambda x: inspect.isclass(x) and issubclass(
+                    x, heat_exc.HeatException)):
+
+            if '__init__' in obj.__dict__:
+                if obj == heat_exc.HeatException:  # manually ignore baseclass
+                    continue
+                elif obj == heat_exc.Error:
+                    error = obj('Error')
+                elif obj == heat_exc.NotFound:
+                    error = obj()
+                elif obj == heat_exc.ResourceFailure:
+                    exc = heat_exc.Error(_('Error'))
+                    error = obj(exc, None, 'CREATE')
+                elif obj == heat_exc.ResourcePropertyConflict:
+                    error = obj('%s' % 'a test prop')
+                else:
+                    continue
+                self.remote_exception_helper(name, error)
+                continue
+
+            if hasattr(obj, 'msg_fmt'):
+                kwargs = {}
+                spec_names = re.findall('%\((\w+)\)([cdeEfFgGinorsxX])',
+                                        obj.msg_fmt)
+
+                for key, convtype in spec_names:
+                    if convtype == 'r' or convtype == 's':
+                        kwargs[key] = '"' + key + '"'
+                    else:
+                        # this is highly unlikely
+                        raise Exception("test needs additional conversion"
+                                        " type added due to %s exception"
+                                        " using '%c' specifier" % (obj,
+                                                                   convtype))
+
+                error = obj(**kwargs)
+                self.remote_exception_helper(name, error)
 
     def test_should_not_ignore_parent_classes(self):
         wrapper = fault.FaultWrapper(None)
