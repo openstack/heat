@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-09-08 06:00+0000\n"
+"POT-Creation-Date: 2014-09-25 06:13+0000\n"
 "PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
@@ -18,6 +18,49 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: heat/api/aws/ec2token.py:162
+msgid "Ec2Token authorization failed, no auth_uri specified in config file"
+msgstr ""
+
+#: heat/api/aws/utils.py:105
+#, python-format
+msgid "Request does not contain %s parameter!"
+msgstr ""
+
+#: heat/api/cloudwatch/watch.py:274
+msgid "Request does not contain required MetricData"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:134
+msgid "Admin client authentication failed"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:154
+msgid "Domain admin client authentication failed"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:184
+msgid "Unknown version in auth_token_info"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:195
+msgid "Keystone v3 API connection failed, no password trust or auth_token!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:211
+msgid "trust token re-scoping failed!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:215
+msgid "Trust impersonation failed"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:338
+#: heat/common/heat_keystoneclient.py:425
+#, python-format
+msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
+msgstr ""
 
 #: heat/common/lifecycle_plugin_utils.py:43
 msgid "failed to get lifecycle plug point classes"
@@ -35,6 +78,11 @@ msgstr ""
 #: heat/common/lifecycle_plugin_utils.py:108
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
+msgstr ""
+
+#: heat/common/plugin_loader.py:97
+#, python-format
+msgid "Failed to import module %s"
 msgstr ""
 
 #: heat/openstack/common/excutils.py:76
