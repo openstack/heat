@@ -84,7 +84,8 @@ def actions_to_urls(stack, properties):
                     url = stack[act].FnGetAtt('AlarmUrl')
                     kwargs[k].append(url)
                 else:
-                    kwargs[k].append(act)
+                    if act:
+                        kwargs[k].append(act)
         else:
             kwargs[k] = v
     return kwargs
