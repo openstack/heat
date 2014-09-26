@@ -338,3 +338,68 @@ class KeypairConstraintTest(common.HeatTestCase):
         self.assertTrue(constraint.validate("", ctx))
 
         self.m.VerifyAll()
+
+
+class ConsoleUrlsTest(common.HeatTestCase):
+
+    scenarios = [
+        ('novnc', dict(console_type='novnc', srv_method='vnc')),
+        ('xvpvnc', dict(console_type='xvpvnc', srv_method='vnc')),
+        ('spice', dict(console_type='spice-html5', srv_method='spice')),
+        ('rdp', dict(console_type='rdp-html5', srv_method='rdp')),
+    ]
+
+    def setUp(self):
+        super(ConsoleUrlsTest, self).setUp()
+        self.nova_client = mock.Mock()
+        con = utils.dummy_context()
+        c = con.clients
+        self.nova_plugin = c.client_plugin('nova')
+        self.nova_plugin._client = self.nova_client
+        self.server = mock.Mock()
+        self.console_method = getattr(self.server,
+                                      'get_%s_console' % self.srv_method)
+
+    def test_get_console_url(self):
+        console = {
+            'console': {
+                'type': self.console_type,
+                'url': '%s_console_url' % self.console_type
+            }
+        }
+        self.console_method.return_value = console
+
+        console_url = self.nova_plugin.get_console_urls(self.server)[
+            self.console_type]
+
+        self.assertEqual(console['console']['url'], console_url)
+        self.console_method.assert_called_once_with(self.console_type)
+
+    def test_get_console_url_tolerate_unavailable(self):
+        msg = 'Unavailable console type %s.' % self.console_type
+        self.console_method.side_effect = nova_exceptions.BadRequest(
+            400, message=msg)
+
+        console_url = self.nova_plugin.get_console_urls(self.server)[
+            self.console_type]
+
+        self.console_method.assert_called_once_with(self.console_type)
+        self.assertEqual(msg, console_url)
+
+    def test_get_console_urls_reraises_other_400(self):
+        exc = nova_exceptions.BadRequest
+        self.console_method.side_effect = exc(400, message="spam")
+
+        urls = self.nova_plugin.get_console_urls(self.server)
+        e = self.assertRaises(exc, urls.__getitem__, self.console_type)
+        self.assertIn('spam', e.message)
+        self.console_method.assert_called_once_with(self.console_type)
+
+    def test_get_console_urls_reraises_other(self):
+        exc = Exception
+        self.console_method.side_effect = exc("spam")
+
+        urls = self.nova_plugin.get_console_urls(self.server)
+        e = self.assertRaises(exc, urls.__getitem__, self.console_type)
+        self.assertIn('spam', e.args)
+        self.console_method.assert_called_once_with(self.console_type)

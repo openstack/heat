@@ -1919,7 +1919,6 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
-
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
         self.assertIn("Value '10a' is not an integer", six.text_type(exc))
@@ -2150,6 +2149,24 @@ class ServersTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         self.assertEqual(server._resolve_attribute("accessIPv4"), '')
+        self.m.VerifyAll()
+
+    def test_resolve_attribute_console_url(self):
+        server = self.fc.servers.list()[0]
+        tmpl, stack = self._setup_test_stack('console_url_stack')
+        ws = servers.Server(
+            'WebServer', tmpl.resource_definitions(stack)['WebServer'], stack)
+        ws.resource_id = server.id
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.id).AndReturn(server)
+        self.m.ReplayAll()
+
+        console_urls = ws._resolve_attribute('console_urls')
+        self.assertIsInstance(console_urls, collections.Mapping)
+        supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5')
+        self.assertEqual(set(supported_consoles), set(console_urls.keys()))
         self.m.VerifyAll()
 
     def test_default_instance_user(self):

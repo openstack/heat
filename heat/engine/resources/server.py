@@ -87,10 +87,10 @@ class Server(stack_user.StackUser):
 
     ATTRIBUTES = (
         NAME_ATTR, SHOW, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
-        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6,
+        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS,
     ) = (
         'name', 'show', 'addresses', 'networks', 'first_address',
-        'instance_name', 'accessIPv4', 'accessIPv6',
+        'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
     )
 
     properties_schema = {
@@ -343,6 +343,14 @@ class Server(stack_user.StackUser):
         ACCESSIPV6: attributes.Schema(
             _('The manually assigned alternative public IPv6 address '
               'of the server.')
+        ),
+        CONSOLE_URLS: attributes.Schema(
+            _("URLs of server's consoles. "
+              "To get a specific console type, the requested type "
+              "can be specified as parameter to the get_attr function, "
+              "e.g. get_attr: [ <server>, console_urls, novnc ]. "
+              "Currently supported types are "
+              "novnc, xvpvnc, spice-html5, rdp-html5.")
         ),
     }
 
@@ -685,6 +693,8 @@ class Server(stack_user.StackUser):
             return server.accessIPv6
         if name == self.SHOW:
             return server._info
+        if name == self.CONSOLE_URLS:
+            return self.client_plugin('nova').get_console_urls(server)
 
     def add_dependencies(self, deps):
         super(Server, self).add_dependencies(deps)
