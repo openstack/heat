@@ -109,6 +109,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                                        "Image Version": "2.1"}},
                          {"id": "5678",
                           "name": "sample-server2",
+                          "OS-EXT-AZ:availability_zone": "nova2",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server2",
                           "image": {"id": 2, "name": "sample image"},
@@ -163,6 +164,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                           "name": "sample-server3",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server3",
+                          "OS-EXT-AZ:availability_zone": "nova3",
                           "image": {"id": 3, "name": "sample image"},
                           "flavor": {"id": 3, "name": "m1.large"},
                           "hostId": "9e107d9d372bb6826bd81d3542a419d6",
