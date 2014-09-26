@@ -1834,6 +1834,34 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    )
 
+    @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_show_nested(self, mock_stack_get_all):
+        self.eng.list_stacks(self.ctx, show_nested=True)
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   True,
+                                                   )
+
+    @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_show_deleted(self, mock_stack_get_all):
+        self.eng.list_stacks(self.ctx, show_deleted=True)
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   True,
+                                                   mock.ANY,
+                                                   )
+
     @mock.patch.object(db_api, 'stack_count_all')
     def test_count_stacks_passes_filter_info(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, filters={'foo': 'bar'})
@@ -1869,6 +1897,15 @@ class StackServiceTest(HeatTestCase):
                                                      tenant_safe=True,
                                                      show_deleted=False,
                                                      show_nested=True)
+
+    @mock.patch.object(db_api, 'stack_count_all')
+    def test_count_stack_show_deleted(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx, show_deleted=True)
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters=mock.ANY,
+                                                     tenant_safe=True,
+                                                     show_deleted=True,
+                                                     show_nested=False)
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):
