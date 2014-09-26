@@ -21,8 +21,6 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
-from .. import client  # noqa
-
 
 LOG = logging.getLogger(__name__)
 
@@ -106,7 +104,7 @@ class Order(resource.Resource):
     }
 
     def barbican(self):
-        return self.clients.client('barbican')
+        return self.client('barbican')
 
     def handle_create(self):
         info = dict(self.properties)
@@ -130,8 +128,9 @@ class Order(resource.Resource):
         if not self.resource_id:
             return
 
+        client = self.barbican()
         try:
-            self.barbican().orders.delete(self.resource_id)
+            client.orders.delete(self.resource_id)
         except client.barbican_client.HTTPClientError as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
