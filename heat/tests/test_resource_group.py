@@ -14,12 +14,15 @@
 import copy
 import mock
 import six
+import uuid
 
 from heat.common import exception
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import resource_group
 from heat.engine import scheduler
+from heat.engine import stack as stackm
+from heat.engine import template as templatem
 from heat.tests import common
 from heat.tests import generic_resource
 from heat.tests import utils
@@ -480,3 +483,54 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertEqual({}, resgrp.child_params())
+
+    def test_adopt(self):
+        tmpl = templatem.Template(template)
+        stack = stackm.Stack(utils.dummy_context(),
+                             'test_stack',
+                             tmpl,
+                             stack_id=str(uuid.uuid4()))
+
+        resg = stack['group1']
+
+        adopt_data = {
+            "status": "COMPLETE",
+            "name": "group1",
+            "resource_data": {},
+            "metadata": {},
+            "resource_id": "test-group1-id",
+            "action": "CREATE",
+            "type": "OS::Heat::ResourceGroup",
+            "resources": {
+                "0": {
+                    "status": "COMPLETE",
+                    "name": "0",
+                    "resource_data": {},
+                    "resource_id": "ID-0",
+                    "action": "CREATE",
+                    "type": "dummy.resource",
+                    "metadata": {}
+                },
+                "1": {
+                    "status": "COMPLETE",
+                    "name": "1",
+                    "resource_data": {},
+                    "resource_id": "ID-1",
+                    "action": "CREATE",
+                    "type": "dummy.resource",
+                    "metadata": {}
+                }
+            }
+        }
+        scheduler.TaskRunner(resg.adopt, adopt_data)()
+        self.assertEqual((resg.ADOPT, resg.COMPLETE), resg.state)
+        self.assertEqual(adopt_data['name'], resg.name)
+        # a new nested stack should be created
+        self.assertIsNotNone(resg.resource_id)
+        # verify all the resources in resource group are adopted.
+        self.assertEqual(adopt_data['resources']['0']['resource_id'],
+                         resg.FnGetAtt('resource.0'))
+        self.assertEqual(adopt_data['resources']['1']['resource_id'],
+                         resg.FnGetAtt('resource.1'))
+        self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
+                          'resource.2')

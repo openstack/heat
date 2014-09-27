@@ -253,6 +253,24 @@ class ResourceGroup(stack_resource.StackResource):
     def child_params(self):
         return {}
 
+    def handle_adopt(self, resource_data):
+        names = self._resource_names()
+        if names:
+            return self.create_with_template(self._assemble_nested(names),
+                                             {},
+                                             adopt_data=resource_data)
+
+    def check_adopt_complete(self, adopter):
+        if adopter is None:
+            return True
+        done = adopter.step()
+        if done:
+            if self._nested.state != (self._nested.ADOPT,
+                                      self._nested.COMPLETE):
+                raise exception.Error(self._nested.status_reason)
+
+        return done
+
 
 def resource_mapping():
     return {
