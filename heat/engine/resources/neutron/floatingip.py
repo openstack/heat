@@ -58,11 +58,13 @@ class FloatingIP(neutron.NeutronResource):
         PORT_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of an existing port with at least one IP address to '
-              'associate with this floating IP.')
+              'associate with this floating IP.'),
+            update_allowed=True
         ),
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
-            _('IP address to use if the port has multiple addresses.')
+            _('IP address to use if the port has multiple addresses.'),
+            update_allowed=True
         ),
     }
 
@@ -130,6 +132,24 @@ class FloatingIP(neutron.NeutronResource):
             client.delete_floatingip(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            neutron_client = self.neutron()
+
+            port_id = prop_diff.get(self.PORT_ID,
+                                    self.properties.get(self.PORT_ID))
+
+            fixed_ip_address = prop_diff.get(
+                self.FIXED_IP_ADDRESS,
+                self.properties.get(self.FIXED_IP_ADDRESS))
+
+            request_body = {
+                'floatingip': {
+                    'port_id': port_id,
+                    'fixed_ip_address': fixed_ip_address}}
+
+            neutron_client.update_floatingip(self.resource_id, request_body)
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
