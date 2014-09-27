@@ -157,6 +157,9 @@ class CeilometerAlarmTest(HeatTestCase):
         al['description'] = mox.IgnoreArg()
         al['name'] = mox.IgnoreArg()
         al['alarm_actions'] = mox.IgnoreArg()
+        al['matching_metadata'] = dict(
+            ('metadata.metering.%s' % k, v)
+            for k, v in al['matching_metadata'].items())
         self.m.StubOutWithMock(self.fa.alarms, 'create')
         self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
         return stack
