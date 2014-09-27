@@ -671,7 +671,7 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
         the groupname and stack id.
         Note: the group name must match what is returned from FnGetRefId
         """
-        autoscaling_tag = [{self.TAG_KEY: 'AutoScalingGroupName',
+        autoscaling_tag = [{self.TAG_KEY: 'metering.AutoScalingGroupName',
                             self.TAG_VALUE: self.FnGetRefId()}]
         return super(AutoScalingGroup, self)._tags() + autoscaling_tag
 

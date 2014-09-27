@@ -288,7 +288,7 @@ class ServerTagsTest(HeatTestCase):
         group_refid = utils.PhysName(stack.name, group.name)
 
         nova_tags['metering.groupname'] = group_refid
-        nova_tags['AutoScalingGroupName'] = group_refid
+        nova_tags['metering.AutoScalingGroupName'] = group_refid
 
         self.m.VerifyAll()
         self.m.UnsetStubs()
