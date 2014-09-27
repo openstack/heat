@@ -132,7 +132,13 @@ class StackUser(resource.Resource):
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
         else:
-            self.data_set('credential_id', kp.id, redact=True)
+            try:
+                credential_id = kp.id
+            except AttributeError:
+                # keystone v2 keypairs do not have an id attribute. Use the
+                # access key instead.
+                credential_id = kp.access
+            self.data_set('credential_id', credential_id, redact=True)
             self.data_set('access_key', kp.access, redact=True)
             self.data_set('secret_key', kp.secret, redact=True)
         return kp
