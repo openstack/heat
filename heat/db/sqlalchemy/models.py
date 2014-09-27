@@ -61,8 +61,9 @@ class HeatBase(models.ModelBase, models.TimestampMixin):
             session = Session.object_session(self)
             if not session:
                 session = get_session()
+        session.begin()
         session.delete(self)
-        session.flush()
+        session.commit()
 
     def update_and_save(self, values, session=None):
         if not session:
