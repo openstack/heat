@@ -145,7 +145,7 @@ _mgr = None
 
 
 def has_client(name):
-    return _mgr and name in _mgr
+    return _mgr and name in _mgr.names()
 
 
 def initialise():

@@ -225,6 +225,7 @@ class TestClientPluginsInitialise(HeatTestCase):
             self.assertEqual(c, plugin.clients)
             self.assertEqual(con, plugin.context)
             self.assertIsNone(plugin._client)
+            self.assertTrue(clients.has_client(plugin_name))
 
 
 class TestIsNotFound(HeatTestCase):
