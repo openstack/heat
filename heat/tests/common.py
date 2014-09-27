@@ -97,6 +97,11 @@ class HeatTestCase(testscenarios.WithScenarios,
             if templ_path not in cur_path:
                 tri.template_name = cur_path.replace('/etc/heat/templates',
                                                      templ_path)
+
+        # use CWLiteAlarm for testing.
+        resources.global_env().registry.load(
+            {"AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"})
+
         utils.setup_dummy_db()
         self.addCleanup(utils.reset_dummy_db)
 

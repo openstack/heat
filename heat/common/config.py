@@ -137,6 +137,9 @@ engine_opts = [
                default=2,
                help=_('RPC timeout for the engine liveness check that is used'
                       ' for stack locking.')),
+    cfg.BoolOpt('enable_cloud_watch_lite',
+                default=True,
+                help=_('Enable the legacy OS::Heat::CWLiteAlarm resource.')),
     cfg.StrOpt('onready',
                help=_('Deprecated.'))]
 

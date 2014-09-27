@@ -30,6 +30,7 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine.resources import template_resource
 from heat.engine import rsrc_defn
+from heat.engine import support
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -108,6 +109,8 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
+
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
             properties_schema = {
                 "Foo": {"Type": "String"},
@@ -186,6 +189,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {}
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
@@ -214,6 +218,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {}
             attributes_schema = {"Foo": attributes.Schema("A test attribute")}
 
@@ -244,6 +249,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.STRING,
                                                    required=True)}
@@ -275,6 +281,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.STRING,
                                                    required=True)}
@@ -306,6 +313,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {}
             attributes_schema = {}
 
@@ -336,6 +344,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.MAP)}
             attributes_schema = {}
@@ -371,6 +380,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {"Length":
                                  properties.Schema(properties.Schema.INTEGER)}
             attributes_schema = {}
@@ -402,6 +412,7 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
+            support_status = support.SupportStatus()
             properties_schema = {"Foo":
                                  properties.Schema(properties.Schema.BOOLEAN)}
             attributes_schema = {}
