@@ -14,6 +14,7 @@
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import port
 from heat.engine.resources.neutron import router
 from heat.engine import support
 
@@ -95,9 +96,10 @@ class FloatingIP(neutron.NeutronResource):
 
     def add_dependencies(self, deps):
         super(FloatingIP, self).add_dependencies(deps)
-        # depend on any RouterGateway in this template with the same
-        # network_id as this floating_network_id
+
         for resource in self.stack.itervalues():
+            # depend on any RouterGateway in this template with the same
+            # network_id as this floating_network_id
             if resource.has_interface('OS::Neutron::RouterGateway'):
                 gateway_network = resource.properties.get(
                     router.RouterGateway.NETWORK) or resource.properties.get(
@@ -107,6 +109,31 @@ class FloatingIP(neutron.NeutronResource):
                         self.FLOATING_NETWORK_ID)
                 if gateway_network == floating_network:
                     deps += (self, resource)
+
+            # depend on any RouterInterface in this template which interfaces
+            # with the same subnet that this floating IP's port is assigned
+            # to
+            elif resource.has_interface('OS::Neutron::RouterInterface'):
+
+                def port_on_subnet(resource, subnet):
+                    if not resource.has_interface('OS::Neutron::Port'):
+                        return False
+                    for fixed_ip in resource.properties.get(
+                            port.Port.FIXED_IPS):
+
+                        port_subnet = (
+                            fixed_ip.properties.get(port.Port.FIXED_IP_SUBNET)
+                            or fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))
+                        return subnet == port_subnet
+                    return False
+
+                interface_subnet = (
+                    resource.properties.get(router.RouterInterface.SUBNET) or
+                    resource.properties.get(router.RouterInterface.SUBNET_ID))
+                for d in deps.required_by(self):
+                    if port_on_subnet(d, interface_subnet):
+                        deps += (self, resource)
+                        break
 
     def validate(self):
         super(FloatingIP, self).validate()
