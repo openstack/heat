@@ -28,7 +28,7 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option('trove', 'endpoint_type')
         args = {
             'service_type': 'database',
-            'auth_url': con.auth_url,
+            'auth_url': con.auth_url or '',
             'proxy_token': con.auth_token,
             'username': None,
             'password': None,

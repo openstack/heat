@@ -27,7 +27,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         args = {
             'service_type': 'volume',
-            'auth_url': con.auth_url,
+            'auth_url': con.auth_url or '',
             'project_id': con.tenant,
             'username': None,
             'api_key': None,
