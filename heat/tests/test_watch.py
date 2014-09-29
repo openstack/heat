@@ -413,6 +413,35 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(self.wr.SUSPENDED, self.wr.state)
         self.assertEqual([], actions)
 
+    def test_evaluate_ceilometer_controlled(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        now = timeutils.utcnow()
+        self.m.StubOutWithMock(timeutils, 'utcnow')
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        self.m.ReplayAll()
+
+        # Now data breaches Threshold, but we're suspended
+        last = now - datetime.timedelta(seconds=300)
+        data = WatchData(35, now - datetime.timedelta(seconds=150))
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[data],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        self.wr.state_set(self.wr.CEILOMETER_CONTROLLED)
+
+        actions = self.wr.evaluate()
+        self.assertEqual(self.wr.CEILOMETER_CONTROLLED, self.wr.state)
+        self.assertEqual([], actions)
+
     def test_rule_actions_alarm_normal(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',

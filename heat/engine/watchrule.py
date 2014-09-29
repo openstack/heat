@@ -224,7 +224,7 @@ class WatchRule(object):
         return fn()
 
     def evaluate(self):
-        if self.state == self.SUSPENDED:
+        if self.state in [self.CEILOMETER_CONTROLLED, self.SUSPENDED]:
             return []
         # has enough time progressed to run the rule
         self.now = timeutils.utcnow()
