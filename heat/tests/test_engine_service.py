@@ -2929,6 +2929,31 @@ class StackServiceTest(HeatTestCase):
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', template)
 
+    def test_validate_new_stack_checks_incorrect_keywords_in_resource(self):
+        template = {'heat_template_version': '2013-05-23',
+                    'resources': {
+                        'Res': {'Type': 'GenericResource1'}}}
+        parsed_template = service.templatem.Template(template)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.eng._validate_new_stack,
+                               self.ctx, 'test_existing_stack',
+                               parsed_template)
+        msg = \
+            u'u\'"Type" is not a valid keyword inside a resource definition\''
+        self.assertEqual(msg, six.text_type(ex))
+
+    def test_validate_new_stack_checks_incorrect_sections(self):
+        template = {'heat_template_version': '2013-05-23',
+                    'unknown_section': {
+                        'Res': {'Type': 'GenericResource1'}}}
+        parsed_template = service.templatem.Template(template)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.eng._validate_new_stack,
+                               self.ctx, 'test_existing_stack',
+                               parsed_template)
+        msg = u'The template section is invalid: unknown_section'
+        self.assertEqual(msg, six.text_type(ex))
+
     def test_validate_new_stack_checks_resource_limit(self):
         cfg.CONF.set_override('max_resources_per_stack', 5)
         template = {'HeatTemplateFormatVersion': '2012-12-12',

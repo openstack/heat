@@ -509,6 +509,11 @@ class EngineService(service.Service):
             raise exception.MissingCredentialError(required='X-Auth-Key')
 
     def _validate_new_stack(self, cnxt, stack_name, parsed_template):
+        try:
+            parsed_template.validate()
+        except Exception as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
+
         if db_api.stack_get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
