@@ -2914,7 +2914,7 @@ class StackServiceTest(HeatTestCase):
     @mock.patch.object(service.db_api, 'stack_get_by_name')
     def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):
         mock_stack_get.return_value = 'existing_db_stack'
-        tmpl = service.templatem.Template(
+        tmpl = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12'})
         self.assertRaises(exception.StackExists, self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', tmpl)
@@ -2923,7 +2923,7 @@ class StackServiceTest(HeatTestCase):
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
-        template = service.templatem.Template(
+        template = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12'})
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
@@ -2933,7 +2933,7 @@ class StackServiceTest(HeatTestCase):
         template = {'heat_template_version': '2013-05-23',
                     'resources': {
                         'Res': {'Type': 'GenericResource1'}}}
-        parsed_template = service.templatem.Template(template)
+        parsed_template = templatem.Template(template)
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
@@ -2946,7 +2946,7 @@ class StackServiceTest(HeatTestCase):
         template = {'heat_template_version': '2013-05-23',
                     'unknown_section': {
                         'Res': {'Type': 'GenericResource1'}}}
-        parsed_template = service.templatem.Template(template)
+        parsed_template = templatem.Template(template)
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
@@ -2964,7 +2964,7 @@ class StackServiceTest(HeatTestCase):
                         'Res4': {'Type': 'GenericResource1'},
                         'Res5': {'Type': 'GenericResource1'},
                         'Res6': {'Type': 'GenericResource1'}}}
-        parsed_template = service.templatem.Template(template)
+        parsed_template = templatem.Template(template)
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', parsed_template)
