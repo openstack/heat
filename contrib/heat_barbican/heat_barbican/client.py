@@ -26,7 +26,7 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
 
-        keystone_client = self.clients('keystone').client
+        keystone_client = self.clients.client('keystone').client
         auth_plugin = auth.KeystoneAuthV2(keystone=keystone_client)
         client = barbican_client.Client(auth_plugin=auth_plugin)
 

@@ -83,11 +83,10 @@ class TestSecret(HeatTestCase):
         self.assertEqual('test-status', self.res.FnGetAtt('status'))
         self.assertEqual('foo', self.res.FnGetAtt('decrypted_payload'))
 
-    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_attributes_handles_exceptions(self):
-        client.barbican_client.HTTPClientError = Exception
+        self.barbican.barbican_client.HTTPClientError = Exception
         self.barbican.secrets.get.side_effect = Exception('boom')
-        self.assertRaises(client.barbican_client.HTTPClientError,
+        self.assertRaises(self.barbican.barbican_client.HTTPClientError,
                           self.res.FnGetAtt, 'order_ref')
 
     def test_create_secret_sets_resource_id(self):
@@ -162,18 +161,16 @@ class TestSecret(HeatTestCase):
 
         mock_delete.assert_called_once_with('foo_id')
 
-    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_handle_delete_ignores_not_found_errors(self):
-        client.barbican_client.HTTPClientError = Exception
-        exc = client.barbican_client.HTTPClientError('Not Found.')
+        self.barbican.barbican_client.HTTPClientError = Exception
+        exc = self.barbican.barbican_client.HTTPClientError('Not Found.')
         self.barbican.secrets.delete.side_effect = exc
         scheduler.TaskRunner(self.res.delete)()
         self.assertTrue(self.barbican.secrets.delete.called)
 
-    @mock.patch.object(client, 'barbican_client', new=mock.Mock())
     def test_handle_delete_raises_resource_failure_on_error(self):
-        client.barbican_client.HTTPClientError = Exception
-        exc = client.barbican_client.HTTPClientError('Boom.')
+        self.barbican.barbican_client.HTTPClientError = Exception
+        exc = self.barbican.barbican_client.HTTPClientError('Boom.')
         self.barbican.secrets.delete.side_effect = exc
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(self.res.delete))
