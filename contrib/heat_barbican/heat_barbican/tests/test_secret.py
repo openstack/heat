@@ -36,6 +36,15 @@ resources:
 '''
 
 
+class FakeSecret(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def store(self):
+        return self.name
+
+
 class TestSecret(HeatTestCase):
 
     def setUp(self):
@@ -64,28 +73,28 @@ class TestSecret(HeatTestCase):
 
     def _create_resource(self, name, snippet, stack):
         res = secret.Secret(name, snippet, stack)
-        self.barbican.secrets.store.return_value = name + '_id'
+        self.barbican.secrets.Secret.return_value = FakeSecret(name + '_id')
         scheduler.TaskRunner(res.create)()
         return res
 
     def test_create_secret(self):
         expected_state = (self.res.CREATE, self.res.COMPLETE)
         self.assertEqual(expected_state, self.res.state)
-        args = self.barbican.secrets.store.call_args[1]
+        args = self.barbican.secrets.Secret.call_args[1]
         self.assertEqual('foobar-secret', args['name'])
 
     def test_attributes(self):
         mock_secret = mock.Mock()
         mock_secret.status = 'test-status'
-        self.barbican.secrets.get.return_value = mock_secret
-        self.barbican.secrets.decrypt.return_value = 'foo'
+        self.barbican.secrets.Secret.return_value = mock_secret
+        mock_secret.payload = 'foo'
 
         self.assertEqual('test-status', self.res.FnGetAtt('status'))
         self.assertEqual('foo', self.res.FnGetAtt('decrypted_payload'))
 
     def test_attributes_handles_exceptions(self):
         self.barbican.barbican_client.HTTPClientError = Exception
-        self.barbican.secrets.get.side_effect = Exception('boom')
+        self.barbican.secrets.Secret.side_effect = Exception('boom')
         self.assertRaises(self.barbican.barbican_client.HTTPClientError,
                           self.res.FnGetAtt, 'order_ref')
 
@@ -104,7 +113,7 @@ class TestSecret(HeatTestCase):
                                             props)
         res = self._create_resource(defn.name, defn, self.stack)
 
-        args = self.barbican.secrets.store.call_args[1]
+        args = self.barbican.secrets.Secret.call_args[1]
         self.assertEqual('foobar', args[res.PAYLOAD])
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
@@ -120,7 +129,7 @@ class TestSecret(HeatTestCase):
                                             props)
         res = self._create_resource(defn.name, defn, self.stack)
 
-        args = self.barbican.secrets.store.call_args[1]
+        args = self.barbican.secrets.Secret.call_args[1]
         self.assertEqual('foobar', args[res.PAYLOAD])
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
