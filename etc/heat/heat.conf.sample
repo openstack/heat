@@ -74,6 +74,12 @@
 # value)
 #enable_cloud_watch_lite=true
 
+# Enable the preview Stack Abandon feature. (boolean value)
+#enable_stack_abandon=false
+
+# Enable the preview Stack Adopt feature. (boolean value)
+#enable_stack_adopt=false
+
 # Deprecated. (string value)
 #onready=<None>
 

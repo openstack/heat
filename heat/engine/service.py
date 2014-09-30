@@ -54,6 +54,8 @@ from heat.rpc import api as rpc_api
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
+cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
+cfg.CONF.import_opt('enable_stack_adopt', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -596,6 +598,9 @@ class EngineService(service.Service):
 
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
+                if not cfg.CONF.enable_stack_adopt:
+                    raise exception.NotSupported(feature='Stack Adopt')
+
                 stack.adopt()
             else:
                 stack.create()
@@ -876,6 +881,9 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         :param stack_identity: Name of the stack you want to abandon.
         """
+        if not cfg.CONF.enable_stack_abandon:
+            raise exception.NotSupported(feature='Stack Abandon')
+
         st = self._get_stack(cnxt, stack_identity)
         LOG.info(_('abandoning stack %s') % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
