@@ -15,6 +15,7 @@ import six
 import testtools
 
 from heat.common import exception
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
@@ -1050,6 +1051,49 @@ class PropertiesTest(testtools.TestCase):
         props = properties.Properties(schema,
                                       {'foo': 'get_attr: [db, value]'},
                                       test_resolver)
+        try:
+            self.assertIsNone(props.validate())
+        except exception.StackValidationFailed:
+            self.fail("Constraints should not have been evaluated.")
+
+    def test_resolve_ref_with_constraints(self):
+        # create test custom constraint
+        class IncorrectConstraint(constraints.BaseCustomConstraint):
+
+            expected_exceptions = (Exception,)
+
+            def validate_with_client(self, client, value):
+                raise Exception("Test exception")
+
+        class TestCustomConstraint(constraints.CustomConstraint):
+            @property
+            def custom_constraint(self):
+                return IncorrectConstraint()
+
+        # create schema with test constraint
+        schema = {
+            'foo': properties.Schema(
+                properties.Schema.STRING,
+                constraints=[TestCustomConstraint('test_constraint')]
+            )
+        }
+
+        # define parameters for function
+        def test_resolver(prop):
+            return 'None'
+
+        class rsrc(object):
+            action = INIT = "INIT"
+
+        stack = {'another_res': rsrc()}
+
+        # define properties with function and constraint
+        props = properties.Properties(
+            schema,
+            {'foo': cfn_funcs.ResourceRef(
+                stack, 'get_resource', 'another_res')},
+            test_resolver)
+
         try:
             self.assertIsNone(props.validate())
         except exception.StackValidationFailed:

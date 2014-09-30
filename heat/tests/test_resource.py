@@ -37,6 +37,8 @@ from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
+import neutronclient.common.exceptions as neutron_exp
+
 
 empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
 
@@ -47,14 +49,18 @@ class ResourceTest(HeatTestCase):
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithCustomConstraint',
+                                 generic_rsrc.ResourceWithCustomConstraint)
 
-        env = environment.Environment()
-        env.load({u'resource_registry':
-                  {u'OS::Test::GenericResource': u'GenericResourceType'}})
+        self.env = environment.Environment()
+        self.env.load({u'resource_registry':
+                      {u'OS::Test::GenericResource': u'GenericResourceType',
+                       u'OS::Test::ResourceWithCustomConstraint':
+                       u'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template(empty_template), env=env,
-                                  stack_id=str(uuid.uuid4()))
+                                  parser.Template(empty_template),
+                                  env=self.env, stack_id=str(uuid.uuid4()))
         self.patch('heat.engine.resource.warnings')
 
     def test_get_class_ok(self):
@@ -1014,6 +1020,46 @@ class ResourceTest(HeatTestCase):
             'heat.engine.clients.os.neutron.NeutronClientPlugin._create')
         mock_create.side_effect = Exception()
         self.assertFalse(res.is_using_neutron())
+
+    def _test_skip_validation_if_custom_constraint(self, tmpl):
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env=self.env)
+        stack.store()
+        path = ('heat.engine.clients.os.neutron.NetworkConstraint.'
+                'validate_with_client')
+        with mock.patch(path) as mock_validate:
+            mock_validate.side_effect = neutron_exp.NeutronClientException
+            rsrc2 = stack['bar']
+            self.assertIsNone(rsrc2.validate())
+
+    def test_ref_skip_validation_if_custom_constraint(self):
+        tmpl = template.Template({
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'foo': {'Type': 'OS::Test::GenericResource'},
+                'bar': {
+                    'Type': 'OS::Test::ResourceWithCustomConstraint',
+                    'Properties': {
+                        'Foo': {'Ref': 'foo'},
+                    }
+                }
+            }
+        })
+        self._test_skip_validation_if_custom_constraint(tmpl)
+
+    def test_hot_ref_skip_validation_if_custom_constraint(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'foo': {'type': 'GenericResourceType'},
+                'bar': {
+                    'type': 'ResourceWithCustomConstraint',
+                    'properties': {
+                        'Foo': {'get_resource': 'foo'},
+                    }
+                }
+            }
+        })
+        self._test_skip_validation_if_custom_constraint(tmpl)
 
 
 class ResourceAdoptTest(HeatTestCase):
