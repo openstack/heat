@@ -922,6 +922,7 @@ class PropertiesTest(testtools.TestCase):
             'missing': {'Type': 'Integer'},
             'defaulted': {'Type': 'Integer', 'Default': 1},
             'default_override': {'Type': 'Integer', 'Default': 1},
+            'default_bool': {'Type': 'Boolean', 'Default': 'false'},
         }
         data = {
             'int': 21,
@@ -937,6 +938,9 @@ class PropertiesTest(testtools.TestCase):
 
     def test_string_good(self):
         self.assertEqual('foofoo', self.props['string'])
+
+    def test_bool_not_str(self):
+        self.assertEqual(False, self.props['default_bool'])
 
     def test_missing_required(self):
         self.assertRaises(ValueError, self.props.get, 'required_int')
