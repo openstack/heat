@@ -140,6 +140,12 @@ engine_opts = [
     cfg.BoolOpt('enable_cloud_watch_lite',
                 default=True,
                 help=_('Enable the legacy OS::Heat::CWLiteAlarm resource.')),
+    cfg.BoolOpt('enable_stack_abandon',
+                default=False,
+                help=_('Enable the preview Stack Abandon feature.')),
+    cfg.BoolOpt('enable_stack_adopt',
+                default=False,
+                help=_('Enable the preview Stack Adopt feature.')),
     cfg.StrOpt('onready',
                help=_('Deprecated.'))]
 

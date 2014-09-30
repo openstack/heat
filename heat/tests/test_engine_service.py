@@ -55,6 +55,7 @@ from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
+cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 
 wp_template = '''
 {
@@ -2023,6 +2024,7 @@ class StackServiceTest(HeatTestCase):
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):
+        cfg.CONF.set_override('enable_stack_abandon', True)
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
