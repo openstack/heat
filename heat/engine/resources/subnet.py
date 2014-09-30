@@ -91,15 +91,18 @@ class Subnet(resource.Resource):
             'ip_version': 4
         }
         subnet = client.create_subnet({'subnet': props})['subnet']
+        self.resource_id_set(subnet['id'])
 
         router = VPC.router_for_vpc(self.neutron(), network_id)
         if router:
             client.add_interface_router(
                 router['id'],
                 {'subnet_id': subnet['id']})
-        self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
+        if self.resource_id is None:
+            return
+
         client = self.neutron()
         network_id = self.properties.get(self.VPC_ID)
         subnet_id = self.resource_id
