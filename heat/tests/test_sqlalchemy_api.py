@@ -190,7 +190,7 @@ class SqlAlchemyTest(HeatTestCase):
     def test_filter_and_page_query_whitelists_sort_keys(self,
                                                         mock_paginate_query):
         query = mock.Mock()
-        sort_keys = ['name', 'foo']
+        sort_keys = ['stack_name', 'foo']
         db_api._filter_and_page_query(self.ctx, query, sort_keys=sort_keys)
 
         args, _ = mock_paginate_query.call_args
@@ -200,7 +200,7 @@ class SqlAlchemyTest(HeatTestCase):
     def test_events_filter_and_page_query_whitelists_sort_keys(
             self, mock_paginate_query):
         query = mock.Mock()
-        sort_keys = ['created_at', 'foo']
+        sort_keys = ['event_time', 'foo']
         db_api._events_filter_and_page_query(self.ctx, query,
                                              sort_keys=sort_keys)
 
@@ -260,28 +260,28 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertRaises(exception.Invalid, db_api._paginate_query,
                           self.ctx, query, model, sort_keys=['foo'])
 
-    def test_filter_sort_keys_returns_empty_list_if_no_keys(self):
+    def test_get_sort_keys_returns_empty_list_if_no_keys(self):
         sort_keys = None
-        whitelist = None
+        mapping = {}
 
-        filtered_keys = db_api._filter_sort_keys(sort_keys, whitelist)
+        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
         self.assertEqual([], filtered_keys)
 
-    def test_filter_sort_keys_whitelists_single_key(self):
+    def test_get_sort_keys_whitelists_single_key(self):
         sort_key = 'foo'
-        whitelist = ['foo']
+        mapping = {'foo': 'Foo'}
 
-        filtered_keys = db_api._filter_sort_keys(sort_key, whitelist)
-        self.assertEqual(['foo'], filtered_keys)
+        filtered_keys = db_api._get_sort_keys(sort_key, mapping)
+        self.assertEqual(['Foo'], filtered_keys)
 
-    def test_filter_sort_keys_whitelists_multiple_keys(self):
+    def test_get_sort_keys_whitelists_multiple_keys(self):
         sort_keys = ['foo', 'bar', 'nope']
-        whitelist = ['foo', 'bar']
+        mapping = {'foo': 'Foo', 'bar': 'Bar'}
 
-        filtered_keys = db_api._filter_sort_keys(sort_keys, whitelist)
-        self.assertIn('foo', filtered_keys)
-        self.assertIn('bar', filtered_keys)
-        self.assertNotIn('nope', filtered_keys)
+        filtered_keys = db_api._get_sort_keys(sort_keys, mapping)
+        self.assertIn('Foo', filtered_keys)
+        self.assertIn('Bar', filtered_keys)
+        self.assertEqual(2, len(filtered_keys))
 
     def test_encryption(self):
         stack_name = 'test_encryption'
@@ -515,7 +515,7 @@ class SqlAlchemyTest(HeatTestCase):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
         st_db = db_api.stack_get_all(self.ctx,
-                                     sort_keys='created_at')
+                                     sort_keys='creation_time')
         self.assertEqual(3, len(st_db))
         self.assertEqual(stacks[0].id, st_db[0].id)
         self.assertEqual(stacks[1].id, st_db[1].id)
@@ -523,7 +523,8 @@ class SqlAlchemyTest(HeatTestCase):
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_stack_get_all_filters_sort_keys(self, mock_paginate):
-        sort_keys = ['name', 'status', 'created_at', 'updated_at', 'username']
+        sort_keys = ['stack_name', 'stack_status', 'creation_time',
+                     'updated_time', 'stack_owner']
         db_api.stack_get_all(self.ctx, sort_keys=sort_keys)
 
         args = mock_paginate.call_args[0]

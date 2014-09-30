@@ -29,6 +29,7 @@ from heat.common.i18n import _
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
+from heat.rpc import api as rpc_api
 
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
@@ -306,18 +307,16 @@ def stack_get_all_by_owner_id(context, owner_id):
     return results
 
 
-def _filter_sort_keys(sort_keys, whitelist):
+def _get_sort_keys(sort_keys, mapping):
     '''Returns an array containing only whitelisted keys
 
     :param sort_keys: an array of strings
-    :param whitelist: an array of allowed strings
+    :param mapping: a mapping from keys to DB column names
     :returns: filtered list of sort keys
     '''
-    if not sort_keys:
-        return []
-    elif not isinstance(sort_keys, list):
+    if isinstance(sort_keys, basestring):
         sort_keys = [sort_keys]
-    return [key for key in sort_keys if key in whitelist]
+    return [mapping[key] for key in sort_keys or [] if key in mapping]
 
 
 def _paginate_query(context, query, model, limit=None, sort_keys=None,
@@ -374,11 +373,11 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
     if filters is None:
         filters = {}
 
-    allowed_sort_keys = [models.Stack.name.key,
-                         models.Stack.status.key,
-                         models.Stack.created_at.key,
-                         models.Stack.updated_at.key]
-    whitelisted_sort_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
+    sort_key_map = {rpc_api.STACK_NAME: models.Stack.name.key,
+                    rpc_api.STACK_STATUS: models.Stack.status.key,
+                    rpc_api.STACK_CREATION_TIME: models.Stack.created_at.key,
+                    rpc_api.STACK_UPDATED_TIME: models.Stack.updated_at.key}
+    whitelisted_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Stack, filters)
     return _paginate_query(context, query, models.Stack, limit,
@@ -576,9 +575,9 @@ def _events_filter_and_page_query(context, query,
     if filters is None:
         filters = {}
 
-    allowed_sort_keys = [models.Event.created_at.key,
-                         models.Event.resource_type.key]
-    whitelisted_sort_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
+    sort_key_map = {rpc_api.EVENT_TIMESTAMP: models.Event.created_at.key,
+                    rpc_api.EVENT_RES_TYPE: models.Event.resource_type.key}
+    whitelisted_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Event, filters)
 
