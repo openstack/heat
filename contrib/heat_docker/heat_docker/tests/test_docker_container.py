@@ -15,12 +15,12 @@
 #    under the License.
 
 import mock
+from oslo.utils import importutils
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -29,7 +29,7 @@ from testtools import skipIf
 from ..resources import docker_container  # noqa
 from .fake_docker_client import FakeDockerClient  # noqa
 
-docker = try_import('docker')
+docker = importutils.try_import('docker')
 
 
 template = '''

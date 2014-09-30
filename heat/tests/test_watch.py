@@ -15,13 +15,13 @@
 import datetime
 
 import mox
+from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import template
 from heat.engine import watchrule
-from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

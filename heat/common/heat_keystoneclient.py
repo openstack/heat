@@ -16,6 +16,7 @@
 from collections import namedtuple
 import copy
 import json
+from oslo.utils import importutils
 import uuid
 
 from keystoneclient.auth.identity import v3 as kc_auth_v3
@@ -29,7 +30,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
-from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger('heat.common.keystoneclient')

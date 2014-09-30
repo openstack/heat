@@ -16,9 +16,9 @@
 import mock
 import mox
 from oslo.config import cfg
+from oslo.utils import importutils
 
 from heat.common import exception
-from heat.openstack.common import importutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

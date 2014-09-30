@@ -14,9 +14,8 @@
 import collections
 import re
 
+from oslo.utils import encodeutils
 from six.moves.urllib import parse as urlparse
-
-from heat.openstack.common import strutils
 
 
 class HeatIdentifier(collections.Mapping):
@@ -116,7 +115,7 @@ class HeatIdentifier(collections.Mapping):
             stacks/<stack_name>/<stack_id><path>
         """
         return 'stacks/%s%s' % (self.stack_path(),
-                                urlparse.quote(strutils.safe_encode(
+                                urlparse.quote(encodeutils.safe_encode(
                                     self.path)))
 
     def stack_path(self):

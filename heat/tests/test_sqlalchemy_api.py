@@ -21,6 +21,7 @@ import uuid
 import fixtures
 import mock
 import mox
+from oslo.utils import timeutils
 
 from heat.common import context
 from heat.common import exception
@@ -33,7 +34,6 @@ from heat.engine import parser
 from heat.engine.resource import Resource
 from heat.engine.resources import instance as instances
 from heat.engine import scheduler
-from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests.v1_1 import fakes

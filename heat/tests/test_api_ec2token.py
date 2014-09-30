@@ -16,12 +16,12 @@ import json
 import six
 
 from oslo.config import cfg
+from oslo.utils import importutils
 import requests
 
 from heat.api.aws import ec2token
 from heat.api.aws import exception
 from heat.common.wsgi import Request
-from heat.openstack.common import importutils
 from heat.tests.common import HeatTestCase
 
 

@@ -15,9 +15,8 @@ import itertools
 import uuid
 
 import migrate.changeset.constraint as constraint
+from oslo.utils import timeutils
 import sqlalchemy
-
-from heat.openstack.common import timeutils
 
 
 def upgrade(migrate_engine):

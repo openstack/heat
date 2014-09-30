@@ -17,6 +17,7 @@ import datetime
 import mock
 import mox
 from oslo.config import cfg
+from oslo.utils import timeutils
 import six
 
 from heat.common import exception
@@ -31,7 +32,6 @@ from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 

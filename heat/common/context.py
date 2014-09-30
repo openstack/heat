@@ -11,13 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.utils import importutils
+
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
 from heat.db import api as db_api
 from heat.engine import clients
 from heat.openstack.common import context
-from heat.openstack.common import importutils
 from heat.openstack.common import local
 from heat.openstack.common.middleware import request_id
 

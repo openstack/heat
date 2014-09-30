@@ -34,6 +34,7 @@ from eventlet.green import ssl
 import eventlet.greenio
 import eventlet.wsgi
 from oslo.config import cfg
+from oslo.utils import importutils
 from paste import deploy
 import routes
 import routes.middleware
@@ -45,7 +46,6 @@ from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common import serializers
 from heat.openstack.common import gettextutils
-from heat.openstack.common import importutils
 
 
 URL_LENGTH_LIMIT = 50000

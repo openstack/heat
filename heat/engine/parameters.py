@@ -15,11 +15,12 @@ import collections
 import itertools
 import json
 
+from oslo.utils import encodeutils
+from oslo.utils import strutils
 import six
 
 from heat.common import exception
 from heat.engine import constraints as constr
-from heat.openstack.common import strutils
 
 
 PARAMETER_KEYS = (
@@ -270,7 +271,7 @@ class Parameter(object):
         if self.hidden():
             return '******'
         else:
-            return strutils.safe_encode(six.text_type(value))
+            return encodeutils.safe_encode(six.text_type(value))
 
 
 class NumberParam(Parameter):
@@ -394,7 +395,7 @@ class JsonParam(Parameter):
     def __str__(self):
         if self.hidden():
             return super(JsonParam, self).__str__()
-        return strutils.safe_decode(json.dumps(self.value()))
+        return encodeutils.safe_decode(json.dumps(self.value()))
 
     def _validate(self, val, context):
         val = self.parse(val)

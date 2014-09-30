@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.common import template_format
@@ -28,7 +29,6 @@ from heat.engine.resources import user
 from heat.engine.resources import wait_condition as waitc
 from heat.engine import signal_responder as signal
 from heat.engine import stack_resource
-from heat.openstack.common import timeutils
 from heat.tests import common
 from heat.tests import generic_resource
 # reuse the same template than autoscaling tests

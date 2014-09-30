@@ -15,6 +15,7 @@ import datetime
 import itertools
 
 from oslo.config import cfg
+from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.common import short_id
@@ -23,7 +24,6 @@ from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
-from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource
 from heat.tests import utils

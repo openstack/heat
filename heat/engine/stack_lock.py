@@ -16,12 +16,12 @@ import uuid
 
 from oslo.config import cfg
 from oslo import messaging
+from oslo.utils import excutils
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
-from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')

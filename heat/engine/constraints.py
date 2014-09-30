@@ -15,11 +15,11 @@ import collections
 import numbers
 import re
 
+from oslo.utils import strutils
 import six
 
 from heat.common import exception
 from heat.engine import resources
-from heat.openstack.common import strutils
 
 
 class Schema(collections.Mapping):

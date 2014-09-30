@@ -15,6 +15,7 @@ import base64
 import contextlib
 from datetime import datetime
 from oslo.config import cfg
+from oslo.utils import excutils
 import six
 import warnings
 
@@ -33,7 +34,6 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
-from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
