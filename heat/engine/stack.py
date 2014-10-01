@@ -18,6 +18,7 @@ import re
 import warnings
 
 from oslo.config import cfg
+from oslo.utils import encodeutils
 import six
 
 from heat.common import context as common_context
@@ -38,7 +39,6 @@ from heat.engine import scheduler
 from heat.engine.template import Template
 from heat.engine import update
 from heat.openstack.common import log as logging
-from heat.openstack.common import strutils
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -458,7 +458,7 @@ class Stack(collections.Mapping):
                 raise ex
             except Exception as ex:
                 LOG.exception(ex)
-                raise StackValidationFailed(message=strutils.safe_decode(
+                raise StackValidationFailed(message=encodeutils.safe_decode(
                                             six.text_type(ex)))
             if result:
                 raise StackValidationFailed(message=result)

@@ -15,11 +15,11 @@
 # limitations under the License.
 
 from oslo.config import cfg
+from oslo.utils import importutils
 from webob.exc import HTTPBadRequest
 from webob.exc import HTTPUnauthorized
 
 from heat.common import wsgi
-from heat.openstack.common import importutils
 
 
 class AuthUrlFilter(wsgi.Middleware):

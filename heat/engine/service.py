@@ -19,6 +19,7 @@ import os
 import eventlet
 from oslo.config import cfg
 from oslo import messaging
+from oslo.utils import timeutils
 import requests
 import six
 import warnings
@@ -47,7 +48,6 @@ from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
-from heat.openstack.common import timeutils
 from heat.openstack.common import uuidutils
 from heat.rpc import api as rpc_api
 

@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.utils import strutils
+
 from heat.openstack.common.gettextutils import _
-from heat.openstack.common import strutils
 
 
 def extract_bool(subject):

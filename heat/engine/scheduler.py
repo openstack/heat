@@ -18,10 +18,10 @@ from time import time as wallclock
 import types
 
 import eventlet
+from oslo.utils import excutils
 import six
 
 from heat.common.i18n import _
-from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

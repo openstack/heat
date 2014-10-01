@@ -17,6 +17,7 @@ SQLAlchemy models for heat data.
 import uuid
 
 from oslo.db.sqlalchemy import models
+from oslo.utils import timeutils
 import six
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
@@ -25,7 +26,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
 from heat.db.sqlalchemy.types import Json
-from heat.openstack.common import timeutils
 
 BASE = declarative_base()
 

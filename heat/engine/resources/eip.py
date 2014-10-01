@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.utils import excutils
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -18,7 +20,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.vpc import VPC
-from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
