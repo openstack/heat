@@ -94,10 +94,24 @@ class InstantiationData(object):
 
     def template(self):
         """
-        Get template file contents, either inline or from a URL, in JSON
-        or YAML format.
+        Get template file contents, either inline, from stack adopt data or
+        from a URL, in JSON or YAML format.
         """
-        if self.PARAM_TEMPLATE in self.data:
+        if engine_api.PARAM_ADOPT_STACK_DATA in self.data:
+            adopt_data = self.data[engine_api.PARAM_ADOPT_STACK_DATA]
+            try:
+                adopt_data = template_format.simple_parse(adopt_data)
+
+                if not isinstance(adopt_data, dict):
+                    raise exc.HTTPBadRequest(
+                        _('Adopt data %s invalid. Adopt data must be a dict.')
+                        % adopt_data)
+
+                return adopt_data['template']
+            except (ValueError, KeyError) as ex:
+                err_reason = _('Invalid data: %s') % ex
+                raise exc.HTTPBadRequest(err_reason)
+        elif self.PARAM_TEMPLATE in self.data:
             template_data = self.data[self.PARAM_TEMPLATE]
             if isinstance(template_data, dict):
                 return template_data
