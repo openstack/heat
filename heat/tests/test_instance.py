@@ -225,30 +225,6 @@ class InstancesTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_validate_BlockDeviceMappings_VolumeSize_invalid_str(self):
-        stack_name = 'val_VolumeSize_valid'
-        tmpl, stack = self._setup_test_stack(stack_name)
-        bdm = [{'DeviceName': 'vdb',
-                'Ebs': {'SnapshotId': '1234',
-                        'VolumeSize': 10}}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['BlockDeviceMappings'] = bdm
-        resource_defns = tmpl.resource_definitions(stack)
-        instance = instances.Instance('validate_volume_size',
-                                      resource_defns['WebServer'], stack)
-
-        self._mock_get_image_id_success('F17-x86_64-gold', 1)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
-
-        self.m.ReplayAll()
-
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                instance.validate)
-        self.assertIn("Value must be a string", six.text_type(exc))
-
-        self.m.VerifyAll()
-
     def test_validate_BlockDeviceMappings_without_Ebs_property(self):
         stack_name = 'without_Ebs'
         tmpl, stack = self._setup_test_stack(stack_name)

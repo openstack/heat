@@ -149,7 +149,7 @@ class EventTest(HeatTestCase):
         rname = 'bad_resource'
         defn = rsrc_defn.ResourceDefinition(rname,
                                             'ResourceWithRequiredProps',
-                                            {'Foo': False})
+                                            {'IntFoo': False})
 
         res = generic_rsrc.ResourceWithRequiredProps(rname, defn, self.stack)
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',

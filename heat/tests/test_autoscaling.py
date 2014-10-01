@@ -1589,26 +1589,6 @@ class AutoScalingTest(common.HeatTestCase):
         self.assertIsNone(rsrc.resource_id)
         self.assertEqual('LaunchConfig', rsrc.FnGetRefId())
 
-    def test_validate_BlockDeviceMappings_VolumeSize_invalid_str(self):
-        t = template_format.parse(as_template)
-        lcp = t['Resources']['LaunchConfig']['Properties']
-        bdm = [{'DeviceName': 'vdb',
-                'Ebs': {'SnapshotId': '1234',
-                        'VolumeSize': 10}}]
-        lcp['BlockDeviceMappings'] = bdm
-        stack = utils.parse_stack(t, params=self.params)
-        self.stub_ImageConstraint_validate()
-        self.m.ReplayAll()
-
-        e = self.assertRaises(exception.StackValidationFailed,
-                              self.create_scaling_group, t,
-                              stack, 'LaunchConfig')
-
-        expected_msg = "Value must be a string"
-        self.assertIn(expected_msg, six.text_type(e))
-
-        self.m.VerifyAll()
-
     def test_validate_BlockDeviceMappings_without_Ebs_property(self):
         t = template_format.parse(as_template)
         lcp = t['Resources']['LaunchConfig']['Properties']
