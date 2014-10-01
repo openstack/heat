@@ -15,6 +15,7 @@
 import datetime
 import errno
 import os
+import sys
 
 
 def list_types():
@@ -24,8 +25,9 @@ def list_types():
 def handle_part(data, ctype, filename, payload):
     if ctype == "__begin__":
         try:
-            os.makedirs('/var/lib/heat-cfntools', 0o700)
-        except OSError as e:
+            os.makedirs('/var/lib/heat-cfntools', int("700", 8))
+        except OSError:
+            ex_type, e, tb = sys.exc_info()
             if e.errno != errno.EEXIST:
                 raise
         return
@@ -33,14 +35,23 @@ def handle_part(data, ctype, filename, payload):
     if ctype == "__end__":
         return
 
-    with open('/var/log/part-handler.log', 'a') as log:
+    log = open('/var/log/part-handler.log', 'a')
+    try:
         timestamp = datetime.datetime.now()
         log.write('%s filename:%s, ctype:%s\n' % (timestamp, filename, ctype))
+    finally:
+        log.close()
 
     if ctype == 'text/x-cfninitdata':
-        with open('/var/lib/heat-cfntools/%s' % filename, 'w') as f:
+        f = open('/var/lib/heat-cfntools/%s' % filename, 'w')
+        try:
             f.write(payload)
+        finally:
+            f.close()
 
         # TODO(sdake) hopefully temporary until users move to heat-cfntools-1.3
-        with open('/var/lib/cloud/data/%s' % filename, 'w') as f:
+        f = open('/var/lib/cloud/data/%s' % filename, 'w')
+        try:
             f.write(payload)
+        finally:
+            f.close()
