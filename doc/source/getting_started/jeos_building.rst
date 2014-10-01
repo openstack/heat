@@ -31,15 +31,15 @@ used to create heat-enabled images.
 .. _tripleo-image-elements: https://github.com/openstack/tripleo-image-elements
 .. _TripleO: https://wiki.openstack.org/wiki/TripleO
 
-Fetch the tool and elements::
+Install the tool (preferably in a virtualenv) and fetch the elements::
 
-    git clone https://github.com/openstack/diskimage-builder.git
+    pip install git+https://github.com/openstack/diskimage-builder.git
     git clone https://github.com/openstack/tripleo-image-elements.git
 
 To create a heat-cfntools enabled image with the current release of Fedora x86_64::
 
     export ELEMENTS_PATH=tripleo-image-elements/elements
-    diskimage-builder/bin/disk-image-create vm fedora heat-cfntools -a amd64 -o fedora-heat-cfntools
+    disk-image-create vm fedora heat-cfntools -a amd64 -o fedora-heat-cfntools
 
 The image may then be pushed to glance, e.g::
 
@@ -49,7 +49,7 @@ The image may then be pushed to glance, e.g::
 To create a heat-cfntools enabled image with the current release of Ubuntu i386::
 
     export ELEMENTS_PATH=tripleo-image-elements/elements
-    diskimage-builder/bin/disk-image-create vm ubuntu heat-cfntools -a i386 -o ubuntu-heat-cfntools
+    disk-image-create vm ubuntu heat-cfntools -a i386 -o ubuntu-heat-cfntools
 
 If you are creating your own images you should consider creating golden images
 which contain all the packages required for the stacks that you launch. You can do
@@ -63,11 +63,11 @@ package download failure causing the stack launch to fail.
 To create an image that contains hooks needed for SoftwareConfig and SoftwareDeployment,
 you can follow the steps bellow to build a fedora based image::
 
-    git clone https://git.openstack.org/openstack/diskimage-builder.git
+    pip install git+https://git.openstack.org/openstack/diskimage-builder.git
     git clone https://git.openstack.org/openstack/tripleo-image-elements.git
     git clone https://git.openstack.org/openstack/heat-templates.git
     export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
-    diskimage-builder/bin/disk-image-create vm \
+    disk-image-create vm \
         fedora selinux-permissive \
         heat-config \
         os-collect-config \
