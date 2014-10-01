@@ -2039,7 +2039,7 @@ class StackServiceTest(HeatTestCase):
                 'type': u'AWS::EC2::Instance'}}
         self.m.ReplayAll()
         ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
-        self.assertEqual(8, len(ret))
+        self.assertEqual(9, len(ret))
         self.assertEqual('CREATE', ret['action'])
         self.assertEqual('COMPLETE', ret['status'])
         self.assertEqual('service_abandon_stack', ret['name'])
@@ -2048,6 +2048,7 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual(self.stack.t.t, ret['template'])
         self.assertIn('project_id', ret)
         self.assertIn('stack_user_project_id', ret)
+        self.assertIn('environment', ret)
         self.m.VerifyAll()
         self.eng.thread_group_mgr.groups[self.stack.id].wait()
 

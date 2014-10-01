@@ -1107,11 +1107,11 @@ class StackTest(HeatTestCase):
             self.stack, self.stack['A'].nested().root_stack)
 
         keys = ['name', 'id', 'action', 'status', 'template', 'resources',
-                'project_id', 'stack_user_project_id']
+                'project_id', 'stack_user_project_id', 'environment']
 
-        self.assertEqual(8, len(ret))
+        self.assertEqual(len(keys), len(ret))
         nested_stack_data = ret['resources']['A']
-        self.assertEqual(8, len(nested_stack_data))
+        self.assertEqual(len(keys), len(nested_stack_data))
         for key in keys:
             self.assertIn(key, ret)
             self.assertIn(key, nested_stack_data)
@@ -1163,6 +1163,7 @@ class StackTest(HeatTestCase):
 
     def test_get_stack_abandon_data(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Parameters': {'param1': {'Type': 'String'}},
                'Resources':
                {'A': {'Type': 'GenericResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
@@ -1172,10 +1173,12 @@ class StackTest(HeatTestCase):
         "B": {"status": "COMPLETE", "name": "B", "resource_data": {},
         "resource_id": null, "action": "INIT", "type": "GenericResourceType",
         "metadata": {}}}'''
+        env = environment.Environment({'parameters': {'param1': 'test'}})
         self.stack = parser.Stack(self.ctx, 'stack_details_test',
                                   parser.Template(tpl),
                                   tenant_id='123',
-                                  stack_user_project_id='234')
+                                  stack_user_project_id='234',
+                                  env=env)
         self.stack.store()
         info = self.stack.prepare_abandon()
         self.assertEqual('CREATE', info['action'])
@@ -1186,6 +1189,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(tpl, info['template'])
         self.assertEqual('123', info['project_id'])
         self.assertEqual('234', info['stack_user_project_id'])
+        self.assertEqual(env.params, info['environment']['parameters'])
 
     def test_set_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_arn_test',
