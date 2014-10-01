@@ -76,7 +76,8 @@ class ResWithComplexPropsAndAttrs(GenericResource):
 
 
 class ResourceWithProps(GenericResource):
-    properties_schema = {'Foo': {'Type': 'String'}}
+    properties_schema = {'Foo': {'Type': 'String'},
+                         'FooInt': {'Type': 'Integer'}}
 
 
 class ResourceWithPropsAndAttrs(ResourceWithProps):

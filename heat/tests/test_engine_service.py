@@ -2202,6 +2202,12 @@ class StackServiceTest(HeatTestCase):
                     'update_allowed': False,
                     'immutable': False,
                 },
+                'FooInt': {
+                    'type': 'integer',
+                    'required': False,
+                    'update_allowed': False,
+                    'immutable': False,
+                },
             },
             'attributes': {
                 'foo': {'description': 'A generic attribute'},
