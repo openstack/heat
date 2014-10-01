@@ -86,10 +86,10 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         return subnet_info['subnet']['network_id']
 
     def get_secgroup_uuids(self, security_groups):
-        '''
-        Returns a list of security group UUIDs.
+        '''Returns a list of security group UUIDs.
+
         Args:
-            security_groups: List of security group names or UUIDs
+        security_groups: List of security group names or UUIDs
         '''
         seclist = []
         all_groups = None

@@ -27,7 +27,7 @@ a generic Openstack deployment and the Rackspace Cloud.
 Rackspace resources depend on the dev branch of
 `pyrax <https://github.com/rackspace/pyrax/tree/dev>`_ to work
 properly. More information about them can be found in the
-`README
+`RACKSPACE_README
 <https://github.com/openstack/heat/blob/master/contrib/rackspace/README.md>`_.
 
 
@@ -41,20 +41,19 @@ DockerInc Resource
 
 This plugin enables the use of  Docker containers in a Heat template and
 requires the `docker-py <https://pypi.python.org/pypi/docker-py>`_
-package. You can find more information in the `README
-<https://github.com/openstack/heat/blob/master/contrib/heat_docker/heat_docker
-/README.md>`_.
+package. You can find more information in the `DOCKER_README
+<https://github.com/openstack/heat/blob/master/contrib/heat_docker/README.md>`_.
 
 .. resourcepages:: DockerInc::
 
 Nova Flavor Resource
-------------------
+--------------------
 
 .. rubric:: This resource is not enabled by default.
 
 This plugin enables dynamic creation of Nova flavors through Heat. You can
-find more information in the `README
-<https://github.com/openstack/heat/blob/master/contrib/nova_flavor/nova_flavor
+find more information in the `NOVA_FLAVOR_README
+<https://github.com/openstack/heat/blob/master/contrib/nova_flavor
 /README.md>`_.
 
 .. resourcepages:: NovaFlavor::
