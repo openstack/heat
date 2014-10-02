@@ -54,7 +54,8 @@ def simple_parse(tmpl_str):
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)
         except yaml.YAMLError as yea:
-            raise ValueError(yea)
+            msg = _('Error parsing template: %s') % yea
+            raise ValueError(msg)
         else:
             if tpl is None:
                 tpl = {}

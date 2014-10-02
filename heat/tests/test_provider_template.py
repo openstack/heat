@@ -661,6 +661,36 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
         self.m.VerifyAll()
 
+    def test_incorrect_template_provided_with_url(self):
+        wrong_template = '''
+         <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#
+        '''
+
+        env = environment.Environment()
+        test_templ_name = 'http://heatr/bad_tmpl.yaml'
+        env.load({'resource_registry':
+                  {'Test::Tmpl': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(empty_template), env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https'))\
+            .AndReturn(wrong_template)
+        self.m.ReplayAll()
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  'Test::Tmpl')
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition,
+                                                      stack)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                temp_res.validate)
+        self.assertIn('Error parsing template: ', six.text_type(err))
+
+        self.m.VerifyAll()
+
 
 class NestedProvider(HeatTestCase):
     """Prove that we can use the registry in a nested provider."""

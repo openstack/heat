@@ -139,7 +139,7 @@ class YamlParseExceptions(HeatTestCase):
         ('scanner', dict(raised_exception=yaml.scanner.ScannerError())),
         ('parser', dict(raised_exception=yaml.parser.ParserError())),
         ('reader',
-         dict(raised_exception=yaml.reader.ReaderError('', '', '', '', ''))),
+         dict(raised_exception=yaml.reader.ReaderError('', 42, 'x', '', ''))),
     ]
 
     def test_parse_to_value_exception(self):
@@ -148,8 +148,10 @@ class YamlParseExceptions(HeatTestCase):
         with mock.patch.object(yaml, 'load') as yaml_loader:
             yaml_loader.side_effect = self.raised_exception
 
-            self.assertRaises(ValueError,
-                              template_format.parse, text)
+            err = self.assertRaises(ValueError,
+                                    template_format.parse, text)
+
+            self.assertIn('Error parsing template: ', six.text_type(err))
 
 
 class JsonYamlResolvedCompareTest(HeatTestCase):
