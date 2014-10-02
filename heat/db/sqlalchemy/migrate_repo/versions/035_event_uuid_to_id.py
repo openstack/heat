@@ -27,8 +27,15 @@ def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
 
     event_table = sqlalchemy.Table('event', meta, autoload=True)
+    event_uuid_column_kwargs = {}
+    if migrate_engine.name == 'ibm_db_sa':
+        # NOTE(mriedem): DB2 10.5 doesn't support unique constraints over
+        # nullable columns, it creates a unique index instead, so we have
+        # to make the uuid column non-nullable in the DB2 case.
+        event_uuid_column_kwargs['nullable'] = False
     event_uuid = sqlalchemy.Column('uuid', sqlalchemy.String(length=36),
-                                   default=lambda: str(uuid.uuid4))
+                                   default=lambda: str(uuid.uuid4),
+                                   **event_uuid_column_kwargs)
     event_table.create_column(event_uuid)
 
     if migrate_engine.name == 'postgresql':
@@ -39,7 +46,13 @@ def upgrade(migrate_engine):
                                      server_default=sqlalchemy.text(
                                          "nextval('evt')"))
     else:
-        event_id = sqlalchemy.Column('tmp_id', sqlalchemy.Integer)
+        event_id_column_kwargs = {}
+        if migrate_engine.name == 'ibm_db_sa':
+            # NOTE(mriedem): This is turned into a primary key constraint
+            # later so it must be non-nullable.
+            event_id_column_kwargs['nullable'] = False
+        event_id = sqlalchemy.Column('tmp_id', sqlalchemy.Integer,
+                                     **event_id_column_kwargs)
     event_table.create_column(event_id)
 
     fake_autoincrement = itertools.count(1)
@@ -53,12 +66,20 @@ def upgrade(migrate_engine):
             event_table.c.id == event.id).values(values)
         migrate_engine.execute(update)
 
-    cons = constraint.UniqueConstraint('uuid', table=event_table)
+    constraint_kwargs = {'table': event_table}
+    if migrate_engine.name == 'ibm_db_sa':
+        # NOTE(mriedem): DB2 gives a random name to the unique constraint
+        # if one is not provided so let's set the standard name ourselves.
+        constraint_kwargs['name'] = 'uniq_event0uuid0'
+    cons = constraint.UniqueConstraint('uuid', **constraint_kwargs)
     cons.create()
 
     event_table.c.id.drop()
 
-    event_table.c.tmp_id.alter('id', sqlalchemy.Integer)
+    alter_kwargs = {}
+    if migrate_engine.name == 'ibm_db_sa':
+        alter_kwargs['nullable'] = False
+    event_table.c.tmp_id.alter('id', sqlalchemy.Integer, **alter_kwargs)
 
     cons = constraint.PrimaryKeyConstraint('tmp_id', table=event_table)
     cons.create()
@@ -127,8 +148,13 @@ def downgrade(migrate_engine):
 
     event_table = sqlalchemy.Table('event', meta, autoload=True)
 
+    event_id_column_kwargs = {}
+    if migrate_engine.name == 'ibm_db_sa':
+        event_id_column_kwargs['nullable'] = False
+
     event_id = sqlalchemy.Column('tmp_id', sqlalchemy.String(length=36),
-                                 default=lambda: str(uuid.uuid4))
+                                 default=lambda: str(uuid.uuid4),
+                                 **event_id_column_kwargs)
     event_id.create(event_table)
 
     event_list = event_table.select().execute()
@@ -144,7 +170,13 @@ def downgrade(migrate_engine):
     cons = constraint.PrimaryKeyConstraint('tmp_id', table=event_table)
     cons.create()
 
-    event_table.c.tmp_id.alter('id', default=lambda: str(uuid.uuid4))
+    alter_kwargs = {}
+    # NOTE(mriedem): DB2 won't allow a primary key on a nullable column so
+    # we have to make it non-nullable.
+    if migrate_engine.name == 'ibm_db_sa':
+        alter_kwargs['nullable'] = False
+    event_table.c.tmp_id.alter('id', default=lambda: str(uuid.uuid4),
+                               **alter_kwargs)
     if migrate_engine.name == 'postgresql':
         sequence = sqlalchemy.Sequence('evt')
         sqlalchemy.schema.DropSequence(sequence, bind=migrate_engine).execute()
