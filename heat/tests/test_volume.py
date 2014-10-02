@@ -816,7 +816,8 @@ class CinderVolumeTest(BaseVolumeTest):
                         display_description='desc', volume_type='lvm',
                         metadata={'key': 'value'}, source_volid=None,
                         status='available', bootable=False,
-                        created_at='2013-02-25T02:40:21.000000')
+                        created_at='2013-02-25T02:40:21.000000',
+                        encrypted=False, attachments=[])
         stack_name = 'test_volume_stack'
 
         self._mock_create_volume(fv, stack_name)
@@ -842,6 +843,8 @@ class CinderVolumeTest(BaseVolumeTest):
         self.assertEqual(u'2013-02-25T02:40:21.000000',
                          rsrc.FnGetAtt('created_at'))
         self.assertEqual(u'False', rsrc.FnGetAtt('bootable'))
+        self.assertEqual(u'False', rsrc.FnGetAtt('encrypted'))
+        self.assertEqual(u'[]', rsrc.FnGetAtt('attachments'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
