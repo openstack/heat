@@ -15,6 +15,7 @@ import copy
 import uuid
 
 from oslo.config import cfg
+from oslo.serialization import jsonutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -26,7 +27,6 @@ from heat.engine.resources.neutron import subnet
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support
-from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 

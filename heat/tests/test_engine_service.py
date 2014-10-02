@@ -25,6 +25,7 @@ from oslo.config import cfg
 from oslo import messaging
 from oslo.messaging.rpc import client as rpc_client
 from oslo.messaging.rpc import dispatcher
+from oslo.serialization import jsonutils
 import six
 
 from heat.common import exception
@@ -45,7 +46,6 @@ from heat.engine import service
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
-from heat.openstack.common import jsonutils
 from heat.openstack.common import threadgroup
 from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase

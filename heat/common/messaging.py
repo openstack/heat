@@ -18,9 +18,9 @@
 import eventlet
 from oslo.config import cfg
 import oslo.messaging
+from oslo.serialization import jsonutils
 
 from heat.common import context
-from heat.openstack.common import jsonutils
 
 
 TRANSPORT = None
