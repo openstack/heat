@@ -148,7 +148,8 @@ class LoadBalancerTest(common.HeatTestCase):
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
     def test_loadbalancer(self):
-        self._mock_get_image_id_success(u'F20-x86_64-cfntools', 746)
+        self._mock_get_image_id_success(
+            u'Fedora-Cloud-Base-20141203-21.x86_64', 746)
         self._create_stubs()
         self.m.ReplayAll()
 
@@ -209,7 +210,8 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_loadbalancer_nokey(self):
-        self._mock_get_image_id_success(u'F20-x86_64-cfntools', 746)
+        self._mock_get_image_id_success(
+            u'Fedora-Cloud-Base-20141203-21.x86_64', 746)
         self._create_stubs(key_name=None, stub_meta=False)
 
         self.m.ReplayAll()
