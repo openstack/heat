@@ -121,7 +121,8 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('raw_template.id'),
         nullable=False)
-    raw_template = relationship(RawTemplate, backref=backref('stack'))
+    raw_template = relationship(RawTemplate, cascade="all,delete",
+                                backref=backref('stack'))
     username = sqlalchemy.Column(sqlalchemy.String(256))
     tenant = sqlalchemy.Column(sqlalchemy.String(256))
     parameters = sqlalchemy.Column('parameters', Json)

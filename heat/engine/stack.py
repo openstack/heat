@@ -775,7 +775,9 @@ class Stack(collections.Mapping):
             LOG.debug('Deleting backup stack')
             backup_stack.delete(backup=True)
 
-            # flip the template to the newstack values
+            # Flip the template to the newstack values, but keep
+            # reference to old stack id to overwrite DB entry
+            newstack.t.id = self.t.id
             self.t = newstack.t
             template_outputs = self.t[self.t.OUTPUTS]
             self.outputs = self.resolve_static_data(template_outputs)
@@ -958,7 +960,10 @@ class Stack(collections.Mapping):
         if stack_status != self.FAILED:
             # delete the stack
             try:
-                db_api.stack_delete(self.context, self.id)
+                if backup:
+                    db_api.stack_delete_hard(self.context, self.id)
+                else:
+                    db_api.stack_delete(self.context, self.id)
             except exception.NotFound:
                 LOG.info(_("Tried to delete stack that does not exist "
                            "%s ") % self.id)

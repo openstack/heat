@@ -429,6 +429,27 @@ def stack_delete(context, stack_id):
     session.flush()
 
 
+def stack_delete_hard(context, stack_id):
+    s = stack_get(context, stack_id)
+    if not s:
+        raise exception.NotFound(_('Attempt to hard-delete a stack with id: '
+                                 '%(id)s %(msg)s') % {
+                                     'id': stack_id,
+                                     'msg': 'that does not exist'})
+
+    session = Session.object_session(s)
+
+    for r in s.resources:
+        session.delete(r)
+
+    for e in s.events:
+        session.delete(e)
+
+    session.delete(s)
+
+    session.flush()
+
+
 def stack_lock_create(stack_id, engine_id):
     session = get_session()
     with session.begin():
