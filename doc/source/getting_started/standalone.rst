@@ -76,7 +76,7 @@ Now make a file to store your new environment (heat.env).
 Now you use this like::
 
   . heat.env
-  heat list
+  heat stack-list
 
 Note: remember to open up firewall ports on “rock” so that you can
 access the OpenStack services.
