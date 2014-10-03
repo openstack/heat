@@ -20,6 +20,7 @@ import six
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine.resources.software_config import software_deployment as sd
+from heat.engine import support
 
 
 class StructuredConfig(sc.SoftwareConfig):
@@ -31,6 +32,8 @@ class StructuredConfig(sc.SoftwareConfig):
     configuration syntax. The resulting configuration is transferred,
     stored and returned by the software_configs API as parsed JSON.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         GROUP,
@@ -74,6 +77,8 @@ class StructuredDeployment(sd.SoftwareDeployment):
     needs to be passed through to the substituted configuration then a
     different input_key property value can be specified.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         CONFIG,

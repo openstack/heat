@@ -22,6 +22,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import signal_responder
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -212,6 +213,9 @@ class WaitConditionHandle(BaseWaitConditionHandle):
     then the cfn-signal will use this url to post to and
     WaitCondition will poll it to see if has been written to.
     '''
+
+    support_status = support.SupportStatus(version='2014.2')
+
     METADATA_KEYS = (
         DATA, REASON, STATUS, UNIQUE_ID
     ) = (
@@ -261,6 +265,9 @@ class UpdateWaitConditionHandle(WaitConditionHandle):
     out new configurations and be confident that they are rolled out once
     UPDATE COMPLETE is reached.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
+
     def update(self, after, before=None, prev_resource=None):
         raise resource.UpdateReplace(self.name)
 
@@ -404,6 +411,9 @@ class HeatWaitCondition(resource.Resource):
 
 
 class WaitCondition(HeatWaitCondition):
+
+    support_status = support.SupportStatus(version='2014.2')
+
     PROPERTIES = (
         HANDLE, TIMEOUT, COUNT,
     ) = (

@@ -15,9 +15,12 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.vpc import VPC
+from heat.engine import support
 
 
 class RouteTable(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         VPC_ID, TAGS,

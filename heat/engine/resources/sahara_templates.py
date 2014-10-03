@@ -18,6 +18,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -29,6 +30,8 @@ SAHARA_NAME_REGEX = (r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]"
 
 
 class SaharaNodeGroupTemplate(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, FLAVOR,
@@ -171,6 +174,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
 
 
 class SaharaClusterTemplate(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, DESCRIPTION,

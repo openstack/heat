@@ -28,6 +28,7 @@ from heat.engine import properties
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 from heat.scaling import cooldown
 from heat.scaling import template
@@ -442,6 +443,8 @@ class InstanceGroup(stack_resource.StackResource):
 
 
 class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, MAX_SIZE, MIN_SIZE,

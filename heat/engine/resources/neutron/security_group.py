@@ -15,9 +15,12 @@ from heat.common import exception
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine import support
 
 
 class SecurityGroup(neutron.NeutronResource):
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         NAME, DESCRIPTION, RULES,

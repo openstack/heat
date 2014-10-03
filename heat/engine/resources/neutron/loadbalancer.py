@@ -498,6 +498,8 @@ class PoolMember(neutron.NeutronResource):
     A resource to handle load balancer members.
     """
 
+    support_status = support.SupportStatus(version='2014.1')
+
     PROPERTIES = (
         POOL_ID, ADDRESS, PROTOCOL_PORT, WEIGHT, ADMIN_STATE_UP,
     ) = (

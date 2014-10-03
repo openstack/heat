@@ -25,6 +25,7 @@ from heat.engine import resource
 from heat.engine.resources import resource_group
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import signal_responder
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -59,6 +60,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     allow conditional logic to perform different configuration for different
     actions.
     '''
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         CONFIG, SERVER, INPUT_VALUES,

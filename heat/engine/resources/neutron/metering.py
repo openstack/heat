@@ -15,12 +15,15 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
+from heat.engine import support
 
 
 class MeteringLabel(neutron.NeutronResource):
     """
     A resource for creating neutron metering label.
     """
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         NAME, DESCRIPTION,
@@ -81,6 +84,8 @@ class MeteringRule(neutron.NeutronResource):
     """
     A resource to create rule for some label.
     """
+
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         METERING_LABEL_ID, REMOTE_IP_PREFIX, DIRECTION, EXCLUDED,

@@ -27,6 +27,8 @@ class NetworkGateway(neutron.NeutronResource):
     A resource for the Network Gateway resource in Neutron Network Gateway.
     '''
 
+    support_status = support.SupportStatus(version='2014.1')
+
     PROPERTIES = (
         NAME, DEVICES, CONNECTIONS,
     ) = (
