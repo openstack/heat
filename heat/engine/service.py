@@ -280,11 +280,12 @@ class EngineListener(service.Service):
         super(EngineListener, self).__init__()
         self.thread_group_mgr = thread_group_mgr
         self.engine_id = engine_id
+        self.host = host
 
     def start(self):
         super(EngineListener, self).start()
         self.target = messaging.Target(
-            server=cfg.CONF.host, topic=self.engine_id)
+            server=self.host, topic=self.engine_id)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
@@ -359,7 +360,7 @@ class EngineService(service.Service):
         LOG.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
         target = messaging.Target(
-            version=self.RPC_API_VERSION, server=cfg.CONF.host,
+            version=self.RPC_API_VERSION, server=self.host,
             topic=self.topic)
         self.target = target
         server = rpc_messaging.get_rpc_server(target, self)
