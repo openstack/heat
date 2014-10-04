@@ -12,7 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside post_test_hook function in devstack gate.
+# generates sample configuration file heat_integrationtests.conf.sample
+unset OS_USERNAME
+unset OS_PASSWORD
+unset OS_TENANT_NAME
+unset OS_AUTH_URL
+unset OS_REGION_NAME
 
-cd /opt/stack/new/heat
-sudo tox -efunctional
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd $DIR/..
+PYTHONPATH=. python -m heat_integrationtests.common.config \
+          heat_integrationtests/common/config.py \
+          > heat_integrationtests/heat_integrationtests.conf.sample
+popd
