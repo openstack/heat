@@ -1330,44 +1330,6 @@ class DBAPIStackTest(HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
-    def test_stack_delete_hard(self):
-        stack = create_stack(self.ctx, self.template, self.user_creds)
-        stack_id = stack.id
-        resource = create_resource(self.ctx, stack)
-        template_id = stack.raw_template.id
-        db_api.stack_delete_hard(self.ctx, stack_id)
-
-        self.assertIsNone(db_api.stack_get(self.ctx, stack_id,
-                                           show_deleted=False))
-
-        self.assertRaises(exception.NotFound, db_api.stack_delete,
-                          self.ctx, stack_id)
-
-        # Even soft-delete aware should not find it
-        self.assertIsNone(db_api.stack_get(self.ctx, stack_id,
-                                           show_deleted=True))
-
-        # Testing child resources deletion
-        self.assertRaises(exception.NotFound, db_api.resource_get,
-                          self.ctx, resource.id)
-
-        # Testing raw_template deletion
-        self.assertRaises(exception.NotFound, db_api.raw_template_get,
-                          self.ctx, template_id)
-
-    def test_stack_delete_hard_deletes_events(self):
-        stack = create_stack(self.ctx, self.template, self.user_creds)
-        stack_id = stack.id
-        values = [
-            {'stack_id': stack_id, 'resource_name': 'res1'},
-            {'stack_id': stack_id, 'resource_name': 'res2'},
-        ]
-        [create_event(self.ctx, **val) for val in values]
-
-        db_api.stack_delete_hard(self.ctx, stack_id)
-        events = db_api.event_get_all_by_stack(self.ctx, stack_id)
-        self.assertEqual(0, len(events))
-
     def test_stack_update(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         values = {

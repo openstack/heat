@@ -154,10 +154,6 @@ def stack_delete(context, stack_id):
     return IMPL.stack_delete(context, stack_id)
 
 
-def stack_delete_hard(context, stack_id):
-    return IMPL.stack_delete_hard(context, stack_id)
-
-
 def stack_lock_create(stack_id, engine_id):
     return IMPL.stack_lock_create(stack_id, engine_id)
 
