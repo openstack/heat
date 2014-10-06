@@ -18,9 +18,9 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.openstack.common import log as logging
 

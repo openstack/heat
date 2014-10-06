@@ -38,11 +38,11 @@ from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import dependencies
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine.properties import Properties
 from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine import service
+from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
