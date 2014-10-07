@@ -15,12 +15,15 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class GlanceImage(resource.Resource):
     '''
     A resource managing for image in Glance.
     '''
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         NAME, IMAGE_ID, IS_PUBLIC, MIN_DISK, MIN_RAM, PROTECTED,
