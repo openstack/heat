@@ -1792,6 +1792,8 @@ class StackServiceTest(HeatTestCase):
 
         thread = self.m.CreateMockAnything()
         thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
+        thread.link(mox.IgnoreArg(), self.stack.id,
+                    mox.IgnoreArg()).AndReturn(None)
 
         def run(stack_id, func, *args, **kwargs):
             func(*args)
@@ -3481,6 +3483,17 @@ class ThreadGroupManagerTest(HeatTestCase):
         thm.add_event(stack_id, e1)
         thm.add_event(stack_id, e2)
         self.assertEqual(thm.events[stack_id], [e1, e2])
+
+    def test_tgm_remove_event(self):
+        stack_id = 'add_events_test'
+        e1, e2 = mock.Mock(), mock.Mock()
+        thm = service.ThreadGroupManager()
+        thm.add_event(stack_id, e1)
+        thm.add_event(stack_id, e2)
+        thm.remove_event(stack_id, e2)
+        self.assertEqual(thm.events[stack_id], [e1])
+        thm.remove_event(stack_id, e1)
+        self.assertNotIn(stack_id, thm.events)
 
     def test_tgm_send(self):
         stack_id = 'send_test'
