@@ -14,6 +14,8 @@
 import copy
 import itertools
 
+import mock
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
@@ -310,6 +312,22 @@ Resources:
 
         resource = self.stack['my_group']
         self.assertEqual('0', resource.FnGetRefId())
+
+    def test_check(self):
+        self._setup_test_stack()
+        resource = self.stack['my_group']
+        mock_get = mock.Mock()
+        resource.auto_scale().get = mock_get
+        scheduler.TaskRunner(resource.check)()
+        self.assertEqual('CHECK', resource.action)
+        self.assertEqual('COMPLETE', resource.status)
+
+        mock_get.side_effect = auto_scale.NotFound('boom')
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(resource.check))
+        self.assertEqual('CHECK', resource.action)
+        self.assertEqual('FAILED', resource.status)
+        self.assertIn('boom', str(exc))
 
     def test_update_group_config(self):
         """

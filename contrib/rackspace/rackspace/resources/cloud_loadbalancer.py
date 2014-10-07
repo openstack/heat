@@ -532,6 +532,12 @@ class CloudLoadBalancer(resource.Resource):
     def check_create_complete(self, loadbalancer):
         return self._check_status(loadbalancer, ['ACTIVE'])
 
+    def handle_check(self):
+        loadbalancer = self.clb.get(self.resource_id)
+        if not self._check_status(loadbalancer, ['ACTIVE']):
+            raise exception.Error(_("Cloud LoadBalancer is not ACTIVE "
+                                    "(was: %s)") % loadbalancer.status)
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Add and remove nodes specified in the prop_diff."""
         loadbalancer = self.clb.get(self.resource_id)

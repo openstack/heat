@@ -105,6 +105,9 @@ class CloudNetwork(resource.Resource):
                                            cidr=self.properties[self.CIDR])
         self.resource_id_set(cnw.id)
 
+    def handle_check(self):
+        self.cloud_networks().get(self.resource_id)
+
     def handle_delete(self):
         net = self.network()
         if net:

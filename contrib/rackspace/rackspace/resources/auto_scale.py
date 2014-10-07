@@ -328,6 +328,9 @@ class Group(resource.Resource):
         group = asclient.create(**self._get_create_args())
         self.resource_id_set(str(group.id))
 
+    def handle_check(self):
+        self.auto_scale().get(self.resource_id)
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update the group configuration and the launch configuration."""
         asclient = self.auto_scale()

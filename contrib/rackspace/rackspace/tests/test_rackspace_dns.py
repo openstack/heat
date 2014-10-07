@@ -13,6 +13,9 @@
 
 import uuid
 
+import mock
+
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
@@ -209,6 +212,24 @@ class RackspaceDnsTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
+
+    def test_check(self):
+        t = template_format.parse(domain_only_template)
+        instance = self._setup_test_cloud_dns_instance('dnsinstance_create', t)
+
+        mock_get = mock.Mock()
+        instance.cloud_dns = mock.Mock()
+        instance.cloud_dns.return_value.get = mock_get
+        scheduler.TaskRunner(instance.check)()
+        self.assertEqual('CHECK', instance.action)
+        self.assertEqual('COMPLETE', instance.status)
+
+        mock_get.side_effect = cloud_dns.NotFound('boom')
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(instance.check))
+        self.assertEqual('CHECK', instance.action)
+        self.assertEqual('FAILED', instance.status)
+        self.assertIn('boom', str(exc))
 
     def test_update(self, updateRecords=None):
         """

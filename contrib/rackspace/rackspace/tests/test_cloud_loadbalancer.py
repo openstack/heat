@@ -429,8 +429,7 @@ class LoadBalancerTest(common.HeatTestCase):
                                                           self.lb_name,
                                                           expected)
 
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                rsrc.validate)
+        exc = self.assertRaises(exception.StackValidationFailed, rsrc.validate)
         self.assertIn("Property certificate not assigned", six.text_type(exc))
 
         ssl_termination['certificate'] = 'dfaewfwef'
@@ -523,6 +522,35 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
+
+    def test_check(self):
+        stack = mock.Mock()
+        stack.db_resource_get.return_value = None
+        resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
+        loadbalancer = lb.CloudLoadBalancer("test", resdef, stack)
+        loadbalancer._add_event = mock.Mock()
+        mock_cloud_lb = mock.Mock()
+        mock_get = mock.Mock(return_value=mock_cloud_lb)
+        loadbalancer.clb.get = mock_get
+
+        mock_cloud_lb.status = 'ACTIVE'
+        scheduler.TaskRunner(loadbalancer.check)()
+        self.assertEqual('CHECK', loadbalancer.action)
+        self.assertEqual('COMPLETE', loadbalancer.status)
+
+        mock_cloud_lb.status = 'FOOBAR'
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(loadbalancer.check))
+        self.assertEqual('CHECK', loadbalancer.action)
+        self.assertEqual('FAILED', loadbalancer.status)
+        self.assertIn('FOOBAR', str(exc))
+
+        mock_get.side_effect = lb.NotFound('boom')
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(loadbalancer.check))
+        self.assertEqual('CHECK', loadbalancer.action)
+        self.assertEqual('FAILED', loadbalancer.status)
+        self.assertIn('boom', str(exc))
 
     def test_update_add_node_by_address(self):
         expected_ip = '172.168.1.4'
