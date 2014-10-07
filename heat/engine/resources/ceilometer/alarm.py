@@ -163,7 +163,8 @@ class CeilometerAlarm(resource.Resource):
         MATCHING_METADATA: properties.Schema(
             properties.Schema.MAP,
             _('Meter should match this resource metadata (key=value) '
-              'additionally to the meter_name.')
+              'additionally to the meter_name.'),
+            default={}
         ),
     }
     properties_schema.update(common_properties_schema)
@@ -192,7 +193,7 @@ class CeilometerAlarm(resource.Resource):
 
     def handle_create(self):
         props = self.cfn_to_ceilometer(self.stack,
-                                       self.parsed_template('Properties'))
+                                       self.properties)
         props['name'] = self.physical_resource_name()
 
         alarm = self.ceilometer().alarms.create(**props)
@@ -268,7 +269,7 @@ class CombinationAlarm(resource.Resource):
 
     def handle_create(self):
         properties = actions_to_urls(self.stack,
-                                     self.parsed_template('Properties'))
+                                     self.properties)
         properties['name'] = self.physical_resource_name()
         properties['type'] = 'combination'
 
