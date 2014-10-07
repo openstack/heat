@@ -845,6 +845,8 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                                             template_version=template_version)
 
     def FnGetAtt(self, key, *path):
+        if key == self.CURRENT_SIZE:
+            return len(self.get_instances())
         if path:
             attrs = ((rsrc.name,
                       rsrc.FnGetAtt(*path)) for rsrc in self.get_instances())
@@ -852,8 +854,6 @@ class AutoScalingResourceGroup(AutoScalingGroup):
                 return dict(attrs)
             if key == self.OUTPUTS_LIST:
                 return [value for name, value in attrs]
-            if key == self.CURRENT_SIZE:
-                return len(list(attrs))
 
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
