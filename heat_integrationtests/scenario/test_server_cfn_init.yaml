@@ -1,0 +1,82 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: |
+  Template which uses a wait condition to confirm that a minimal
+  cfn-init and cfn-signal has worked
+Parameters:
+  key_name:
+    Type: String
+  flavor:
+    Type: String
+  image:
+    Type: String
+  network:
+    Type: String
+  timeout:
+    Type: Number
+Resources:
+  CfnUser:
+    Type: AWS::IAM::User
+  SmokeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable only ping and SSH access
+      SecurityGroupIngress:
+      - {CidrIp: 0.0.0.0/0, FromPort: '-1', IpProtocol: icmp, ToPort: '-1'}
+      - {CidrIp: 0.0.0.0/0, FromPort: '22', IpProtocol: tcp, ToPort: '22'}
+  SmokeKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: {Ref: CfnUser}
+  SmokeServer:
+    Type: OS::Nova::Server
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /tmp/smoke-status:
+              content: smoke test complete
+            /etc/cfn/cfn-credentials:
+              content:
+                Fn::Replace:
+                - SmokeKeys: {Ref: SmokeKeys}
+                  SecretAccessKey:
+                    'Fn::GetAtt': [SmokeKeys, SecretAccessKey]
+                - |
+                  AWSAccessKeyId=SmokeKeys
+                  AWSSecretKey=SecretAccessKey
+              mode: '000400'
+              owner: root
+              group: root
+    Properties:
+      image: {Ref: image}
+      flavor: {Ref: flavor}
+      key_name: {Ref: key_name}
+      security_groups:
+      - {Ref: SmokeSecurityGroup}
+      networks:
+      - uuid: {Ref: network}
+      user_data:
+        Fn::Replace:
+        - WaitHandle: {Ref: WaitHandle}
+        - |
+          #!/bin/bash -v
+          /opt/aws/bin/cfn-init
+          /opt/aws/bin/cfn-signal -e 0 --data "`cat /tmp/smoke-status`" \
+              --id smoke_status "WaitHandle"
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: SmokeServer
+    Properties:
+      Handle: {Ref: WaitHandle}
+      Timeout: {Ref: timeout}
+Outputs:
+  WaitConditionStatus:
+    Description: Contents of /tmp/smoke-status on SmokeServer
+    Value:
+      Fn::GetAtt: [WaitCondition, Data]
+  SmokeServerIp:
+    Description: IP address of server
+    Value:
+      Fn::GetAtt: [SmokeServer, first_address]
