@@ -16,4 +16,4 @@
 
 source /opt/stack/new/devstack/accrc/demo/demo
 cd /opt/stack/new/heat
-sudo tox -eintegration
+sudo -E tox -eintegration
