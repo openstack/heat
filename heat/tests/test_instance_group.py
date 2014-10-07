@@ -13,17 +13,20 @@
 
 import copy
 
+import mock
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests.autoscaling import inline_templates
+from heat.tests import common
 from heat.tests import utils
-
 
 ig_template = '''
 {
@@ -62,10 +65,7 @@ ig_template = '''
 '''
 
 
-class InstanceGroupTest(HeatTestCase):
-    def setUp(self):
-        super(InstanceGroupTest, self).setUp()
-
+class InstanceGroupTest(common.HeatTestCase):
     def _stub_create(self, num, instance_class=instance.Instance):
         """
         Expect creation of C{num} number of Instances.
@@ -362,3 +362,24 @@ class InstanceGroupTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.VerifyAll()
+
+
+class TestChildTemplate(common.HeatTestCase):
+    def setUp(self):
+        super(TestChildTemplate, self).setUp()
+        t = template_format.parse(inline_templates.as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        defn = rsrc_defn.ResourceDefinition('ig', 'OS::Heat::InstanceGroup',
+                                            {'Size': 2,
+                                             'LaunchConfigurationName': 'foo'})
+        self.instance_group = asc.InstanceGroup('ig', defn, stack)
+
+    def test_child_template(self):
+        self.instance_group._create_template = mock.Mock(return_value='tpl')
+
+        self.assertEqual('tpl', self.instance_group.child_template())
+        self.instance_group._create_template.assert_called_once_with(2)
+
+    def test_child_params(self):
+        self.instance_group._environment = mock.Mock(return_value='env')
+        self.assertEqual('env', self.instance_group.child_params())
