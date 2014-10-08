@@ -15,6 +15,7 @@ import copy
 import json
 
 from ceilometerclient import exc as ceilometerclient_exc
+import mock
 import mox
 from oslo.config import cfg
 import six
@@ -451,6 +452,42 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def _prepare_check_resource(self):
+        snippet = template_format.parse(not_string_alarm_template)
+        stack = utils.parse_stack(snippet)
+        res = stack['MEMAlarmHigh']
+        res.ceilometer = mock.Mock()
+        mock_alarm = mock.Mock(enabled=True, state='ok')
+        res.ceilometer().alarms.get.return_value = mock_alarm
+        return res
+
+    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
+    def test_check(self, mock_load):
+        res = self._prepare_check_resource()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
+    def test_check_watchrule_failure(self, mock_load):
+        res = self._prepare_check_resource()
+        exc = alarm.exception.WatchRuleNotFound(watch_name='Boom')
+        mock_load.side_effect = exc
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('Boom', res.status_reason)
+
+    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
+    def test_check_alarm_failure(self, mock_load):
+        res = self._prepare_check_resource()
+        res.ceilometer().alarms.get.side_effect = Exception('Boom')
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('Boom', res.status_reason)
+
 
 class CombinationAlarmTest(common.HeatTestCase):
 
@@ -568,3 +605,26 @@ class CombinationAlarmTest(common.HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
+
+    def _prepare_check_resource(self):
+        snippet = template_format.parse(combination_alarm_template)
+        stack = utils.parse_stack(snippet)
+        res = stack['CombinAlarm']
+        res.ceilometer = mock.Mock()
+        mock_alarm = mock.Mock(enabled=True, state='ok')
+        res.ceilometer().alarms.get.return_value = mock_alarm
+        return res
+
+    def test_check(self):
+        res = self._prepare_check_resource()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_failure(self):
+        res = self._prepare_check_resource()
+        res.ceilometer().alarms.get.side_effect = Exception('Boom')
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('Boom', res.status_reason)
