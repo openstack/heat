@@ -535,7 +535,14 @@ class EngineService(service.Service):
         tmpl = templatem.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
+        # If it is stack-adopt, use parameters from adopt_stack_data
         common_params = api.extract_args(args)
+
+        if rpc_api.PARAM_ADOPT_STACK_DATA in common_params:
+            params[rpc_api.STACK_PARAMETERS] = common_params[
+                rpc_api.PARAM_ADOPT_STACK_DATA]['environment'][
+                    rpc_api.STACK_PARAMETERS]
+
         env = environment.Environment(params)
         stack = parser.Stack(cnxt, stack_name, tmpl, env,
                              owner_id=owner_id,

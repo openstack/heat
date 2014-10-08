@@ -728,6 +728,85 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_adopt(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+        template = {
+            "heat_template_version": "2013-05-23",
+            "parameters": {"app_dbx": {"type": "string"}},
+            "resources": {"res1": {"type": "GenericResourceType"}}}
+
+        parameters = {"app_dbx": "test"}
+        adopt_data = {
+            "status": "COMPLETE",
+            "name": "rtrove1",
+            "parameters": parameters,
+            "template": template,
+            "action": "CREATE",
+            "id": "8532f0d3-ea84-444e-b2bb-2543bb1496a4",
+            "resources": {"res1": {
+                    "status": "COMPLETE",
+                    "name": "database_password",
+                    "resource_id": "yBpuUROjfGQ2gKOD",
+                    "action": "CREATE",
+                    "type": "GenericResourceType",
+                    "metadata": {}}}}
+        body = {'template': None,
+                'stack_name': identity.stack_name,
+                'parameters': parameters,
+                'timeout_mins': 30,
+                'adopt_stack_data': str(adopt_data)}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        rpc_client.EngineClient.call(
+            req.context,
+            ('create_stack',
+             {'stack_name': identity.stack_name,
+              'template': template,
+              'params': {'parameters': parameters,
+                         'resource_registry': {}},
+              'files': {},
+              'args': {'timeout_mins': 30,
+                       'adopt_stack_data': str(adopt_data)},
+              'owner_id': None})
+        ).AndReturn(dict(identity))
+        self.m.ReplayAll()
+
+        response = self.controller.create(req,
+                                          tenant_id=identity.tenant,
+                                          body=body)
+
+        expected = {'stack':
+                    {'id': '1',
+                     'links': [{'href': self._url(identity), 'rel': 'self'}]}}
+        self.assertEqual(expected, response)
+        self.m.VerifyAll()
+
+    def test_adopt_error(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+        parameters = {"app_dbx": "test"}
+        adopt_data = ["Test"]
+        body = {'template': None,
+                'stack_name': identity.stack_name,
+                'parameters': parameters,
+                'timeout_mins': 30,
+                'adopt_stack_data': str(adopt_data)}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        self.m.ReplayAll()
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant,
+                                       body=body)
+        self.assertEqual(400, resp.status_code)
+        self.assertEqual('400 Bad Request', resp.status)
+        self.assertIn('Adopt data must be a dict.', resp.text)
+        self.m.VerifyAll()
+
     def test_create_with_files(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
