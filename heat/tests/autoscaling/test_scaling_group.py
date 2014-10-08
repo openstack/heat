@@ -17,8 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import autoscaling as asc
-from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
@@ -137,29 +135,106 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.assertEqual(expected_msg, six.text_type(e))
         self.m.VerifyAll()
 
-    def test_child_template_uses_min_size(self):
+
+class TestInitialGroupSize(common.HeatTestCase):
+    scenarios = [
+        ('000', dict(mins=0, maxs=0, desired=0, expected=0)),
+        ('040', dict(mins=0, maxs=4, desired=0, expected=0)),
+        ('253', dict(mins=2, maxs=5, desired=3, expected=3)),
+        ('14n', dict(mins=1, maxs=4, desired=None, expected=1)),
+    ]
+
+    def setUp(self):
+        super(TestInitialGroupSize, self).setUp()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://server.test:8000/v1/waitcondition')
+        self.stub_keystoneclient()
+
+    def test_initial_size(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = self.mins
+        properties['MaxSize'] = self.maxs
+        properties['DesiredCapacity'] = self.desired
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        group = stack['WebServerGroup']
+        with mock.patch.object(group, '_create_template') as mock_cre_temp:
+            group.child_template()
+            mock_cre_temp.assert_called_once_with(self.expected)
+
+
+class TestGroupAdjust(common.HeatTestCase):
+    def setUp(self):
+        super(TestGroupAdjust, self).setUp()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://server.test:8000/v1/waitcondition')
+        self.stub_keystoneclient()
+
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'AWS::AutoScaling::AutoScalingGroup',
-            {'MinSize': 2, 'MaxSize': 5, 'LaunchConfigurationName': 'foo'})
-        rsrc = asc.AutoScalingGroup('asg', defn, stack)
+        self.group = stack['WebServerGroup']
+        self.assertIsNone(self.group.validate())
 
-        rsrc._create_template = mock.Mock(return_value='tpl')
+    def test_scaling_policy_cooldown_toosoon(self):
+        """If _cooldown_inprogress() returns True don't progress."""
 
-        self.assertEqual('tpl', rsrc.child_template())
-        rsrc._create_template.assert_called_once_with(2)
+        dont_call = self.patchobject(self.group, 'get_instances')
+        with mock.patch.object(self.group, '_cooldown_inprogress',
+                               return_value=True):
+            self.group.adjust(1)
+        self.assertEqual([], dont_call.call_args_list)
 
-    def test_child_template_uses_desired_capacity(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'AWS::AutoScaling::AutoScalingGroup',
-            {'MinSize': 2, 'MaxSize': 5, 'DesiredCapacity': 3,
-             'LaunchConfigurationName': 'foo'})
-        rsrc = asc.AutoScalingGroup('asg', defn, stack)
+    def test_scaling_policy_cooldown_ok(self):
+        self.patchobject(self.group, 'get_instances', return_value=[])
+        resize = self.patchobject(self.group, 'resize')
+        cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+        self.group.adjust(1)
 
-        rsrc._create_template = mock.Mock(return_value='tpl')
+        expected_notifies = [
+            mock.call(
+                capacity=0, suffix='start', adjustment_type='ChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'Start resizing the group WebServerGroup',
+                adjustment=1,
+                stack=self.group.stack),
+            mock.call(
+                capacity=1, suffix='end',
+                adjustment_type='ChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'End resizing the group WebServerGroup',
+                adjustment=1,
+                stack=self.group.stack)]
 
-        self.assertEqual('tpl', rsrc.child_template())
-        rsrc._create_template.assert_called_once_with(3)
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        resize.assert_called_once_with(1)
+        cd_stamp.assert_called_once_with('ChangeInCapacity : 1')
+
+    def test_scaling_policy_resize_fail(self):
+        self.patchobject(self.group, 'get_instances', return_value=[])
+        self.patchobject(self.group, 'resize',
+                         side_effect=ValueError('test error'))
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+        self.assertRaises(ValueError, self.group.adjust, 1)
+
+        expected_notifies = [
+            mock.call(
+                capacity=0, suffix='start',
+                adjustment_type='ChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'Start resizing the group WebServerGroup',
+                adjustment=1,
+                stack=self.group.stack),
+            mock.call(
+                capacity=0, suffix='error',
+                adjustment_type='ChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'test error',
+                adjustment=1,
+                stack=self.group.stack)]
+
+        self.assertEqual(expected_notifies, notify.call_args_list)
