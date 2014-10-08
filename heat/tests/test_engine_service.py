@@ -547,6 +547,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_adopt_with_params(self):
+        cfg.CONF.set_override('enable_stack_adopt', True)
         template = {
             "heat_template_version": "2013-05-23",
             "parameters": {"app_dbx": {"type": "string"}},
