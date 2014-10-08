@@ -812,7 +812,7 @@ class EngineService(service.Service):
 
         env = environment.Environment(params)
 
-        for res in tmpl_resources.values():
+        for name, res in six.iteritems(tmpl_resources):
             ResourceClass = env.get_class(res['Type'])
             if ResourceClass == resources.template_resource.TemplateResource:
                 # we can't validate a TemplateResource unless we instantiate
@@ -820,9 +820,12 @@ class EngineService(service.Service):
                 # parameters into properties_schema.
                 continue
 
-            props = properties.Properties(ResourceClass.properties_schema,
-                                          res.get('Properties', {}),
-                                          context=cnxt)
+            props = properties.Properties(
+                ResourceClass.properties_schema,
+                res.get('Properties', {}),
+                parent_name=six.text_type(name),
+                context=cnxt,
+                section='Properties')
             deletion_policy = res.get('DeletionPolicy', 'Delete')
             try:
                 ResourceClass.validate_deletion_policy(deletion_policy)

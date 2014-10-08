@@ -183,7 +183,8 @@ class ResourceDefinitionCore(object):
         require a context to validate constraints.
         """
         return properties.Properties(schema, self._properties or {},
-                                     function.resolve, self.name, context)
+                                     function.resolve, self.name, context,
+                                     section=PROPERTIES)
 
     def deletion_policy(self):
         """
@@ -201,7 +202,8 @@ class ResourceDefinitionCore(object):
         require a context to validate constraints.
         """
         return properties.Properties(schema, self._update_policy or {},
-                                     function.resolve, self.name, context)
+                                     function.resolve, self.name, context,
+                                     section=UPDATE_POLICY)
 
     def metadata(self):
         """

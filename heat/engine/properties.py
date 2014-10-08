@@ -267,7 +267,6 @@ class Property(object):
                 keys = list(self.schema.schema)
             schemata = dict((k, self.schema.schema[k]) for k in keys)
             properties = Properties(schemata, dict(child_values),
-                                    parent_name=self.name,
                                     context=self.context)
             if validate:
                 properties.validate()
@@ -343,15 +342,16 @@ class Property(object):
 class Properties(collections.Mapping):
 
     def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
-                 context=None):
+                 context=None, section=None):
         self.props = dict((k, Property(s, k, context))
                           for k, s in schema.items())
         self.resolve = resolver
         self.data = data
-        if parent_name is None:
-            self.error_prefix = ''
-        else:
-            self.error_prefix = '%s: ' % parent_name
+        self.error_prefix = []
+        if parent_name is not None:
+            self.error_prefix.append(parent_name)
+        if section is not None:
+            self.error_prefix.append(section)
         self.context = context
 
     @staticmethod
@@ -369,38 +369,58 @@ class Properties(collections.Mapping):
         return {}
 
     def validate(self, with_value=True):
-        for (key, prop) in self.props.items():
-            # check that update_allowed and immutable
-            # do not contradict each other
-            if prop.update_allowed() and prop.immutable():
-                msg = _("Property %(prop)s: %(ua)s and %(im)s "
-                        "cannot both be True") % {
-                            'prop': key,
-                            'ua': prop.schema.UPDATE_ALLOWED,
-                            'im': prop.schema.IMMUTABLE}
-                raise exception.InvalidSchemaError(message=msg)
-
-            if with_value:
-                try:
-                    self._get_property_value(key, validate=True)
-                except ValueError as e:
-                    msg = _("Property error : %s") % e
+        try:
+            for key in self.data:
+                if key not in self.props:
+                    msg = _("Unknown Property %s") % key
                     raise exception.StackValidationFailed(message=msg)
 
-            # are there unimplemented Properties
-            if not prop.implemented() and key in self.data:
-                msg = _("Property %s not implemented yet") % key
-                raise exception.StackValidationFailed(message=msg)
+            for (key, prop) in self.props.items():
+                # check that update_allowed and immutable
+                # do not contradict each other
+                if prop.update_allowed() and prop.immutable():
+                    msg = _("Property %(prop)s: %(ua)s and %(im)s "
+                            "cannot both be True") % {
+                                'prop': key,
+                                'ua': prop.schema.UPDATE_ALLOWED,
+                                'im': prop.schema.IMMUTABLE}
+                    raise exception.InvalidSchemaError(message=msg)
 
-        for key in self.data:
-            if key not in self.props:
-                msg = _("Unknown Property %s") % key
-                raise exception.StackValidationFailed(message=msg)
+                if with_value:
+                    try:
+                        self._get_property_value(key, validate=True)
+                    except exception.StackValidationFailed as ex:
+                        path = [key]
+                        path.extend(ex.path)
+                        raise exception.StackValidationFailed(
+                            path=path, message=ex.error_message)
+                    except ValueError as e:
+                        if prop.required() and key not in self.data:
+                            path = []
+                        else:
+                            path = [key]
+                        raise exception.StackValidationFailed(
+                            path=path, message=six.text_type(e))
+
+                # are there unimplemented Properties
+                if not prop.implemented() and key in self.data:
+                    msg = _("Property %s not implemented yet") % key
+                    raise exception.StackValidationFailed(message=msg)
+        except exception.StackValidationFailed as ex:
+            # NOTE(prazumovsky): should reraise exception for adding specific
+            # error name and error_prefix to path for correct error message
+            # building.
+            path = self.error_prefix
+            path.extend(ex.path)
+            raise exception.StackValidationFailed(
+                error=ex.error or 'Property error',
+                path=path,
+                message=ex.error_message
+            )
 
     def _get_property_value(self, key, validate=False):
         if key not in self:
-            raise KeyError(_('%(prefix)sInvalid Property %(key)s') %
-                           {'prefix': self.error_prefix, 'key': key})
+            raise KeyError(_('Invalid Property %s') % key)
 
         prop = self.props[key]
 
@@ -414,16 +434,20 @@ class Properties(collections.Mapping):
 
                 value = self.resolve(unresolved_value)
                 return prop.get_value(value, validate)
+            # Children can raise StackValidationFailed with unique path which
+            # is necessary for further use in StackValidationFailed exception.
+            # So we need to handle this exception in this method.
+            except exception.StackValidationFailed as e:
+                raise exception.StackValidationFailed(path=e.path,
+                                                      message=e.error_message)
             # the resolver function could raise any number of exceptions,
             # so handle this generically
             except Exception as e:
-                raise ValueError('%s%s %s' % (self.error_prefix, key,
-                                              six.text_type(e)))
+                raise ValueError(six.text_type(e))
         elif prop.has_default():
             return prop.get_value(None, validate)
         elif prop.required():
-            raise ValueError(_('%(prefix)sProperty %(key)s not assigned') %
-                             {'prefix': self.error_prefix, 'key': key})
+            raise ValueError(_('Property %s not assigned') % key)
 
     def __getitem__(self, key):
         return self._get_property_value(key)

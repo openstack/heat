@@ -83,6 +83,9 @@ class CfnTemplate(template.Template):
         return dict((name, parameters.Schema.from_dict(name, schema))
                     for name, schema in six.iteritems(params))
 
+    def get_section_name(self, section):
+        return section
+
     def parameters(self, stack_identifier, user_params, param_defaults=None):
         return parameters.Parameters(stack_identifier, self,
                                      user_params=user_params,

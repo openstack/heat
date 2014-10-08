@@ -103,11 +103,11 @@ class NovaKeyPairTest(common.HeatTestCase):
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = nova_keypair.KeyPair('kp', definition, stack)
         self.m.ReplayAll()
-        create = scheduler.TaskRunner(kp_res.create)
-        error = self.assertRaises(exception.ResourceFailure, create)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  kp_res.validate)
         self.assertIn("Property error", six.text_type(error))
-        self.assertIn("name length (0) is out of range (min: 1, max: 255)",
-                      six.text_type(error))
+        self.assertIn("kp.properties.name: length (0) is out of "
+                      "range (min: 1, max: 255)", six.text_type(error))
         self.m.VerifyAll()
 
     def test_create_key_excess_name_length(self):
@@ -119,11 +119,11 @@ class NovaKeyPairTest(common.HeatTestCase):
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = nova_keypair.KeyPair('kp', definition, stack)
         self.m.ReplayAll()
-        create = scheduler.TaskRunner(kp_res.create)
-        error = self.assertRaises(exception.ResourceFailure, create)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  kp_res.validate)
         self.assertIn("Property error", six.text_type(error))
-        self.assertIn("name length (256) is out of range (min: 1, max: 255)",
-                      six.text_type(error))
+        self.assertIn("kp.properties.name: length (256) is out of "
+                      "range (min: 1, max: 255)", six.text_type(error))
         self.m.VerifyAll()
 
     def test_delete_key(self):

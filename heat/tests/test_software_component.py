@@ -217,8 +217,8 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                          tool: script
                  ''',
                  err=exc.StackValidationFailed,
-                 err_msg='actions length (0) is out of range '
-                         '(min: 1, max: None)')
+                 err_msg='component.properties.configs[0].actions: '
+                         'length (0) is out of range (min: 1, max: None)')
         ),
         (
             'multiple_configs_per_action_single',
