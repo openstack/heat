@@ -397,7 +397,7 @@ class Properties(collections.Mapping):
                 raise ValueError('%s%s %s' % (self.error_prefix, key,
                                               six.text_type(e)))
         elif prop.has_default():
-            return prop.default()
+            return prop.get_value(None, validate)
         elif prop.required():
             raise ValueError(_('%(prefix)sProperty %(key)s not assigned') %
                              {'prefix': self.error_prefix, 'key': key})
