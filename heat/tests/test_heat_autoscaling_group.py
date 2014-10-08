@@ -21,15 +21,16 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine.resources import autoscaling
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource
 from heat.tests import utils
 
 
-class AutoScalingGroupTest(HeatTestCase):
+class AutoScalingGroupTest(common.HeatTestCase):
 
     as_template = '''
         heat_template_version: 2013-05-23
@@ -264,8 +265,23 @@ class AutoScalingGroupTest(HeatTestCase):
         self.assertEqual(dict((n, n) for n in member_names),
                          rsrc.FnGetAtt('outputs', 'Bar'))
 
+    def test_attribute_current_size(self):
+        rsrc = self.create_stack(self.parsed)['my-group']
+        mock_instances = self.patchobject(autoscaling.AutoScalingResourceGroup,
+                                          'get_instances')
+        mock_instances.return_value = ['one', 'two', 'three']
 
-class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
+        self.assertEqual(3, rsrc.FnGetAtt('current_size'))
+
+    def test_attribute_current_size_with_path(self):
+        rsrc = self.create_stack(self.parsed)['my-group']
+        mock_instances = self.patchobject(autoscaling.AutoScalingResourceGroup,
+                                          'get_instances')
+        mock_instances.return_value = ['one', 'two', 'three', 'four']
+        self.assertEqual(4, rsrc.FnGetAtt('current_size', 'name'))
+
+
+class HeatScalingGroupWithCFNScalingPolicyTest(common.HeatTestCase):
     as_template = '''
         heat_template_version: 2013-05-23
         description: AutoScaling Test
@@ -322,7 +338,7 @@ class HeatScalingGroupWithCFNScalingPolicyTest(HeatTestCase):
                           group.FnGetAtt, 'InstanceList')
 
 
-class ScalingPolicyTest(HeatTestCase):
+class ScalingPolicyTest(common.HeatTestCase):
     # TODO(Qiming): Add more tests to the scaling policy
     as_template = '''
         heat_template_version: 2013-05-23
@@ -392,7 +408,7 @@ class ScalingPolicyTest(HeatTestCase):
         self.assertEqual(3, len(group.get_instance_names()))
 
 
-class RollingUpdatesTest(HeatTestCase):
+class RollingUpdatesTest(common.HeatTestCase):
 
     as_template = '''
         heat_template_version: 2013-05-23

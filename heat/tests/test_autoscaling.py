@@ -40,53 +40,6 @@ from heat.tests import utils
 
 as_template = inline_templates.as_template
 
-as_template_HoT = '''
-{
-    "heat_template_version": "2013-05-23",
-    "description": "AutoScaling Test",
-    "parameters": {
-        "flavor": {"type": "string"},
-        "image": {"type": "string"}
-    },
-    "resources": {
-        "WebServerGroup": {
-            "type": "OS::Heat::AutoScalingGroup",
-            "properties": {
-                "min_size": 1,
-                "max_size": 5,
-                "desired_capacity": 1,
-                "resource": {
-                    "type": "OS::Nova::Server",
-                    "properties": {
-                        "flavor": {"get_param": "flavor"},
-                        "image": {"get_param": "image"},
-                        "metadata": {"metering.stack": "test-metadata"}
-                    }
-                }
-            }
-        },
-        "WebServerScaleUpPolicy": {
-            "type": "OS::Heat::ScalingPolicy",
-            "properties": {
-                "adjustment_type": "change_in_capacity",
-                "auto_scaling_group_id": {"get_resource": "WebServerGroup"},
-                "cooldown": 60,
-                "scaling_adjustment": 1
-            }
-        },
-        "WebServerScaleDownPolicy": {
-            "type": "OS::Heat::ScalingPolicy",
-            "properties": {
-                "adjustment_type": "change_in_capacity",
-                "auto_scaling_group_id": {"get_resource": "WebServerGroup"},
-                "cooldown": 60,
-                "scaling_adjustment": -1
-            }
-        }
-    }
-}
-'''
-
 as_template_bad_group = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -1062,33 +1015,6 @@ class AutoScalingTest(common.HeatTestCase):
         self.assertEqual(3, len(rsrc.get_instance_names()))
 
         rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_scaling_group_current_size(self):
-        t = template_format.parse(as_template_HoT)
-        stack = utils.parse_stack(t, params=self.params_HoT)
-
-        # create asg with size of 2
-        properties = t['resources']['WebServerGroup']['properties']
-        properties['desired_capacity'] = '2'
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ExactCapacity : 2')
-        self._stub_create_hot(2)
-        self.m.ReplayAll()
-        rsrc = self.create_scaling_group_hot(t, stack, 'WebServerGroup')
-        self.assertEqual(2, rsrc.FnGetAtt("current_size", 'name'))
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        # raise to 3
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
-        self._stub_create_hot(1)
-        self._stub_scale_notification(adjust=1, groupname=rsrc.FnGetRefId(),
-                                      start_capacity=2, end_capacity=3)
-        self.m.ReplayAll()
-        rsrc.adjust(1)
-        self.assertEqual(3, rsrc.FnGetAtt("current_size", 'name'))
-
         self.m.VerifyAll()
 
     def test_scaling_policy_bad_group(self):
