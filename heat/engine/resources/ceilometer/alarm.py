@@ -174,22 +174,25 @@ class CeilometerAlarm(resource.Resource):
 
     def cfn_to_ceilometer(self, stack, properties):
         kwargs = actions_to_urls(stack, properties)
+        if self.MATCHING_METADATA not in properties:
+            return kwargs
         if kwargs.get(self.METER_NAME) in NOVA_METERS:
             prefix = 'user_metadata.'
         else:
             prefix = 'metering.'
-        for k, v in iter(properties.items()):
-            if k == self.MATCHING_METADATA:
-                # make sure we have matching_metadata that looks like this:
-                # matching_metadata: {metadata.$prefix.x}
-                kwargs[k] = {}
-                for m_k, m_v in six.iteritems(v):
-                    if m_k.startswith('metadata.%s' % prefix):
-                        kwargs[k][m_k] = m_v
-                    elif m_k.startswith(prefix):
-                        kwargs[k]['metadata.%s' % m_k] = m_v
-                    else:
-                        kwargs[k]['metadata.%s%s' % (prefix, m_k)] = m_v
+
+        # make sure we have matching_metadata that looks like this:
+        # matching_metadata: {metadata.$prefix.x}
+        kwargs[self.MATCHING_METADATA] = {}
+        for m_k, m_v in six.iteritems(properties.get(
+                self.MATCHING_METADATA, {})):
+            if m_k.startswith('metadata.%s' % prefix):
+                key = m_k
+            elif m_k.startswith(prefix):
+                key = 'metadata.%s' % m_k
+            else:
+                key = 'metadata.%s%s' % (prefix, m_k)
+            kwargs[self.MATCHING_METADATA][key] = m_v
         return kwargs
 
     def handle_create(self):
