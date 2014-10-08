@@ -14,7 +14,6 @@
 import copy
 import datetime
 
-import mock
 import mox
 from oslo.config import cfg
 from oslo.utils import timeutils
@@ -26,7 +25,6 @@ from heat.common import template_format
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
@@ -1376,123 +1374,6 @@ class AutoScalingTest(common.HeatTestCase):
 
         rsrc.delete()
         self.m.VerifyAll()
-
-    def test_toomany_vpc_zone_identifier(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['WebServerGroup']['Properties']
-        properties['VPCZoneIdentifier'] = ['xxxx', 'yyyy']
-
-        stack = utils.parse_stack(t, params=self.params)
-        self.stub_ImageConstraint_validate()
-        self.m.ReplayAll()
-        self.assertRaises(exception.NotSupported,
-                          self.create_scaling_group, t,
-                          stack, 'WebServerGroup')
-
-        self.m.VerifyAll()
-
-    def test_invalid_min_size(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['WebServerGroup']['Properties']
-        properties['MinSize'] = '-1'
-        properties['MaxSize'] = '2'
-
-        stack = utils.parse_stack(t, params=self.params)
-
-        self.stub_ImageConstraint_validate()
-
-        self.m.ReplayAll()
-        e = self.assertRaises(exception.StackValidationFailed,
-                              self.create_scaling_group, t,
-                              stack, 'WebServerGroup')
-
-        expected_msg = "The size of AutoScalingGroup can not be less than zero"
-        self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
-
-    def test_invalid_max_size(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['WebServerGroup']['Properties']
-        properties['MinSize'] = '3'
-        properties['MaxSize'] = '1'
-
-        stack = utils.parse_stack(t, params=self.params)
-
-        self.stub_ImageConstraint_validate()
-        self.m.ReplayAll()
-
-        e = self.assertRaises(exception.StackValidationFailed,
-                              self.create_scaling_group, t,
-                              stack, 'WebServerGroup')
-
-        expected_msg = "MinSize can not be greater than MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
-
-    def test_invalid_desiredcapacity(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['WebServerGroup']['Properties']
-        properties['MinSize'] = '1'
-        properties['MaxSize'] = '3'
-        properties['DesiredCapacity'] = '4'
-
-        stack = utils.parse_stack(t, params=self.params)
-        self.stub_ImageConstraint_validate()
-
-        self.m.ReplayAll()
-        e = self.assertRaises(exception.StackValidationFailed,
-                              self.create_scaling_group, t,
-                              stack, 'WebServerGroup')
-
-        expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
-
-    def test_invalid_desiredcapacity_zero(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['WebServerGroup']['Properties']
-        properties['MinSize'] = '1'
-        properties['MaxSize'] = '3'
-        properties['DesiredCapacity'] = '0'
-
-        stack = utils.parse_stack(t, params=self.params)
-        self.stub_ImageConstraint_validate()
-
-        self.m.ReplayAll()
-        e = self.assertRaises(exception.StackValidationFailed,
-                              self.create_scaling_group, t,
-                              stack, 'WebServerGroup')
-
-        expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
-
-    def test_child_template_uses_min_size(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=self.params)
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'AWS::AutoScaling::AutoScalingGroup',
-            {'MinSize': 2, 'MaxSize': 5, 'LaunchConfigurationName': 'foo'})
-        rsrc = asc.AutoScalingGroup('asg', defn, stack)
-
-        rsrc._create_template = mock.Mock(return_value='tpl')
-
-        self.assertEqual('tpl', rsrc.child_template())
-        rsrc._create_template.assert_called_once_with(2)
-
-    def test_child_template_uses_desired_capacity(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=self.params)
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'AWS::AutoScaling::AutoScalingGroup',
-            {'MinSize': 2, 'MaxSize': 5, 'DesiredCapacity': 3,
-             'LaunchConfigurationName': 'foo'})
-        rsrc = asc.AutoScalingGroup('asg', defn, stack)
-
-        rsrc._create_template = mock.Mock(return_value='tpl')
-
-        self.assertEqual('tpl', rsrc.child_template())
-        rsrc._create_template.assert_called_once_with(3)
 
     def test_launch_config_get_ref_by_id(self):
         t = template_format.parse(as_template)
