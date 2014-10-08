@@ -19,6 +19,7 @@ import sys
 from oslo.config import cfg
 from oslo.db.sqlalchemy import session as db_session
 from oslo.db.sqlalchemy import utils
+import osprofiler.sqlalchemy
 import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.orm.session import Session
@@ -33,6 +34,7 @@ from heat.rpc import api as rpc_api
 
 CONF = cfg.CONF
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
+CONF.import_group('profiler', 'heat.common.config')
 
 _facade = None
 
@@ -42,6 +44,12 @@ def get_facade():
 
     if not _facade:
         _facade = db_session.EngineFacade.from_config(CONF)
+        if CONF.profiler.profiler_enabled:
+            if CONF.profiler.trace_sqlalchemy:
+                osprofiler.sqlalchemy.add_tracing(sqlalchemy,
+                                                  _facade.get_engine(),
+                                                  "db")
+
     return _facade
 
 get_engine = lambda: get_facade().get_engine()

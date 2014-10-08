@@ -21,6 +21,7 @@ from oslo.config import cfg
 from oslo import messaging
 from oslo.serialization import jsonutils
 from oslo.utils import timeutils
+from osprofiler import profiler
 import requests
 import six
 import warnings
@@ -93,13 +94,31 @@ class ThreadGroupManager(object):
         """
         pass
 
+    def _serialize_profile_info(self):
+        prof = profiler.get()
+        trace_info = None
+        if prof:
+            trace_info = {
+                "hmac_key": prof.hmac_key,
+                "base_id": prof.get_base_id(),
+                "parent_id": prof.get_id()
+            }
+        return trace_info
+
+    def _start_with_trace(self, trace, func, *args, **kwargs):
+        if trace:
+            profiler.init(**trace)
+        return func(*args, **kwargs)
+
     def start(self, stack_id, func, *args, **kwargs):
         """
         Run the given method in a sub-thread.
         """
         if stack_id not in self.groups:
             self.groups[stack_id] = threadgroup.ThreadGroup()
-        return self.groups[stack_id].add_thread(func, *args, **kwargs)
+        return self.groups[stack_id].add_thread(self._start_with_trace,
+                                                self._serialize_profile_info(),
+                                                func, *args, **kwargs)
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
         """
@@ -276,6 +295,7 @@ class StackWatch(object):
         self.check_stack_watches(sid)
 
 
+@profiler.trace_cls("rpc")
 class EngineListener(service.Service):
     '''
     Listen on an AMQP queue named for the engine.  Allows individual
@@ -314,6 +334,7 @@ class EngineListener(service.Service):
         self.thread_group_mgr.send(stack_id, message)
 
 
+@profiler.trace_cls("rpc")
 class EngineService(service.Service):
     """
     Manages the running instances from creation to destruction.

@@ -37,6 +37,7 @@ from oslo import i18n
 from heat.common import config
 from heat.common.i18n import _
 from heat.common import messaging
+from heat.common import profiler
 from heat.common import wsgi
 from heat.openstack.common import log as logging
 from heat.openstack.common import systemd
@@ -57,6 +58,7 @@ if __name__ == '__main__':
         host = cfg.CONF.heat_api.bind_host
         LOG.info(_('Starting Heat ReST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
+        profiler.setup('heat-api', host)
         server = wsgi.Server()
         server.start(app, cfg.CONF.heat_api, default_port=port)
         systemd.notify_once()

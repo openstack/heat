@@ -353,6 +353,11 @@ class DummyThreadGroup(object):
         pass
 
     def add_thread(self, callback, *args, **kwargs):
+        # just to make _start_with_trace() easier to test:
+        # callback == _start_with_trace
+        # args[0] == trace_info
+        # args[1] == actual_callback
+        callback = args[1]
         self.threads.append(callback)
         return DummyThread()
 
@@ -3462,8 +3467,9 @@ class ThreadGroupManagerTest(HeatTestCase):
         ret = thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
 
         self.assertEqual(self.tg_mock, thm.groups['test'])
-        self.tg_mock.add_thread.assert_called_with(self.f, *self.fargs,
-                                                   **self.fkwargs)
+        self.tg_mock.add_thread.assert_called_with(
+            thm._start_with_trace, None,
+            self.f, *self.fargs, **self.fkwargs)
         self.assertEqual(self.tg_mock.add_thread(), ret)
 
     def test_tgm_add_timer(self):

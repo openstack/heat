@@ -36,6 +36,7 @@ from oslo.config import cfg
 from oslo import i18n
 
 from heat.common import messaging
+from heat.common import profiler
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
 
@@ -53,6 +54,7 @@ if __name__ == '__main__':
 
     from heat.engine import service as engine
 
+    profiler.setup('heat-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(srv, workers=cfg.CONF.num_engine_workers)
     if cfg.CONF.enable_cloud_watch_lite:
