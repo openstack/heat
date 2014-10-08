@@ -53,11 +53,10 @@ def extract_args(params):
 
     adopt_data = params.get(api.PARAM_ADOPT_STACK_DATA)
     if adopt_data:
-        adopt_data = template_format.simple_parse(adopt_data)
-        if not isinstance(adopt_data, dict):
-            raise ValueError(
-                _('Unexpected adopt data "%s". Adopt data must be a dict.')
-                % adopt_data)
+        try:
+            adopt_data = template_format.simple_parse(adopt_data)
+        except ValueError as exc:
+            raise ValueError(_('Invalid adopt data: %s') % exc)
         kwargs[api.PARAM_ADOPT_STACK_DATA] = adopt_data
 
     return kwargs
