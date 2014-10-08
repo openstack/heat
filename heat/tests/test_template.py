@@ -124,6 +124,9 @@ class TestTemplatePluginManager(common.HeatTestCase):
             def param_schemata(self):
                 pass
 
+            def get_section_name(self, section):
+                pass
+
             def parameters(self, stack_identifier, user_params):
                 pass
 

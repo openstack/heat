@@ -158,6 +158,11 @@ class Template(collections.Mapping):
         pass
 
     @abc.abstractmethod
+    def get_section_name(self, section):
+        """Return a correct section name."""
+        pass
+
+    @abc.abstractmethod
     def parameters(self, stack_identifier, user_params, param_defaults=None):
         '''Return a parameters.Parameters object for the stack.'''
         pass

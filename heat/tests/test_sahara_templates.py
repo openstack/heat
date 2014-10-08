@@ -188,8 +188,10 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.patchobject(ngt, 'is_using_neutron').return_value = False
 
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
-        self.assertEqual(u"Property error : node-group: flavor Error "
-                         u"validating value u'm1.large'", six.text_type(ex))
+        self.assertEqual(u"Property error : "
+                         u"resources.node-group.properties.flavor: "
+                         u"Error validating value u'm1.large'",
+                         six.text_type(ex))
 
 
 class SaharaClusterTemplateTest(common.HeatTestCase):

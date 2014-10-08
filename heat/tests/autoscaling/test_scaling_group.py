@@ -220,8 +220,10 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         rsrc = stack['WebServerGroup']
         self._stub_nova_server_get(not_found=True)
         self.m.ReplayAll()
-        msg = ("Property error : WebServerGroup: InstanceId Error validating "
-               "value '5678': The server (5678) could not be found")
+        msg = ("Property error : "
+               "Resources.WebServerGroup.Properties.InstanceId: "
+               "Error validating value '5678': The server (5678) could "
+               "not be found.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(msg, six.text_type(exc))

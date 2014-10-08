@@ -98,7 +98,8 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['min_disk'] = -1
-        error_msg = 'min_disk -1 is out of range (min: 0, max: None)'
+        error_msg = ('Property error : resources.image.properties.min_disk: '
+                     '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
 
     def test_invalid_min_ram(self):
@@ -110,7 +111,8 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['min_ram'] = -1
-        error_msg = 'min_ram -1 is out of range (min: 0, max: None)'
+        error_msg = ('Property error : resources.image.properties.min_ram: '
+                     '-1 is out of range (min: 0, max: None)')
         self._test_validate(image, error_msg)
 
     def test_miss_disk_format(self):
@@ -134,7 +136,9 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['disk_format'] = 'incorrect_format'
-        error_msg = ('disk_format "incorrect_format" is not an allowed value '
+        error_msg = ('Property error : '
+                     'resources.image.properties.disk_format: '
+                     '"incorrect_format" is not an allowed value '
                      '[ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso]')
         self._test_validate(image, error_msg)
 
@@ -159,8 +163,10 @@ class GlanceImageTest(common.HeatTestCase):
         )
         image = stack['image']
         image.t['Properties']['container_format'] = 'incorrect_format'
-        error_msg = ('container_format "incorrect_format" is not an '
-                     'allowed value [ami, ari, aki, bare, ova, ovf]')
+        error_msg = ('Property error : '
+                     'resources.image.properties.container_format: '
+                     '"incorrect_format" is not an allowed value '
+                     '[ami, ari, aki, bare, ova, ovf]')
         self._test_validate(image, error_msg)
 
     def test_miss_location(self):
