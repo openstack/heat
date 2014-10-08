@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2014.2.dev102.gb8ed388\n"
+"Project-Id-Version: heat 2015.1.dev63.gcca7d10\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-09-25 06:13+0000\n"
+"POT-Creation-Date: 2014-10-08 06:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:217
+#: heat/api/openstack/v1/stacks.py:226
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
@@ -73,49 +73,37 @@ msgstr ""
 msgid "task run outlasted interval by %s sec"
 msgstr ""
 
-#: heat/openstack/common/network_utils.py:149
-msgid "tcp_keepidle not available on your system"
-msgstr ""
-
-#: heat/openstack/common/network_utils.py:156
-msgid "tcp_keepintvl not available on your system"
-msgstr ""
-
-#: heat/openstack/common/network_utils.py:163
-msgid "tcp_keepknt not available on your system"
-msgstr ""
-
 #: heat/openstack/common/service.py:364
 #, python-format
 msgid "pid %d not in child list"
 msgstr ""
 
-#: heat/tests/generic_resource.py:34
+#: heat/tests/generic_resource.py:36
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:38
+#: heat/tests/generic_resource.py:40
 #, python-format
 msgid "Updating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:42
+#: heat/tests/generic_resource.py:44
 #, python-format
 msgid "Deleting generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:49
+#: heat/tests/generic_resource.py:51
 #, python-format
 msgid "Suspending generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:53
+#: heat/tests/generic_resource.py:55
 #, python-format
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:139
+#: heat/tests/generic_resource.py:141
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
