@@ -204,6 +204,24 @@ class HOTemplateTest(HeatTestCase):
                          'inside a resource definition\'',
                          six.text_type(err))
 
+    def test_translate_resources_resources_without_name(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          type: AWS::EC2::Instance
+          properties:
+            property1: value1
+          metadata:
+            foo: bar
+          depends_on: dummy
+          deletion_policy: dummy
+        ''')
+        tmpl = parser.Template(hot_tpl)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.__getitem__, tmpl.RESOURCES)
+        self.assertEqual('"resources" must contain a map of resource maps.',
+                         six.text_type(error))
+
     def test_translate_resources_bad_metadata(self):
         """Test translation of resources including invalid keyword."""
 

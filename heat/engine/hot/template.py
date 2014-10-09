@@ -13,6 +13,7 @@
 import collections
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_template
@@ -128,10 +129,12 @@ class HOTemplate20130523(template.Template):
                             'update_policy': 'UpdatePolicy'}
 
         cfn_resources = {}
-
         for resource_name, attrs in six.iteritems(resources):
             cfn_resource = {}
 
+            if isinstance(attrs, six.string_types):
+                message = _('"resources" must contain a map of resource maps.')
+                raise exception.StackValidationFailed(message=message)
             for attr, attr_value in six.iteritems(attrs):
                 cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
                                            _('"%s" is not a valid keyword '
