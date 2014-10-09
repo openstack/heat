@@ -160,7 +160,7 @@ class ThreadGroupManager(object):
     def add_event(self, stack_id, event):
         self.events[stack_id].append(event)
 
-    def remove_event(self, stack_id, event):
+    def remove_event(self, gt, stack_id, event):
         for e in self.events.pop(stack_id, []):
             if e is not event:
                 self.add_event(stack_id, e)
