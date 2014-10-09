@@ -191,7 +191,7 @@ class ThreadGroupManager(object):
                 eventlet.sleep()
 
     def send(self, stack_id, message):
-        for event in self.events.get(stack_id, []):
+        for event in self.events.pop(stack_id, []):
             event.send(message)
 
 
