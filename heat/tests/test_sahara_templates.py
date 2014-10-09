@@ -114,6 +114,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         expected_kwargs = {'description': "",
                            'volumes_per_node': None,
                            'volumes_size': None,
+                           'volume_type': None,
                            'node_processes': ['namenode', 'jobtracker'],
                            'floating_ip_pool': 'some_pool_id',
                            'node_configs': None,

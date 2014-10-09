@@ -35,12 +35,12 @@ class SaharaNodeGroupTemplate(resource.Resource):
     support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
-        NAME, PLUGIN_NAME, HADOOP_VERSION, FLAVOR,
-        DESCRIPTION, VOLUMES_PER_NODE, VOLUMES_SIZE,
+        NAME, PLUGIN_NAME, HADOOP_VERSION, FLAVOR, DESCRIPTION,
+        VOLUMES_PER_NODE, VOLUMES_SIZE, VOLUME_TYPE,
         NODE_PROCESSES, FLOATING_IP_POOL, NODE_CONFIGS,
     ) = (
-        'name', 'plugin_name', 'hadoop_version', 'flavor',
-        'description', 'volumes_per_node', 'volumes_size',
+        'name', 'plugin_name', 'hadoop_version', 'flavor', 'description',
+        'volumes_per_node', 'volumes_size', 'volume_type',
         'node_processes', 'floating_ip_pool', 'node_configs',
     )
 
@@ -87,6 +87,10 @@ class SaharaNodeGroupTemplate(resource.Resource):
                 constraints.Range(min=1),
             ],
         ),
+        VOLUME_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _("Type of the volume to create on Cinder backend."),
+        ),
         NODE_PROCESSES: properties.Schema(
             properties.Schema.LIST,
             _("List of processes to run on every node."),
@@ -130,6 +134,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             self.properties[self.FLAVOR])
         volumes_per_node = self.properties.get(self.VOLUMES_PER_NODE)
         volumes_size = self.properties.get(self.VOLUMES_SIZE)
+        volume_type = self.properties.get(self.VOLUME_TYPE)
         floating_ip_pool = self.properties.get(self.FLOATING_IP_POOL)
         if floating_ip_pool:
             floating_ip_pool = self.client_plugin(
@@ -144,6 +149,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             description=description,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
+            volume_type=volume_type,
             node_processes=node_processes,
             floating_ip_pool=floating_ip_pool,
             node_configs=node_configs)
