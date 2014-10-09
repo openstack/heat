@@ -119,7 +119,7 @@ class KeystoneClientV2(object):
     @staticmethod
     def _service_admin_creds():
         # Import auth_token to have keystone_authtoken settings setup.
-        importutils.import_module('keystoneclient.middleware.auth_token')
+        importutils.import_module('keystonemiddleware.auth_token')
 
         creds = {
             'username': cfg.CONF.keystone_authtoken.admin_user,
