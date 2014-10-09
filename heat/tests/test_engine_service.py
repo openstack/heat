@@ -3503,9 +3503,9 @@ class ThreadGroupManagerTest(HeatTestCase):
         thm = service.ThreadGroupManager()
         thm.add_event(stack_id, e1)
         thm.add_event(stack_id, e2)
-        thm.remove_event(stack_id, e2)
+        thm.remove_event(None, stack_id, e2)
         self.assertEqual(thm.events[stack_id], [e1])
-        thm.remove_event(stack_id, e1)
+        thm.remove_event(None, stack_id, e1)
         self.assertNotIn(stack_id, thm.events)
 
     def test_tgm_send(self):
