@@ -499,7 +499,7 @@ class Ec2TokenTest(HeatTestCase):
 
     def test_call_ok_auth_uri_ks_authtoken(self):
         # Import auth_token to have keystone_authtoken settings setup.
-        importutils.import_module('keystoneclient.middleware.auth_token')
+        importutils.import_module('keystonemiddleware.auth_token')
         dummy_url = 'http://123:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
                               group='keystone_authtoken')

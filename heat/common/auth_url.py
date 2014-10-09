@@ -34,7 +34,7 @@ class AuthUrlFilter(wsgi.Middleware):
             return self.conf['auth_uri']
         else:
             # Import auth_token to have keystone_authtoken settings setup.
-            auth_token_module = 'keystoneclient.middleware.auth_token'
+            auth_token_module = 'keystonemiddleware.auth_token'
             importutils.import_module(auth_token_module)
             return cfg.CONF.keystone_authtoken.auth_uri
 

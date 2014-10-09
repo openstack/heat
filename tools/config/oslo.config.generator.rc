@@ -1,3 +1,3 @@
-export HEAT_CONFIG_GENERATOR_EXTRA_MODULES=keystoneclient.middleware.auth_token
+export HEAT_CONFIG_GENERATOR_EXTRA_MODULES=keystonemiddleware.auth_token
 export HEAT_CONFIG_GENERATOR_EXTRA_LIBRARIES="heat.common.config heat.common.wsgi oslo.messaging oslo.db"
 export HEAT_CONFIG_GENERATOR_EXCLUDED_FILES="heat/common/config.py heat/common/wsgi.py heat/openstack/common/sslutils.py"

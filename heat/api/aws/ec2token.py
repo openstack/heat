@@ -66,7 +66,7 @@ class EC2Token(wsgi.Middleware):
         else:
             # Import auth_token to have keystone_authtoken settings setup.
             # We can use the auth_uri from the keystone_authtoken section
-            importutils.import_module('keystoneclient.middleware.auth_token')
+            importutils.import_module('keystonemiddleware.auth_token')
             return cfg.CONF.keystone_authtoken['auth_uri']
 
     @staticmethod
