@@ -703,6 +703,16 @@ class PropertyTest(testtools.TestCase):
         self.assertEqual("int() argument must be a string or a number, "
                          "not 'list'", six.text_type(ex))
 
+    def test_str_from_int(self):
+        schema = {'Type': 'String'}
+        p = properties.Property(schema)
+        self.assertEqual('3', p.get_value(3))
+
+    def test_str_from_bool(self):
+        schema = {'Type': 'String'}
+        p = properties.Property(schema)
+        self.assertEqual('True', p.get_value(True))
+
     def test_int_from_str_good(self):
         schema = {'Type': 'Integer'}
         p = properties.Property(schema)
@@ -1502,15 +1512,24 @@ class PropertiesValidationTest(testtools.TestCase):
         props = properties.Properties(schema, {})
         self.assertIsNone(props.validate())
 
-    def test_bad_data(self):
-        schema = {'foo': {'Type': 'String'}}
-        props = properties.Properties(schema, {'foo': 42})
-        self.assertRaises(exception.StackValidationFailed, props.validate)
-
     def test_unknown_typo(self):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'food': 42})
         self.assertRaises(exception.StackValidationFailed, props.validate)
+
+    def test_list_instead_string(self):
+        schema = {'foo': {'Type': 'String'}}
+        props = properties.Properties(schema, {'foo': ['foo', 'bar']})
+        ex = self.assertRaises(exception.StackValidationFailed, props.validate)
+        self.assertEqual('Property error : foo Value must be a string',
+                         six.text_type(ex))
+
+    def test_dict_instead_string(self):
+        schema = {'foo': {'Type': 'String'}}
+        props = properties.Properties(schema, {'foo': {'foo': 'bar'}})
+        ex = self.assertRaises(exception.StackValidationFailed, props.validate)
+        self.assertEqual('Property error : foo Value must be a string',
+                         six.text_type(ex))
 
     def test_none_string(self):
         schema = {'foo': {'Type': 'String'}}

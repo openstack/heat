@@ -243,7 +243,10 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or ''
         if not isinstance(value, basestring):
-            raise ValueError(_('Value must be a string'))
+            if isinstance(value, (bool, int)):
+                value = six.text_type(value)
+            else:
+                raise ValueError(_('Value must be a string'))
         return value
 
     def _get_children(self, child_values, keys=None, validate=False):
