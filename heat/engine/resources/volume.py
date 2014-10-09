@@ -84,10 +84,10 @@ class Volume(resource.Resource):
 
     default_client_name = 'cinder'
 
-    def _display_name(self):
+    def _name(self):
         return self.physical_resource_name()
 
-    def _display_description(self):
+    def _description(self):
         return self.physical_resource_name()
 
     def _create_arguments(self):
@@ -111,14 +111,22 @@ class Volume(resource.Resource):
             vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)
-            vol.update(
-                display_name=self._display_name(),
-                display_description=self._display_description())
+            if cinder.volume_api_version == 1:
+                kwargs = {'display_name': self._name(),
+                          'display_description': self._description()}
+            else:
+                kwargs = {'name': self._name(),
+                          'description': self._description()}
+            vol.update(**kwargs)
         else:
-            vol = cinder.volumes.create(
-                display_name=self._display_name(),
-                display_description=self._display_description(),
-                **self._create_arguments())
+            kwargs = self._create_arguments()
+            if cinder.volume_api_version == 1:
+                kwargs['display_name'] = self._name()
+                kwargs['display_description'] = self._description()
+            else:
+                kwargs['name'] = self._name()
+                kwargs['description'] = self._description()
+            vol = cinder.volumes.create(**kwargs)
         self.resource_id_set(vol.id)
 
         return vol
@@ -455,8 +463,8 @@ class CinderVolume(Volume):
     )
 
     ATTRIBUTES = (
-        AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME,
-        DISPLAY_DESCRIPTION, VOLUME_TYPE_ATTR, METADATA_ATTR,
+        AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME_ATTR,
+        DISPLAY_DESCRIPTION_ATTR, VOLUME_TYPE_ATTR, METADATA_ATTR,
         SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE, METADATA_VALUES_ATTR,
         ENCRYPTED_ATTR, ATTACHMENTS,
     ) = (
@@ -539,10 +547,10 @@ class CinderVolume(Volume):
         SNAPSHOT_ID_ATTR: attributes.Schema(
             _('The snapshot the volume was created from, if any.')
         ),
-        DISPLAY_NAME: attributes.Schema(
+        DISPLAY_NAME_ATTR: attributes.Schema(
             _('Name of the volume.')
         ),
-        DISPLAY_DESCRIPTION: attributes.Schema(
+        DISPLAY_DESCRIPTION_ATTR: attributes.Schema(
             _('Description of the volume.')
         ),
         VOLUME_TYPE_ATTR: attributes.Schema(
@@ -576,13 +584,13 @@ class CinderVolume(Volume):
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
 
-    def _display_name(self):
+    def _name(self):
         name = self.properties[self.NAME]
         if name:
             return name
-        return super(CinderVolume, self)._display_name()
+        return super(CinderVolume, self)._name()
 
-    def _display_description(self):
+    def _description(self):
         return self.properties[self.DESCRIPTION]
 
     def _create_arguments(self):
@@ -608,6 +616,11 @@ class CinderVolume(Volume):
             return unicode(json.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
+        if self.cinder().volume_api_version >= 2:
+            if name == 'display_name':
+                return vol.name
+            elif name == 'display_description':
+                return vol.description
         return unicode(getattr(vol, name))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -621,8 +634,12 @@ class CinderVolume(Volume):
                            self.properties.get(self.NAME))
             update_description = (prop_diff.get(self.DESCRIPTION) or
                                   self.properties.get(self.DESCRIPTION))
-            kwargs['display_name'] = update_name
-            kwargs['display_description'] = update_description
+            if self.cinder().volume_api_version == 1:
+                kwargs['display_name'] = update_name
+                kwargs['display_description'] = update_description
+            else:
+                kwargs['name'] = update_name
+                kwargs['description'] = update_description
             self.cinder().volumes.update(vol, **kwargs)
         # update the metadata for cinder volume
         if self.METADATA in prop_diff:

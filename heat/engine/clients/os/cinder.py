@@ -11,22 +11,57 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from cinderclient import client as cc
 from cinderclient import exceptions
 
-from heat.engine.clients import client_plugin
+from heat.common import exception
+from heat.engine import clients
+from heat.openstack.common.gettextutils import _
 
 
-class CinderClientPlugin(client_plugin.ClientPlugin):
+LOG = logging.getLogger(__name__)
+
+
+class CinderClientPlugin(clients.client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
+
+    def get_volume_api_version(self):
+        '''Returns the most recent API version.'''
+
+        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
+        try:
+            self.url_for(service_type='volumev2', endpoint_type=endpoint_type)
+            return 2
+        except exceptions.EndpointNotFound:
+            try:
+                self.url_for(service_type='volume',
+                             endpoint_type=endpoint_type)
+                return 1
+            except exceptions.EndpointNotFound:
+                return None
 
     def _create(self):
 
         con = self.context
+
+        volume_api_version = self.get_volume_api_version()
+        if volume_api_version == 1:
+            service_type = 'volume'
+            client_version = '1'
+        elif volume_api_version == 2:
+            service_type = 'volumev2'
+            client_version = '2'
+        else:
+            raise exception.Error(_('No volume service available.'))
+        LOG.info(_('Creating Cinder client with volume API version %d.'),
+                 volume_api_version)
+
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         args = {
-            'service_type': 'volume',
+            'service_type': service_type,
             'auth_url': con.auth_url or '',
             'project_id': con.tenant,
             'username': None,
@@ -38,11 +73,13 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option('cinder', 'insecure')
         }
 
-        client = cc.Client('1', **args)
-        management_url = self.url_for(service_type='volume',
+        client = cc.Client(client_version, **args)
+        management_url = self.url_for(service_type=service_type,
                                       endpoint_type=endpoint_type)
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
+
+        client.volume_api_version = volume_api_version
 
         return client
 
