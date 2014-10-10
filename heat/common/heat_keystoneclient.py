@@ -248,13 +248,16 @@ class KeystoneClientV3(object):
         return opts
 
     def _get_client_option(self, option):
-        try:
-            cfg.CONF.import_opt(option, 'heat.common.config',
-                                group='clients_keystone')
-            return getattr(cfg.CONF.clients_keystone, option)
-        except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
-            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-            return getattr(cfg.CONF.clients, option)
+        # look for the option in the [clients_keystone] section
+        # unknown options raise cfg.NoSuchOptError
+        cfg.CONF.import_opt(option, 'heat.common.config',
+                            group='clients_keystone')
+        v = getattr(cfg.CONF.clients_keystone, option)
+        if v is not None:
+            return v
+        # look for the option in the generic [clients] section
+        cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+        return getattr(cfg.CONF.clients, option)
 
     def create_trust_context(self):
         """Create a trust using the trustor identity in the current context.
