@@ -422,7 +422,7 @@ class LoadBalancer(stack_resource.StackResource):
         servers = []
         n = 1
         nova_cp = self.client_plugin('nova')
-        for i in instances:
+        for i in instances or []:
             ip = nova_cp.server_to_ipaddress(i) or '0.0.0.0'
             LOG.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
@@ -481,7 +481,17 @@ class LoadBalancer(stack_resource.StackResource):
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
-        if self.INSTANCES in prop_diff:
+        new_props = json_snippet.properties(self.properties_schema,
+                                            self.context)
+
+        # Valid use cases are:
+        # - Membership controlled by members property in template
+        # - Empty members property in template; membership controlled by
+        #   "updates" triggered from autoscaling group.
+        # Mixing the two will lead to undefined behaviour.
+        if (self.INSTANCES in prop_diff and
+                (self.properties[self.INSTANCES] is not None or
+                 new_props[self.INSTANCES] is not None)):
             templ = self.get_parsed_template()
             cfg = self._haproxy_config(templ, prop_diff[self.INSTANCES])
 
