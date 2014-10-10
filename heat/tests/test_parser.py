@@ -924,6 +924,8 @@ class StackTest(HeatTestCase):
                                  generic_rsrc.ResourceWithProps)
         resource._register_class('ResourceWithComplexAttributesType',
                                  generic_rsrc.ResourceWithComplexAttributes)
+        resource._register_class('ResWithComplexPropsAndAttrs',
+                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def test_stack_reads_tenant(self):
         stack = parser.Stack(self.ctx, 'test_stack', self.tmpl,
@@ -2177,6 +2179,69 @@ class StackTest(HeatTestCase):
         loaded_stack = parser.Stack.load(self.ctx, self.stack.id)
         stored_props = loaded_stack['AResource']._stored_properties_data
         self.assertEqual({'Foo': 'xyz'}, stored_props)
+
+        self.m.VerifyAll()
+
+    def test_update_modify_ok_replace_int(self):
+        # create
+        #========
+        tmpl = {'heat_template_version': '2013-05-23',
+                'resources': {'AResource': {
+                    'type': 'ResWithComplexPropsAndAttrs',
+                    'properties': {'an_int': 1}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        stack_id = self.stack.id
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        value1 = 2
+        prop_diff1 = {'an_int': value1}
+        value2 = 1
+        prop_diff2 = {'an_int': value2}
+
+        self.m.StubOutWithMock(generic_rsrc.ResWithComplexPropsAndAttrs,
+                               'handle_update')
+        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(
+            IgnoreArg(), IgnoreArg(), prop_diff1)
+        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(
+            IgnoreArg(), IgnoreArg(), prop_diff2)
+
+        self.m.ReplayAll()
+
+        # update 1
+        #==========
+
+        self.stack = parser.Stack.load(self.ctx, stack_id=stack_id)
+        tmpl2 = {'heat_template_version': '2013-05-23',
+                 'resources': {'AResource': {
+                     'type': 'ResWithComplexPropsAndAttrs',
+                     'properties': {'an_int': value1}}}}
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        # update 2
+        #==========
+        # reload the previous stack
+        self.stack = parser.Stack.load(self.ctx, stack_id=stack_id)
+        tmpl3 = {'heat_template_version': '2013-05-23',
+                 'resources': {'AResource': {
+                     'type': 'ResWithComplexPropsAndAttrs',
+                     'properties': {'an_int': value2}}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl3))
+
+        self.stack.update(updated_stack)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
 
         self.m.VerifyAll()
 
