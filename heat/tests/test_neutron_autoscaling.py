@@ -122,7 +122,6 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_pool')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(neutronclient.Client, 'list_members')
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'server_to_ipaddress')
@@ -310,8 +309,6 @@ class AutoScalingTest(HeatTestCase):
         nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.5')
 
-        neutronclient.Client.delete_member(mox.IgnoreArg()).AndReturn(None)
-
         neutronclient.Client.create_member(memberb_block).\
             AndReturn(memberb_ret_block)
 
@@ -320,12 +317,6 @@ class AutoScalingTest(HeatTestCase):
 
         neutronclient.Client.create_member(memberc_block).\
             AndReturn(memberc_ret_block)
-
-        nova.NovaClientPlugin.server_to_ipaddress(
-            mox.IgnoreArg()).AndReturn('1.2.3.4')
-
-        neutronclient.Client.create_member(membera_block).\
-            AndReturn(membera_ret_block)
 
         self.m.ReplayAll()
 

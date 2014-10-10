@@ -638,7 +638,6 @@ class LoadBalancer(resource.Resource):
         MEMBERS: properties.Schema(
             properties.Schema.LIST,
             _('The list of Nova server IDs load balanced.'),
-            default=[],
             update_allowed=True
         ),
     }
@@ -650,7 +649,7 @@ class LoadBalancer(resource.Resource):
         client = self.neutron()
         protocol_port = self.properties[self.PROTOCOL_PORT]
 
-        for member in self.properties.get(self.MEMBERS):
+        for member in self.properties[self.MEMBERS] or []:
             address = self.client_plugin('nova').server_to_ipaddress(member)
             lb_member = client.create_member({
                 'member': {
@@ -660,8 +659,18 @@ class LoadBalancer(resource.Resource):
             self.data_set(member, lb_member['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if self.MEMBERS in prop_diff:
-            members = set(prop_diff[self.MEMBERS])
+        new_props = json_snippet.properties(self.properties_schema,
+                                            self.context)
+
+        # Valid use cases are:
+        # - Membership controlled by members property in template
+        # - Empty members property in template; membership controlled by
+        #   "updates" triggered from autoscaling group.
+        # Mixing the two will lead to undefined behaviour.
+        if (self.MEMBERS in prop_diff and
+                (self.properties[self.MEMBERS] is not None or
+                 new_props[self.MEMBERS] is not None)):
+            members = set(new_props[self.MEMBERS] or [])
             rd_members = self.data()
             old_members = set(rd_members.keys())
             client = self.neutron()
@@ -686,7 +695,7 @@ class LoadBalancer(resource.Resource):
 
     def handle_delete(self):
         client = self.neutron()
-        for member in self.properties.get(self.MEMBERS):
+        for member in self.properties[self.MEMBERS] or []:
             member_id = self.data().get(member)
             try:
                 client.delete_member(member_id)
