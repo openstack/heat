@@ -107,6 +107,49 @@ class NeutronNetworkGatewayTest(HeatTestCase):
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
+    def mock_create_fail_network_not_found_delete_success(self):
+        neutronclient.Client.create_network_gateway({
+            'network_gateway': {
+                'name': u'NetworkGateway',
+                'devices': [{'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                             'interface_name': u'breth1'}]
+            }
+        }
+        ).AndReturn({
+            'network_gateway': {
+                'id': 'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
+                'name': 'NetworkGateway',
+                'default': False,
+                'tenant_id': '96ba52dc-c5c5-44c6-9a9d-d3ba1a03f77f',
+                'devices': [{
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth1'}]
+            }
+        }
+        )
+
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            '6af055d3-26f6-48dd-a597-7611d7e58d35'
+        ).MultipleTimes().AndRaise(qe.NeutronClientException(status_code=404))
+        # mock successful to delete the network_gateway
+        neutronclient.Client.delete_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
+        ).AndReturn(None)
+        neutronclient.Client.show_network_gateway(
+            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+
+        t = template_format.parse(gw_template)
+
+        stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
+        rsrc = network_gateway.NetworkGateway(
+            'test_network_gateway',
+            resource_defns['NetworkGateway'], stack)
+        return rsrc
+
     def prepare_create_network_gateway(self, resolve_neutron=True):
         neutronclient.Client.create_network_gateway({
             'network_gateway': {
@@ -227,6 +270,24 @@ class NeutronNetworkGatewayTest(HeatTestCase):
 
     def test_network_gateway_create(self):
         self._test_network_gateway_create()
+
+    def test_network_gateway_create_fail_delete_success(self):
+        # if network_gateway created successful, but didn't to connect with
+        # network, then can delete the network_gateway successful
+        # without residue network_gateway
+        rsrc = self.mock_create_fail_network_not_found_delete_success()
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual(u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', ref_id)
+
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
     def test_network_gateway_update(self):
         rsrc = self.prepare_create_network_gateway()
