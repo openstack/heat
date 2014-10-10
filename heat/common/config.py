@@ -166,7 +166,9 @@ auth_password_opts = [
                 help=_('Allowed keystone endpoints for auth_uri when '
                        'multi_cloud is enabled. At least one endpoint needs '
                        'to be specified.'))]
-clients_opts = [
+
+# these options define baseline defaults that apply to all clients
+default_clients_opts = [
     cfg.StrOpt('endpoint_type',
                default='publicURL',
                help=_(
@@ -184,8 +186,28 @@ clients_opts = [
                 help=_("If set, then the server's certificate will not "
                        "be verified."))]
 
+# these options can be defined for each client
+# they must not specify defaults, since any options not defined in a client
+# specific group is looked up on the generic group above
+clients_opts = [
+    cfg.StrOpt('endpoint_type',
+               help=_(
+                   'Type of endpoint in Identity service catalog to use '
+                   'for communication with the OpenStack service.')),
+    cfg.StrOpt('ca_file',
+               help=_('Optional CA cert file to use in SSL connections.')),
+    cfg.StrOpt('cert_file',
+               help=_('Optional PEM-formatted certificate chain file.')),
+    cfg.StrOpt('key_file',
+               help=_('Optional PEM-formatted file that contains the '
+                      'private key.')),
+    cfg.BoolOpt('insecure',
+                help=_("If set, then the server's certificate will not "
+                       "be verified."))]
+
 heat_client_opts = [
     cfg.StrOpt('url',
+               default='',
                help=_('Optional heat url in format like'
                       ' http://0.0.0.0:8004/v1/%(tenant_id)s.'))]
 
@@ -211,7 +233,7 @@ def list_opts():
     yield paste_deploy_group.name, paste_deploy_opts
     yield auth_password_group.name, auth_password_opts
     yield revision_group.name, revision_opts
-    yield 'clients', clients_opts
+    yield 'clients', default_clients_opts
 
     for client in ('nova', 'swift', 'neutron', 'cinder',
                    'ceilometer', 'keystone', 'heat', 'glance', 'trove'):

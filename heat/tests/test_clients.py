@@ -144,10 +144,16 @@ class ClientPluginTest(HeatTestCase):
                               group='clients_heat')
         cfg.CONF.set_override('ca_file', '/tmp/foo',
                               group='clients')
+        cfg.CONF.set_override('endpoint_type', 'internalURL',
+                              group='clients')
 
         # check heat group
         self.assertEqual('/tmp/bar',
                          plugin._get_client_option('heat', 'ca_file'))
+
+        # check fallback clients group for known client
+        self.assertEqual('internalURL',
+                         plugin._get_client_option('glance', 'endpoint_type'))
 
         # check fallback clients group for unknown client foo
         self.assertEqual('/tmp/foo',
