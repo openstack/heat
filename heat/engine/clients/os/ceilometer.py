@@ -47,3 +47,6 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
 
     def is_over_limit(self, ex):
         return isinstance(ex, exc.HTTPOverLimit)
+
+    def is_conflict(self, ex):
+        return isinstance(ex, exc.HTTPConflict)

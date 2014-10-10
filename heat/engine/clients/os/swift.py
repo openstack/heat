@@ -61,6 +61,10 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return (isinstance(ex, exceptions.ClientException) and
                 ex.http_status == 413)
 
+    def is_conflict(self, ex):
+        return (isinstance(ex, exceptions.ClientException) and
+                ex.http_status == 409)
+
     @staticmethod
     def is_valid_temp_url_path(path):
         '''Return True if path is a valid Swift TempURL path, False otherwise.

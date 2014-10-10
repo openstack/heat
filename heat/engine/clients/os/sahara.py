@@ -43,3 +43,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
     def is_over_limit(self, ex):
         return (isinstance(ex, sahara_base.APIException) and
                 ex.error_code == 413)
+
+    def is_conflict(self, ex):
+        return (isinstance(ex, sahara_base.APIException) and
+                ex.error_code == 409)

@@ -86,6 +86,9 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
     def is_bad_request(self, ex):
         return isinstance(ex, exceptions.BadRequest)
 
+    def is_conflict(self, ex):
+        return isinstance(ex, exceptions.Conflict)
+
     def is_unprocessable_entity(self, ex):
         http_status = (getattr(ex, 'http_status', None) or
                        getattr(ex, 'code', None))

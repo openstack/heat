@@ -51,6 +51,9 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
     def is_over_limit(self, ex):
         return isinstance(ex, exceptions.RequestEntityTooLarge)
 
+    def is_conflict(self, ex):
+        return isinstance(ex, exceptions.Conflict)
+
     def get_flavor_id(self, flavor):
         '''
         Get the id for the specified flavor name.

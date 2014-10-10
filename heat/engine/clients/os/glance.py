@@ -54,6 +54,9 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
     def is_over_limit(self, ex):
         return isinstance(ex, exc.HTTPOverLimit)
 
+    def is_conflict(self, ex):
+        return isinstance(ex, exc.HTTPConflict)
+
     def get_image_id(self, image_identifier):
         '''
         Return an id for the specified image name or identifier.

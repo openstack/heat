@@ -88,3 +88,7 @@ class CinderClientPlugin(clients.client_plugin.ClientPlugin):
 
     def is_over_limit(self, ex):
         return isinstance(ex, exceptions.OverLimit)
+
+    def is_conflict(self, ex):
+        return (isinstance(ex, exceptions.ClientException) and
+                ex.code == 409)
