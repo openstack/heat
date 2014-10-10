@@ -903,12 +903,14 @@ class Resource(object):
         if self.id is not None:
             try:
                 rs = db_api.resource_get(self.context, self.id)
-                rs.update_and_save({'action': self.action,
-                                    'status': self.status,
-                                    'status_reason': reason,
-                                    'stack_id': self.stack.id,
-                                    'updated_at': self.updated_time,
-                                    'nova_instance': self.resource_id})
+                rs.update_and_save({
+                    'action': self.action,
+                    'status': self.status,
+                    'status_reason': reason,
+                    'stack_id': self.stack.id,
+                    'updated_at': self.updated_time,
+                    'properties_data': self._stored_properties_data,
+                    'nova_instance': self.resource_id})
             except Exception as ex:
                 LOG.error(_('DB error %s') % ex)
 

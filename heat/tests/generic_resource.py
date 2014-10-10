@@ -60,11 +60,13 @@ class ResWithComplexPropsAndAttrs(GenericResource):
 
     properties_schema = {'a_string': {'Type': 'String'},
                          'a_list': {'Type': 'List'},
-                         'a_map': {'Type': 'Map'}}
+                         'a_map': {'Type': 'Map'},
+                         'an_int': {'Type': 'Integer'}}
 
     attributes_schema = {'list': attributes.Schema('A list'),
                          'map': attributes.Schema('A map'),
                          'string': attributes.Schema('A string')}
+    update_allowed_properties = ('an_int',)
 
     def _resolve_attribute(self, name):
         try:

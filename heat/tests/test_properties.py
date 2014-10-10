@@ -1485,6 +1485,18 @@ class PropertiesTest(testtools.TestCase):
         self.assertEqual(expected,
                          dict((n, dict(s)) for n, s in props_schemata.items()))
 
+    def test_compare_same(self):
+        schema = {'foo': {'Type': 'Integer'}}
+        props_a = properties.Properties(schema, {'foo': 1})
+        props_b = properties.Properties(schema, {'foo': 1})
+        self.assertFalse(props_a != props_b)
+
+    def test_compare_different(self):
+        schema = {'foo': {'Type': 'Integer'}}
+        props_a = properties.Properties(schema, {'foo': 0})
+        props_b = properties.Properties(schema, {'foo': 1})
+        self.assertTrue(props_a != props_b)
+
 
 class PropertiesValidationTest(testtools.TestCase):
     def test_required(self):
