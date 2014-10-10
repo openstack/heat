@@ -30,7 +30,7 @@ from heat.tests import utils
 
 cfg.CONF.import_opt('region_name_for_services', 'heat.common.config')
 cfg.CONF.import_group('keystone_authtoken',
-                      'keystoneclient.middleware.auth_token')
+                      'keystonemiddleware.auth_token')
 
 
 class KeystoneClientTest(HeatTestCase):

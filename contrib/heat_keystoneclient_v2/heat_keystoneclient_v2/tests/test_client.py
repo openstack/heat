@@ -33,7 +33,7 @@ class KeystoneClientTest(HeatTestCase):
         self.ctx = utils.dummy_context()
 
         # Import auth_token to have keystone_authtoken settings setup.
-        importutils.import_module('keystoneclient.middleware.auth_token')
+        importutils.import_module('keystonemiddleware.auth_token')
 
         dummy_url = 'http://server.test:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
