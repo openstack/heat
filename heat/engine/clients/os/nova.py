@@ -307,7 +307,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             else:
                 # Some clouds append extra (STATUS) strings to the status
                 short_server_status = server.status.split('(')[0]
-                if short_server_status == "DELETED":
+                if short_server_status in ("DELETED", "SOFT_DELETED"):
                     break
                 if short_server_status == "ERROR":
                     fault = getattr(server, 'fault', {})

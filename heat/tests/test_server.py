@@ -1054,6 +1054,31 @@ class ServersTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_server_soft_delete(self):
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'create_delete')
+        server.resource_id = '1234'
+
+        # this makes sure the auto increment worked on server creation
+        self.assertTrue(server.id > 0)
+
+        server_get = self.fc.client.get_servers_1234()
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+
+        def make_soft_delete():
+            server_get[1]["server"]['status'] = "SOFT_DELETED"
+
+        get = self.fc.client.get_servers_1234
+        get().AndReturn(server_get)
+        get().AndReturn(server_get)
+        get().WithSideEffects(make_soft_delete).AndReturn(server_get)
+        mox.Replay(get)
+
+        scheduler.TaskRunner(server.delete)()
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
     def test_server_update_metadata(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
