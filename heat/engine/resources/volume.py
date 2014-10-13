@@ -105,6 +105,15 @@ class Volume(resource.Resource):
             'metadata': tags
         }
 
+    def _fetch_name_and_description(self, api_version, name=None,
+                                    description=None):
+        if api_version == 1:
+            return {'display_name': name or self._name(),
+                    'display_description': description or self._description()}
+        else:
+            return {'name': name or self._name(),
+                    'description': description or self._description()}
+
     def handle_create(self):
         backup_id = self.properties.get(self.BACKUP_ID)
         cinder = self.cinder()
@@ -112,21 +121,13 @@ class Volume(resource.Resource):
             vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)
-            if cinder.volume_api_version == 1:
-                kwargs = {'display_name': self._name(),
-                          'display_description': self._description()}
-            else:
-                kwargs = {'name': self._name(),
-                          'description': self._description()}
+            kwargs = self._fetch_name_and_description(
+                cinder.volume_api_version)
             vol.update(**kwargs)
         else:
             kwargs = self._create_arguments()
-            if cinder.volume_api_version == 1:
-                kwargs['display_name'] = self._name()
-                kwargs['display_description'] = self._description()
-            else:
-                kwargs['name'] = self._name()
-                kwargs['description'] = self._description()
+            kwargs.update(self._fetch_name_and_description(
+                cinder.volume_api_version))
             vol = cinder.volumes.create(**kwargs)
         self.resource_id_set(vol.id)
 
@@ -629,32 +630,28 @@ class CinderVolume(Volume):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
         checkers = []
+        cinder = self.cinder()
         # update the name and description for cinder volume
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
-            vol = self.cinder().volumes.get(self.resource_id)
-            kwargs = {}
+            vol = cinder.volumes.get(self.resource_id)
             update_name = (prop_diff.get(self.NAME) or
                            self.properties.get(self.NAME))
             update_description = (prop_diff.get(self.DESCRIPTION) or
                                   self.properties.get(self.DESCRIPTION))
-            if self.cinder().volume_api_version == 1:
-                kwargs['display_name'] = update_name
-                kwargs['display_description'] = update_description
-            else:
-                kwargs['name'] = update_name
-                kwargs['description'] = update_description
-            self.cinder().volumes.update(vol, **kwargs)
+            kwargs = self._fetch_name_and_description(
+                cinder.volume_api_version, update_name, update_description)
+            cinder.volumes.update(vol, **kwargs)
         # update the metadata for cinder volume
         if self.METADATA in prop_diff:
             if not vol:
-                vol = self.cinder().volumes.get(self.resource_id)
+                vol = cinder.volumes.get(self.resource_id)
             metadata = prop_diff.get(self.METADATA)
-            self.cinder().volumes.update_all_metadata(vol, metadata)
+            cinder.volumes.update_all_metadata(vol, metadata)
 
         # extend volume size
         if self.SIZE in prop_diff:
             if not vol:
-                vol = self.cinder().volumes.get(self.resource_id)
+                vol = cinder.volumes.get(self.resource_id)
 
             new_size = prop_diff[self.SIZE]
             if new_size < vol.size:
