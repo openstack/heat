@@ -391,7 +391,13 @@ class Stack(collections.Mapping):
 
     def __str__(self):
         '''Return a human-readable string representation of the stack.'''
-        return 'Stack "%s" [%s]' % (self.name, self.id)
+        text = 'Stack "%s" [%s]' % (self.name, self.id)
+        return encodeutils.safe_encode(text)
+
+    def __unicode__(self):
+        '''Return a human-readable string representation of the stack.'''
+        text = 'Stack "%s" [%s]' % (self.name, self.id)
+        return encodeutils.safe_encode(text)
 
     def resource_by_refid(self, refid):
         '''
@@ -991,7 +997,7 @@ class Stack(collections.Mapping):
         '''
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
-            LOG.info(_LI('%s is already suspended'), str(self))
+            LOG.info(_LI('%s is already suspended'), six.text_type(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -1011,7 +1017,7 @@ class Stack(collections.Mapping):
         '''
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
-            LOG.info(_LI('%s is already resumed'), str(self))
+            LOG.info(_LI('%s is already resumed'), six.text_type(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,

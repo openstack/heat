@@ -15,6 +15,7 @@ import base64
 import contextlib
 from datetime import datetime
 from oslo.config import cfg
+from oslo.utils import encodeutils
 from oslo.utils import excutils
 import six
 import warnings
@@ -365,11 +366,27 @@ class Resource(object):
     def __str__(self):
         if self.stack.id:
             if self.resource_id:
-                return '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
+                text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
                                             self.resource_id, str(self.stack))
-            return '%s "%s" %s' % (self.__class__.__name__, self.name,
-                                   str(self.stack))
-        return '%s "%s"' % (self.__class__.__name__, self.name)
+            else:
+                text = '%s "%s" %s' % (self.__class__.__name__, self.name,
+                                       str(self.stack))
+        else:
+            text = '%s "%s"' % (self.__class__.__name__, self.name)
+        return encodeutils.safe_encode(text)
+
+    def __unicode__(self):
+        if self.stack.id:
+            if self.resource_id:
+                text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
+                                            self.resource_id,
+                                            unicode(self.stack))
+            else:
+                text = '%s "%s" %s' % (self.__class__.__name__, self.name,
+                                       unicode(self.stack))
+        else:
+            text = '%s "%s"' % (self.__class__.__name__, self.name)
+        return encodeutils.safe_decode(text)
 
     def add_dependencies(self, deps):
         for dep in self.t.dependencies(self.stack):
@@ -441,7 +458,7 @@ class Resource(object):
                 LOG.debug('%s', six.text_type(ex))
         except Exception as ex:
             LOG.info('%(action)s: %(info)s', {"action": action,
-                                              "info": str(self)},
+                                              "info": six.text_type(self)},
                      exc_info=True)
             failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, six.text_type(failure))
@@ -528,10 +545,10 @@ class Resource(object):
         action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
             exc = exception.Error(_('State %s invalid for create')
-                                  % str(self.state))
+                                  % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_LI('creating %s'), str(self))
+        LOG.info(_LI('creating %s'), six.text_type(self))
 
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
@@ -723,7 +740,7 @@ class Resource(object):
         # Don't try to suspend the resource unless it's in a stable state
         if (self.action == self.DELETE or self.status != self.COMPLETE):
             exc = exception.Error(_('State %s invalid for suspend')
-                                  % str(self.state))
+                                  % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
         LOG.info(_LI('suspending %s'), six.text_type(self))
@@ -739,7 +756,7 @@ class Resource(object):
         # Can't resume a resource unless it's SUSPEND_COMPLETE
         if self.state != (self.SUSPEND, self.COMPLETE):
             exc = exception.Error(_('State %s invalid for resume')
-                                  % str(self.state))
+                                  % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
         LOG.info(_LI('resuming %s'), six.text_type(self))
@@ -1039,8 +1056,8 @@ class Resource(object):
                 reason_string = get_string_details()
             self._add_event('signal', self.status, reason_string)
         except Exception as ex:
-            LOG.exception(_('signal %(name)s : %(msg)s') % {'name': str(self),
-                                                            'msg': ex})
+            LOG.exception(_('signal %(name)s : %(msg)s')
+                          % {'name': six.text_type(self), 'msg': ex})
             failure = exception.ResourceFailure(ex, self)
             raise failure
 
