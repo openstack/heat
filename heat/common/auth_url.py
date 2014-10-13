@@ -19,6 +19,7 @@ from oslo.utils import importutils
 from webob.exc import HTTPBadRequest
 from webob.exc import HTTPUnauthorized
 
+from heat.common.i18n import _
 from heat.common import wsgi
 
 

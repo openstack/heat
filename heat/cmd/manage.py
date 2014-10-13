@@ -21,6 +21,7 @@ import sys
 
 from oslo.config import cfg
 
+from heat.common.i18n import _
 from heat.db import api
 from heat.db import utils
 from heat.openstack.common import log

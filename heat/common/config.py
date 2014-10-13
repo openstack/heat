@@ -20,6 +20,7 @@ import os
 from eventlet.green import socket
 from oslo.config import cfg
 
+from heat.common.i18n import _
 from heat.common import wsgi
 from heat.openstack.common import log as logging
 

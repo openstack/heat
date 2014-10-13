@@ -21,6 +21,7 @@ from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.neutron import loadbalancer

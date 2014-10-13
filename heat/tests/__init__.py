@@ -18,9 +18,6 @@ def fake_translate_msgid(msgid, domain, desired_locale=None):
     return msgid
 
 i18n.enable_lazy()
-# fixme(elynn): Since install() is deprecated, we should remove it in
-# the future
-i18n.install('heat')
 
 #To ensure messages don't really get translated while running tests.
 #As there are lots of places where matching is expected when comparing

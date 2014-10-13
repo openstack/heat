@@ -14,6 +14,7 @@
 import warnings
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.openstack.common import log as logging

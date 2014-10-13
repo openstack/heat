@@ -19,7 +19,7 @@ from oslo.config import cfg
 import yaml
 
 from heat.common import exception
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 

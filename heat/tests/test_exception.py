@@ -19,6 +19,7 @@ import fixtures
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.tests import common
 
 

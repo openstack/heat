@@ -19,6 +19,7 @@ import six
 from stevedore import extension
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.db import api as db_api
 from heat.openstack.common import log as logging
 

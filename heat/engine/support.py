@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.i18n import _
+
 SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, PROTOTYPE, DEPRECATED,
                     UNSUPPORTED) = ('UNKNOWN', 'SUPPORTED', 'PROTOTYPE',
                                     'DEPRECATED', 'UNSUPPORTED')

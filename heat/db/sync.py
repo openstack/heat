@@ -17,14 +17,9 @@ from __future__ import print_function
 import sys
 
 from oslo.config import cfg
-from oslo import i18n
 
 from heat.db import migration
 from heat.openstack.common import log as logging
-
-# fixme(elynn): Since install() is deprecated, we should remove it in
-# the future
-i18n.install('heat')
 
 LOG = logging.getLogger(__name__)
 

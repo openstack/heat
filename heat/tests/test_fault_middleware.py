@@ -21,6 +21,7 @@ from oslo.messaging._drivers import common as rpc_common
 
 import heat.api.middleware.fault as fault
 from heat.common import exception as heat_exc
+from heat.common.i18n import _
 from heat.tests.common import HeatTestCase
 
 

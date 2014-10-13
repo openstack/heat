@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource

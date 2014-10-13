@@ -28,6 +28,7 @@ import six
 from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import scheduler
 

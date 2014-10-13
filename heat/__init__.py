@@ -17,6 +17,3 @@
 from oslo import i18n
 
 i18n.enable_lazy()
-# fixme(elynn): Since install() is deprecated, we should remove it in
-# the future
-i18n.install('heat')

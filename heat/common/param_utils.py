@@ -13,7 +13,7 @@
 
 from oslo.utils import strutils
 
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 
 
 def extract_bool(subject):

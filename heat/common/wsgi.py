@@ -34,6 +34,7 @@ from eventlet.green import ssl
 import eventlet.greenio
 import eventlet.wsgi
 from oslo.config import cfg
+from oslo import i18n
 from oslo.utils import importutils
 from paste import deploy
 import routes
@@ -44,8 +45,8 @@ import webob.exc
 
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
+from heat.common.i18n import _
 from heat.common import serializers
-from heat.openstack.common import gettextutils
 
 
 URL_LENGTH_LIMIT = 50000
@@ -521,7 +522,7 @@ class Request(webob.Request):
         """
         if not self.accept_language:
             return None
-        all_languages = gettextutils.get_available_languages('heat')
+        all_languages = i18n.get_available_languages('heat')
         return self.accept_language.best_match(all_languages)
 
 
@@ -735,9 +736,9 @@ def log_exception(err, exc_info):
 def translate_exception(exc, locale):
     """Translates all translatable elements of the given exception."""
     if isinstance(exc, exception.HeatException):
-        exc.message = gettextutils.translate(exc.message, locale)
+        exc.message = i18n.translate(exc.message, locale)
     else:
-        exc.message = gettextutils.translate(six.text_type(exc), locale)
+        exc.message = i18n.translate(six.text_type(exc), locale)
 
     if isinstance(exc, webob.exc.HTTPError):
         # If the explanation is not a Message, that means that the
@@ -746,13 +747,13 @@ def translate_exception(exc, locale):
         # exception is converted to a response, let's actually swap it with
         # message, since message is what gets passed in at construction time
         # in the API
-        if not isinstance(exc.explanation, gettextutils.Message):
+        if not isinstance(exc.explanation, i18n._message.Message):
             exc.explanation = six.text_type(exc)
             exc.detail = ''
         else:
             exc.explanation = \
-                gettextutils.translate(exc.explanation, locale)
-            exc.detail = gettextutils.translate(exc.detail, locale)
+                i18n.translate(exc.explanation, locale)
+            exc.detail = i18n.translate(exc.detail, locale)
     return exc
 
 

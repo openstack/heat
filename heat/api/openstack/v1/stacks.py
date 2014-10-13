@@ -22,6 +22,7 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import environment_format
+from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import param_utils

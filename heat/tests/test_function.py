@@ -16,6 +16,7 @@ import six
 import uuid
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.cfn import functions
 from heat.engine import environment
 from heat.engine import function

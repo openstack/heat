@@ -18,6 +18,8 @@
 
 from oslo import i18n
 
+from heat.openstack.common import gettextutils
+
 
 _translators = i18n.TranslatorFactory(domain='heat')
 
@@ -33,3 +35,13 @@ _LI = _translators.log_info
 _LW = _translators.log_warning
 _LE = _translators.log_error
 _LC = _translators.log_critical
+
+# FIXME(elynn): Parts in oslo-incubator are still using gettextutils._(), etc.,
+# from oslo-incubator. Until these parts are changed to use oslo.i18n, we'll
+# monkey-patch gettextutils._(), _LI(), etc., to use our oslo.i18n versions.
+gettextutils._ = _
+gettextutils._LI = _LI
+gettextutils._LW = _LW
+gettextutils._LE = _LE
+gettextutils._LC = _LC
+gettextutils.install = i18n.install

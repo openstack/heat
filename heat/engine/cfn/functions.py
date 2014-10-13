@@ -19,6 +19,7 @@ import six
 
 from heat.api.aws import utils as aws_utils
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine import function
 from heat.engine import resource
 

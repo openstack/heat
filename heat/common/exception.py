@@ -22,7 +22,7 @@ import sys
 import six
 from six.moves.urllib import parse as urlparse
 
-from heat.openstack.common.gettextutils import _
+from heat.common.i18n import _
 from heat.openstack.common import log as logging
 
 

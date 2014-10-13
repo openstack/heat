@@ -21,6 +21,8 @@ import uuid
 
 from six.moves import xrange
 
+from heat.common.i18n import _
+
 
 def _to_byte_string(value, num_bits):
     """Convert an integer to a big-endian string of bytes with padding.

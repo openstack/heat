@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.i18n import _
 from heat.common.template_format import yaml
 from heat.common.template_format import yaml_dumper
 from heat.engine import properties
