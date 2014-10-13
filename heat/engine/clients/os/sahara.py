@@ -21,6 +21,8 @@ from heat.engine.clients import client_plugin
 
 class SaharaClientPlugin(client_plugin.ClientPlugin):
 
+    exceptions_module = sahara_base
+
     def _create(self):
         con = self.context
         endpoint_type = self._get_client_option('sahara', 'endpoint_type')

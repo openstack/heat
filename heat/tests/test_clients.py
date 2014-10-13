@@ -18,6 +18,7 @@ from glanceclient import exc as glance_exc
 from heatclient import exc as heat_exc
 from keystoneclient import exceptions as keystone_exc
 from neutronclient.common import exceptions as neutron_exc
+from saharaclient.api import base as sahara_base
 from swiftclient import exceptions as swift_exc
 from troveclient.client import exceptions as trove_exc
 
@@ -574,6 +575,41 @@ class TestIsNotFound(HeatTestCase):
             plugin='trove',
             exception=lambda: trove_exc.Conflict(
                 message='Conflict'),
+        )),
+        ('sahara_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='sahara',
+            exception=lambda: sahara_base.APIException(
+                error_message='gone1', error_code=404),
+        )),
+        ('sahara_exception', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=False,
+            is_conflict=False,
+            plugin='sahara',
+            exception=lambda: Exception()
+        )),
+        ('sahara_overlimit', dict(
+            is_not_found=False,
+            is_over_limit=True,
+            is_client_exception=True,
+            is_conflict=False,
+            plugin='sahara',
+            exception=lambda: sahara_base.APIException(
+                error_message='over1', error_code=413),
+        )),
+        ('sahara_conflict', dict(
+            is_not_found=False,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=True,
+            plugin='sahara',
+            exception=lambda: sahara_base.APIException(
+                error_message='conflict1', error_code=409),
         )),
     ]
 
