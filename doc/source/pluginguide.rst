@@ -402,7 +402,7 @@ physical resource supports suspending*
   API and suspend the resource's operation. This function should return
   information sufficient for ``check_suspend_complete`` to poll the native
   API to verify the operation's status.
-  
+
   :return: a token containing enough information for ``check_suspend_complete``
            to verify operation status.
   :raise: any ``Exception`` if the suspend operation fails.
@@ -410,7 +410,7 @@ physical resource supports suspending*
 .. py:function:: check_suspend_complete(self, token)
 
   Verify the suspend operation completed successfully.
-  
+
   :param token: the return value of ``handle_suspend``
   :return: ``True`` if the suspend operation completed and the physical
            resource is now suspended; ``False`` otherwise.
@@ -427,7 +427,7 @@ physical resource supports resuming from a suspended state*
   API and resume a suspended resource's operation. This function should return
   information sufficient for ``check_resume_complete`` to poll the native
   API to verify the operation's status.
-  
+
   :return: a token containing enough information for ``check_resume_complete``
            to verify operation status.
   :raise: any ``Exception`` if the resume operation fails.
@@ -435,7 +435,7 @@ physical resource supports resuming from a suspended state*
 .. py:function:: check_resume_complete(self, token)
 
   Verify the resume operation completed successfully.
-  
+
   :param token: the return value of ``handle_resume``
   :return: ``True`` if the resume operation completed and the physical resource
            is now active; ``False`` otherwise.
@@ -447,26 +447,46 @@ Delete
 .. py:function:: handle_delete(self)
 
   Delete the physical resource.
-  
+
   :return: a token containing sufficient data to verify the operations status
   :raise: any ``Exception`` if the delete operation failed
 
-.. py:function:: handle_delete_snapshot(self, initial_state)
+.. py:function:: handle_delete_snapshot(self, snapshot)
+
+  Delete resource snapshot.
+
+  :param snapshot: dictionary describing current snapshot.
+  :return: a token containing sufficient data to verify the operations status
+  :raise: any ``Exception`` if the delete operation failed
+
+.. py:function:: handle_snapshot_delete(self, state)
 
   Called instead of ``handle_delete`` when the deletion policy is SNAPSHOT.
-  
-  :param initial_state: the (action, status) tuple of the resource as of
-                        the start of this method
+  Create backup of resource and then delete resource.
+
+  :param state: the (action, status) tuple of the resource to make sure that
+                backup may be created for the current resource
   :return: a token containing sufficient data to verify the operations status
   :raise: any ``Exception`` if the delete operation failed
 
 .. py:function:: check_delete_complete(self, token)
 
   Verify the delete operation completed successfully.
-  
-  :param token: the return value of ``handle_delete`` used to verify the
-                status of the operation
+
+  :param token: the return value of ``handle_delete`` or
+                ``handle_snapshot_delete`` (for deletion policy - Snapshot)
+                used to verify the status of the operation
   :return: ``True`` if the delete operation completed and the physical resource
+           is deleted; ``False`` otherwise.
+  :raise: any ``Exception`` if the delete operation failed.
+
+.. py:function:: check_delete_snapshot_complete(self, token)
+
+  Verify the delete snapshot operation completed successfully.
+
+  :param token: the return value of ``handle_delete_snapshot`` used
+                to verify the status of the operation
+  :return: ``True`` if the delete operation completed and the snapshot
            is deleted; ``False`` otherwise.
   :raise: any ``Exception`` if the delete operation failed.
 
