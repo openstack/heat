@@ -31,6 +31,92 @@ from ..resources import cloud_loadbalancer as lb  # noqa
 # The following fakes are for pyrax
 
 
+cert = """\
+-----BEGIN CERTIFICATE-----
+MIIFBjCCAu4CCQDWdcR5LY/+/jANBgkqhkiG9w0BAQUFADBFMQswCQYDVQQGEwJB
+VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
+cyBQdHkgTHRkMB4XDTE0MTAxNjE3MDYxNVoXDTE1MTAxNjE3MDYxNVowRTELMAkG
+A1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0
+IFdpZGdpdHMgUHR5IEx0ZDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIB
+AMm5NcP0tMKHblT6Ud1k8TxZ9/8uOHwUNPbvFsvSyCupj0J0vGCTjbuC2I5T/CXR
+tnLEIt/EarlNAqcjbDCWtSyEKs3zDmmkreoIDEa8pyAQ2ycsCXGMxDN97F3/wlLZ
+agUNM0FwGHLZWBg62bM6l+bpTUcX0PqSyv/aVMhJ8EPDX0Dx1RYsVwUzIe/HWC7x
+vCmtDApAp1Fwq7AwlRaKU17sGwPWJ8+I8PyouBdqNuslHm7LQ0XvBA5DfkQA6feB
+ZeJIyOtctM9WFWQI5fKOsyt5P306B3Zztw9VZLAmZ8qHex+R1WY1zXxDAwKEQz/X
+8bRqMA/VU8OxJcK0AmY/1v/TFmAlRh2XBCIc+5UGtCcftWvZJAsKur8Hg5pPluGv
+ptyqSgSsSKtOVWkyTANP1LyOkpBA8Kmkeo2CKXu1SCFypY5Q6E+Fy8Y8RaHJPvzR
+NHcm1tkBvHOKyRso6FjvxuJEyIC9EyUK010nwQm7Qui11VgCSHBoaKVvkIbFfQdK
+aCes0oQO5dqY0+fC/IFDhrxlvSd2Wk7KjuNjNu9kVN9Ama2pRTxhYKaN+GsHfoL7
+ra6G9HjbUVULAdjCko3zOKEUzFLLf1VZYk7hDhyv9kovk0b8sr5WowxW7+9Wy0NK
+WL5f2QgVCcoHw9bGhyuYQCdBfztNmKOWe9pGj6bQAx4pAgMBAAEwDQYJKoZIhvcN
+AQEFBQADggIBALFSj3G2TEL/UWtNcPeY2fbxSGBrboFx3ur8+zTkdZzvfC8H9/UK
+w0aRH0rK4+lKYDqF6A9bUHP17DaJm1lF9In38VVMOuur0ehUIn1S2U3OvlDLN68S
+p5D4wGKMcUfUQ6pzhSKJCMvGX561TKHCc5fZhPruy75Xq2DcwJENE189foKLFvJs
+ca4sIARqP6v1vfARcfH5leSsdIq8hy6VfL0BRATXfNHZh4SNbyDJYYTxrEUPHYXW
+pzW6TziZXYNMG2ZRdHF/mDJuFzw2EklOrPC9MySCZv2i9swnqyuwNYh/SAMhodTv
+ZDGy4nbjWNe5BflTMBceh45VpyTcnQulFhZQFwP79fK10BoDrOc1mEefhIqT+fPI
+LJepLOf7CSXtYBcWbmMCLHNh+PrlCiA1QMTyd/AC1vvoiyCbs3M419XbXcBSDEh8
+tACplmhf6z1vDkElWiDr8y0kujJ/Gie24iLTun6oHG+f+o6bbQ9w196T0olLcGx0
+oAYL0Olqli6cWHhraVAzZ5t5PH4X9TiESuQ+PMjqGImCIUscXY4objdnB5dfPHoz
+eF5whPl36/GK8HUixCibkCyqEOBBuNqhOz7nVLM0eg5L+TE5coizEBagxVCovYSj
+fQ9zkIgaC5oeH6L0C1FFG1vRNSWokheBk14ztVoJCJyFr6p0/6pD7SeR
+-----END CERTIFICATE-----"""
+
+private_key = """\
+-----BEGIN PRIVATE KEY-----
+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
+LpTt0Xs1OFZxaNpolW5Qis4os7UmmIRV
+-----END PRIVATE KEY-----"""
+
+
 class FakeClient(object):
     user_agent = "Fake"
     USER_AGENT = "Fake"
@@ -140,7 +226,34 @@ class FakeLoadBalancer(object):
     def set_error_page(self, *args, **kwargs):
         pass
 
+    def clear_error_page(self, *args, **kwargs):
+        pass
+
     def add_access_list(self, *args, **kwargs):
+        pass
+
+    def update(self, *args, **kwargs):
+        pass
+
+    def add_health_monitor(self, *args, **kwargs):
+        pass
+
+    def delete_health_monitor(self, *args, **kwargs):
+        pass
+
+    def delete_ssl_termination(self, *args, **kwargs):
+        pass
+
+    def set_metadata(self, *args, **kwargs):
+        pass
+
+    def delete_metadata(self, *args, **kwargs):
+        pass
+
+    def add_connection_throttle(self, *args, **kwargs):
+        pass
+
+    def delete_connection_throttle(self, *args, **kwargs):
         pass
 
 
@@ -553,17 +666,22 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertIn('boom', str(exc))
 
     def test_update_add_node_by_address(self):
-        expected_ip = '172.168.1.4'
-        added_node = {'nodes': [
-            {"address": "166.78.103.141", "port": 80, "condition": "ENABLED"},
-            {"address": expected_ip, "port": 80, "condition": "ENABLED"}]}
         rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
                                                           self.lb_name,
                                                           self.expected_body)
         fake_loadbalancer.nodes = self.expected_body['nodes']
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.m.VerifyAll()
+
+        update_template = copy.deepcopy(rsrc.t)
+        expected_ip = '172.168.1.4'
+        update_template['Properties']['nodes'] = [
+            {"addresses": ["166.78.103.141"],
+             "port": 80,
+             "condition": "ENABLED"},
+            {"addresses": [expected_ip],
+             "port": 80,
+             "condition": "ENABLED"}]
 
         self.m.StubOutWithMock(rsrc.clb, 'get')
         rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
@@ -575,7 +693,8 @@ class LoadBalancerTest(common.HeatTestCase):
                                    condition='ENABLED')])
 
         self.m.ReplayAll()
-        rsrc.handle_update({}, {}, added_node)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
     def test_update_delete_node_failed(self):
@@ -601,3 +720,647 @@ class LoadBalancerTest(common.HeatTestCase):
         resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         lbres = lb.CloudLoadBalancer("test", resdef, stack)
         self.assertIsNone(lbres._resolve_attribute("PublicIp"))
+
+    def test_update_immutable(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['name'] = "updated_name"
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        msg = ("Load Balancer '%s' has a status of 'PENDING_UPDATE' and "
+               "is considered immutable." % rsrc.resource_id)
+        fake_loadbalancer.update(name="updated_name").AndRaise(Exception(msg))
+        fake_loadbalancer.update(name="updated_name").AndReturn(None)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_name(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['name'] = "updated_name"
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(name="updated_name")
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_multiple(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['name'] = "updated_name"
+        update_template['Properties']['algorithm'] = "RANDOM"
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(name="updated_name", algorithm="RANDOM")
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_algorithm(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['algorithm'] = "RANDOM"
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(algorithm="RANDOM")
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_protocol(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['protocol'] = "IMAPS"
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(protocol="IMAPS")
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_half_closed(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['halfClosed'] = True
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(halfClosed=True)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_port(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['port'] = 1234
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(port=1234)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_timeout(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['timeout'] = 120
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(timeout=120)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_health_monitor_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['healthMonitor'] = {
+            'type': "HTTP", 'delay': 10, 'timeout': 10,
+            'attemptsBeforeDeactivation': 4, 'path': "/",
+            'statusRegex': "^[234][0-9][0-9]$", 'bodyRegex': ".* testing .*",
+            'hostHeader': "example.com"}
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_health_monitor')
+        fake_loadbalancer.add_health_monitor(
+            attemptsBeforeDeactivation=4, bodyRegex='.* testing .*', delay=10,
+            hostHeader='example.com', path='/',
+            statusRegex='^[234][0-9][0-9]$', timeout=10, type='HTTP')
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_health_monitor_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        hm = {'type': "HTTP", 'delay': 10, 'timeout': 10,
+              'attemptsBeforeDeactivation': 4, 'path': "/",
+              'statusRegex': "^[234][0-9][0-9]$", 'bodyRegex': ".* testing .*",
+              'hostHeader': "example.com"}
+        template['Resources'][lb_name]['Properties']['healthMonitor'] = hm
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['healthMonitor'] = hm
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['healthMonitor']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'delete_health_monitor')
+        fake_loadbalancer.delete_health_monitor()
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_session_persistence_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['sessionPersistence'] = 'SOURCE_IP'
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('SOURCE_IP', fake_loadbalancer.session_persistence)
+        self.m.VerifyAll()
+
+    def test_update_session_persistence_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['sessionPersistence'] = \
+            "SOURCE_IP"
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['sessionPersistence'] = {'persistenceType': "SOURCE_IP"}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['sessionPersistence']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('', fake_loadbalancer.session_persistence)
+        self.m.VerifyAll()
+
+    def test_update_ssl_termination_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['sslTermination'] = {
+            'securePort': 443, 'privatekey': private_key, 'certificate': cert,
+            'secureTrafficOnly': False}
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_ssl_termination')
+        fake_loadbalancer.add_ssl_termination(
+            securePort=443, privatekey=private_key, certificate=cert,
+            secureTrafficOnly=False, intermediateCertificate=None)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_ssl_termination_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['sslTermination'] = {
+            'securePort': 443, 'privatekey': private_key, 'certificate': cert,
+            'secureTrafficOnly': False}
+        # The SSL termination config is done post-creation, so no need
+        # to modify self.expected_body
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['sslTermination']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'delete_ssl_termination')
+        fake_loadbalancer.delete_ssl_termination()
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_metadata_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['metadata'] = {'a': 1, 'b': 2}
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'set_metadata')
+        fake_loadbalancer.set_metadata({'a': 1, 'b': 2})
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_metadata_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['metadata'] = {
+            'a': 1, 'b': 2}
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['metadata'] = [{'key': 'a', 'value': 1},
+                                     {'key': 'b', 'value': 2}]
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['metadata']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'delete_metadata')
+        fake_loadbalancer.delete_metadata()
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_errorpage_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        error_page = (
+            '<html><head><title>Service Unavailable</title></head><body><h2>'
+            'Service Unavailable</h2>The service is unavailable</body></html>')
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['errorPage'] = error_page
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'set_error_page')
+        fake_loadbalancer.set_error_page(error_page)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_errorpage_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        error_page = (
+            '<html><head><title>Service Unavailable</title></head><body><h2>'
+            'Service Unavailable</h2>The service is unavailable</body></html>')
+        template['Resources'][lb_name]['Properties']['errorPage'] = error_page
+        # The error page config is done post-creation, so no need to
+        # modify self.expected_body
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['errorPage']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'clear_error_page')
+        fake_loadbalancer.clear_error_page()
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_connection_logging_enable(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['connectionLogging'] = True
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(True, fake_loadbalancer.connection_logging)
+        self.m.VerifyAll()
+
+    def test_update_connection_logging_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['connectionLogging'] = \
+            True
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['connectionLogging'] = {'enabled': True}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['connectionLogging']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(False, fake_loadbalancer.connection_logging)
+        self.m.VerifyAll()
+
+    def test_update_connection_logging_disable(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['connectionLogging'] = \
+            True
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['connectionLogging'] = {'enabled': True}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['connectionLogging'] = False
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(False, fake_loadbalancer.connection_logging)
+        self.m.VerifyAll()
+
+    def test_update_connection_throttle_add(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['connectionThrottle'] = {
+            'maxConnections': 1000}
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_connection_throttle')
+        fake_loadbalancer.add_connection_throttle(
+            maxConnections=1000, maxConnectionRate=None, minConnections=None,
+            rateInterval=None)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_connection_throttle_delete(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['connectionThrottle'] = \
+            {'maxConnections': 1000}
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['connectionThrottle'] = {
+            'maxConnections': 1000, 'maxConnectionRate': None,
+            'rateInterval': None, 'minConnections': None}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['connectionThrottle']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'delete_connection_throttle')
+        fake_loadbalancer.delete_connection_throttle()
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_content_caching_enable(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['contentCaching'] = 'ENABLED'
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(True, fake_loadbalancer.content_caching)
+        self.m.VerifyAll()
+
+    def test_update_content_caching_deleted(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['contentCaching'] = \
+            'ENABLED'
+        # Enabling the content cache is done post-creation, so no need
+        # to modify self.expected_body
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        del update_template['Properties']['contentCaching']
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        self.assertEqual(True, fake_loadbalancer.content_caching)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(False, fake_loadbalancer.content_caching)
+        self.m.VerifyAll()
+
+    def test_update_content_caching_disable(self):
+        template = copy.deepcopy(self.lb_template)
+        lb_name = template['Resources'].keys()[0]
+        template['Resources'][lb_name]['Properties']['contentCaching'] = \
+            'ENABLED'
+        # Enabling the content cache is done post-creation, so no need
+        # to modify self.expected_body
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['contentCaching'] = 'DISABLED'
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+
+        self.assertEqual(True, fake_loadbalancer.content_caching)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(False, fake_loadbalancer.content_caching)
+        self.m.VerifyAll()
