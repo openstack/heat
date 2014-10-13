@@ -2055,7 +2055,9 @@ class NeutronFloatingIPTest(HeatTestCase):
                     'admin_state_up': True,
                     'name': 'test_port',
                     'device_id': 'd6b4d3a5-c700-476f-b609-1493dd9dadc2',
-                    'device_owner': 'network:floatingip'
+                    'device_owner': 'network:floatingip',
+                    'security_groups': [
+                        '8a2f582a-e1cd-480f-b85d-b02631c10656']
                 }
             }
         ).AndReturn(None)
@@ -2089,7 +2091,8 @@ class NeutronFloatingIPTest(HeatTestCase):
             }],
             "name": "test_port",
             "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc2",
-            'device_owner': 'network:floatingip'
+            'device_owner': 'network:floatingip',
+            'security_groups': ['8a2f582a-e1cd-480f-b85d-b02631c10656']
         }
         update_snippet = rsrc_defn.ResourceDefinition(p.name, p.type(), props)
 
@@ -2605,7 +2608,7 @@ class NeutronPortTest(HeatTestCase):
         scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
 
-    def test_security_groups(self):
+    def _mock_create_with_security_groups(self, port_prop):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -2616,20 +2619,10 @@ class NeutronPortTest(HeatTestCase):
             'subnet',
             'sub1234'
         ).AndReturn('sub1234')
-        neutronclient.Client.create_port({'port': {
-            'network_id': u'net1234',
-            'security_groups': ['8a2f582a-e1cd-480f-b85d-b02631c10656',
-                                '024613dc-b489-4478-b46f-ada462738740'],
-            'fixed_ips': [
-                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
-            ],
-            'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
-        ).AndReturn({'port': {
-            "status": "BUILD",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
+        neutronclient.Client.create_port({'port': port_prop}).AndReturn(
+            {'port': {
+                "status": "BUILD",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}})
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
@@ -2639,10 +2632,46 @@ class NeutronPortTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+    def test_security_groups(self):
+        port_prop = {
+            'network_id': u'net1234',
+            'security_groups': ['8a2f582a-e1cd-480f-b85d-b02631c10656',
+                                '024613dc-b489-4478-b46f-ada462738740'],
+            'fixed_ips': [
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp'}
+
+        self._mock_create_with_security_groups(port_prop)
+
         t = template_format.parse(neutron_port_template)
         t['Resources']['port']['Properties']['security_groups'] = [
             '8a2f582a-e1cd-480f-b85d-b02631c10656',
             '024613dc-b489-4478-b46f-ada462738740']
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+
+        self.m.VerifyAll()
+
+    def test_security_groups_empty_list(self):
+        port_prop = {
+            'network_id': u'net1234',
+            'security_groups': [],
+            'fixed_ips': [
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp'}
+
+        self._mock_create_with_security_groups(port_prop)
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties']['security_groups'] = []
         stack = utils.parse_stack(t)
 
         port = stack['port']
@@ -2657,8 +2686,16 @@ class NeutronPortTest(HeatTestCase):
                  'device_owner': u'network:dhcp'}
         new_props = props.copy()
         new_props['name'] = "new_name"
+        new_props['security_groups'] = [
+            '8a2f582a-e1cd-480f-b85d-b02631c10656']
         new_props_update = new_props.copy()
         new_props_update.pop('network_id')
+
+        new_props1 = new_props.copy()
+        new_props1.pop('security_groups')
+        new_props_update1 = new_props_update.copy()
+        new_props_update1['security_groups'] = [
+            '0389f747-7785-4757-b7bb-2ab07e4b09c3']
 
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
@@ -2686,6 +2723,25 @@ class NeutronPortTest(HeatTestCase):
             {'port': new_props_update}
         ).AndReturn(None)
 
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'tenant_id': 'dc4b074874244f7693dd65583733a758',
+                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+                    'name': 'default',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
+        neutronclient.Client.list_security_groups().AndReturn(
+            fake_groups_list)
+        neutronclient.Client.update_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'port': new_props_update1}
+        ).AndReturn(None)
+
         self.m.ReplayAll()
 
         # create port
@@ -2699,6 +2755,10 @@ class NeutronPortTest(HeatTestCase):
         # update port
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
+        self.assertIsNone(port.handle_update(update_snippet, {}, {}))
+        # update again to test port without security group
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_props1)
         self.assertIsNone(port.handle_update(update_snippet, {}, {}))
 
         self.m.VerifyAll()
