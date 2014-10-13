@@ -492,6 +492,33 @@ class VolumeTest(BaseVolumeTest):
 
         self.m.VerifyAll()
 
+    def test_volume_deleting_delete(self):
+        fv = FakeVolume('creating', 'available')
+        stack_name = 'test_volume_deleting_stack'
+
+        self._mock_create_volume(fv, stack_name)
+
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'DataVolume')
+        self.assertEqual('available', fv.status)
+
+        # make sure that delete was not called
+        self.m.StubOutWithMock(fv, 'delete')
+
+        self.m.StubOutWithMock(fv, 'get')
+        fv.get().AndReturn(None)
+        fv.get().AndRaise(cinder_exp.NotFound('Not found'))
+        self.m.ReplayAll()
+
+        fv.status = 'deleting'
+        scheduler.TaskRunner(rsrc.destroy)()
+
+        self.m.VerifyAll()
+
     def test_volume_update_not_supported(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'available')
