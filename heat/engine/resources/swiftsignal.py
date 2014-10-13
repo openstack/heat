@@ -105,6 +105,28 @@ class SwiftSignalHandle(resource.Resource):
             elif key == self.CURL_CLI:
                 return ('curl -i -X PUT \'%s\'' % self.data().get('endpoint'))
 
+    def handle_delete(self):
+        sc = self.client_plugin('swift').client()
+
+        # Delete all versioned objects
+        while True:
+            try:
+                sc.delete_object(self.stack.id, self.physical_resource_name())
+            except Exception as exc:
+                if sc.is_not_found(exc):
+                    break
+                raise
+
+        # Delete the container if it is empty
+        try:
+            sc.delete_container(self.stack.id)
+        except Exception as exc:
+            if sc.is_not_found(exc) or sc.is_conflict(exc):
+                pass
+            raise
+
+        self.data_delete('endpoint')
+
 
 class SwiftSignal(resource.Resource):
 
