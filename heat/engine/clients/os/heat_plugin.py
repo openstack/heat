@@ -50,6 +50,9 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
     def is_over_limit(self, ex):
         return isinstance(ex, exc.HTTPOverLimit)
 
+    def is_conflict(self, ex):
+        return isinstance(ex, exc.HTTPConflict)
+
     def get_heat_url(self):
         heat_url = self._get_client_option('heat', 'url')
         if heat_url:
