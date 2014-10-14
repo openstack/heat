@@ -161,15 +161,31 @@ class CeilometerAlarmTest(HeatTestCase):
         al['ok_actions'] = None
         al['repeat_actions'] = True
         al['enabled'] = True
-        al['evaluation_periods'] = 1
-        al['period'] = 60
-        al['threshold'] = 50
-        if 'matching_metadata' in al:
-            al['matching_metadata'] = dict(
-                ('metadata.metering.%s' % k, v)
-                for k, v in al['matching_metadata'].items())
+        rule = dict(
+            period=60,
+            evaluation_periods=1,
+            threshold=50)
+        for field in ['period', 'evaluation_periods', 'threshold']:
+            del al[field]
+        for field in ['statistic', 'comparison_operator', 'meter_name']:
+            rule[field] = al[field]
+            del al[field]
+        if 'query' in al and al['query']:
+            query = al['query']
         else:
-            al['matching_metadata'] = {}
+            query = []
+        if 'query' in al:
+            del al['query']
+        if 'matching_metadata' in al and al['matching_metadata']:
+            for k, v in al['matching_metadata'].items():
+                key = 'metadata.metering.' + k
+                query.append(dict(field=key, op='eq', value=v))
+        if 'matching_metadata' in al:
+            del al['matching_metadata']
+        if query:
+            rule['query'] = query
+        al['threshold_rule'] = rule
+        al['type'] = 'threshold'
         self.m.StubOutWithMock(self.fa.alarms, 'create')
         self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
         return stack
@@ -184,15 +200,30 @@ class CeilometerAlarmTest(HeatTestCase):
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['alarm_actions'] = ['signal_handler']
         properties['matching_metadata'] = {'a': 'v'}
+        properties['query'] = [dict(field='b', op='eq', value='w')]
 
         self.stack = self.create_stack(template=json.dumps(t))
         self.m.StubOutWithMock(self.fa.alarms, 'update')
         schema = schemata(alarm.CeilometerAlarm.properties_schema)
+        exns = ['period', 'evaluation_periods', 'threshold',
+                'statistic', 'comparison_operator', 'meter_name',
+                'matching_metadata', 'query']
         al2 = dict((k, mox.IgnoreArg())
-                   for k, s in schema.items() if s.update_allowed)
+                   for k, s in schema.items()
+                   if s.update_allowed and k not in exns)
         al2['alarm_id'] = mox.IgnoreArg()
-        del al2['enabled']
-        del al2['repeat_actions']
+        al2['type'] = 'threshold'
+        al2['threshold_rule'] = dict(
+            meter_name=properties['meter_name'],
+            period=90,
+            evaluation_periods=2,
+            threshold=39,
+            statistic='max',
+            comparison_operator='lt',
+            query=[
+                dict(field='c', op='ne', value='z'),
+                dict(field='metadata.metering.x', op='eq', value='y')
+            ])
         self.fa.alarms.update(**al2).AndReturn(None)
 
         self.m.ReplayAll()
@@ -212,6 +243,8 @@ class CeilometerAlarmTest(HeatTestCase):
             'insufficient_data_actions': [],
             'alarm_actions': [],
             'ok_actions': ['signal_handler'],
+            'matching_metadata': {'x': 'y'},
+            'query': [dict(field='c', op='ne', value='z')]
         })
         snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                rsrc.type(),
