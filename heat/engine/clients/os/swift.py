@@ -65,8 +65,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return (isinstance(ex, exceptions.ClientException) and
                 ex.http_status == 409)
 
-    @staticmethod
-    def is_valid_temp_url_path(path):
+    def is_valid_temp_url_path(self, path):
         '''Return True if path is a valid Swift TempURL path, False otherwise.
 
         A Swift TempURL path must:
@@ -82,7 +81,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return bool(len(parts) == 5 and
                     not parts[0] and
                     parts[1] == 'v1' and
-                    parts[2] and
+                    parts[2].endswith(self.context.tenant_id) and
                     parts[3] and
                     parts[4].strip('/'))
 

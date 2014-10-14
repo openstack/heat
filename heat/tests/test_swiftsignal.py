@@ -329,20 +329,6 @@ class SwiftSignalTest(HeatTestCase):
         self.assertIn('not a valid SwiftSignalHandle.  The container name',
                       six.text_type(st.status_reason))
 
-    @mock.patch.object(swift.SwiftClientPlugin, 'get_signal_url')
-    def test_validate_handle_url_bad_tenant(self, mock_handle_url):
-        stack_id = '1234'
-        mock_handle_url.return_value = (
-            "http://fake-host.com:8080/v1/AUTH_foo/%s/"
-            "test_st-test_wait_condition_handle?temp_url_sig="
-            "12d8f9f2c923fbeb555041d4ed63d83de6768e95&"
-            "temp_url_expires=1404762741" % stack_id)
-        st = create_stack(swiftsignal_template, stack_id=stack_id)
-
-        st.create()
-        self.assertIn('not a valid SwiftSignalHandle.  The tenant',
-                      six.text_type(st.status_reason))
-
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
     def test_multiple_signals_same_id_complete(self, mock_name, mock_swift):

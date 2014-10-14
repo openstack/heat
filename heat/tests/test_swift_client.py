@@ -23,8 +23,9 @@ class SwiftClientPluginTestCase(HeatTestCase):
     def setUp(self):
         super(SwiftClientPluginTestCase, self).setUp()
         self.swift_client = mock.Mock()
-        con = utils.dummy_context()
-        c = con.clients
+        self.context = utils.dummy_context()
+        self.context.tenant_id = "demo"
+        c = self.context.clients
         self.swift_plugin = c.client_plugin('swift')
         self.swift_plugin._client = self.swift_client
 
@@ -32,7 +33,6 @@ class SwiftClientPluginTestCase(HeatTestCase):
 class SwiftUtilsTests(SwiftClientPluginTestCase):
 
     def test_is_valid_temp_url_path(self):
-        sc = swift.SwiftClientPlugin
 
         valids = [
             "/v1/AUTH_demo/c/o",
@@ -41,7 +41,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
             "/v1/AUTH_demo/c/pseudo_folder/o",
         ]
         for url in valids:
-            self.assertTrue(sc.is_valid_temp_url_path(url))
+            self.assertTrue(self.swift_plugin.is_valid_temp_url_path(url))
 
         invalids = [
             "/v2/AUTH_demo/c/o",
@@ -52,15 +52,16 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
             "//v1/AUTH_demo/c/o",
             "/v1/AUTH_demo/o",
             "/v1/AUTH_demo//o",
+            "/v1/AUTH_d3mo//o",
             "/v1//c/o",
             "/v1/c/o",
         ]
         for url in invalids:
-            self.assertFalse(sc.is_valid_temp_url_path(url))
+            self.assertFalse(self.swift_plugin.is_valid_temp_url_path(url))
 
     def test_get_temp_url(self):
         self.swift_client.url = ("http://fake-host.com:8080/v1/"
-                                 "AUTH_test_tenant_id")
+                                 "AUTH_demo")
         self.swift_client.head_account = mock.Mock(return_value={
             'x-account-meta-temp-url-key': '123456'})
         self.swift_client.post_account = mock.Mock()
@@ -71,7 +72,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
         obj_name = '%s-%s' % (stack_name, handle_name)
         url = self.swift_plugin.get_temp_url(container_name, obj_name)
         self.assertFalse(self.swift_client.post_account.called)
-        regexp = ("http://fake-host.com:8080/v1/AUTH_test_tenant_id/%s"
+        regexp = ("http://fake-host.com:8080/v1/AUTH_demo/%s"
                   "/%s\?temp_url_sig=[0-9a-f]{40}&"
                   "temp_url_expires=[0-9]{10}" %
                   (container_name, obj_name))
@@ -82,7 +83,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
 
     def test_get_temp_url_no_account_key(self):
         self.swift_client.url = ("http://fake-host.com:8080/v1/"
-                                 "AUTH_test_tenant_id")
+                                 "AUTH_demo")
         self.swift_client.head_account = mock.Mock(return_value={})
         self.swift_client.post_account = mock.Mock()
         self.assertFalse(self.swift_client.post_account.called)
@@ -96,7 +97,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
 
     def test_get_signal_url(self):
         self.swift_client.url = ("http://fake-host.com:8080/v1/"
-                                 "AUTH_test_tenant_id")
+                                 "AUTH_demo")
         self.swift_client.head_account = mock.Mock(return_value={
             'x-account-meta-temp-url-key': '123456'})
         self.swift_client.post_account = mock.Mock()
@@ -108,7 +109,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
         url = self.swift_plugin.get_signal_url(container_name, obj_name)
         self.assertTrue(self.swift_client.put_container.called)
         self.assertTrue(self.swift_client.put_object.called)
-        regexp = ("http://fake-host.com:8080/v1/AUTH_test_tenant_id/%s"
+        regexp = ("http://fake-host.com:8080/v1/AUTH_demo/%s"
                   "/%s\?temp_url_sig=[0-9a-f]{40}&"
                   "temp_url_expires=[0-9]{10}" %
                   (container_name, obj_name))

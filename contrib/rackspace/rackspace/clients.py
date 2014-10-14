@@ -177,6 +177,26 @@ class RackspaceCinderClient(cinder.CinderClientPlugin):
 
 class RackspaceSwiftClient(swift.SwiftClientPlugin):
 
+    def is_valid_temp_url_path(self, path):
+        '''Return True if path is a valid Swift TempURL path, False otherwise.
+
+        A Swift TempURL path must:
+        - Be five parts, ['', 'v1', 'account', 'container', 'object']
+        - Be a v1 request
+        - Have account, container, and object values
+        - Have an object value with more than just '/'s
+
+        :param path: The TempURL path
+        :type path: string
+        '''
+        parts = path.split('/', 4)
+        return bool(len(parts) == 5 and
+                    not parts[0] and
+                    parts[1] == 'v1' and
+                    parts[2] and
+                    parts[3] and
+                    parts[4].strip('/'))
+
     def get_temp_url(self, container_name, obj_name, timeout=None):
         '''
         Return a Swift TempURL.
