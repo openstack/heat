@@ -676,13 +676,18 @@ class Server(stack_user.StackUser):
         # It is not known which subnet a server might be assigned
         # to so all subnets in a network should be created before
         # the servers in that network.
+        nets = self.properties.get(self.NETWORKS)
+        if not nets:
+            return
         for res in self.stack.itervalues():
-            if (res.has_interface('OS::Neutron::Subnet')):
-                subnet_net = res.properties.get(subnet.Subnet.NETWORK_ID)
-                for net in self.properties.get(self.NETWORKS):
-                    # we do not need to worry about NETWORK_ID values which are
-                    # names instead of UUIDs since these were not created
-                    # by this stack
+            if res.has_interface('OS::Neutron::Subnet'):
+                subnet_net = (res.properties.get(subnet.Subnet.NETWORK_ID)
+                              or res.properties.get(subnet.Subnet.NETWORK))
+                for net in nets:
+                    # worry about network_id because that could be the match
+                    # assigned to the subnet as well and could have been
+                    # created by this stack. Regardless, the server should
+                    # still wait on the subnet.
                     net_id = (net.get(self.NETWORK_ID) or
                               net.get(self.NETWORK_UUID))
                     if net_id and net_id == subnet_net:
