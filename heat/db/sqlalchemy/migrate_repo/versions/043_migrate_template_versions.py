@@ -14,17 +14,20 @@ import copy
 import time
 
 from migrate.versioning import util as migrate_util
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from heat.common.i18n import _
-from heat.db.sqlalchemy import models
 
 
 def upgrade(migrate_engine):
     Session = sessionmaker(bind=migrate_engine)
     session = Session()
 
-    raw_templates = session.query(models.RawTemplate).all()
+    meta = sqlalchemy.MetaData(bind=migrate_engine)
+
+    templ_table = sqlalchemy.Table('raw_template', meta, autoload=True)
+    raw_templates = templ_table.select().execute()
 
     # NOTE (sdake) 2014-04-24 is the date of the Icehouse release.  It is
     # possible that folks could continue to make errors in their templates

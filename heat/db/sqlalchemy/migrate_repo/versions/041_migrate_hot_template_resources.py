@@ -14,17 +14,20 @@ import copy
 
 from migrate.versioning import util as migrate_util
 import six
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from heat.common.i18n import _
-from heat.db.sqlalchemy import models
 
 
 def upgrade(migrate_engine):
     Session = sessionmaker(bind=migrate_engine)
     session = Session()
 
-    raw_templates = session.query(models.RawTemplate).all()
+    meta = sqlalchemy.MetaData(bind=migrate_engine)
+
+    templ_table = sqlalchemy.Table('raw_template', meta, autoload=True)
+    raw_templates = templ_table.select().execute()
 
     CFN_TO_HOT_RESOURCE_ATTRS = {'Type': 'type',
                                  'Properties': 'properties',

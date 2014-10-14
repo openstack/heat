@@ -15,10 +15,10 @@ import copy
 
 from migrate.versioning import util as migrate_util
 import six
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from heat.common.i18n import _
-from heat.db.sqlalchemy import models
 from heat.engine.hot.parameters import HOTParamSchema
 
 
@@ -26,7 +26,10 @@ def upgrade(migrate_engine):
     Session = sessionmaker(bind=migrate_engine)
     session = Session()
 
-    raw_templates = session.query(models.RawTemplate).all()
+    meta = sqlalchemy.MetaData(bind=migrate_engine)
+
+    templ_table = sqlalchemy.Table('raw_template', meta, autoload=True)
+    raw_templates = templ_table.select().execute()
 
     for raw_template in raw_templates:
         if ('heat_template_version' in raw_template.template
