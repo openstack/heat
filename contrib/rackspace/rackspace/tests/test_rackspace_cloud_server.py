@@ -325,6 +325,51 @@ class CloudServersTest(common.HeatTestCase):
         self.assertEqual('Error: Unknown Managed Cloud automation status: FOO',
                          six.text_type(exc))
 
+    def _prepare_server_check(self):
+        templ, stack = self._setup_test_stack('server_check')
+        server = self.fc.servers.list()[1]
+        res = stack['WebServer']
+        res.nova = mock.Mock()
+        res.nova().servers.get = mock.Mock(return_value=server)
+        return res
+
+    def test_check_rackconnect(self):
+        res = self._prepare_server_check()
+        res._check_rack_connect_complete = mock.Mock(return_value=True)
+        self.ctx.roles = ['rack_connect']
+
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_rackconnect_failure(self):
+        self.ctx.roles = ['rack_connect']
+        res = self._prepare_server_check()
+        res._check_active = mock.Mock(return_value=True)
+        res._check_rack_connect_complete = mock.Mock(return_value=False)
+
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertIn('False', six.text_type(exc))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+
+    def test_check_managed_cloud(self):
+        res = self._prepare_server_check()
+        res._check_managed_cloud_complete = mock.Mock(return_value=True)
+        self.ctx.roles = ['rax_managed']
+
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_managed_cloud_failure(self):
+        res = self._prepare_server_check()
+        res._check_managed_cloud_complete = mock.Mock(return_value=False)
+        self.ctx.roles = ['rax_managed']
+
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertIn('False', six.text_type(exc))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+
     @mock.patch.object(resource.Resource, 'data_set')
     def test_create_store_admin_pass_resource_data(self,
                                                    mock_data_set):

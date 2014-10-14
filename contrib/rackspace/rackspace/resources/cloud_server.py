@@ -197,7 +197,7 @@ class CloudServer(server.Server):
 
     def check_create_complete(self, server):
         """Check if server creation is complete and handle server configs."""
-        if not self._check_active(server):
+        if not super(CloudServer, self).check_create_complete(server):
             return False
 
         self.client_plugin().refresh_server(server)
@@ -233,6 +233,26 @@ class CloudServer(server.Server):
                           redact=True)
 
         return server
+
+    def handle_check(self):
+        server = self._check_server_status()
+        checks = []
+
+        if 'rack_connect' in self.context.roles:
+            rc_status = self._check_rack_connect_complete(server)
+            checks.append(
+                {'attr': 'rackconnect complete', 'expected': True,
+                 'current': rc_status}
+            )
+
+        if 'rax_managed' in self.context.roles:
+            mc_status = self._check_managed_cloud_complete(server)
+            checks.append(
+                {'attr': 'managed_cloud complete', 'expected': True,
+                 'current': mc_status}
+            )
+
+        self._verify_check_conditions(checks)
 
 
 def resource_mapping():
