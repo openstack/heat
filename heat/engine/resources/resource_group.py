@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -69,15 +70,21 @@ class ResourceGroup(stack_resource.StackResource):
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
-        COUNT, INDEX_VAR, RESOURCE_DEF,
+        COUNT, INDEX_VAR, RESOURCE_DEF, REMOVAL_POLICIES
     ) = (
-        'count', 'index_var', 'resource_def',
+        'count', 'index_var', 'resource_def', 'removal_policies'
     )
 
     _RESOURCE_DEF_KEYS = (
         RESOURCE_DEF_TYPE, RESOURCE_DEF_PROPERTIES,
     ) = (
         'type', 'properties',
+    )
+
+    _REMOVAL_POLICIES_KEYS = (
+        REMOVAL_RSRC_LIST,
+    ) = (
+        'resource_list',
     )
 
     ATTRIBUTES = (
@@ -126,6 +133,36 @@ class ResourceGroup(stack_resource.StackResource):
             },
             required=True
         ),
+        REMOVAL_POLICIES: properties.Schema(
+            properties.Schema.LIST,
+            _('Policies for removal of resources on update'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                _('Policy to be processed when doing an update which '
+                  'requires removal of specific resources.'),
+                schema={
+                    REMOVAL_RSRC_LIST: properties.Schema(
+                        properties.Schema.LIST,
+                        _('List of resources to be removed '
+                          'when doing an update which requires removal of '
+                          'specific resources. '
+                          'The resource may be specified several ways: '
+                          '(1) The resource name, as in the nested stack, '
+                          '(2) The resource reference returned from '
+                          'get_resource in a template, as available via '
+                          'the \'refs\' attribute '
+                          'Note this is destructive on update when specified; '
+                          'even if the count is not being reduced, and once '
+                          'a resource name is removed, it\'s name is never '
+                          'reused in subsequent updates'
+                          ),
+                        default=[]
+                    ),
+                },
+            ),
+            update_allowed=True,
+            default=[]
+        ),
     }
 
     attributes_schema = {
@@ -150,8 +187,51 @@ class ResourceGroup(stack_resource.StackResource):
                              self.stack)
         res_inst.validate()
 
+    def _name_blacklist(self):
+        """Resolve the remove_policies to names for removal."""
+
+        # To avoid reusing names after removal, we store a comma-separated
+        # blacklist in the resource data
+        db_rsrc_names = self.data().get('name_blacklist')
+        if db_rsrc_names:
+            current_blacklist = db_rsrc_names.split(',')
+        else:
+            current_blacklist = []
+
+        # Now we iterate over the removal policies, and update the blacklist
+        # with any additional names
+        rsrc_names = list(current_blacklist)
+        for r in self.properties[self.REMOVAL_POLICIES]:
+            if self.REMOVAL_RSRC_LIST in r:
+                # Tolerate string or int list values
+                for n in r[self.REMOVAL_RSRC_LIST]:
+                    str_n = six.text_type(n)
+                    if str_n in self.nested() and str_n not in rsrc_names:
+                        rsrc_names.append(str_n)
+                        continue
+                    rsrc = self.nested().resource_by_refid(str_n)
+                    if rsrc and str_n not in rsrc_names:
+                        rsrc_names.append(rsrc.name)
+
+        # If the blacklist has changed, update the resource data
+        if rsrc_names != current_blacklist:
+            self.data_set('name_blacklist', ','.join(rsrc_names))
+        return rsrc_names
+
     def _resource_names(self):
-        return [str(n) for n in range(self.properties.get(self.COUNT))]
+        name_blacklist = self._name_blacklist()
+        req_count = self.properties.get(self.COUNT)
+
+        def gen_names():
+            count = 0
+            index = 0
+            while count < req_count:
+                if str(index) not in name_blacklist:
+                    yield str(index)
+                    count += 1
+                index += 1
+
+        return list(gen_names())
 
     def handle_create(self):
         names = self._resource_names()

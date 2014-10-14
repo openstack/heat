@@ -92,6 +92,24 @@ template_repl = {
     }
 }
 
+template_repl2 = {
+    "heat_template_version": "2013-05-23",
+    "resources": {
+        "group1": {
+            "type": "OS::Heat::ResourceGroup",
+            "properties": {
+                "count": 2,
+                "resource_def": {
+                    "type": "dummy.resource",
+                    "properties": {
+                        "Foo": "Bar%index%"
+                    }
+                }
+            }
+        }
+    }
+}
+
 template_attr = {
     "heat_template_version": "2014-10-16",
     "resources": {
@@ -378,6 +396,177 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(2, len(resg.nested()))
         resource_names = [r.name for r in resg.nested().iter_resources()]
         self.assertEqual(['0', '1'], sorted(resource_names))
+
+    def test_update_remove_resource_list_name(self):
+        """Test update specifying victims."""
+        resg = self._create_dummy_stack()
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+
+        new_snip = copy.deepcopy(resg.t)
+        new_snip['Properties']['count'] = 5
+        scheduler.TaskRunner(resg.update, new_snip)()
+        self.stack = resg.nested()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(5, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1', '2', '3', '4'], sorted(resource_names))
+
+        # Reduce by three, specifying the middle resources to be removed
+        reduce_snip = copy.deepcopy(resg.t)
+        reduce_snip['Properties']['count'] = 2
+        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
+                                                        ['1', '2', '3']}]
+        scheduler.TaskRunner(resg.update, reduce_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '4'], sorted(resource_names))
+
+        # Increase to 3 again leaving the force remove, the indexes are skipped
+        increase_snip = copy.deepcopy(resg.t)
+        increase_snip['Properties']['count'] = 3
+        scheduler.TaskRunner(resg.update, increase_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(3, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '4', '5'], sorted(resource_names))
+
+        # Increase to 5 clearing the resource_list, the blacklist should be
+        # maintained so no resource names are reused
+        increase_snip2 = copy.deepcopy(resg.t)
+        increase_snip2['Properties']['count'] = 5
+        del(increase_snip2['Properties']['removal_policies'])
+        scheduler.TaskRunner(resg.update, increase_snip2)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(5, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '4', '5', '6', '7'], sorted(resource_names))
+
+        # Reduce by 3 only passing two resource_list victims, the remaining
+        # removal should be the largest numbered/newest, as normal
+        reduce_snip = copy.deepcopy(resg.t)
+        reduce_snip['Properties']['count'] = 2
+        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
+                                                         ['4', '5']}]
+        scheduler.TaskRunner(resg.update, reduce_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '6'], sorted(resource_names))
+
+    def test_update_remove_resource_list_refid(self):
+        """Test update specifying victims."""
+        resg = self._create_dummy_stack()
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+
+        # Update to remove a specific resource ref without affecting the size
+        # we should remove resource 0 and build a replacement
+        r_id = resg.nested()['0'].FnGetRefId()
+        self.assertIsNotNone(r_id)
+        reduce_snip = copy.deepcopy(resg.t)
+        reduce_snip['Properties']['count'] = 2
+        reduce_snip['Properties']['removal_policies'] = [
+            {'resource_list': [r_id]}]
+        scheduler.TaskRunner(resg.update, reduce_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['1', '2'], sorted(resource_names))
+        self.assertIsNone(resg.nested().resource_by_refid(r_id))
+
+        # We now should not do anything on subsequent updates
+        reduce_snip = copy.deepcopy(resg.t)
+        del(reduce_snip['Properties']['removal_policies'])
+        scheduler.TaskRunner(resg.update, reduce_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['1', '2'], sorted(resource_names))
+        self.assertIsNone(resg.nested().resource_by_refid(r_id))
+
+    def test_update_remove_add_index_replacement(self):
+        """Test update removal/add indexes are consistent."""
+        resg = self._create_dummy_stack(template_data=template_repl2)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+
+        new_snip = copy.deepcopy(resg.t)
+        new_snip['Properties']['count'] = 5
+        scheduler.TaskRunner(resg.update, new_snip)()
+        self.stack = resg.nested()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(5, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1', '2', '3', '4'], sorted(resource_names))
+        for r in ['0', '1', '2', '3', '4']:
+            prop_val = 'Bar%s' % r
+            self.assertEqual(prop_val, resg.nested()[r].properties.get('Foo'))
+
+        # Reduce by three, specifying the middle resources to be removed
+        reduce_snip = copy.deepcopy(resg.t)
+        reduce_snip['Properties']['count'] = 2
+        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
+                                                        ['1', '2', '3']}]
+        scheduler.TaskRunner(resg.update, reduce_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '4'], sorted(resource_names))
+        self.assertEqual('Bar0', resg.nested()['0'].properties.get('Foo'))
+        self.assertEqual('Bar4', resg.nested()['4'].properties.get('Foo'))
+
+        # Increase to 3 again leaving the force remove, the indexes are skipped
+        increase_snip = copy.deepcopy(resg.t)
+        increase_snip['Properties']['count'] = 3
+        scheduler.TaskRunner(resg.update, increase_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(3, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '4', '5'], sorted(resource_names))
+        self.assertEqual('Bar0', resg.nested()['0'].properties.get('Foo'))
+        self.assertEqual('Bar4', resg.nested()['4'].properties.get('Foo'))
+        self.assertEqual('Bar5', resg.nested()['5'].properties.get('Foo'))
+
+    def test_invalid_removal_policies_nolist(self):
+        """Test that error raised for malformed removal_policies."""
+        tmp = copy.deepcopy(template)
+        grp_props = tmp['resources']['group1']['properties']
+        grp_props['removal_policies'] = 'notallowed'
+        stack = utils.parse_stack(tmp)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                resg.validate)
+        errstr = 'removal_policies "\'notallowed\'" is not a list'
+        self.assertIn(errstr, six.text_type(exc))
+
+    def test_invalid_removal_policies_nomap(self):
+        """Test that error raised for malformed removal_policies."""
+        tmp = copy.deepcopy(template)
+        grp_props = tmp['resources']['group1']['properties']
+        grp_props['removal_policies'] = ['notallowed']
+        stack = utils.parse_stack(tmp)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                resg.validate)
+        errstr = '"notallowed" is not a map'
+        self.assertIn(errstr, six.text_type(exc))
 
     def test_aggregate_attribs(self):
         """
