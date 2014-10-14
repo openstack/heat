@@ -419,17 +419,6 @@
 
 
 #
-# Options defined in heat.openstack.common.lockutils
-#
-
-# Enables or disables inter-process locks. (boolean value)
-#disable_process_locking=false
-
-# Directory to use for lock files. (string value)
-#lock_path=<None>
-
-
-#
 # Options defined in heat.openstack.common.log
 #
 
