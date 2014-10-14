@@ -129,6 +129,43 @@ class ServersTest(common.HeatTestCase):
                              stack_user_project_id='8888')
         return (templ, stack)
 
+    def _prepare_server_check(self):
+        templ, stack = self._setup_test_stack('server_check')
+        server = self.fc.servers.list()[1]
+        res = stack['WebServer']
+        res.nova = mock.Mock()
+        res.nova().servers.get = mock.Mock(return_value=server)
+        return res
+
+    def test_check(self):
+        res = self._prepare_server_check()
+        res._check_server_status = mock.Mock()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_fail(self):
+        res = self._prepare_server_check()
+        res._check_server_status = mock.Mock(side_effect=Exception('boom'))
+
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertIn('boom', six.text_type(exc))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+
+    def test_check_server_status(self):
+        res = self._prepare_server_check()
+        server = res._check_server_status()
+        self.assertEqual(self.fc.servers.list()[1], server)
+
+    def test_check_server_status_not_active(self):
+        res = self._prepare_server_check()
+        res._check_active = mock.Mock(return_value=False)
+        res.nova().servers.get().status = 'FOO'
+
+        exc = self.assertRaises(exception.Error,
+                                scheduler.TaskRunner(res._check_server_status))
+        self.assertIn('FOO', six.text_type(exc))
+
     def _get_test_template(self, stack_name, server_name=None,
                            image_id=None):
         (tmpl, stack) = self._setup_test_stack(stack_name)
