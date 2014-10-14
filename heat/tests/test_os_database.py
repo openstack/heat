@@ -14,6 +14,7 @@
 from troveclient.openstack.common.apiclient import exceptions as troveexc
 import uuid
 
+import mock
 import six
 
 from heat.common import exception
@@ -223,6 +224,32 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(instance.create))
         self.m.VerifyAll()
+
+    def _get_db_instance(self):
+        fake_dbinstance = FakeDBInstance()
+        t = template_format.parse(db_template)
+        res = self._setup_test_clouddbinstance('trove_check', t)
+        res.trove = mock.Mock()
+        res.trove().instances.get.return_value = fake_dbinstance
+        res.flavor = 'Foo Flavor'
+        res.volume = 'Foo Volume'
+        res.datastore_type = 'Foo Type'
+        res.datastore_version = 'Foo Version'
+        return (res, fake_dbinstance)
+
+    def test_osdatabase_check(self):
+        (res, fake_instance) = self._get_db_instance()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_osdatabase_check_not_active(self):
+        (res, fake_instance) = self._get_db_instance()
+        fake_instance.status = 'FOOBAR'
+
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertIn('FOOBAR', six.text_type(exc))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
 
     def test_osdatabase_delete(self):
         fake_dbinstance = FakeDBInstance()
