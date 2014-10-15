@@ -18,6 +18,7 @@ from swiftclient import client as swiftclient_client
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine.clients.os import swift
 from heat.engine import constraints
@@ -240,14 +241,14 @@ class SwiftSignal(resource.Resource):
             for status in statuses:
                 if status == self.STATUS_FAILURE:
                     failure = SwiftSignalFailure(self)
-                    LOG.info(_('%(name)s Failed (%(failure)s)')
-                             % {'name': str(self), 'failure': str(failure)})
+                    LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+                             {'name': str(self), 'failure': str(failure)})
                     raise failure
                 elif status != self.STATUS_SUCCESS:
                     raise exception.Error(_("Unknown status: %s") % status)
 
             if len(statuses) >= count:
-                LOG.info(_("%s Succeeded") % str(self))
+                LOG.info(_LI("%s Succeeded"), str(self))
                 return
 
     def get_signals(self):

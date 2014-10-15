@@ -13,6 +13,8 @@
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -327,11 +329,12 @@ class OSDBInstance(resource.Resource):
             instance.get()
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
-                msg = _("Stack %(name)s (%(id)s) received an OverLimit "
-                        "response during instance.get(): %(exception)s")
-                LOG.warning(msg % {'name': self.stack.name,
-                                   'id': self.stack.id,
-                                   'exception': exc})
+                LOG.warn(_LW("Stack %(name)s (%(id)s) received an "
+                             "OverLimit response during instance.get():"
+                             " %(exception)s"),
+                         {'name': self.stack.name,
+                          'id': self.stack.id,
+                          'exception': exc})
             else:
                 raise
 
@@ -346,16 +349,15 @@ class OSDBInstance(resource.Resource):
 
         if instance.status != self.ACTIVE:
             return False
-
-        msg = _("Database instance %(database)s created (flavor:%(flavor)s, "
-                "volume:%(volume)s, datastore:%(datastore_type)s, "
-                "datastore_version:%(datastore_version)s)")
-
-        LOG.info(msg % {'database': self._dbinstance_name(),
-                        'flavor': self.flavor,
-                        'volume': self.volume,
-                        'datastore_type': self.datastore_type,
-                        'datastore_version': self.datastore_version})
+        LOG.info(_LI("Database instance %(database)s created (flavor:%("
+                     "flavor)s,volume:%(volume)s, datastore:%("
+                     "datastore_type)s, datastore_version:%("
+                     "datastore_version)s)"),
+                 {'database': self._dbinstance_name(),
+                  'flavor': self.flavor,
+                  'volume': self.volume,
+                  'datastore_type': self.datastore_type,
+                  'datastore_version': self.datastore_version})
         return True
 
     def handle_delete(self):

@@ -15,6 +15,7 @@
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -146,8 +147,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
             node_processes=node_processes,
             floating_ip_pool=floating_ip_pool,
             node_configs=node_configs)
-        LOG.info(_("Node Group Template '%s' has been created"
-                   ) % node_group_template.name)
+        LOG.info(_LI("Node Group Template '%s' has been created"),
+                 node_group_template.name)
         self.resource_id_set(node_group_template.id)
         return self.resource_id
 
@@ -159,8 +160,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
                 self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-        LOG.info(_("Node Group Template '%s' has been deleted."
-                   ) % self._ngt_name())
+        LOG.info(_LI("Node Group Template '%s' has been deleted."),
+                 self._ngt_name())
 
     def validate(self):
         res = super(SaharaNodeGroupTemplate, self).validate()
@@ -304,8 +305,8 @@ class SaharaClusterTemplate(resource.Resource):
             cluster_configs=cluster_configs,
             node_groups=node_groups
         )
-        LOG.info(_("Cluster Template '%s' has been created"
-                   ) % cluster_template.name)
+        LOG.info(_LI("Cluster Template '%s' has been created"),
+                 cluster_template.name)
         self.resource_id_set(cluster_template.id)
         return self.resource_id
 
@@ -317,8 +318,8 @@ class SaharaClusterTemplate(resource.Resource):
                 self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-        LOG.info(_("Cluster Template '%s' has been deleted."
-                   ) % self._cluster_template_name())
+        LOG.info(_LI("Cluster Template '%s' has been deleted."),
+                 self._cluster_template_name())
 
     def validate(self):
         res = super(SaharaClusterTemplate, self).validate()

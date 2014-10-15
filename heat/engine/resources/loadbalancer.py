@@ -16,6 +16,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import constraints
@@ -435,8 +436,8 @@ class LoadBalancer(stack_resource.StackResource):
     def get_parsed_template(self):
         if cfg.CONF.loadbalancer_template:
             with open(cfg.CONF.loadbalancer_template) as templ_fd:
-                LOG.info(_('Using custom loadbalancer template %s')
-                         % cfg.CONF.loadbalancer_template)
+                LOG.info(_LI('Using custom loadbalancer template %s'),
+                         cfg.CONF.loadbalancer_template)
                 contents = templ_fd.read()
         else:
             contents = lb_template_default
