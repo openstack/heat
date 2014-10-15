@@ -105,7 +105,10 @@ engine_opts = [
                       'stored password or trusts.')),
     cfg.ListOpt('trusts_delegated_roles',
                 default=['heat_stack_owner'],
-                help=_('Subset of trustor roles to be delegated to heat.')),
+                help=_('Subset of trustor roles to be delegated to heat.'
+                       ' If trusts_delegated_roles is set to [],'
+                       ' all roles of a user will be delegated to heat'
+                       ' when creating a stack.')),
     cfg.IntOpt('max_resources_per_stack',
                default=1000,
                help='Maximum resources allowed per top-level stack.'),
