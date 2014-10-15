@@ -72,7 +72,7 @@ class CloudDns(resource.Resource):
             _('How long other servers should cache recorddata.'),
             default=3600,
             constraints=[
-                constraints.Range(min=301),
+                constraints.Range(min=300),
             ],
             update_allowed=True
         ),
@@ -127,7 +127,7 @@ class CloudDns(resource.Resource):
                           'recorddata.'),
                         default=3600,
                         constraints=[
-                            constraints.Range(min=301),
+                            constraints.Range(min=300),
                         ]
                     ),
                     RECORD_TYPE: properties.Schema(
