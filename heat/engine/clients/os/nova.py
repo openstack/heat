@@ -29,6 +29,7 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
 from heat.engine import scheduler
 
@@ -104,19 +105,20 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         try:
             server.get()
         except exceptions.OverLimit as exc:
-            msg = _("Server %(name)s (%(id)s) received an OverLimit "
-                    "response during server.get(): %(exception)s")
-            LOG.warning(msg % {'name': server.name,
-                               'id': server.id,
-                               'exception': exc})
+            LOG.warn(_LW("Server %(name)s (%(id)s) received an OverLimit "
+                         "response during server.get(): %(exception)s"),
+                     {'name': server.name,
+                      'id': server.id,
+                      'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                msg = _('Server "%(name)s" (%(id)s) received the following '
-                        'exception during server.get(): %(exception)s')
-                LOG.warning(msg % {'name': server.name,
-                                   'id': server.id,
-                                   'exception': exc})
+                LOG.warn(_LW('Server "%(name)s" (%(id)s) received the '
+                             'following exception during server.get(): '
+                             '%(exception)s'),
+                         {'name': server.name,
+                          'id': server.id,
+                          'exception': exc})
             else:
                 raise
 
@@ -396,8 +398,8 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         try:
             server = self.client().servers.get(server)
         except exceptions.NotFound as ex:
-            LOG.warn(_('Instance (%(server)s) not found: %(ex)s')
-                     % {'server': server, 'ex': ex})
+            LOG.warn(_LW('Instance (%(server)s) not found: %(ex)s'),
+                     {'server': server, 'ex': ex})
         else:
             for n in server.networks:
                 if len(server.networks[n]) > 0:

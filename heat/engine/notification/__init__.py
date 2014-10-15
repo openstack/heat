@@ -14,9 +14,7 @@
 from oslo.config import cfg
 
 from heat.common import messaging
-from heat.openstack.common import log
 
-LOG = log.getLogger(__name__)
 SERVICE = 'orchestration'
 INFO = 'INFO'
 ERROR = 'ERROR'
