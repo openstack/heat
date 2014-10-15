@@ -371,6 +371,14 @@ class EngineService(service.Service):
                           'deprecated and will be removed in the Juno '
                           'release.', DeprecationWarning)
 
+        if cfg.CONF.trusts_delegated_roles:
+            warnings.warn('The default value of "trusts_delegated_roles" '
+                          'option in heat.conf is changed to [] in Kilo '
+                          'and heat will delegate all roles of trustor. '
+                          'Please keep the same if you do not want to '
+                          'delegate subset roles when upgrading.',
+                          Warning)
+
     def create_periodic_tasks(self):
         LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())
         # Note with multiple workers, the parent process hasn't called start()

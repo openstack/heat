@@ -35,9 +35,10 @@
 # (string value)
 #deferred_auth_method=password
 
-# Subset of trustor roles to be delegated to heat. (list
-# value)
-#trusts_delegated_roles=heat_stack_owner
+# Subset of trustor roles to be delegated to heat. If left
+# unset, all roles of a user will be delegated to heat when
+# creating a stack. (list value)
+#trusts_delegated_roles=
 
 # Maximum resources allowed per top-level stack. (integer
 # value)
