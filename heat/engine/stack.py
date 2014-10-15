@@ -26,6 +26,9 @@ from heat.common import context as common_context
 from heat.common import exception
 from heat.common.exception import StackValidationFailed
 from heat.common.i18n import _
+from heat.common.i18n import _LE
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
 from heat.db import api as db_api
@@ -229,7 +232,7 @@ class Stack(collections.Mapping):
         via the Parameters class as the StackId pseudo parameter
         '''
         if not self.parameters.set_stack_id(self.identifier()):
-            LOG.warning(_("Unable to set parameters StackId identifier"))
+            LOG.warn(_LW("Unable to set parameters StackId identifier"))
 
     @staticmethod
     def _get_dependencies(resources):
@@ -503,11 +506,12 @@ class Stack(collections.Mapping):
             stack.update_and_save({'action': action,
                                    'status': status,
                                    'status_reason': reason})
-            msg = _('Stack %(action)s %(status)s (%(name)s): %(reason)s')
-            LOG.info(msg % {'action': action,
-                            'status': status,
-                            'name': self.name,
-                            'reason': reason})
+            LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
+                         '%(reason)s'),
+                     {'action': action,
+                      'status': status,
+                      'name': self.name,
+                      'reason': reason})
             notification.send(self)
 
     @property
@@ -697,7 +701,7 @@ class Stack(collections.Mapping):
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, event=None):
         if action not in (self.UPDATE, self.ROLLBACK):
-            LOG.error(_("Unexpected action %s passed to update!") % action)
+            LOG.error(_LE("Unexpected action %s passed to update!"), action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -816,7 +820,7 @@ class Stack(collections.Mapping):
         required for those resources, e.g the stack_user_project.
         '''
         if action not in (self.DELETE, self.ROLLBACK):
-            LOG.error(_("Unexpected action %s passed to delete!") % action)
+            LOG.error(_LE("Unexpected action %s passed to delete!"), action)
             self.state_set(self.DELETE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -933,16 +937,17 @@ class Stack(collections.Mapping):
                 try:
                     db_api.user_creds_delete(self.context, self.user_creds_id)
                 except exception.NotFound:
-                    LOG.info(_("Tried to delete user_creds that do not exist "
-                               "(stack=%(stack)s user_creds_id=%(uc)s)") %
+                    LOG.info(_LI("Tried to delete user_creds that do not "
+                                 "exist (stack=%(stack)s user_creds_id="
+                                 "%(uc)s)"),
                              {'stack': self.id, 'uc': self.user_creds_id})
 
                 try:
                     self.user_creds_id = None
                     self.store()
                 except exception.NotFound:
-                    LOG.info(_("Tried to store a stack that does not exist "
-                               "%s ") % self.id)
+                    LOG.info(_LI("Tried to store a stack that does not exist "
+                                 "%s "), self.id)
 
             # If the stack has a domain project, delete it
             if self.stack_user_project_id and not abandon:
@@ -958,8 +963,8 @@ class Stack(collections.Mapping):
         try:
             self.state_set(action, stack_status, reason)
         except exception.NotFound:
-            LOG.info(_("Tried to delete stack that does not exist "
-                       "%s ") % self.id)
+            LOG.info(_LI("Tried to delete stack that does not exist "
+                         "%s "), self.id)
 
         if not backup:
             lifecycle_plugin_utils.do_post_ops(self.context, self,
@@ -970,8 +975,8 @@ class Stack(collections.Mapping):
             try:
                 db_api.stack_delete(self.context, self.id)
             except exception.NotFound:
-                LOG.info(_("Tried to delete stack that does not exist "
-                           "%s ") % self.id)
+                LOG.info(_LI("Tried to delete stack that does not exist "
+                             "%s "), self.id)
             self.id = None
 
     @profiler.trace('Stack.suspend', hide_args=False)
@@ -986,7 +991,7 @@ class Stack(collections.Mapping):
         '''
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
-            LOG.info(_('%s is already suspended') % str(self))
+            LOG.info(_LI('%s is already suspended'), str(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -1006,7 +1011,7 @@ class Stack(collections.Mapping):
         '''
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
-            LOG.info(_('%s is already resumed') % str(self))
+            LOG.info(_LI('%s is already resumed'), str(self))
             return
 
         sus_task = scheduler.TaskRunner(self.stack_task,
@@ -1054,7 +1059,7 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                LOG.error(_('Resource %(name)s delete failed: %(ex)s') %
+                LOG.error(_LE('Resource %(name)s delete failed: %(ex)s'),
                           {'name': res.name, 'ex': ex})
 
         for res in deps:

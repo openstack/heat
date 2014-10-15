@@ -22,6 +22,7 @@ from oslo.utils import excutils
 import six
 
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -202,7 +203,7 @@ class TaskRunner(object):
             assert self._runner is not None, "Task not started"
 
             if self._timeout is not None and self._timeout.expired():
-                LOG.info(_('%s timed out') % str(self))
+                LOG.info(_LI('%s timed out'), str(self))
                 self._done = True
 
                 self._timeout.trigger(self._runner)

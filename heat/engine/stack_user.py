@@ -15,6 +15,7 @@ import keystoneclient.exceptions as kc_exception
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
@@ -95,7 +96,7 @@ class StackUser(resource.Resource):
             # compatibility with resources created before the migration
             # to stack_user.StackUser domain users.  After an appropriate
             # transitional period, this should be removed.
-            LOG.warning(_('Reverting to legacy user delete path'))
+            LOG.warn(_LW('Reverting to legacy user delete path'))
             try:
                 self.keystone().delete_stack_user(user_id)
             except kc_exception.NotFound:

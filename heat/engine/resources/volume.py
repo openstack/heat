@@ -15,6 +15,7 @@ import json
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -238,13 +239,13 @@ class VolumeExtendTask(object):
             vol.get()
 
         if vol.status != 'available':
-            LOG.info(_("Resize failed: Volume %(vol)s is in %(status)s state."
-                       ) % {'vol': vol.id, 'status': vol.status})
+            LOG.info(_LI("Resize failed: Volume %(vol)s is in %(status)s "
+                         "state."), {'vol': vol.id, 'status': vol.status})
             raise resource.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume resize failed'))
 
-        LOG.info(_('%s - complete') % str(self))
+        LOG.info(_LI('%s - complete'), str(self))
 
 
 class VolumeAttachTask(object):
@@ -293,14 +294,15 @@ class VolumeAttachTask(object):
             vol.get()
 
         if vol.status != 'in-use':
-            LOG.info(_("Attachment failed - volume %(vol)s "
-                       "is in %(status)s status") % {"vol": vol.id,
-                                                     "status": vol.status})
+            LOG.info(_LI("Attachment failed - volume %(vol)s "
+                         "is in %(status)s status"),
+                     {"vol": vol.id,
+                      "status": vol.status})
             raise resource.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume attachment failed'))
 
-        LOG.info(_('%s - complete') % str(self))
+        LOG.info(_LI('%s - complete'), str(self))
 
 
 class VolumeDetachTask(object):
@@ -363,13 +365,13 @@ class VolumeDetachTask(object):
                 yield
                 vol.get()
 
-            LOG.info(_('%(name)s - status: %(status)s')
-                     % {'name': str(self), 'status': vol.status})
+            LOG.info(_LI('%(name)s - status: %(status)s'),
+                     {'name': str(self), 'status': vol.status})
             if vol.status != 'available':
-                LOG.info(_("Detachment failed - volume %(vol)s "
-                           "is in %(status)s status") % {
-                               "vol": vol.id,
-                               "status": vol.status})
+                LOG.info(_LI("Detachment failed - volume %(vol)s "
+                             "is in %(status)s status"),
+                         {"vol": vol.id,
+                          "status": vol.status})
                 raise resource.ResourceUnknownStatus(
                     resource_status=vol.status,
                     result=_('Volume detachment failed'))
@@ -390,12 +392,12 @@ class VolumeDetachTask(object):
             return True
 
         while server_has_attachment(self.server_id, self.attachment_id):
-            LOG.info(_("Server %(srv)s still has attachment %(att)s.")
-                     % {'att': self.attachment_id, 'srv': self.server_id})
+            LOG.info(_LI("Server %(srv)s still has attachment %(att)s."),
+                     {'att': self.attachment_id, 'srv': self.server_id})
             yield
 
-        LOG.info(_("Volume %(vol)s is detached from server %(srv)s")
-                 % {'vol': vol.id, 'srv': self.server_id})
+        LOG.info(_LI("Volume %(vol)s is detached from server %(srv)s"),
+                 {'vol': vol.id, 'srv': self.server_id})
 
 
 class VolumeAttachment(resource.Resource):

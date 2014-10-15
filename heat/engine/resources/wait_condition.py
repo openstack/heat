@@ -16,6 +16,9 @@ import uuid
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.engine import attributes
 from heat.engine import constraints
@@ -63,8 +66,8 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         if self._metadata_format_ok(metadata):
             rsrc_metadata = self.metadata_get(refresh=True)
             if metadata[self.UNIQUE_ID] in rsrc_metadata:
-                LOG.warning(_("Overwriting Metadata item for id %s!")
-                            % metadata[self.UNIQUE_ID])
+                LOG.warn(_LW("Overwriting Metadata item for id %s!"),
+                         metadata[self.UNIQUE_ID])
             safe_metadata = {}
             for k in self.METADATA_KEYS:
                 if k == self.UNIQUE_ID:
@@ -76,7 +79,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                              (safe_metadata[self.STATUS],
                               safe_metadata[self.REASON]))
         else:
-            LOG.error(_("Metadata failed validation for %s") % self.name)
+            LOG.error(_LE("Metadata failed validation for %s"), self.name)
             raise ValueError(_("Metadata format invalid"))
         return signal_reason
 
@@ -353,20 +356,20 @@ class HeatWaitCondition(resource.Resource):
                 yield
             except scheduler.Timeout:
                 timeout = WaitConditionTimeout(self, handle)
-                LOG.info(_('%(name)s Timed out (%(timeout)s)')
-                         % {'name': str(self), 'timeout': str(timeout)})
+                LOG.info(_LI('%(name)s Timed out (%(timeout)s)'),
+                         {'name': str(self), 'timeout': str(timeout)})
                 raise timeout
 
             handle_status = handle.get_status()
 
             if any(s != handle.STATUS_SUCCESS for s in handle_status):
                 failure = WaitConditionFailure(self, handle)
-                LOG.info(_('%(name)s Failed (%(failure)s)')
-                         % {'name': str(self), 'failure': str(failure)})
+                LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+                         {'name': str(self), 'failure': str(failure)})
                 raise failure
 
             if len(handle_status) >= self.properties[self.COUNT]:
-                LOG.info(_("%s Succeeded") % str(self))
+                LOG.info(_LI("%s Succeeded"), str(self))
                 return
 
     def handle_create(self):

@@ -18,6 +18,8 @@ from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.db import api as db_api
 from heat.engine import stack
 from heat.engine import timestamp
@@ -76,8 +78,8 @@ class WatchRule(object):
             try:
                 watch = db_api.watch_rule_get_by_name(context, watch_name)
             except Exception as ex:
-                LOG.warn(_('WatchRule.load (%(watch_name)s) db error '
-                           '%(ex)s') % {'watch_name': watch_name, 'ex': ex})
+                LOG.warn(_LW('WatchRule.load (%(watch_name)s) db error '
+                             '%(ex)s'), {'watch_name': watch_name, 'ex': ex})
         if watch is None:
             raise exception.WatchRuleNotFound(watch_name=watch_name)
         else:
@@ -247,13 +249,13 @@ class WatchRule(object):
         return actions
 
     def rule_actions(self, new_state):
-        LOG.info(_('WATCH: stack:%(stack)s, watch_name:%(watch_name)s, '
-                   'new_state:%(new_state)s'), {'stack': self.stack_id,
-                                                'watch_name': self.name,
-                                                'new_state': new_state})
+        LOG.info(_LI('WATCH: stack:%(stack)s, watch_name:%(watch_name)s, '
+                     'new_state:%(new_state)s'), {'stack': self.stack_id,
+                                                  'watch_name': self.name,
+                                                  'new_state': new_state})
         actions = []
         if self.ACTION_MAP[new_state] not in self.rule:
-            LOG.info(_('no action for new state %s'), new_state)
+            LOG.info(_LI('no action for new state %s'), new_state)
         else:
             s = db_api.stack_get(self.context, self.stack_id,
                                  eager_load=True)
@@ -263,8 +265,8 @@ class WatchRule(object):
                 for refid in self.rule[self.ACTION_MAP[new_state]]:
                     actions.append(stk.resource_by_refid(refid).signal)
             else:
-                LOG.warning(_("Could not process watch state %s for stack")
-                            % new_state)
+                LOG.warn(_LW("Could not process watch state %s for stack"),
+                         new_state)
         return actions
 
     def _to_ceilometer(self, data):
@@ -347,9 +349,9 @@ class WatchRule(object):
                           % {'self_state': self.state, 'name': self.name,
                              'state': state})
             else:
-                LOG.warning(_("Unable to override state %(state)s for "
-                              "watch %(name)s") % {'state': self.state,
-                                                   'name': self.name})
+                LOG.warn(_LW("Unable to override state %(state)s for "
+                             "watch %(name)s"), {'state': self.state,
+                                                 'name': self.name})
         return actions
 
 
