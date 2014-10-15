@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
         con = self.context
         if self.auth_token is None:
-            LOG.error(_("Zaqar connection failed, no auth_token!"))
+            LOG.error(_LE("Zaqar connection failed, no auth_token!"))
             return None
 
         opts = {

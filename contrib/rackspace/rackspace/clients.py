@@ -21,7 +21,8 @@ import urlparse
 from oslo.config import cfg
 
 from heat.common import exception
-from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
@@ -57,7 +58,7 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
         """Create an authenticated client context."""
         self.pyrax = pyrax.create_context("rackspace")
         self.pyrax.auth_endpoint = self.context.auth_url
-        LOG.info(_("Authenticating username: %s") %
+        LOG.info(_LI("Authenticating username: %s") %
                  self.context.username)
         tenant = self.context.tenant_id
         tenant_name = self.context.tenant
@@ -65,9 +66,9 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
                                    tenant_id=tenant,
                                    tenant_name=tenant_name)
         if not self.pyrax.authenticated:
-            LOG.warn(_("Pyrax Authentication Failed."))
+            LOG.warn(_LW("Pyrax Authentication Failed."))
             raise exception.AuthorizationFailure()
-        LOG.info(_("User %s authenticated successfully."),
+        LOG.info(_LI("User %s authenticated successfully."),
                  self.context.username)
 
 

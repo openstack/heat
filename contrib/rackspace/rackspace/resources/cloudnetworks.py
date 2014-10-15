@@ -15,6 +15,7 @@ import netaddr
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -93,8 +94,8 @@ class CloudNetwork(resource.Resource):
             try:
                 self._network = self.cloud_networks().get(self.resource_id)
             except NotFound:
-                LOG.warn(_("Could not find network %s but resource id is set.")
-                         % self.resource_id)
+                LOG.warn(_LW("Could not find network %s but resource id is"
+                             " set."), self.resource_id)
         return self._network
 
     def cloud_networks(self):
