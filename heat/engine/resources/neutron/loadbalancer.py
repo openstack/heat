@@ -698,8 +698,7 @@ class LoadBalancer(resource.Resource):
 
     def handle_delete(self):
         client = self.neutron()
-        for member in self.properties[self.MEMBERS] or []:
-            member_id = self.data().get(member)
+        for member, member_id in self.data().items():
             try:
                 client.delete_member(member_id)
             except Exception as ex:
