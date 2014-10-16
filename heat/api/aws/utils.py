@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Helper utilities related to the AWS API implementations
-'''
+"""Helper utilities related to the AWS API implementations."""
 
 import itertools
 import re
@@ -26,16 +24,12 @@ LOG = logging.getLogger(__name__)
 
 
 def format_response(action, response):
-    """
-    Format response from engine into API format
-    """
+    """Format response from engine into API format."""
     return {'%sResponse' % action: {'%sResult' % action: response}}
 
 
 def extract_param_pairs(params, prefix='', keyname='', valuename=''):
-    """
-    Extract a dictionary of user input parameters, from AWS style
-    parameter-pair encoded list
+    """Extract user input params from AWS style parameter-pair encoded list.
 
     In the AWS API list items appear as two key-value
     pairs (passed as query parameters)  with keys of the form below:
@@ -46,7 +40,7 @@ def extract_param_pairs(params, prefix='', keyname='', valuename=''):
     Prefix.member.2.keyvalue=somevalue
 
     We reformat this into a dict here to match the heat
-    engine API expected format
+    engine API expected format.
     """
     plist = extract_param_list(params, prefix)
     kvs = [(p[keyname], p[valuename]) for p in plist
@@ -56,8 +50,7 @@ def extract_param_pairs(params, prefix='', keyname='', valuename=''):
 
 
 def extract_param_list(params, prefix=''):
-    """
-    Extract a list-of-dicts based on parameters containing AWS style list
+    """Extract a list-of-dicts based on parameters containing AWS style list.
 
     MetricData.member.1.MetricName=buffers
     MetricData.member.1.Unit=Bytes
@@ -67,9 +60,8 @@ def extract_param_list(params, prefix=''):
     MetricData.member.2.Value=12345
 
     This can be extracted by passing prefix=MetricData, resulting in a
-    list containing two dicts
+    list containing two dicts.
     """
-
     key_re = re.compile(r"%s\.member\.([0-9]+)\.(.*)" % (prefix))
 
     def get_param_data(params):
@@ -94,10 +86,11 @@ def extract_param_list(params, prefix=''):
 
 
 def get_param_value(params, key):
-    """
+    """Looks up an expected parameter in a parsed params dict.
+
     Helper function, looks up an expected parameter in a parsed
     params dict and returns the result.  If params does not contain
-    the requested key we raise an exception of the appropriate type
+    the requested key we raise an exception of the appropriate type.
     """
     try:
         return params[key]
@@ -107,9 +100,7 @@ def get_param_value(params, key):
 
 
 def reformat_dict_keys(keymap=None, inputdict=None):
-    '''
-    Utility function for mapping one dict format to another
-    '''
+    """Utility function for mapping one dict format to another."""
     keymap = keymap or {}
     inputdict = inputdict or {}
     return dict([(outk, inputdict[ink]) for ink, outk in keymap.items()

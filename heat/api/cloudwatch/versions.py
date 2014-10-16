@@ -11,9 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Controller that returns information on the heat API versions
-"""
+"""Controller that returns information on the heat API versions."""
 
 import httplib
 import json
@@ -23,9 +21,7 @@ import webob.dec
 
 class Controller(object):
 
-    """
-    A controller that produces information on the heat API versions.
-    """
+    """A controller that produces information on the heat API versions."""
 
     def __init__(self, conf):
         self.conf = conf
