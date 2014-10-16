@@ -720,6 +720,22 @@ class Resource(object):
             reason = '%s not supported for %s' % (action, self.type())
             self.state_set(action, self.COMPLETE, reason)
 
+    def _verify_check_conditions(self, checks):
+        def valid(check):
+            if isinstance(check['expected'], list):
+                return check['current'] in check['expected']
+            else:
+                return check['current'] == check['expected']
+
+        msg = _("'%(attr)s': expected '%(expected)s', got '%(current)s'")
+        invalid_checks = [
+            msg % check
+            for check in checks
+            if not valid(check)
+        ]
+        if invalid_checks:
+            raise exception.Error('; '.join(invalid_checks))
+
     def suspend(self):
         '''
         Suspend the resource.  Subclasses should provide a handle_suspend()

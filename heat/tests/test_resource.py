@@ -844,6 +844,28 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.FAILED, res.status)
         self.assertIn('boom', res.status_reason)
 
+    def test_verify_check_conditions(self):
+        valid_foos = ['foo1', 'foo2']
+        checks = [
+            {'attr': 'foo1', 'expected': 'bar1', 'current': 'baz1'},
+            {'attr': 'foo2', 'expected': valid_foos, 'current': 'foo2'},
+            {'attr': 'foo3', 'expected': 'bar3', 'current': 'baz3'},
+            {'attr': 'foo4', 'expected': 'foo4', 'current': 'foo4'},
+            {'attr': 'foo5', 'expected': valid_foos, 'current': 'baz5'},
+        ]
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'GenericResourceType')
+        res = generic_rsrc.ResourceWithProps('test_res', tmpl, self.stack)
+
+        exc = self.assertRaises(exception.Error,
+                                res._verify_check_conditions, checks)
+        exc_text = six.text_type(exc)
+        self.assertNotIn("'foo2':", exc_text)
+        self.assertNotIn("'foo4':", exc_text)
+        self.assertIn("'foo1': expected 'bar1', got 'baz1'", exc_text)
+        self.assertIn("'foo3': expected 'bar3', got 'baz3'", exc_text)
+        self.assertIn("'foo5': expected '['foo1', 'foo2']', got 'baz5'",
+                      exc_text)
+
     def test_suspend_resume_ok(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType',
