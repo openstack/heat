@@ -197,20 +197,6 @@ class AutoScalingTest(HeatTestCase):
         vip_ret_block['vip']['id'] = str(uuid.uuid4())
         vip_ret_block['vip']['status'] = 'ACTIVE'
 
-        port_block = {
-            'port': {
-                'network_id': network_body['network']['id'],
-                'fixed_ips': [
-                    {
-                        'subnet_id': subnet_body['subnet']['id'],
-                    }
-                ],
-                'admin_state_up': True
-            }
-        }
-        port_ret_block = copy.deepcopy(port_block)
-        port_ret_block['port']['id'] = str(uuid.uuid4())
-
         membera_block = {
             'member': {
                 'protocol_port': 8080,
@@ -240,14 +226,6 @@ class AutoScalingTest(HeatTestCase):
         }
         memberc_ret_block = copy.deepcopy(memberc_block)
         memberc_ret_block['member']['id'] = str(uuid.uuid4())
-
-        class id_type(object):
-
-            def __init__(self, id, name):
-                self.id = id
-                self.name = name
-
-        instances = {}
 
         neutronclient.Client.create_health_monitor(mon_block).\
             AndReturn(mon_ret_block)
@@ -287,8 +265,6 @@ class AutoScalingTest(HeatTestCase):
         neutronclient.Client.create_member(membera_block).\
             AndReturn(membera_ret_block)
 
-        instances[instid] = membera_ret_block['member']['id']
-
         # Start of update
         parser.Stack.validate()
         instid = str(uuid.uuid4())
@@ -297,7 +273,6 @@ class AutoScalingTest(HeatTestCase):
             .AndReturn(False)
         instance.Instance.check_create_complete(mox.IgnoreArg())\
             .AndReturn(True)
-        instances[instid] = memberb_ret_block['member']['id']
 
         instid = str(uuid.uuid4())
         instance.Instance.handle_create().AndReturn(instid)
