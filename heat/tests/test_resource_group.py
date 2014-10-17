@@ -359,6 +359,10 @@ class ResourceGroupTest(common.HeatTestCase):
     def test_update(self):
         """Test basic update."""
         resg = self._create_dummy_stack()
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+        old_snip = copy.deepcopy(resg.t)
         new_snip = copy.deepcopy(resg.t)
         new_snip['Properties']['count'] = 3
         scheduler.TaskRunner(resg.update, new_snip)()
@@ -366,6 +370,14 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
         self.assertEqual(3, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1', '2'], sorted(resource_names))
+        scheduler.TaskRunner(resg.update, old_snip)()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
 
     def test_aggregate_attribs(self):
         """

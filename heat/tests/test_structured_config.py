@@ -246,11 +246,10 @@ class StructuredDeploymentsTest(HeatTestCase):
             set(resg._resource_names())
         )
 
+        resg.properties = {'servers': {'s1': 'u1', 's2': 'u2', 's3': 'u3'}}
         self.assertEqual(
             set(('s1', 's2', 's3')),
-            set(resg._resource_names({
-                'servers': {'s1': 'u1', 's2': 'u2', 's3': 'u3'}}))
-        )
+            set(resg._resource_names()))
 
     def test_assemble_nested(self):
         """

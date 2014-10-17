@@ -565,9 +565,8 @@ class SoftwareDeployments(resource_group.ResourceGroup):
         ),
     }
 
-    def _resource_names(self, properties=None):
-        p = properties or self.properties
-        return p.get(self.SERVERS, {}).keys()
+    def _resource_names(self):
+        return self.properties.get(self.SERVERS, {}).keys()
 
     def _do_prop_replace(self, res_name, res_def_template):
         res_def = copy.deepcopy(res_def_template)
