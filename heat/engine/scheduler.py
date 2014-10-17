@@ -18,6 +18,7 @@ from time import time as wallclock
 import types
 
 import eventlet
+from oslo.utils import encodeutils
 from oslo.utils import excutils
 import six
 
@@ -43,7 +44,7 @@ def task_description(task):
             return '%s from %s' % (name, task.__self__)
     elif isinstance(task, types.FunctionType):
         if name is not None:
-            return str(name)
+            return six.text_type(name)
     return repr(task)
 
 
@@ -62,7 +63,7 @@ class Timeout(BaseException):
         """
         Initialise with the TaskRunner and a timeout period in seconds.
         """
-        message = _('%s Timed out') % str(task_runner)
+        message = _('%s Timed out') % six.text_type(task_runner)
         super(Timeout, self).__init__(message)
 
         # Note that we don't attempt to handle leap seconds or large clock
@@ -148,12 +149,18 @@ class TaskRunner(object):
 
     def __str__(self):
         """Return a human-readable string representation of the task."""
-        return 'Task %s' % self.name
+        text = 'Task %s' % self.name
+        return encodeutils.safe_encode(text)
+
+    def __unicode__(self):
+        """Return a human-readable string representation of the task."""
+        text = 'Task %s' % self.name
+        return encodeutils.safe_decode(text)
 
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""
         if ENABLE_SLEEP and wait_time is not None:
-            LOG.debug('%s sleeping' % str(self))
+            LOG.debug('%s sleeping' % six.text_type(self))
             eventlet.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None):
@@ -180,7 +187,7 @@ class TaskRunner(object):
         assert self._runner is None, "Task already started"
         assert not self._done, "Task already cancelled"
 
-        LOG.debug('%s starting' % str(self))
+        LOG.debug('%s starting' % six.text_type(self))
 
         if timeout is not None:
             self._timeout = Timeout(self, timeout)
@@ -192,7 +199,7 @@ class TaskRunner(object):
         else:
             self._runner = False
             self._done = True
-            LOG.debug('%s done (not resumable)' % str(self))
+            LOG.debug('%s done (not resumable)' % six.text_type(self))
 
     def step(self):
         """
@@ -203,18 +210,18 @@ class TaskRunner(object):
             assert self._runner is not None, "Task not started"
 
             if self._timeout is not None and self._timeout.expired():
-                LOG.info(_LI('%s timed out'), str(self))
+                LOG.info(_LI('%s timed out'), six.text_type(self))
                 self._done = True
 
                 self._timeout.trigger(self._runner)
             else:
-                LOG.debug('%s running' % str(self))
+                LOG.debug('%s running' % six.text_type(self))
 
                 try:
                     next(self._runner)
                 except StopIteration:
                     self._done = True
-                    LOG.debug('%s complete' % str(self))
+                    LOG.debug('%s complete' % six.text_type(self))
 
         return self._done
 
@@ -234,7 +241,7 @@ class TaskRunner(object):
             return
 
         if not self.started() or grace_period is None:
-            LOG.debug('%s cancelled' % str(self))
+            LOG.debug('%s cancelled' % six.text_type(self))
             self._done = True
             if self.started():
                 self._runner.close()
@@ -351,12 +358,13 @@ class DependencyTaskGroup(object):
         if name is None:
             name = '(%s) %s' % (getattr(task, '__name__',
                                         task_description(task)),
-                                str(dependencies))
+                                six.text_type(dependencies))
         self.name = name
 
     def __repr__(self):
         """Return a string representation of the task."""
-        return '%s(%s)' % (type(self).__name__, self.name)
+        text = '%s(%s)' % (type(self).__name__, self.name)
+        return encodeutils.safe_encode(text)
 
     def __call__(self):
         """Return a co-routine which runs the task group."""
@@ -497,7 +505,8 @@ class PollingTaskGroup(object):
 
     def __repr__(self):
         """Return a string representation of the task group."""
-        return '%s(%s)' % (type(self).__name__, self.name)
+        text = '%s(%s)' % (type(self).__name__, self.name)
+        return encodeutils.safe_encode(text)
 
     def __call__(self):
         """Return a co-routine which runs the task group."""

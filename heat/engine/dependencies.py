@@ -14,6 +14,7 @@
 import collections
 import itertools
 
+from oslo.utils import encodeutils
 import six
 from six.moves import xrange
 
@@ -84,7 +85,13 @@ class Node(object):
 
     def __str__(self):
         '''Return a human-readable string representation of the node.'''
-        return '{%s}' % ', '.join(str(n) for n in self)
+        text = '{%s}' % ', '.join(str(n) for n in self)
+        return encodeutils.safe_encode(text)
+
+    def __unicode__(self):
+        '''Return a human-readable string representation of the node.'''
+        text = '{%s}' % ', '.join(unicode(n) for n in self)
+        return encodeutils.safe_decode(text)
 
     def __repr__(self):
         '''Return a string representation of the node.'''
@@ -137,7 +144,15 @@ class Graph(collections.defaultdict):
     def __str__(self):
         '''Convert the graph to a human-readable string.'''
         pairs = ('%s: %s' % (str(k), str(v)) for k, v in six.iteritems(self))
-        return '{%s}' % ', '.join(pairs)
+        text = '{%s}' % ', '.join(pairs)
+        return encodeutils.safe_encode(text)
+
+    def __unicode__(self):
+        '''Convert the graph to a human-readable string.'''
+        pairs = ('%s: %s' % (unicode(k), unicode(v))
+                 for k, v in six.iteritems(self))
+        text = '{%s}' % ', '.join(pairs)
+        return encodeutils.safe_decode(text)
 
     @staticmethod
     def toposort(graph):
@@ -155,7 +170,7 @@ class Graph(collections.defaultdict):
             else:
                 # There are nodes remaining, but none without
                 # dependencies: a cycle
-                raise CircularDependencyException(cycle=str(graph))
+                raise CircularDependencyException(cycle=six.text_type(graph))
 
 
 class Dependencies(object):
@@ -227,10 +242,17 @@ class Dependencies(object):
         '''
         return str(self._graph)
 
+    def __unicode__(self):
+        '''
+        Return a human-readable string representation of the dependency graph
+        '''
+        return unicode(self._graph)
+
     def __repr__(self):
         '''Return a string representation of the object.'''
         edge_reprs = (repr(e) for e in self._graph.edges())
-        return 'Dependencies([%s])' % ', '.join(edge_reprs)
+        text = 'Dependencies([%s])' % ', '.join(edge_reprs)
+        return encodeutils.safe_encode(text)
 
     def graph(self, reverse=False):
         '''Return a copy of the underlying dependency graph.'''
