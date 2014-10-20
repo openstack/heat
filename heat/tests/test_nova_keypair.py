@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import mock
 import six
 
 from heat.common import exception
@@ -135,6 +136,21 @@ class NovaKeyPairTest(common.HeatTestCase):
         scheduler.TaskRunner(test_res.delete)()
         self.assertEqual((test_res.DELETE, test_res.COMPLETE), test_res.state)
         self.m.VerifyAll()
+
+    def test_check_key(self):
+        res = self._get_test_resource(self.kp_template)
+        res.nova = mock.Mock()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_key_fail(self):
+        res = self._get_test_resource(self.kp_template)
+        res.nova = mock.Mock()
+        res.nova().keypairs.get.side_effect = Exception("boom")
+        exc = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(res.check))
+        self.assertIn("boom", six.text_type(exc))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
 
     def test_delete_key_not_found(self):
         """Test delete non-existent key."""
