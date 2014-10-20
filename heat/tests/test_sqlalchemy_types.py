@@ -47,8 +47,20 @@ class JsonTest(testtools.TestCase):
         result = self.sqltype.process_bind_param(value, dialect)
         self.assertEqual('{"foo": "bar"}', result)
 
+    def test_process_bind_param_null(self):
+        dialect = None
+        value = None
+        result = self.sqltype.process_bind_param(value, dialect)
+        self.assertEqual('null', result)
+
     def test_process_result_value(self):
         dialect = None
         value = '{"foo": "bar"}'
         result = self.sqltype.process_result_value(value, dialect)
         self.assertEqual({'foo': 'bar'}, result)
+
+    def test_process_result_value_null(self):
+        dialect = None
+        value = None
+        result = self.sqltype.process_result_value(value, dialect)
+        self.assertIsNone(result)
