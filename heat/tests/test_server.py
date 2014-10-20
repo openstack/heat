@@ -67,6 +67,36 @@ wp_template = '''
 }
 '''
 
+subnet_template = '''
+heat_template_version: 2013-05-23
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+      networks:
+      - { uuid: 12345 }
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network: 12345
+'''
+
+no_subnet_template = '''
+heat_template_version: 2013-05-23
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network: 12345
+'''
+
 
 class ServersTest(HeatTestCase):
     def setUp(self):
@@ -90,8 +120,8 @@ class ServersTest(HeatTestCase):
         yield max_personality_size
         yield max_server_meta
 
-    def _setup_test_stack(self, stack_name):
-        t = template_format.parse(wp_template)
+    def _setup_test_stack(self, stack_name, test_templ=wp_template):
+        t = template_format.parse(test_templ)
         templ = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              environment.Environment({'key_name': 'test'}),
@@ -187,6 +217,26 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+
+    def test_subnet_dependency(self):
+        template, stack = self._setup_test_stack('subnet-test',
+                                                 subnet_template)
+        server_rsrc = stack['server']
+        subnet_rsrc = stack['subnet']
+        deps = []
+        server_rsrc.add_dependencies(deps)
+        self.assertEqual(4, len(deps))
+        self.assertEqual(subnet_rsrc, deps[3])
+
+    def test_subnet_nodeps(self):
+        template, stack = self._setup_test_stack('subnet-test',
+                                                 no_subnet_template)
+        server_rsrc = stack['server']
+        subnet_rsrc = stack['subnet']
+        deps = []
+        server_rsrc.add_dependencies(deps)
+        self.assertEqual(2, len(deps))
+        self.assertNotIn(subnet_rsrc, deps)
 
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
