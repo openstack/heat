@@ -17,6 +17,7 @@ from heat.engine import constraints as constr
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.software_config import software_config as sc
+from heat.engine import support
 
 
 class SoftwareComponent(sc.SoftwareConfig):
@@ -33,6 +34,8 @@ class SoftwareComponent(sc.SoftwareConfig):
     SoftwareConfig resource, and only adds handling for the additional
     'configs' property and attribute.
     '''
+
+    support_status = support.SupportStatus(version='2014.2')
 
     PROPERTIES = (
         CONFIGS, INPUTS, OUTPUTS, OPTIONS,
