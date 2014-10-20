@@ -138,7 +138,8 @@ class InstanceGroupTest(common.HeatTestCase):
         class MyInstance(instance.Instance):
             """A customized Instance resource."""
 
-        original_instance = resource.get_class("AWS::EC2::Instance")
+        original_instance = resources.global_env().get_class(
+            "AWS::EC2::Instance")
         resource._register_class("AWS::EC2::Instance", MyInstance)
         self.addCleanup(resource._register_class, "AWS::EC2::Instance",
                         original_instance)

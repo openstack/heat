@@ -43,7 +43,6 @@ from heat.engine import environment
 from heat.engine.event import Event
 from heat.engine import parameter_groups
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine import resources
 from heat.engine import stack as parser
 from heat.engine import stack_lock
@@ -949,7 +948,7 @@ class EngineService(service.Service):
 
         :param cnxt: RPC context.
         """
-        return resource.get_types(support_status)
+        return resources.global_env().get_types(support_status)
 
     def resource_schema(self, cnxt, type_name):
         """
@@ -959,7 +958,7 @@ class EngineService(service.Service):
         :param type_name: Name of the resource type to obtain the schema of.
         """
         try:
-            resource_class = resource.get_class(type_name)
+            resource_class = resources.global_env().get_class(type_name)
         except exception.StackValidationFailed:
             raise exception.ResourceTypeNotFound(type_name=type_name)
 
@@ -988,8 +987,8 @@ class EngineService(service.Service):
         :param type_name: Name of the resource type to generate a template for.
         """
         try:
-            return \
-                resource.get_class(type_name).resource_to_template(type_name)
+            return resources.global_env().get_class(
+                type_name).resource_to_template(type_name)
         except exception.StackValidationFailed:
             raise exception.ResourceTypeNotFound(type_name=type_name)
 

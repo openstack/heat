@@ -30,6 +30,7 @@ from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
@@ -64,11 +65,12 @@ class ResourceTest(HeatTestCase):
         self.patch('heat.engine.resource.warnings')
 
     def test_get_class_ok(self):
-        cls = resource.get_class('GenericResourceType')
+        cls = resources.global_env().get_class('GenericResourceType')
         self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_class_noexist(self):
-        self.assertRaises(exception.StackValidationFailed, resource.get_class,
+        self.assertRaises(exception.StackValidationFailed,
+                          resources.global_env().get_class,
                           'NoExistResourceType')
 
     def test_resource_new_ok(self):

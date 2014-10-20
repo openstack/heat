@@ -45,16 +45,6 @@ cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
 LOG = logging.getLogger(__name__)
 
 
-def get_types(support_status):
-    '''Return a list of valid resource types.'''
-    return resources.global_env().get_types(support_status)
-
-
-def get_class(resource_type, resource_name=None):
-    '''Return the Resource class for a given resource type.'''
-    return resources.global_env().get_class(resource_type, resource_name)
-
-
 def _register_class(resource_type, resource_class):
     resources.global_env().register_class(resource_type, resource_class)
 
