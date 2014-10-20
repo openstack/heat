@@ -513,6 +513,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
 class SoftwareDeployments(resource_group.ResourceGroup):
 
+    support_status = support.SupportStatus(version='2014.2')
+
     PROPERTIES = (
         SERVERS,
         CONFIG,
