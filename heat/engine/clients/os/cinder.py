@@ -15,6 +15,7 @@ import logging
 
 from cinderclient import client as cc
 from cinderclient import exceptions
+from keystoneclient import exceptions as ks_exceptions
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -36,12 +37,12 @@ class CinderClientPlugin(clients.client_plugin.ClientPlugin):
         try:
             self.url_for(service_type='volumev2', endpoint_type=endpoint_type)
             return 2
-        except exceptions.EndpointNotFound:
+        except ks_exceptions.EndpointNotFound:
             try:
                 self.url_for(service_type='volume',
                              endpoint_type=endpoint_type)
                 return 1
-            except exceptions.EndpointNotFound:
+            except ks_exceptions.EndpointNotFound:
                 return None
 
     def _create(self):

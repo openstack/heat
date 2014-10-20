@@ -19,7 +19,7 @@ wrong the tests might raise AssertionError. I've indicated in comments the
 places where actual behavior differs from the spec.
 """
 
-from cinderclient import exceptions as cinder_exceptions
+from keystoneclient import exceptions
 
 from heat.common import context
 
@@ -135,7 +135,9 @@ class FakeKeystoneClient(object):
         if self.only_services is not None:
             if 'service_type' in kwargs and \
                     kwargs['service_type'] not in self.only_services:
-                raise cinder_exceptions.EndpointNotFound()
+                # keystone client throws keystone exceptions, not cinder
+                # exceptions.
+                raise exceptions.EndpointNotFound()
         return 'http://example.com:1234/v1'
 
     def create_trust_context(self):
