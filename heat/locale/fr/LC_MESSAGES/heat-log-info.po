@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-09-25 06:13+0000\n"
+"POT-Creation-Date: 2014-10-20 06:02+0000\n"
 "PO-Revision-Date: 2014-09-24 20:48+0000\n"
 "Last-Translator: Maxime COQUEREL <max.coquerel@gmail.com>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
@@ -49,7 +49,7 @@ msgstr "Succès de l'authentification AWS"
 msgid "AWS authentication failure."
 msgstr "Echec de l'authentification AWS"
 
-#: heat/api/cfn/v1/stacks.py:439
+#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:786
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -58,20 +58,377 @@ msgstr "validate_template"
 msgid "Fetching data from %s"
 msgstr "Recherche de donnée depuis %s"
 
+#: heat/engine/environment.py:221
+#, python-format
+msgid "Registering %(path)s -> %(value)s"
+msgstr ""
+
+#: heat/engine/environment.py:443
+#, python-format
+msgid "Loading %s"
+msgstr ""
+
+#: heat/engine/resource.py:551
+#, python-format
+msgid "creating %s"
+msgstr ""
+
+#: heat/engine/resource.py:700
+#, python-format
+msgid "updating %s"
+msgstr ""
+
+#: heat/engine/resource.py:725
+#, python-format
+msgid "Checking %s"
+msgstr ""
+
+#: heat/engine/resource.py:746
+#, python-format
+msgid "suspending %s"
+msgstr ""
+
+#: heat/engine/resource.py:762
+#, python-format
+msgid "resuming %s"
+msgstr ""
+
+#: heat/engine/resource.py:767
+#, python-format
+msgid "snapshotting %s"
+msgstr ""
+
+#: heat/engine/resource.py:813
+#, python-format
+msgid "Validating %s"
+msgstr ""
+
+#: heat/engine/resource.py:846
+#, python-format
+msgid "deleting %s"
+msgstr ""
+
+#: heat/engine/scheduler.py:213
+#, python-format
+msgid "%s timed out"
+msgstr ""
+
+#: heat/engine/service.py:408
+msgid "Attempting to stop engine service..."
+msgstr ""
+
+#: heat/engine/service.py:419
+#, python-format
+msgid "Waiting stack %s processing to be finished"
+msgstr ""
+
+#: heat/engine/service.py:423
+#, python-format
+msgid "Stack %s processing was finished"
+msgstr ""
+
+#: heat/engine/service.py:426
+msgid "All threads were gone, terminating engine"
+msgstr ""
+
+#: heat/engine/service.py:605
+#, python-format
+msgid "previewing stack %s"
+msgstr ""
+
+#: heat/engine/service.py:633
+#, python-format
+msgid "Creating stack %s"
+msgstr ""
+
+#: heat/engine/service.py:655
+#, python-format
+msgid "Stack create failed, status %s"
+msgstr ""
+
+#: heat/engine/service.py:690
+#, python-format
+msgid "Updating stack %s"
+msgstr ""
+
+#: heat/engine/service.py:752
+#, python-format
+msgid "Starting cancel of updating stack %s"
+msgstr ""
+
+#: heat/engine/service.py:881
+#, python-format
+msgid "Deleting stack %s"
+msgstr ""
+
+#: heat/engine/service.py:934
+#, python-format
+msgid "abandoning stack %s"
+msgstr ""
+
+#: heat/engine/service.py:1235
+#, python-format
+msgid "Checking stack %s"
+msgstr ""
+
+#: heat/engine/stack.py:515
+#, python-format
+msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
+msgstr ""
+
+#: heat/engine/stack.py:946
+#, python-format
+msgid ""
+"Tried to delete user_creds that do not exist (stack=%(stack)s user_creds_id="
+"%(uc)s)"
+msgstr ""
+
+#: heat/engine/stack.py:955
+#, python-format
+msgid "Tried to store a stack that does not exist %s "
+msgstr ""
+
+#: heat/engine/stack.py:972 heat/engine/stack.py:984
+#, python-format
+msgid "Tried to delete stack that does not exist %s "
+msgstr ""
+
+#: heat/engine/stack.py:1000
+#, python-format
+msgid "%s is already suspended"
+msgstr ""
+
+#: heat/engine/stack.py:1020
+#, python-format
+msgid "%s is already resumed"
+msgstr ""
+
+#: heat/engine/stack_lock.py:84
+#, python-format
+msgid ""
+"Stale lock detected on stack %(stack)s.  Engine %(engine)s will attempt to "
+"steal the lock"
+msgstr ""
+
+#: heat/engine/stack_lock.py:92
+#, python-format
+msgid "Engine %(engine)s successfully stole the lock on stack %(stack)s"
+msgstr ""
+
+#: heat/engine/stack_lock.py:99
+#, python-format
+msgid ""
+"The lock on stack %(stack)s was released while engine %(engine)s was "
+"stealing it. Trying again"
+msgstr ""
+
+#: heat/engine/stack_lock.py:106
+#, python-format
+msgid ""
+"Failed to steal lock on stack %(stack)s. Engine %(engine)s stole the lock "
+"first"
+msgstr ""
+
+#: heat/engine/stack_resource.py:258
+msgid "Stack not found to delete"
+msgstr ""
+
+#: heat/engine/update.py:135
+#, python-format
+msgid "Resource %(res_name)s for stack %(stack_name)s updated"
+msgstr ""
+
+#: heat/engine/watchrule.py:252
+#, python-format
+msgid ""
+"WATCH: stack:%(stack)s, watch_name:%(watch_name)s, new_state:%(new_state)s"
+msgstr ""
+
+#: heat/engine/watchrule.py:258
+#, python-format
+msgid "no action for new state %s"
+msgstr ""
+
+#: heat/engine/clients/os/cinder.py:60
+#, python-format
+msgid "Creating Cinder client with volume API version %d."
+msgstr ""
+
+#: heat/engine/clients/os/glance.py:96
+#, python-format
+msgid "Image %s was not found in glance"
+msgstr ""
+
+#: heat/engine/clients/os/glance.py:100
+#, python-format
+msgid "Multiple images %s were found in glance with name"
+msgstr ""
+
+#: heat/engine/resources/autoscaling.py:621
+#, python-format
+msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
+msgstr ""
+
+#: heat/engine/resources/eip.py:102 heat/engine/resources/eip.py:116
+#, python-format
+msgid "ElasticIp create %s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:87
+#: heat/engine/resources/aws/scaling_policy.py:118
+#, python-format
+msgid "%(name)s Alarm, new state %(state)s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:95
+#, python-format
+msgid "%(name)s Alarm, can not find instance %(instance)s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:101
+#, python-format
+msgid "%(name)s Alarm, restarting resource: %(victim)s"
+msgstr ""
+
+#: heat/engine/resources/instance.py:462
+#, python-format
+msgid "%(name)s._resolve_attribute(%(attname)s) == %(res)s"
+msgstr ""
+
+#: heat/engine/resources/loadbalancer.py:439
+#, python-format
+msgid "Using custom loadbalancer template %s"
+msgstr ""
+
+#: heat/engine/resources/os_database.py:352
+#, python-format
+msgid ""
+"Database instance %(database)s created (flavor:%(flavor)s,volume:%(volume)s, "
+"datastore:%(datastore_type)s, datastore_version:%(datastore_version)s)"
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:136
+#, python-format
+msgid "Cluster \"%s\" is being started."
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:148
+#, python-format
+msgid "Cluster '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_cluster.py:160
+#, python-format
+msgid "Cluster '%s' has been deleted"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:150
+#, python-format
+msgid "Node Group Template '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:163
+#, python-format
+msgid "Node Group Template '%s' has been deleted."
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:308
+#, python-format
+msgid "Cluster Template '%s' has been created"
+msgstr ""
+
+#: heat/engine/resources/sahara_templates.py:321
+#, python-format
+msgid "Cluster Template '%s' has been deleted."
+msgstr ""
+
+#: heat/engine/resources/server.py:943
+#, python-format
+msgid ""
+"For the server \"%(server)s\" the \"%(uuid)s\" property is set to network "
+"\"%(network)s\". \"%(uuid)s\" property is deprecated. Use \"%(id)s\"  "
+"property instead."
+msgstr ""
+
+#: heat/engine/resources/swiftsignal.py:244
+#: heat/engine/resources/wait_condition.py:367
+#, python-format
+msgid "%(name)s Failed (%(failure)s)"
+msgstr ""
+
+#: heat/engine/resources/swiftsignal.py:251
+#: heat/engine/resources/wait_condition.py:372
+#, python-format
+msgid "%s Succeeded"
+msgstr ""
+
+#: heat/engine/resources/user.py:227 heat/engine/resources/user.py:247
+#, python-format
+msgid "could not get secret for %(username)s Error:%(msg)s"
+msgstr ""
+
+#: heat/engine/resources/volume.py:242
+#, python-format
+msgid "Resize failed: Volume %(vol)s is in %(status)s state."
+msgstr ""
+
+#: heat/engine/resources/volume.py:248 heat/engine/resources/volume.py:305
+#, python-format
+msgid "%s - complete"
+msgstr ""
+
+#: heat/engine/resources/volume.py:297
+#, python-format
+msgid "Attachment failed - volume %(vol)s is in %(status)s status"
+msgstr ""
+
+#: heat/engine/resources/volume.py:368
+#, python-format
+msgid "%(name)s - status: %(status)s"
+msgstr ""
+
+#: heat/engine/resources/volume.py:371
+#, python-format
+msgid "Detachment failed - volume %(vol)s is in %(status)s status"
+msgstr ""
+
+#: heat/engine/resources/volume.py:395
+#, python-format
+msgid "Server %(srv)s still has attachment %(att)s."
+msgstr ""
+
+#: heat/engine/resources/volume.py:399
+#, python-format
+msgid "Volume %(vol)s is detached from server %(srv)s"
+msgstr ""
+
+#: heat/engine/resources/wait_condition.py:359
+#, python-format
+msgid "%(name)s Timed out (%(timeout)s)"
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:124
+#: heat/engine/resources/openstack/scaling_policy.py:133
+#, python-format
+msgid "%(name)s NOT performing scaling action, cooldown %(cooldown)s"
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:138
+#: heat/engine/resources/openstack/scaling_policy.py:147
+#, python-format
+msgid ""
+"%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by %(filter)s"
+msgstr ""
+
+#: heat/engine/resources/openstack/scaling_policy.py:127
+#, python-format
+msgid "Alarm %(name)s, new state %(state)s"
+msgstr ""
+
 #: heat/openstack/common/eventlet_backdoor.py:140
 #, python-format
 msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
 msgstr "Eventlet backdoor en écoute sur le port %(port)s for process %(pid)d"
-
-#: heat/openstack/common/lockutils.py:83
-#, python-format
-msgid "Created lock path: %s"
-msgstr "Chemin de verrou créé: %s"
-
-#: heat/openstack/common/lockutils.py:250
-#, python-format
-msgid "Failed to remove file %(file)s"
-msgstr "Echec de la suppression du fichier %(file)s"
 
 #: heat/openstack/common/service.py:176
 #, python-format

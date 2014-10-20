@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-09-25 06:13+0000\n"
+"POT-Creation-Date: 2014-10-20 06:02+0000\n"
 "PO-Revision-Date: 2014-08-07 07:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Japanese (http://www.transifex.com/projects/p/heat/language/"
@@ -25,12 +25,12 @@ msgstr ""
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 
-#: heat/api/aws/utils.py:105
+#: heat/api/aws/utils.py:98
 #, python-format
 msgid "Request does not contain %s parameter!"
 msgstr ""
 
-#: heat/api/cloudwatch/watch.py:274
+#: heat/api/cloudwatch/watch.py:254
 msgid "Request does not contain required MetricData"
 msgstr ""
 
@@ -64,20 +64,20 @@ msgstr ""
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:43
+#: heat/common/lifecycle_plugin_utils.py:44
 msgid "failed to get lifecycle plug point classes"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:50
+#: heat/common/lifecycle_plugin_utils.py:51
 #, python-format
 msgid "failed to instantiate stack lifecycle class %s"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:55
+#: heat/common/lifecycle_plugin_utils.py:56
 msgid "failed to sort lifecycle plug point classes"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:108
+#: heat/common/lifecycle_plugin_utils.py:109
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr ""
@@ -85,6 +85,85 @@ msgstr ""
 #: heat/common/plugin_loader.py:97
 #, python-format
 msgid "Failed to import module %s"
+msgstr ""
+
+#: heat/engine/api.py:267
+msgid "Unexpected number of keys in watch_data.data!"
+msgstr ""
+
+#: heat/engine/environment.py:436
+#, python-format
+msgid "Failed to read %s"
+msgstr ""
+
+#: heat/engine/environment.py:448
+#, python-format
+msgid "Failed to parse %(file_path)s"
+msgstr ""
+
+#: heat/engine/environment.py:452
+#, python-format
+msgid "Failed to read %(file_path)s"
+msgstr ""
+
+#: heat/engine/plugin_manager.py:97
+#, python-format
+msgid "Failed to load %(mapping_name)s from %(module)s"
+msgstr ""
+
+#: heat/engine/plugin_manager.py:104
+#, python-format
+msgid "Invalid type for %(mapping_name)s from %(module)s"
+msgstr ""
+
+#: heat/engine/resource.py:908 heat/engine/resource.py:935
+#, python-format
+msgid "DB error %s"
+msgstr ""
+
+#: heat/engine/service.py:261
+#, python-format
+msgid "Unable to retrieve stack %s for periodic task"
+msgstr ""
+
+#: heat/engine/service.py:1348
+msgid "Filtering by namespace/metric not yet supported"
+msgstr ""
+
+#: heat/engine/stack.py:710
+#, python-format
+msgid "Unexpected action %s passed to update!"
+msgstr ""
+
+#: heat/engine/stack.py:829
+#, python-format
+msgid "Unexpected action %s passed to delete!"
+msgstr ""
+
+#: heat/engine/stack.py:1068
+#, python-format
+msgid "Resource %(name)s delete failed: %(ex)s"
+msgstr ""
+
+#: heat/engine/resources/eip.py:109
+msgid ""
+"No default floating IP pool configured. Set 'default_floating_pool' in nova."
+"conf."
+msgstr ""
+
+#: heat/engine/resources/eip.py:322 heat/engine/resources/eip.py:345
+msgid "Port not specified."
+msgstr ""
+
+#: heat/engine/resources/nova_floatingip.py:75
+msgid ""
+"Could not allocate floating IP. Probably there is no default floating IP "
+"pool is configured."
+msgstr ""
+
+#: heat/engine/resources/wait_condition.py:82
+#, python-format
+msgid "Metadata failed validation for %s"
 msgstr ""
 
 #: heat/openstack/common/excutils.py:76
@@ -96,11 +175,6 @@ msgstr "除去される元の例外: %s"
 #, python-format
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "予期せぬ例外が、%d回()発生しました。再試行中。"
-
-#: heat/openstack/common/lockutils.py:120
-#, python-format
-msgid "Could not release the acquired lock `%s`"
-msgstr "取得したロック `%s` を解放できませんでした"
 
 #: heat/openstack/common/loopingcall.py:89
 msgid "in fixed duration looping call"
