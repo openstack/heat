@@ -34,6 +34,8 @@ class Json(LongText):
         return dumps(value)
 
     def process_result_value(self, value, dialect):
+        if value is None:
+            return None
         return loads(value)
 
 
