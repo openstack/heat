@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine import resource
-from heat.engine.resources import autoscaling
+from heat.engine.resources.openstack import autoscaling_group as asg
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
@@ -267,7 +267,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
     def test_attribute_current_size(self):
         rsrc = self.create_stack(self.parsed)['my-group']
-        mock_instances = self.patchobject(autoscaling.AutoScalingResourceGroup,
+        mock_instances = self.patchobject(asg.AutoScalingResourceGroup,
                                           'get_instances')
         mock_instances.return_value = ['one', 'two', 'three']
 
@@ -275,7 +275,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
     def test_attribute_current_size_with_path(self):
         rsrc = self.create_stack(self.parsed)['my-group']
-        mock_instances = self.patchobject(autoscaling.AutoScalingResourceGroup,
+        mock_instances = self.patchobject(asg.AutoScalingResourceGroup,
                                           'get_instances')
         mock_instances.return_value = ['one', 'two', 'three', 'four']
         self.assertEqual(4, rsrc.FnGetAtt('current_size', 'name'))

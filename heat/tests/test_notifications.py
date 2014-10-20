@@ -21,7 +21,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 # imports for mocking
-from heat.engine.resources import autoscaling
+from heat.engine.resources.aws import autoscaling_group as aws_asg
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import nova_keypair
@@ -272,7 +272,7 @@ class ScaleNotificationTest(common.HeatTestCase):
         group = self.create_autoscaling_stack_and_get_group()
 
         err_message = 'Boooom'
-        m_as = self.patchobject(autoscaling.AutoScalingGroup, 'resize')
+        m_as = self.patchobject(aws_asg.AutoScalingGroup, 'resize')
         m_as.side_effect = exception.Error(err_message)
 
         info, error = self.expected_notifs_calls(group,
