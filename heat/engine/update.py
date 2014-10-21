@@ -54,11 +54,12 @@ class StackUpdate(object):
         cleanup_prev = scheduler.DependencyTaskGroup(
             self.previous_stack.dependencies,
             self._remove_backup_resource,
-            reverse=True,
-            error_wait_time=self.error_wait_time)
+            reverse=True)
 
-        self.updater = scheduler.DependencyTaskGroup(self.dependencies(),
-                                                     self._resource_update)
+        self.updater = scheduler.DependencyTaskGroup(
+            self.dependencies(),
+            self._resource_update,
+            error_wait_time=self.error_wait_time)
 
         if not self.rollback:
             yield cleanup_prev()
