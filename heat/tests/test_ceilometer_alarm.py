@@ -321,6 +321,24 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_alarm_metadata_prefix(self):
+        t = template_format.parse(alarm_template)
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        # Test for bug/1383521, where meter_name is in NOVA_METERS
+        properties[alarm.CeilometerAlarm.METER_NAME] = 'memory.usage'
+        properties['matching_metadata'] =\
+            {'metadata.user_metadata.groupname': 'foo'}
+
+        self.stack = self.create_stack(template=json.dumps(t))
+
+        rsrc = self.stack['MEMAlarmHigh']
+        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
+        query = rsrc.properties.data['threshold_rule']['query']
+        expected_query = [{'field': u'metadata.user_metadata.groupname',
+                           'value': u'foo', 'op': 'eq'}]
+        self.assertEqual(expected_query, query)
+
     def test_mem_alarm_high_correct_matching_metadata(self):
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
