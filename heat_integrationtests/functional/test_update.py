@@ -1,0 +1,116 @@
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import logging
+
+from heat_integrationtests.common import test
+
+
+LOG = logging.getLogger(__name__)
+
+
+class UpdateStackTest(test.HeatIntegrationTest):
+
+    template = '''
+heat_template_version: 2013-05-23
+resources:
+  random1:
+    type: OS::Heat::RandomString
+'''
+    update_template = '''
+heat_template_version: 2013-05-23
+resources:
+  random1:
+    type: OS::Heat::RandomString
+  random2:
+    type: OS::Heat::RandomString
+'''
+
+    def setUp(self):
+        super(UpdateStackTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def update_stack(self, stack_identifier, template):
+        stack_name = stack_identifier.split('/')[0]
+        self.client.stacks.update(
+            stack_id=stack_identifier,
+            stack_name=stack_name,
+            template=template,
+            files={},
+            disable_rollback=True,
+            parameters={},
+            environment={}
+        )
+        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
+
+    def list_resources(self, stack_identifier):
+        resources = self.client.resources.list(stack_identifier)
+        return dict((r.resource_name, r.resource_type) for r in resources)
+
+    def test_stack_update_nochange(self):
+        stack_name = self._stack_rand_name()
+        self.client.stacks.create(
+            stack_name=stack_name,
+            template=self.template,
+            files={},
+            disable_rollback=True,
+            parameters={},
+            environment={}
+        )
+        self.addCleanup(self.client.stacks.delete, stack_name)
+
+        stack = self.client.stacks.get(stack_name)
+        stack_identifier = '%s/%s' % (stack_name, stack.id)
+
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        expected_resources = {'random1': 'OS::Heat::RandomString'}
+        self.assertEqual(expected_resources,
+                         self.list_resources(stack_identifier))
+
+        # Update with no changes, resources should be unchanged
+        self.update_stack(stack_identifier, self.template)
+        self.assertEqual(expected_resources,
+                         self.list_resources(stack_identifier))
+
+    def test_stack_update_add_remove(self):
+        stack_name = self._stack_rand_name()
+
+        self.client.stacks.create(
+            stack_name=stack_name,
+            template=self.template,
+            files={},
+            disable_rollback=True,
+            parameters={},
+            environment={}
+        )
+        self.addCleanup(self.client.stacks.delete, stack_name)
+
+        stack = self.client.stacks.get(stack_name)
+        stack_identifier = '%s/%s' % (stack_name, stack.id)
+
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        initial_resources = {'random1': 'OS::Heat::RandomString'}
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
+
+        # Add one resource via a stack update
+        self.update_stack(stack_identifier, self.update_template)
+        stack = self.client.stacks.get(stack_identifier)
+        updated_resources = {'random1': 'OS::Heat::RandomString',
+                             'random2': 'OS::Heat::RandomString'}
+        self.assertEqual(updated_resources,
+                         self.list_resources(stack_identifier))
+
+        # Then remove it by updating with the original template
+        self.update_stack(stack_identifier, self.template)
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
