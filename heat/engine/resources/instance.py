@@ -60,16 +60,6 @@ class Restarter(signal_responder.SignalResponder):
         ),
     }
 
-    def _find_resource(self, resource_id):
-        '''
-        Return the resource with the specified instance ID, or None if it
-        cannot be found.
-        '''
-        for resource in self.stack.itervalues():
-            if resource.resource_id == resource_id:
-                return resource
-        return None
-
     def handle_create(self):
         super(Restarter, self).handle_create()
         self.resource_id_set(self._get_user_id())
@@ -90,12 +80,13 @@ class Restarter(signal_responder.SignalResponder):
         if alarm_state != 'alarm':
             return
 
-        victim = self._find_resource(self.properties[self.INSTANCE_ID])
+        target_id = self.properties[self.INSTANCE_ID]
+        victim = self.stack.resource_by_refid(target_id)
         if victim is None:
             LOG.info(_LI('%(name)s Alarm, can not find instance '
                          '%(instance)s'),
                      {'name': self.name,
-                      'instance': self.properties[self.INSTANCE_ID]})
+                      'instance': target_id})
             return
 
         LOG.info(_LI('%(name)s Alarm, restarting resource: %(victim)s'),
