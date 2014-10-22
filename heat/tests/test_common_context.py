@@ -14,11 +14,11 @@
 import mock
 import os
 from oslo.config import cfg
+from oslo.middleware import request_id
 import webob
 
 from heat.common import context
 from heat.common import exception
-from heat.openstack.common.middleware import request_id
 from heat.openstack.common import policy as base_policy
 from heat.tests import common
 

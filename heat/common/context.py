@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.middleware import request_id as oslo_request_id
 from oslo.utils import importutils
 
 from heat.common import exception
@@ -20,7 +21,6 @@ from heat.db import api as db_api
 from heat.engine import clients
 from heat.openstack.common import context
 from heat.openstack.common import local
-from heat.openstack.common.middleware import request_id
 
 
 class RequestContext(context.RequestContext):
@@ -156,7 +156,7 @@ class ContextMiddleware(wsgi.Middleware):
             if roles is not None:
                 roles = roles.split(',')
             token_info = environ.get('keystone.token_info')
-            req_id = environ.get(request_id.ENV_REQUEST_ID)
+            req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
 
         except Exception:
             raise exception.NotAuthenticated()
