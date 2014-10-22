@@ -19,7 +19,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources import queue  # noqa
@@ -70,7 +70,7 @@ class FakeQueue(object):
         pass
 
 
-class ZaqarMessageQueueTest(HeatTestCase):
+class ZaqarMessageQueueTest(common.HeatTestCase):
     def setUp(self):
         super(ZaqarMessageQueueTest, self).setUp()
         self.fc = self.m.CreateMockAnything()

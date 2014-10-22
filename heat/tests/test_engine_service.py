@@ -48,7 +48,7 @@ from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.rpc import api as engine_api
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -368,7 +368,7 @@ class DummyThreadGroup(object):
         pass
 
 
-class StackCreateTest(HeatTestCase):
+class StackCreateTest(common.HeatTestCase):
     def setUp(self):
         super(StackCreateTest, self).setUp()
 
@@ -462,7 +462,7 @@ class StackCreateTest(HeatTestCase):
         self.assertEqual('COMPLETE', db_s.status, )
 
 
-class StackServiceCreateUpdateDeleteTest(HeatTestCase):
+class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
@@ -1428,7 +1428,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                          six.text_type(ex))
 
 
-class StackServiceUpdateActionsNotSupportedTest(HeatTestCase):
+class StackServiceUpdateActionsNotSupportedTest(common.HeatTestCase):
 
     scenarios = [
         ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
@@ -1471,7 +1471,7 @@ class StackServiceUpdateActionsNotSupportedTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class StackServiceActionsTest(HeatTestCase):
+class StackServiceActionsTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackServiceActionsTest, self).setUp()
@@ -1560,7 +1560,7 @@ class StackServiceActionsTest(HeatTestCase):
         self.assertTrue(stack.check.called)
 
 
-class StackServiceAuthorizeTest(HeatTestCase):
+class StackServiceAuthorizeTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackServiceAuthorizeTest, self).setUp()
@@ -1655,7 +1655,7 @@ class StackServiceAuthorizeTest(HeatTestCase):
             self.ctx, self.stack, 'WebServer'))
 
 
-class StackServiceTest(HeatTestCase):
+class StackServiceTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackServiceTest, self).setUp()
@@ -3060,7 +3060,7 @@ class StackServiceTest(HeatTestCase):
                           self.ctx, 'test_existing_stack', parsed_template)
 
 
-class SoftwareConfigServiceTest(HeatTestCase):
+class SoftwareConfigServiceTest(common.HeatTestCase):
 
     def setUp(self):
         super(SoftwareConfigServiceTest, self).setUp()
@@ -3435,7 +3435,7 @@ class SoftwareConfigServiceTest(HeatTestCase):
             'http://192.168.2.2/foo/bar', jsonutils.dumps(result_metadata))
 
 
-class ThreadGroupManagerTest(HeatTestCase):
+class ThreadGroupManagerTest(common.HeatTestCase):
     def setUp(self):
         super(ThreadGroupManagerTest, self).setUp()
         self.f = 'function'
@@ -3520,7 +3520,7 @@ class ThreadGroupManagerTest(HeatTestCase):
         thm.send(stack_id, 'test_message')
 
 
-class ThreadGroupManagerStopTest(HeatTestCase):
+class ThreadGroupManagerStopTest(common.HeatTestCase):
     def test_tgm_stop(self):
         stack_id = 'test'
         done = []
@@ -3546,7 +3546,7 @@ class ThreadGroupManagerStopTest(HeatTestCase):
         self.assertNotIn(stack_id, thm.events)
 
 
-class SnapshotServiceTest(HeatTestCase):
+class SnapshotServiceTest(common.HeatTestCase):
 
     def setUp(self):
         super(SnapshotServiceTest, self).setUp()

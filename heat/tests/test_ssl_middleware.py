@@ -15,10 +15,10 @@ from oslo.config import cfg
 import webob
 
 from heat.api.middleware import ssl
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class SSLMiddlewareTest(HeatTestCase):
+class SSLMiddlewareTest(common.HeatTestCase):
     scenarios = [('with_forwarded_proto_default_header',
                   dict(forwarded_protocol='https',
                        secure_proxy_ssl_header=None,

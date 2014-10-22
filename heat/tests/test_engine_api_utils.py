@@ -26,12 +26,12 @@ from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import resource
 from heat.rpc import api as rpc_api
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
-class FormatTest(HeatTestCase):
+class FormatTest(common.HeatTestCase):
     def setUp(self):
         super(FormatTest, self).setUp()
 
@@ -310,7 +310,7 @@ class FormatTest(HeatTestCase):
         self.assertEqual(expected, info)
 
 
-class FormatValidateParameterTest(HeatTestCase):
+class FormatValidateParameterTest(common.HeatTestCase):
 
     base_template = '''
     {
@@ -852,7 +852,7 @@ class FormatValidateParameterTest(HeatTestCase):
         self.assertEqual(self.expected, param_formated)
 
 
-class FormatSoftwareConfigDeploymentTest(HeatTestCase):
+class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
 
     def _dummy_software_config(self):
         config = mock.Mock()
@@ -908,7 +908,7 @@ class FormatSoftwareConfigDeploymentTest(HeatTestCase):
         self.assertIsNone(api.format_software_deployment(None))
 
 
-class TestExtractArgs(HeatTestCase):
+class TestExtractArgs(common.HeatTestCase):
     def test_timeout_extract(self):
         p = {'timeout_mins': '5'}
         args = api.extract_args(p)

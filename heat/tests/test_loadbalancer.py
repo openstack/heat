@@ -28,7 +28,7 @@ from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -100,7 +100,7 @@ lb_template_nokey = '''
 '''
 
 
-class LoadBalancerTest(HeatTestCase):
+class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes.FakeClient()

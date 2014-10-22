@@ -18,7 +18,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import s3
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -62,7 +62,7 @@ swift_template = '''
 '''
 
 
-class s3Test(HeatTestCase):
+class s3Test(common.HeatTestCase):
     def setUp(self):
         super(s3Test, self).setUp()
         self.m.CreateMock(sc.Connection)

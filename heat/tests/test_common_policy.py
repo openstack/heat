@@ -21,13 +21,13 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import policy
 from heat.openstack.common import policy as base_policy
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
-class TestPolicyEnforcer(HeatTestCase):
+class TestPolicyEnforcer(common.HeatTestCase):
     cfn_actions = ("ListStacks", "CreateStack", "DescribeStacks",
                    "DeleteStack", "UpdateStack", "DescribeStackEvents",
                    "ValidateTemplate", "GetTemplate",

@@ -17,7 +17,7 @@ import types
 import six
 
 from heat.engine import plugin_manager
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 def legacy_test_mapping():
@@ -44,7 +44,7 @@ class MappingTestError(Exception):
     pass
 
 
-class TestPluginManager(HeatTestCase):
+class TestPluginManager(common.HeatTestCase):
 
     @staticmethod
     def module():

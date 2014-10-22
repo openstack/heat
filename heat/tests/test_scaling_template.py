@@ -15,10 +15,10 @@ import itertools
 
 from heat.common import short_id
 from heat.scaling import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class ResourceTemplatesTest(HeatTestCase):
+class ResourceTemplatesTest(common.HeatTestCase):
 
     def setUp(self):
         super(ResourceTemplatesTest, self).setUp()

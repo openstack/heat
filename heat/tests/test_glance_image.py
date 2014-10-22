@@ -20,7 +20,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import glance_image as gi
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 image_template = '''
@@ -55,7 +55,7 @@ resources:
 '''
 
 
-class GlanceImageTest(HeatTestCase):
+class GlanceImageTest(common.HeatTestCase):
     def setUp(self):
         super(GlanceImageTest, self).setUp()
 

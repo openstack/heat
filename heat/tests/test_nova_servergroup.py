@@ -16,7 +16,7 @@ import mock
 
 from heat.common import template_format
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -40,7 +40,7 @@ class FakeGroup(object):
         self.name = name
 
 
-class NovaServerGroupTest(HeatTestCase):
+class NovaServerGroupTest(common.HeatTestCase):
     def setUp(self):
         super(NovaServerGroupTest, self).setUp()
 

@@ -16,11 +16,11 @@ import mock
 from heat.engine import parser
 from heat.engine.resources.software_config import structured_config as sc
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class StructuredConfigTestJSON(HeatTestCase):
+class StructuredConfigTestJSON(common.HeatTestCase):
 
     template = {
         'HeatTemplateFormatVersion': '2012-12-12',
@@ -70,7 +70,7 @@ class StructuredConfigTestJSON(HeatTestCase):
         self.assertEqual(self.stored_config, kwargs['config'])
 
 
-class StructuredDeploymentDerivedTest(HeatTestCase):
+class StructuredDeploymentDerivedTest(common.HeatTestCase):
 
     template = {
         'HeatTemplateFormatVersion': '2012-12-12',
@@ -105,7 +105,7 @@ class StructuredDeploymentDerivedTest(HeatTestCase):
         self.assertEqual({"foo": "baz"}, result)
 
 
-class StructuredDeploymentParseTest(HeatTestCase):
+class StructuredDeploymentParseTest(common.HeatTestCase):
 
     scenarios = [
         (
@@ -197,7 +197,7 @@ class StructuredDeploymentParseTest(HeatTestCase):
             parse(self.inputs, self.input_key, self.config))
 
 
-class StructuredDeploymentsTest(HeatTestCase):
+class StructuredDeploymentsTest(common.HeatTestCase):
 
     template = {
         'heat_template_version': '2013-05-23',
@@ -213,7 +213,7 @@ class StructuredDeploymentsTest(HeatTestCase):
     }
 
     def setUp(self):
-        HeatTestCase.setUp(self)
+        common.HeatTestCase.setUp(self)
         heat = mock.MagicMock()
         self.deployments = heat.return_value.software_deployments
 

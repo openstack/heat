@@ -24,7 +24,7 @@ from heat.engine.resources import server
 from heat.engine.resources import wait_condition as wc
 from heat.engine import scheduler
 from heat.engine import service
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -142,7 +142,7 @@ resources:
 '''
 
 
-class MetadataRefreshTest(HeatTestCase):
+class MetadataRefreshTest(common.HeatTestCase):
     '''
     The point of the test is to confirm that metadata gets updated
     when FnGetAtt() returns something different.
@@ -207,7 +207,7 @@ class MetadataRefreshTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class WaitCondMetadataUpdateTest(HeatTestCase):
+class WaitCondMetadataUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
         self.stub_keystoneclient()
@@ -294,7 +294,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class MetadataRefreshTestServer(HeatTestCase):
+class MetadataRefreshTestServer(common.HeatTestCase):
     '''
     The point of the test is to confirm that metadata gets updated
     when FnGetAtt() returns something different when using a native

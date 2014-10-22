@@ -22,7 +22,7 @@ from heat.engine.resources.nova_floatingip import NovaFloatingIp
 from heat.engine.resources.nova_floatingip import NovaFloatingIpAssociation
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -57,7 +57,7 @@ floating_ip_template_with_assoc = '''
 '''
 
 
-class NovaFloatingIPTest(HeatTestCase):
+class NovaFloatingIPTest(common.HeatTestCase):
 
     def setUp(self):
         super(NovaFloatingIPTest, self).setUp()

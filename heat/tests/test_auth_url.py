@@ -18,7 +18,7 @@ import mock
 import webob
 
 from heat.common import auth_url
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class FakeApp(object):
@@ -31,7 +31,7 @@ class FakeApp(object):
         return resp(environ, start_response)
 
 
-class AuthUrlFilterTest(HeatTestCase):
+class AuthUrlFilterTest(common.HeatTestCase):
 
     def setUp(self):
         super(AuthUrlFilterTest, self).setUp()

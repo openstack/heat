@@ -15,10 +15,10 @@ import mock
 
 from heat.api.openstack.v1.views import stacks_view
 from heat.common import identifier
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestFormatStack(HeatTestCase):
+class TestFormatStack(common.HeatTestCase):
     def setUp(self):
         super(TestFormatStack, self).setUp()
         self.request = mock.Mock()
@@ -101,7 +101,7 @@ class TestFormatStack(HeatTestCase):
         self.assertNotIn('foo3', result)
 
 
-class TestStacksViewBuilder(HeatTestCase):
+class TestStacksViewBuilder(common.HeatTestCase):
     def setUp(self):
         super(TestStacksViewBuilder, self).setUp()
         self.request = mock.Mock()

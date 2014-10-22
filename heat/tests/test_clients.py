@@ -29,12 +29,12 @@ from testtools.testcase import skip
 
 from heat.engine import clients
 from heat.engine.clients import client_plugin
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
 
-class ClientsTest(HeatTestCase):
+class ClientsTest(common.HeatTestCase):
 
     def test_clients_get_heat_url(self):
         con = mock.Mock()
@@ -130,7 +130,7 @@ class FooClientsPlugin(client_plugin.ClientPlugin):
         pass
 
 
-class ClientPluginTest(HeatTestCase):
+class ClientPluginTest(common.HeatTestCase):
 
     def test_get_client_option(self):
         con = mock.Mock()
@@ -198,7 +198,7 @@ class ClientPluginTest(HeatTestCase):
         self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
 
 
-class TestClientPluginsInitialise(HeatTestCase):
+class TestClientPluginsInitialise(common.HeatTestCase):
 
     @skip('skipped until keystone can read context auth_ref')
     def test_create_all_clients(self):
@@ -230,7 +230,7 @@ class TestClientPluginsInitialise(HeatTestCase):
             self.assertTrue(clients.has_client(plugin_name))
 
 
-class TestIsNotFound(HeatTestCase):
+class TestIsNotFound(common.HeatTestCase):
 
     scenarios = [
         ('ceilometer_not_found', dict(
@@ -685,7 +685,7 @@ class TestIsNotFound(HeatTestCase):
                     raise
 
 
-class ClientAPIVersionTest(HeatTestCase):
+class ClientAPIVersionTest(common.HeatTestCase):
 
     def test_cinder_api_v1_and_v2(self):
         self.stub_keystoneclient()

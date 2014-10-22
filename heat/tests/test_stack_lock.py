@@ -18,11 +18,11 @@ from oslo import messaging
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import stack_lock
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class StackLockTest(HeatTestCase):
+class StackLockTest(common.HeatTestCase):
     def setUp(self):
         super(StackLockTest, self).setUp()
         self.context = utils.dummy_context()

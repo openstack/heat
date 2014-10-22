@@ -12,10 +12,10 @@
 #    under the License.
 
 from heat.engine import support
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class SupportStatusTest(HeatTestCase):
+class SupportStatusTest(common.HeatTestCase):
     def test_valid_status(self):
         status = support.SupportStatus(
             status=support.DEPRECATED,

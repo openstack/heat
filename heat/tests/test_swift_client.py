@@ -15,11 +15,11 @@ import mock
 from testtools.matchers import MatchesRegex
 
 from heat.engine.clients.os import swift
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class SwiftClientPluginTestCase(HeatTestCase):
+class SwiftClientPluginTestCase(common.HeatTestCase):
     def setUp(self):
         super(SwiftClientPluginTestCase, self).setUp()
         self.swift_client = mock.Mock()

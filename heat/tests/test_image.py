@@ -14,11 +14,11 @@ import mock
 
 from heat.common import exception
 from heat.engine.clients.os import glance
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class ImageConstraintTest(HeatTestCase):
+class ImageConstraintTest(common.HeatTestCase):
 
     def setUp(self):
         super(ImageConstraintTest, self).setUp()

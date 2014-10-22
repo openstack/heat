@@ -16,11 +16,11 @@ import mock
 from heat.engine import parser
 from heat.engine.resources.software_config import cloud_config as cc
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class CloudConfigTest(HeatTestCase):
+class CloudConfigTest(common.HeatTestCase):
 
     def setUp(self):
         super(CloudConfigTest, self).setUp()

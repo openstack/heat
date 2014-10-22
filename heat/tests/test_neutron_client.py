@@ -15,11 +15,11 @@ import mock
 
 from heat.common import exception
 from heat.engine.clients.os import neutron
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class NeutronClientPluginTestCase(HeatTestCase):
+class NeutronClientPluginTestCase(common.HeatTestCase):
     def setUp(self):
         super(NeutronClientPluginTestCase, self).setUp()
         self.neutron_client = mock.MagicMock()

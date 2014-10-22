@@ -19,7 +19,7 @@ from six.moves import cStringIO
 from six.moves import urllib
 
 from heat.common import urlfetch
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class Response(object):
@@ -35,7 +35,7 @@ class Response(object):
         pass
 
 
-class UrlFetchTest(HeatTestCase):
+class UrlFetchTest(common.HeatTestCase):
     def setUp(self):
         super(UrlFetchTest, self).setUp()
         self.m.StubOutWithMock(requests, 'get')

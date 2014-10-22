@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
@@ -20,7 +20,7 @@ from heat.engine import properties
 from heat.engine import rsrc_defn
 
 
-class ResourceDefinitionTest(HeatTestCase):
+class ResourceDefinitionTest(common.HeatTestCase):
 
     def make_me_one_with_everything(self):
         return rsrc_defn.ResourceDefinition(
@@ -175,7 +175,7 @@ class ResourceDefinitionTest(HeatTestCase):
         self.assertNotEqual(hash(rd1), hash(rd2))
 
 
-class ResourceDefinitionSnippetTest(HeatTestCase):
+class ResourceDefinitionSnippetTest(common.HeatTestCase):
     def test_type(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType')
         self.assertEqual({'Type': 'SomeType'}, rd)

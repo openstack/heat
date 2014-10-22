@@ -24,7 +24,7 @@ from heat.engine.hot.template import HOTemplate20130523
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import service
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -804,7 +804,7 @@ resources:
 '''
 
 
-class validateTest(HeatTestCase):
+class validateTest(common.HeatTestCase):
     def setUp(self):
         super(validateTest, self).setUp()
         resources.initialise()

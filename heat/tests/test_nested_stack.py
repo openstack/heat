@@ -28,14 +28,14 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 
 
-class NestedStackTest(HeatTestCase):
+class NestedStackTest(common.HeatTestCase):
     test_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:

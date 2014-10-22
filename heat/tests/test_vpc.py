@@ -19,7 +19,7 @@ from heat.engine import parser
 from heat.engine.resources import subnet as sn
 from heat.engine import scheduler
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 try:
@@ -29,7 +29,7 @@ except ImportError:
     neutronclient = None
 
 
-class VPCTestBase(HeatTestCase):
+class VPCTestBase(common.HeatTestCase):
 
     def setUp(self):
         super(VPCTestBase, self).setUp()

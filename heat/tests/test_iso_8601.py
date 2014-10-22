@@ -12,10 +12,10 @@
 #    under the License.
 
 from heat.engine.resources import iso_8601
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestISO8601Constraint(HeatTestCase):
+class TestISO8601Constraint(common.HeatTestCase):
 
     def setUp(self):
         super(TestISO8601Constraint, self).setUp()

@@ -19,7 +19,7 @@ from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine.resources import user
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import fakes
 from heat.tests import utils
 
@@ -100,7 +100,7 @@ user_policy_template = '''
 '''
 
 
-class UserTest(HeatTestCase):
+class UserTest(common.HeatTestCase):
     def setUp(self):
         super(UserTest, self).setUp()
         self.username = 'test_stack-CfnUser-aabbcc'
@@ -271,7 +271,7 @@ class UserTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class AccessKeyTest(HeatTestCase):
+class AccessKeyTest(common.HeatTestCase):
     def setUp(self):
         super(AccessKeyTest, self).setUp()
         self.username = utils.PhysName('test_stack', 'CfnUser')
@@ -389,7 +389,7 @@ class AccessKeyTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class AccessPolicyTest(HeatTestCase):
+class AccessPolicyTest(common.HeatTestCase):
 
     def test_accesspolicy_create_ok(self):
         t = template_format.parse(user_policy_template)

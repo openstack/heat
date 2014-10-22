@@ -14,14 +14,14 @@
 import webob
 
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class VersionController(object):
     pass
 
 
-class VersionNegotiationMiddlewareTest(HeatTestCase):
+class VersionNegotiationMiddlewareTest(common.HeatTestCase):
     def _version_controller_factory(self, conf):
         return VersionController()
 

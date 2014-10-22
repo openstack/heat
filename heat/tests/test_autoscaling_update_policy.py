@@ -28,7 +28,7 @@ from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes11
 
@@ -201,7 +201,7 @@ asg_tmpl_with_updt_policy = '''
 '''
 
 
-class AutoScalingGroupTest(HeatTestCase):
+class AutoScalingGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(AutoScalingGroupTest, self).setUp()

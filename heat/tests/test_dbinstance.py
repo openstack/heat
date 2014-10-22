@@ -18,7 +18,7 @@ from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -147,7 +147,7 @@ class DBInstance(resource.Resource):
     }
 
 
-class DBInstanceTest(HeatTestCase):
+class DBInstanceTest(common.HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()
 

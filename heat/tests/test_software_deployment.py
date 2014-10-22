@@ -23,11 +23,11 @@ from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
 from heat.engine import rsrc_defn
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class SoftwareDeploymentTest(HeatTestCase):
+class SoftwareDeploymentTest(common.HeatTestCase):
 
     template = {
         'HeatTemplateFormatVersion': '2012-12-12',
@@ -785,7 +785,7 @@ class SoftwareDeploymentTest(HeatTestCase):
             self.assertIsNotNone(self.deployment._handle_action(action))
 
 
-class SoftwareDeploymentsTest(HeatTestCase):
+class SoftwareDeploymentsTest(common.HeatTestCase):
 
     template = {
         'heat_template_version': '2013-05-23',
@@ -803,7 +803,7 @@ class SoftwareDeploymentsTest(HeatTestCase):
     }
 
     def setUp(self):
-        HeatTestCase.setUp(self)
+        common.HeatTestCase.setUp(self)
         heat = mock.MagicMock()
         self.deployments = heat.return_value.software_deployments
 

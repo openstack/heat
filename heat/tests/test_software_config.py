@@ -17,11 +17,11 @@ import mock
 from heat.engine import parser
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class SoftwareConfigTest(HeatTestCase):
+class SoftwareConfigTest(common.HeatTestCase):
 
     def setUp(self):
         super(SoftwareConfigTest, self).setUp()

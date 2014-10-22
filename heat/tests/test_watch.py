@@ -22,7 +22,7 @@ from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import template
 from heat.engine import watchrule
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -37,7 +37,7 @@ class DummyAction(object):
     signal = "DummyAction"
 
 
-class WatchRuleTest(HeatTestCase):
+class WatchRuleTest(common.HeatTestCase):
     stack_id = None
 
     def setUpDatabase(self):

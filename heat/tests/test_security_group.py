@@ -25,7 +25,7 @@ from heat.engine.clients.os import nova
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -39,7 +39,7 @@ NovaSG = collections.namedtuple('NovaSG',
                                 ]))
 
 
-class SecurityGroupTest(HeatTestCase):
+class SecurityGroupTest(common.HeatTestCase):
 
     test_template_nova = '''
 HeatTemplateFormatVersion: '2012-12-12'

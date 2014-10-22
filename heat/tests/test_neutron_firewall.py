@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import firewall
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -84,7 +84,7 @@ firewall_rule_template = '''
 '''
 
 
-class FirewallTest(HeatTestCase):
+class FirewallTest(common.HeatTestCase):
 
     def setUp(self):
         super(FirewallTest, self).setUp()
@@ -211,7 +211,7 @@ class FirewallTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class FirewallPolicyTest(HeatTestCase):
+class FirewallPolicyTest(common.HeatTestCase):
 
     def setUp(self):
         super(FirewallPolicyTest, self).setUp()
@@ -337,7 +337,7 @@ class FirewallPolicyTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class FirewallRuleTest(HeatTestCase):
+class FirewallRuleTest(common.HeatTestCase):
 
     def setUp(self):
         super(FirewallRuleTest, self).setUp()

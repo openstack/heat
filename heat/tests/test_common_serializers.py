@@ -19,10 +19,10 @@ import datetime
 import webob
 
 from heat.common import serializers
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class JSONResponseSerializerTest(HeatTestCase):
+class JSONResponseSerializerTest(common.HeatTestCase):
 
     def test_to_json(self):
         fixture = {"key": "value"}
@@ -54,7 +54,7 @@ class JSONResponseSerializerTest(HeatTestCase):
         self.assertEqual('{"key": "value"}', response.body)
 
 
-class XMLResponseSerializerTest(HeatTestCase):
+class XMLResponseSerializerTest(common.HeatTestCase):
 
     def test_to_xml(self):
         fixture = {"key": "value"}

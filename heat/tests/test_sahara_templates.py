@@ -23,7 +23,7 @@ from heat.engine.clients.os import nova
 from heat.engine.clients.os import sahara
 from heat.engine.resources import sahara_templates as st
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 node_group_template = """
@@ -69,7 +69,7 @@ class FakeClusterTemplate(object):
         self.name = "node-group-template"
 
 
-class SaharaNodeGroupTemplateTest(HeatTestCase):
+class SaharaNodeGroupTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(SaharaNodeGroupTemplateTest, self).setUp()
         self.patchobject(st.constraints.CustomConstraint,
@@ -152,7 +152,7 @@ class SaharaNodeGroupTemplateTest(HeatTestCase):
                          six.text_type(ex))
 
 
-class SaharaClusterTemplateTest(HeatTestCase):
+class SaharaClusterTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(SaharaClusterTemplateTest, self).setUp()
         self.patchobject(st.constraints.CustomConstraint, '_is_valid'
