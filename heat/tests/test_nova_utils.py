@@ -22,11 +22,11 @@ from novaclient import exceptions as nova_exceptions
 from heat.common import exception
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests.v1_1 import fakes
 
 
-class NovaUtilsTests(HeatTestCase):
+class NovaUtilsTests(common.HeatTestCase):
     """
     Basic tests for the helper methods in
     :module:'heat.engine.resources.nova_utils'.
@@ -128,7 +128,7 @@ class NovaUtilsTests(HeatTestCase):
                       six.text_type(err))
 
 
-class NovaUtilsRefreshServerTests(HeatTestCase):
+class NovaUtilsRefreshServerTests(common.HeatTestCase):
 
     def setUp(self):
         super(NovaUtilsRefreshServerTests, self).setUp()
@@ -176,7 +176,7 @@ class NovaUtilsRefreshServerTests(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NovaUtilsUserdataTests(HeatTestCase):
+class NovaUtilsUserdataTests(common.HeatTestCase):
 
     def setUp(self):
         super(NovaUtilsUserdataTests, self).setUp()
@@ -241,7 +241,7 @@ class NovaUtilsUserdataTests(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NovaUtilsMetadataTests(HeatTestCase):
+class NovaUtilsMetadataTests(common.HeatTestCase):
 
     def setUp(self):
         super(NovaUtilsMetadataTests, self).setUp()

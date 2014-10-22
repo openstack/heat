@@ -24,7 +24,7 @@ from heat.engine.clients.os import trove
 from heat.engine import parser
 from heat.engine.resources import os_database
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -95,7 +95,7 @@ class FakeVersion(object):
         self.name = name
 
 
-class OSDBInstanceTest(HeatTestCase):
+class OSDBInstanceTest(common.HeatTestCase):
     def setUp(self):
         super(OSDBInstanceTest, self).setUp()
         self.stub_keystoneclient()

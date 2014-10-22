@@ -12,10 +12,10 @@
 #    under the License.
 
 from heat.common import param_utils
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestExtractBool(HeatTestCase):
+class TestExtractBool(common.HeatTestCase):
     def test_extract_bool(self):
         for value in ('True', 'true', 'TRUE', True):
             self.assertTrue(param_utils.extract_bool(value))

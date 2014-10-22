@@ -33,7 +33,7 @@ from heat.engine.resources.neutron import router
 from heat.engine.resources.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -500,7 +500,7 @@ stpnb = copy.deepcopy(stpna)
 stpnb['network']['status'] = "BUILD"
 
 
-class NeutronTest(HeatTestCase):
+class NeutronTest(common.HeatTestCase):
 
     def test_validate_properties(self):
         vs = {'router:external': True}
@@ -679,7 +679,7 @@ class NeutronTest(HeatTestCase):
         self.m.UnsetStubs()
 
 
-class NeutronNetTest(HeatTestCase):
+class NeutronNetTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronNetTest, self).setUp()
@@ -878,7 +878,7 @@ class NeutronNetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NeutronProviderNetTest(HeatTestCase):
+class NeutronProviderNetTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronProviderNetTest, self).setUp()
@@ -996,7 +996,7 @@ class NeutronProviderNetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NeutronSubnetTest(HeatTestCase):
+class NeutronSubnetTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronSubnetTest, self).setUp()
@@ -1296,7 +1296,7 @@ class NeutronSubnetTest(HeatTestCase):
         }, p)
 
 
-class NeutronRouterTest(HeatTestCase):
+class NeutronRouterTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronRouterTest, self).setUp()
@@ -1913,7 +1913,7 @@ class NeutronRouterTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NeutronFloatingIPTest(HeatTestCase):
+class NeutronFloatingIPTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronFloatingIPTest, self).setUp()
@@ -2414,7 +2414,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NeutronPortTest(HeatTestCase):
+class NeutronPortTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronPortTest, self).setUp()
@@ -2941,7 +2941,7 @@ class NeutronPortTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NetworkConstraintTest(HeatTestCase):
+class NetworkConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
         nc = self.m.CreateMockAnything()
@@ -2965,7 +2965,7 @@ class NetworkConstraintTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class PortConstraintTest(HeatTestCase):
+class PortConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
         nc = self.m.CreateMockAnything()
@@ -2989,7 +2989,7 @@ class PortConstraintTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class RouterConstraintTest(HeatTestCase):
+class RouterConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
         nc = self.m.CreateMockAnything()
@@ -3013,7 +3013,7 @@ class RouterConstraintTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class SubnetConstraintTest(HeatTestCase):
+class SubnetConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
         nc = self.m.CreateMockAnything()

@@ -19,12 +19,12 @@ from heat.common import template_format
 from heat.engine.resources.software_config import software_component as sc
 from heat.engine import stack
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heatclient.exc import HTTPNotFound
 
 
-class SoftwareComponentTest(HeatTestCase):
+class SoftwareComponentTest(common.HeatTestCase):
 
     def setUp(self):
         super(SoftwareComponentTest, self).setUp()
@@ -105,7 +105,7 @@ class SoftwareComponentTest(HeatTestCase):
         self.assertIsNone(self.component._resolve_attribute('configs'))
 
 
-class SoftwareComponentValidationTest(HeatTestCase):
+class SoftwareComponentValidationTest(common.HeatTestCase):
 
     scenarios = [
         (

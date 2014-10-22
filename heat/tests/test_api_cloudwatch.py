@@ -21,11 +21,11 @@ from heat.common import policy
 from heat.common.wsgi import Request
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class WatchControllerTest(HeatTestCase):
+class WatchControllerTest(common.HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed

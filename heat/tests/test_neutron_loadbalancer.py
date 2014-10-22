@@ -26,7 +26,7 @@ from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.neutron import loadbalancer
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as nova_fakes
 
@@ -221,7 +221,7 @@ pool_with_health_monitors_template = '''
 '''
 
 
-class HealthMonitorTest(HeatTestCase):
+class HealthMonitorTest(common.HeatTestCase):
 
     def setUp(self):
         super(HealthMonitorTest, self).setUp()
@@ -346,7 +346,7 @@ class HealthMonitorTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class PoolTest(HeatTestCase):
+class PoolTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolTest, self).setUp()
@@ -843,7 +843,7 @@ class PoolTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class PoolMemberTest(HeatTestCase):
+class PoolMemberTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolMemberTest, self).setUp()
@@ -945,7 +945,7 @@ class PoolMemberTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class LoadBalancerTest(HeatTestCase):
+class LoadBalancerTest(common.HeatTestCase):
 
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
@@ -1031,7 +1031,7 @@ class LoadBalancerTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class PoolUpdateHealthMonitorsTest(HeatTestCase):
+class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolUpdateHealthMonitorsTest, self).setUp()

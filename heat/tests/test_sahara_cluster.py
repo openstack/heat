@@ -24,7 +24,7 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import sahara
 from heat.engine.resources import sahara_cluster as sc
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -54,7 +54,7 @@ class FakeCluster(object):
                               "Web UI": "http://host_ip:port"}}
 
 
-class SaharaClusterTest(HeatTestCase):
+class SaharaClusterTest(common.HeatTestCase):
     def setUp(self):
         super(SaharaClusterTest, self).setUp()
         self.patchobject(sc.constraints.CustomConstraint, '_is_valid'

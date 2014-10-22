@@ -34,7 +34,7 @@ from heat.engine import parser
 from heat.engine.resource import Resource
 from heat.engine.resources import instance as instances
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -86,7 +86,7 @@ class MyResource(Resource):
         self.data_set('my_secret', my_secret, True)
 
 
-class SqlAlchemyTest(HeatTestCase):
+class SqlAlchemyTest(common.HeatTestCase):
     def setUp(self):
         super(SqlAlchemyTest, self).setUp()
         self.fc = fakes.FakeClient()
@@ -1173,7 +1173,7 @@ def create_watch_data(ctx, watch_rule, **kwargs):
     return db_api.watch_data_create(ctx, values)
 
 
-class DBAPIRawTemplateTest(HeatTestCase):
+class DBAPIRawTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIRawTemplateTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1235,7 +1235,7 @@ class DBAPIRawTemplateTest(HeatTestCase):
         self.assertEqual(updated_tp.files, new_files)
 
 
-class DBAPIUserCredsTest(HeatTestCase):
+class DBAPIUserCredsTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIUserCredsTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1284,7 +1284,7 @@ class DBAPIUserCredsTest(HeatTestCase):
         self.assertIn(exp_msg, six.text_type(err))
 
 
-class DBAPIStackTest(HeatTestCase):
+class DBAPIStackTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIStackTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1542,7 +1542,7 @@ class DBAPIStackTest(HeatTestCase):
         self.assertEqual('a' * 255, stack.status_reason)
 
 
-class DBAPIResourceTest(HeatTestCase):
+class DBAPIResourceTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIResourceTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1634,7 +1634,7 @@ class DBAPIResourceTest(HeatTestCase):
         self.assertEqual('a' * 255, ret_res.status_reason)
 
 
-class DBAPIStackLockTest(HeatTestCase):
+class DBAPIStackLockTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIStackLockTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1694,7 +1694,7 @@ class DBAPIStackLockTest(HeatTestCase):
         self.assertTrue(observed)
 
 
-class DBAPIResourceDataTest(HeatTestCase):
+class DBAPIResourceDataTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIResourceDataTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1745,7 +1745,7 @@ class DBAPIResourceDataTest(HeatTestCase):
         self.assertIsNotNone(res_data)
 
 
-class DBAPIEventTest(HeatTestCase):
+class DBAPIEventTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIEventTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1864,7 +1864,7 @@ class DBAPIEventTest(HeatTestCase):
         self.assertEqual('a' * 255, ret_event.resource_status_reason)
 
 
-class DBAPIWatchRuleTest(HeatTestCase):
+class DBAPIWatchRuleTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIWatchRuleTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -1944,7 +1944,7 @@ class DBAPIWatchRuleTest(HeatTestCase):
         self.assertEqual([], db_api.watch_data_get_all(self.ctx))
 
 
-class DBAPIWatchDataTest(HeatTestCase):
+class DBAPIWatchDataTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIWatchDataTest, self).setUp()
         self.ctx = utils.dummy_context()

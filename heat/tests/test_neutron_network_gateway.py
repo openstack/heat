@@ -26,7 +26,7 @@ from heat.common import template_format
 from heat.engine.resources.neutron import network_gateway
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -93,7 +93,7 @@ sng = {
 }
 
 
-class NeutronNetworkGatewayTest(HeatTestCase):
+class NeutronNetworkGatewayTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronNetworkGatewayTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_network_gateway')

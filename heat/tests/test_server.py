@@ -36,7 +36,7 @@ from heat.engine.resources import server as servers
 from heat.engine import scheduler
 from heat.engine import template
 from heat.openstack.common import uuidutils
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -98,7 +98,7 @@ resources:
 '''
 
 
-class ServersTest(HeatTestCase):
+class ServersTest(common.HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
         self.fc = fakes_v1_1.FakeClient()
@@ -2702,7 +2702,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class FlavorConstraintTest(HeatTestCase):
+class FlavorConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
         client = fakes.FakeClient()

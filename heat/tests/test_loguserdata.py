@@ -18,7 +18,7 @@ import pkg_resources
 import subprocess
 
 from heat.cloudinit import loguserdata
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class FakeCiVersion(object):
@@ -37,7 +37,7 @@ class FakePOpen(object):
         pass
 
 
-class LoguserdataTest(HeatTestCase):
+class LoguserdataTest(common.HeatTestCase):
 
     def setUp(self):
         super(LoguserdataTest, self).setUp()

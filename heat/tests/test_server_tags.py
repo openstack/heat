@@ -23,7 +23,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import instance as instances
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -124,7 +124,7 @@ autoscaling_template = '''
 '''
 
 
-class ServerTagsTest(HeatTestCase):
+class ServerTagsTest(common.HeatTestCase):
     def setUp(self):
         super(ServerTagsTest, self).setUp()
         self.fc = fakes.FakeClient()

@@ -19,11 +19,11 @@ import mock
 from heat.engine import parser
 from heat.engine.resources.software_config import multi_part as mp
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class MultipartMimeTest(HeatTestCase):
+class MultipartMimeTest(common.HeatTestCase):
 
     def setUp(self):
         super(MultipartMimeTest, self).setUp()

@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from testtools import skipIf
@@ -52,7 +52,7 @@ template = '''
 '''
 
 
-class DockerContainerTest(HeatTestCase):
+class DockerContainerTest(common.HeatTestCase):
 
     def setUp(self):
         super(DockerContainerTest, self).setUp()

@@ -19,11 +19,11 @@ import uuid
 
 from heat.common import exception
 from heat.engine.clients.os import nova
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class NovaClientPluginTestCase(HeatTestCase):
+class NovaClientPluginTestCase(common.HeatTestCase):
     def setUp(self):
         super(NovaClientPluginTestCase, self).setUp()
         self.nova_client = self.m.CreateMockAnything()

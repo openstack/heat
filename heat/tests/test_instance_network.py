@@ -23,7 +23,7 @@ from heat.engine import parser
 from heat.engine.resources import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -149,7 +149,7 @@ class FakeNeutron(object):
         return None
 
 
-class instancesTest(HeatTestCase):
+class instancesTest(common.HeatTestCase):
     def setUp(self):
         super(instancesTest, self).setUp()
         self.fc = fakes.FakeClient()

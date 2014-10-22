@@ -24,7 +24,7 @@ from heat.engine import parser
 from heat.engine.resources import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -155,7 +155,7 @@ ipassoc_template_validate = '''
 '''
 
 
-class EIPTest(HeatTestCase):
+class EIPTest(common.HeatTestCase):
     def setUp(self):
         # force Nova, will test Neutron below
         super(EIPTest, self).setUp()
@@ -355,7 +355,7 @@ class EIPTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class AllocTest(HeatTestCase):
+class AllocTest(common.HeatTestCase):
 
     def setUp(self):
         super(AllocTest, self).setUp()

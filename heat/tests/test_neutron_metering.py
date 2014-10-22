@@ -19,7 +19,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import metering
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -50,7 +50,7 @@ metering_template = '''
 '''
 
 
-class MeteringLabelTest(HeatTestCase):
+class MeteringLabelTest(common.HeatTestCase):
 
     def setUp(self):
         super(MeteringLabelTest, self).setUp()
@@ -159,7 +159,7 @@ class MeteringLabelTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class MeteringRuleTest(HeatTestCase):
+class MeteringRuleTest(common.HeatTestCase):
 
     def setUp(self):
         super(MeteringRuleTest, self).setUp()

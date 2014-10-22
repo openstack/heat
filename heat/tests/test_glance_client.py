@@ -17,11 +17,11 @@ import uuid
 from glanceclient import exc as glance_exceptions
 
 from heat.common import exception
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class GlanceUtilsTests(HeatTestCase):
+class GlanceUtilsTests(common.HeatTestCase):
     """
     Basic tests for the helper methods in
     :module:'heat.engine.resources.clients.os.glance'.

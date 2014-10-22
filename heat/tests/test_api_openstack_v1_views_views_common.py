@@ -15,10 +15,10 @@ import mock
 from six.moves.urllib import parse as urlparse
 
 from heat.api.openstack.v1.views import views_common
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestViewsCommon(HeatTestCase):
+class TestViewsCommon(common.HeatTestCase):
     def setUp(self):
         super(TestViewsCommon, self).setUp()
         self.request = mock.Mock()

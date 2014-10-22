@@ -24,7 +24,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests import utils
@@ -43,7 +43,7 @@ test_template_signal = '''
 '''
 
 
-class SignalTest(HeatTestCase):
+class SignalTest(common.HeatTestCase):
 
     def setUp(self):
         super(SignalTest, self).setUp()

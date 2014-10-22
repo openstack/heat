@@ -16,7 +16,7 @@ import mock
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources.nova_flavor import NovaFlavor  # noqa
@@ -42,7 +42,7 @@ flavor_template = {
 }
 
 
-class NovaFlavorTest(HeatTestCase):
+class NovaFlavorTest(common.HeatTestCase):
     def setUp(self):
         super(NovaFlavorTest, self).setUp()
 

@@ -19,7 +19,7 @@ from heat.common import template_format
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from .. import client  # noqa
@@ -45,7 +45,7 @@ class FakeSecret(object):
         return self.name
 
 
-class TestSecret(HeatTestCase):
+class TestSecret(common.HeatTestCase):
 
     def setUp(self):
         super(TestSecret, self).setUp()

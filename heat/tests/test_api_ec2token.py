@@ -22,10 +22,10 @@ import requests
 from heat.api.aws import ec2token
 from heat.api.aws import exception
 from heat.common.wsgi import Request
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class Ec2TokenTest(HeatTestCase):
+class Ec2TokenTest(common.HeatTestCase):
     '''
     Tests the Ec2Token middleware
     '''

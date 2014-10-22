@@ -22,7 +22,7 @@ from oslo.messaging._drivers import common as rpc_common
 import heat.api.middleware.fault as fault
 from heat.common import exception as heat_exc
 from heat.common.i18n import _
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class StackNotFoundChild(heat_exc.StackNotFound):
@@ -33,7 +33,7 @@ class ErrorWithNewline(webob.exc.HTTPBadRequest):
     pass
 
 
-class FaultMiddlewareTest(HeatTestCase):
+class FaultMiddlewareTest(common.HeatTestCase):
 
     def test_disguised_http_exception_with_newline(self):
         wrapper = fault.FaultWrapper(None)

@@ -17,7 +17,7 @@ import eventlet
 
 from heat.engine import dependencies
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 class DummyTask(object):
@@ -33,7 +33,7 @@ class DummyTask(object):
         pass
 
 
-class PollingTaskGroupTest(HeatTestCase):
+class PollingTaskGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(PollingTaskGroupTest, self).setUp()
@@ -161,7 +161,7 @@ class PollingTaskGroupTest(HeatTestCase):
                 dummy.do_step(1, i, i * i)
 
 
-class ExceptionGroupTest(HeatTestCase):
+class ExceptionGroupTest(common.HeatTestCase):
 
     def test_contains_exceptions(self):
         exception_group = scheduler.ExceptionGroup()
@@ -190,7 +190,7 @@ class ExceptionGroupTest(HeatTestCase):
         self.assertEqual("['ex 1', 'ex 2']", str(exception_group))
 
 
-class DependencyTaskGroupTest(HeatTestCase):
+class DependencyTaskGroupTest(common.HeatTestCase):
     def setUp(self):
         super(DependencyTaskGroupTest, self).setUp()
         self.addCleanup(self.m.VerifyAll)
@@ -440,7 +440,7 @@ class DependencyTaskGroupTest(HeatTestCase):
         self.assertEqual(e1, exc)
 
 
-class TaskTest(HeatTestCase):
+class TaskTest(common.HeatTestCase):
 
     def setUp(self):
         super(TaskTest, self).setUp()
@@ -892,7 +892,7 @@ class TaskTest(HeatTestCase):
         self.assertTrue(runner.done())
 
 
-class TimeoutTest(HeatTestCase):
+class TimeoutTest(common.HeatTestCase):
     def test_compare(self):
         task = scheduler.TaskRunner(DummyTask())
 
@@ -906,7 +906,7 @@ class TimeoutTest(HeatTestCase):
         self.assertNotEqual(earlier, later)
 
 
-class DescriptionTest(HeatTestCase):
+class DescriptionTest(common.HeatTestCase):
 
     def setUp(self):
         super(DescriptionTest, self).setUp()
@@ -950,7 +950,7 @@ class DescriptionTest(HeatTestCase):
         self.assertEqual('o', scheduler.task_description(C()))
 
 
-class WrapperTaskTest(HeatTestCase):
+class WrapperTaskTest(common.HeatTestCase):
 
     def setUp(self):
         super(WrapperTaskTest, self).setUp()

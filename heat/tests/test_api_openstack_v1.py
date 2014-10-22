@@ -35,7 +35,7 @@ from heat.common import urlfetch
 from heat.common.wsgi import Request
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -59,7 +59,7 @@ def to_remote_error(error):
     return remote_error
 
 
-class InstantiationDataTest(HeatTestCase):
+class InstantiationDataTest(common.HeatTestCase):
 
     def test_format_parse(self):
         data = {"AWSTemplateFormatVersion": "2010-09-09",
@@ -313,7 +313,7 @@ class ControllerTest(object):
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
-class StackControllerTest(ControllerTest, HeatTestCase):
+class StackControllerTest(ControllerTest, common.HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -1929,7 +1929,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
 
-class StackSerializerTest(HeatTestCase):
+class StackSerializerTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackSerializerTest, self).setUp()
@@ -1947,7 +1947,7 @@ class StackSerializerTest(HeatTestCase):
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
-class ResourceControllerTest(ControllerTest, HeatTestCase):
+class ResourceControllerTest(ControllerTest, common.HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -2452,7 +2452,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
-class EventControllerTest(ControllerTest, HeatTestCase):
+class EventControllerTest(ControllerTest, common.HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -3035,7 +3035,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
 
-class RoutesTest(HeatTestCase):
+class RoutesTest(common.HeatTestCase):
 
     def assertRoute(self, mapper, path, method, action, controller,
                     params=None):
@@ -3496,7 +3496,7 @@ class RoutesTest(HeatTestCase):
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
-class ActionControllerTest(ControllerTest, HeatTestCase):
+class ActionControllerTest(ControllerTest, common.HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -3694,7 +3694,7 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
-class BuildInfoControllerTest(ControllerTest, HeatTestCase):
+class BuildInfoControllerTest(ControllerTest, common.HeatTestCase):
 
     def setUp(self):
         super(BuildInfoControllerTest, self).setUp()
@@ -3746,7 +3746,7 @@ class BuildInfoControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('403 Forbidden', six.text_type(resp))
 
 
-class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
+class SoftwareConfigControllerTest(ControllerTest, common.HeatTestCase):
 
     def setUp(self):
         super(SoftwareConfigControllerTest, self).setUp()
@@ -3870,7 +3870,7 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
             self.assertEqual('NotFound', resp.json['error']['type'])
 
 
-class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
+class SoftwareDeploymentControllerTest(ControllerTest, common.HeatTestCase):
 
     def setUp(self):
         super(SoftwareDeploymentControllerTest, self).setUp()

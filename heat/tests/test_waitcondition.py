@@ -31,7 +31,7 @@ from heat.engine import resource
 from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 test_template_waitcondition = '''
@@ -131,7 +131,7 @@ resources:
 '''
 
 
-class WaitConditionTest(HeatTestCase):
+class WaitConditionTest(common.HeatTestCase):
 
     def setUp(self):
         super(WaitConditionTest, self).setUp()
@@ -404,7 +404,7 @@ class WaitConditionTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class WaitConditionHandleTest(HeatTestCase):
+class WaitConditionHandleTest(common.HeatTestCase):
     def setUp(self):
         super(WaitConditionHandleTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -575,7 +575,7 @@ class WaitConditionHandleTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class WaitConditionUpdateTest(HeatTestCase):
+class WaitConditionUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitConditionUpdateTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -767,7 +767,7 @@ class WaitConditionUpdateTest(HeatTestCase):
             resource.UpdateReplace, wait_condition_handle.update, None, None)
 
 
-class HeatWaitConditionTest(HeatTestCase):
+class HeatWaitConditionTest(common.HeatTestCase):
 
     def setUp(self):
         super(HeatWaitConditionTest, self).setUp()

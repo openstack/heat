@@ -25,7 +25,7 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import stack_resource
 from heat.engine import template as templatem
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -100,7 +100,7 @@ class MyImplementedStackResource(MyStackResource):
         return self.nested_params
 
 
-class StackResourceTest(HeatTestCase):
+class StackResourceTest(common.HeatTestCase):
     def setUp(self):
         super(StackResourceTest, self).setUp()
         resource._register_class('some_magic_type',

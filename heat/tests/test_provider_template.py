@@ -32,7 +32,7 @@ from heat.engine import resources
 from heat.engine.resources import template_resource
 from heat.engine import rsrc_defn
 from heat.engine import support
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -44,7 +44,7 @@ class MyCloudResource(generic_rsrc.GenericResource):
     pass
 
 
-class ProviderTemplateTest(HeatTestCase):
+class ProviderTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(ProviderTemplateTest, self).setUp()
         resource._register_class('OS::ResourceType',
@@ -693,7 +693,7 @@ class ProviderTemplateTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class NestedProvider(HeatTestCase):
+class NestedProvider(common.HeatTestCase):
     """Prove that we can use the registry in a nested provider."""
 
     def setUp(self):
@@ -781,7 +781,7 @@ resource_registry:
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
 
-class ProviderTemplateUpdateTest(HeatTestCase):
+class ProviderTemplateUpdateTest(common.HeatTestCase):
     main_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -938,7 +938,7 @@ Outputs:
         self.m.VerifyAll()
 
 
-class ProviderTemplateAdoptTest(HeatTestCase):
+class ProviderTemplateAdoptTest(common.HeatTestCase):
     main_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:

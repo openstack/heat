@@ -28,7 +28,7 @@ from heat.engine import resource
 from heat.engine.resources.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource
 from heat.tests import utils
 
@@ -125,7 +125,7 @@ class FakeCeilometerClient(object):
     alarms = FakeCeilometerAlarms()
 
 
-class CeilometerAlarmTest(HeatTestCase):
+class CeilometerAlarmTest(common.HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
 
@@ -412,7 +412,7 @@ class CeilometerAlarmTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class CombinationAlarmTest(HeatTestCase):
+class CombinationAlarmTest(common.HeatTestCase):
 
     def setUp(self):
         super(CombinationAlarmTest, self).setUp()

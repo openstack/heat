@@ -30,7 +30,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import instance as instances
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -71,7 +71,7 @@ wp_template = '''
 '''
 
 
-class InstancesTest(HeatTestCase):
+class InstancesTest(common.HeatTestCase):
     def setUp(self):
         super(InstancesTest, self).setUp()
         self.fc = fakes.FakeClient()

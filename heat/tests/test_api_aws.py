@@ -13,10 +13,10 @@
 
 
 from heat.api.aws import utils as api_utils
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class AWSCommonTest(HeatTestCase):
+class AWSCommonTest(common.HeatTestCase):
     '''
     Tests the api/aws common components
     '''

@@ -22,7 +22,7 @@ from heat.db import api as db_api
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack_user
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests import utils
@@ -37,7 +37,7 @@ resources:
 '''
 
 
-class StackUserTest(HeatTestCase):
+class StackUserTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackUserTest, self).setUp()

@@ -23,7 +23,7 @@ from heat.engine.clients.os import nova
 from heat.engine import function
 from heat.engine import parser
 from heat.engine.resources import instance
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -155,7 +155,7 @@ ig_tmpl_with_updt_policy = '''
 '''
 
 
-class InstanceGroupTest(HeatTestCase):
+class InstanceGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(InstanceGroupTest, self).setUp()

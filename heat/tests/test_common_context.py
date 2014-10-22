@@ -20,12 +20,12 @@ from heat.common import context
 from heat.common import exception
 from heat.openstack.common.middleware import request_id
 from heat.openstack.common import policy as base_policy
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
-class TestRequestContext(HeatTestCase):
+class TestRequestContext(common.HeatTestCase):
 
     def setUp(self):
         self.ctx = {'username': 'mick',
@@ -104,7 +104,7 @@ class TestRequestContext(HeatTestCase):
             self.assertFalse(ctx.is_admin)
 
 
-class RequestContextMiddlewareTest(HeatTestCase):
+class RequestContextMiddlewareTest(common.HeatTestCase):
 
     scenarios = [(
         'empty_headers',

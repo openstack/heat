@@ -30,7 +30,7 @@ from heat.engine.resources import instance
 from heat.engine.resources import volume as vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
@@ -105,7 +105,7 @@ resources:
 '''
 
 
-class BaseVolumeTest(HeatTestCase):
+class BaseVolumeTest(common.HeatTestCase):
     def setUp(self):
         super(BaseVolumeTest, self).setUp()
         self.fc = fakes.FakeClient()

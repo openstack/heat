@@ -14,10 +14,10 @@
 import mock
 
 from heat.db.sqlalchemy import filters as db_filters
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class ExactFilterTest(HeatTestCase):
+class ExactFilterTest(common.HeatTestCase):
     def setUp(self):
         super(ExactFilterTest, self).setUp()
         self.query = mock.Mock()

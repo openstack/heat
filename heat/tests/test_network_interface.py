@@ -15,7 +15,7 @@ import copy
 
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 try:
@@ -36,7 +36,7 @@ test_template = {
 }
 
 
-class NetworkInterfaceTest(HeatTestCase):
+class NetworkInterfaceTest(common.HeatTestCase):
     def setUp(self):
         super(NetworkInterfaceTest, self).setUp()
         self.ctx = utils.dummy_context()

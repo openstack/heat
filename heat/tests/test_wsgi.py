@@ -25,10 +25,10 @@ import webob
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common import wsgi
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class RequestTest(HeatTestCase):
+class RequestTest(common.HeatTestCase):
 
     def setUp(self):
         self.stubs = stubout.StubOutForTesting()
@@ -104,7 +104,7 @@ class RequestTest(HeatTestCase):
         self.assertIsNone(request.best_match_language())
 
 
-class ResourceTest(HeatTestCase):
+class ResourceTest(common.HeatTestCase):
 
     def setUp(self):
         self.stubs = stubout.StubOutForTesting()
@@ -227,7 +227,7 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class ResourceExceptionHandlingTest(HeatTestCase):
+class ResourceExceptionHandlingTest(common.HeatTestCase):
     scenarios = [
         ('client_exceptions', dict(
             exception=exception.StackResourceLimitExceeded,
@@ -263,7 +263,7 @@ class ResourceExceptionHandlingTest(HeatTestCase):
         self.assertNotIn(six.text_type(e), self.LOG.output)
 
 
-class JSONRequestDeserializerTest(HeatTestCase):
+class JSONRequestDeserializerTest(common.HeatTestCase):
 
     def test_has_body_no_content_length(self):
         request = wsgi.Request.blank('/')

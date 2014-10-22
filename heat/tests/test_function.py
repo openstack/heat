@@ -23,7 +23,7 @@ from heat.engine import function
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -40,7 +40,7 @@ class TestFunction(function.Function):
         return 'wibble'
 
 
-class FunctionTest(HeatTestCase):
+class FunctionTest(common.HeatTestCase):
     def test_equal(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
         self.assertTrue(func == 'wibble')
@@ -61,7 +61,7 @@ class FunctionTest(HeatTestCase):
         self.assertEqual({'foo': ['bar', 'baz']}, copy.deepcopy(func))
 
 
-class ResolveTest(HeatTestCase):
+class ResolveTest(common.HeatTestCase):
     def test_resolve_func(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
 
@@ -99,7 +99,7 @@ class ResolveTest(HeatTestCase):
         self.assertIsNot(result, snippet)
 
 
-class ValidateTest(HeatTestCase):
+class ValidateTest(common.HeatTestCase):
     def setUp(self):
         super(ValidateTest, self).setUp()
         self.func = TestFunction(None, 'foo', ['bar', 'baz'])
@@ -138,7 +138,7 @@ class ValidateTest(HeatTestCase):
         self.assertEqual('Need more arguments', six.text_type(ex))
 
 
-class DependenciesTest(HeatTestCase):
+class DependenciesTest(common.HeatTestCase):
     func = TestFunction(None, 'test', None)
 
     scenarios = [
@@ -155,7 +155,7 @@ class DependenciesTest(HeatTestCase):
         self.assertEqual(2, len(deps))
 
 
-class ValidateGetAttTest(HeatTestCase):
+class ValidateGetAttTest(common.HeatTestCase):
     def setUp(self):
         super(ValidateGetAttTest, self).setUp()
 

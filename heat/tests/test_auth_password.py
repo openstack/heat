@@ -19,7 +19,7 @@ from keystoneclient.v2_0 import client as keystone_client
 import webob
 
 from heat.common.auth_password import KeystonePasswordAuthProtocol
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 EXPECTED_V2_DEFAULT_ENV_RESPONSE = {
     'HTTP_X_IDENTITY_STATUS': 'Confirmed',
@@ -71,7 +71,7 @@ class FakeApp(object):
         return resp(env, start_response)
 
 
-class KeystonePasswordAuthProtocolTest(HeatTestCase):
+class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
 
     def setUp(self):
         super(KeystonePasswordAuthProtocolTest, self).setUp()

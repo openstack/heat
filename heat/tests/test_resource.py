@@ -34,7 +34,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -44,7 +44,7 @@ import neutronclient.common.exceptions as neutron_exp
 empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
 
 
-class ResourceTest(HeatTestCase):
+class ResourceTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
 
@@ -1064,7 +1064,7 @@ class ResourceTest(HeatTestCase):
         self._test_skip_validation_if_custom_constraint(tmpl)
 
 
-class ResourceAdoptTest(HeatTestCase):
+class ResourceAdoptTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceAdoptTest, self).setUp()
         resource._register_class('GenericResourceType',
@@ -1153,7 +1153,7 @@ class ResourceAdoptTest(HeatTestCase):
         self.assertEqual(expected, res.status_reason)
 
 
-class ResourceDependenciesTest(HeatTestCase):
+class ResourceDependenciesTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceDependenciesTest, self).setUp()
 
@@ -1629,7 +1629,7 @@ class ResourceDependenciesTest(HeatTestCase):
         self.assertIn('"wibble" (in foo)', six.text_type(ex))
 
 
-class MetadataTest(HeatTestCase):
+class MetadataTest(common.HeatTestCase):
     def setUp(self):
         super(MetadataTest, self).setUp()
         self.stack = parser.Stack(utils.dummy_context(),
@@ -1663,7 +1663,7 @@ class MetadataTest(HeatTestCase):
         self.assertEqual(test_data, self.res.metadata)
 
 
-class ReducePhysicalResourceNameTest(HeatTestCase):
+class ReducePhysicalResourceNameTest(common.HeatTestCase):
     scenarios = [
         ('one', dict(
             limit=10,

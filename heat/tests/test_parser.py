@@ -43,7 +43,7 @@ from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests.fakes import FakeKeystoneClient
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -55,7 +55,7 @@ def join(raw):
     return function.resolve(tmpl.parse(None, raw))
 
 
-class ParserTest(HeatTestCase):
+class ParserTest(common.HeatTestCase):
 
     def test_list(self):
         raw = ['foo', 'bar', 'baz']
@@ -162,7 +162,7 @@ class DummyClass(object):
         self.metadata = metadata
 
 
-class TemplateTest(HeatTestCase):
+class TemplateTest(common.HeatTestCase):
 
     def setUp(self):
         super(TemplateTest, self).setUp()
@@ -656,7 +656,7 @@ Mappings:
         self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])
 
 
-class TemplateFnErrorTest(HeatTestCase):
+class TemplateFnErrorTest(common.HeatTestCase):
     scenarios = [
         ('select_from_list_not_int',
          dict(expect=TypeError,
@@ -778,7 +778,7 @@ class TemplateFnErrorTest(HeatTestCase):
         self.assertIn(self.snippet.keys()[0], six.text_type(error))
 
 
-class ResolveDataTest(HeatTestCase):
+class ResolveDataTest(common.HeatTestCase):
 
     def setUp(self):
         super(ResolveDataTest, self).setUp()
@@ -909,7 +909,7 @@ class ResolveDataTest(HeatTestCase):
                          self.resolve(snippet))
 
 
-class StackTest(HeatTestCase):
+class StackTest(common.HeatTestCase):
     def setUp(self):
         super(StackTest, self).setUp()
 

@@ -18,13 +18,13 @@ from oslo.config import cfg
 from oslo.utils import importutils
 
 from heat.common import exception
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from .. import client as heat_keystoneclient  # noqa
 
 
-class KeystoneClientTest(HeatTestCase):
+class KeystoneClientTest(common.HeatTestCase):
     """Test cases for heat.common.heat_keystoneclient."""
 
     def setUp(self):

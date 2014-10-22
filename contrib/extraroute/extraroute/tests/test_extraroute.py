@@ -16,7 +16,7 @@ from neutronclient.v2_0 import client as neutronclient
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 from ..resources import extraroute  # noqa
@@ -52,7 +52,7 @@ neutron_template = '''
 '''
 
 
-class NeutronExtraRouteTest(HeatTestCase):
+class NeutronExtraRouteTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronExtraRouteTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')

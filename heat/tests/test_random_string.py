@@ -22,11 +22,11 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources.random_string import RandomString
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
-class TestRandomString(HeatTestCase):
+class TestRandomString(common.HeatTestCase):
 
     template_random_string = '''
 HeatTemplateFormatVersion: '2012-12-12'
@@ -195,7 +195,7 @@ Resources:
                          six.text_type(exc))
 
 
-class TestGenerateRandomString(HeatTestCase):
+class TestGenerateRandomString(common.HeatTestCase):
 
     scenarios = [
         ('lettersdigits', dict(

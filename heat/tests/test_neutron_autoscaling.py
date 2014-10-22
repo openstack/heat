@@ -26,7 +26,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as v1fakes
 
@@ -99,7 +99,7 @@ as_template = '''
 '''
 
 
-class AutoScalingTest(HeatTestCase):
+class AutoScalingTest(common.HeatTestCase):
     params = {'KeyName': 'test', 'ImageId': 'foo'}
 
     def setUp(self):

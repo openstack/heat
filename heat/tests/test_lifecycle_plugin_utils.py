@@ -16,7 +16,7 @@ import mock
 from heat.common import lifecycle_plugin_utils
 from heat.engine import lifecycle_plugin
 from heat.engine import resources
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
 empty_template = '''
@@ -26,7 +26,7 @@ resources:
 '''
 
 
-class LifecyclePluginUtilsTests(HeatTestCase):
+class LifecyclePluginUtilsTests(common.HeatTestCase):
     """
     Basic tests for the helper methods in
     :module:'heat.common.lifecycle_plugin_utils'.

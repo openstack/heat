@@ -28,7 +28,7 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import template
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import test_parser
 from heat.tests import utils
@@ -87,7 +87,7 @@ class DummyClass(object):
         self.metadata = metadata
 
 
-class HOTemplateTest(HeatTestCase):
+class HOTemplateTest(common.HeatTestCase):
     """Test processing of HOT templates."""
 
     @staticmethod
@@ -882,7 +882,7 @@ class StackTest(test_parser.StackTest):
         self.m.VerifyAll()
 
 
-class StackAttributesTest(HeatTestCase):
+class StackAttributesTest(common.HeatTestCase):
     """
     Test stack get_attr function when stack was created from HOT template.
     """
@@ -979,7 +979,7 @@ class StackAttributesTest(HeatTestCase):
             self.assertEqual(self.expected, resolved)
 
 
-class StackGetAttrValidationTest(HeatTestCase):
+class StackGetAttrValidationTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackGetAttrValidationTest, self).setUp()
@@ -1008,7 +1008,7 @@ class StackGetAttrValidationTest(HeatTestCase):
                          stack.resources['resource2'].properties['a_string'])
 
 
-class StackParametersTest(HeatTestCase):
+class StackParametersTest(common.HeatTestCase):
     """
     Test stack get_param function when stack was created from HOT template.
     """
@@ -1096,7 +1096,7 @@ class StackParametersTest(HeatTestCase):
                          function.resolve(tmpl.parse(stack, self.snippet)))
 
 
-class HOTParamValidatorTest(HeatTestCase):
+class HOTParamValidatorTest(common.HeatTestCase):
     """Test HOTParamValidator"""
 
     def test_multiple_constraint_descriptions(self):

@@ -22,7 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.neutron import vpnservice
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -151,7 +151,7 @@ ipsecpolicy_template = '''
 '''
 
 
-class VPNServiceTest(HeatTestCase):
+class VPNServiceTest(common.HeatTestCase):
 
     VPN_SERVICE_CONF = {
         'vpnservice': {
@@ -300,7 +300,7 @@ class VPNServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class IPsecSiteConnectionTest(HeatTestCase):
+class IPsecSiteConnectionTest(common.HeatTestCase):
 
     IPSEC_SITE_CONNECTION_CONF = {
         'ipsec_site_connection': {
@@ -457,7 +457,7 @@ class IPsecSiteConnectionTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class IKEPolicyTest(HeatTestCase):
+class IKEPolicyTest(common.HeatTestCase):
 
     IKE_POLICY_CONF = {
         'ikepolicy': {
@@ -598,7 +598,7 @@ class IKEPolicyTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class IPsecPolicyTest(HeatTestCase):
+class IPsecPolicyTest(common.HeatTestCase):
 
     IPSEC_POLICY_CONF = {
         'ipsecpolicy': {

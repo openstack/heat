@@ -25,7 +25,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import heat_keystoneclient
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 cfg.CONF.import_opt('region_name_for_services', 'heat.common.config')
@@ -33,7 +33,7 @@ cfg.CONF.import_group('keystone_authtoken',
                       'keystonemiddleware.auth_token')
 
 
-class KeystoneClientTest(HeatTestCase):
+class KeystoneClientTest(common.HeatTestCase):
     """Test cases for heat.common.heat_keystoneclient."""
 
     def setUp(self):

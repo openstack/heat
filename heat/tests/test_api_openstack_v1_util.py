@@ -18,10 +18,10 @@ from heat.api.openstack.v1 import util
 from heat.common import context
 from heat.common import policy
 from heat.common.wsgi import Request
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 
 
-class TestGetAllowedParams(HeatTestCase):
+class TestGetAllowedParams(common.HeatTestCase):
     def setUp(self):
         super(TestGetAllowedParams, self).setUp()
         req = Request({})
@@ -83,7 +83,7 @@ class TestGetAllowedParams(HeatTestCase):
         self.assertNotIn('foo', result)
 
 
-class TestPolicyEnforce(HeatTestCase):
+class TestPolicyEnforce(common.HeatTestCase):
     def setUp(self):
         super(TestPolicyEnforce, self).setUp()
         self.req = Request({})

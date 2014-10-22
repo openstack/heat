@@ -30,7 +30,7 @@ from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -113,7 +113,7 @@ def cont_index(obj_name, num_version_hist):
     return (container_header, objects)
 
 
-class SwiftSignalHandleTest(HeatTestCase):
+class SwiftSignalHandleTest(common.HeatTestCase):
     def setUp(self):
         super(SwiftSignalHandleTest, self).setUp()
         utils.setup_dummy_db()
@@ -278,7 +278,7 @@ class SwiftSignalHandleTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
 
-class SwiftSignalTest(HeatTestCase):
+class SwiftSignalTest(common.HeatTestCase):
     def setUp(self):
         super(SwiftSignalTest, self).setUp()
         utils.setup_dummy_db()

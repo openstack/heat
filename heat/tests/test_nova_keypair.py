@@ -19,12 +19,12 @@ from heat.common import exception
 from heat.engine.clients.os import nova
 from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
 
 
-class NovaKeyPairTest(HeatTestCase):
+class NovaKeyPairTest(common.HeatTestCase):
 
     kp_template = {
         "heat_template_version": "2013-05-23",
@@ -180,7 +180,7 @@ class NovaKeyPairTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class KeypairConstraintTest(HeatTestCase):
+class KeypairConstraintTest(common.HeatTestCase):
 
     def test_validation(self):
         client = fakes.FakeClient()

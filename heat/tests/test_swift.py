@@ -19,7 +19,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import swift
 from heat.engine import scheduler
-from heat.tests.common import HeatTestCase
+from heat.tests import common
 from heat.tests import utils
 
 
@@ -64,7 +64,7 @@ swift_template = '''
 '''
 
 
-class swiftTest(HeatTestCase):
+class swiftTest(common.HeatTestCase):
     def setUp(self):
         super(swiftTest, self).setUp()
         self.m.CreateMock(sc.Connection)
