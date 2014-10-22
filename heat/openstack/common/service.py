@@ -38,14 +38,12 @@ from eventlet import event
 from oslo.config import cfg
 
 from heat.openstack.common import eventlet_backdoor
-from heat.openstack.common.gettextutils import _LE, _LI, _LW
-from heat.openstack.common import importutils
+from heat.openstack.common._i18n import _LE, _LI, _LW
 from heat.openstack.common import log as logging
 from heat.openstack.common import systemd
 from heat.openstack.common import threadgroup
 
 
-rpc = importutils.try_import('heat.openstack.common.rpc')
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
@@ -180,12 +178,6 @@ class ServiceLauncher(Launcher):
             status = exc.code
         finally:
             self.stop()
-            if rpc:
-                try:
-                    rpc.cleanup()
-                except Exception:
-                    # We're shutting down, so it doesn't matter at this point.
-                    LOG.exception(_LE('Exception during rpc cleanup.'))
 
         return status, signo
 
