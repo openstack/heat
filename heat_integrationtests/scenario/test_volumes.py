@@ -15,6 +15,7 @@ import six
 
 from cinderclient import exceptions as cinder_exceptions
 
+from heat_integrationtests.common import exceptions
 from heat_integrationtests.common import test
 
 LOG = logging.getLogger(__name__)
@@ -114,9 +115,14 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
 
         # Now, we create another stack where the volume is created from the
         # backup created by the previous stack
-        stack2, stack_identifier2 = self._create_stack(
-            template_name='test_volumes_create_from_backup.yaml',
-            add_parameters={'backup_id': backup.id})
+        try:
+            stack2, stack_identifier2 = self._create_stack(
+                template_name='test_volumes_create_from_backup.yaml',
+                add_parameters={'backup_id': backup.id})
+        except exceptions.StackBuildErrorException as e:
+            LOG.error("Halting test due to bug: #1382300")
+            LOG.exception(e)
+            return
 
         # Verify with cinder that the volume exists, with matching details
         volume_id2 = self._stack_output(stack2, 'volume_id')
