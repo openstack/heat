@@ -275,6 +275,31 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(
             resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
 
+    def test_update_replace_in_failed_without_nested(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                            'GenericResourceType',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Foo',)
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        generic_rsrc.ResourceWithProps.handle_create().AndRaise(
+            exception.ResourceFailure)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.create))
+        self.assertEqual((res.CREATE, res.FAILED), res.state)
+
+        utmpl = rsrc_defn.ResourceDefinition('test_resource',
+                                             'GenericResourceType',
+                                             {'Foo': 'xyz'})
+        # resource in failed status and hasn't nested will enter
+        # UpdateReplace flow
+        self.assertRaises(
+            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+
+        self.m.VerifyAll()
+
     def test_updated_time_changes_only_on_update_calls(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType')
