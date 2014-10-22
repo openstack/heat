@@ -212,9 +212,6 @@ class SwiftSignal(resource.Resource):
         if not sc.is_valid_temp_url_path(self.url.path):
             raise ValueError(msg % {'url': self.url.path,
                                     'part': 'Swift TempURL path'})
-        if not parts[2].endswith(self.context.tenant_id):
-            raise ValueError(msg % {'url': self.url.path,
-                                    'part': 'tenant'})
         if not parts[3] == self.stack.id:
             raise ValueError(msg % {'url': self.url.path,
                                     'part': 'container name'})
