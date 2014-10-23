@@ -116,7 +116,7 @@ class InstanceGroup(stack_resource.StackResource):
         ),
         LAUNCH_CONFIGURATION_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Name of LaunchConfiguration resource.'),
+            _('The reference to a LaunchConfiguration resource.'),
             required=True,
             update_allowed=True
         ),
@@ -192,6 +192,28 @@ class InstanceGroup(stack_resource.StackResource):
                 if iso8601utils.parse_isoduration(pause_time) > 3600:
                     raise ValueError('Maximum PauseTime is 1 hour.')
 
+    def validate_launchconfig(self):
+        # It seems to be a common error to not have a dependancy on the
+        # launchconfiguration. This can happen if the the actual resource
+        # name is used instead of {get_resource: launch_conf} and no
+        # depends_on is used.
+
+        conf_refid = self.properties.get(self.LAUNCH_CONFIGURATION_NAME)
+        if conf_refid:
+            conf = self.stack.resource_by_refid(conf_refid)
+            if conf is None:
+                raise ValueError(_('%(lc)s (%(ref)s)'
+                                   ' reference can not be found.')
+                                 % dict(lc=self.LAUNCH_CONFIGURATION_NAME,
+                                        ref=conf_refid))
+            if self.name not in conf.required_by():
+                raise ValueError(_('%(lc)s (%(ref)s)'
+                                   ' requires a reference to the'
+                                   ' configuration not just the name of the'
+                                   ' resource.') % dict(
+                                       lc=self.LAUNCH_CONFIGURATION_NAME,
+                                       ref=conf_refid))
+
     def get_instance_names(self):
         """Get a list of resource names of the instances in this InstanceGroup.
 
@@ -221,6 +243,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
+        self.validate_launchconfig()
         num_instances = self.properties[self.SIZE]
         initial_template = self._create_template(num_instances)
         return self.create_with_template(initial_template, self._environment())
@@ -484,7 +507,7 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
         ),
         LAUNCH_CONFIGURATION_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Name of LaunchConfiguration resource.'),
+            _('The reference to a LaunchConfiguration resource.'),
             required=True,
             update_allowed=True
         ),
@@ -574,6 +597,7 @@ class AutoScalingGroup(InstanceGroup, cooldown.CooldownMixin):
     }
 
     def handle_create(self):
+        self.validate_launchconfig()
         return self.create_with_template(self.child_template(),
                                          self._environment())
 

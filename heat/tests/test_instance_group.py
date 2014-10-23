@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 
 import mock
 
@@ -363,6 +364,31 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.VerifyAll()
+
+    def test_validate_launch_conf(self):
+        t = template_format.parse(ig_template)
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['LaunchConfigurationName'] = 'urg_i_cant_spell'
+        stack = utils.parse_stack(t)
+
+        rsrc = stack['JobServerGroup']
+        creator = scheduler.TaskRunner(rsrc.create)
+        error = self.assertRaises(exception.ResourceFailure, creator)
+
+        self.assertIn('(urg_i_cant_spell) reference can not be found.',
+                      six.text_type(error))
+
+    def test_validate_launch_conf_no_ref(self):
+        t = template_format.parse(ig_template)
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['LaunchConfigurationName'] = 'JobServerConfig'
+        stack = utils.parse_stack(t)
+
+        rsrc = stack['JobServerGroup']
+        creator = scheduler.TaskRunner(rsrc.create)
+        error = self.assertRaises(exception.ResourceFailure, creator)
+        self.assertIn('(JobServerConfig) requires a reference to the',
+                      six.text_type(error))
 
 
 class TestChildTemplate(common.HeatTestCase):
