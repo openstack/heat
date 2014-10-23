@@ -614,13 +614,15 @@ class LoadBalancer(resource.Resource):
     def handle_delete(self):
         client = self.neutron()
         for member in self.properties.get(self.MEMBERS):
-            member_id = db_api.resource_data_get(self, member)
             try:
+                member_id = db_api.resource_data_get(self, member)
                 client.delete_member(member_id)
+                db_api.resource_data_delete(self, member)
             except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise ex
-            db_api.resource_data_delete(self, member)
+            except exception.NotFound:
+                pass
 
 
 def resource_mapping():
