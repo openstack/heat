@@ -229,7 +229,7 @@ class StackResource(resource.Resource):
         stack = self._parse_nested_stack(name, child_template, user_params,
                                          timeout_mins)
         stack.parameters.set_stack_id(nested_stack.identifier())
-
+        nested_stack.updated_time = self.updated_time
         updater = scheduler.TaskRunner(nested_stack.update_task, stack)
         updater.start()
         return updater
