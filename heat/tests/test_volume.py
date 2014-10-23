@@ -14,6 +14,7 @@
 import collections
 import copy
 import json
+import mock
 
 from cinderclient import exceptions as cinder_exp
 from cinderclient.v2 import client as cinderclient
@@ -564,6 +565,45 @@ class VolumeTest(BaseVolumeTest):
                       "(AWS::EC2::Volume) is not supported",
                       six.text_type(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+
+    def test_volume_check(self):
+        stack = utils.parse_stack(self.t, stack_name='volume_check')
+        res = stack['DataVolume']
+        res.cinder = mock.Mock()
+
+        fake_volume = FakeVolume('available', 'available')
+        res.cinder().volumes.get.return_value = fake_volume
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+        fake_volume = FakeVolume('in-use', 'in-use')
+        res.cinder().volumes.get.return_value = fake_volume
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_volume_check_not_available(self):
+        stack = utils.parse_stack(self.t, stack_name='volume_check')
+        res = stack['DataVolume']
+        res.cinder = mock.Mock()
+
+        fake_volume = FakeVolume('foobar', 'foobar')
+        res.cinder().volumes.get.return_value = fake_volume
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('foobar', res.status_reason)
+
+    def test_volume_check_fail(self):
+        stack = utils.parse_stack(self.t, stack_name='volume_check')
+        res = stack['DataVolume']
+        res.cinder = mock.Mock()
+        res.cinder().volumes.get.side_effect = Exception('boom')
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('boom', res.status_reason)
 
     def test_snapshot(self):
         stack_name = 'test_volume_stack'
