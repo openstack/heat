@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the heat project.
 #
 # Translators:
+# Maxime COQUEREL <max.coquerel@gmail.com>, 2014
 msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-20 06:02+0000\n"
-"PO-Revision-Date: 2014-08-07 07:52+0000\n"
+"POT-Creation-Date: 2014-10-23 06:00+0000\n"
+"PO-Revision-Date: 2014-10-21 00:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -26,7 +27,7 @@ msgstr ""
 #: heat/api/aws/utils.py:98
 #, python-format
 msgid "Request does not contain %s parameter!"
-msgstr ""
+msgstr "La requete ne doit pas contenir le paramètre %s!"
 
 #: heat/api/cloudwatch/watch.py:254
 msgid "Request does not contain required MetricData"
@@ -34,11 +35,11 @@ msgstr ""
 
 #: heat/common/heat_keystoneclient.py:134
 msgid "Admin client authentication failed"
-msgstr ""
+msgstr "Echec d'authentification Admin client"
 
 #: heat/common/heat_keystoneclient.py:154
 msgid "Domain admin client authentication failed"
-msgstr ""
+msgstr "Echec d'authentification Domain admin client"
 
 #: heat/common/heat_keystoneclient.py:184
 msgid "Unknown version in auth_token_info"
@@ -56,8 +57,8 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:338
-#: heat/common/heat_keystoneclient.py:425
+#: heat/common/heat_keystoneclient.py:342
+#: heat/common/heat_keystoneclient.py:429
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -78,12 +79,12 @@ msgstr ""
 #: heat/common/lifecycle_plugin_utils.py:109
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
-msgstr ""
+msgstr "%(opname) %(ci)s échec pour  %(a)s sur %(sid)s"
 
 #: heat/common/plugin_loader.py:97
 #, python-format
 msgid "Failed to import module %s"
-msgstr ""
+msgstr "Echec lors de l'import du module %s"
 
 #: heat/engine/api.py:267
 msgid "Unexpected number of keys in watch_data.data!"
@@ -92,17 +93,17 @@ msgstr ""
 #: heat/engine/environment.py:436
 #, python-format
 msgid "Failed to read %s"
-msgstr ""
+msgstr "Echec de lecture %s"
 
 #: heat/engine/environment.py:448
 #, python-format
 msgid "Failed to parse %(file_path)s"
-msgstr ""
+msgstr "Echec d'analyse  %(file_path)s"
 
 #: heat/engine/environment.py:452
 #, python-format
 msgid "Failed to read %(file_path)s"
-msgstr ""
+msgstr "Echec de lecture %(file_path)s"
 
 #: heat/engine/plugin_manager.py:97
 #, python-format
@@ -114,17 +115,17 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:908 heat/engine/resource.py:935
+#: heat/engine/resource.py:898 heat/engine/resource.py:925
 #, python-format
 msgid "DB error %s"
-msgstr ""
+msgstr "Erreur base de donné %s"
 
-#: heat/engine/service.py:261
+#: heat/engine/service.py:260
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:1348
+#: heat/engine/service.py:1355
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -151,7 +152,7 @@ msgstr ""
 
 #: heat/engine/resources/eip.py:322 heat/engine/resources/eip.py:345
 msgid "Port not specified."
-msgstr ""
+msgstr "Port non spécifié"
 
 #: heat/engine/resources/nova_floatingip.py:75
 msgid ""
