@@ -67,6 +67,10 @@
 # (integer value)
 #stack_action_timeout=3600
 
+# Error wait time in seconds for stack action (ie. create or
+# update). (integer value)
+#error_wait_time=240
+
 # RPC timeout for the engine liveness check that is used for
 # stack locking. (integer value)
 #engine_life_check_timeout=2

@@ -31,7 +31,6 @@ from heat.engine import environment
 from heat.engine import resources
 from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
-from heat.engine import stack
 from heat.tests import fakes
 from heat.tests import utils
 
@@ -90,6 +89,7 @@ class HeatTestCase(testscenarios.WithScenarios,
                                'environment.d')
 
         cfg.CONF.set_default('environment_dir', env_dir)
+        cfg.CONF.set_override('error_wait_time', None)
         self.addCleanup(cfg.CONF.reset)
 
         messaging.setup("fake://", optional=True)
@@ -111,14 +111,6 @@ class HeatTestCase(testscenarios.WithScenarios,
 
         utils.setup_dummy_db()
         self.addCleanup(utils.reset_dummy_db)
-
-        cached_wait_time = stack.ERROR_WAIT_TIME
-        stack.ERROR_WAIT_TIME = None
-
-        def replace_wait_time():
-            stack.ERROR_WAIT_TIME = cached_wait_time
-
-        self.addCleanup(replace_wait_time)
 
     def stub_wallclock(self):
         """
