@@ -194,7 +194,6 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         exc = swiftclient_exceptions.ClientException("Overlimit",
                                                      http_status=413)
         mock_swift_object.delete_object.side_effect = (None, None, None, exc)
-        mock_swift_object.is_not_found.return_value = False
         rsrc = st.resources['test_wait_condition_handle']
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(rsrc.delete))
@@ -219,8 +218,6 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         exc = swiftclient_exceptions.ClientException("Object DELETE failed",
                                                      http_status=404)
         mock_swift_object.delete_object.side_effect = (None, None, None, exc)
-        mock_swift_object.is_not_found.side_effect = (True, False)
-        mock_swift_object.is_conflict.return_value = False
 
         exc = swiftclient_exceptions.ClientException("Overlimit",
                                                      http_status=413)
