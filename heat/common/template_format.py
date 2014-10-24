@@ -14,6 +14,7 @@
 import itertools
 import json
 import re
+import six
 
 from oslo.config import cfg
 import yaml
@@ -54,6 +55,7 @@ def simple_parse(tmpl_str):
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)
         except yaml.YAMLError as yea:
+            yea = six.text_type(yea)
             msg = _('Error parsing template: %s') % yea
             raise ValueError(msg)
         else:
