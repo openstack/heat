@@ -41,7 +41,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
             'project_id': con.tenant,
             'token': self.auth_token,
             'endpoint_type': endpoint_type,
-            'ca_file': self._get_client_option('glance', 'ca_file'),
+            'cacert': self._get_client_option('glance', 'ca_file'),
             'cert_file': self._get_client_option('glance', 'cert_file'),
             'key_file': self._get_client_option('glance', 'key_file'),
             'insecure': self._get_client_option('glance', 'insecure')
