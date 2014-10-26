@@ -178,7 +178,7 @@ for the *instance_type* parameter:
       label: Instance Type
       description: Type of instance (flavor) to be used
       constraints:
-        - allow_values: [ m1.medium, m1.large, m1.xlarge ]
+        - allowed_values: [ m1.medium, m1.large, m1.xlarge ]
           description: Value must be one of m1.medium, m1.large or m1.xlarge.
 
 The *constraints* section allows for defining a list of constraints that must
