@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-20 06:02+0000\n"
-"PO-Revision-Date: 2014-08-07 07:52+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/"
 "heat/language/en_GB/)\n"
@@ -56,8 +56,8 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:338
-#: heat/common/heat_keystoneclient.py:425
+#: heat/common/heat_keystoneclient.py:342
+#: heat/common/heat_keystoneclient.py:429
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -114,17 +114,17 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:908 heat/engine/resource.py:935
+#: heat/engine/resource.py:898 heat/engine/resource.py:925
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/service.py:261
+#: heat/engine/service.py:260
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:1348
+#: heat/engine/service.py:1355
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -174,11 +174,11 @@ msgstr "Original exception being dropped: %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "Unexpected exception occurred %d time(s)... retrying."
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "in fixed duration looping call"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "in dynamic looping call"
 
@@ -197,10 +197,6 @@ msgstr "No handler for matches of kind %s"
 msgid "Failed to understand rule %r"
 msgstr "Failed to understand rule %r"
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "Exception during rpc cleanup."
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "Unhandled exception"

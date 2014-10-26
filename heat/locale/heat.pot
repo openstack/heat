@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev203.gce6dac2\n"
+"Project-Id-Version: heat 2015.1.dev215.g609cfc8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-23 06:00+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1854,9 +1854,9 @@ msgid "truncating shrinkage to %s"
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:114
-#: heat/engine/resources/autoscaling.py:482
-#: heat/engine/resources/autoscaling.py:515
-#: heat/engine/resources/autoscaling.py:520
+#: heat/engine/resources/autoscaling.py:505
+#: heat/engine/resources/autoscaling.py:538
+#: heat/engine/resources/autoscaling.py:543
 #: heat/engine/resources/instance.py:193 heat/engine/resources/instance.py:198
 #: heat/engine/resources/instance.py:203 heat/engine/resources/instance.py:208
 #: heat/engine/resources/instance.py:213 heat/engine/resources/instance.py:218
@@ -1875,8 +1875,8 @@ msgid "Not Implemented."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:119
-#: heat/engine/resources/autoscaling.py:487
-msgid "Name of LaunchConfiguration resource."
+#: heat/engine/resources/autoscaling.py:510
+msgid "The reference to a LaunchConfiguration resource."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:125
@@ -1884,12 +1884,12 @@ msgid "Desired number of instances."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:131
-#: heat/engine/resources/autoscaling.py:528
+#: heat/engine/resources/autoscaling.py:551
 msgid "List of LoadBalancer resources."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:135
-#: heat/engine/resources/autoscaling.py:544
+#: heat/engine/resources/autoscaling.py:567
 msgid "Tags to attach to this group."
 msgstr ""
 
@@ -1897,120 +1897,132 @@ msgstr ""
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:415
+#: heat/engine/resources/autoscaling.py:205
+#, python-format
+msgid "%(lc)s (%(ref)s) reference can not be found."
+msgstr ""
+
+#: heat/engine/resources/autoscaling.py:210
+#, python-format
+msgid ""
+"%(lc)s (%(ref)s) requires a reference to the configuration not just the "
+"name of the resource."
+msgstr ""
+
+#: heat/engine/resources/autoscaling.py:438
 #, python-format
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:493
+#: heat/engine/resources/autoscaling.py:516
 msgid "Maximum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:499
+#: heat/engine/resources/autoscaling.py:522
 msgid "Minimum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:505
-#: heat/engine/resources/autoscaling.py:772
+#: heat/engine/resources/autoscaling.py:528
+#: heat/engine/resources/autoscaling.py:796
 #: heat/engine/resources/aws/scaling_policy.py:72
 #: heat/engine/resources/openstack/scaling_policy.py:80
 msgid "Cooldown period, in seconds."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:510
+#: heat/engine/resources/autoscaling.py:533
 msgid "Desired initial number of instances."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:532
+#: heat/engine/resources/autoscaling.py:555
 msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be "
 "exactly 1."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:538
+#: heat/engine/resources/autoscaling.py:561
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:645
+#: heat/engine/resources/autoscaling.py:669
 #, python-format
 msgid "Start resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:660
+#: heat/engine/resources/autoscaling.py:684
 msgid "Failed sending error notification"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:665
+#: heat/engine/resources/autoscaling.py:689
 #, python-format
 msgid "End resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:693
+#: heat/engine/resources/autoscaling.py:717
 msgid "MinSize can not be greater than MaxSize"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:697
+#: heat/engine/resources/autoscaling.py:721
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:703
+#: heat/engine/resources/autoscaling.py:727
 msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:712
+#: heat/engine/resources/autoscaling.py:736
 msgid "Anything other than one VPCZoneIdentifier"
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:749
+#: heat/engine/resources/autoscaling.py:773
 msgid ""
 "Resource definition for the resources in the group, in HOT format. The "
 "value of this property is the definition of a resource just as if it had "
 "been declared in the template itself."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:758
+#: heat/engine/resources/autoscaling.py:782
 msgid "Maximum number of resources in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:765
+#: heat/engine/resources/autoscaling.py:789
 msgid "Minimum number of resources in the group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:777
+#: heat/engine/resources/autoscaling.py:801
 msgid "Desired initial number of resources."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:782
+#: heat/engine/resources/autoscaling.py:806
 msgid "Policy for rolling updates for this scaling group."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:788
+#: heat/engine/resources/autoscaling.py:812
 msgid ""
 "The minimum number of resources in service while rolling updates are "
 "being executed."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:794
+#: heat/engine/resources/autoscaling.py:818
 msgid "The maximum number of resources to replace at once."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:799
+#: heat/engine/resources/autoscaling.py:823
 msgid "The number of seconds to wait between batches of updates."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:809
+#: heat/engine/resources/autoscaling.py:833
 #: heat/engine/resources/resource_group.py:173
 msgid ""
 "A map of resource names to the specified attribute of each individual "
 "resource."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:813
+#: heat/engine/resources/autoscaling.py:837
 msgid "A list of the specified attribute of each individual resource."
 msgstr ""
 
-#: heat/engine/resources/autoscaling.py:816
+#: heat/engine/resources/autoscaling.py:840
 msgid "The current size of AutoscalingResourceGroup."
 msgstr ""
 
@@ -3375,30 +3387,30 @@ msgstr ""
 msgid "A map containing all headers for the container."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:47
+#: heat/engine/resources/swiftsignal.py:45
 #: heat/engine/resources/wait_condition.py:292
 #, python-format
 msgid "%(len)d of %(count)d received - %(reasons)s"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:49
+#: heat/engine/resources/swiftsignal.py:47
 #: heat/engine/resources/wait_condition.py:294
 #, python-format
 msgid "%(len)d of %(count)d received"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:71
+#: heat/engine/resources/swiftsignal.py:70
 msgid ""
 "Tokens are not needed for Swift TempURLs.  This attribute is being kept "
 "for compatibility with the OS::Heat::WaitConditionHandle resource"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:77
+#: heat/engine/resources/swiftsignal.py:76
 #: heat/engine/resources/wait_condition.py:125
 msgid "Endpoint/url which can be used for signalling handle"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:81
+#: heat/engine/resources/swiftsignal.py:80
 #: heat/engine/resources/wait_condition.py:129
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be "
@@ -3407,20 +3419,20 @@ msgid ""
 "by adding --data-binary '{\"status\": \"FAILURE\"}'"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:142
+#: heat/engine/resources/swiftsignal.py:144
 msgid ""
 "URL of TempURL where resource will signal completion and optionally "
 "upload data."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:147
+#: heat/engine/resources/swiftsignal.py:149
 msgid ""
 "The maximum number of seconds to wait for the resource to signal "
 "completion.  Once the timeout is reached, creation of the signal resource"
 " will fail."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:158
+#: heat/engine/resources/swiftsignal.py:160
 #: heat/engine/resources/wait_condition.py:329
 #: heat/engine/resources/wait_condition.py:451
 msgid ""
@@ -3428,16 +3440,16 @@ msgid ""
 "creation process continues."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:172
+#: heat/engine/resources/swiftsignal.py:174
 msgid "JSON data that was uploaded via the SwiftSignalHandle."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:209
+#: heat/engine/resources/swiftsignal.py:211
 #, python-format
 msgid "\"%(url)s\" is not a valid SwiftSignalHandle.  The %(part)s is invalid"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:245
+#: heat/engine/resources/swiftsignal.py:247
 #, python-format
 msgid "Unknown status: %s"
 msgstr ""
@@ -5470,22 +5482,22 @@ msgid ""
 "characters. Please use unicode() or translate() instead."
 msgstr ""
 
-#: heat/openstack/common/log.py:327
+#: heat/openstack/common/log.py:287
 #, python-format
 msgid "Deprecated: %s"
 msgstr ""
 
-#: heat/openstack/common/log.py:436
+#: heat/openstack/common/log.py:395
 #, python-format
 msgid "Error loading logging config %(log_config)s: %(err_msg)s"
 msgstr ""
 
-#: heat/openstack/common/log.py:486
+#: heat/openstack/common/log.py:456
 #, python-format
 msgid "syslog facility must be one of: %s"
 msgstr ""
 
-#: heat/openstack/common/log.py:729
+#: heat/openstack/common/log.py:707
 #, python-format
 msgid "Fatal call to deprecated config: %(msg)s"
 msgstr ""
@@ -5508,11 +5520,11 @@ msgstr ""
 msgid "Rules must be an instance of dict or Rules, got %s instead"
 msgstr ""
 
-#: heat/openstack/common/processutils.py:58
+#: heat/openstack/common/processutils.py:59
 msgid "Unexpected error while running command."
 msgstr ""
 
-#: heat/openstack/common/processutils.py:61
+#: heat/openstack/common/processutils.py:62
 #, python-format
 msgid ""
 "%(description)s\n"
@@ -5524,18 +5536,28 @@ msgstr ""
 
 #: heat/openstack/common/processutils.py:143
 #, python-format
-msgid "Got unknown keyword args to utils.execute: %r"
+msgid "Got unknown keyword args: %r"
 msgstr ""
 
-#: heat/openstack/common/processutils.py:149
+#: heat/openstack/common/processutils.py:148
 msgid "Command requested root, but did not specify a root helper."
 msgstr ""
 
-#: heat/openstack/common/processutils.py:246
+#: heat/openstack/common/processutils.py:158
+#, python-format
+msgid "Running cmd (subprocess): %s"
+msgstr ""
+
+#: heat/openstack/common/processutils.py:206
+#, python-format
+msgid "%r failed. Retrying."
+msgstr ""
+
+#: heat/openstack/common/processutils.py:248
 msgid "Environment not supported over SSH"
 msgstr ""
 
-#: heat/openstack/common/processutils.py:250
+#: heat/openstack/common/processutils.py:252
 msgid "process_input not supported over SSH"
 msgstr ""
 
@@ -5574,18 +5596,28 @@ msgstr ""
 msgid "Invalid string format: %s"
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:70
+#: heat/openstack/common/versionutils.py:90
 #, python-format
 msgid ""
 "%(what)s is deprecated as of %(as_of)s in favor of %(in_favor_of)s and "
 "may be removed in %(remove_in)s."
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:74
+#: heat/openstack/common/versionutils.py:94
 #, python-format
 msgid ""
 "%(what)s is deprecated as of %(as_of)s and may be removed in "
 "%(remove_in)s. It will not be superseded."
+msgstr ""
+
+#: heat/openstack/common/versionutils.py:98
+#, python-format
+msgid "%(what)s is deprecated as of %(as_of)s in favor of %(in_favor_of)s."
+msgstr ""
+
+#: heat/openstack/common/versionutils.py:101
+#, python-format
+msgid "%(what)s is deprecated as of %(as_of)s. It will not be superseded."
 msgstr ""
 
 #: heat/openstack/common/crypto/utils.py:30

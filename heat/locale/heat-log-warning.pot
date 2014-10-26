@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev161.g6b9a2b5\n"
+"Project-Id-Version: heat 2015.1.dev215.g609cfc8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-20 06:02+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,38 +33,38 @@ msgid ""
 "falling back to using default"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:306
+#: heat/common/heat_keystoneclient.py:310
 #, python-format
 msgid "Truncating the username %s to the last 64 characters."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:404
+#: heat/common/heat_keystoneclient.py:408
 msgid ""
 "Falling back to legacy non-domain user create, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:458
+#: heat/common/heat_keystoneclient.py:462
 msgid ""
 "Falling back to legacy non-domain user delete, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:479
-#: heat/common/heat_keystoneclient.py:496
+#: heat/common/heat_keystoneclient.py:483
+#: heat/common/heat_keystoneclient.py:500
 msgid "Falling back to legacy non-domain project, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:587
-#: heat/common/heat_keystoneclient.py:604
+#: heat/common/heat_keystoneclient.py:591
+#: heat/common/heat_keystoneclient.py:608
 msgid "Falling back to legacy non-domain keypair, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:623
+#: heat/common/heat_keystoneclient.py:627
 msgid "Falling back to legacy non-domain disable, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:633
+#: heat/common/heat_keystoneclient.py:637
 msgid "Falling back to legacy non-domain enable, configure domain in heat.conf"
 msgstr ""
 
@@ -78,32 +78,32 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:887
+#: heat/engine/resource.py:877
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1073
+#: heat/engine/resource.py:1063
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:276
+#: heat/engine/service.py:275
 #, python-format
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/service.py:1070
+#: heat/engine/service.py:1077
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1325
+#: heat/engine/service.py:1332
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1354
+#: heat/engine/service.py:1361
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -195,12 +195,12 @@ msgstr ""
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
 
-#: heat/openstack/common/loopingcall.py:82
+#: heat/openstack/common/loopingcall.py:87
 #, python-format
-msgid "task run outlasted interval by %s sec"
+msgid "task %(func_name)s run outlasted interval by %(delay).2f sec"
 msgstr ""
 
-#: heat/openstack/common/service.py:364
+#: heat/openstack/common/service.py:356
 #, python-format
 msgid "pid %d not in child list"
 msgstr ""

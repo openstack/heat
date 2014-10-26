@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-23 06:00+0000\n"
-"PO-Revision-Date: 2014-10-21 00:51+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -175,11 +175,11 @@ msgstr "Exception d'origine en cours de suppression : %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "Exception inattendue survenue %d fois... Nouvel essai."
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "dans l'appel en boucle de durée fixe"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "dans l'appel en boucle dynamique"
 
@@ -198,10 +198,6 @@ msgstr "Aucun gestionnaire pour les correspondances de type %s"
 msgid "Failed to understand rule %r"
 msgstr "Règle %r incompréhensible"
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "Exception pendant le nettoyage rpc."
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "Exception non gérée"

@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-20 06:02+0000\n"
-"PO-Revision-Date: 2014-08-07 07:52+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Japanese (http://www.transifex.com/projects/p/heat/language/"
 "ja/)\n"
@@ -58,8 +58,8 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:338
-#: heat/common/heat_keystoneclient.py:425
+#: heat/common/heat_keystoneclient.py:342
+#: heat/common/heat_keystoneclient.py:429
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -116,17 +116,17 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:908 heat/engine/resource.py:935
+#: heat/engine/resource.py:898 heat/engine/resource.py:925
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/service.py:261
+#: heat/engine/service.py:260
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:1348
+#: heat/engine/service.py:1355
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -176,11 +176,11 @@ msgstr "除去される元の例外: %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "予期せぬ例外が、%d回()発生しました。再試行中。"
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "一定期間の呼び出しループ"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "動的呼び出しループ"
 
@@ -199,10 +199,6 @@ msgstr "種類 %s の一致向けのハンドラーがありません"
 msgid "Failed to understand rule %r"
 msgstr "ルール %r を解釈できませんでした"
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "RPCクリーンアップ中に例外が発生"
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "未処理例外"

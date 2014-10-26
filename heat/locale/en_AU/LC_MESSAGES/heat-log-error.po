@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-23 06:00+0000\n"
-"PO-Revision-Date: 2014-10-21 00:51+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: English (Australia) (http://www.transifex.com/projects/p/heat/"
 "language/en_AU/)\n"
@@ -174,11 +174,11 @@ msgstr "Original exception being dropped: %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "Unexpected exception occurred %d time(s)... retrying."
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "in fixed duration looping call"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "in dynamic looping call"
 
@@ -197,10 +197,6 @@ msgstr "No handler for matches of kind %s"
 msgid "Failed to understand rule %r"
 msgstr "Failed to understand rule %r"
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "Exception during rpc cleanup."
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "Unhandled exception"
