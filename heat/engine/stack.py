@@ -476,9 +476,17 @@ class Stack(collections.Mapping):
                 raise StackValidationFailed(message=result)
 
             for val in self.outputs.values():
-                snippet = val.get('Value', '')
                 try:
-                    function.validate(snippet)
+                    if isinstance(val, six.string_types):
+                        message = _('"Outputs" must contain '
+                                    'a map of output maps, '
+                                    'find a string "%s".') % val
+                        raise StackValidationFailed(message=message)
+                    if not val or not val.get('Value', ''):
+                        msg = _('Every Output object must '
+                                'contain a Value member.')
+                        raise StackValidationFailed(message=msg)
+                    function.validate(val.get('Value', ''))
                 except Exception as ex:
                     reason = 'Output validation error: %s' % six.text_type(ex)
                     raise StackValidationFailed(message=reason)
