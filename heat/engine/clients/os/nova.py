@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -369,6 +370,10 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         Serialize non-string metadata values before sending them to
         Nova.
         """
+        if not isinstance(metadata, collections.Mapping):
+            raise exception.StackValidationFailed(message=_(
+                "nova server metadata needs to be a Map."))
+
         return dict((key, (value if isinstance(value,
                                                six.string_types)
                            else json.dumps(value))
