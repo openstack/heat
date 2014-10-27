@@ -1128,6 +1128,15 @@ class Server(stack_user.StackUser):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
 
+    def handle_restore(self, defn, restore_data):
+        image_id = restore_data['resource_data']['snapshot_image_id']
+        props = dict(
+            (key, value) for (key, value) in
+            defn.properties(self.properties_schema).iteritems()
+            if value is not None)
+        props[self.IMAGE] = image_id
+        return defn.freeze(properties=props)
+
 
 class FlavorConstraint(constraints.BaseCustomConstraint):
 
