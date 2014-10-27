@@ -564,13 +564,13 @@ The syntax of the get_attr function is as follows:
 ::
 
   get_attr:
-    - <resource ID>
+    - <resource name>
     - <attribute name>
     - <key/index 1> (optional)
     - <key/index 2> (optional)
     - ...
 
-resource ID
+resource name
     This parameter specifies the resource for which the attributes shall be
     resolved. This resource must be defined within the *resources* section of
     the template (see also :ref:`hot_spec_resources`).
