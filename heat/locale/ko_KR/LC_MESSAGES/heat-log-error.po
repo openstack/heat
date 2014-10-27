@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-20 06:02+0000\n"
-"PO-Revision-Date: 2014-10-17 10:50+0000\n"
-"Last-Translator: Mario Cho <hephaex@gmail.com>\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
 "Language: ko_KR\n"
@@ -57,8 +57,8 @@ msgstr "신뢰할 수 있는 token 재설정 실패!"
 msgid "Trust impersonation failed"
 msgstr "트러스트의 위장이 실패했습니다."
 
-#: heat/common/heat_keystoneclient.py:338
-#: heat/common/heat_keystoneclient.py:425
+#: heat/common/heat_keystoneclient.py:342
+#: heat/common/heat_keystoneclient.py:429
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -117,17 +117,17 @@ msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#: heat/engine/resource.py:908 heat/engine/resource.py:935
+#: heat/engine/resource.py:898 heat/engine/resource.py:925
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
 
-#: heat/engine/service.py:261
+#: heat/engine/service.py:260
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/service.py:1348
+#: heat/engine/service.py:1355
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
@@ -180,11 +180,11 @@ msgstr "기존 예외가 삭제됨: %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "예기치 않은 예외 %d 번 발생하였습니다... 다시 시도중."
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "고정 기간 루프 호출에서"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "동적 루프 호출에서"
 
@@ -203,10 +203,6 @@ msgstr "%s 유형의 일치에 대한 핸들러가 없음"
 msgid "Failed to understand rule %r"
 msgstr "룰 %r를 이해하지 못했습니다."
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "RPC 정리하는 동안 예외입니다."
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "처리되지 않은 예외"

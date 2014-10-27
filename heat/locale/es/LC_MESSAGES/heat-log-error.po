@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-23 06:00+0000\n"
-"PO-Revision-Date: 2014-10-21 00:51+0000\n"
+"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"PO-Revision-Date: 2014-10-24 01:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -179,11 +179,11 @@ msgstr "Se está descartando excepción original: %s"
 msgid "Unexpected exception occurred %d time(s)... retrying."
 msgstr "La excepción inesperada ha ocurrido %d vez(veces)... reintentando."
 
-#: heat/openstack/common/loopingcall.py:89
+#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "en llamada en bucle de duración fija"
 
-#: heat/openstack/common/loopingcall.py:131
+#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "en llamada en bucle dinámica"
 
@@ -202,10 +202,6 @@ msgstr "No hay manejador para coincidencias de clase %s"
 msgid "Failed to understand rule %r"
 msgstr "Ha ocurrido un error al interpretar la regla %r"
 
-#: heat/openstack/common/service.py:188
-msgid "Exception during rpc cleanup."
-msgstr "Excepción durante limpieza de rpc."
-
-#: heat/openstack/common/service.py:277
+#: heat/openstack/common/service.py:269
 msgid "Unhandled exception"
 msgstr "Excepción no controlada"
