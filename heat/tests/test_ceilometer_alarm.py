@@ -179,7 +179,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         if 'matching_metadata' in al and al['matching_metadata']:
             for k, v in al['matching_metadata'].items():
                 key = 'metadata.metering.' + k
-                query.append(dict(field=key, op='eq', value=v))
+                query.append(dict(field=key, op='eq', value=six.text_type(v)))
         if 'matching_metadata' in al:
             del al['matching_metadata']
         if query:
@@ -318,6 +318,28 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.assertIsInstance(rsrc.properties['evaluation_periods'], int)
         self.assertIsInstance(rsrc.properties['period'], int)
         self.assertIsInstance(rsrc.properties['threshold'], int)
+
+        self.m.VerifyAll()
+
+    def test_mem_alarm_high_correct_matching_metadata(self):
+        t = template_format.parse(alarm_template)
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        properties['matching_metadata'] = {'fro': 'bar',
+                                           'bro': True,
+                                           'dro': 1234,
+                                           'pro': '{"Mem": {"Ala": {"Hig"}}}',
+                                           'tro': [1, 2, 3, 4]}
+
+        self.stack = self.create_stack(template=json.dumps(t))
+
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.properties.data = rsrc.cfn_to_ceilometer(self.stack, properties)
+        self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
+        for key in rsrc.properties.data['threshold_rule']['query']:
+            self.assertIsInstance(key['value'], six.text_type)
 
         self.m.VerifyAll()
 

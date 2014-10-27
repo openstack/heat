@@ -244,7 +244,10 @@ class CeilometerAlarm(resource.Resource):
                 key = 'metadata.%s' % m_k
             else:
                 key = 'metadata.%s%s' % (prefix, m_k)
-            query.append(dict(field=key, op='eq', value=m_v))
+            # NOTE(prazumovsky): type of query value must be a string, but
+            # matching_metadata value type can not be a string, so we
+            # must convert value to a string type.
+            query.append(dict(field=key, op='eq', value=six.text_type(m_v)))
         if self.MATCHING_METADATA in kwargs:
             del kwargs[self.MATCHING_METADATA]
         if self.QUERY in kwargs:
