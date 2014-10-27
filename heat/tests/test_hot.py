@@ -156,6 +156,21 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = parser.Template(hot_tpl)
         self.assertEqual(expected, tmpl[tmpl.RESOURCES])
 
+    def test_translate_resources_bad_no_data(self):
+        """Test translation of resources without any mapping."""
+
+        hot_tpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+        """)
+
+        tmpl = parser.Template(hot_tpl)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.__getitem__, tmpl.RESOURCES)
+        self.assertEqual('Each resource must contain a type key.',
+                         six.text_type(error))
+
     def test_translate_resources_bad_type(self):
         """Test translation of resources including invalid keyword."""
 
@@ -219,7 +234,8 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = parser.Template(hot_tpl)
         error = self.assertRaises(exception.StackValidationFailed,
                                   tmpl.__getitem__, tmpl.RESOURCES)
-        self.assertEqual('"resources" must contain a map of resource maps.',
+        self.assertEqual('"resources" must contain a map of resource maps. '
+                         'Found a [%s] instead' % six.text_type,
                          six.text_type(error))
 
     def test_translate_resources_bad_metadata(self):
@@ -333,6 +349,38 @@ class HOTemplateTest(common.HeatTestCase):
 
         tmpl = parser.Template(hot_tpl)
         self.assertEqual(expected, tmpl[tmpl.OUTPUTS])
+
+    def test_translate_outputs_bad_no_data(self):
+        """Test translation of outputs without any mapping."""
+
+        hot_tpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        outputs:
+          output1:
+        """)
+
+        tmpl = parser.Template(hot_tpl)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.__getitem__, tmpl.OUTPUTS)
+        self.assertEqual('Each output must contain a value key.',
+                         six.text_type(error))
+
+    def test_translate_outputs_bad_without_name(self):
+        """Test translation of outputs without name."""
+
+        hot_tpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        outputs:
+          description: wrong output
+          value: value1
+        """)
+
+        tmpl = parser.Template(hot_tpl)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  tmpl.__getitem__, tmpl.OUTPUTS)
+        self.assertEqual('"outputs" must contain a map of output maps. '
+                         'Found a [%s] instead' % six.text_type,
+                         six.text_type(error))
 
     def test_translate_outputs_bad_description(self):
         """Test translation of outputs into internal engine format."""
