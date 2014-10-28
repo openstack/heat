@@ -37,7 +37,7 @@ class ServerGroup(resource.Resource):
         ),
         POLICIES: properties.Schema(
             properties.Schema.LIST,
-            _('A list of string policies to apply.'
+            _('A list of string policies to apply. '
               'Defaults to anti-affinity.'),
             default=['anti-affinity'],
             constraints=[
