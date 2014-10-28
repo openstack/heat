@@ -177,6 +177,7 @@ class CloudDns(resource.Resource):
             # handle records separately
             records = prop_diff.pop(self.RECORDS, {})
 
+        if prop_diff:
             # Handle top level domain properties
             dom.update(**prop_diff)
 
