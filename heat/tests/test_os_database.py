@@ -11,11 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from troveclient.openstack.common.apiclient import exceptions as troveexc
 import uuid
 
 import mock
 import six
+from troveclient.openstack.common.apiclient import exceptions as troveexc
 
 from heat.common import exception
 from heat.common import template_format
@@ -23,7 +23,9 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine.resources import os_database
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -163,6 +165,45 @@ class OSDBInstanceTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
+
+    def test_create_failed(self):
+        mock_stack = mock.Mock()
+        mock_stack.db_resource_get.return_value = None
+        res_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
+        osdb_res = os_database.OSDBInstance("test", res_def, mock_stack)
+
+        # test for bad statuses
+        mock_input = mock.Mock()
+        mock_input.status = 'ERROR'
+        error_string = ('Went to status ERROR due to "The last operation for '
+                        'the database instance failed due to an error."')
+        exc = self.assertRaises(resource.ResourceInError,
+                                osdb_res.check_create_complete,
+                                mock_input)
+        self.assertIn(error_string, six.text_type(exc))
+
+        mock_input = mock.Mock()
+        mock_input.status = 'FAILED'
+        error_string = ('Went to status FAILED due to "The database instance '
+                        'was created, but heat failed to set up the '
+                        'datastore. If a database instance is in the FAILED '
+                        'state, it should be deleted and a new one should '
+                        'be created."')
+        exc = self.assertRaises(resource.ResourceInError,
+                                osdb_res.check_create_complete,
+                                mock_input)
+        self.assertIn(error_string, six.text_type(exc))
+
+        # test if error string is not defined
+
+        osdb_res.TROVE_STATUS_REASON = {}
+        mock_input = mock.Mock()
+        mock_input.status = 'ERROR'
+        error_string = ('Went to status ERROR due to "Unknown"')
+        exc = self.assertRaises(resource.ResourceInError,
+                                osdb_res.check_create_complete,
+                                mock_input)
+        self.assertIn(error_string, six.text_type(exc))
 
     def test_osdatabase_restore_point(self):
         fake_dbinstance = FakeDBInstance()
