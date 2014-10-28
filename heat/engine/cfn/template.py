@@ -87,7 +87,7 @@ class CfnTemplate(template.Template):
                     field = data[key]
                     if not isinstance(field, valid_types):
                         args = {'name': name, 'key': key, 'typename': typename}
-                        msg = _('Resource %(name)s %(key)s type'
+                        msg = _('Resource %(name)s %(key)s type '
                                 'must be %(typename)s') % args
                         raise TypeError(msg)
                     return field
