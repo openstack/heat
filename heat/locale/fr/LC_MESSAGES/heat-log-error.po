@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-26 06:00+0000\n"
-"PO-Revision-Date: 2014-10-24 01:08+0000\n"
-"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
+"POT-Creation-Date: 2014-10-28 06:00+0000\n"
+"PO-Revision-Date: 2014-10-27 20:01+0000\n"
+"Last-Translator: Maxime COQUEREL <max.coquerel@gmail.com>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
 "Language: fr\n"
@@ -43,7 +43,7 @@ msgstr "Echec d'authentification Domain admin client"
 
 #: heat/common/heat_keystoneclient.py:184
 msgid "Unknown version in auth_token_info"
-msgstr ""
+msgstr "Version inconnu dans auth_tokern_info"
 
 #: heat/common/heat_keystoneclient.py:195
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
@@ -108,12 +108,12 @@ msgstr "Echec de lecture %(file_path)s"
 #: heat/engine/plugin_manager.py:97
 #, python-format
 msgid "Failed to load %(mapping_name)s from %(module)s"
-msgstr ""
+msgstr "Echec de chargement %(mapping_name)s depuis %(module)s"
 
 #: heat/engine/plugin_manager.py:104
 #, python-format
 msgid "Invalid type for %(mapping_name)s from %(module)s"
-msgstr ""
+msgstr "Type invalide pour  %(mapping_name)s depuis %(module)s"
 
 #: heat/engine/resource.py:898 heat/engine/resource.py:925
 #, python-format
@@ -123,7 +123,7 @@ msgstr "Erreur base de donné %s"
 #: heat/engine/service.py:260
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
-msgstr ""
+msgstr "Impossible de récupérer la stack %s pour la tache périodique"
 
 #: heat/engine/service.py:1355
 msgid "Filtering by namespace/metric not yet supported"
@@ -132,17 +132,17 @@ msgstr ""
 #: heat/engine/stack.py:710
 #, python-format
 msgid "Unexpected action %s passed to update!"
-msgstr ""
+msgstr "Action inattendu %s à mettre à jour!"
 
-#: heat/engine/stack.py:829
+#: heat/engine/stack.py:831
 #, python-format
 msgid "Unexpected action %s passed to delete!"
-msgstr ""
+msgstr "Action inattendu %s à supprimer!"
 
-#: heat/engine/stack.py:1068
+#: heat/engine/stack.py:1096
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
-msgstr ""
+msgstr "Ressource %(name)s échec de suppression: %(ex)s"
 
 #: heat/engine/resources/eip.py:109
 msgid ""
@@ -163,7 +163,7 @@ msgstr ""
 #: heat/engine/resources/wait_condition.py:82
 #, python-format
 msgid "Metadata failed validation for %s"
-msgstr ""
+msgstr "Echec de validation de metadata pour %s"
 
 #: heat/openstack/common/excutils.py:76
 #, python-format
