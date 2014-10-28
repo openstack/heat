@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev215.g609cfc8\n"
+"Project-Id-Version: heat 2015.1.dev233.gd5bcfa9\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"POT-Creation-Date: 2014-10-28 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -795,21 +795,21 @@ msgstr ""
 msgid "Invalid UUID version (%d)"
 msgstr ""
 
-#: heat/common/template_format.py:57
+#: heat/common/template_format.py:59
 #, python-format
 msgid "Error parsing template: %s"
 msgstr ""
 
-#: heat/common/template_format.py:64
+#: heat/common/template_format.py:66
 msgid "The template is not a JSON object or YAML mapping."
 msgstr ""
 
-#: heat/common/template_format.py:77
+#: heat/common/template_format.py:79
 #, python-format
 msgid "Template exceeds maximum allowed size (%s bytes)"
 msgstr ""
 
-#: heat/common/template_format.py:85
+#: heat/common/template_format.py:87
 msgid "Template format version not found."
 msgstr ""
 
@@ -867,7 +867,7 @@ msgid ""
 "by the Keystone v3 API with big service catalogs.)"
 msgstr ""
 
-#: heat/common/wsgi.py:213 heat/openstack/common/sslutils.py:56
+#: heat/common/wsgi.py:213
 msgid ""
 "When running server in SSL mode, you must specify both a cert_file and "
 "key_file option value in your configuration file"
@@ -1496,7 +1496,7 @@ msgstr ""
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:1077
+#: heat/engine/stack.py:1105
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -2261,7 +2261,7 @@ msgid ""
 msgstr ""
 
 #: heat/engine/resources/instance.py:309 heat/engine/resources/volume.py:419
-#: heat/engine/resources/volume.py:772
+#: heat/engine/resources/volume.py:783
 msgid "The ID of the volume to be attached."
 msgstr ""
 
@@ -3703,11 +3703,11 @@ msgstr ""
 msgid "Scheduler hints are not supported by the current volume API."
 msgstr ""
 
-#: heat/engine/resources/volume.py:766
+#: heat/engine/resources/volume.py:777
 msgid "The ID of the server to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/volume.py:778
+#: heat/engine/resources/volume.py:789
 msgid ""
 "The location where the volume is exposed on the instance. This assignment"
 " may not be honored and it is advised that the path /dev/disk/by-"
@@ -3868,11 +3868,11 @@ msgstr ""
 msgid "String value with which to compare"
 msgstr ""
 
-#: heat/engine/resources/ceilometer/alarm.py:321
+#: heat/engine/resources/ceilometer/alarm.py:324
 msgid "List of alarm identifiers to combine."
 msgstr ""
 
-#: heat/engine/resources/ceilometer/alarm.py:327
+#: heat/engine/resources/ceilometer/alarm.py:330
 msgid "Operator used to combine the alarms."
 msgstr ""
 
@@ -5559,26 +5559,6 @@ msgstr ""
 
 #: heat/openstack/common/processutils.py:252
 msgid "process_input not supported over SSH"
-msgstr ""
-
-#: heat/openstack/common/sslutils.py:47
-#, python-format
-msgid "Unable to find cert_file : %s"
-msgstr ""
-
-#: heat/openstack/common/sslutils.py:50
-#, python-format
-msgid "Unable to find ca_file : %s"
-msgstr ""
-
-#: heat/openstack/common/sslutils.py:53
-#, python-format
-msgid "Unable to find key_file : %s"
-msgstr ""
-
-#: heat/openstack/common/sslutils.py:95
-#, python-format
-msgid "Invalid SSL version : %s"
 msgstr ""
 
 #: heat/openstack/common/strutils.py:92
