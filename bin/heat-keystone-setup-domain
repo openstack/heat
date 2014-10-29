@@ -37,6 +37,18 @@ opts = [
                     " and projects in the stack-user-domain"),
     cfg.StrOpt('stack-domain-admin-password',
                help="Password to set for stack-domain-admin"),
+    cfg.BoolOpt('insecure',
+                default=False,
+                help="If set, then the server's certificate will not "
+                     "be verified."),
+    cfg.StrOpt('os-cacert',
+               help='Optional CA cert file to use in SSL connections.'),
+    cfg.StrOpt('os-cert',
+               help='Optional PEM-formatted certificate chain file.'),
+    cfg.StrOpt('os-key',
+               help='Optional PEM-formatted file that contains the '
+                    'private key.'),
+
 ]
 
 cfg.CONF.register_cli_opts(opts)
@@ -53,6 +65,11 @@ HEAT_DOMAIN_DESCRIPTION = 'Contains users and projects created by heat'
 logger.debug("USERNAME=%s" % USERNAME)
 logger.debug("AUTH_URL=%s" % AUTH_URL)
 
+CACERT = os.environ.get('OS_CACERT', cfg.CONF.os_cacert)
+CERT = os.environ.get('OS_CERT', cfg.CONF.os_cert)
+KEY = os.environ.get('OS_KEY', cfg.CONF.os_key)
+insecure = cfg.CONF.insecure
+
 
 def main():
     log_lvl = logging.DEBUG if DEBUG else logging.WARNING
@@ -61,11 +78,23 @@ def main():
         level=log_lvl)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
-    c = client.Client(debug=DEBUG,
-                      username=USERNAME,
-                      password=PASSWORD,
-                      auth_url=AUTH_URL,
-                      endpoint=AUTH_URL)
+    if insecure:
+        c = client.Client(debug=DEBUG,
+                          username=USERNAME,
+                          password=PASSWORD,
+                          auth_url=AUTH_URL,
+                          endpoint=AUTH_URL,
+                          verify=False)
+    else:
+        c = client.Client(debug=DEBUG,
+                          username=USERNAME,
+                          password=PASSWORD,
+                          auth_url=AUTH_URL,
+                          endpoint=AUTH_URL,
+                          cacert=CACERT,
+                          cert=CERT,
+                          key=KEY)
+
     c.authenticate()
 
     # Create the heat domain
