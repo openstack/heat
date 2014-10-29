@@ -30,10 +30,8 @@ Status
 HOT is considered reliable, supported, and standardized as of our
 Icehouse (April 2014) release.  The Heat core team may make improvements
 to the standard, which very likely would be backward compatible.  The template
-format is also versioned.  In our Juno release, Heat will support multiple
-different versions of the HOT specification if there is a need driven by the
-introduction of new features.
-
+format is also versioned.  Since Juno release, Heat supports multiple
+different versions of the HOT specification.
 
 ------------------
 Template Structure
@@ -88,6 +86,59 @@ outputs
     This section allows for specifying output parameters available to users once
     the template has been instantiated. This section is *optional* and can be
     omitted when no output values are required.
+
+
+.. _hot_spec_template_version:
+
+---------------------
+Heat Template Version
+---------------------
+
+The value of  *heat_template_version* tells Heat not only the format of the
+template but also features that will be validated and supported.
+For example, Heat currently supports the following values for the
+*heat_template_version* key:
+
+2013-05-23
+    The key with value *2013-05-23* indicates that the YAML document is a HOT
+    template and it may contain features implemented until the Icehouse release.
+    This version supports the following functions (some are back ported
+    to this version):
+
+::
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  resource_facade
+  str_replace
+  Fn::Base64
+  Fn::GetAZs
+  Fn::Join
+  Fn::MemberListToMap
+  Fn::Replace
+  Fn::ResourceFacade
+  Fn::Select
+  Fn::Split
+  Ref
+
+2014-10-16
+    The key with value *2014-10-16* indicates that the YAML document is a HOT
+    template and it may contain features added and/or removed up until the Juno
+    release.  This version removes most CFN functions that were supported in
+    the Icehouse release, i.e. the *2013-05-23* version.  So the supported functions
+    now are:
+
+::
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  resource_facade
+  str_replace
+  Fn::Select
 
 
 .. _hot_spec_parameter_groups:
@@ -659,7 +710,7 @@ get_param
 ---------
 The *get_param* function allows for referencing an input parameter of a template
 from anywhere within a template. At runtime, it will be resolved to the value
-provided for this input parameter. The syntax of the get_param function is as
+provided for this input parameter. The syntax of the *get_param* function is as
 follows:
 
 ::
@@ -729,8 +780,8 @@ given as single parameter to the get_resource function.
 list_join
 ---------
 The *list_join* function joins a list of strings with the given delimiter. This
-function is available beginning with the `2014-10-16` version of HOT.
-The syntax of the list_join function is as follows:
+function is introduced in the Juno release, usable in HOT versions later than
+`2013-05-23`.  The syntax of the list_join function is as follows:
 
 ::
 
@@ -750,7 +801,11 @@ This would resolve to "one, two, and three".
 resource_facade
 ---------------
 The *resource_facade* function allows a provider template to retrieve data
-about its resource facade in the parent template. (A provider template is used to provide a custom definition of a resource - the facade - in the form of a Heat template. The resource's properties are passed to the provider template as its parameters, but other resource data can be included using this function.)
+about its resource facade in the parent template. A provider template is used
+to provide a custom definition of a resource - the facade - in the form of a
+Heat template. The resource's properties are passed to the provider template as
+its parameters, but other resource data can be included using this function.)
+
 The syntax of the *resource_facade* function is as follows::
 
   resource_facade: <data type>
@@ -833,3 +888,8 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the str_replace function.
+
+Fn::Select
+---------
+*Fn::Select* is a function borrowed from CFN template.  Please check the CFN
+template guide for a description.

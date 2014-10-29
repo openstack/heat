@@ -16,7 +16,10 @@ CloudFormation Compatible Functions
 ===================================
 
 There are a number of functions that you can use to help you write
-CloudFormation compatible templates.
+CloudFormation compatible templates.  While most CloudFormation functions are
+supported in HOT version '2013-05-23', *Fn::Select* is the only CloudFormation
+function supported in HOT templates since version '2014-10-16' which is
+introduced in Juno.
 
 All of these functions (except *Ref*) start with *Fn::*.
 
