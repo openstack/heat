@@ -221,6 +221,11 @@ class CeilometerAlarm(resource.Resource):
 
         kwargs = actions_to_urls(stack, properties)
         kwargs['type'] = 'threshold'
+        if kwargs.get(self.METER_NAME) in NOVA_METERS:
+            prefix = 'user_metadata.'
+        else:
+            prefix = 'metering.'
+
         rule = {}
         for field in ['period', 'evaluation_periods', 'threshold',
                       'statistic', 'comparison_operator', 'meter_name']:
@@ -229,11 +234,6 @@ class CeilometerAlarm(resource.Resource):
                 del kwargs[field]
         mmd = properties.get(self.MATCHING_METADATA) or {}
         query = properties.get(self.QUERY) or []
-
-        if kwargs.get(self.METER_NAME) in NOVA_METERS:
-            prefix = 'user_metadata.'
-        else:
-            prefix = 'metering.'
 
         # make sure the matching_metadata appears in the query like this:
         # {field: metadata.$prefix.x, ...}
