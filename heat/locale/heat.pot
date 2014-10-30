@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev233.gd5bcfa9\n"
+"Project-Id-Version: heat 2015.1.dev242.g3a642f5\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-28 06:00+0000\n"
+"POT-Creation-Date: 2014-10-30 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1724,7 +1724,7 @@ msgstr ""
 
 #: heat/engine/cfn/template.py:90 heat/engine/hot/template.py:191
 #, python-format
-msgid "Resource %(name)s %(key)s typemust be %(typename)s"
+msgid "Resource %(name)s %(key)s type must be %(typename)s"
 msgstr ""
 
 #: heat/engine/cfn/template.py:100 heat/engine/hot/template.py:201
@@ -1741,19 +1741,23 @@ msgstr ""
 msgid "Error retrieving image list from glance: %s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:322 heat/engine/resources/nova_utils.py:281
+#: heat/engine/clients/os/nova.py:323 heat/engine/resources/nova_utils.py:281
 #, python-format
 msgid "Server %(name)s delete failed: (%(code)s) %(message)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:351 heat/engine/resources/nova_utils.py:319
+#: heat/engine/clients/os/nova.py:352 heat/engine/resources/nova_utils.py:319
 #, python-format
 msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:371 heat/engine/resources/nova_utils.py:345
+#: heat/engine/clients/os/nova.py:372 heat/engine/resources/nova_utils.py:345
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:380
+msgid "nova server metadata needs to be a Map."
 msgstr ""
 
 #: heat/engine/hot/functions.py:48
@@ -2561,7 +2565,7 @@ msgid "Server Group name."
 msgstr ""
 
 #: heat/engine/resources/nova_servergroup.py:40
-msgid "A list of string policies to apply.Defaults to anti-affinity."
+msgid "A list of string policies to apply. Defaults to anti-affinity."
 msgstr ""
 
 #: heat/engine/resources/os_database.py:79
