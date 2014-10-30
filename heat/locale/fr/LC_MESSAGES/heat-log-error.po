@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-28 06:00+0000\n"
-"PO-Revision-Date: 2014-10-27 20:01+0000\n"
+"POT-Creation-Date: 2014-10-30 06:00+0000\n"
+"PO-Revision-Date: 2014-10-28 09:52+0000\n"
 "Last-Translator: Maxime COQUEREL <max.coquerel@gmail.com>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -23,6 +23,8 @@ msgstr ""
 #: heat/api/aws/ec2token.py:162
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
+"Échec de l’autorisation Ec2Token, pas auth_uri spécifié dans le fichier de "
+"configuration"
 
 #: heat/api/aws/utils.py:98
 #, python-format
@@ -31,7 +33,7 @@ msgstr "La requete ne doit pas contenir le paramètre %s!"
 
 #: heat/api/cloudwatch/watch.py:254
 msgid "Request does not contain required MetricData"
-msgstr ""
+msgstr "La requête ne doit pas contenir comme pré-requis MetricData"
 
 #: heat/common/heat_keystoneclient.py:134
 msgid "Admin client authentication failed"
@@ -48,6 +50,8 @@ msgstr "Version inconnu dans auth_tokern_info"
 #: heat/common/heat_keystoneclient.py:195
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
+"Échec de la connexion Keystone v3 API, pas de mot de passe de confiance ou "
+"auth_token!"
 
 #: heat/common/heat_keystoneclient.py:211
 msgid "trust token re-scoping failed!"
@@ -62,6 +66,8 @@ msgstr ""
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
+"Échec d'ajout de l'utilisateur %(user)s pour le rôle %(role)s, vérifier si "
+"le role existe!"
 
 #: heat/common/lifecycle_plugin_utils.py:44
 msgid "failed to get lifecycle plug point classes"
