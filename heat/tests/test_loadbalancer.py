@@ -13,6 +13,7 @@
 
 import copy
 import re
+import six
 
 import mock
 import mox
@@ -223,7 +224,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def assertRegexpMatches(self, text, expected_regexp, msg=None):
         """Fail the test unless the text matches the regular expression."""
-        if isinstance(expected_regexp, basestring):
+        if isinstance(expected_regexp, six.string_types):
             expected_regexp = re.compile(expected_regexp)
         if not expected_regexp.search(text):
             msg = msg or "Regexp didn't match"

@@ -118,7 +118,7 @@ def resolve(snippet):
 
     if isinstance(snippet, collections.Mapping):
         return dict((k, resolve(v)) for k, v in snippet.items())
-    elif (not isinstance(snippet, basestring) and
+    elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
         return [resolve(v) for v in snippet]
 
@@ -131,7 +131,7 @@ def validate(snippet):
     elif isinstance(snippet, collections.Mapping):
         for v in snippet.values():
             validate(v)
-    elif (not isinstance(snippet, basestring) and
+    elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
         for v in snippet:
             validate(v)
@@ -156,7 +156,7 @@ def dependencies(snippet, path=''):
                              mkpath(key)) for key, value in snippet.items())
         return itertools.chain.from_iterable(deps)
 
-    elif (not isinstance(snippet, basestring) and
+    elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
         def mkpath(idx):
             return ''.join([path, '[%d]' % idx])

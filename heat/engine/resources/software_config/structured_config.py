@@ -131,10 +131,10 @@ class StructuredDeployment(sd.SoftwareDeployment):
             if len(snippet) == 1:
                 fn_name, args = next(six.iteritems(snippet))
                 if fn_name == input_key:
-                    if isinstance(args, basestring):
+                    if isinstance(args, six.string_types):
                         return inputs.get(args)
             return dict((k, parse(v)) for k, v in six.iteritems(snippet))
-        elif (not isinstance(snippet, basestring) and
+        elif (not isinstance(snippet, six.string_types) and
               isinstance(snippet, collections.Iterable)):
             return [parse(v) for v in snippet]
         else:

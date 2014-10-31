@@ -387,15 +387,15 @@ class SchemaTest(testtools.TestCase):
         '''Test Schema.to_schema_type method for type String.'''
         schema = constraints.Schema('String')
         res = schema.to_schema_type('one')
-        self.assertIsInstance(res, basestring)
+        self.assertIsInstance(res, six.string_types)
         res = schema.to_schema_type('1')
-        self.assertIsInstance(res, basestring)
+        self.assertIsInstance(res, six.string_types)
         res = schema.to_schema_type(1)
-        self.assertIsInstance(res, basestring)
+        self.assertIsInstance(res, six.string_types)
         res = schema.to_schema_type(True)
-        self.assertIsInstance(res, basestring)
+        self.assertIsInstance(res, six.string_types)
         res = schema.to_schema_type(None)
-        self.assertIsInstance(res, basestring)
+        self.assertIsInstance(res, six.string_types)
 
     def test_to_schema_type_boolean(self):
         '''Test Schema.to_schema_type method for type Boolean.'''

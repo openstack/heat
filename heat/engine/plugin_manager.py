@@ -75,7 +75,7 @@ class PluginMapping(object):
         passed to the mapping functions.
 
         '''
-        if isinstance(names, basestring):
+        if isinstance(names, six.string_types):
             names = [names]
 
         self.names = ['%s_mapping' % name for name in names]

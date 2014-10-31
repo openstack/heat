@@ -235,7 +235,7 @@ class Select(function.Function):
             # Handle by returning an empty string
             return ''
 
-        if isinstance(strings, basestring):
+        if isinstance(strings, six.string_types):
             # might be serialized json.
             try:
                 strings = json.loads(strings)
@@ -245,13 +245,13 @@ class Select(function.Function):
                 raise ValueError(_('"%(fn_name)s": %(err)s') % fmt_data)
 
         if isinstance(strings, collections.Mapping):
-            if not isinstance(index, basestring):
+            if not isinstance(index, six.string_types):
                 raise TypeError(_('Index to "%s" must be a string') %
                                 self.fn_name)
             return strings.get(index, '')
 
         if (isinstance(strings, collections.Sequence) and
-                not isinstance(strings, basestring)):
+                not isinstance(strings, six.string_types)):
             if not isinstance(index, (int, long)):
                 raise TypeError(_('Index to "%s" must be an integer') %
                                 self.fn_name)
@@ -288,7 +288,7 @@ class Join(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (basestring, collections.Mapping)):
+        if isinstance(self.args, (six.string_types, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -302,19 +302,19 @@ class Join(function.Function):
         strings = function.resolve(self._strings)
         if strings is None:
             strings = []
-        if (isinstance(strings, basestring) or
+        if (isinstance(strings, six.string_types) or
                 not isinstance(strings, collections.Sequence)):
             raise TypeError(_('"%s" must operate on a list') % self.fn_name)
 
         delim = function.resolve(self._delim)
-        if not isinstance(delim, basestring):
+        if not isinstance(delim, six.string_types):
             raise TypeError(_('"%s" delimiter must be a string') %
                             self.fn_name)
 
         def ensure_string(s):
             if s is None:
                 return ''
-            if not isinstance(s, basestring):
+            if not isinstance(s, six.string_types):
                 raise TypeError(
                     _('Items to join must be strings %s') % (repr(s)[:200]))
             return s
@@ -342,7 +342,7 @@ class Split(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (basestring, collections.Mapping)):
+        if isinstance(self.args, (six.string_types, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -355,10 +355,10 @@ class Split(function.Function):
     def result(self):
         strings = function.resolve(self._strings)
 
-        if not isinstance(self._delim, basestring):
+        if not isinstance(self._delim, six.string_types):
             raise TypeError(_("Delimiter for %s must be string") %
                             self.fn_name)
-        if not isinstance(strings, basestring):
+        if not isinstance(strings, six.string_types):
             raise TypeError(_("String to split must be string; got %s") %
                             type(strings))
 
@@ -401,7 +401,7 @@ class Replace(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (basestring, collections.Mapping)):
+        if isinstance(self.args, (six.string_types, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -417,7 +417,7 @@ class Replace(function.Function):
         template = function.resolve(self._string)
         mapping = function.resolve(self._mapping)
 
-        if not isinstance(template, basestring):
+        if not isinstance(template, six.string_types):
             raise TypeError(_('"%s" template must be a string') % self.fn_name)
 
         if not isinstance(mapping, collections.Mapping):
@@ -426,14 +426,15 @@ class Replace(function.Function):
         def replace(string, change):
             placeholder, value = change
 
-            if not isinstance(placeholder, basestring):
+            if not isinstance(placeholder, six.string_types):
                 raise TypeError(_('"%s" param placeholders must be strings') %
                                 self.fn_name)
 
             if value is None:
                 value = ''
 
-            if not isinstance(value, (basestring, int, long, float, bool)):
+            if not isinstance(value,
+                              (six.string_types, int, long, float, bool)):
                 raise TypeError(_('"%s" params must be strings or numbers') %
                                 self.fn_name)
 
@@ -457,7 +458,7 @@ class Base64(function.Function):
 
     def result(self):
         resolved = function.resolve(self.args)
-        if not isinstance(resolved, basestring):
+        if not isinstance(resolved, six.string_types):
             raise TypeError(_('"%s" argument must be a string') % self.fn_name)
         return resolved
 
@@ -495,10 +496,10 @@ class MemberListToMap(function.Function):
             '''
             raise TypeError(_('Wrong Arguments try: "%s"') % correct)
 
-        if not isinstance(self._keyname, basestring):
+        if not isinstance(self._keyname, six.string_types):
             raise TypeError(_('%s Key Name must be a string') % self.fn_name)
 
-        if not isinstance(self._valuename, basestring):
+        if not isinstance(self._valuename, six.string_types):
             raise TypeError(_('%s Value Name must be a string') % self.fn_name)
 
     def result(self):
@@ -508,7 +509,7 @@ class MemberListToMap(function.Function):
             raise TypeError(_('Member list must be a list'))
 
         def item(s):
-            if not isinstance(s, basestring):
+            if not isinstance(s, six.string_types):
                 raise TypeError(_("Member list items must be strings"))
             return s.split('=', 1)
 

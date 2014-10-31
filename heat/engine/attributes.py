@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import six
 import warnings
 
 from heat.common.i18n import _
@@ -190,7 +191,7 @@ def select_from_attribute(attribute_value, path):
                                        collections.Sequence)):
             raise TypeError(_("Can't traverse attribute path"))
 
-        if not isinstance(key, (basestring, int)):
+        if not isinstance(key, (six.string_types, int)):
             raise TypeError(_('Path components in attributes must be strings'))
 
         return collection[key]
