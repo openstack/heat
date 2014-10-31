@@ -425,6 +425,25 @@ class Environment(object):
         return self.stack_lifecycle_plugins
 
 
+def get_custom_environment(registry, cust_params):
+    """Build a customized environment using the given registry and params.
+    This is built from the cust_params and the given registry so some
+    resources can use user-provided parameters as if they come from an
+    environment.
+    """
+    new_env = Environment()
+    new_env.registry = registry
+    cust_env = {env_fmt.PARAMETERS: {}}
+    if cust_params is not None:
+        if env_fmt.PARAMETERS not in cust_params:
+            cust_env[env_fmt.PARAMETERS] = cust_params
+        else:
+            cust_env.update(cust_params)
+
+    new_env.load(cust_env)
+    return new_env
+
+
 def read_global_environment(env, env_dir=None):
     if env_dir is None:
         cfg.CONF.import_opt('environment_dir', 'heat.common.config')
