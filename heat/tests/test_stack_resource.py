@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from datetime import datetime
 import six
 import uuid
 
@@ -379,6 +380,8 @@ class StackResourceTest(common.HeatTestCase):
         new_templ = self.simple_template.copy()
         inst_snippet = new_templ["Resources"]["WebServer"].copy()
         new_templ["Resources"]["WebServer2"] = inst_snippet
+        self.parent_resource.updated_time = datetime(2014, 10, 24, 15, 40)
+
         updater = self.parent_resource.update_with_template(
             new_templ, {})
         updater.run_to_completion()
@@ -388,11 +391,15 @@ class StackResourceTest(common.HeatTestCase):
         self.assertEqual(set(["WebServer", "WebServer2"]),
                          set(self.stack.keys()))
         self.assertIsNone(self.stack.timeout_mins)
+        self.assertIsNotNone(self.stack.updated_time)
 
         # The stack's owner_id is maintained.
         saved_stack = parser.Stack.load(
             self.parent_stack.context, self.stack.id)
         self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
+        # Check the stack's updated_time is saved and same as the resource
+        self.assertEqual(self.parent_resource.updated_time,
+                         saved_stack.updated_time)
 
     def test_update_with_template_timeout_mins(self):
         self.assertIsNone(self.parent_stack.timeout_mins)
