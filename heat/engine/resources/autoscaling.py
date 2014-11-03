@@ -368,14 +368,13 @@ class InstanceGroup(stack_resource.StackResource):
         efft_bat_sz = min(batch_size, capacity)
         efft_min_sz = min(min_in_service, capacity)
 
-        batch_cnt = (capacity + efft_bat_sz - 1) // efft_bat_sz
-        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
-            raise ValueError('The current UpdatePolicy will result '
-                             'in stack update timeout.')
-
         # effective capacity includes temporary capacity added to accommodate
         # the minimum number of instances in service during update
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
+        batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
+        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
+            raise ValueError('The current UpdatePolicy will result '
+                             'in stack update timeout.')
 
         try:
             remainder = capacity
@@ -389,7 +388,8 @@ class InstanceGroup(stack_resource.StackResource):
                 updater.run_to_completion()
                 self.check_update_complete(updater)
                 remainder -= efft_bat_sz
-                if remainder > 0 and pause_sec > 0:
+                if ((remainder > 0 or efft_capacity > capacity) and
+                        pause_sec > 0):
                     self._lb_reload()
                     waiter = scheduler.TaskRunner(pause_between_batch)
                     waiter(timeout=pause_sec)
