@@ -438,6 +438,8 @@ Resources:
         urlfetch.get(
             'https://server.test/depth3.template').AndReturn(
                 self.nested_template)
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate().MultipleTimes().AndReturn(None)
         self.m.ReplayAll()
         self.create_stack(root_template)
         self.m.VerifyAll()

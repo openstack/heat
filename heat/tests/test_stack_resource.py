@@ -70,6 +70,63 @@ simple_template = '''
 }
 '''
 
+main_template = '''
+heat_template_version: 2013-05-23
+resources:
+  volume_server:
+    type: nested.yaml
+'''
+
+my_wrong_nested_template = '''
+heat_template_version: 2013-05-23
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.small
+  volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: 10
+      description: Volume for stack
+  volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      volume_id: { get_resource: volume }
+      instance_uuid: { get_resource: instance }
+'''
+
+resource_group_template = '''
+heat_template_version: 2013-05-23
+resources:
+  my_resource_group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      resource_def:
+        type: idontexist
+'''
+
+heat_autoscaling_group_template = '''
+heat_template_version: 2013-05-23
+resources:
+  my_autoscaling_group:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: idontexist
+      desired_capacity: 2
+      max_size: 4
+      min_size: 1
+'''
+
+nova_server_template = '''
+heat_template_version: 2013-05-23
+resources:
+  group_server:
+    type: idontexist
+'''
+
 
 class MyStackResource(stack_resource.StackResource,
                       generic_rsrc.GenericResource):
@@ -287,6 +344,62 @@ class StackResourceTest(common.HeatTestCase):
 
         self.assertFalse(nested_stack.validate.called)
         self.assertTrue(nested_stack.preview_resources.called)
+
+    def test_validate_error_reference(self):
+        stack_name = 'validate_error_reference'
+        tmpl = template_format.parse(main_template)
+        files = {'nested.yaml': my_wrong_nested_template}
+        stack = parser.Stack(utils.dummy_context(), stack_name,
+                             templatem.Template(tmpl, files=files))
+        rsrc = stack['volume_server']
+        raise_exc_msg = ('The specified reference "instance" ('
+                         'in volume_attachment.Properties.instance_uuid) '
+                         'is incorrect')
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(raise_exc_msg, six.text_type(exc))
+
+    def _test_validate_unknown_resource_type(self, stack_name,
+                                             tmpl, resource_name):
+        raise_exc_msg = ('Unknown resource Type : idontexist')
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
+        rsrc = stack[resource_name]
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(raise_exc_msg, six.text_type(exc))
+
+    def test_validate_resource_group(self):
+        # test validate without nested template
+        stack_name = 'validate_resource_group_template'
+        t = template_format.parse(resource_group_template)
+        tmpl = templatem.Template(t)
+        self._test_validate_unknown_resource_type(stack_name, tmpl,
+                                                  'my_resource_group')
+
+        # validate with nested template
+        res_prop = t['resources']['my_resource_group']['properties']
+        res_prop['resource_def']['type'] = 'nova_server.yaml'
+        files = {'nova_server.yaml': nova_server_template}
+        tmpl = templatem.Template(t, files=files)
+        self._test_validate_unknown_resource_type(stack_name, tmpl,
+                                                  'my_resource_group')
+
+    def test_validate_heat_autoscaling_group(self):
+        # test validate without nested template
+        stack_name = 'validate_heat_autoscaling_group_template'
+        t = template_format.parse(heat_autoscaling_group_template)
+        tmpl = templatem.Template(t)
+        self._test_validate_unknown_resource_type(stack_name, tmpl,
+                                                  'my_autoscaling_group')
+
+        # validate with nested template
+        res_prop = t['resources']['my_autoscaling_group']['properties']
+        res_prop['resource']['type'] = 'nova_server.yaml'
+        files = {'nova_server.yaml': nova_server_template}
+        tmpl = templatem.Template(t, files=files)
+        self._test_validate_unknown_resource_type(stack_name, tmpl,
+                                                  'my_autoscaling_group')
 
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)

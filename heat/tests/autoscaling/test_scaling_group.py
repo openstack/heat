@@ -179,6 +179,9 @@ class TestGroupAdjust(common.HeatTestCase):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.group = stack['WebServerGroup']
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         self.assertIsNone(self.group.validate())
 
     def test_scaling_policy_cooldown_toosoon(self):

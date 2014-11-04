@@ -75,7 +75,7 @@ class InstanceGroupTest(common.HeatTestCase):
                                instead of instance.Instance.
         """
         self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate()
+        parser.Stack.validate().MultipleTimes().AndReturn(None)
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
@@ -244,7 +244,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate()
+        parser.Stack.validate().MultipleTimes().AndReturn(None)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
@@ -327,6 +327,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         self._stub_create(2)
+
         self.m.ReplayAll()
         self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')

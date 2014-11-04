@@ -508,7 +508,7 @@ class AutoScalingTest(common.HeatTestCase):
                                     u'AvailabilityZones': ['abc', 'xyz']}}
 
         self.m.StubOutWithMock(short_id, 'generate_id')
-        short_id.generate_id().AndReturn('aaaabbbbcccc')
+        short_id.generate_id().MultipleTimes().AndReturn('aaaabbbbcccc')
 
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
@@ -556,7 +556,7 @@ class AutoScalingTest(common.HeatTestCase):
         }
 
         self.m.StubOutWithMock(short_id, 'generate_id')
-        short_id.generate_id().AndReturn('aaaabbbbcccc')
+        short_id.generate_id().MultipleTimes().AndReturn('aaaabbbbcccc')
 
         self.m.StubOutWithMock(neutron_lb.LoadBalancer, 'handle_update')
         neutron_lb.LoadBalancer.handle_update(expected,
