@@ -1022,7 +1022,7 @@ class Resource(object):
         def get_string_details():
             if details is None:
                 return 'No signal details provided'
-            if isinstance(details, basestring):
+            if isinstance(details, six.string_types):
                 return details
             if isinstance(details, dict):
                 if all(k in details for k in ('previous', 'current',

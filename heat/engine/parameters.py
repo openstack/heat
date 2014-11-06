@@ -372,7 +372,7 @@ class JsonParam(Parameter):
     def parse(self, value):
         try:
             val = value
-            if not isinstance(val, basestring):
+            if not isinstance(val, six.string_types):
                 val = json.dumps(val)
             if val:
                 return json.loads(val)

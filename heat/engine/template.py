@@ -34,7 +34,7 @@ _template_classes = None
 def get_version(template_data, available_versions):
     version_keys = set(key for key, version in available_versions)
     candidate_keys = set(k for k, v in six.iteritems(template_data) if
-                         isinstance(v, basestring))
+                         isinstance(v, six.string_types))
 
     keys_present = version_keys & candidate_keys
 
@@ -211,7 +211,7 @@ def parse(functions, stack, snippet):
             if Func is not None:
                 return Func(stack, fn_name, recurse(args))
         return dict((k, recurse(v)) for k, v in six.iteritems(snippet))
-    elif (not isinstance(snippet, basestring) and
+    elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
         return [recurse(v) for v in snippet]
     else:

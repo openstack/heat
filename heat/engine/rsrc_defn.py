@@ -14,6 +14,7 @@ import collections
 import copy
 import itertools
 import operator
+import six
 
 from heat.common import exception
 
@@ -66,7 +67,7 @@ class ResourceDefinitionCore(object):
         self._hash = hash(self.resource_type)
         self._rendering = None
 
-        assert isinstance(description, basestring)
+        assert isinstance(description, six.string_types)
 
         if properties is not None:
             assert isinstance(properties, (collections.Mapping,
@@ -80,7 +81,7 @@ class ResourceDefinitionCore(object):
 
         assert isinstance(depends, (collections.Sequence,
                                     function.Function))
-        assert not isinstance(depends, basestring)
+        assert not isinstance(depends, six.string_types)
         self._hash ^= _hash_data(depends)
 
         if deletion_policy is not None:
@@ -392,7 +393,7 @@ def _hash_data(data):
     if isinstance(data, function.Function):
         data = copy.deepcopy(data)
 
-    if not isinstance(data, basestring):
+    if not isinstance(data, six.string_types):
         if isinstance(data, collections.Sequence):
             return hash(tuple(_hash_data(d) for d in data))
 

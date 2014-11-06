@@ -195,7 +195,9 @@ class HOTemplate20130523(template.Template):
                 else:
                     return default
 
-            resource_type = get_check_type(RES_TYPE, basestring, 'string')
+            resource_type = get_check_type(RES_TYPE,
+                                           six.string_types,
+                                           'string')
             if resource_type is None:
                 args = {'name': name, 'type_key': RES_TYPE}
                 msg = _('Resource %(name)s is missing "%(type_key)s"') % args
@@ -215,11 +217,11 @@ class HOTemplate20130523(template.Template):
                                      collections.Sequence,
                                      'list or string',
                                      default=[])
-            if isinstance(depends, basestring):
+            if isinstance(depends, six.string_types):
                 depends = [depends]
 
             deletion_policy = get_check_type(RES_DELETION_POLICY,
-                                             basestring,
+                                             six.string_types,
                                              'string')
 
             update_policy = get_check_type(RES_UPDATE_POLICY,

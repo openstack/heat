@@ -19,6 +19,7 @@ The IDs each comprise 12 (lower-case) alphanumeric characters.
 import base64
 import uuid
 
+import six
 from six.moves import xrange
 
 from heat.common.i18n import _
@@ -40,7 +41,7 @@ def get_id(source_uuid):
 
     The supplied UUID must be a version 4 UUID object.
     """
-    if isinstance(source_uuid, basestring):
+    if isinstance(source_uuid, six.string_types):
         source_uuid = uuid.UUID(source_uuid)
     if source_uuid.version != 4:
         raise ValueError(_('Invalid UUID version (%d)') % source_uuid.version)

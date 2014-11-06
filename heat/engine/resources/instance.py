@@ -473,7 +473,7 @@ class Instance(resource.Resource):
             unsorted_nics = []
             for entry in network_interfaces:
                 nic = (entry
-                       if not isinstance(entry, basestring)
+                       if not isinstance(entry, six.string_types)
                        else {'NetworkInterfaceId': entry,
                              'DeviceIndex': len(unsorted_nics)})
                 unsorted_nics.append(nic)

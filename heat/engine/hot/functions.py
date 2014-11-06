@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -48,7 +49,7 @@ class GetParam(function.Function):
             raise ValueError(_('Function "%s" must have arguments') %
                              self.fn_name)
 
-        if isinstance(args, basestring):
+        if isinstance(args, six.string_types):
             param_name = args
             path_components = []
         elif isinstance(args, collections.Sequence):
@@ -58,7 +59,7 @@ class GetParam(function.Function):
             raise TypeError(_('Argument to "%s" must be string or list') %
                             self.fn_name)
 
-        if not isinstance(param_name, basestring):
+        if not isinstance(param_name, six.string_types):
             raise TypeError(_('Parameter name in "%s" must be string') %
                             self.fn_name)
 
@@ -72,7 +73,7 @@ class GetParam(function.Function):
                                            collections.Sequence)):
                 raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
 
-            if not isinstance(key, (basestring, int)):
+            if not isinstance(key, (six.string_types, int)):
                 raise TypeError(_('Path components in "%s" '
                                   'must be strings') % self.fn_name)
 
@@ -99,7 +100,7 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
 
     def _parse_args(self):
         if (not isinstance(self.args, collections.Sequence) or
-                isinstance(self.args, basestring)):
+                isinstance(self.args, six.string_types)):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
 
@@ -202,7 +203,7 @@ class GetFile(function.Function):
 
     def result(self):
         args = function.resolve(self.args)
-        if not (isinstance(args, basestring)):
+        if not (isinstance(args, six.string_types)):
             raise TypeError(_('Argument to "%s" must be a string') %
                             self.fn_name)
 

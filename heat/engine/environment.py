@@ -47,7 +47,7 @@ class ResourceInfo(object):
         if name.endswith(('.yaml', '.template')):
             # a template url for the resource "Type"
             return TemplateResourceInfo(registry, path, value)
-        elif not isinstance(value, basestring):
+        elif not isinstance(value, six.string_types):
             return ClassResourceInfo(registry, path, value)
         elif value.endswith(('.yaml', '.template')):
             # a registered template
@@ -304,7 +304,7 @@ class ResourceRegistry(object):
             msg = _('Non-empty resource type is required '
                     'for resource "%s"') % resource_name
             raise exception.StackValidationFailed(message=msg)
-        elif not isinstance(resource_type, basestring):
+        elif not isinstance(resource_type, six.string_types):
             msg = _('Resource "%s" type is not a string') % resource_name
             raise exception.StackValidationFailed(message=msg)
 

@@ -243,7 +243,7 @@ class Property(object):
     def _get_string(self, value):
         if value is None:
             value = self.has_default() and self.default() or ''
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             if isinstance(value, (bool, int)):
                 value = six.text_type(value)
             else:
@@ -278,7 +278,7 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or []
         if (not isinstance(value, collections.Sequence) or
-                isinstance(value, basestring)):
+                isinstance(value, six.string_types)):
             raise TypeError(_('"%s" is not a list') % repr(value))
 
         return [v[1] for v in self._get_children(enumerate(value),

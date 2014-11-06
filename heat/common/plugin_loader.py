@@ -20,6 +20,7 @@ for them before loading them.
 """
 
 import pkgutil
+import six
 import sys
 import types
 
@@ -45,7 +46,8 @@ def create_subpackage(path, parent_package_name, subpackage_name="plugins"):
     package_name = _module_name(parent_package_name, subpackage_name)
 
     package = types.ModuleType(package_name)
-    package.__path__ = [path] if isinstance(path, basestring) else list(path)
+    package.__path__ = ([path] if isinstance(path, six.string_types)
+                        else list(path))
     sys.modules[package_name] = package
 
     return package

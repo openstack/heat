@@ -14,6 +14,7 @@
 '''Implementation of SQLAlchemy backend.'''
 from datetime import datetime
 from datetime import timedelta
+import six
 import sys
 
 from oslo.config import cfg
@@ -322,7 +323,7 @@ def _get_sort_keys(sort_keys, mapping):
     :param mapping: a mapping from keys to DB column names
     :returns: filtered list of sort keys
     '''
-    if isinstance(sort_keys, basestring):
+    if isinstance(sort_keys, six.string_types):
         sort_keys = [sort_keys]
     return [mapping[key] for key in sort_keys or [] if key in mapping]
 
