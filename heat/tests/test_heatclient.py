@@ -1459,7 +1459,7 @@ class KeystoneClientTest(HeatTestCase):
 
 class KeystoneClientTestDomainName(KeystoneClientTest):
     def setUp(self):
-        cfg.CONF.set_override('stack_user_domain_name', 'adomain123')
+        cfg.CONF.set_override('stack_user_domain_name', 'fake_domain_name')
         super(KeystoneClientTestDomainName, self).setUp()
         cfg.CONF.clear_override('stack_user_domain_id')
 
@@ -1469,8 +1469,8 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
     def _stub_domain_admin_client_domain_get(self):
         dummy_domain = self.m.CreateMockAnything()
         dummy_domain.id = 'adomain123'
-        self.mock_ks_v3_client_domain_mngr.get('adomain123').AndReturn(
-            dummy_domain)
+        self.mock_ks_v3_client_domain_mngr.list(
+            name='fake_domain_name').AndReturn([dummy_domain])
 
     def _stub_domain_admin_client(self, auth_ok=True):
         kc_v3.Client(
@@ -1481,11 +1481,11 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
             insecure=False,
             key=None,
             password='adminsecret',
-            user_domain_name='adomain123',
+            user_domain_name='fake_domain_name',
             username='adminuser123').AndReturn(self.mock_admin_client)
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
         self.mock_admin_client.authenticate(
-            domain_name='adomain123').AndReturn(auth_ok)
+            domain_name='fake_domain_name').AndReturn(auth_ok)
         if auth_ok:
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
             self.mock_admin_client.auth_ref.user_id = '1234'
@@ -1496,7 +1496,7 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
                             username='duser',
                             password='apassw',
                             project_id='aproject',
-                            user_domain_name='adomain123'
+                            user_domain_name='fake_domain_name'
                             ).AndReturn('dummyauth')
 
     def test_enable_stack_domain_user_error_project(self):
@@ -1573,3 +1573,13 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         self._stub_domain_admin_client_domain_get()
         p = super(KeystoneClientTestDomainName, self)
         p.test_delete_stack_domain_project_wrongdomain()
+
+    def test_create_stack_domain_project(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_create_stack_domain_project()
+
+    def test_create_stack_domain_user(self):
+        self._stub_domain_admin_client_domain_get()
+        p = super(KeystoneClientTestDomainName, self)
+        p.test_create_stack_domain_user()
