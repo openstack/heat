@@ -4280,10 +4280,10 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Every Output object must contain a Value member.',
+        self.assertIn('Each Output must contain a Value key.',
                       six.text_type(ex))
 
-    def test_incorrect_outputs_cfn_wrong_data(self):
+    def test_incorrect_outputs_cfn_string_data(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
         Resources:
@@ -4301,8 +4301,30 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('"Outputs" must contain a map of output maps',
+        self.assertIn('Outputs must contain Output. '
+                      'Found a [%s] instead' % six.text_type,
                       six.text_type(ex))
+
+    def test_incorrect_outputs_cfn_list_data(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              Foo: abc
+        Outputs:
+          Resource_attr:
+            - Data is not what it seems
+        """)
+        self.stack = parser.Stack(self.ctx, 'stack_with_correct_outputs',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn('Outputs must contain Output. '
+                      'Found a [%s] instead' % type([]), six.text_type(ex))
 
     def test_incorrect_outputs_hot_get_attr(self):
         tmpl = {'heat_template_version': '2013-05-23',

@@ -1020,7 +1020,7 @@ class validateTest(common.HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual({'Error': 'Resources must contain Resource. '
-                          'Found a [string] instead'},
+                          'Found a [%s] instead' % six.text_type},
                          res)
 
     def test_invalid_section_cfn(self):

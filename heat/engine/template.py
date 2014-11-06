@@ -188,16 +188,13 @@ class Template(collections.Mapping):
         # check resources
         for res in self[self.RESOURCES].values():
             try:
-                if not res.get('Type'):
-                    message = _('Every Resource object must '
-                                'contain a Type member.')
+                if not res or not res.get('Type'):
+                    message = _('Each Resource must contain '
+                                'a Type key.')
                     raise exception.StackValidationFailed(message=message)
             except AttributeError:
-                type_res = type(res)
-                if isinstance(res, unicode):
-                    type_res = "string"
                 message = _('Resources must contain Resource. '
-                            'Found a [%s] instead') % type_res
+                            'Found a [%s] instead') % type(res)
                 raise exception.StackValidationFailed(message=message)
 
 
