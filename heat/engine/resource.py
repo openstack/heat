@@ -39,6 +39,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import log as logging
+from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
 
@@ -177,10 +178,17 @@ class Resource(object):
         self._stored_properties_data = None
         self.created_time = None
         self.updated_time = None
+        self._rpc_client = None
 
         resource = stack.db_resource_get(name)
         if resource:
             self._load_data(resource)
+
+    def rpc_client(self):
+        '''Return a client for making engine RPC calls.'''
+        if not self._rpc_client:
+            self._rpc_client = rpc_client.EngineClient()
+        return self._rpc_client
 
     def _load_data(self, resource):
         '''Load the resource state from its DB representation.'''

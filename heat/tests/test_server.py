@@ -26,7 +26,6 @@ from heat.common.i18n import _
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
-from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine import environment
@@ -531,12 +530,11 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, '_create')
-        heat_client = mock.Mock()
-        heat_plugin.HeatClientPlugin._create().AndReturn(heat_client)
-        sc = mock.Mock()
-        sc.config = 'wordpress from config'
-        heat_client.software_configs.get.return_value = sc
+        self.rpc_client = mock.MagicMock()
+        server._rpc_client = self.rpc_client
+
+        sc = {'config': 'wordpress from config'}
+        self.rpc_client.show_software_config.return_value = sc
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -572,11 +570,10 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        self.m.StubOutWithMock(heat_plugin.HeatClientPlugin, '_create')
-        heat_client = mock.Mock()
-        heat_plugin.HeatClientPlugin._create().AndReturn(heat_client)
-        heat_client.software_configs.get.side_effect = \
-            heat_plugin.exc.HTTPNotFound()
+        self.rpc_client = mock.MagicMock()
+        server._rpc_client = self.rpc_client
+
+        self.rpc_client.show_software_config.side_effect = exception.NotFound
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)

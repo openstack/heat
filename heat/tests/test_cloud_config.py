@@ -38,9 +38,8 @@ class CloudConfigTest(common.HeatTestCase):
                         'Properties': self.properties
                     }}}))
         self.config = self.stack['config_mysql']
-        heat = mock.MagicMock()
-        self.config.heat = heat
-        self.software_configs = heat.return_value.software_configs
+        self.rpc_client = mock.MagicMock()
+        self.config._rpc_client = self.rpc_client
 
     def test_resource_mapping(self):
         mapping = cc.resource_mapping()
@@ -50,11 +49,10 @@ class CloudConfigTest(common.HeatTestCase):
         self.assertIsInstance(self.config, cc.CloudConfig)
 
     def test_handle_create(self):
-        sc = mock.MagicMock()
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        sc.id = config_id
-        self.software_configs.create.return_value = sc
+        value = {'id': config_id}
+        self.rpc_client.create_software_config.return_value = value
         self.config.handle_create()
         self.assertEqual(config_id, self.config.resource_id)
-        kwargs = self.software_configs.create.call_args[1]
+        kwargs = self.rpc_client.create_software_config.call_args[1]
         self.assertEqual('#cloud-config\n{foo: bar}\n', kwargs['config'])

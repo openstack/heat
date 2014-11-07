@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heatclient.exc import HTTPNotFound
 import mock
 
+from heat.common import exception as exc
 from heat.engine import parser
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import template
@@ -43,11 +43,8 @@ class SoftwareConfigTest(common.HeatTestCase):
                         'Properties': self.properties
                     }}}))
         self.config = self.stack['config_mysql']
-        heat = mock.MagicMock()
-        self.heatclient = mock.MagicMock()
-        self.config.heat = heat
-        heat.return_value = self.heatclient
-        self.software_configs = self.heatclient.software_configs
+        self.rpc_client = mock.MagicMock()
+        self.config._rpc_client = self.rpc_client
 
     def test_resource_mapping(self):
         mapping = sc.resource_mapping()
@@ -57,10 +54,9 @@ class SoftwareConfigTest(common.HeatTestCase):
         self.assertIsInstance(self.config, sc.SoftwareConfig)
 
     def test_handle_create(self):
-        value = mock.MagicMock()
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        value.id = config_id
-        self.software_configs.create.return_value = value
+        value = {'id': config_id}
+        self.rpc_client.create_software_config.return_value = value
         self.config.handle_create()
         self.assertEqual(config_id, self.config.resource_id)
 
@@ -69,9 +65,9 @@ class SoftwareConfigTest(common.HeatTestCase):
         self.assertIsNone(self.config.handle_delete())
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.config.resource_id = config_id
-        self.software_configs.delete.return_value = None
+        self.rpc_client.delete_software_config.return_value = None
         self.assertIsNone(self.config.handle_delete())
-        self.software_configs.delete.side_effect = HTTPNotFound()
+        self.rpc_client.delete_software_config.side_effect = exc.NotFound
         self.assertIsNone(self.config.handle_delete())
 
     def test_resolve_attribute(self):
@@ -79,10 +75,9 @@ class SoftwareConfigTest(common.HeatTestCase):
         self.config.resource_id = None
         self.assertIsNone(self.config._resolve_attribute('config'))
         self.config.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        value = mock.MagicMock()
-        value.config = '#!/bin/bash'
-        self.software_configs.get.return_value = value
+        value = {'config': '#!/bin/bash'}
+        self.rpc_client.show_software_config.return_value = value
         self.assertEqual(
             '#!/bin/bash', self.config._resolve_attribute('config'))
-        self.software_configs.get.side_effect = HTTPNotFound()
+        self.rpc_client.show_software_config.side_effect = exc.NotFound
         self.assertEqual(None, self.config._resolve_attribute('config'))

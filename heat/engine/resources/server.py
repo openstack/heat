@@ -30,6 +30,7 @@ from heat.engine import stack_user
 from heat.engine import support
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
+from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 
@@ -469,6 +470,14 @@ class Server(stack_user.StackUser):
         return self.properties.get(
             self.SOFTWARE_CONFIG_TRANSPORT) == self.POLL_TEMP_URL
 
+    def get_software_config(self, ud_content):
+        try:
+            sc = self.rpc_client().show_software_config(
+                self.context, ud_content)
+            return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
+        except exception.NotFound:
+            return ud_content
+
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
 
@@ -477,11 +486,7 @@ class Server(stack_user.StackUser):
         if self.user_data_software_config() or self.user_data_raw():
             if uuidutils.is_uuid_like(ud_content):
                 # attempt to load the userdata from software config
-                try:
-                    ud_content = self.heat().software_configs.get(
-                        ud_content).config
-                except Exception as ex:
-                    self.client_plugin('heat').ignore_not_found(ex)
+                ud_content = self.get_software_config(ud_content)
 
         metadata = self.metadata_get(True) or {}
 

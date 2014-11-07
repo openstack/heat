@@ -18,6 +18,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import support
+from heat.rpc import api as rpc_api
 
 
 class SoftwareComponent(sc.SoftwareConfig):
@@ -116,8 +117,8 @@ class SoftwareComponent(sc.SoftwareConfig):
         # set 'group' to enable component processing by in-instance hook
         props[self.GROUP] = 'component'
 
-        sc = self.heat().software_configs.create(**props)
-        self.resource_id_set(sc.id)
+        sc = self.rpc_client().create_software_config(self.context, **props)
+        self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
     def _resolve_attribute(self, name):
         '''
@@ -129,14 +130,13 @@ class SoftwareComponent(sc.SoftwareConfig):
         '''
         if name == self.CONFIGS_ATTR and self.resource_id:
             try:
-                config = self.heat().software_configs.get(self.resource_id).\
-                    config
+                sc = self.rpc_client().show_software_config(
+                    self.context, self.resource_id)
                 # configs list is stored in 'config' property of parent class
                 # (see handle_create)
-                return config.get(self.CONFIGS)
-            except Exception as ex:
-                if self.client_plugin().is_not_found(ex):
-                    return None
+                return sc[rpc_api.SOFTWARE_CONFIG_CONFIG].get(self.CONFIGS)
+            except exception.NotFound:
+                return None
 
     def validate(self):
         '''Validate SoftwareComponent properties consistency.'''

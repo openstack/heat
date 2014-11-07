@@ -26,6 +26,7 @@ from heat.engine.resources.software_config import software_config as sc
 from heat.engine import signal_responder
 from heat.engine import support
 from heat.openstack.common import log as logging
+from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -194,23 +195,26 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     def _delete_derived_config(self, derived_config_id):
         try:
-            self.heat().software_configs.delete(derived_config_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
+            self.rpc_client().delete_software_config(
+                self.context, derived_config_id)
+        except exception.NotFound:
+            pass
 
     def _get_derived_config(self, action, source_config):
 
         derived_params = self._build_derived_config_params(
-            action, source_config.to_dict())
-        derived_config = self.heat().software_configs.create(**derived_params)
-        return derived_config.id
+            action, source_config)
+        derived_config = self.rpc_client().create_software_config(
+            self.context, **derived_params)
+        return derived_config[rpc_api.SOFTWARE_CONFIG_ID]
 
     def _handle_action(self, action):
         config_id = self.properties.get(self.CONFIG)
-        config = self.heat().software_configs.get(config_id)
+        config = self.rpc_client().show_software_config(
+            self.context, config_id)
 
         if action not in self.properties[self.DEPLOY_ACTIONS]\
-                and not config.group == 'component':
+                and not config[rpc_api.SOFTWARE_CONFIG_GROUP] == 'component':
             return
 
         props = self._build_properties(
@@ -430,7 +434,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     def handle_signal(self, details):
         sd = self.heat().software_deployments.get(self.resource_id)
-        sc = self.heat().software_configs.get(self.properties[self.CONFIG])
+        sc = self.rpc_client().show_software_config(
+            self.context, self.properties[self.CONFIG])
         if not sd.status == self.IN_PROGRESS:
             # output values are only expected when in an IN_PROGRESS state
             return
@@ -450,7 +455,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         else:
             event_reason = 'deployment succeeded'
 
-        for output in sc.outputs or []:
+        for output in sc[rpc_api.SOFTWARE_CONFIG_OUTPUTS] or []:
             out_key = output['name']
             if out_key in details:
                 ov[out_key] = details[out_key]
@@ -486,8 +491,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
         # Since there is no value for this key yet, check the output schemas
         # to find out if the key is valid
-        sc = self.heat().software_configs.get(self.properties[self.CONFIG])
-        output_keys = [output['name'] for output in sc.outputs]
+        sc = self.rpc_client().show_software_config(
+            self.context, self.properties[self.CONFIG])
+        outputs = sc[rpc_api.SOFTWARE_CONFIG_OUTPUTS] or []
+        output_keys = [output['name'] for output in outputs]
         if key not in output_keys and key not in self.ATTRIBUTES:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)

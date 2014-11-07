@@ -14,14 +14,13 @@
 import mock
 import six
 
-from heat.common import exception
+from heat.common import exception as exc
 from heat.common import template_format
 from heat.engine.resources.software_config import software_component as sc
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-from heatclient.exc import HTTPNotFound
 
 
 class SoftwareComponentTest(common.HeatTestCase):
@@ -58,11 +57,8 @@ class SoftwareComponentTest(common.HeatTestCase):
             self.ctx, 'software_component_test_stack',
             template.Template(self.template))
         self.component = self.stack['mysql_component']
-        heat = mock.MagicMock()
-        self.heatclient = mock.MagicMock()
-        self.component.heat = heat
-        heat.return_value = self.heatclient
-        self.software_configs = self.heatclient.software_configs
+        self.rpc_client = mock.MagicMock()
+        self.component._rpc_client = self.rpc_client
 
     def test_resource_mapping(self):
         mapping = sc.resource_mapping()
@@ -72,10 +68,9 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.assertIsInstance(self.component, sc.SoftwareComponent)
 
     def test_handle_create(self):
-        value = mock.MagicMock()
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        value.id = config_id
-        self.software_configs.create.return_value = value
+        value = {'id': config_id}
+        self.rpc_client.create_software_config.return_value = value
         self.component.handle_create()
         self.assertEqual(config_id, self.component.resource_id)
 
@@ -84,9 +79,9 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.assertIsNone(self.component.handle_delete())
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         self.component.resource_id = config_id
-        self.software_configs.delete.return_value = None
+        self.rpc_client.delete_software_config.return_value = None
         self.assertIsNone(self.component.handle_delete())
-        self.software_configs.delete.side_effect = HTTPNotFound()
+        self.rpc_client.delete_software_config.side_effect = exc.NotFound
         self.assertIsNone(self.component.handle_delete())
 
     def test_resolve_attribute(self):
@@ -94,14 +89,13 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.component.resource_id = None
         self.assertIsNone(self.component._resolve_attribute('configs'))
         self.component.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        value = mock.MagicMock()
         configs = self.\
             template['resources']['mysql_component']['properties']['configs']
         # configs list is stored in 'config' property of SoftwareConfig
-        value.config = {'configs': configs}
-        self.software_configs.get.return_value = value
+        value = {'config': {'configs': configs}}
+        self.rpc_client.show_software_config.return_value = value
         self.assertEqual(configs, self.component._resolve_attribute('configs'))
-        self.software_configs.get.side_effect = HTTPNotFound()
+        self.rpc_client.show_software_config.side_effect = exc.NotFound
         self.assertIsNone(self.component._resolve_attribute('configs'))
 
 
@@ -160,7 +154,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                            echo CREATE $foo
                          tool: script
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='Unknown Property config')
         ),
         (
@@ -172,7 +166,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                      inputs:
                        - name: foo
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='Property configs not assigned')
         ),
         # do not test until bug #1350840
@@ -199,7 +193,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                        config: #!/bin/bash
                        tool: script
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='is not a list')
         ),
         (
@@ -213,7 +207,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                          config: #!/bin/bash
                          tool: script
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='actions length (0) is out of range '
                          '(min: 1, max: None)')
         ),
@@ -231,7 +225,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                          config: #!/bin/bash
                          tool: script
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='Defining more than one configuration for the same '
                          'action in SoftwareComponent "component" is not '
                          'allowed.')
@@ -250,7 +244,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
                          config: #!/bin/bash
                          tool: script
                  ''',
-                 err=exception.StackValidationFailed,
+                 err=exc.StackValidationFailed,
                  err_msg='Defining more than one configuration for the same '
                          'action in SoftwareComponent "component" is not '
                          'allowed.')
@@ -272,11 +266,7 @@ class SoftwareComponentValidationTest(common.HeatTestCase):
             self.ctx, 'software_component_test_stack',
             template.Template(self.template))
         self.component = self.stack['component']
-        heat = mock.MagicMock()
-        self.heatclient = mock.MagicMock()
-        self.component.heat = heat
-        heat.return_value = self.heatclient
-        self.software_configs = self.heatclient.software_configs
+        self.component._rpc_client = mock.MagicMock()
 
     def test_properties_schema(self):
         if self.err:

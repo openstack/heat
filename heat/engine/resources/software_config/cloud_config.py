@@ -17,6 +17,7 @@ from heat.common.template_format import yaml_dumper
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
 from heat.engine import support
+from heat.rpc import api as rpc_api
 
 
 class CloudConfig(software_config.SoftwareConfig):
@@ -54,8 +55,8 @@ class CloudConfig(software_config.SoftwareConfig):
         cloud_config = yaml.dump(self.properties.get(
             self.CLOUD_CONFIG), Dumper=yaml_dumper)
         props[self.CONFIG] = '#cloud-config\n%s' % cloud_config
-        sc = self.heat().software_configs.create(**props)
-        self.resource_id_set(sc.id)
+        sc = self.rpc_client().create_software_config(self.context, **props)
+        self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
 
 def resource_mapping():

@@ -17,7 +17,7 @@ import copy
 import mock
 import six
 
-from heat.common import exception
+from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
@@ -117,10 +117,13 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         get_signed_url.return_value = 'http://192.0.2.2/signed_url'
 
         self.deployment = self.stack['deployment_mysql']
+
+        self.rpc_client = mock.MagicMock()
+        self.deployment._rpc_client = self.rpc_client
+
         heat = mock.MagicMock()
         self.deployment.heat = heat
         self.deployments = heat.return_value.software_deployments
-        self.software_configs = heat.return_value.software_configs
 
     def test_validate(self):
         template = dict(self.template_with_server)
@@ -138,7 +141,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         props['user_data_format'] = 'RAW'
         self._create_stack(template)
         sd = self.deployment
-        err = self.assertRaises(exception.StackValidationFailed, sd.validate)
+        err = self.assertRaises(exc.StackValidationFailed, sd.validate)
         self.assertEqual("Resource server's property "
                          "user_data_format should be set to "
                          "SOFTWARE_CONFIG since there are "
@@ -149,7 +152,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertIsInstance(self.deployment, sd.SoftwareDeployment)
 
     def mock_software_config(self):
-        sc = mock.MagicMock()
         config = {
             'id': '48e8ade1-9196-42d5-89a2-f709fde42632',
             'group': 'Test::Group',
@@ -167,14 +169,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'outputs': [],
         }
-        sc.to_dict.return_value = config
-        sc.group = 'Test::Group'
-        sc.config = config['config']
-        self.software_configs.get.return_value = sc
-        return sc
+        self.rpc_client.show_software_config.return_value = config
+        return config
 
     def mock_software_component(self):
-        sc = mock.MagicMock()
         config = {
             'id': '48e8ade1-9196-42d5-89a2-f709fde42632',
             'group': 'component',
@@ -220,16 +218,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'outputs': [],
         }
-        sc.to_dict.return_value = config
-        sc.group = 'component'
-        sc.config = config['config']
-        self.software_configs.get.return_value = sc
-        return sc
+        self.rpc_client.show_software_config.return_value = config
+        return config
 
     def mock_derived_software_config(self):
-        sc = mock.MagicMock()
-        sc.id = '9966c8e7-bc9c-42de-aa7d-f2447a952cb2'
-        self.software_configs.create.return_value = sc
+        sc = {'id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2'}
+        self.rpc_client.create_software_config.return_value = sc
         return sc
 
     def mock_deployment(self):
@@ -290,11 +284,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'options': {},
             'outputs': []
-        }, self.software_configs.create.call_args[1])
+        }, self.rpc_client.create_software_config.call_args[1])
 
         self.assertEqual(
             {'action': 'CREATE',
-             'config_id': derived_sc.id,
+             'config_id': derived_sc['id'],
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -381,11 +375,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'options': {},
             'outputs': []
-        }, self.software_configs.create.call_args[1])
+        }, self.rpc_client.create_software_config.call_args[1])
 
         self.assertEqual(
             {'action': 'CREATE',
-             'config_id': derived_sc.id,
+             'config_id': derived_sc['id'],
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
@@ -404,7 +398,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         args = self.deployments.create.call_args[1]
         self.assertEqual(
             {'action': 'CREATE',
-             'config_id': derived_sc.id,
+             'config_id': derived_sc['id'],
              'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'IN_PROGRESS',
@@ -449,7 +443,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd.status = self.deployment.FAILED
         sd.status_reason = 'something wrong'
         err = self.assertRaises(
-            exception.Error, self.deployment.check_create_complete, sd)
+            exc.Error, self.deployment.check_create_complete, sd)
         self.assertEqual(
             'Deployment to server failed: something wrong', six.text_type(err))
 
@@ -479,7 +473,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'DELETE',
-            'config_id': derived_sc.id,
+            'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
@@ -499,14 +493,15 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
-        sd.config_id = derived_sc.id
+        sd.config_id = derived_sc['id']
         self.deployments.get.return_value = sd
 
         sd.delete.side_effect = HTTPNotFound()
-        self.software_configs.delete.side_effect = HTTPNotFound()
+        self.rpc_client.delete_software_config.side_effect = exc.NotFound
         self.assertIsNone(self.deployment.handle_delete())
         self.assertEqual(
-            (derived_sc.id,), self.software_configs.delete.call_args[0])
+            (self.ctx, derived_sc['id']),
+            self.rpc_client.delete_software_config.call_args[0])
 
     def test_handle_delete_none(self):
         self._create_stack(self.template)
@@ -539,13 +534,14 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.handle_update(
             json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff)
         self.assertEqual(
-            (config_id,), self.software_configs.get.call_args[0])
+            (self.ctx, config_id),
+            self.rpc_client.show_software_config.call_args[0])
 
         args = self.deployments.get.call_args[0]
         self.assertEqual(1, len(args))
         self.assertIn(sd.id, args)
         args = sd.update.call_args[1]
-        self.assertEqual(derived_sc.id, args['config_id'])
+        self.assertEqual(derived_sc['id'], args['config_id'])
 
     def test_handle_suspend_resume(self):
         self._create_stack(self.template_delete_suspend_resume)
@@ -564,7 +560,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'SUSPEND',
-            'config_id': derived_sc.id,
+            'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
@@ -583,7 +579,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'RESUME',
-            'config_id': derived_sc.id,
+            'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
@@ -599,16 +595,18 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
-        sc = mock.MagicMock()
-        sc.outputs = [{'name': 'foo'},
-                      {'name': 'foo2'},
-                      {'name': 'failed',
-                       'error_output': True}]
+        sc = {
+            'outputs': [
+                {'name': 'foo'},
+                {'name': 'foo2'},
+                {'name': 'failed', 'error_output': True}
+            ]
+        }
         sd.output_values = {}
         sd.status = self.deployment.IN_PROGRESS
         sd.update.return_value = None
         self.deployments.get.return_value = sd
-        self.software_configs.get.return_value = sc
+        self.rpc_client.show_software_config.return_value = sc
         details = {
             'foo': 'bar',
             'deploy_status_code': 0
@@ -630,16 +628,18 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
-        sc = mock.MagicMock()
-        sc.outputs = [{'name': 'foo'},
-                      {'name': 'foo2'},
-                      {'name': 'failed',
-                       'error_output': True}]
+        sc = {
+            'outputs': [
+                {'name': 'foo'},
+                {'name': 'foo2'},
+                {'name': 'failed', 'error_output': True}
+            ]
+        }
         sd.output_values = {}
         sd.status = self.deployment.IN_PROGRESS
         sd.update.return_value = None
         self.deployments.get.return_value = sd
-        self.software_configs.get.return_value = sc
+        self.rpc_client.show_software_config.return_value = sc
         details = {
             'foo': 'bar',
             'deploy_status_code': '0'
@@ -661,16 +661,18 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_signal_failed(self):
         self._create_stack(self.template)
         sd = mock.MagicMock()
-        sc = mock.MagicMock()
-        sc.outputs = [{'name': 'foo'},
-                      {'name': 'foo2'},
-                      {'name': 'failed',
-                       'error_output': True}]
+        sc = {
+            'outputs': [
+                {'name': 'foo'},
+                {'name': 'foo2'},
+                {'name': 'failed', 'error_output': True}
+            ]
+        }
         sd.output_values = {}
         sd.status = self.deployment.IN_PROGRESS
         sd.update.return_value = None
         self.deployments.get.return_value = sd
-        self.software_configs.get.return_value = sc
+        self.rpc_client.show_software_config.return_value = sc
         details = {'failed': 'no enough memory found.'}
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment failed', ret)
@@ -760,7 +762,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd.outputs = []
         sd.output_values = {'foo': 'bar'}
         err = self.assertRaises(
-            exception.InvalidTemplateAttribute,
+            exc.InvalidTemplateAttribute,
             self.deployment.FnGetAtt, 'foo2')
         self.assertEqual(
             'The Referenced Attribute (deployment_mysql foo2) is incorrect.',

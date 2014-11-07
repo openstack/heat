@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -18,6 +19,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 from heat.openstack.common import log as logging
+from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -152,14 +154,12 @@ class SoftwareConfig(resource.Resource):
         ),
     }
 
-    default_client_name = 'heat'
-
     def handle_create(self):
         props = dict(self.properties)
         props[self.NAME] = self.physical_resource_name()
 
-        sc = self.heat().software_configs.create(**props)
-        self.resource_id_set(sc.id)
+        sc = self.rpc_client().create_software_config(self.context, **props)
+        self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
     def handle_delete(self):
 
@@ -167,9 +167,10 @@ class SoftwareConfig(resource.Resource):
             return
 
         try:
-            self.heat().software_configs.delete(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
+            self.rpc_client().delete_software_config(
+                self.context, self.resource_id)
+        except exception.NotFound:
+            pass
 
     def _resolve_attribute(self, name):
         '''
@@ -178,11 +179,11 @@ class SoftwareConfig(resource.Resource):
         '''
         if name == self.CONFIG_ATTR and self.resource_id:
             try:
-                return self.heat().software_configs.get(
-                    self.resource_id).config
-            except Exception as ex:
-                if self.client_plugin().is_not_found(ex):
-                    return None
+                sc = self.rpc_client().show_software_config(
+                    self.context, self.resource_id)
+                return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
+            except exception.NotFound:
+                return None
 
 
 def resource_mapping():

@@ -16,11 +16,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
 from heat.engine import support
+from heat.rpc import api as rpc_api
 
 
 class MultipartMime(software_config.SoftwareConfig):
@@ -95,8 +97,8 @@ class MultipartMime(software_config.SoftwareConfig):
     def handle_create(self):
         props = {self.NAME: self.physical_resource_name()}
         props[self.CONFIG] = self.get_message()
-        sc = self.heat().software_configs.create(**props)
-        self.resource_id_set(sc.id)
+        sc = self.rpc_client().create_software_config(self.context, **props)
+        self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
     def get_message(self):
         if self.message:
@@ -107,10 +109,14 @@ class MultipartMime(software_config.SoftwareConfig):
             config = item.get(self.CONFIG)
             part_type = item.get(self.TYPE, self.TEXT)
             part = config
+
             try:
-                part = self.heat().software_configs.get(config).config
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
+                sc = self.rpc_client().show_software_config(
+                    self.context, self.resource_id)
+            except exception.NotFound:
+                pass
+            else:
+                part = sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
 
             if part_type == self.MULTIPART:
                 self._append_multiparts(subparts, part)
