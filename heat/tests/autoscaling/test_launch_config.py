@@ -11,12 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from oslo.config import cfg
 import six
 
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os import nova
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
@@ -62,6 +64,81 @@ class LaunchConfigurationTest(common.HeatTestCase):
         rsrc.id = None
         self.assertIsNone(rsrc.resource_id)
         self.assertEqual('LaunchConfig', rsrc.FnGetRefId())
+
+    def test_launch_config_create_with_instanceid(self):
+        t = template_format.parse(inline_templates.as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        lcp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['LaunchConfig']
+        # ImageId, InstanceType and BlockDeviceMappings keep the lc's values
+        # KeyName and SecurityGroups are derived from the instance
+        lc_props = {
+            'ImageId': 'foo',
+            'InstanceType': 'bar',
+            'BlockDeviceMappings': lcp['BlockDeviceMappings'],
+            'KeyName': 'hth_keypair',
+            'SecurityGroups': ['hth_test']
+        }
+        rsrc.rebuild_lc_properties = mock.Mock(return_value=lc_props)
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        self.patchobject(nova.ServerConstraint, 'validate', return_value=True)
+        self.m.ReplayAll()
+
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_lc_validate_without_InstanceId_and_ImageId(self):
+        t = template_format.parse(inline_templates.as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        lcp.pop('ImageId')
+        stack = utils.parse_stack(t, inline_templates.as_params)
+        rsrc = stack['LaunchConfig']
+        self.stub_SnapshotConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.m.ReplayAll()
+        e = self.assertRaises(exception.StackValidationFailed,
+                              rsrc.validate)
+        ex_msg = ('If without InstanceId, '
+                  'ImageId and InstanceType are required.')
+        self.assertIn(ex_msg, six.text_type(e))
+        self.m.VerifyAll()
+
+    def test_lc_validate_without_InstanceId_and_InstanceType(self):
+        t = template_format.parse(inline_templates.as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        lcp.pop('InstanceType')
+        stack = utils.parse_stack(t, inline_templates.as_params)
+        rsrc = stack['LaunchConfig']
+        self.stub_SnapshotConstraint_validate()
+        self.stub_ImageConstraint_validate()
+        self.m.ReplayAll()
+        e = self.assertRaises(exception.StackValidationFailed,
+                              rsrc.validate)
+        ex_msg = ('If without InstanceId, '
+                  'ImageId and InstanceType are required.')
+        self.assertIn(ex_msg, six.text_type(e))
+        self.m.VerifyAll()
+
+    def test_launch_config_create_with_instanceid_not_found(self):
+        t = template_format.parse(inline_templates.as_template)
+        lcp = t['Resources']['LaunchConfig']['Properties']
+        lcp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['LaunchConfig']
+
+        self.patchobject(nova.NovaClientPlugin, 'get_server',
+                         side_effect=exception.ServerNotFound(server='5678'))
+        msg = ("Property error : LaunchConfig: InstanceId Error validating "
+               "value '5678': The server (5678) could not be found.")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(msg, six.text_type(exc))
 
     def test_validate_BlockDeviceMappings_without_Ebs_property(self):
         t = template_format.parse(inline_templates.as_template)

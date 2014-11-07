@@ -12,9 +12,12 @@
 #    under the License.
 
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
+from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 
@@ -24,9 +27,11 @@ class LaunchConfiguration(resource.Resource):
     PROPERTIES = (
         IMAGE_ID, INSTANCE_TYPE, KEY_NAME, USER_DATA, SECURITY_GROUPS,
         KERNEL_ID, RAM_DISK_ID, BLOCK_DEVICE_MAPPINGS, NOVA_SCHEDULER_HINTS,
+        INSTANCE_ID,
     ) = (
         'ImageId', 'InstanceType', 'KeyName', 'UserData', 'SecurityGroups',
         'KernelId', 'RamDiskId', 'BlockDeviceMappings', 'NovaSchedulerHints',
+        'InstanceId',
     )
 
     _NOVA_SCHEDULER_HINT_KEYS = (
@@ -53,7 +58,6 @@ class LaunchConfiguration(resource.Resource):
         IMAGE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Glance image ID or name.'),
-            required=True,
             constraints=[
                 constraints.CustomConstraint('glance.image')
             ]
@@ -61,9 +65,17 @@ class LaunchConfiguration(resource.Resource):
         INSTANCE_TYPE: properties.Schema(
             properties.Schema.STRING,
             _('Nova instance type (flavor).'),
-            required=True,
             constraints=[
                 constraints.CustomConstraint('nova.flavor')
+            ]
+        ),
+        INSTANCE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of an existing instance you want to use to create '
+              'the launch configuration. All properties are derived from '
+              'the instance with the exception of BlockDeviceMapping.'),
+            constraints=[
+                constraints.CustomConstraint("nova.server")
             ]
         ),
         KEY_NAME: properties.Schema(
@@ -178,6 +190,32 @@ class LaunchConfiguration(resource.Resource):
         ),
     }
 
+    def rebuild_lc_properties(self, instance_id):
+        server = self.client_plugin('nova').get_server(instance_id)
+        instance_props = {
+            self.IMAGE_ID: server.image['id'],
+            self.INSTANCE_TYPE: server.flavor['id'],
+            self.KEY_NAME: server.key_name,
+            self.SECURITY_GROUPS: [sg['name']
+                                   for sg in server.security_groups]
+        }
+        lc_props = function.resolve(self.properties.data)
+        for key, value in six.iteritems(instance_props):
+            # the properties which are specified in launch configuration,
+            # will override the attributes from the instance
+            lc_props.setdefault(key, value)
+
+        return lc_props
+
+    def handle_create(self):
+        instance_id = self.properties.get(self.INSTANCE_ID)
+        if instance_id:
+            lc_props = self.rebuild_lc_properties(instance_id)
+            defn = self.t.freeze(properties=lc_props)
+            self.properties = defn.properties(
+                self.properties_schema, self.context)
+            self._update_stored_properties()
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             raise resource.UpdateReplace(self.name)
@@ -205,6 +243,16 @@ class LaunchConfiguration(resource.Resource):
                     msg = _("Ebs is missing, this is required "
                             "when specifying BlockDeviceMappings.")
                     raise exception.StackValidationFailed(message=msg)
+        # validate the 'InstanceId', 'ImageId' and 'InstanceType',
+        # if without 'InstanceId',  'ImageId' and 'InstanceType' are required
+        instance_id = self.properties.get(self.INSTANCE_ID)
+        if not instance_id:
+            image_id = self.properties.get(self.IMAGE_ID)
+            instance_type = self.properties.get(self.INSTANCE_TYPE)
+            if not image_id or not instance_type:
+                msg = _('If without InstanceId, '
+                        'ImageId and InstanceType are required.')
+                raise exception.StackValidationFailed(message=msg)
 
 
 def resource_mapping():
