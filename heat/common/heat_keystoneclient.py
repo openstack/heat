@@ -312,6 +312,21 @@ class KeystoneClientV3(object):
         #get the last 64 characters of the username
         return username[-64:]
 
+    def _get_domain_id_from_name(self, domain_name):
+        domains = self.domain_admin_client.domains.list(name=domain_name)
+        if len(domains) == 1:
+            return domains[0].id
+        elif len(domains) == 0:
+            LOG.error(_LE("Can't find domain id for %(domain)s!"), {
+                      'domain': domain_name})
+            raise exception.Error(_("Failed to find domain %s")
+                                  % domain_name)
+        else:
+            LOG.error(_LE("Unexpected response looking for %(domain)s!"), {
+                      'domain': domain_name})
+            raise exception.Error(_("Unexpected response looking for "
+                                    "domain %s") % domain_name)
+
     def create_stack_user(self, username, password=''):
         """Create a user defined as part of a stack.
 
@@ -419,7 +434,7 @@ class KeystoneClientV3(object):
             # Create user
             user = self.domain_admin_client.users.create(
                 name=self._get_username(username), password=password,
-                default_project=project_id, domain=self.stack_domain)
+                default_project=project_id, domain=self.stack_domain_id)
             # Add to stack user role
             LOG.debug("Adding user %(user)s to role %(role)s" % {
                       'user': user.id, 'role': role_id})
@@ -441,9 +456,8 @@ class KeystoneClientV3(object):
             if self._stack_domain_is_id:
                 self._stack_domain_id = self.stack_domain
             else:
-                domain = self.domain_admin_client.domains.get(
-                    self.stack_domain)
-                self._stack_domain_id = domain.id
+                domain_id = self._get_domain_id_from_name(self.stack_domain)
+                self._stack_domain_id = domain_id
         return self._stack_domain_id
 
     def _check_stack_domain_user(self, user_id, project_id, action):
@@ -489,7 +503,7 @@ class KeystoneClientV3(object):
         desc = "Heat stack user project"
         domain_project = self.domain_admin_client.projects.create(
             name=project_name,
-            domain=self.stack_domain,
+            domain=self.stack_domain_id,
             description=desc)
         return domain_project.id
 
