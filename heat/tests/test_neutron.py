@@ -1929,13 +1929,27 @@ class NeutronFloatingIPTest(HeatTestCase):
                                'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
-    def test_floating_ip(self):
-        self._test_floating_ip()
+    def test_floating_ip_router_interface(self):
+        t = template_format.parse(neutron_floating_template)
+        del t['Resources']['gateway']
+        self._test_floating_ip(t)
 
-    def test_floating_ip_deprecated(self):
-        self._test_floating_ip(resolve_neutron=False)
+    def test_floating_ip_router_gateway(self):
+        t = template_format.parse(neutron_floating_template)
+        del t['Resources']['router_interface']
+        self._test_floating_ip(t, r_iface=False)
 
-    def _test_floating_ip(self, resolve_neutron=True):
+    def test_floating_ip_deprecated_router_interface(self):
+        t = template_format.parse(neutron_floating_template_deprecated)
+        del t['Resources']['gateway']
+        self._test_floating_ip(t, resolve_neutron=False)
+
+    def test_floating_ip_deprecated_router_gateway(self):
+        t = template_format.parse(neutron_floating_template_deprecated)
+        del t['Resources']['router_interface']
+        self._test_floating_ip(t, resolve_neutron=False, r_iface=False)
+
+    def _test_floating_ip(self, tmpl, resolve_neutron=True, r_iface=True):
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
@@ -1959,27 +1973,24 @@ class NeutronFloatingIPTest(HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
                 qe.NeutronClientException(status_code=404))
         if resolve_neutron:
-            t = template_format.parse(neutron_floating_template)
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'network',
                 'abcd1234'
             ).AndReturn('abcd1234')
-        else:
-            t = template_format.parse(neutron_floating_template_deprecated)
 
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(tmpl)
 
         # assert the implicit dependency between the floating_ip
         # and the gateway
         self.m.ReplayAll()
 
-        deps = stack.dependencies[stack['gateway']]
-
-        self.assertIn(stack['floating_ip'], deps)
-
-        deps = stack.dependencies[stack['router_interface']]
-        self.assertIn(stack['floating_ip'], deps)
+        if r_iface:
+            deps = stack.dependencies[stack['router_interface']]
+            self.assertIn(stack['floating_ip'], deps)
+        else:
+            deps = stack.dependencies[stack['gateway']]
+            self.assertIn(stack['floating_ip'], deps)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
