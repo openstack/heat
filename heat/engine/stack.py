@@ -79,7 +79,8 @@ class Stack(collections.Mapping):
                  adopt_stack_data=None, stack_user_project_id=None,
                  created_time=None, updated_time=None,
                  user_creds_id=None, tenant_id=None,
-                 use_stored_context=False, username=None):
+                 use_stored_context=False, username=None,
+                 nested_depth=0):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -113,6 +114,7 @@ class Stack(collections.Mapping):
         self.created_time = created_time
         self.updated_time = updated_time
         self.user_creds_id = user_creds_id
+        self.nested_depth = nested_depth
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -307,7 +309,8 @@ class Stack(collections.Mapping):
             'stack_user_project_id': self.stack_user_project_id,
             'updated_at': self.updated_time,
             'user_creds_id': self.user_creds_id,
-            'backup': backup
+            'backup': backup,
+            'nested_depth': self.nested_depth
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)

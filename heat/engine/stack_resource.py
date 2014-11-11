@@ -42,11 +42,6 @@ class StackResource(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
-        if self.stack.parent_resource:
-            self.recursion_depth = (
-                self.stack.parent_resource.recursion_depth + 1)
-        else:
-            self.recursion_depth = 0
 
     def _outputs_to_attribs(self, json_snippet):
         outputs = json_snippet.get('Outputs')
@@ -122,7 +117,7 @@ class StackResource(resource.Resource):
 
     def _parse_nested_stack(self, stack_name, child_template, child_params,
                             timeout_mins=None, adopt_data=None):
-        if self.recursion_depth >= cfg.CONF.max_nested_stack_depth:
+        if self.stack.nested_depth >= cfg.CONF.max_nested_stack_depth:
             msg = _("Recursion depth exceeds %d.") % \
                 cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
@@ -140,6 +135,7 @@ class StackResource(resource.Resource):
             timeout_mins = self.stack.timeout_mins
 
         stack_user_project_id = self.stack.stack_user_project_id
+        new_nested_depth = self.stack.nested_depth + 1
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
@@ -156,7 +152,8 @@ class StackResource(resource.Resource):
                               owner_id=self.stack.id,
                               user_creds_id=self.stack.user_creds_id,
                               stack_user_project_id=stack_user_project_id,
-                              adopt_stack_data=adopt_data)
+                              adopt_stack_data=adopt_data,
+                              nested_depth=new_nested_depth)
         nested.validate()
         return nested
 

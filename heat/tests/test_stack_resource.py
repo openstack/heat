@@ -178,6 +178,7 @@ class StackResourceTest(common.HeatTestCase):
             user_creds_id=self.parent_stack.user_creds_id,
             stack_user_project_id=self.parent_stack.stack_user_project_id,
             adopt_stack_data=None,
+            nested_depth=1
         )
 
     @mock.patch('heat.engine.environment.get_custom_environment')
@@ -217,6 +218,7 @@ class StackResourceTest(common.HeatTestCase):
             user_creds_id=self.parent_stack.user_creds_id,
             stack_user_project_id=self.parent_stack.stack_user_project_id,
             adopt_stack_data=None,
+            nested_depth=1
         )
 
     def test_preview_propagates_files(self):
@@ -284,6 +286,7 @@ class StackResourceTest(common.HeatTestCase):
                          self.stack.name)
         self.assertEqual(self.templ, self.stack.t.t)
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
+        self.assertEqual(1, self.stack.nested_depth)
         self.assertIsNone(self.stack.timeout_mins)
         self.assertEqual('aprojectid', self.stack.stack_user_project_id)
 
@@ -622,7 +625,8 @@ class StackResourceTest(common.HeatTestCase):
                      owner_id=self.parent_stack.id,
                      user_creds_id=self.parent_stack.user_creds_id,
                      adopt_stack_data=None,
-                     stack_user_project_id='aprojectid').AndReturn(self.stack)
+                     stack_user_project_id='aprojectid',
+                     nested_depth=1).AndReturn(self.stack)
 
         st_set = self.stack.state_set
         self.m.StubOutWithMock(self.stack, 'state_set')
