@@ -572,7 +572,8 @@ class EngineService(service.Service):
             raise exception.RequestLimitExceeded(message=message)
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
-                                           params, files, args, owner_id=None):
+                                           params, files, args, owner_id=None,
+                                           nested_depth=0):
         tmpl = templatem.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -587,6 +588,7 @@ class EngineService(service.Service):
         env = environment.Environment(params)
         stack = parser.Stack(cnxt, stack_name, tmpl, env,
                              owner_id=owner_id,
+                             nested_depth=nested_depth,
                              **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
@@ -621,7 +623,7 @@ class EngineService(service.Service):
 
     @request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args,
-                     owner_id=None):
+                     owner_id=None, nested_depth=0):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -636,6 +638,8 @@ class EngineService(service.Service):
         :param args: Request parameters/args passed from API
         :param owner_id: parent stack ID for nested stacks, only expected when
                          called from another heat-engine (not a user option)
+        :param nested_depth: the nested depth for nested stacks, only expected
+                         when called from another heat-engine
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
@@ -667,7 +671,8 @@ class EngineService(service.Service):
                                                         params,
                                                         files,
                                                         args,
-                                                        owner_id)
+                                                        owner_id,
+                                                        nested_depth)
 
         stack.store()
 
