@@ -24,6 +24,7 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os import nova
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
@@ -111,12 +112,14 @@ class AutoScalingTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def _stub_create(self, num, with_error=None):
+    def _stub_create(self, num, with_error=None, with_lcn=True):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
+        # create with launch config name, need to stub snapshot constraint
+        if with_lcn:
+            self.stub_SnapshotConstraint_validate()
         if with_error:
             instance.Instance.handle_create().AndRaise(
                 exception.Error(with_error))
@@ -700,4 +703,85 @@ class AutoScalingTest(common.HeatTestCase):
         self.assertEqual(4, len(grouputils.get_member_names(rsrc)))
 
         rsrc.delete()
+        self.m.VerifyAll()
+
+    def _stub_nova_server_get(self, not_found=False):
+        mock_server = mock.MagicMock()
+        mock_server.image = {'id': 'dd619705-468a-4f7d-8a06-b84794b3561a'}
+        mock_server.flavor = {'id': '1'}
+        mock_server.key_name = 'test'
+        mock_server.security_groups = [{u'name': u'hth_test'}]
+        if not_found:
+            self.patchobject(nova.NovaClientPlugin, 'get_server',
+                             side_effect=exception.ServerNotFound(
+                                 server='5678'))
+        else:
+            self.patchobject(nova.NovaClientPlugin, 'get_server',
+                             return_value=mock_server)
+
+    def test_validate_without_InstanceId_and_LaunchConfigurationName(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp.pop('LaunchConfigurationName')
+        agp.pop('LoadBalancerNames')
+        stack = utils.parse_stack(t, params=self.params)
+        rsrc = stack['WebServerGroup']
+        error_msg = ("Either 'InstanceId' or 'LaunchConfigurationName' "
+                     "must be provided.")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(error_msg, six.text_type(exc))
+
+    def test_validate_with_InstanceId_and_LaunchConfigurationName(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=self.params)
+        rsrc = stack['WebServerGroup']
+        error_msg = ("Either 'InstanceId' or 'LaunchConfigurationName' "
+                     "must be provided.")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(error_msg, six.text_type(exc))
+
+    def test_scaling_group_create_with_instanceid(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp['InstanceId'] = '5678'
+        agp.pop('LaunchConfigurationName')
+        agp.pop('LoadBalancerNames')
+        stack = utils.parse_stack(t, params=self.params)
+        rsrc = stack['WebServerGroup']
+        self.stub_KeypairConstraint_validate()
+        self._stub_nova_server_get()
+        self._stub_create(1, with_lcn=False)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        instance_definition = rsrc._get_instance_definition()
+        ins_props = instance_definition['Properties']
+        self.assertEqual('dd619705-468a-4f7d-8a06-b84794b3561a',
+                         ins_props['ImageId'])
+        self.assertEqual('test', ins_props['KeyName'])
+        self.assertEqual(['hth_test'], ins_props['SecurityGroups'])
+        self.assertEqual('1', ins_props['InstanceType'])
+
+        self.m.VerifyAll()
+
+    def test_scaling_group_create_with_instanceid_not_found(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp.pop('LaunchConfigurationName')
+        agp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=self.params)
+        rsrc = stack['WebServerGroup']
+        self._stub_nova_server_get(not_found=True)
+        self.m.ReplayAll()
+        msg = ("Property error : WebServerGroup: InstanceId Error validating "
+               "value '5678': The server (5678) could not be found")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(msg, six.text_type(exc))
+
         self.m.VerifyAll()
