@@ -223,32 +223,30 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             action)
 
         if action == self.CREATE:
-            sd = self.heat().software_deployments.create(**props)
-            self.resource_id_set(sd.id)
+            sd = self.rpc_client().create_software_deployment(
+                self.context, **props)
+            self.resource_id_set(sd[rpc_api.SOFTWARE_DEPLOYMENT_ID])
         else:
-            sd = self.heat().software_deployments.get(self.resource_id)
-            previous_derived_config = sd.config_id
-            sd.update(**props)
-            if previous_derived_config:
-                self._delete_derived_config(previous_derived_config)
+            sd = self.rpc_client().show_software_deployment(
+                self.context, self.resource_id)
+            prev_derived_config = sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
+            sd = self.rpc_client().update_software_deployment(
+                self.context, **props)
+            if prev_derived_config:
+                self._delete_derived_config(prev_derived_config)
         if not self._signal_transport_none():
             return sd
 
-    @staticmethod
-    def _check_complete(sd):
-        if not sd:
+    def _check_complete(self):
+        sd = self.rpc_client().show_software_deployment(
+            self.context, self.resource_id)
+        status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
+        if status == SoftwareDeployment.COMPLETE:
             return True
-        # NOTE(dprince): when lazy loading the sd attributes
-        # we need to support multiple versions of heatclient
-        if hasattr(sd, 'get'):
-            sd.get()
-        else:
-            sd._get()
-        if sd.status == SoftwareDeployment.COMPLETE:
-            return True
-        elif sd.status == SoftwareDeployment.FAILED:
+        elif status == SoftwareDeployment.FAILED:
+            status_reason = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS_REASON]
             message = _("Deployment to server "
-                        "failed: %s") % sd.status_reason
+                        "failed: %s") % status_reason
             LOG.error(message)
             exc = exception.Error(message)
             raise exc
@@ -376,7 +374,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.data_set('password', password, True)
 
     def check_create_complete(self, sd):
-        return self._check_complete(sd)
+        return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -386,7 +384,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._handle_action(self.UPDATE)
 
     def check_update_complete(self, sd):
-        return self._check_complete(sd)
+        return self._check_complete()
 
     def handle_delete(self):
         if self.DELETE in self.properties[self.DEPLOY_ACTIONS]:
@@ -397,7 +395,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def check_delete_complete(self, sd=None):
         if not sd:
             return True
-        if self._check_complete(sd):
+        if self._check_complete():
             self._delete_resource()
             return True
 
@@ -411,11 +409,13 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         derived_config_id = None
         if self.resource_id is not None:
             try:
-                sd = self.heat().software_deployments.get(self.resource_id)
-                derived_config_id = sd.config_id
-                sd.delete()
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
+                sd = self.rpc_client().show_software_deployment(
+                    self.context, self.resource_id)
+                derived_config_id = sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
+                self.rpc_client().delete_software_deployment(
+                    self.context, self.resource_id)
+            except exception.NotFound:
+                pass
 
         if derived_config_id:
             self._delete_derived_config(derived_config_id)
@@ -424,25 +424,28 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._handle_action(self.SUSPEND)
 
     def check_suspend_complete(self, sd):
-        return self._check_complete(sd)
+        return self._check_complete()
 
     def handle_resume(self):
         return self._handle_action(self.RESUME)
 
     def check_resume_complete(self, sd):
-        return self._check_complete(sd)
+        return self._check_complete()
 
     def handle_signal(self, details):
-        sd = self.heat().software_deployments.get(self.resource_id)
+        sd = self.rpc_client().show_software_deployment(
+            self.context, self.resource_id)
         sc = self.rpc_client().show_software_config(
             self.context, self.properties[self.CONFIG])
-        if not sd.status == self.IN_PROGRESS:
+        status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
+
+        if not status == self.IN_PROGRESS:
             # output values are only expected when in an IN_PROGRESS state
             return
 
         details = details or {}
 
-        ov = sd.output_values or {}
+        ov = sd[rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES] or {}
         status = None
         status_reasons = {}
         status_code = details.get(self.STATUS_CODE)
@@ -476,7 +479,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         else:
             status = self.COMPLETE
             status_reason = _('Outputs received')
-        sd.update(output_values=ov, status=status, status_reason=status_reason)
+
+        self.rpc_client().update_software_deployment(
+            self.context, self.resource_id,
+            output_values=ov, status=status, status_reason=status_reason)
         # Return a string describing the outcome of handling the signal data
         return event_reason
 
@@ -484,9 +490,11 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         '''
         Resource attributes map to deployment outputs values
         '''
-        sd = self.heat().software_deployments.get(self.resource_id)
-        if key in sd.output_values:
-            attribute = sd.output_values.get(key)
+        sd = self.rpc_client().show_software_deployment(
+            self.context, self.resource_id)
+        ov = sd[rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES] or {}
+        if key in ov:
+            attribute = ov.get(key)
             return attributes.select_from_attribute(attribute, path)
 
         # Since there is no value for this key yet, check the output schemas
