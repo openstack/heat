@@ -52,15 +52,21 @@ class StackResource(resource.Resource):
                                                     self.attributes_schema,
                                                     self._resolve_attribute)
 
-    def nested(self):
+    def nested(self, force_reload=False):
         '''
         Return a Stack object representing the nested (child) stack.
+        :param force_reload: Forces reloading from the DB instead of returning
+                             the locally cached Stack object
         '''
+        if force_reload:
+            self._nested = None
+
         if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
                                              self.resource_id,
                                              parent_resource=self,
-                                             show_deleted=False)
+                                             show_deleted=False,
+                                             force_reload=force_reload)
 
             if self._nested is None:
                 raise exception.NotFound(_("Nested stack not found in DB"))

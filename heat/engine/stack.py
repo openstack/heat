@@ -247,7 +247,7 @@ class Stack(collections.Mapping):
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, parent_resource=None,
-             show_deleted=True, use_stored_context=False):
+             show_deleted=True, use_stored_context=False, force_reload=False):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id,
@@ -256,6 +256,9 @@ class Stack(collections.Mapping):
         if stack is None:
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
+
+        if force_reload:
+            stack.refresh()
 
         return cls._from_db(context, stack, parent_resource=parent_resource,
                             use_stored_context=use_stored_context)
