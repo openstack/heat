@@ -118,6 +118,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
                       args={'timeout_mins': u'30'})
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
+        call_kwargs['nested_depth'] = 0
         expected_message = self.rpcapi.make_msg('create_stack', **call_kwargs)
         kwargs['expected_message'] = expected_message
         self._test_engine_api('create_stack', 'call', **kwargs)
