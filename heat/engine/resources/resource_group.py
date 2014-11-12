@@ -241,17 +241,12 @@ class ResourceGroup(stack_resource.StackResource):
                                          {}, self.stack.timeout_mins)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            old_names = self._resource_names()
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
-
-            new_names = self._resource_names()
-            if old_names != new_names:
-                return self.update_with_template(
-                    self._assemble_nested(new_names),
-                    {},
-                    self.stack.timeout_mins)
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
+        new_names = self._resource_names()
+        return self.update_with_template(self._assemble_nested(new_names),
+                                         {},
+                                         self.stack.timeout_mins)
 
     def handle_delete(self):
         return self.delete_nested()
