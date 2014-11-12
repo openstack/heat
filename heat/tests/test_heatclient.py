@@ -74,10 +74,13 @@ class KeystoneClientTest(HeatTestCase):
             project_name='service',
             username='heat').AndReturn(self.mock_admin_client)
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
-        self.mock_admin_client.authenticate().AndReturn(auth_ok)
         if auth_ok:
+            self.mock_admin_client.authenticate().AndReturn(auth_ok)
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
             self.mock_admin_client.auth_ref.user_id = '1234'
+        else:
+            self.mock_admin_client.authenticate().AndRaise(
+                kc_exception.Unauthorized)
 
     def _stub_domain_admin_client(self, auth_ok=True):
         kc_v3.Client(

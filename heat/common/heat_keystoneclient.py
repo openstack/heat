@@ -127,9 +127,10 @@ class KeystoneClientV3(object):
             admin_creds = self._service_admin_creds()
             admin_creds.update(self._ssl_options())
             c = kc_v3.Client(**admin_creds)
-            if c.authenticate():
+            try:
+                c.authenticate()
                 self._admin_client = c
-            else:
+            except kc_exception.Unauthorized:
                 LOG.error(_LE("Admin client authentication failed"))
                 raise exception.AuthorizationFailure()
         return self._admin_client
@@ -147,9 +148,10 @@ class KeystoneClientV3(object):
                 auth_kwargs = {'domain_id': self.stack_domain}
             else:
                 auth_kwargs = {'domain_name': self.stack_domain}
-            if c.authenticate(**auth_kwargs):
+            try:
+                c.authenticate(**auth_kwargs)
                 self._domain_admin_client = c
-            else:
+            except kc_exception.Unauthorized:
                 LOG.error(_LE("Domain admin client authentication failed"))
                 raise exception.AuthorizationFailure()
         return self._domain_admin_client
@@ -200,7 +202,11 @@ class KeystoneClientV3(object):
         # If auth_ref has already be specified via auth_token_info, don't
         # authenticate as we want to reuse, rather than request a new token
         if 'auth_ref' not in kwargs:
-            client.authenticate()
+            try:
+                client.authenticate()
+            except kc_exception.Unauthorized:
+                LOG.error(_LE("Keystone client authentication failed"))
+                raise exception.AuthorizationFailure()
 
         # If we are authenticating with a trust set the context auth_token
         # with the trust scoped token
