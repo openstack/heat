@@ -606,6 +606,17 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                           self.ctx, stack_name,
                           stack.t.t, {}, None, {})
 
+    def test_stack_create_AuthorizationFailure(self):
+        stack_name = 'service_create_test_stack_AuthorizationFailure'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        self.m.StubOutWithMock(parser.Stack, 'create_stack_user_project_id')
+        parser.Stack.create_stack_user_project_id().AndRaise(
+            exception.AuthorizationFailure)
+        self.assertRaises(dispatcher.ExpectedException,
+                          self.man.create_stack,
+                          self.ctx, stack_name,
+                          stack.t.t, {}, None, {})
+
     def test_stack_create_no_credentials(self):
         stack_name = 'test_stack_create_no_credentials'
         params = {'foo': 'bar'}

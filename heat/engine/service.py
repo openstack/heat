@@ -646,7 +646,11 @@ class EngineService(service.Service):
         def _stack_create(stack):
 
             if not stack.stack_user_project_id:
-                stack.create_stack_user_project_id()
+                try:
+                    stack.create_stack_user_project_id()
+                except exception.AuthorizationFailure as ex:
+                    stack.state_set(stack.action, stack.FAILED,
+                                    six.text_type(ex))
 
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
@@ -654,7 +658,7 @@ class EngineService(service.Service):
                     raise exception.NotSupported(feature='Stack Adopt')
 
                 stack.adopt()
-            else:
+            elif stack.status != stack.FAILED:
                 stack.create()
 
             if (stack.action in (stack.CREATE, stack.ADOPT)
