@@ -96,6 +96,19 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                           self.nova_plugin.get_keypair, 'notakey')
         self.m.VerifyAll()
 
+    def test_get_server(self):
+        """Tests the get_server function."""
+        my_server = self.m.CreateMockAnything()
+        self.nova_client.servers = self.m.CreateMockAnything()
+        self.nova_client.servers.get('my_server').AndReturn(my_server)
+        self.nova_client.servers.get('idontexist').AndRaise(
+            nova_exceptions.NotFound(404))
+        self.m.ReplayAll()
+        self.assertEqual(my_server, self.nova_plugin.get_server('my_server'))
+        self.assertRaises(exception.ServerNotFound,
+                          self.nova_plugin.get_server, 'idontexist')
+        self.m.VerifyAll()
+
     def test_get_status(self):
         server = self.m.CreateMockAnything()
         server.status = 'ACTIVE'
@@ -256,3 +269,23 @@ class NovaUtilsMetadataTests(NovaClientPluginTestCase):
         }
 
         self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
+
+
+class ServerConstraintTest(NovaClientPluginTestCase):
+
+    def setUp(self):
+        super(ServerConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_server = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'nova').get_server = self.mock_get_server
+        self.constraint = nova.ServerConstraint()
+
+    def test_validation(self):
+        self.mock_get_server.return_value = mock.MagicMock()
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_server.side_effect = exception.ServerNotFound(
+            server='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
