@@ -242,6 +242,10 @@ class Parameter(object):
 
         raise exception.UserParameterMissing(key=self.name)
 
+    def has_value(self):
+        '''Parameter has a user or default value.'''
+        return self.user_value or self.has_default()
+
     def hidden(self):
         '''
         Return whether the parameter should be sanitised in any output to

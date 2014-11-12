@@ -802,6 +802,41 @@ resources:
       size: { get_param: size }
 '''
 
+test_template_default_override = '''
+heat_template_version: 2013-05-23
+
+description:  create a network
+
+parameters:
+  net_name:
+    type: string
+    default: defaultnet
+    description: Name of private network to be created
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: net_name }
+'''
+
+test_template_no_default = '''
+heat_template_version: 2013-05-23
+
+description:  create a network
+
+parameters:
+  net_name:
+    type: string
+    description: Name of private network to be created
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: net_name }
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -899,6 +934,22 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
+
+    def test_validate_parameters_env_override(self):
+        t = template_format.parse(test_template_default_override)
+        env_params = {'net_name': 'betternetname'}
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, env_params))
+        self.assertEqual('betternetname',
+                         res['Parameters']['net_name']['Default'])
+
+    def test_validate_parameters_env_provided(self):
+        t = template_format.parse(test_template_no_default)
+        env_params = {'net_name': 'betternetname'}
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, env_params))
+        self.assertEqual('betternetname',
+                         res['Parameters']['net_name']['Default'])
 
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
