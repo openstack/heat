@@ -274,8 +274,8 @@ def format_validate_parameter(param):
         api.PARAM_LABEL: param.label()
     }
 
-    if param.has_default():
-        res[api.PARAM_DEFAULT] = param.default()
+    if param.has_value():
+        res[api.PARAM_DEFAULT] = param.value()
 
     constraint_description = []
 

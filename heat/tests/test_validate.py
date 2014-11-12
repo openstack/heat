@@ -771,6 +771,41 @@ parameter_groups:
     description: A group of parameters for the database
 '''
 
+test_template_default_override = '''
+heat_template_version: 2013-05-23
+
+description:  create a network
+
+parameters:
+  net_name:
+    type: string
+    default: defaultnet
+    description: Name of private network to be created
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: net_name }
+'''
+
+test_template_no_default = '''
+heat_template_version: 2013-05-23
+
+description:  create a network
+
+parameters:
+  net_name:
+    type: string
+    description: Name of private network to be created
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: net_name }
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -906,6 +941,32 @@ class validateTest(HeatTestCase):
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
+
+    def test_validate_parameters_env_override(self):
+        t = template_format.parse(test_template_default_override)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+        env_params = {'net_name': 'betternetname'}
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, env_params))
+        self.assertEqual('betternetname',
+                         res['Parameters']['net_name']['Default'])
+
+    def test_validate_parameters_env_provided(self):
+        t = template_format.parse(test_template_no_default)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+        env_params = {'net_name': 'betternetname'}
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t, env_params))
+        self.assertEqual('betternetname',
+                         res['Parameters']['net_name']['Default'])
 
     def test_validate_hot_parameter_label(self):
         t = template_format.parse(test_template_hot_parameter_label)
