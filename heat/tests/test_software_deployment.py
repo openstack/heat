@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heatclient.exc import HTTPNotFound
-
 import copy
 import mock
 import six
@@ -121,10 +119,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client = mock.MagicMock()
         self.deployment._rpc_client = self.rpc_client
 
-        heat = mock.MagicMock()
-        self.deployment.heat = heat
-        self.deployments = heat.return_value.software_deployments
-
     def test_validate(self):
         template = dict(self.template_with_server)
         props = template['Resources']['server']['Properties']
@@ -227,9 +221,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         return sc
 
     def mock_deployment(self):
-        sd = mock.MagicMock()
-        sd.id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        self.deployments.create.return_value = sd
+        sd = {
+            'id': 'c8a19429-7fde-47ea-a42f-40045488226c',
+            'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2'
+        }
+        self.rpc_client.create_software_deployment.return_value = sd
         return sd
 
     def test_handle_create(self):
@@ -241,7 +237,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.handle_create()
 
-        self.assertEqual(sd.id, self.deployment.resource_id)
+        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual({
             'config': 'the config',
             'group': 'Test::Group',
@@ -293,7 +289,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
              'status_reason': 'Not waiting for outputs signal'},
-            self.deployments.create.call_args[1])
+            self.rpc_client.create_software_deployment.call_args[1])
 
     def test_handle_create_for_component(self):
         self._create_stack(self.template_no_signal)
@@ -304,7 +300,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.handle_create()
 
-        self.assertEqual(sd.id, self.deployment.resource_id)
+        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual({
             'config': {
                 'configs': [
@@ -384,7 +380,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'COMPLETE',
              'status_reason': 'Not waiting for outputs signal'},
-            self.deployments.create.call_args[1])
+            self.rpc_client.create_software_deployment.call_args[1])
 
     def test_handle_create_do_not_wait(self):
         self._create_stack(self.template)
@@ -394,8 +390,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd = self.mock_deployment()
 
         self.deployment.handle_create()
-        self.assertEqual(sd.id, self.deployment.resource_id)
-        args = self.deployments.create.call_args[1]
+        self.assertEqual(sd['id'], self.deployment.resource_id)
         self.assertEqual(
             {'action': 'CREATE',
              'config_id': derived_sc['id'],
@@ -403,45 +398,58 @@ class SoftwareDeploymentTest(common.HeatTestCase):
              'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
              'status': 'IN_PROGRESS',
              'status_reason': 'Deploy data available'},
-            args)
+            self.rpc_client.create_software_deployment.call_args[1])
 
     def test_check_create_complete(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.COMPLETE
+        sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = sd
+
+        sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_create_complete(sd))
-        sd.status = self.deployment.IN_PROGRESS
+        sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_create_complete(sd))
 
     def test_check_update_complete(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.COMPLETE
+        sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = sd
+
+        sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_update_complete(sd))
-        sd.status = self.deployment.IN_PROGRESS
+
+        sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_update_complete(sd))
 
     def test_check_suspend_complete(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.COMPLETE
+        sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = sd
+
+        sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_suspend_complete(sd))
-        sd.status = self.deployment.IN_PROGRESS
+
+        sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_suspend_complete(sd))
 
     def test_check_resume_complete(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.COMPLETE
+        sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = sd
+
+        sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_resume_complete(sd))
-        sd.status = self.deployment.IN_PROGRESS
+
+        sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_resume_complete(sd))
 
     def test_check_create_complete_error(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.FAILED
-        sd.status_reason = 'something wrong'
+        sd = {
+            'status': self.deployment.FAILED,
+            'status_reason': 'something wrong'
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         err = self.assertRaises(
             exc.Error, self.deployment.check_create_complete, sd)
         self.assertEqual(
@@ -450,12 +458,14 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_delete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
-        self.deployments.get.return_value = sd
+        self.rpc_client.show_software_deployment.return_value = sd
 
-        self.deployment.resource_id = sd.id
+        self.deployment.resource_id = sd['id']
         self.deployment.handle_delete()
 
-        self.assertEqual([], sd.delete.call_args)
+        self.assertEqual(
+            (self.ctx, sd['id']),
+            self.rpc_client.delete_software_deployment.call_args[0])
 
     def test_delete_complete(self):
         self._create_stack(self.template_delete_suspend_resume)
@@ -464,25 +474,24 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
 
-        self.deployment.resource_id = sd.id
-        self.deployments.delete.return_value = None
+        self.deployment.resource_id = sd['id']
 
-        self.deployments.get.return_value = sd
-        sd.update.return_value = None
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.rpc_client.update_software_deployment.return_value = sd
         self.assertEqual(sd, self.deployment.handle_delete())
-        args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'DELETE',
             'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
-            'status_reason': 'Deploy data available'
-        }, args)
+            'status_reason': 'Deploy data available'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
+        sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_delete_complete(sd))
 
-        sd.status = self.deployment.COMPLETE
+        sd['status'] = self.deployment.COMPLETE
         self.assertTrue(self.deployment.check_delete_complete(sd))
 
     def test_handle_delete_notfound(self):
@@ -493,11 +502,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.mock_software_config()
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
-        sd.config_id = derived_sc['id']
-        self.deployments.get.return_value = sd
+        sd['config_id'] = derived_sc['id']
+        self.rpc_client.show_software_deployment.return_value = sd
 
-        sd.delete.side_effect = HTTPNotFound()
-        self.rpc_client.delete_software_config.side_effect = exc.NotFound
+        nf = exc.NotFound
+        self.rpc_client.delete_software_deployment.side_effect = nf
+        self.rpc_client.delete_software_config.side_effect = nf
         self.assertIsNone(self.deployment.handle_delete())
         self.assertEqual(
             (self.ctx, derived_sc['id']),
@@ -516,15 +526,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_update(self):
         self._create_stack(self.template)
 
-        self.mock_software_config()
-
-        derived_sc = self.mock_derived_software_config()
+        self.mock_derived_software_config()
         sd = self.mock_deployment()
         rsrc = self.stack['deployment_mysql']
 
-        self.deployments.get.return_value = sd
-        sd.update.return_value = None
-        self.deployment.resource_id = sd.id
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.deployment.resource_id = sd['id']
         config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
         prop_diff = {'config': config_id}
         props = copy.copy(rsrc.properties.data)
@@ -537,11 +544,18 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             (self.ctx, config_id),
             self.rpc_client.show_software_config.call_args[0])
 
-        args = self.deployments.get.call_args[0]
-        self.assertEqual(1, len(args))
-        self.assertIn(sd.id, args)
-        args = sd.update.call_args[1]
-        self.assertEqual(derived_sc['id'], args['config_id'])
+        self.assertEqual(
+            (self.ctx, sd['id']),
+            self.rpc_client.show_software_deployment.call_args[0])
+
+        self.assertEqual({
+            'action': 'UPDATE',
+            'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
+            'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
+            'status': 'IN_PROGRESS',
+            'status_reason': u'Deploy data available'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_suspend_resume(self):
         self._create_stack(self.template_delete_suspend_resume)
@@ -550,51 +564,47 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         derived_sc = self.mock_derived_software_config()
         sd = self.mock_deployment()
 
-        self.deployments.get.return_value = sd
-        sd.update.return_value = None
-        self.deployment.resource_id = sd.id
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.deployment.resource_id = sd['id']
 
         # first, handle the suspend
         self.deployment.handle_suspend()
 
-        args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'SUSPEND',
             'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
-            'status_reason': 'Deploy data available'
-        }, args)
+            'status_reason': 'Deploy data available'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
-        sd.status = 'IN_PROGRESS'
+        sd['status'] = 'IN_PROGRESS'
         self.assertFalse(self.deployment.check_suspend_complete(sd))
 
-        sd.status = 'COMPLETE'
+        sd['status'] = 'COMPLETE'
         self.assertTrue(self.deployment.check_suspend_complete(sd))
 
         # now, handle the resume
         self.deployment.handle_resume()
 
-        args = sd.update.call_args[1]
         self.assertEqual({
             'action': 'RESUME',
             'config_id': derived_sc['id'],
             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
-            'status_reason': 'Deploy data available'
-        }, args)
+            'status_reason': 'Deploy data available'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
-        sd.status = 'IN_PROGRESS'
+        sd['status'] = 'IN_PROGRESS'
         self.assertFalse(self.deployment.check_resume_complete(sd))
 
-        sd.status = 'COMPLETE'
+        sd['status'] = 'COMPLETE'
         self.assertTrue(self.deployment.check_resume_complete(sd))
 
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -602,10 +612,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 {'name': 'failed', 'error_output': True}
             ]
         }
-        sd.output_values = {}
-        sd.status = self.deployment.IN_PROGRESS
-        sd.update.return_value = None
-        self.deployments.get.return_value = sd
+        sd = {
+            'output_values': {},
+            'status': self.deployment.IN_PROGRESS
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         self.rpc_client.show_software_config.return_value = sc
         details = {
             'foo': 'bar',
@@ -613,7 +624,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         }
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
-        args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
                 'foo': 'bar',
@@ -622,12 +632,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'deploy_stdout': None
             },
             'status': 'COMPLETE',
-            'status_reason': 'Outputs received'
-        }, args)
+            'status_reason': 'Outputs received'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -635,10 +644,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 {'name': 'failed', 'error_output': True}
             ]
         }
-        sd.output_values = {}
-        sd.status = self.deployment.IN_PROGRESS
-        sd.update.return_value = None
-        self.deployments.get.return_value = sd
+        sd = {
+            'output_values': {},
+            'status': self.deployment.IN_PROGRESS
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         self.rpc_client.show_software_config.return_value = sc
         details = {
             'foo': 'bar',
@@ -646,7 +656,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         }
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
-        args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
                 'foo': 'bar',
@@ -655,12 +664,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'deploy_stdout': None
             },
             'status': 'COMPLETE',
-            'status_reason': 'Outputs received'
-        }, args)
+            'status_reason': 'Outputs received'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_signal_failed(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -668,15 +676,15 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 {'name': 'failed', 'error_output': True}
             ]
         }
-        sd.output_values = {}
-        sd.status = self.deployment.IN_PROGRESS
-        sd.update.return_value = None
-        self.deployments.get.return_value = sd
+        sd = {
+            'output_values': {},
+            'status': self.deployment.IN_PROGRESS
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         self.rpc_client.show_software_config.return_value = sc
         details = {'failed': 'no enough memory found.'}
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment failed', ret)
-        args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
                 'deploy_status_code': None,
@@ -685,13 +693,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'failed': 'no enough memory found.'
             },
             'status': 'FAILED',
-            'status_reason': 'failed : no enough memory found.'
-        }, args)
+            'status_reason': 'failed : no enough memory found.'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
         # Test bug 1332355, where details contains a translateable message
         details = {'failed': _('need more memory.')}
         self.deployment.handle_signal(details)
-        args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
                 'deploy_status_code': None,
@@ -700,24 +707,23 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'failed': 'need more memory.'
             },
             'status': 'FAILED',
-            'status_reason': 'failed : need more memory.'
-        }, args)
+            'status_reason': 'failed : need more memory.'},
+            self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_status_code_failed(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.outputs = []
-        sd.output_values = {}
-        sd.status = self.deployment.IN_PROGRESS
-        sd.update.return_value = None
-        self.deployments.get.return_value = sd
+        sd = {
+            'outputs': [],
+            'output_values': {},
+            'status': self.deployment.IN_PROGRESS
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         details = {
             'deploy_stdout': 'A thing happened',
             'deploy_stderr': 'Then it broke',
             'deploy_status_code': -1
         }
         self.deployment.handle_signal(details)
-        args = sd.update.call_args[1]
         self.assertEqual({
             'output_values': {
                 'deploy_stdout': 'A thing happened',
@@ -726,29 +732,34 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             },
             'status': 'FAILED',
             'status_reason': ('deploy_status_code : Deployment exited '
-                              'with non-zero status code: -1')
-        }, args)
+                              'with non-zero status code: -1')},
+            self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_signal_not_waiting(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.status = self.deployment.COMPLETE
-        self.deployments.get.return_value = sd
+        sd = {
+            'status': self.deployment.COMPLETE
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
         details = None
         self.assertIsNone(self.deployment.handle_signal(details))
 
     def test_fn_get_att(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.outputs = [{'name': 'failed', 'error_output': True},
-                      {'name': 'foo'}]
-        sd.output_values = {
-            'foo': 'bar',
-            'deploy_stdout': 'A thing happened',
-            'deploy_stderr': 'Extraneous logging',
-            'deploy_status_code': 0
+        sd = {
+            'outputs': [
+                {'name': 'failed', 'error_output': True},
+                {'name': 'foo'}
+            ],
+            'output_values': {
+                'foo': 'bar',
+                'deploy_stdout': 'A thing happened',
+                'deploy_stderr': 'Extraneous logging',
+                'deploy_status_code': 0
+            },
+            'status': self.deployment.COMPLETE
         }
-        self.deployments.get.return_value = sd
+        self.rpc_client.show_software_deployment.return_value = sd
         self.assertEqual('bar', self.deployment.FnGetAtt('foo'))
         self.assertEqual('A thing happened',
                          self.deployment.FnGetAtt('deploy_stdout'))
@@ -758,9 +769,13 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_fn_get_att_error(self):
         self._create_stack(self.template)
-        sd = mock.MagicMock()
-        sd.outputs = []
-        sd.output_values = {'foo': 'bar'}
+
+        sd = {
+            'outputs': [],
+            'output_values': {'foo': 'bar'},
+        }
+        self.rpc_client.show_software_deployment.return_value = sd
+
         err = self.assertRaises(
             exc.InvalidTemplateAttribute,
             self.deployment.FnGetAtt, 'foo2')
@@ -806,8 +821,7 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
 
     def setUp(self):
         common.HeatTestCase.setUp(self)
-        heat = mock.MagicMock()
-        self.deployments = heat.return_value.software_deployments
+        self.rpc_client = mock.MagicMock()
 
     def test_build_resource_definition(self):
         stack = utils.parse_stack(self.template)
