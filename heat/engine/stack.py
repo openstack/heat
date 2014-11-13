@@ -45,9 +45,9 @@ from heat.engine import update
 from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 
-LOG = logging.getLogger(__name__)
+cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
 
-ERROR_WAIT_TIME = 240
+LOG = logging.getLogger(__name__)
 
 
 class ForcedCancel(BaseException):
@@ -565,11 +565,10 @@ class Stack(collections.Mapping):
                                                             self.FAILED):
                 self.delete(action=self.ROLLBACK)
 
-        creator = scheduler.TaskRunner(self.stack_task,
-                                       action=self.CREATE,
-                                       reverse=False,
-                                       post_func=rollback,
-                                       error_wait_time=ERROR_WAIT_TIME)
+        creator = scheduler.TaskRunner(
+            self.stack_task, action=self.CREATE,
+            reverse=False, post_func=rollback,
+            error_wait_time=cfg.CONF.error_wait_time)
         creator(timeout=self.timeout_secs())
 
     def _adopt_kwargs(self, resource):
@@ -751,9 +750,10 @@ class Stack(collections.Mapping):
                              self.env)
         backup_stack = self._backup_stack()
         try:
-            update_task = update.StackUpdate(self, newstack, backup_stack,
-                                             rollback=action == self.ROLLBACK,
-                                             error_wait_time=ERROR_WAIT_TIME)
+            update_task = update.StackUpdate(
+                self, newstack, backup_stack,
+                rollback=action == self.ROLLBACK,
+                error_wait_time=cfg.CONF.error_wait_time)
             updater = scheduler.TaskRunner(update_task)
 
             self.env = newstack.env
