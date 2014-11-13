@@ -12,6 +12,7 @@
 #    under the License.
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
+import collections
 import mock
 from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
@@ -22,6 +23,7 @@ from heat.common import exception
 from heat.engine.clients.os import nova
 from heat.tests import common
 from heat.tests import utils
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class NovaClientPluginTestCase(common.HeatTestCase):
@@ -289,3 +291,50 @@ class ServerConstraintTest(NovaClientPluginTestCase):
         self.mock_get_server.side_effect = exception.ServerNotFound(
             server='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
+
+
+class FlavorConstraintTest(common.HeatTestCase):
+
+    def test_validate(self):
+        client = fakes_v1_1.FakeClient()
+        self.stub_keystoneclient()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(client)
+        client.flavors = self.m.CreateMockAnything()
+
+        flavor = collections.namedtuple("Flavor", ["id", "name"])
+        flavor.id = "1234"
+        flavor.name = "foo"
+        client.flavors.list().MultipleTimes().AndReturn([flavor])
+        self.m.ReplayAll()
+
+        constraint = nova.FlavorConstraint()
+        ctx = utils.dummy_context()
+        self.assertFalse(constraint.validate("bar", ctx))
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertTrue(constraint.validate("1234", ctx))
+
+        self.m.VerifyAll()
+
+
+class KeypairConstraintTest(common.HeatTestCase):
+
+    def test_validation(self):
+        client = fakes_v1_1.FakeClient()
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(client)
+        client.keypairs = self.m.CreateMockAnything()
+
+        key = collections.namedtuple("Key", ["name"])
+        key.name = "foo"
+        client.keypairs.get('bar').AndRaise(fakes_v1_1.fake_exception())
+        client.keypairs.get(key.name).AndReturn(key)
+        self.m.ReplayAll()
+
+        constraint = nova.KeypairConstraint()
+        ctx = utils.dummy_context()
+        self.assertFalse(constraint.validate("bar", ctx))
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertTrue(constraint.validate("", ctx))
+
+        self.m.VerifyAll()

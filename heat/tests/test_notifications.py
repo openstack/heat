@@ -17,6 +17,7 @@ from oslo.utils import timeutils
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
@@ -24,7 +25,6 @@ from heat.engine import resource
 from heat.engine.resources import autoscaling
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
-from heat.engine.resources import nova_keypair
 from heat.engine.resources import user
 from heat.engine.resources import wait_condition as waitc
 from heat.engine import signal_responder as signal
@@ -166,7 +166,7 @@ class ScaleNotificationTest(common.HeatTestCase):
 
     def mock_stack_except_for_group(self):
         self.m_validate = self.patchobject(parser.Stack, 'validate')
-        self.patchobject(nova_keypair.KeypairConstraint, 'validate')
+        self.patchobject(nova.KeypairConstraint, 'validate')
         self.patchobject(glance.ImageConstraint, 'validate')
         self.patchobject(instance.Instance, 'handle_create')\
             .return_value = True

@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import copy
 import six
 
@@ -177,27 +176,4 @@ class NovaKeyPairTest(common.HeatTestCase):
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
-        self.m.VerifyAll()
-
-
-class KeypairConstraintTest(common.HeatTestCase):
-
-    def test_validation(self):
-        client = fakes.FakeClient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(client)
-        client.keypairs = self.m.CreateMockAnything()
-
-        key = collections.namedtuple("Key", ["name"])
-        key.name = "foo"
-        client.keypairs.get('bar').AndRaise(fakes.fake_exception())
-        client.keypairs.get(key.name).AndReturn(key)
-        self.m.ReplayAll()
-
-        constraint = nova_keypair.KeypairConstraint()
-        ctx = utils.dummy_context()
-        self.assertFalse(constraint.validate("bar", ctx))
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertTrue(constraint.validate("", ctx))
-
         self.m.VerifyAll()

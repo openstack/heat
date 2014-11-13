@@ -36,7 +36,6 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.openstack.common import uuidutils
 from heat.tests import common
-from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
 
@@ -2755,29 +2754,5 @@ class ServersTest(common.HeatTestCase):
         stack.restore(fake_snapshot)
 
         self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
-
-        self.m.VerifyAll()
-
-
-class FlavorConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        client = fakes.FakeClient()
-        self.stub_keystoneclient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(client)
-        client.flavors = self.m.CreateMockAnything()
-
-        flavor = collections.namedtuple("Flavor", ["id", "name"])
-        flavor.id = "1234"
-        flavor.name = "foo"
-        client.flavors.list().MultipleTimes().AndReturn([flavor])
-        self.m.ReplayAll()
-
-        constraint = servers.FlavorConstraint()
-        ctx = utils.dummy_context()
-        self.assertFalse(constraint.validate("bar", ctx))
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertTrue(constraint.validate("1234", ctx))
 
         self.m.VerifyAll()

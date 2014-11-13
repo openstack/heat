@@ -1143,14 +1143,6 @@ class Server(stack_user.StackUser):
         return defn.freeze(properties=props)
 
 
-class FlavorConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exception.FlavorMissing,)
-
-    def validate_with_client(self, client, value):
-        client.client_plugin('nova').get_flavor_id(value)
-
-
 def resource_mapping():
     return {
         'OS::Nova::Server': Server,
