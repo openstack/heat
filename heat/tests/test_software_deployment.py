@@ -17,6 +17,7 @@ import six
 
 from heat.common import exception as exc
 from heat.common.i18n import _
+from heat.engine.clients.os import nova
 from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
 from heat.engine import rsrc_defn
@@ -106,6 +107,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             stack_user_project_id='65728b74-cfe7-4f17-9c15-11d4f686e591'
         )
 
+        nova.NovaClientPlugin.get_server = mock.Mock(
+            return_value=mock.MagicMock())
         self.patchobject(sd.SoftwareDeployment, '_create_user')
         self.patchobject(sd.SoftwareDeployment, '_create_keypair')
         self.patchobject(sd.SoftwareDeployment, '_delete_user')

@@ -420,7 +420,10 @@ class VolumeAttachment(resource.Resource):
             properties.Schema.STRING,
             _('The ID of the instance to which the volume attaches.'),
             immutable=True,
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
         VOLUME_ID: properties.Schema(
             properties.Schema.STRING,

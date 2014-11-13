@@ -750,6 +750,8 @@ class VolumeTest(BaseVolumeTest):
             "range (min: 1, max: None)", six.text_type(error))
 
     def test_volume_attachment_updates_not_supported(self):
+        nova.NovaClientPlugin.get_server = mock.Mock(
+            return_value=mock.MagicMock())
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'

@@ -16,6 +16,7 @@ from oslo.utils import excutils
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -109,7 +110,10 @@ class NovaFloatingIpAssociation(resource.Resource):
             properties.Schema.STRING,
             _('Server to assign floating IP to.'),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
         FLOATING_IP: properties.Schema(
             properties.Schema.STRING,

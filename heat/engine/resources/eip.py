@@ -53,7 +53,10 @@ class ElasticIp(resource.Resource):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Instance ID to associate with EIP.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
     }
 
@@ -190,7 +193,10 @@ class ElasticIpAssociation(resource.Resource):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Instance ID to associate with EIP specified by EIP property.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
         EIP: properties.Schema(
             properties.Schema.STRING,
@@ -354,7 +360,7 @@ class ElasticIpAssociation(resource.Resource):
     def _validate_update_properties(self, prop_diff):
         # according to aws doc, when update allocation_id or eip,
         # if you also change the InstanceId or NetworkInterfaceId,
-         # should go to Replacement flow
+        # should go to Replacement flow
         if self.ALLOCATION_ID in prop_diff or self.EIP in prop_diff:
             instance_id = prop_diff.get(self.INSTANCE_ID)
             ni_id = prop_diff.get(self.NETWORK_INTERFACE_ID)

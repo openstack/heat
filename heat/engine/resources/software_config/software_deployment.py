@@ -115,6 +115,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         SERVER: properties.Schema(
             properties.Schema.STRING,
             _('ID of Nova server to apply configuration to.'),
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
         INPUT_VALUES: properties.Schema(
             properties.Schema.MAP,

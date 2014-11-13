@@ -50,7 +50,10 @@ class Restarter(signal_responder.SignalResponder):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Instance ID to be restarted.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('nova.server')
+            ]
         ),
     }
 
