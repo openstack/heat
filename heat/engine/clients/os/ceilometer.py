@@ -34,7 +34,7 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
             'project_id': con.tenant,
             'token': lambda: self.auth_token,
             'endpoint_type': endpoint_type,
-            'ca_file': self._get_client_option('ceilometer', 'ca_file'),
+            'cacert': self._get_client_option('ceilometer', 'ca_file'),
             'cert_file': self._get_client_option('ceilometer', 'cert_file'),
             'key_file': self._get_client_option('ceilometer', 'key_file'),
             'insecure': self._get_client_option('ceilometer', 'insecure')
