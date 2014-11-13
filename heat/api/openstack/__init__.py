@@ -11,20 +11,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.api.middleware.fault import FaultWrapper
-from heat.api.middleware.ssl import SSLMiddleware
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.middleware import fault
+from heat.api.middleware import ssl
+from heat.api.middleware import version_negotiation as vn
 from heat.api.openstack import versions
 
 
 def version_negotiation_filter(app, conf, **local_conf):
-    return VersionNegotiationFilter(versions.Controller, app,
-                                    conf, **local_conf)
+    return vn.VersionNegotiationFilter(versions.Controller, app,
+                                       conf, **local_conf)
 
 
 def faultwrap_filter(app, conf, **local_conf):
-    return FaultWrapper(app)
+    return fault.FaultWrapper(app)
 
 
 def sslmiddleware_filter(app, conf, **local_conf):
-    return SSLMiddleware(app)
+    return ssl.SSLMiddleware(app)

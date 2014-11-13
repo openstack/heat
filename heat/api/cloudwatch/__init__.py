@@ -12,11 +12,11 @@
 #    under the License.
 
 import routes
-from webob import Request
+import webob
 
 from heat.api.cloudwatch import versions
 from heat.api.cloudwatch import watch
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.middleware import version_negotiation as vn
 from heat.common import wsgi
 
 
@@ -49,7 +49,7 @@ class API(wsgi.Router):
             api_action = self._actions[action]
 
             def action_match(environ, result):
-                req = Request(environ)
+                req = webob.Request(environ)
                 env_action = req.params.get("Action")
                 return env_action == api_action
 
@@ -65,5 +65,5 @@ class API(wsgi.Router):
 
 
 def version_negotiation_filter(app, conf, **local_conf):
-    return VersionNegotiationFilter(versions.Controller, app,
-                                    conf, **local_conf)
+    return vn.VersionNegotiationFilter(versions.Controller, app,
+                                       conf, **local_conf)
