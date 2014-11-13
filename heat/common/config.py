@@ -71,6 +71,7 @@ service_opts = [
                help=_('Keystone username, a user with roles sufficient to '
                       'manage users and projects in the stack_user_domain.')),
     cfg.StrOpt('stack_domain_admin_password',
+               secret=True,
                help=_('Keystone password for stack_domain_admin user.')),
     cfg.IntOpt('max_template_size',
                default=524288,
