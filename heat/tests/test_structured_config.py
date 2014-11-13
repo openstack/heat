@@ -13,11 +13,96 @@
 
 import mock
 
+from heat.common import exception
 from heat.engine import parser
 from heat.engine.resources.software_config import structured_config as sc
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
+
+
+SCENARIOS = [
+    (
+        'no_functions',
+        dict(input_key='get_input',
+             inputs={},
+             config={'foo': 'bar'},
+             result={'foo': 'bar'}),
+    ),
+    (
+        'none_inputs',
+        dict(input_key='get_input',
+             inputs=None,
+             config={'foo': 'bar'},
+             result={'foo': 'bar'}),
+    ),
+    (
+        'none_config',
+        dict(input_key='get_input',
+             inputs=None,
+             config=None,
+             result=None),
+    ),
+    (
+        'empty_config',
+        dict(input_key='get_input',
+             inputs=None,
+             config='',
+             result=''),
+    ),
+    (
+        'simple',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'foo': {'get_input': 'bar'}},
+             result={'foo': 'baa'}),
+    ),
+    (
+        'multi_key',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'foo': [{'get_input': 'bar'}, 'other']},
+             result={'foo': ['baa', 'other']}),
+    ),
+    (
+        'list_arg',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'foo': {'get_input': ['bar', 'baz']}},
+             result={'foo': {'get_input': ['bar', 'baz']}}),
+    ),
+    (
+        'missing_input',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'foo': {'get_input': 'barr'}},
+             result={'foo': None}),
+    ),
+    (
+        'deep',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'foo': {'foo': {'get_input': 'bar'}}},
+             result={'foo': {'foo': 'baa'}}),
+    ),
+    (
+        'shallow',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa'},
+             config={'get_input': 'bar'},
+             result='baa'),
+    ),
+    (
+        'list',
+        dict(input_key='get_input',
+             inputs={'bar': 'baa', 'bar2': 'baz', 'bar3': 'bink'},
+             config={'foo': [
+                 {'get_input': 'bar'},
+                 {'get_input': 'bar2'},
+                 {'get_input': 'bar3'}]},
+             result={'foo': ['baa', 'baz', 'bink']}),
+    )
+]
 
 
 class StructuredConfigTestJSON(common.HeatTestCase):
@@ -103,90 +188,58 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
         self.assertEqual({"foo": "baz"}, result)
 
 
-class StructuredDeploymentParseTest(common.HeatTestCase):
+class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
 
-    scenarios = [
-        (
-            'no_functions',
-            dict(input_key='get_input',
-                 inputs={},
-                 config={'foo': 'bar'},
-                 result={'foo': 'bar'}),
-        ),
-        (
-            'none_inputs',
-            dict(input_key='get_input',
-                 inputs=None,
-                 config={'foo': 'bar'},
-                 result={'foo': 'bar'}),
-        ),
-        (
-            'none_config',
-            dict(input_key='get_input',
-                 inputs=None,
-                 config=None,
-                 result=None),
-        ),
-        (
-            'empty_config',
-            dict(input_key='get_input',
-                 inputs=None,
-                 config='',
-                 result=''),
-        ),
-        (
-            'simple',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'foo': {'get_input': 'bar'}},
-                 result={'foo': 'baa'}),
-        ),
-        (
-            'multi_key',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'foo': {'get_input': 'bar', 'other': 'thing'}},
-                 result={'foo': {'get_input': 'bar', 'other': 'thing'}}),
-        ),
-        (
-            'list_arg',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'foo': {'get_input': ['bar', 'baz']}},
-                 result={'foo': {'get_input': ['bar', 'baz']}}),
-        ),
-        (
-            'missing_input',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'foo': {'get_input': 'barr'}},
-                 result={'foo': None}),
-        ),
-        (
-            'deep',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'foo': {'foo': {'get_input': 'bar'}}},
-                 result={'foo': {'foo': 'baa'}}),
-        ),
-        (
-            'shallow',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa'},
-                 config={'get_input': 'bar'},
-                 result='baa'),
-        ),
-        (
-            'list',
-            dict(input_key='get_input',
-                 inputs={'bar': 'baa', 'bar2': 'baz', 'bar3': 'bink'},
-                 config={'foo': [
-                     {'get_input': 'bar'},
-                     {'get_input': 'bar2'},
-                     {'get_input': 'bar3'}]},
-                 result={'foo': ['baa', 'baz', 'bink']}),
-        )
-    ]
+    template = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deploy_mysql': {
+                'Type': 'OS::Heat::StructuredDeployment',
+                'Properties': {}
+            }
+        }
+    }
+
+    def setUp(self):
+        super(StructuredDeploymentWithStrictInputTest, self).setUp()
+        self.source = {'config':
+                      {'foo': [{"get_input": "bar"},
+                               {"get_input": "barz"}]}}
+        self.inputs = [{'name': 'bar', 'value': 'baz'},
+                       {'name': 'barz', 'value': 'baz2'}]
+
+    def _stack_with_template(self, template_def):
+        self.ctx = utils.dummy_context()
+        self.stack = parser.Stack(
+            self.ctx, 'software_deploly_test_stack',
+            template.Template(template_def))
+        self.deployment = self.stack['deploy_mysql']
+        heat = mock.MagicMock()
+        self.deployments = heat.return_value.software_deployments
+
+    def test_build_derived_config_failure(self):
+        props = {'input_values_validate': 'STRICT'}
+        self.template['Resources']['deploy_mysql']['Properties'] = props
+        self._stack_with_template(self.template)
+        inputs = [{'name': 'bar', 'value': 'baz'}]
+
+        self.assertRaises(exception.UserParameterMissing,
+                          self.deployment._build_derived_config,
+                          'CREATE', self.source, inputs, {})
+
+    def test_build_derived_config_success(self):
+        props = {'input_values_validate': 'STRICT'}
+        self.template['Resources']['deploy_mysql']['Properties'] = props
+        self._stack_with_template(self.template)
+
+        expected = {'foo': ['baz', 'baz2']}
+        result = self.deployment._build_derived_config(
+            'CREATE', self.source, self.inputs, {})
+        self.assertEqual(result, expected)
+
+
+class StructuredDeploymentParseTest(common.HeatTestCase):
+    scenarios = SCENARIOS
 
     def test_parse(self):
         parse = sc.StructuredDeployment.parse
@@ -227,7 +280,8 @@ class StructuredDeploymentsTest(common.HeatTestCase):
                 'input_key': 'get_input',
                 'input_values': None,
                 'name': None,
-                'signal_transport': 'CFN_SIGNAL'
+                'signal_transport': 'CFN_SIGNAL',
+                'input_values_validate': 'LAX'
             }
         }
         self.assertEqual(
@@ -269,7 +323,8 @@ class StructuredDeploymentsTest(common.HeatTestCase):
                         'input_key': 'get_input',
                         'input_values': None,
                         'name': None,
-                        'signal_transport': 'CFN_SIGNAL'
+                        'signal_transport': 'CFN_SIGNAL',
+                        'input_values_validate': 'LAX'
                     }
                 },
                 "server2": {
@@ -281,10 +336,80 @@ class StructuredDeploymentsTest(common.HeatTestCase):
                         'input_key': 'get_input',
                         'input_values': None,
                         'name': None,
-                        'signal_transport': 'CFN_SIGNAL'
+                        'signal_transport': 'CFN_SIGNAL',
+                        'input_values_validate': 'LAX'
                     }
                 }
             }
         }
 
         self.assertEqual(templ, resg._assemble_nested(['server1', 'server2']))
+
+
+class StructuredDeploymentWithStrictInputParseTest(common.HeatTestCase):
+    scenarios = SCENARIOS
+
+    def test_parse(self):
+        self.parse = sc.StructuredDeployment.parse
+        if 'missing_input' not in self.shortDescription():
+            self.assertEqual(
+                self.result,
+                self.parse(
+                    self.inputs,
+                    self.input_key,
+                    self.config,
+                    check_input_val='STRICT')
+            )
+        else:
+            self.assertRaises(exception.UserParameterMissing,
+                              self.parse,
+                              self.inputs,
+                              self.input_key,
+                              self.config,
+                              check_input_val='STRICT')
+
+
+class StructuredDeploymentParseMethodsTest(common.HeatTestCase):
+    def test_get_key_args(self):
+        snippet = {'get_input': 'bar'}
+        input_key = 'get_input'
+        expected = 'bar'
+        result = sc.StructuredDeployment.get_input_key_arg(snippet, input_key)
+        self.assertEqual(result, expected)
+
+    def test_get_key_args_long_snippet(self):
+        snippet = {'get_input': 'bar', 'second': 'foo'}
+        input_key = 'get_input'
+        result = sc.StructuredDeployment.get_input_key_arg(snippet, input_key)
+        self.assertFalse(result)
+
+    def test_get_key_args_unknown_input_key(self):
+        snippet = {'get_input': 'bar'}
+        input_key = 'input'
+        result = sc.StructuredDeployment.get_input_key_arg(snippet, input_key)
+        self.assertFalse(result)
+
+    def test_get_key_args_wrong_args(self):
+        snippet = {'get_input': None}
+        input_key = 'get_input'
+        result = sc.StructuredDeployment.get_input_key_arg(snippet, input_key)
+        self.assertFalse(result)
+
+    def test_get_input_key_value(self):
+        inputs = {'bar': 'baz', 'foo': 'foo2'}
+        res = sc.StructuredDeployment.get_input_key_value('bar', inputs, False)
+        expected = 'baz'
+        self.assertEqual(res, expected)
+
+    def test_get_input_key_value_raise_exception(self):
+        inputs = {'bar': 'baz', 'foo': 'foo2'}
+        self.assertRaises(exception.UserParameterMissing,
+                          sc.StructuredDeployment.get_input_key_value,
+                          'barz',
+                          inputs,
+                          'STRICT')
+
+    def test_get_input_key_value_get_none(self):
+        inputs = {'bar': 'baz', 'foo': 'foo2'}
+        res = sc.StructuredDeployment.get_input_key_value('brz', inputs, False)
+        self.assertIsNone(res)
