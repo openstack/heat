@@ -13,8 +13,7 @@
 
 import sqlalchemy
 
-from heat.db.sqlalchemy.types import Json
-from heat.db.sqlalchemy.types import LongText
+from heat.db.sqlalchemy import types
 
 
 def upgrade(migrate_engine):
@@ -31,8 +30,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('name', sqlalchemy.String(255),
                           nullable=True),
         sqlalchemy.Column('group', sqlalchemy.String(255)),
-        sqlalchemy.Column('config', LongText),
-        sqlalchemy.Column('io', Json),
+        sqlalchemy.Column('config', types.LongText),
+        sqlalchemy.Column('io', types.Json),
         sqlalchemy.Column('tenant', sqlalchemy.String(64),
                           nullable=False,
                           index=True),
@@ -56,8 +55,8 @@ def upgrade(migrate_engine):
                           sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('software_config.id'),
                           nullable=False),
-        sqlalchemy.Column('input_values', Json),
-        sqlalchemy.Column('output_values', Json),
+        sqlalchemy.Column('input_values', types.Json),
+        sqlalchemy.Column('output_values', types.Json),
         sqlalchemy.Column('signal_id', sqlalchemy.String(1024)),
         sqlalchemy.Column('action', sqlalchemy.String(255)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),

@@ -13,7 +13,7 @@
 
 import sqlalchemy
 
-from heat.db.sqlalchemy.types import Json
+from heat.db.sqlalchemy import types
 
 
 def upgrade(migrate_engine):
@@ -34,7 +34,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('updated_at', sqlalchemy.DateTime),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
         sqlalchemy.Column('status_reason', sqlalchemy.String(255)),
-        sqlalchemy.Column('data', Json),
+        sqlalchemy.Column('data', types.Json),
         sqlalchemy.Column('tenant', sqlalchemy.String(64),
                           nullable=False,
                           index=True),

@@ -19,7 +19,7 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from heat.common.i18n import _
-from heat.engine.hot.parameters import HOTParamSchema
+from heat.engine.hot import parameters
 
 
 def upgrade(migrate_engine):
@@ -49,7 +49,7 @@ def upgrade(migrate_engine):
                     del schema['Type']
                     changed = True
 
-                if (schema.get('type') not in HOTParamSchema.TYPES
+                if (schema.get('type') not in parameters.HOTParamSchema.TYPES
                         and schema['type'].istitle()):
                     schema['type'] = schema['type'].lower()
                     changed = True

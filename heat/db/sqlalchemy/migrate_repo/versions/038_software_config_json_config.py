@@ -13,21 +13,20 @@
 
 import sqlalchemy
 
-from heat.db.sqlalchemy.types import Json
-from heat.db.sqlalchemy.types import LongText
+from heat.db.sqlalchemy import types
 
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
     software_config = sqlalchemy.Table('software_config', meta, autoload=True)
-    software_config.c.config.alter(type=Json)
+    software_config.c.config.alter(type=types.Json)
     software_config.c.io.drop()
 
 
 def downgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
     software_config = sqlalchemy.Table('software_config', meta, autoload=True)
-    software_config.c.config.alter(type=LongText)
+    software_config.c.config.alter(type=types.LongText)
 
-    io = sqlalchemy.Column('io', Json)
+    io = sqlalchemy.Column('io', types.Json)
     io.create(software_config)

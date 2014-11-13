@@ -12,8 +12,7 @@
 #    under the License.
 
 '''Implementation of SQLAlchemy backend.'''
-from datetime import datetime
-from datetime import timedelta
+import datetime
 import six
 import sys
 
@@ -23,7 +22,7 @@ from oslo.db.sqlalchemy import utils
 import osprofiler.sqlalchemy
 import sqlalchemy
 from sqlalchemy import orm
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import session as orm_session
 
 from heat.common import crypt
 from heat.common import exception
@@ -429,7 +428,7 @@ def stack_delete(context, stack_id):
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
-    session = Session.object_session(s)
+    session = orm_session.Session.object_session(s)
 
     for r in s.resources:
         session.delete(r)
@@ -508,7 +507,7 @@ def user_creds_delete(context, user_creds_id):
         raise exception.NotFound(
             _('Attempt to delete user creds with id '
               '%(id)s that does not exist') % {'id': user_creds_id})
-    session = Session.object_session(creds)
+    session = orm_session.Session.object_session(creds)
     session.delete(creds)
     session.flush()
 
@@ -674,7 +673,7 @@ def watch_rule_delete(context, watch_id):
                                  '%(id)s %(msg)s') % {
                                      'id': watch_id,
                                      'msg': 'that does not exist'})
-    session = Session.object_session(wr)
+    session = orm_session.Session.object_session(wr)
 
     for d in wr.watch_data:
         session.delete(d)
@@ -716,7 +715,7 @@ def software_config_get(context, config_id):
 
 def software_config_delete(context, config_id):
     config = software_config_get(context, config_id)
-    session = Session.object_session(config)
+    session = orm_session.Session.object_session(config)
     session.delete(config)
     session.flush()
 
@@ -763,7 +762,7 @@ def software_deployment_update(context, deployment_id, values):
 
 def software_deployment_delete(context, deployment_id):
     deployment = software_deployment_get(context, deployment_id)
-    session = Session.object_session(deployment)
+    session = orm_session.Session.object_session(deployment)
     session.delete(deployment)
     session.flush()
 
@@ -796,7 +795,7 @@ def snapshot_update(context, snapshot_id, values):
 
 def snapshot_delete(context, snapshot_id):
     snapshot = snapshot_get(context, snapshot_id)
-    session = Session.object_session(snapshot)
+    session = orm_session.Session.object_session(snapshot)
     session.delete(snapshot)
     session.flush()
 
@@ -825,7 +824,7 @@ def purge_deleted(age, granularity='days'):
     elif granularity == 'minutes':
         age = age * 60
 
-    time_line = datetime.now() - timedelta(seconds=age)
+    time_line = datetime.datetime.now() - datetime.timedelta(seconds=age)
     engine = get_engine()
     meta = sqlalchemy.MetaData()
     meta.bind = engine

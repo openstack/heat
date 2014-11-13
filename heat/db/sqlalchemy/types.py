@@ -11,11 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from json import dumps
-from json import loads
+import json
 
 from sqlalchemy.dialects import mysql
 from sqlalchemy import types
+
+
+dumps = json.dumps
+loads = json.loads
 
 
 class LongText(types.TypeDecorator):
@@ -43,11 +46,11 @@ def associate_with(sqltype):
     # TODO(leizhang) When we removed sqlalchemy 0.7 dependence
     # we can import MutableDict directly and remove ./mutable.py
     try:
-        from sqlalchemy.ext.mutable import MutableDict as sa_MutableDict
-        sa_MutableDict.associate_with(Json)
+        from sqlalchemy.ext import mutable
+        mutable.MutableDict.associate_with(Json)
     except ImportError:
-        from heat.db.sqlalchemy.mutable import MutableDict
-        MutableDict.associate_with(Json)
+        from heat.db.sqlalchemy import mutable
+        mutable.MutableDict.associate_with(Json)
 
 associate_with(LongText)
 associate_with(Json)

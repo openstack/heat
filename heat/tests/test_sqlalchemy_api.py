@@ -11,14 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from datetime import datetime
-from datetime import timedelta
+import datetime
 from json import dumps
 from json import loads
 import six
 import uuid
 
-import fixtures
 import mock
 import mox
 from oslo.utils import timeutils
@@ -1498,19 +1496,13 @@ class DBAPIStackTest(common.HeatTestCase):
                          db_api.stack_count_all(self.ctx, tenant_safe=False))
 
     def test_purge_deleted(self):
-        now = datetime.now()
-        delta = timedelta(seconds=3600 * 7)
+        now = datetime.datetime.now()
+        delta = datetime.timedelta(seconds=3600 * 7)
         deleted = [now - delta * i for i in range(1, 6)]
         templates = [create_raw_template(self.ctx) for i in range(5)]
         creds = [create_user_creds(self.ctx) for i in range(5)]
         stacks = [create_stack(self.ctx, templates[i], creds[i],
                                deleted_at=deleted[i]) for i in range(5)]
-
-        class MyDatetime(object):
-            def now(self):
-                return now
-        self.useFixture(fixtures.MonkeyPatch('heat.db.sqlalchemy.api.datetime',
-                                             MyDatetime()))
 
         db_api.purge_deleted(age=1, granularity='days')
         self._deleted_stack_existance(utils.dummy_context(), stacks,
