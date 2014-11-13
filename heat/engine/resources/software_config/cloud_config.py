@@ -12,8 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
-from heat.common.template_format import yaml
-from heat.common.template_format import yaml_dumper
+from heat.common import template_format
 from heat.engine import properties
 from heat.engine.resources.software_config import software_config
 from heat.engine import support
@@ -51,8 +50,8 @@ class CloudConfig(software_config.SoftwareConfig):
     }
 
     def handle_create(self):
-        cloud_config = yaml.dump(self.properties.get(
-            self.CLOUD_CONFIG), Dumper=yaml_dumper)
+        cloud_config = template_format.yaml.dump(self.properties.get(
+            self.CLOUD_CONFIG), Dumper=template_format.yaml_dumper)
         props = {
             self.NAME: self.physical_resource_name(),
             self.CONFIG: '#cloud-config\n%s' % cloud_config,

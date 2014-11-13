@@ -20,7 +20,7 @@ import mock
 import six
 from swiftclient import client as swiftclient_client
 from swiftclient import exceptions as swiftclient_exceptions
-from testtools.matchers import MatchesRegex
+from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
@@ -83,7 +83,7 @@ obj_header = {
 
 def create_stack(template, stack_id=None):
     tmpl = template_format.parse(template)
-    template = stack.Template(tmpl)
+    template = stack.tmpl.Template(tmpl)
     ctx = utils.dummy_context(tenant_id='test_tenant')
     st = stack.Stack(ctx, 'test_st', template,
                      environment.Environment(),
@@ -143,7 +143,7 @@ class SwiftSignalHandleTest(common.HeatTestCase):
                   "\?temp_url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}"
                   % st.id)
         res_id = st.resources['test_wait_condition_handle'].resource_id
-        self.assertThat(res_id, MatchesRegex(regexp))
+        self.assertThat(res_id, matchers.MatchesRegex(regexp))
 
         # Since the account key is mocked out above
         self.assertFalse(mock_swift_object.post_account.called)
@@ -707,7 +707,7 @@ class SwiftSignalTest(common.HeatTestCase):
                     'test_st-test_wait_condition_handle-abcdefghijkl\?temp_'
                     'url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}') % st.id
         self.assertThat(handle.FnGetAtt('endpoint'),
-                        MatchesRegex(expected))
+                        matchers.MatchesRegex(expected))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -737,7 +737,8 @@ class SwiftSignalTest(common.HeatTestCase):
                     'AUTH_test_tenant/%s/test_st-test_wait_condition_'
                     'handle-abcdefghijkl\?temp_url_sig=[0-9a-f]{40}&'
                     'temp_url_expires=[0-9]{10}\'') % st.id
-        self.assertThat(handle.FnGetAtt('curl_cli'), MatchesRegex(expected))
+        self.assertThat(handle.FnGetAtt('curl_cli'),
+                        matchers.MatchesRegex(expected))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')

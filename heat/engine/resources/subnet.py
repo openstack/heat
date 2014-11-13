@@ -15,7 +15,7 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.vpc import VPC
+from heat.engine.resources import vpc
 
 
 class Subnet(resource.Resource):
@@ -94,7 +94,7 @@ class Subnet(resource.Resource):
         subnet = client.create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 
-        router = VPC.router_for_vpc(self.neutron(), network_id)
+        router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
         if router:
             client.add_interface_router(
                 router['id'],
@@ -109,7 +109,7 @@ class Subnet(resource.Resource):
         subnet_id = self.resource_id
 
         try:
-            router = VPC.router_for_vpc(self.neutron(), network_id)
+            router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
             if router:
                 client.remove_interface_router(
                     router['id'],

@@ -16,7 +16,6 @@ import itertools
 
 from oslo.utils import encodeutils
 import six
-from six.moves import xrange
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -161,7 +160,7 @@ class Graph(collections.defaultdict):
 
         This is a destructive operation for the graph.
         '''
-        for iteration in xrange(len(graph)):
+        for iteration in six.moves.xrange(len(graph)):
             for key, node in six.iteritems(graph):
                 if not node:
                     yield key

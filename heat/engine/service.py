@@ -40,7 +40,7 @@ from heat.engine import api
 from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import environment
-from heat.engine.event import Event
+from heat.engine import event as evt
 from heat.engine import parameter_groups
 from heat.engine import properties
 from heat.engine import resources
@@ -1048,9 +1048,9 @@ class EngineService(service.Service):
                 stacks[stack_id] = parser.Stack.load(cnxt, stack_id)
             return stacks[stack_id]
 
-        return [api.format_event(Event.load(cnxt,
-                                            e.id, e,
-                                            get_stack(e.stack_id)))
+        return [api.format_event(evt.Event.load(cnxt,
+                                                e.id, e,
+                                                get_stack(e.stack_id)))
                 for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):

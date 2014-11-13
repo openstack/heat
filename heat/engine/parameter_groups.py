@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common.exception import StackValidationFailed
+from heat.common import exception
 from heat.common.i18n import _
 from heat.openstack.common import log as logging
 
@@ -49,14 +49,14 @@ class ParameterGroups(object):
                 parameters = group.get(PARAMETERS)
 
                 if parameters is None:
-                    raise StackValidationFailed(message=_(
+                    raise exception.StackValidationFailed(message=_(
                         'Parameters must be provided for '
                         'each Parameter Group.'))
 
                 for param in parameters:
                     #Check if param has been added to a previous group
                     if param in grouped_parameters:
-                        raise StackValidationFailed(message=_(
+                        raise exception.StackValidationFailed(message=_(
                             'The %s parameter must be assigned to one '
                             'Parameter Group only.') % param)
                     else:
@@ -64,6 +64,6 @@ class ParameterGroups(object):
 
                     #Check that grouped parameter references a valid Parameter
                     if param not in self.parameter_names:
-                        raise StackValidationFailed(message=_(
+                        raise exception.StackValidationFailed(message=_(
                             'The Parameter name (%s) does not reference '
                             'an existing parameter.') % param)
