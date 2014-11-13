@@ -24,10 +24,10 @@ from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 
-from testtools import skipIf
+import testtools
 
 from ..resources import docker_container  # noqa
-from .fake_docker_client import FakeDockerClient  # noqa
+import fake_docker_client as fakeclient  # noqa
 
 docker = importutils.try_import('docker')
 
@@ -67,7 +67,8 @@ class DockerContainerTest(common.HeatTestCase):
             resource_name,
             stack.t.resource_definitions(stack)[resource_name], stack)
         self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(FakeDockerClient())
+        resource.get_client().MultipleTimes().AndReturn(
+            fakeclient.FakeDockerClient())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -96,7 +97,8 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, stack)
         self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(FakeDockerClient())
+        resource.get_client().MultipleTimes().AndReturn(
+            fakeclient.FakeDockerClient())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -116,7 +118,8 @@ class DockerContainerTest(common.HeatTestCase):
         resource = docker_container.DockerContainer(
             'Blog', definition, stack)
         self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(FakeDockerClient())
+        resource.get_client().MultipleTimes().AndReturn(
+            fakeclient.FakeDockerClient())
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
@@ -160,7 +163,7 @@ class DockerContainerTest(common.HeatTestCase):
         scheduler.TaskRunner(container.delete)()
         self.m.VerifyAll()
 
-    @skipIf(docker is None, 'docker-py not available')
+    @testtools.skipIf(docker is None, 'docker-py not available')
     def test_resource_delete_exception(self):
         response = mock.MagicMock()
         response.status_code = 404

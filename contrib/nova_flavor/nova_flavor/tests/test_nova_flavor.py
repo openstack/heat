@@ -19,8 +19,7 @@ from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
-from ..resources.nova_flavor import NovaFlavor  # noqa
-from ..resources.nova_flavor import resource_mapping  # noqa
+from ..resources import nova_flavor  # noqa
 from heat.tests.v1_1 import fakes
 
 flavor_template = {
@@ -50,7 +49,7 @@ class NovaFlavorTest(common.HeatTestCase):
 
         # For unit testing purpose. Register resource provider
         # explicitly.
-        resource._register_class("OS::Nova::Flavor", NovaFlavor)
+        resource._register_class("OS::Nova::Flavor", nova_flavor.NovaFlavor)
 
         self.stack = parser.Stack(
             self.ctx, 'nova_flavor_test_stack',
@@ -65,10 +64,10 @@ class NovaFlavorTest(common.HeatTestCase):
         self.flavors = self.novaclient.flavors
 
     def test_resource_mapping(self):
-        mapping = resource_mapping()
+        mapping = nova_flavor.resource_mapping()
         self.assertEqual(1, len(mapping))
-        self.assertEqual(NovaFlavor, mapping['OS::Nova::Flavor'])
-        self.assertIsInstance(self.my_flavor, NovaFlavor)
+        self.assertEqual(nova_flavor.NovaFlavor, mapping['OS::Nova::Flavor'])
+        self.assertIsInstance(self.my_flavor, nova_flavor.NovaFlavor)
 
     def test_flavor_handle_create(self):
         value = mock.MagicMock()

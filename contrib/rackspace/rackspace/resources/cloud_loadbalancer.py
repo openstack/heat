@@ -23,7 +23,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
-from heat.engine.properties import Properties
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.openstack.common import log as logging
@@ -633,10 +632,10 @@ class CloudLoadBalancer(resource.Resource):
             if health_monitor[self.HEALTH_MONITOR_TYPE] == 'CONNECT':
                 schema = dict((k, v) for k, v in schema.items()
                               if k in self._HEALTH_MONITOR_CONNECT_KEYS)
-            Properties(schema,
-                       health_monitor,
-                       function.resolve,
-                       self.name).validate()
+            properties.Properties(schema,
+                                  health_monitor,
+                                  function.resolve,
+                                  self.name).validate()
 
         # if a vip specifies and id, it can't specify version or type;
         # otherwise version and type are required
