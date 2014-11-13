@@ -156,7 +156,6 @@ add_role() {
     user_roles=$(keystone user-role-list \
                           --user_id $user_id\
                           --tenant_id $tenant 2>/dev/null)
-    die_if_not_set $LINENO user_roles "Fail to get user_roles for tenant($tenant) and user_id($user_id)"
     if [ $? == 0 ]; then
         # Folsom
         existing_role=$(get_data 1 $role_id 1 echo "$user_roles")
