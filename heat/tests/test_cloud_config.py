@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import uuid
 
 from heat.engine import parser
 from heat.engine.resources.software_config import cloud_config as cc
@@ -52,7 +53,12 @@ class CloudConfigTest(common.HeatTestCase):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         value = {'id': config_id}
         self.rpc_client.create_software_config.return_value = value
+        self.config.id = uuid.uuid4().hex
         self.config.handle_create()
         self.assertEqual(config_id, self.config.resource_id)
         kwargs = self.rpc_client.create_software_config.call_args[1]
-        self.assertEqual('#cloud-config\n{foo: bar}\n', kwargs['config'])
+        self.assertEqual({
+            'name': self.config.physical_resource_name(),
+            'config': '#cloud-config\n{foo: bar}\n',
+            'group': 'Heat::Ungrouped'
+        }, kwargs)

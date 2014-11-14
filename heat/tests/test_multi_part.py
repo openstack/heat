@@ -14,6 +14,7 @@
 import email
 
 import mock
+import uuid
 
 from heat.common import exception as exc
 from heat.engine import parser
@@ -57,10 +58,15 @@ class MultipartMimeTest(common.HeatTestCase):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         sc = {'id': config_id}
         self.rpc_client.create_software_config.return_value = sc
+        self.config.id = uuid.uuid4().hex
         self.config.handle_create()
         self.assertEqual(config_id, self.config.resource_id)
-        args = self.rpc_client.create_software_config.call_args[1]
-        self.assertEqual(self.config.message, args['config'])
+        kwargs = self.rpc_client.create_software_config.call_args[1]
+        self.assertEqual({
+            'name': self.config.physical_resource_name(),
+            'config': self.config.message,
+            'group': 'Heat::Ungrouped'
+        }, kwargs)
 
     def test_get_message_not_none(self):
         self.config.message = 'Not none'
