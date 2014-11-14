@@ -194,6 +194,20 @@ Resources:
                          "character class and character sequence minimums",
                          six.text_type(exc))
 
+    def test_exceeds_max_length(self):
+        template_random_string = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  secret:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 513
+'''
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.create_stack, template_random_string)
+        self.assertIn('length 513 is out of range (min: 1, max: 512)',
+                      six.text_type(exc))
+
 
 class TestGenerateRandomString(HeatTestCase):
 
