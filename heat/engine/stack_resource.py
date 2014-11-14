@@ -160,7 +160,6 @@ class StackResource(resource.Resource):
                               stack_user_project_id=stack_user_project_id,
                               adopt_stack_data=adopt_data,
                               nested_depth=new_nested_depth)
-        nested.validate()
         return nested
 
     def _validate_nested_resources(self, templ):
@@ -182,6 +181,7 @@ class StackResource(resource.Resource):
         self._nested = self._parse_nested_stack(name, child_template,
                                                 user_params, timeout_mins,
                                                 adopt_data)
+        self._nested.validate()
         nested_id = self._nested.store()
         self.resource_id_set(nested_id)
 
@@ -216,6 +216,7 @@ class StackResource(resource.Resource):
         name = self.physical_resource_name()
         stack = self._parse_nested_stack(name, child_template, user_params,
                                          timeout_mins)
+        stack.validate()
         stack.parameters.set_stack_id(nested_stack.identifier())
         nested_stack.updated_time = self.updated_time
         updater = scheduler.TaskRunner(nested_stack.update_task, stack)

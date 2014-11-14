@@ -264,6 +264,19 @@ class StackResourceTest(common.HeatTestCase):
         self.assertRaises(exception.RequestLimitExceeded,
                           stk_resource.preview)
 
+    @mock.patch.object(stack_resource.parser, 'Stack')
+    def test_preview_doesnt_validate_nested_stack(self, mock_stack_class):
+        nested_stack = mock.Mock()
+        mock_stack_class.return_value = nested_stack
+
+        tmpl = self.parent_stack.t.t
+        self.parent_resource.child_template = mock.Mock(return_value=tmpl)
+        self.parent_resource.child_params = mock.Mock(return_value={})
+        self.parent_resource.preview()
+
+        self.assertFalse(nested_stack.validate.called)
+        self.assertTrue(nested_stack.preview_resources.called)
+
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
