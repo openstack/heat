@@ -113,7 +113,8 @@ class ResourceGroup(stack_resource.StackResource):
             default="%index%",
             constraints=[
                 constraints.Length(min=3)
-            ]
+            ],
+            support_status=support.SupportStatus(version='2014.2')
         ),
         RESOURCE_DEF: properties.Schema(
             properties.Schema.MAP,
@@ -161,7 +162,8 @@ class ResourceGroup(stack_resource.StackResource):
                 },
             ),
             update_allowed=True,
-            default=[]
+            default=[],
+            support_status=support.SupportStatus(version='2015.1')
         ),
     }
 
