@@ -120,6 +120,25 @@ def format_stack(stack, preview=False):
     return info
 
 
+def format_resource_attributes(resource, with_attr=None):
+    def resolve(attr, resolver):
+        try:
+            return resolver[attr]
+        except Exception:
+            return None
+
+    resolver = resource.attributes
+    if 'show' in resolver.keys():
+        resolver = resolver['show']
+
+    if not with_attr:
+        with_attr = []
+
+    attributes = set(resolver.keys() + with_attr)
+    return dict((attr, resolve(attr, resolver))
+                for attr in attributes)
+
+
 def format_resource_properties(resource):
     def get_property(prop):
         try:
@@ -131,7 +150,8 @@ def format_resource_properties(resource):
                 for prop in resource.properties_schema.keys())
 
 
-def format_stack_resource(resource, detail=True, with_props=False):
+def format_stack_resource(resource, detail=True, with_props=False,
+                          with_attr=None):
     '''
     Return a representation of the given resource that matches the API output
     expectations.
@@ -161,6 +181,8 @@ def format_stack_resource(resource, detail=True, with_props=False):
     if detail:
         res[rpc_api.RES_DESCRIPTION] = resource.t.description
         res[rpc_api.RES_METADATA] = resource.metadata_get()
+        res[rpc_api.RES_SCHEMA_ATTRIBUTES] = format_resource_attributes(
+            resource, with_attr)
 
     if with_props:
         res[rpc_api.RES_SCHEMA_PROPERTIES] = format_resource_properties(

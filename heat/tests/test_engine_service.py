@@ -2281,7 +2281,7 @@ class StackServiceTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer')
+                                             'WebServer', with_attr=None)
 
         self.assertIn('resource_identity', r)
         self.assertIn('description', r)
@@ -2296,6 +2296,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn('resource_type', r)
         self.assertIn('physical_resource_id', r)
         self.assertIn('resource_name', r)
+        self.assertIn('attributes', r)
         self.assertEqual('WebServer', r['resource_name'])
 
         self.m.VerifyAll()
