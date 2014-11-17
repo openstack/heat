@@ -328,16 +328,20 @@ class EngineClient(object):
                                              sort_keys=sort_keys,
                                              sort_dir=sort_dir))
 
-    def describe_stack_resource(self, ctxt, stack_identity, resource_name):
+    def describe_stack_resource(self, ctxt, stack_identity, resource_name,
+                                with_attr=None):
         """
         Get detailed resource information about a particular resource.
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack.
         :param resource_name: the Resource.
         """
-        return self.call(ctxt, self.make_msg('describe_stack_resource',
-                                             stack_identity=stack_identity,
-                                             resource_name=resource_name))
+        return self.call(ctxt,
+                         self.make_msg('describe_stack_resource',
+                                       stack_identity=stack_identity,
+                                       resource_name=resource_name,
+                                       with_attr=with_attr),
+                         version='1.2')
 
     def find_physical_resource(self, ctxt, physical_resource_id):
         """

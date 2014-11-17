@@ -2129,7 +2129,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2191,7 +2193,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2224,7 +2228,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2238,6 +2244,47 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
+
+    def test_show_with_single_attribute(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show', True)
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant, 'foo', '1')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        mock_describe = mock.Mock(return_value={'foo': 'bar'})
+        self.controller.rpc_client.describe_stack_resource = mock_describe
+
+        req = self._get(res_identity._tenant_path(), {'with_attr': 'baz'})
+        resp = self.controller.show(req, tenant_id=self.tenant,
+                                    stack_name=stack_identity.stack_name,
+                                    stack_id=stack_identity.stack_id,
+                                    resource_name=res_name)
+
+        self.assertEqual({'resource': {'foo': 'bar'}}, resp)
+        args, kwargs = mock_describe.call_args
+        self.assertIn('baz', kwargs['with_attr'])
+
+    def test_show_with_multiple_attributes(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show', True)
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant, 'foo', '1')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        mock_describe = mock.Mock(return_value={'foo': 'bar'})
+        self.controller.rpc_client.describe_stack_resource = mock_describe
+
+        req = self._get(res_identity._tenant_path())
+        req.environ['QUERY_STRING'] = 'with_attr=a1&with_attr=a2&with_attr=a3'
+        resp = self.controller.show(req, tenant_id=self.tenant,
+                                    stack_name=stack_identity.stack_name,
+                                    stack_id=stack_identity.stack_id,
+                                    resource_name=res_name)
+
+        self.assertEqual({'resource': {'foo': 'bar'}}, resp)
+        args, kwargs = mock_describe.call_args
+        self.assertIn('a1', kwargs['with_attr'])
+        self.assertIn('a2', kwargs['with_attr'])
+        self.assertIn('a3', kwargs['with_attr'])
 
     def test_show_nonexist_resource(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -2254,7 +2301,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2284,7 +2333,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2347,7 +2398,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -2376,7 +2429,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -2406,7 +2461,9 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         rpc_client.EngineClient.call(
             req.context,
             ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name})
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
