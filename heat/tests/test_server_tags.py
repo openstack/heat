@@ -206,6 +206,7 @@ class ServerTagsTest(common.HeatTestCase):
                                  new_metadata).AndReturn(None)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['Tags'] = new_tags
@@ -227,6 +228,7 @@ class ServerTagsTest(common.HeatTestCase):
         conf = stack['Config']
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
@@ -278,6 +280,7 @@ class ServerTagsTest(common.HeatTestCase):
         conf = stack['Config']
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         self.assertIsNone(conf.validate())

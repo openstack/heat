@@ -178,7 +178,10 @@ class Instance(resource.Resource):
             properties.Schema.STRING,
             _('Nova instance type (flavor).'),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('nova.flavor')
+            ]
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,

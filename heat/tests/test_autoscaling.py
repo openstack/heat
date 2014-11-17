@@ -112,6 +112,7 @@ class AutoScalingTest(common.HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         if with_error:
             instance.Instance.handle_create().AndRaise(
                 exception.Error(with_error))
@@ -128,6 +129,7 @@ class AutoScalingTest(common.HeatTestCase):
         self.m.StubOutWithMock(server.Server, 'check_create_complete')
         self.m.StubOutWithMock(server.Server, 'validate')
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         server_test = object()
         for x in range(num):
             server.Server.handle_create().AndReturn(server_test)
@@ -466,6 +468,7 @@ class AutoScalingTest(common.HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         instance.Instance.handle_create().AndRaise(Exception)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -748,6 +751,7 @@ class AutoScalingTest(common.HeatTestCase):
         stack = utils.parse_stack(t, params=self.params)
         rsrc = stack['LaunchConfig']
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -772,6 +776,7 @@ class AutoScalingTest(common.HeatTestCase):
         stack = utils.parse_stack(t, params=self.params)
 
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
@@ -792,6 +797,7 @@ class AutoScalingTest(common.HeatTestCase):
         stack = utils.parse_stack(t, params=self.params)
 
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,

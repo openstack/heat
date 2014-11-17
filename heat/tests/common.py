@@ -157,3 +157,8 @@ class HeatTestCase(testscenarios.WithScenarios,
             for x in range(num):
                 glance.ImageConstraint.validate(
                     mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(True)
+
+    def stub_FlavorConstraint_validate(self):
+        self.m.StubOutWithMock(nova.FlavorConstraint, 'validate')
+        nova.FlavorConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)

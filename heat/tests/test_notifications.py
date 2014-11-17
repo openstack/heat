@@ -168,6 +168,7 @@ class ScaleNotificationTest(common.HeatTestCase):
         self.m_validate = self.patchobject(parser.Stack, 'validate')
         self.patchobject(nova.KeypairConstraint, 'validate')
         self.patchobject(glance.ImageConstraint, 'validate')
+        self.patchobject(nova.FlavorConstraint, 'validate')
         self.patchobject(instance.Instance, 'handle_create')\
             .return_value = True
         self.patchobject(instance.Instance, 'check_create_complete')\

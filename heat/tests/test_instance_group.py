@@ -78,6 +78,7 @@ class InstanceGroupTest(common.HeatTestCase):
         parser.Stack.validate()
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.StubOutWithMock(instance_class, 'handle_create')
         self.m.StubOutWithMock(instance_class, 'check_create_complete')
@@ -163,6 +164,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -180,6 +182,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -241,6 +244,7 @@ class InstanceGroupTest(common.HeatTestCase):
         parser.Stack.validate()
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
@@ -284,6 +288,7 @@ class InstanceGroupTest(common.HeatTestCase):
         parser.Stack.validate()
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
 
