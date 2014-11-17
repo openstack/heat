@@ -171,8 +171,12 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         exc = swiftclient_exceptions.ClientException("Object DELETE failed",
                                                      http_status=404)
         mock_swift_object.delete_object.side_effect = (None, None, None, exc)
-        mock_swift_object.delete_container.return_value = None
-        st.delete()
+        exc = swiftclient_exceptions.ClientException("Container DELETE failed",
+                                                     http_status=404)
+        mock_swift_object.delete_container.side_effect = exc
+        rsrc = st.resources['test_wait_condition_handle']
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual(('DELETE', 'COMPLETE'), rsrc.state)
         self.assertEqual(4, mock_swift_object.delete_object.call_count)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
@@ -249,8 +253,10 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         mock_swift_object.delete_object.side_effect = (None, None, None, exc)
         exc = swiftclient_exceptions.ClientException("Container DELETE failed",
                                                      http_status=409)
-        mock_swift_object.delete_container.return_value = exc
-        st.delete()
+        mock_swift_object.delete_container.side_effect = exc
+        rsrc = st.resources['test_wait_condition_handle']
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual(('DELETE', 'COMPLETE'), rsrc.state)
         self.assertEqual(4, mock_swift_object.delete_object.call_count)
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')

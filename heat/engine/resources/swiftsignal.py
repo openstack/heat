@@ -125,7 +125,8 @@ class SwiftSignalHandle(resource.Resource):
         except Exception as exc:
             if cplugin.is_not_found(exc) or cplugin.is_conflict(exc):
                 pass
-            raise
+            else:
+                raise
 
         self.data_delete('endpoint')
 
