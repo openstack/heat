@@ -35,20 +35,30 @@ resources:
     type: OS::Heat::RandomString
 '''
 
+    provider_template = '''
+heat_template_version: 2013-05-23
+resources:
+  random1:
+    type: My::RandomString
+'''
+
     def setUp(self):
         super(UpdateStackTest, self).setUp()
         self.client = self.orchestration_client
 
-    def update_stack(self, stack_identifier, template):
+    def update_stack(self, stack_identifier, template, environment=None,
+                     files=None):
+        env = environment or {}
+        env_files = files or {}
         stack_name = stack_identifier.split('/')[0]
         self.client.stacks.update(
             stack_id=stack_identifier,
             stack_name=stack_name,
             template=template,
-            files={},
+            files=env_files,
             disable_rollback=True,
             parameters={},
-            environment={}
+            environment=env
         )
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
 
@@ -114,3 +124,60 @@ resources:
         self.update_stack(stack_identifier, self.template)
         self.assertEqual(initial_resources,
                          self.list_resources(stack_identifier))
+
+    def test_stack_update_provider(self):
+        stack_name = self._stack_rand_name()
+        files = {'provider.yaml': self.template}
+        env = {'resource_registry':
+               {'My::RandomString': 'provider.yaml'}}
+
+        self.client.stacks.create(
+            stack_name=stack_name,
+            template=self.provider_template,
+            files=files,
+            disable_rollback=True,
+            parameters={},
+            environment=env
+        )
+        self.addCleanup(self.client.stacks.delete, stack_name)
+
+        stack = self.client.stacks.get(stack_name)
+        stack_identifier = '%s/%s' % (stack_name, stack.id)
+
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        initial_resources = {'random1': 'My::RandomString'}
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
+
+        # Prove the resource is backed by a nested stack, save the ID
+        rsrc = self.client.resources.get(stack_identifier, 'random1')
+        nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
+        nested_href = nested_link[0]['href']
+        nested_id = nested_href.split('/')[-1]
+        nested_identifier = '/'.join(nested_href.split('/')[-2:])
+        physical_resource_id = rsrc.physical_resource_id
+        self.assertEqual(physical_resource_id, nested_id)
+
+        # Then check the expected resources are in the nested stack
+        nested_resources = {'random1': 'OS::Heat::RandomString'}
+        self.assertEqual(nested_resources,
+                         self.list_resources(nested_identifier))
+
+        # Add one resource via a stack update by changing the nested stack
+        files['provider.yaml'] = self.update_template
+        self.update_stack(stack_identifier, self.provider_template,
+                          environment=env, files=files)
+        stack = self.client.stacks.get(stack_identifier)
+
+        # Parent resources should be unchanged and the nested stack
+        # should have been updated in-place without replacement
+        self.assertEqual(initial_resources,
+                         self.list_resources(stack_identifier))
+        rsrc = self.client.resources.get(stack_identifier, 'random1')
+        self.assertEqual(rsrc.physical_resource_id, nested_id)
+
+        # Then check the expected resources are in the nested stack
+        nested_resources = {'random1': 'OS::Heat::RandomString',
+                            'random2': 'OS::Heat::RandomString'}
+        self.assertEqual(nested_resources,
+                         self.list_resources(nested_identifier))
