@@ -11,24 +11,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from sqlalchemy import MetaData, Sequence, Table
+import sqlalchemy
 
 
 def upgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
     meta.reflect(meta.bind)
 
     if migrate_engine.name == 'postgresql':
-        resource = Table('resource', meta)
+        resource = sqlalchemy.Table('resource', meta)
         resource.c.id.alter(server_default=None)
 
 
 def downgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
     if migrate_engine.name == 'postgresql':
-        resource = Table('resource', meta, autoload=True)
-        resource.c.id.alter(server_default=Sequence('resource_id_seq')
-                            .next_value())
+        resource = sqlalchemy.Table('resource', meta, autoload=True)
+        resource.c.id.alter(
+            server_default=sqlalchemy.Sequence('resource_id_seq').next_value())
