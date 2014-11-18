@@ -320,15 +320,13 @@ class KeystoneClientV3(object):
         if len(domains) == 1:
             return domains[0].id
         elif len(domains) == 0:
-            LOG.error(_LE("Can't find domain id for %(domain)s!"), {
-                      'domain': domain_name})
-            raise exception.Error(_("Failed to find domain %s")
-                                  % domain_name)
+            msg = _LE('Can\'t find domain id for %s!')
+            LOG.error(msg, domain_name)
+            raise exception.Error(msg % domain_name)
         else:
-            LOG.error(_LE("Unexpected response looking for %(domain)s!"), {
-                      'domain': domain_name})
-            raise exception.Error(_("Unexpected response looking for "
-                                    "domain %s") % domain_name)
+            msg = _LE('Multiple domain ids were found for %s!')
+            LOG.error(msg, domain_name)
+            raise exception.Error(msg % domain_name)
 
     def create_stack_user(self, username, password=''):
         """Create a user defined as part of a stack.
