@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import hashlib
+
 from oslo.config import cfg
+from oslo.serialization import jsonutils
 
 from heat.common import environment_format
 from heat.common import exception
@@ -353,3 +356,10 @@ class StackResource(resource.Resource):
 
     def _resolve_attribute(self, name):
         return self.get_output(name)
+
+    def implementation_signature(self):
+        schema_names = ([prop for prop in self.properties_schema] +
+                        [at for at in self.attributes_schema])
+        schema_hash = hashlib.sha1(';'.join(schema_names))
+        templ_hash = hashlib.sha1(jsonutils.dumps(self.child_template()))
+        return (schema_hash.hexdigest(), templ_hash.hexdigest())

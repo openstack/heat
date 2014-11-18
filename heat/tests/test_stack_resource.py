@@ -134,6 +134,13 @@ class StackResourceTest(HeatTestCase):
         preview = self.parent_resource.preview()
         self.assertIsInstance(preview, stack_resource.StackResource)
 
+    def test_implementation_signature(self):
+        self.parent_resource.child_template = mock.Mock(
+            return_value=self.simple_template)
+        sig1, sig2 = self.parent_resource.implementation_signature()
+        self.assertEqual('3700dc2ae6ff4f0a236e7477ad6b8d51157f2153', sig1)
+        self.assertEqual('efe1707e1bd7dda17b9e995d8a8cf3c057119c96', sig2)
+
     def test_propagated_files(self):
         self.parent_stack.t.files["foo"] = "bar"
         self.parent_resource.create_with_template(self.templ,
