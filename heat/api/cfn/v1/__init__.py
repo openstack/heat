@@ -12,7 +12,7 @@
 #    under the License.
 
 import routes
-from webob import Request
+import webob
 
 from heat.api.cfn.v1 import signal
 from heat.api.cfn.v1 import stacks
@@ -54,7 +54,7 @@ class API(wsgi.Router):
             api_action = self._actions[action]
 
             def action_match(environ, result):
-                req = Request(environ)
+                req = webob.Request(environ)
                 env_action = req.params.get("Action")
                 return env_action == api_action
 
