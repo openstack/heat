@@ -12,6 +12,7 @@
 
 import logging
 import six
+from testtools.testcase import skip
 
 from cinderclient import exceptions as cinder_exceptions
 
@@ -76,6 +77,7 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
         return stack, stack_identifier
 
+    @skip('Skipped until failure rate can be reduced ref bug #1382300')
     def test_cinder_volume_create_backup_restore(self):
         """Ensure the 'Snapshot' deletion policy works.
 
