@@ -269,11 +269,14 @@ class RandomString(resource.Resource):
             random_string = self._deprecated_random_string(char_seq, length)
 
         self.data_set('value', random_string, redact=True)
-        self.resource_id_set(random_string)
+        self.resource_id_set(self.physical_resource_name())
 
     def _resolve_attribute(self, name):
         if name == self.VALUE:
             return self.data().get(self.VALUE)
+
+    def FnGetRefId(self):
+        return self.data().get(self.VALUE)
 
 
 def resource_mapping():

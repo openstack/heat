@@ -194,6 +194,21 @@ Resources:
                          "character class and character sequence minimums",
                          six.text_type(exc))
 
+    def test_max_length(self):
+        template_random_string = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  secret:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 512
+'''
+        stack = self.create_stack(template_random_string)
+        secret = stack['secret']
+        random_string = secret.FnGetAtt('value')
+        self.assertEqual(512, len(random_string))
+        self.assertEqual(random_string, secret.FnGetRefId())
+
 
 class TestGenerateRandomString(common.HeatTestCase):
 
