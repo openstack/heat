@@ -237,11 +237,8 @@ class ResourceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         names = self._resource_names()
-        if names:
-            return self.create_with_template(
-                self._assemble_nested(names),
-                {},
-                self.stack.timeout_mins)
+        return self.create_with_template(self._assemble_nested(names),
+                                         {}, self.stack.timeout_mins)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

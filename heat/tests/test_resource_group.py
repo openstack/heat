@@ -252,6 +252,18 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(
             expect, resg._assemble_nested(['0'], include_all=True))
 
+    def test_assemble_nested_zero(self):
+        templ = copy.deepcopy(template)
+        templ['resources']['group1']['properties']['count'] = 0
+        stack = utils.parse_stack(templ)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        expect = {
+            "heat_template_version": "2013-05-23",
+            "resources": {}
+        }
+        self.assertEqual(expect, resg._assemble_nested([]))
+
     def test_index_var(self):
         stack = utils.parse_stack(template_repl)
         snip = stack.t.resource_definitions(stack)['group1']
@@ -662,10 +674,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = stack['group1']
         scheduler.TaskRunner(resg.create)()
         self.stack = resg.nested()
-        if expect_count > 0:
-            self.assertEqual(expect_count, len(resg.nested()))
-        else:
-            self.assertIsNone(resg.nested())
+        self.assertEqual(expect_count, len(resg.nested()))
         self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
         return resg
 
