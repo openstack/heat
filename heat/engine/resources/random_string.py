@@ -226,6 +226,7 @@ class RandomString(resource.Resource):
         return random_string
 
     def validate(self):
+        super(RandomString, self).validate()
         sequence = self.properties.get(self.SEQUENCE)
         char_sequences = self.properties.get(self.CHARACTER_SEQUENCES)
         char_classes = self.properties.get(self.CHARACTER_CLASSES)
