@@ -14,8 +14,7 @@
 
 import testtools
 
-from heat.engine.dependencies import CircularDependencyException
-from heat.engine.dependencies import Dependencies
+from heat.engine import dependencies
 
 
 class dependenciesTest(testtools.TestCase):
@@ -23,7 +22,7 @@ class dependenciesTest(testtools.TestCase):
     def _dep_test(self, func, checkorder, deps):
         nodes = set.union(*[set(e) for e in deps])
 
-        d = Dependencies(deps)
+        d = dependencies.Dependencies(deps)
         order = list(func(d))
 
         for n in nodes:
@@ -49,22 +48,22 @@ class dependenciesTest(testtools.TestCase):
 
     def test_edges(self):
         input_edges = [('1', None), ('2', '3'), ('2', '4')]
-        dp = Dependencies(input_edges)
+        dp = dependencies.Dependencies(input_edges)
         self.assertEqual(set(input_edges), set(dp.graph().edges()))
 
     def test_repr(self):
-        dp = Dependencies([('1', None), ('2', '3'), ('2', '4')])
+        dp = dependencies.Dependencies([('1', None), ('2', '3'), ('2', '4')])
         s = "Dependencies([('1', None), ('2', '3'), ('2', '4')])"
         self.assertEqual(s, repr(dp))
 
     def test_single_node(self):
-        d = Dependencies([('only', None)])
+        d = dependencies.Dependencies([('only', None)])
         l = list(iter(d))
         self.assertEqual(1, len(l))
         self.assertEqual('only', l[0])
 
     def test_disjoint(self):
-        d = Dependencies([('1', None), ('2', None)])
+        d = dependencies.Dependencies([('1', None), ('2', None)])
         l = list(iter(d))
         self.assertEqual(2, len(l))
         self.assertIn('1', l)
@@ -123,51 +122,60 @@ class dependenciesTest(testtools.TestCase):
                            ('b1', 'first'), ('b2', 'first'))
 
     def test_circular_fwd(self):
-        d = Dependencies([('first', 'second'),
-                          ('second', 'third'),
-                          ('third', 'first')])
-        self.assertRaises(CircularDependencyException, list, iter(d))
+        d = dependencies.Dependencies([('first', 'second'),
+                                       ('second', 'third'),
+                                       ('third', 'first')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          list,
+                          iter(d))
 
     def test_circular_rev(self):
-        d = Dependencies([('first', 'second'),
-                          ('second', 'third'),
-                          ('third', 'first')])
-        self.assertRaises(CircularDependencyException, list, reversed(d))
+        d = dependencies.Dependencies([('first', 'second'),
+                                       ('second', 'third'),
+                                       ('third', 'first')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          list,
+                          reversed(d))
 
     def test_self_ref(self):
-        d = Dependencies([('node', 'node')])
-        self.assertRaises(CircularDependencyException, list, iter(d))
+        d = dependencies.Dependencies([('node', 'node')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          list,
+                          iter(d))
 
     def test_complex_circular_fwd(self):
-        d = Dependencies([('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
-                          ('mid1', 'e2'), ('mid1', 'mid3'),
-                          ('mid2', 'mid3'),
-                          ('mid3', 'e3'),
-                          ('e3', 'mid1')])
-        self.assertRaises(CircularDependencyException, list, iter(d))
+        d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
+                                       ('last', 'mid2'), ('mid1', 'e2'),
+                                       ('mid1', 'mid3'), ('mid2', 'mid3'),
+                                       ('mid3', 'e3'), ('e3', 'mid1')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          list,
+                          iter(d))
 
     def test_complex_circular_rev(self):
-        d = Dependencies([('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
-                          ('mid1', 'e2'), ('mid1', 'mid3'),
-                          ('mid2', 'mid3'),
-                          ('mid3', 'e3'),
-                          ('e3', 'mid1')])
-        self.assertRaises(CircularDependencyException, list, reversed(d))
+        d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
+                                       ('last', 'mid2'), ('mid1', 'e2'),
+                                       ('mid1', 'mid3'), ('mid2', 'mid3'),
+                                       ('mid3', 'e3'), ('e3', 'mid1')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          list,
+                          reversed(d))
 
     def test_noexist_partial(self):
-        d = Dependencies([('foo', 'bar')])
+        d = dependencies.Dependencies([('foo', 'bar')])
         get = lambda i: d[i]
         self.assertRaises(KeyError, get, 'baz')
 
     def test_single_partial(self):
-        d = Dependencies([('last', 'first')])
+        d = dependencies.Dependencies([('last', 'first')])
         p = d['last']
         l = list(iter(p))
         self.assertEqual(1, len(l))
         self.assertEqual('last', l[0])
 
     def test_simple_partial(self):
-        d = Dependencies([('last', 'middle'), ('middle', 'first')])
+        d = dependencies.Dependencies([('last', 'middle'),
+                                       ('middle', 'first')])
         p = d['middle']
         order = list(iter(p))
         self.assertEqual(2, len(order))
@@ -177,9 +185,9 @@ class dependenciesTest(testtools.TestCase):
         self.assertTrue(order.index('last') > order.index('middle'))
 
     def test_simple_multilevel_partial(self):
-        d = Dependencies([('last', 'middle'),
-                          ('middle', 'target'),
-                          ('target', 'first')])
+        d = dependencies.Dependencies([('last', 'middle'),
+                                       ('middle', 'target'),
+                                       ('target', 'first')])
         p = d['target']
         order = list(iter(p))
         self.assertEqual(3, len(order))
@@ -188,10 +196,10 @@ class dependenciesTest(testtools.TestCase):
                             "'%s' not found in dependency order" % n)
 
     def test_complex_partial(self):
-        d = Dependencies([('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
-                          ('mid1', 'e2'), ('mid1', 'mid3'),
-                          ('mid2', 'mid3'),
-                          ('mid3', 'e3')])
+        d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
+                                       ('last', 'mid2'), ('mid1', 'e2'),
+                                       ('mid1', 'mid3'), ('mid2', 'mid3'),
+                                       ('mid3', 'e3')])
         p = d['mid3']
         order = list(iter(p))
         self.assertEqual(4, len(order))
@@ -200,10 +208,10 @@ class dependenciesTest(testtools.TestCase):
                             "'%s' not found in dependency order" % n)
 
     def test_required_by(self):
-        d = Dependencies([('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
-                          ('mid1', 'e2'), ('mid1', 'mid3'),
-                          ('mid2', 'mid3'),
-                          ('mid3', 'e3')])
+        d = dependencies.Dependencies([('last', 'e1'), ('last', 'mid1'),
+                                       ('last', 'mid2'), ('mid1', 'e2'),
+                                       ('mid1', 'mid3'), ('mid2', 'mid3'),
+                                       ('mid3', 'e3')])
 
         self.assertEqual(0, len(list(d.required_by('last'))))
 

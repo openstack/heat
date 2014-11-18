@@ -18,7 +18,7 @@ from oslo.config import cfg
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
 from heat.common import policy
-from heat.common.wsgi import Request
+from heat.common import wsgi
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 from heat.tests import common
@@ -36,7 +36,7 @@ class WatchControllerTest(common.HeatTestCase):
         params = params or {}
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
-        req = Request(environ)
+        req = wsgi.Request(environ)
         req.context = utils.dummy_context()
         return req
 

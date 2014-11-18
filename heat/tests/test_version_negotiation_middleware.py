@@ -13,7 +13,7 @@
 
 import webob
 
-from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.middleware import version_negotiation as vn
 from heat.tests import common
 
 
@@ -26,7 +26,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         return VersionController()
 
     def test_match_version_string(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({})
         major_version = 1
@@ -39,7 +39,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertEqual(minor_version, request.environ['api.minor_version'])
 
     def test_not_match_version_string(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({})
 
@@ -47,7 +47,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertFalse(match)
 
     def test_return_version_controller_when_request_path_is_version(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'versions'})
 
@@ -56,7 +56,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertIsInstance(response, VersionController)
 
     def test_return_version_controller_when_request_path_is_empty(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': '/'})
 
@@ -65,7 +65,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertIsInstance(response, VersionController)
 
     def test_request_path_contains_valid_version(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         major_version = 1
         minor_version = 0
@@ -80,7 +80,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertEqual(minor_version, request.environ['api.minor_version'])
 
     def test_removes_version_from_request_path(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         expected_path = 'resource'
         request = webob.Request({'PATH_INFO': 'v1.0/{0}'.format(expected_path)
@@ -92,7 +92,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertEqual(expected_path, request.path_info_peek())
 
     def test_request_path_contains_unknown_version(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'v2.0/resource'})
 
@@ -101,7 +101,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertIsInstance(response, VersionController)
 
     def test_accept_header_contains_valid_version(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         major_version = 1
         minor_version = 0
@@ -116,7 +116,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertEqual(minor_version, request.environ['api.minor_version'])
 
     def test_accept_header_contains_unknown_version(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers['Accept'] = 'application/vnd.openstack.' \
@@ -127,7 +127,7 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         self.assertIsInstance(response, VersionController)
 
     def test_no_URI_version_accept_header_contains_invalid_MIME_type(self):
-        version_negotiation = VersionNegotiationFilter(
+        version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'resource'})
         request.headers['Accept'] = 'application/invalidMIMEType'

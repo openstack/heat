@@ -17,14 +17,14 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.common import context
 from heat.common import policy
-from heat.common.wsgi import Request
+from heat.common import wsgi
 from heat.tests import common
 
 
 class TestGetAllowedParams(common.HeatTestCase):
     def setUp(self):
         super(TestGetAllowedParams, self).setUp()
-        req = Request({})
+        req = wsgi.Request({})
         self.params = req.params.copy()
         self.params.add('foo', 'foo value')
         self.whitelist = {'foo': 'single'}
@@ -86,7 +86,7 @@ class TestGetAllowedParams(common.HeatTestCase):
 class TestPolicyEnforce(common.HeatTestCase):
     def setUp(self):
         super(TestPolicyEnforce, self).setUp()
-        self.req = Request({})
+        self.req = wsgi.Request({})
         self.req.context = context.RequestContext(tenant_id='foo',
                                                   is_admin=False)
 

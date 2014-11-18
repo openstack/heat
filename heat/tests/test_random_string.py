@@ -14,13 +14,12 @@
 import re
 
 import six
-from testtools.matchers import HasLength
-from testtools.matchers import MatchesRegex
+from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
-from heat.engine.resources.random_string import RandomString
+from heat.engine.resources import random_string as rs
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -251,9 +250,10 @@ class TestGenerateRandomString(common.HeatTestCase):
         # run each test multiple times to confirm random generator
         # doesn't generate a matching pattern by chance
         for i in range(1, 32):
-            sequence = RandomString._sequences[self.seq]
-            r = RandomString._deprecated_random_string(sequence, self.length)
+            sequence = rs.RandomString._sequences[self.seq]
+            r = rs.RandomString._deprecated_random_string(sequence,
+                                                          self.length)
 
-            self.assertThat(r, HasLength(self.length))
+            self.assertThat(r, matchers.HasLength(self.length))
             regex = '%s{%s}' % (self.pattern, self.length)
-            self.assertThat(r, MatchesRegex(regex))
+            self.assertThat(r, matchers.MatchesRegex(regex))

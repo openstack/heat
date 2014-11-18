@@ -27,7 +27,7 @@ from heat.engine.clients.os import neutron
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import net
-from heat.engine.resources.neutron.neutron import NeutronResource as qr
+from heat.engine.resources.neutron import neutron as nr
 from heat.engine.resources.neutron import provider_net
 from heat.engine.resources.neutron import router
 from heat.engine.resources.neutron import subnet
@@ -507,68 +507,68 @@ class NeutronTest(common.HeatTestCase):
         data = {'admin_state_up': False,
                 'value_specs': vs}
         p = properties.Properties(net.Net.properties_schema, data)
-        self.assertIsNone(qr.validate_properties(p))
+        self.assertIsNone(nr.NeutronResource.validate_properties(p))
 
         vs['shared'] = True
         self.assertEqual('shared not allowed in value_specs',
-                         qr.validate_properties(p))
+                         nr.NeutronResource.validate_properties(p))
         vs.pop('shared')
 
         vs['name'] = 'foo'
         self.assertEqual('name not allowed in value_specs',
-                         qr.validate_properties(p))
+                         nr.NeutronResource.validate_properties(p))
         vs.pop('name')
 
         vs['tenant_id'] = '1234'
         self.assertEqual('tenant_id not allowed in value_specs',
-                         qr.validate_properties(p))
+                         nr.NeutronResource.validate_properties(p))
         vs.pop('tenant_id')
 
         vs['foo'] = '1234'
-        self.assertIsNone(qr.validate_properties(p))
+        self.assertIsNone(nr.NeutronResource.validate_properties(p))
 
     def test_validate_depr_properties_required(self):
         data = {'network_id': '1234',
                 'network': 'abc'}
         p = properties.Properties(subnet.Subnet.properties_schema, data)
         self.assertRaises(exception.ResourcePropertyConflict,
-                          qr._validate_depr_property_required,
+                          nr.NeutronResource._validate_depr_property_required,
                           p, 'network', 'network_id')
         data = {}
         p = properties.Properties(subnet.Subnet.properties_schema, data)
         self.assertRaises(exception.StackValidationFailed,
-                          qr._validate_depr_property_required,
+                          nr.NeutronResource._validate_depr_property_required,
                           p, 'network', 'network_id')
 
     def test_prepare_properties(self):
         data = {'admin_state_up': False,
                 'value_specs': {'router:external': True}}
         p = properties.Properties(net.Net.properties_schema, data)
-        props = qr.prepare_properties(p, 'resource_name')
+        props = nr.NeutronResource.prepare_properties(p, 'resource_name')
         self.assertEqual({'name': 'resource_name',
                           'router:external': True,
                           'admin_state_up': False,
                           'shared': False}, props)
 
     def test_is_built(self):
-        self.assertTrue(qr.is_built({'status': 'ACTIVE'}))
-        self.assertTrue(qr.is_built({'status': 'DOWN'}))
-        self.assertFalse(qr.is_built({'status': 'BUILD'}))
-        e = self.assertRaises(resource.ResourceInError, qr.is_built, {
-            'status': 'ERROR'
-        })
+        self.assertTrue(nr.NeutronResource.is_built({'status': 'ACTIVE'}))
+        self.assertTrue(nr.NeutronResource.is_built({'status': 'DOWN'}))
+        self.assertFalse(nr.NeutronResource.is_built({'status': 'BUILD'}))
+        e = self.assertRaises(
+            resource.ResourceInError,
+            nr.NeutronResource.is_built, {'status': 'ERROR'})
         self.assertEqual(
             'Went to status ERROR due to "Unknown"',
             six.text_type(e))
-        e = self.assertRaises(resource.ResourceUnknownStatus, qr.is_built, {
-            'status': 'FROBULATING'
-        })
+        e = self.assertRaises(
+            resource.ResourceUnknownStatus,
+            nr.NeutronResource.is_built, {'status': 'FROBULATING'})
         self.assertEqual(
             'Resource is not built - Unknown status FROBULATING',
             six.text_type(e))
 
     def test_resolve_attribute(self):
-        class SomeNeutronResource(qr):
+        class SomeNeutronResource(nr.NeutronResource):
             properties_schema = {}
 
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
@@ -593,7 +593,9 @@ class NeutronTest(common.HeatTestCase):
         security_groups = ['b62c3079-6946-44f5-a67b-6b9091884d4f',
                            '9887157c-d092-40f5-b547-6361915fce7d']
         self.assertEqual(security_groups,
-                         qr.get_secgroup_uuids(security_groups, None, None))
+                         nr.NeutronResource.get_secgroup_uuids(security_groups,
+                                                               None,
+                                                               None))
         # test get_secgroup_uuids with name
         secgroups = ['security_group_1']
         expected_groups = ['0389f747-7785-4757-b7bb-2ab07e4b09c3']
@@ -616,8 +618,9 @@ class NeutronTest(common.HeatTestCase):
             fake_groups_list)
         self.m.ReplayAll()
         self.assertEqual(expected_groups,
-                         qr.get_secgroup_uuids(secgroups, nclient,
-                                               ctx.tenant_id))
+                         nr.NeutronResource.get_secgroup_uuids(secgroups,
+                                                               nclient,
+                                                               ctx.tenant_id))
         self.m.VerifyAll()
         self.m.UnsetStubs()
         # test there are two securityGroups with same name, but there is
@@ -645,8 +648,9 @@ class NeutronTest(common.HeatTestCase):
             fake_groups_list)
         self.m.ReplayAll()
         self.assertEqual(expected_groups,
-                         qr.get_secgroup_uuids(secgroups, nclient,
-                                               ctx.tenant_id))
+                         nr.NeutronResource.get_secgroup_uuids(secgroups,
+                                                               nclient,
+                                                               ctx.tenant_id))
         self.m.VerifyAll()
         self.m.UnsetStubs()
         # test there are two securityGroups with same name, and the two
@@ -673,7 +677,7 @@ class NeutronTest(common.HeatTestCase):
         neutronclient.Client.list_security_groups().AndReturn(fake_groups_list)
         self.m.ReplayAll()
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
-                          qr.get_secgroup_uuids,
+                          nr.NeutronResource.get_secgroup_uuids,
                           secgroups, nclient, ctx.tenant_id)
         self.m.VerifyAll()
         self.m.UnsetStubs()

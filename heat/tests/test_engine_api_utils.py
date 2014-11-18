@@ -11,17 +11,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from datetime import datetime
+import datetime as dt
 import uuid
 
 import json
 import mock
 import six
 
-from heat.common.identifier import EventIdentifier
+from heat.common import identifier
 from heat.common import template_format
 from heat.engine import api
-from heat.engine.event import Event
+from heat.engine import event
 from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import resource
@@ -29,6 +29,8 @@ from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
+
+datetime = dt.datetime
 
 
 class FormatTest(common.HeatTestCase):
@@ -53,11 +55,12 @@ class FormatTest(common.HeatTestCase):
 
     def _dummy_event(self, event_id):
         resource = self.stack['generic1']
-        return Event(utils.dummy_context(), self.stack, 'CREATE', 'COMPLETE',
-                     'state changed', 'z3455xyc-9f88-404d-a85b-5315293e67de',
-                     resource.properties, resource.name, resource.type(),
-                     uuid='abc123yc-9f88-404d-a85b-531529456xyz',
-                     id=event_id)
+        return event.Event(utils.dummy_context(), self.stack, 'CREATE',
+                           'COMPLETE', 'state changed',
+                           'z3455xyc-9f88-404d-a85b-5315293e67de',
+                           resource.properties, resource.name, resource.type(),
+                           uuid='abc123yc-9f88-404d-a85b-531529456xyz',
+                           id=event_id)
 
     def test_format_stack_resource(self):
         res = self.stack['generic1']
@@ -194,10 +197,11 @@ class FormatTest(common.HeatTestCase):
         self.assertEqual(event_keys, set(formatted.keys()))
 
         event_id_formatted = formatted[rpc_api.EVENT_ID]
-        event_identifier = EventIdentifier(event_id_formatted['tenant'],
-                                           event_id_formatted['stack_name'],
-                                           event_id_formatted['stack_id'],
-                                           event_id_formatted['path'])
+        event_identifier = identifier.EventIdentifier(
+            event_id_formatted['tenant'],
+            event_id_formatted['stack_name'],
+            event_id_formatted['stack_id'],
+            event_id_formatted['path'])
         self.assertEqual(event_id, event_identifier.event_id)
 
     @mock.patch.object(api, 'format_stack_resource')
