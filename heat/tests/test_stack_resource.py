@@ -140,7 +140,11 @@ class StackResourceTest(common.HeatTestCase):
             return_value=self.simple_template)
         sig1, sig2 = self.parent_resource.implementation_signature()
         self.assertEqual('3700dc2ae6ff4f0a236e7477ad6b8d51157f2153', sig1)
-        self.assertEqual('efe1707e1bd7dda17b9e995d8a8cf3c057119c96', sig2)
+        self.assertEqual('70e69545e0c47123159974c9166741085eb46dba', sig2)
+        self.parent_stack.t.files["foo"] = "bar"
+        sig1a, sig2a = self.parent_resource.implementation_signature()
+        self.assertEqual(sig1, sig1a)
+        self.assertNotEqual(sig2, sig2a)
 
     def test_propagated_files(self):
         self.parent_stack.t.files["foo"] = "bar"
