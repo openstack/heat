@@ -127,8 +127,7 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     parameters = sqlalchemy.Column('parameters', Json)
     user_creds_id = sqlalchemy.Column(
         sqlalchemy.Integer,
-        sqlalchemy.ForeignKey('user_creds.id'),
-        nullable=False)
+        sqlalchemy.ForeignKey('user_creds.id'))
     owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
@@ -167,7 +166,7 @@ class UserCreds(BASE, HeatBase):
     password = sqlalchemy.Column(sqlalchemy.String(255))
     decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     tenant = sqlalchemy.Column(sqlalchemy.String(1024))
-    auth_url = sqlalchemy.Column(sqlalchemy.String)
+    auth_url = sqlalchemy.Column(sqlalchemy.Text)
     tenant_id = sqlalchemy.Column(sqlalchemy.String(256))
     trust_id = sqlalchemy.Column(sqlalchemy.String(255))
     trustor_user_id = sqlalchemy.Column(sqlalchemy.String(64))
@@ -216,7 +215,7 @@ class ResourceData(BASE, HeatBase):
                            primary_key=True,
                            nullable=False)
     key = sqlalchemy.Column('key', sqlalchemy.String(255))
-    value = sqlalchemy.Column('value', sqlalchemy.String)
+    value = sqlalchemy.Column('value', sqlalchemy.Text)
     redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
     decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     resource_id = sqlalchemy.Column('resource_id',
@@ -301,7 +300,7 @@ class SoftwareConfig(BASE, HeatBase):
     group = sqlalchemy.Column('group', sqlalchemy.String(255))
     config = sqlalchemy.Column('config', Json)
     tenant = sqlalchemy.Column(
-        'tenant', sqlalchemy.String(64), nullable=False)
+        'tenant', sqlalchemy.String(64), nullable=False, index=True)
 
 
 class SoftwareDeployment(BASE, HeatBase, StateAware):
@@ -311,6 +310,8 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
     """
 
     __tablename__ = 'software_deployment'
+    __table_args__ = (
+        sqlalchemy.Index('ix_software_deployment_created_at', 'created_at'),)
 
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
@@ -321,11 +322,11 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
         nullable=False)
     config = relationship(SoftwareConfig, backref=backref('deployments'))
     server_id = sqlalchemy.Column('server_id', sqlalchemy.String(36),
-                                  nullable=False)
+                                  nullable=False, index=True)
     input_values = sqlalchemy.Column('input_values', Json)
     output_values = sqlalchemy.Column('output_values', Json)
     tenant = sqlalchemy.Column(
-        'tenant', sqlalchemy.String(64), nullable=False)
+        'tenant', sqlalchemy.String(64), nullable=False, index=True)
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
 
@@ -342,7 +343,7 @@ class Snapshot(BASE, HeatBase):
     name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
     data = sqlalchemy.Column('data', Json)
     tenant = sqlalchemy.Column(
-        'tenant', sqlalchemy.String(64), nullable=False)
+        'tenant', sqlalchemy.String(64), nullable=False, index=True)
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
     status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
     stack = relationship(Stack, backref=backref('snapshot'))
