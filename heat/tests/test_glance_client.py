@@ -11,12 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import six
 import uuid
 
 from glanceclient import exc as glance_exceptions
 
 from heat.common import exception
+from heat.engine.clients.os import glance
 from heat.tests import common
 from heat.tests import utils
 
@@ -122,3 +124,23 @@ class GlanceUtilsTests(common.HeatTestCase):
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
                           self.glance_plugin.get_image_id, img_name)
         self.m.VerifyAll()
+
+
+class ImageConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(ImageConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_image = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'glance').get_image_id = self.mock_get_image
+        self.constraint = glance.ImageConstraint()
+
+    def test_validation(self):
+        self.mock_get_image.return_value = "id1"
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_image.side_effect = exception.ImageNotFound(
+            image_name='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
