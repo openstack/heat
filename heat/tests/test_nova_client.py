@@ -112,6 +112,58 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                           self.nova_plugin.get_server, 'idontexist')
         self.m.VerifyAll()
 
+    def test_get_network_id_by_label(self):
+        """Tests the get_net_id_by_label function."""
+        net = self.m.CreateMockAnything()
+        net.id = str(uuid.uuid4())
+        self.nova_client.networks = self.m.CreateMockAnything()
+        self.nova_client.networks.find(label='net_label').AndReturn(
+            net)
+        self.nova_client.networks.find(label='idontexist').AndRaise(
+            nova_exceptions.NotFound(404))
+        self.nova_client.networks.find(label='notUnique').AndRaise(
+            nova_exceptions.NoUniqueMatch())
+        self.m.ReplayAll()
+        self.assertEqual(net.id,
+                         self.nova_plugin.get_net_id_by_label('net_label'))
+
+        exc = self.assertRaises(
+            exception.NovaNetworkNotFound,
+            self.nova_plugin.get_net_id_by_label, 'idontexist')
+        expected = 'The Nova network (idontexist) could not be found'
+        self.assertIn(expected, six.text_type(exc))
+        exc = self.assertRaises(
+            exception.PhysicalResourceNameAmbiguity,
+            self.nova_plugin.get_net_id_by_label, 'notUnique')
+        expected = ('Multiple physical resources were found '
+                    'with name (notUnique)')
+        self.assertIn(expected, six.text_type(exc))
+        self.m.VerifyAll()
+
+    def test_get_nova_network_id(self):
+        """Tests the get_nova_network_id function."""
+        net = self.m.CreateMockAnything()
+        net.id = str(uuid.uuid4())
+        not_existent_net_id = str(uuid.uuid4())
+        self.nova_client.networks = self.m.CreateMockAnything()
+        self.nova_client.networks.get(net.id).AndReturn(net)
+        self.nova_client.networks.get(not_existent_net_id).AndRaise(
+            nova_exceptions.NotFound(404))
+        self.nova_client.networks.find(label=not_existent_net_id).AndRaise(
+            nova_exceptions.NotFound(404))
+
+        self.m.ReplayAll()
+        self.assertEqual(net.id,
+                         self.nova_plugin.get_nova_network_id(net.id))
+        exc = self.assertRaises(
+            exception.NovaNetworkNotFound,
+            self.nova_plugin.get_nova_network_id, not_existent_net_id)
+        expected = ('The Nova network (%s) could not be found' %
+                    not_existent_net_id)
+        self.assertIn(expected, six.text_type(exc))
+
+        self.m.VerifyAll()
+
     def test_get_status(self):
         server = self.m.CreateMockAnything()
         server.status = 'ACTIVE'

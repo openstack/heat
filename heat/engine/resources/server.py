@@ -93,7 +93,6 @@ class Server(stack_user.StackUser):
         'name', 'show', 'addresses', 'networks', 'first_address',
         'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
     )
-
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -221,11 +220,17 @@ class Server(stack_user.StackUser):
                         _('ID of network to create a port on.'),
                         support_status=support.SupportStatus(
                             support.DEPRECATED,
-                            _('Use property %s.') % NETWORK_ID)
+                            _('Use property %s.') % NETWORK_ID),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ]
                     ),
                     NETWORK_ID: properties.Schema(
                         properties.Schema.STRING,
-                        _('Name or ID of network to create a port on.')
+                        _('Name or ID of network to create a port on.'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ]
                     ),
                     NETWORK_FIXED_IP: properties.Schema(
                         properties.Schema.STRING,
@@ -655,15 +660,17 @@ class Server(stack_user.StackUser):
 
         for net_data in networks:
             nic_info = {}
-            if net_data.get(self.NETWORK_UUID):
-                nic_info['net-id'] = net_data[self.NETWORK_UUID]
-            label_or_uuid = net_data.get(self.NETWORK_ID)
-            if label_or_uuid:
-                if uuidutils.is_uuid_like(label_or_uuid):
-                    nic_info['net-id'] = label_or_uuid
+            net_identifier = (net_data.get(self.NETWORK_UUID) or
+                              net_data.get(self.NETWORK_ID))
+            if net_identifier:
+                if self.is_using_neutron():
+                    net_id = (self.client_plugin(
+                        'neutron').resolve_network(
+                        net_data, self.NETWORK_ID, self.NETWORK_UUID))
                 else:
-                    network = self.nova().networks.find(label=label_or_uuid)
-                    nic_info['net-id'] = network.id
+                    net_id = (self.client_plugin(
+                        'nova').get_nova_network_id(net_identifier))
+                nic_info['net-id'] = net_id
             if net_data.get(self.NETWORK_FIXED_IP):
                 nic_info['v4-fixed-ip'] = net_data[self.NETWORK_FIXED_IP]
             if net_data.get(self.NETWORK_PORT):

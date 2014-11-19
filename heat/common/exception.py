@@ -248,6 +248,10 @@ class VolumeTypeNotFound(HeatException):
     msg_fmt = _("The VolumeType (%(volume_type)s) could not be found.")
 
 
+class NovaNetworkNotFound(HeatException):
+    msg_fmt = _("The Nova network (%(network)s) could not be found.")
+
+
 class PhysicalResourceNameAmbiguity(HeatException):
     msg_fmt = _(
         "Multiple physical resources were found with name (%(name)s).")

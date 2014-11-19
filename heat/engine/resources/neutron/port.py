@@ -66,13 +66,19 @@ class Port(neutron.NeutronResource):
             properties.Schema.STRING,
             support_status=support.SupportStatus(
                 support.DEPRECATED,
-                _('Use property %s.') % NETWORK)
+                _('Use property %s.') % NETWORK),
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
 
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Network this port belongs to.'),
-            support_status=support.SupportStatus(version='2014.2')
+            support_status=support.SupportStatus(version='2014.2'),
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
 
         NAME: properties.Schema(

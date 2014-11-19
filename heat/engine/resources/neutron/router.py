@@ -14,6 +14,7 @@
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
@@ -340,12 +341,18 @@ class RouterGateway(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 support.DEPRECATED,
                 _('Use property %s.') % NETWORK),
-            required=False
+            required=False,
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('external network for the gateway.'),
-            required=False
+            required=False,
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
 
     }

@@ -14,6 +14,7 @@ import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import port
@@ -44,13 +45,19 @@ class FloatingIP(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 support.DEPRECATED,
                 _('Use property %s.') % FLOATING_NETWORK),
-            required=False
+            required=False,
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
         FLOATING_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Network to allocate floating IP from.'),
             required=False,
-            support_status=support.SupportStatus(version='2014.2')
+            support_status=support.SupportStatus(version='2014.2'),
+            constraints=[
+                constraints.CustomConstraint('neutron.network')
+            ],
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,

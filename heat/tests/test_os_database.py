@@ -149,12 +149,16 @@ class OSDBInstanceTest(common.HeatTestCase):
     def _stubout_check_create_complete(self, fake_dbinstance):
         self.fc.instances.get(fake_dbinstance.id).AndReturn(fake_dbinstance)
 
-    def _stubout_validate(self, instance, neutron=None):
+    def _stubout_validate(self, instance, neutron=None,
+                          mock_net_constraint=False):
+        if mock_net_constraint:
+            self.stub_NetworkConstraint_validate()
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'datastore_versions')
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
         self.fc.datastore_versions.list(instance.properties['datastore_type']
                                         ).AndReturn([FakeVersion()])
+
         if neutron is not None:
             self.m.StubOutWithMock(instance, 'is_using_neutron')
             instance.is_using_neutron().AndReturn(bool(neutron))
@@ -550,7 +554,8 @@ class OSDBInstanceTest(common.HeatTestCase):
                 "network": "somenetuuid"
             }]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
-        self._stubout_validate(instance, neutron=True)
+        self._stubout_validate(instance, neutron=True,
+                               mock_net_constraint=True)
 
         ex = self.assertRaises(
             exception.StackValidationFailed, instance.validate)
@@ -622,7 +627,13 @@ class OSDBInstanceTest(common.HeatTestCase):
         t['resources']['MySqlCloudDB']['properties']['networks'] = [
             {'network': net_id}]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self.stub_NetworkConstraint_validate()
         self._stubout_common_create()
+        self.m.StubOutWithMock(neutron.NeutronClientPlugin,
+                               'find_neutron_resource')
+        neutron.NeutronClientPlugin.find_neutron_resource(
+            instance.properties.get('networks')[0],
+            'network', 'network').AndReturn(net_id)
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=[],
                                  users=[],
@@ -649,13 +660,14 @@ class OSDBInstanceTest(common.HeatTestCase):
         t['resources']['MySqlCloudDB']['properties']['networks'] = [
             {'network': 'somenetname'}]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
+        self.stub_NetworkConstraint_validate()
         self._stubout_common_create()
+        self.patchobject(instance, 'is_using_neutron', return_value=False)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.nova)
         self.m.StubOutWithMock(self.nova, 'networks')
         self.m.StubOutWithMock(self.nova.networks, 'find')
         self.nova.networks.find(label='somenetname').AndReturn(FakeNet())
-
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=[],
                                  users=[],

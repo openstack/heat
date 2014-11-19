@@ -29,6 +29,7 @@ from heat.common import messaging
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import resources
@@ -190,4 +191,9 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_ServerConstraint_validate(self):
         self.m.StubOutWithMock(nova.ServerConstraint, 'validate')
         nova.ServerConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+    def stub_NetworkConstraint_validate(self):
+        self.m.StubOutWithMock(neutron.NetworkConstraint, 'validate')
+        neutron.NetworkConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)

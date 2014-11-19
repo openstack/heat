@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from oslo.utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -129,7 +128,10 @@ class OSDBInstance(resource.Resource):
                         properties.Schema.STRING,
                         _('Name or UUID of the network to attach this NIC to. '
                           'Either %(port)s or %(net)s must be specified.') % {
-                              'port': PORT, 'net': NET}
+                              'port': PORT, 'net': NET},
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ]
                     ),
                     PORT: properties.Schema(
                         properties.Schema.STRING,
@@ -298,13 +300,13 @@ class OSDBInstance(resource.Resource):
             nic_dict = {}
             net = nic.get(self.NET)
             if net:
-                if uuidutils.is_uuid_like(net):
-                    net_id = net
+                if self.is_using_neutron():
+                    net_id = (self.client_plugin(
+                        'neutron').find_neutron_resource(
+                        nic, self.NET, 'network'))
                 else:
-                    # using Nova for lookup to cover both neutron and
-                    # nova-network cases
-                    nova = self.client('nova')
-                    net_id = nova.networks.find(label=net).id
+                    net_id = (self.client_plugin(
+                        'nova').get_nova_network_id(net))
                 nic_dict['net-id'] = net_id
             port = nic.get(self.PORT)
             if port:
@@ -387,7 +389,6 @@ class OSDBInstance(resource.Resource):
         if not self.resource_id:
             return
 
-        instance = None
         try:
             instance = self.trove().instances.get(self.resource_id)
         except Exception as ex:
