@@ -1072,6 +1072,15 @@ class EngineService(service.Service):
         access_key = ec2_creds.get('access')
         return stack.access_allowed(access_key, resource_name)
 
+    def _verify_stack_resource(self, stack, resource_name):
+        if resource_name not in stack:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
+
+        resource = stack[resource_name]
+        if resource.id is None:
+            raise exception.ResourceNotAvailable(resource_name=resource_name)
+
     @request_context
     def describe_stack_resource(self, cnxt, stack_identity, resource_name):
         s = self._get_stack(cnxt, stack_identity)
@@ -1082,13 +1091,7 @@ class EngineService(service.Service):
                 LOG.warn(_LW("Access denied to resource %s"), resource_name)
                 raise exception.Forbidden()
 
-        if resource_name not in stack:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-
-        resource = stack[resource_name]
-        if resource.id is None:
-            raise exception.ResourceNotAvailable(resource_name=resource_name)
+        self._verify_stack_resource(stack, resource_name)
 
         return api.format_stack_resource(stack[resource_name])
 
@@ -1101,14 +1104,7 @@ class EngineService(service.Service):
         # signal doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
         stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
-
-        if resource_name not in stack:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-
-        resource = stack[resource_name]
-        if resource.id is None:
-            raise exception.ResourceNotAvailable(resource_name=resource_name)
+        self._verify_stack_resource(stack, resource_name)
 
         if callable(stack[resource_name].signal):
             stack[resource_name].signal(details)
@@ -1121,7 +1117,7 @@ class EngineService(service.Service):
             if res.name != resource_name and res.id is not None:
                 res.metadata_update()
 
-        return resource.metadata_get()
+        return stack[resource_name].metadata_get()
 
     @request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
