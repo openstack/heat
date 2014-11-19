@@ -480,10 +480,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client.update_software_deployment.return_value = sd
         self.assertEqual(sd, self.deployment.handle_delete())
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'DELETE',
             'config_id': derived_sc['id'],
-            'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -549,10 +548,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             self.rpc_client.show_software_deployment.call_args[0])
 
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'UPDATE',
             'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
-            'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': u'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -571,10 +569,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.handle_suspend()
 
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'SUSPEND',
             'config_id': derived_sc['id'],
-            'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -589,10 +586,9 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.handle_resume()
 
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'action': 'RESUME',
             'config_id': derived_sc['id'],
-            'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-            'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
             'status': 'IN_PROGRESS',
             'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
@@ -605,6 +601,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -625,6 +622,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'output_values': {
                 'foo': 'bar',
                 'deploy_status_code': 0,
@@ -637,6 +635,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -657,6 +656,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'output_values': {
                 'foo': 'bar',
                 'deploy_status_code': '0',
@@ -669,6 +669,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_handle_signal_failed(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         sc = {
             'outputs': [
                 {'name': 'foo'},
@@ -686,6 +687,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment failed', ret)
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'output_values': {
                 'deploy_status_code': None,
                 'deploy_stderr': None,
@@ -700,6 +702,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         details = {'failed': _('need more memory.')}
         self.deployment.handle_signal(details)
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'output_values': {
                 'deploy_status_code': None,
                 'deploy_stderr': None,
@@ -712,6 +715,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_handle_status_code_failed(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         sd = {
             'outputs': [],
             'output_values': {},
@@ -724,7 +728,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'deploy_status_code': -1
         }
         self.deployment.handle_signal(details)
+        self.assertEqual(
+            'c8a19429-7fde-47ea-a42f-40045488226c',
+            self.rpc_client.show_software_deployment.call_args[0][1])
         self.assertEqual({
+            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
             'output_values': {
                 'deploy_stdout': 'A thing happened',
                 'deploy_stderr': 'Then it broke',

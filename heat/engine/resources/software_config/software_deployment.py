@@ -180,9 +180,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _build_properties(self, properties, config_id, action):
         props = {
             'config_id': config_id,
-            'server_id': properties[SoftwareDeployment.SERVER],
             'action': action,
-            'stack_user_project_id': self.stack.stack_user_project_id
         }
 
         if self._signal_transport_none():
@@ -224,14 +222,19 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
         if action == self.CREATE:
             sd = self.rpc_client().create_software_deployment(
-                self.context, **props)
+                self.context,
+                server_id=self.properties[SoftwareDeployment.SERVER],
+                stack_user_project_id=self.stack.stack_user_project_id,
+                **props)
             self.resource_id_set(sd[rpc_api.SOFTWARE_DEPLOYMENT_ID])
         else:
             sd = self.rpc_client().show_software_deployment(
                 self.context, self.resource_id)
             prev_derived_config = sd[rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID]
             sd = self.rpc_client().update_software_deployment(
-                self.context, **props)
+                self.context,
+                deployment_id=self.resource_id,
+                **props)
             if prev_derived_config:
                 self._delete_derived_config(prev_derived_config)
         if not self._signal_transport_none():
@@ -481,7 +484,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             status_reason = _('Outputs received')
 
         self.rpc_client().update_software_deployment(
-            self.context, self.resource_id,
+            self.context, deployment_id=self.resource_id,
             output_values=ov, status=status, status_reason=status_reason)
         # Return a string describing the outcome of handling the signal data
         return event_reason
