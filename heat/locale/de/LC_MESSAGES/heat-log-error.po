@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-26 06:00+0000\n"
-"PO-Revision-Date: 2014-10-24 01:08+0000\n"
+"POT-Creation-Date: 2014-11-19 06:00+0000\n"
+"PO-Revision-Date: 2014-11-18 11:39+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/heat/language/"
 "de/)\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: heat/api/aws/ec2token.py:162
+#: heat/api/aws/ec2token.py:161
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 
@@ -58,8 +58,18 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:342
-#: heat/common/heat_keystoneclient.py:429
+#: heat/common/heat_keystoneclient.py:323
+#, python-format
+msgid "Can't find domain id for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:327
+#, python-format
+msgid "Multiple domain ids were found for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:358
+#: heat/common/heat_keystoneclient.py:445
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -82,7 +92,7 @@ msgstr ""
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr ""
 
-#: heat/common/plugin_loader.py:97
+#: heat/common/plugin_loader.py:99
 #, python-format
 msgid "Failed to import module %s"
 msgstr ""
@@ -91,17 +101,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:436
+#: heat/engine/environment.py:455
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:448
+#: heat/engine/environment.py:467
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:452
+#: heat/engine/environment.py:471
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -116,7 +126,7 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:898 heat/engine/resource.py:925
+#: heat/engine/resource.py:922 heat/engine/resource.py:949
 #, python-format
 msgid "DB error %s"
 msgstr "Datenbankfehler %s"
@@ -126,21 +136,21 @@ msgstr "Datenbankfehler %s"
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:1355
+#: heat/engine/service.py:1356
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/stack.py:710
+#: heat/engine/stack.py:723
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:829
+#: heat/engine/stack.py:845
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1068
+#: heat/engine/stack.py:1110
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
@@ -165,16 +175,6 @@ msgstr ""
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr ""
-
-#: heat/openstack/common/excutils.py:76
-#, python-format
-msgid "Original exception being dropped: %s"
-msgstr "Ursprüngliche Ausnahme wird gelöscht: %s"
-
-#: heat/openstack/common/excutils.py:105
-#, python-format
-msgid "Unexpected exception occurred %d time(s)... retrying."
-msgstr "Unerwartete Ausnahme %d mal(e) aufgetreten... Neuversuch."
 
 #: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
