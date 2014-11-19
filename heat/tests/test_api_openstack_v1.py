@@ -3250,6 +3250,19 @@ class RoutesTest(common.HeatTestCase):
                 'stack_id': 'bbbb'
             })
 
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/teststack/bbbb/snapshots/cccc/restore',
+            'POST',
+            'restore_snapshot',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'stack_name': 'teststack',
+                'stack_id': 'bbbb',
+                'snapshot_id': 'cccc'
+            })
+
     def test_stack_data_template(self):
         self.assertRoute(
             self.m,

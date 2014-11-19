@@ -4335,7 +4335,8 @@ class StackTest(common.HeatTestCase):
         self.stack.create()
 
         data = copy.deepcopy(self.stack.prepare_abandon())
-        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, self.stack.id)
 
         new_tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                     'Resources': {'A': {'Type': 'GenericResourceType'}}}
@@ -4374,7 +4375,8 @@ class StackTest(common.HeatTestCase):
 
         data = self.stack.prepare_abandon()
         data['resources']['A']['resource_data']['a_string'] = 'foo'
-        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, self.stack.id)
 
         self.stack.restore(fake_snapshot)
 

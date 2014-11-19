@@ -2750,7 +2750,8 @@ class ServersTest(common.HeatTestCase):
         data = stack.prepare_abandon()
         resource_data = data['resources']['WebServer']['resource_data']
         resource_data['snapshot_image_id'] = 'CentOS 5.2'
-        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, stack.id)
 
         stack.restore(fake_snapshot)
 

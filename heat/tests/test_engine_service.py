@@ -3562,13 +3562,13 @@ class SnapshotServiceTest(common.HeatTestCase):
         utils.setup_dummy_db()
         self.addCleanup(self.m.VerifyAll)
 
-    def _create_stack(self):
+    def _create_stack(self, stub=True):
         stack = get_wordpress_stack('stack', self.ctx)
         sid = stack.store()
 
         s = db_api.stack_get(self.ctx, sid)
-        self.m.StubOutWithMock(parser.Stack, 'load')
-
+        if stub:
+            self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=s).MultipleTimes().AndReturn(stack)
         return stack
 
@@ -3636,3 +3636,28 @@ class SnapshotServiceTest(common.HeatTestCase):
             "status_reason": "Stack SNAPSHOT completed successfully",
             "data": stack.prepare_abandon()}
         self.assertEqual([expected], snapshots)
+
+    def test_restore_snapshot(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        snapshot = self.engine.stack_snapshot(
+            self.ctx, stack.identifier(), 'snap1')
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+        snapshot_id = snapshot['id']
+        self.engine.stack_restore(self.ctx, stack.identifier(), snapshot_id)
+        self.engine.thread_group_mgr.groups[stack.id].wait()
+        self.assertEqual((stack.RESTORE, stack.COMPLETE), stack.state)
+
+    def test_restore_snapshot_other_stack(self):
+        stack1 = self._create_stack()
+        stack2 = self._create_stack(stub=False)
+        self.m.ReplayAll()
+        snapshot1 = self.engine.stack_snapshot(
+            self.ctx, stack1.identifier(), 'snap1')
+        self.engine.thread_group_mgr.groups[stack1.id].wait()
+        snapshot_id = snapshot1['id']
+        self.engine.stack_restore(self.ctx, stack2.identifier(), snapshot_id)
+        self.engine.thread_group_mgr.groups[stack2.id].wait()
+        self.assertEqual((stack2.RESTORE, stack2.FAILED), stack2.state)
+        self.assertEqual("Can't restore snapshot from other stack",
+                         stack2.status_reason)

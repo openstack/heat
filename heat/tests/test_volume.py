@@ -1473,7 +1473,8 @@ class CinderVolumeTest(BaseVolumeTest):
         self.assertEqual((stack.SNAPSHOT, stack.COMPLETE), stack.state)
 
         data = stack.prepare_abandon()
-        fake_snapshot = collections.namedtuple('Snapshot', ('data',))(data)
+        fake_snapshot = collections.namedtuple(
+            'Snapshot', ('data', 'stack_id'))(data, stack.id)
 
         stack.restore(fake_snapshot)
 

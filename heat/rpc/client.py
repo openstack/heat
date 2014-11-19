@@ -526,3 +526,8 @@ class EngineClient(object):
     def stack_list_snapshots(self, cnxt, stack_identity):
         return self.call(cnxt, self.make_msg('stack_list_snapshots',
                                              stack_identity=stack_identity))
+
+    def stack_restore(self, cnxt, stack_identity, snapshot_id):
+        return self.call(cnxt, self.make_msg('stack_restore',
+                                             stack_identity=stack_identity,
+                                             snapshot_id=snapshot_id))

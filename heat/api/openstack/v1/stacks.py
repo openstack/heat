@@ -464,6 +464,11 @@ class StackController(object):
                 req.context, identity)
         }
 
+    @util.identified_stack
+    def restore_snapshot(self, req, identity, snapshot_id):
+        self.rpc_client.stack_restore(req.context, identity, snapshot_id)
+        raise exc.HTTPAccepted()
+
 
 class StackSerializer(serializers.JSONResponseSerializer):
     """Handles serialization of specific controller method responses."""
