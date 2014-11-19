@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import hashlib
 import json
 
 from requests import exceptions
@@ -147,11 +146,7 @@ class TemplateResource(stack_resource.StackResource):
 
     def implementation_signature(self):
         self._generate_schema(self.t)
-        schema_names = ([prop for prop in self.properties_schema] +
-                        [at for at in self.attributes_schema])
-        schema_hash = hashlib.sha1(';'.join(schema_names))
-        templ_hash = hashlib.sha1(self.template_data())
-        return (schema_hash.hexdigest(), templ_hash.hexdigest())
+        return super(TemplateResource, self).implementation_signature()
 
     def template_data(self):
         # we want to have the latest possible template.
