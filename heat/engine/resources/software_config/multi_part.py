@@ -16,7 +16,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -116,8 +115,8 @@ class MultipartMime(software_config.SoftwareConfig):
             try:
                 sc = self.rpc_client().show_software_config(
                     self.context, self.resource_id)
-            except exception.NotFound:
-                pass
+            except Exception as ex:
+                self.rpc_client().ignore_error_named(ex, 'NotFound')
             else:
                 part = sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
 

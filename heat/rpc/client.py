@@ -57,6 +57,25 @@ class EngineClient(object):
             client = self._client
         return client.cast(ctxt, method, **kwargs)
 
+    def local_error_name(self, error):
+        """
+        Returns the name of the error with any _Remote postfix removed.
+
+        :param error: Remote raised error to derive the name from.
+        """
+        error_name = error.__class__.__name__
+        return error_name.split('_Remote')[0]
+
+    def ignore_error_named(self, error, name):
+        """
+        Raises the error unless its local name matches the supplied name
+
+        :param error: Remote raised error to derive the local name from.
+        :param name: Name to compare local name to.
+        """
+        if self.local_error_name(error) != name:
+            raise error
+
     def identify_stack(self, ctxt, stack_name):
         """
         The identify_stack method returns the full stack identifier for a
