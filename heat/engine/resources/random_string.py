@@ -277,7 +277,10 @@ class RandomString(resource.Resource):
             return self.data().get(self.VALUE)
 
     def FnGetRefId(self):
-        return self.data().get(self.VALUE)
+        if self.resource_id is not None:
+            return self.data().get('value')
+        else:
+            return unicode(self.name)
 
 
 def resource_mapping():
