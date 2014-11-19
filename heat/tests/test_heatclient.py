@@ -1413,7 +1413,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.assertIsNone(heat_ks_client.delete_stack_domain_project(
             project_id='aprojectid'))
 
-    def _test_url_for(self, service_url, expected_kwargs, **kwargs):
+    def _test_url_for(self, service_url, expected_kwargs, ctx=None, **kwargs):
         """
         Helper function for testing url_for depending on different ways to
         pass region name.
@@ -1424,7 +1424,7 @@ class KeystoneClientTest(common.HeatTestCase):
             .AndReturn(service_url)
 
         self.m.ReplayAll()
-        ctx = utils.dummy_context()
+        ctx = ctx or utils.dummy_context()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertEqual(heat_ks_client.url_for(**kwargs), service_url)
         self.m.VerifyAll()
@@ -1451,7 +1451,7 @@ class KeystoneClientTest(common.HeatTestCase):
         kwargs = {
             'region_name': 'RegionTwo'
         }
-        self._test_url_for(service_url, kwargs, **kwargs)
+        self._test_url_for(service_url, kwargs, None, **kwargs)
 
     def test_url_for_with_region_name_from_config(self):
         """
@@ -1466,6 +1466,26 @@ class KeystoneClientTest(common.HeatTestCase):
         }
         service_url = 'http://regionone.example.com:1234/v1'
         self._test_url_for(service_url, kwargs)
+
+    def test_url_for_with_region_name_from_context(self):
+        """
+        Test that default region name for services from context is passed
+        if region name is not specified in arguments.
+        """
+        cfg.CONF.set_override('region_name_for_services', 'RegionOne')
+        service_url = 'http://regiontwo.example.com:1234/v1'
+        region_name_for_services = 'RegionTwo'
+        expected_kwargs = {
+            'region_name': region_name_for_services
+        }
+        ctx = utils.dummy_context('test_username',
+                                  'test_tenant_id',
+                                  'password',
+                                  None,
+                                  None,
+                                  None,
+                                  region_name_for_services)
+        self._test_url_for(service_url, expected_kwargs, ctx)
 
 
 class KeystoneClientTestDomainName(KeystoneClientTest):

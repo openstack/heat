@@ -306,6 +306,9 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertEqual(3, n_depth('1e9deba9-a305-5f29-84d3-c8165647c47e'))
         self.assertEqual(0, n_depth('1a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9'))
 
+    def _check_049(self, engine, data):
+        self.assertColumnExists(engine, 'user_creds', 'region_name')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

@@ -401,8 +401,8 @@ class KeystoneClientV3(object):
         body = {'auth': {'scope':
                          {'project': {'id': project_id}},
                          'identity': {'password': {'user': {
-                         'domain': domain,
-                         'password': password, 'name': username}},
+                             'domain': domain,
+                             'password': password, 'name': username}},
                              'methods': ['password']}}}
         t = sess.post(token_url, headers=headers, json=body,
                       authenticated=False)
@@ -656,7 +656,8 @@ class KeystoneClientV3(object):
         self.domain_admin_client.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
-        default_region_name = cfg.CONF.region_name_for_services
+        default_region_name = (self.context.region_name or
+                               cfg.CONF.region_name_for_services)
         kwargs.setdefault('region_name', default_region_name)
         return self.client.service_catalog.url_for(**kwargs)
 
