@@ -19,7 +19,7 @@ from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
 from heat.common import policy
 from heat.common import wsgi
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.tests import common
 from heat.tests import utils
@@ -442,9 +442,9 @@ class WatchControllerTest(common.HeatTestCase):
         self.assertEqual(expected, self.controller.put_metric_data(dummy_req))
 
     def test_set_alarm_state(self):
-        state_map = {'OK': engine_api.WATCH_STATE_OK,
-                     'ALARM': engine_api.WATCH_STATE_ALARM,
-                     'INSUFFICIENT_DATA': engine_api.WATCH_STATE_NODATA}
+        state_map = {'OK': rpc_api.WATCH_STATE_OK,
+                     'ALARM': rpc_api.WATCH_STATE_ALARM,
+                     'INSUFFICIENT_DATA': rpc_api.WATCH_STATE_NODATA}
 
         for state in state_map.keys():
             params = {u'StateValue': state,
@@ -499,7 +499,7 @@ class WatchControllerTest(common.HeatTestCase):
         ]
         cfg.CONF.register_opts(opts)
         cfg.CONF.set_default('host', 'host')
-        self.topic = engine_api.ENGINE_TOPIC
+        self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
 
         # Create WSGI controller instance

@@ -29,7 +29,7 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.common import wsgi
 from heat.openstack.common import log as logging
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -117,25 +117,25 @@ class StackController(object):
             """
             # Map the engine-api format to the AWS StackSummary datatype
             keymap = {
-                engine_api.STACK_CREATION_TIME: 'CreationTime',
-                engine_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
-                engine_api.STACK_ID: 'StackId',
-                engine_api.STACK_NAME: 'StackName',
-                engine_api.STACK_STATUS_DATA: 'StackStatusReason',
-                engine_api.STACK_TMPL_DESCRIPTION: 'TemplateDescription',
+                rpc_api.STACK_CREATION_TIME: 'CreationTime',
+                rpc_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
+                rpc_api.STACK_ID: 'StackId',
+                rpc_api.STACK_NAME: 'StackName',
+                rpc_api.STACK_STATUS_DATA: 'StackStatusReason',
+                rpc_api.STACK_TMPL_DESCRIPTION: 'TemplateDescription',
             }
 
             result = api_utils.reformat_dict_keys(keymap, s)
 
-            action = s[engine_api.STACK_ACTION]
-            status = s[engine_api.STACK_STATUS]
+            action = s[rpc_api.STACK_ACTION]
+            status = s[rpc_api.STACK_STATUS]
             result['StackStatus'] = '_'.join((action, status))
 
             # AWS docs indicate DeletionTime is omitted for current stacks
             # This is still TODO(unknown) in the engine, we don't keep data for
             # stacks after they are deleted
-            if engine_api.STACK_DELETION_TIME in s:
-                result['DeletionTime'] = s[engine_api.STACK_DELETION_TIME]
+            if rpc_api.STACK_DELETION_TIME in s:
+                result['DeletionTime'] = s[rpc_api.STACK_DELETION_TIME]
 
             return self._id_format(result)
 
@@ -158,9 +158,9 @@ class StackController(object):
 
         def format_stack_outputs(o):
             keymap = {
-                engine_api.OUTPUT_DESCRIPTION: 'Description',
-                engine_api.OUTPUT_KEY: 'OutputKey',
-                engine_api.OUTPUT_VALUE: 'OutputValue',
+                rpc_api.OUTPUT_DESCRIPTION: 'Description',
+                rpc_api.OUTPUT_KEY: 'OutputKey',
+                rpc_api.OUTPUT_VALUE: 'OutputValue',
             }
 
             def replacecolon(d):
@@ -185,33 +185,33 @@ class StackController(object):
             Reformat engine output into the AWS "StackSummary" format
             """
             keymap = {
-                engine_api.STACK_CAPABILITIES: 'Capabilities',
-                engine_api.STACK_CREATION_TIME: 'CreationTime',
-                engine_api.STACK_DESCRIPTION: 'Description',
-                engine_api.STACK_DISABLE_ROLLBACK: 'DisableRollback',
-                engine_api.STACK_NOTIFICATION_TOPICS: 'NotificationARNs',
-                engine_api.STACK_PARAMETERS: 'Parameters',
-                engine_api.STACK_ID: 'StackId',
-                engine_api.STACK_NAME: 'StackName',
-                engine_api.STACK_STATUS_DATA: 'StackStatusReason',
-                engine_api.STACK_TIMEOUT: 'TimeoutInMinutes',
+                rpc_api.STACK_CAPABILITIES: 'Capabilities',
+                rpc_api.STACK_CREATION_TIME: 'CreationTime',
+                rpc_api.STACK_DESCRIPTION: 'Description',
+                rpc_api.STACK_DISABLE_ROLLBACK: 'DisableRollback',
+                rpc_api.STACK_NOTIFICATION_TOPICS: 'NotificationARNs',
+                rpc_api.STACK_PARAMETERS: 'Parameters',
+                rpc_api.STACK_ID: 'StackId',
+                rpc_api.STACK_NAME: 'StackName',
+                rpc_api.STACK_STATUS_DATA: 'StackStatusReason',
+                rpc_api.STACK_TIMEOUT: 'TimeoutInMinutes',
             }
 
-            if s[engine_api.STACK_UPDATED_TIME] is not None:
-                keymap[engine_api.STACK_UPDATED_TIME] = 'LastUpdatedTime'
+            if s[rpc_api.STACK_UPDATED_TIME] is not None:
+                keymap[rpc_api.STACK_UPDATED_TIME] = 'LastUpdatedTime'
 
             result = api_utils.reformat_dict_keys(keymap, s)
 
-            action = s[engine_api.STACK_ACTION]
-            status = s[engine_api.STACK_STATUS]
+            action = s[rpc_api.STACK_ACTION]
+            status = s[rpc_api.STACK_STATUS]
             result['StackStatus'] = '_'.join((action, status))
 
             # Reformat outputs, these are handled separately as they are
             # only present in the engine output for a completely created
             # stack
             result['Outputs'] = []
-            if engine_api.STACK_OUTPUTS in s:
-                for o in s[engine_api.STACK_OUTPUTS]:
+            if rpc_api.STACK_OUTPUTS in s:
+                for o in s[rpc_api.STACK_OUTPUTS]:
                     result['Outputs'].append(format_stack_outputs(o))
 
             # Reformat Parameters dict-of-dict into AWS API format
@@ -286,8 +286,8 @@ class StackController(object):
             the AWS defined parameters (both here and in the engine)
             """
             # TODO(shardy) : Capabilities, NotificationARNs
-            keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT,
-                      'DisableRollback': engine_api.PARAM_DISABLE_ROLLBACK}
+            keymap = {'TimeoutInMinutes': rpc_api.PARAM_TIMEOUT,
+                      'DisableRollback': rpc_api.PARAM_DISABLE_ROLLBACK}
 
             if 'DisableRollback' in params and 'OnFailure' in params:
                 msg = _('DisableRollback and OnFailure '
@@ -303,9 +303,9 @@ class StackController(object):
             if 'OnFailure' in params:
                 value = params['OnFailure']
                 if value == 'DO_NOTHING':
-                    result[engine_api.PARAM_DISABLE_ROLLBACK] = 'true'
+                    result[rpc_api.PARAM_DISABLE_ROLLBACK] = 'true'
                 elif value in ('ROLLBACK', 'DELETE'):
-                    result[engine_api.PARAM_DISABLE_ROLLBACK] = 'false'
+                    result[rpc_api.PARAM_DISABLE_ROLLBACK] = 'false'
 
             return result
 
@@ -445,9 +445,9 @@ class StackController(object):
 
             return {
                 'ParameterKey': key,
-                'DefaultValue': value.get(engine_api.PARAM_DEFAULT, ''),
-                'Description': value.get(engine_api.PARAM_DESCRIPTION, ''),
-                'NoEcho': value.get(engine_api.PARAM_NO_ECHO, 'false')
+                'DefaultValue': value.get(rpc_api.PARAM_DEFAULT, ''),
+                'Description': value.get(rpc_api.PARAM_DESCRIPTION, ''),
+                'NoEcho': value.get(rpc_api.PARAM_NO_ECHO, 'false')
             }
 
         try:
@@ -494,20 +494,20 @@ class StackController(object):
             Reformat engine output into the AWS "StackEvent" format
             """
             keymap = {
-                engine_api.EVENT_ID: 'EventId',
-                engine_api.EVENT_RES_NAME: 'LogicalResourceId',
-                engine_api.EVENT_RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.EVENT_RES_PROPERTIES: 'ResourceProperties',
-                engine_api.EVENT_RES_STATUS_DATA: 'ResourceStatusReason',
-                engine_api.EVENT_RES_TYPE: 'ResourceType',
-                engine_api.EVENT_STACK_ID: 'StackId',
-                engine_api.EVENT_STACK_NAME: 'StackName',
-                engine_api.EVENT_TIMESTAMP: 'Timestamp',
+                rpc_api.EVENT_ID: 'EventId',
+                rpc_api.EVENT_RES_NAME: 'LogicalResourceId',
+                rpc_api.EVENT_RES_PHYSICAL_ID: 'PhysicalResourceId',
+                rpc_api.EVENT_RES_PROPERTIES: 'ResourceProperties',
+                rpc_api.EVENT_RES_STATUS_DATA: 'ResourceStatusReason',
+                rpc_api.EVENT_RES_TYPE: 'ResourceType',
+                rpc_api.EVENT_STACK_ID: 'StackId',
+                rpc_api.EVENT_STACK_NAME: 'StackName',
+                rpc_api.EVENT_TIMESTAMP: 'Timestamp',
             }
 
             result = api_utils.reformat_dict_keys(keymap, e)
-            action = e[engine_api.EVENT_RES_ACTION]
-            status = e[engine_api.EVENT_RES_STATUS]
+            action = e[rpc_api.EVENT_RES_ACTION]
+            status = e[rpc_api.EVENT_RES_STATUS]
             result['ResourceStatus'] = '_'.join((action, status))
             result['ResourceProperties'] = json.dumps(result[
                                                       'ResourceProperties'])
@@ -529,8 +529,8 @@ class StackController(object):
 
     @staticmethod
     def _resource_status(res):
-        action = res[engine_api.RES_ACTION]
-        status = res[engine_api.RES_STATUS]
+        action = res[rpc_api.RES_ACTION]
+        status = res[rpc_api.RES_STATUS]
         return '_'.join((action, status))
 
     def describe_stack_resource(self, req):
@@ -543,15 +543,15 @@ class StackController(object):
         def format_resource_detail(r):
             # Reformat engine output into the AWS "StackResourceDetail" format
             keymap = {
-                engine_api.RES_DESCRIPTION: 'Description',
-                engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
-                engine_api.RES_NAME: 'LogicalResourceId',
-                engine_api.RES_METADATA: 'Metadata',
-                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
-                engine_api.RES_TYPE: 'ResourceType',
-                engine_api.RES_STACK_ID: 'StackId',
-                engine_api.RES_STACK_NAME: 'StackName',
+                rpc_api.RES_DESCRIPTION: 'Description',
+                rpc_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
+                rpc_api.RES_NAME: 'LogicalResourceId',
+                rpc_api.RES_METADATA: 'Metadata',
+                rpc_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                rpc_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                rpc_api.RES_TYPE: 'ResourceType',
+                rpc_api.RES_STACK_ID: 'StackId',
+                rpc_api.RES_STACK_NAME: 'StackName',
             }
 
             result = api_utils.reformat_dict_keys(keymap, r)
@@ -601,14 +601,14 @@ class StackController(object):
             Reformat engine output into the AWS "StackResource" format
             """
             keymap = {
-                engine_api.RES_DESCRIPTION: 'Description',
-                engine_api.RES_NAME: 'LogicalResourceId',
-                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
-                engine_api.RES_TYPE: 'ResourceType',
-                engine_api.RES_STACK_ID: 'StackId',
-                engine_api.RES_STACK_NAME: 'StackName',
-                engine_api.RES_UPDATED_TIME: 'Timestamp',
+                rpc_api.RES_DESCRIPTION: 'Description',
+                rpc_api.RES_NAME: 'LogicalResourceId',
+                rpc_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                rpc_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                rpc_api.RES_TYPE: 'ResourceType',
+                rpc_api.RES_STACK_ID: 'StackId',
+                rpc_api.RES_STACK_NAME: 'StackName',
+                rpc_api.RES_UPDATED_TIME: 'Timestamp',
             }
 
             result = api_utils.reformat_dict_keys(keymap, r)
@@ -656,11 +656,11 @@ class StackController(object):
             Reformat engine output into the AWS "StackResourceSummary" format
             """
             keymap = {
-                engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
-                engine_api.RES_NAME: 'LogicalResourceId',
-                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
-                engine_api.RES_TYPE: 'ResourceType',
+                rpc_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
+                rpc_api.RES_NAME: 'LogicalResourceId',
+                rpc_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                rpc_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                rpc_api.RES_TYPE: 'ResourceType',
             }
 
             result = api_utils.reformat_dict_keys(keymap, r)

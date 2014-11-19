@@ -31,7 +31,7 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.common import wsgi
 from heat.openstack.common import log as logging
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class InstantiationData(object):
         """
         self.data = data
         if patch:
-            self.data[engine_api.PARAM_EXISTING] = True
+            self.data[rpc_api.PARAM_EXISTING] = True
 
     @staticmethod
     def format_parse(data, data_type):
@@ -98,8 +98,8 @@ class InstantiationData(object):
         Get template file contents, either inline, from stack adopt data or
         from a URL, in JSON or YAML format.
         """
-        if engine_api.PARAM_ADOPT_STACK_DATA in self.data:
-            adopt_data = self.data[engine_api.PARAM_ADOPT_STACK_DATA]
+        if rpc_api.PARAM_ADOPT_STACK_DATA in self.data:
+            adopt_data = self.data[rpc_api.PARAM_ADOPT_STACK_DATA]
             try:
                 adopt_data = template_format.simple_parse(adopt_data)
                 return adopt_data['template']
@@ -190,15 +190,15 @@ class StackController(object):
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
 
         show_deleted = False
-        if engine_api.PARAM_SHOW_DELETED in params:
-            params[engine_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
-                params[engine_api.PARAM_SHOW_DELETED])
-            show_deleted = params[engine_api.PARAM_SHOW_DELETED]
+        if rpc_api.PARAM_SHOW_DELETED in params:
+            params[rpc_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
+                params[rpc_api.PARAM_SHOW_DELETED])
+            show_deleted = params[rpc_api.PARAM_SHOW_DELETED]
         show_nested = False
-        if engine_api.PARAM_SHOW_NESTED in params:
-            params[engine_api.PARAM_SHOW_NESTED] = param_utils.extract_bool(
-                params[engine_api.PARAM_SHOW_NESTED])
-            show_nested = params[engine_api.PARAM_SHOW_NESTED]
+        if rpc_api.PARAM_SHOW_NESTED in params:
+            params[rpc_api.PARAM_SHOW_NESTED] = param_utils.extract_bool(
+                params[rpc_api.PARAM_SHOW_NESTED])
+            show_nested = params[rpc_api.PARAM_SHOW_NESTED]
         # get the with_count value, if invalid, raise ValueError
         with_count = False
         if req.params.get('with_count'):
@@ -287,7 +287,7 @@ class StackController(object):
 
         formatted_stack = stacks_view.format_stack(
             req,
-            {engine_api.STACK_ID: result}
+            {rpc_api.STACK_ID: result}
         )
         return {'stack': formatted_stack}
 

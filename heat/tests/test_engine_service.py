@@ -47,7 +47,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc
@@ -1014,8 +1014,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
-        api_args = {engine_api.PARAM_TIMEOUT: 60,
-                    engine_api.PARAM_EXISTING: True}
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        wp_template_no_default, no_params,
                                        None, api_args)
@@ -2766,7 +2766,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(ex.exc_info[0], exception.WatchRuleNotFound)
 
         # Check the response has all keys defined in the engine API
-        for key in engine_api.WATCH_KEYS:
+        for key in rpc_api.WATCH_KEYS:
             self.assertIn(key, result[0])
 
     @stack_context('service_show_watch_metric_test_stack', False)
@@ -2812,7 +2812,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(2, len(result))
 
         # Check the response has all keys defined in the engine API
-        for key in engine_api.WATCH_DATA_KEYS:
+        for key in rpc_api.WATCH_DATA_KEYS:
             self.assertIn(key, result[0])
 
     @stack_context('service_show_watch_state_test_stack')
@@ -2854,7 +2854,7 @@ class StackServiceTest(common.HeatTestCase):
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
         self.assertEqual(
             [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
 
@@ -2862,7 +2862,7 @@ class StackServiceTest(common.HeatTestCase):
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
         self.assertEqual(
             [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
 
@@ -2870,7 +2870,7 @@ class StackServiceTest(common.HeatTestCase):
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual(state, result[rpc_api.WATCH_STATE_VALUE])
         self.assertEqual(
             [dummy_action.signal],
             self.eng.thread_group_mgr.groups[self.stack.id].threads)

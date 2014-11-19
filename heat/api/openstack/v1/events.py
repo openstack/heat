@@ -20,17 +20,17 @@ from heat.common.i18n import _
 from heat.common import identifier
 from heat.common import serializers
 from heat.common import wsgi
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 
 
 summary_keys = [
-    engine_api.EVENT_ID,
-    engine_api.EVENT_TIMESTAMP,
-    engine_api.EVENT_RES_NAME,
-    engine_api.EVENT_RES_STATUS,
-    engine_api.EVENT_RES_STATUS_DATA,
-    engine_api.EVENT_RES_PHYSICAL_ID,
+    rpc_api.EVENT_ID,
+    rpc_api.EVENT_TIMESTAMP,
+    rpc_api.EVENT_RES_NAME,
+    rpc_api.EVENT_RES_STATUS,
+    rpc_api.EVENT_RES_STATUS_DATA,
+    rpc_api.EVENT_RES_PHYSICAL_ID,
 ]
 
 
@@ -41,7 +41,7 @@ def format_event(req, event, keys=None):
         if not include_key(key):
             return
 
-        if key == engine_api.EVENT_ID:
+        if key == rpc_api.EVENT_ID:
             identity = identifier.EventIdentifier(**value)
             yield ('id', identity.event_id)
             yield ('links', [util.make_link(req, identity),
@@ -49,16 +49,16 @@ def format_event(req, event, keys=None):
                                             'resource'),
                              util.make_link(req, identity.stack(),
                                             'stack')])
-        elif key in (engine_api.EVENT_STACK_ID, engine_api.EVENT_STACK_NAME,
-                     engine_api.EVENT_RES_ACTION):
+        elif key in (rpc_api.EVENT_STACK_ID, rpc_api.EVENT_STACK_NAME,
+                     rpc_api.EVENT_RES_ACTION):
             return
-        elif (key == engine_api.EVENT_RES_STATUS and
-              engine_api.EVENT_RES_ACTION in event):
+        elif (key == rpc_api.EVENT_RES_STATUS and
+              rpc_api.EVENT_RES_ACTION in event):
             # To avoid breaking API compatibility, we join RES_ACTION
             # and RES_STATUS, so the API format doesn't expose the
             # internal split of state into action/status
-            yield (key, '_'.join((event[engine_api.EVENT_RES_ACTION], value)))
-        elif (key == engine_api.RES_NAME):
+            yield (key, '_'.join((event[rpc_api.EVENT_RES_ACTION], value)))
+        elif (key == rpc_api.RES_NAME):
             yield ('logical_resource_id', value)
             yield (key, value)
 
@@ -121,7 +121,7 @@ class EventController(object):
             events = self._event_list(req, identity,
                                       filters=filter_params, **params)
         else:
-            res_match = lambda e: e[engine_api.EVENT_RES_NAME] == resource_name
+            res_match = lambda e: e[rpc_api.EVENT_RES_NAME] == resource_name
 
             events = self._event_list(req, identity, res_match,
                                       filters=filter_params, **params)
@@ -138,8 +138,8 @@ class EventController(object):
         """
 
         def event_match(ev):
-            identity = identifier.EventIdentifier(**ev[engine_api.EVENT_ID])
-            return (ev[engine_api.EVENT_RES_NAME] == resource_name and
+            identity = identifier.EventIdentifier(**ev[rpc_api.EVENT_ID])
+            return (ev[rpc_api.EVENT_RES_NAME] == resource_name and
                     identity.event_id == event_id)
 
         events = self._event_list(req, identity, event_match, True)
