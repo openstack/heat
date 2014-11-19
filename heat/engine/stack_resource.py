@@ -25,6 +25,8 @@ from heat.engine import stack as parser
 from heat.engine import template
 from heat.openstack.common import log as logging
 
+cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
+
 LOG = logging.getLogger(__name__)
 
 
@@ -186,11 +188,14 @@ class StackResource(resource.Resource):
         self.resource_id_set(nested_id)
 
         action = self._nested.CREATE
+        error_wait_time = cfg.CONF.error_wait_time
         if adopt_data:
             action = self._nested.ADOPT
+            error_wait_time = None
 
         stack_creator = scheduler.TaskRunner(self._nested.stack_task,
-                                             action=action)
+                                             action=action,
+                                             error_wait_time=error_wait_time)
         stack_creator.start(timeout=self._nested.timeout_secs())
         return stack_creator
 
