@@ -95,8 +95,11 @@ class MultipartMime(software_config.SoftwareConfig):
     message = None
 
     def handle_create(self):
-        props = {self.NAME: self.physical_resource_name()}
-        props[self.CONFIG] = self.get_message()
+        props = {
+            self.NAME: self.physical_resource_name(),
+            self.CONFIG: self.get_message(),
+            self.GROUP: 'Heat::Ungrouped'
+        }
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
 
