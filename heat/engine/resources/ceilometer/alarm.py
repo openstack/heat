@@ -347,7 +347,7 @@ class CombinationAlarm(resource.Resource):
 
     def _reformat_properties(self, properties):
         combination_rule = {}
-        for name in [self.ALARM_IDS, self.OPERATOR, REPEAT_ACTIONS]:
+        for name in [self.ALARM_IDS, self.OPERATOR]:
             value = properties.pop(name, None)
             if value:
                 combination_rule[name] = value
