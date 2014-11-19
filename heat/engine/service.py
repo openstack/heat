@@ -573,7 +573,7 @@ class EngineService(service.Service):
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, args, owner_id=None,
-                                           nested_depth=0):
+                                           nested_depth=0, user_creds_id=None):
         tmpl = templatem.Template(template, files=files)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -589,6 +589,7 @@ class EngineService(service.Service):
         stack = parser.Stack(cnxt, stack_name, tmpl, env,
                              owner_id=owner_id,
                              nested_depth=nested_depth,
+                             user_creds_id=user_creds_id,
                              **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
@@ -623,7 +624,7 @@ class EngineService(service.Service):
 
     @request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args,
-                     owner_id=None, nested_depth=0):
+                     owner_id=None, nested_depth=0, user_creds_id=None):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -640,6 +641,7 @@ class EngineService(service.Service):
                          called from another heat-engine (not a user option)
         :param nested_depth: the nested depth for nested stacks, only expected
                          when called from another heat-engine
+        :param user_creds_id: the parent user_creds record for nested stacks
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
@@ -672,7 +674,8 @@ class EngineService(service.Service):
                                                         files,
                                                         args,
                                                         owner_id,
-                                                        nested_depth)
+                                                        nested_depth,
+                                                        user_creds_id)
 
         stack.store()
 
