@@ -13,7 +13,7 @@
 #    under the License.
 
 import datetime
-from distutils.version import LooseVersion
+from distutils import version
 import errno
 import logging
 import os
@@ -27,8 +27,9 @@ LOG = logging.getLogger('heat-provision')
 
 
 def chk_ci_version():
-    v = LooseVersion(pkg_resources.get_distribution('cloud-init').version)
-    return v >= LooseVersion('0.6.0')
+    v = version.LooseVersion(
+        pkg_resources.get_distribution('cloud-init').version)
+    return v >= version.LooseVersion('0.6.0')
 
 
 def init_logging():
