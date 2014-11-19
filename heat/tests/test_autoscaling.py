@@ -14,6 +14,7 @@
 import copy
 import datetime
 
+import mock
 import mox
 from oslo.config import cfg
 from oslo.utils import timeutils
@@ -26,6 +27,7 @@ from heat.common import template_format
 from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine.resources.aws import autoscaling_group as asg
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
@@ -71,6 +73,16 @@ class AutoScalingTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=self.params)
+        self.defn = rsrc_defn.ResourceDefinition(
+            'asg', 'AWS::AutoScaling::AutoScalingGroup',
+            {'AvailabilityZones': ['nova'],
+             'LaunchConfigurationName': 'config',
+             'MaxSize': 5,
+             'MinSize': 1,
+             'DesiredCapacity': 2})
+        self.asg = asg.AutoScalingGroup('asg', self.defn, stack)
 
     def create_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
@@ -490,6 +502,15 @@ class AutoScalingTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_update_in_failed(self):
+        self.asg.state_set('CREATE', 'FAILED')
+        # to update the failed asg
+        self.asg.adjust = mock.Mock(return_value=None)
+
+        self.asg.handle_update(self.defn, None, None)
+        self.asg.adjust.assert_called_once_with(
+            2, adjustment_type='ExactCapacity')
+
     def test_lb_reload_static_resolve(self):
         t = template_format.parse(as_template)
         properties = t['Resources']['ElasticLoadBalancer']['Properties']
@@ -710,7 +731,7 @@ class AutoScalingTest(common.HeatTestCase):
         up_policy.metadata_get().AndReturn(previous_meta)
         rsrc.metadata_get().AndReturn(previous_meta)
 
-        #stub for the metadata accesses while creating the two instances
+        # stub for the metadata accesses while creating the two instances
         resource.Resource.metadata_get()
         resource.Resource.metadata_get()
 
