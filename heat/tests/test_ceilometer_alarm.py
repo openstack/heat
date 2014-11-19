@@ -397,8 +397,9 @@ class CombinationAlarmTest(HeatTestCase):
             insufficient_data_actions=None,
             ok_actions=None,
             name=mox.IgnoreArg(), type='combination',
+            repeat_actions=True,
             combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
-                              'operator': u'and', 'repeat_actions': True}
+                              'operator': u'and'}
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
         stack = utils.parse_stack(snippet)
