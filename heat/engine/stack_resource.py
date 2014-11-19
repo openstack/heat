@@ -358,5 +358,7 @@ class StackResource(resource.Resource):
         schema_names = ([prop for prop in self.properties_schema] +
                         [at for at in self.attributes_schema])
         schema_hash = hashlib.sha1(';'.join(schema_names))
-        templ_hash = hashlib.sha1(jsonutils.dumps(self.child_template()))
-        return (schema_hash.hexdigest(), templ_hash.hexdigest())
+        definition = {'template': self.child_template(),
+                      'files': self.stack.t.files}
+        definition_hash = hashlib.sha1(jsonutils.dumps(definition))
+        return (schema_hash.hexdigest(), definition_hash.hexdigest())
