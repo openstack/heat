@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-30 06:00+0000\n"
-"PO-Revision-Date: 2014-10-28 09:52+0000\n"
-"Last-Translator: Maxime COQUEREL <max.coquerel@gmail.com>\n"
+"POT-Creation-Date: 2014-11-19 06:00+0000\n"
+"PO-Revision-Date: 2014-11-18 11:39+0000\n"
+"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
 "Language: fr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: heat/api/aws/ec2token.py:162
+#: heat/api/aws/ec2token.py:161
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 "Échec de l’autorisation Ec2Token, pas auth_uri spécifié dans le fichier de "
@@ -61,8 +61,18 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:342
-#: heat/common/heat_keystoneclient.py:429
+#: heat/common/heat_keystoneclient.py:323
+#, python-format
+msgid "Can't find domain id for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:327
+#, python-format
+msgid "Multiple domain ids were found for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:358
+#: heat/common/heat_keystoneclient.py:445
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -87,7 +97,7 @@ msgstr ""
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(opname) %(ci)s échec pour  %(a)s sur %(sid)s"
 
-#: heat/common/plugin_loader.py:97
+#: heat/common/plugin_loader.py:99
 #, python-format
 msgid "Failed to import module %s"
 msgstr "Echec lors de l'import du module %s"
@@ -96,17 +106,17 @@ msgstr "Echec lors de l'import du module %s"
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:436
+#: heat/engine/environment.py:455
 #, python-format
 msgid "Failed to read %s"
 msgstr "Echec de lecture %s"
 
-#: heat/engine/environment.py:448
+#: heat/engine/environment.py:467
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "Echec d'analyse  %(file_path)s"
 
-#: heat/engine/environment.py:452
+#: heat/engine/environment.py:471
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "Echec de lecture %(file_path)s"
@@ -121,7 +131,7 @@ msgstr "Echec de chargement %(mapping_name)s depuis %(module)s"
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "Type invalide pour  %(mapping_name)s depuis %(module)s"
 
-#: heat/engine/resource.py:898 heat/engine/resource.py:925
+#: heat/engine/resource.py:922 heat/engine/resource.py:949
 #, python-format
 msgid "DB error %s"
 msgstr "Erreur base de donné %s"
@@ -131,21 +141,21 @@ msgstr "Erreur base de donné %s"
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "Impossible de récupérer la stack %s pour la tache périodique"
 
-#: heat/engine/service.py:1355
+#: heat/engine/service.py:1356
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/stack.py:710
+#: heat/engine/stack.py:723
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "Action inattendu %s à mettre à jour!"
 
-#: heat/engine/stack.py:831
+#: heat/engine/stack.py:845
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "Action inattendu %s à supprimer!"
 
-#: heat/engine/stack.py:1096
+#: heat/engine/stack.py:1110
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "Ressource %(name)s échec de suppression: %(ex)s"
@@ -170,16 +180,6 @@ msgstr ""
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "Echec de validation de metadata pour %s"
-
-#: heat/openstack/common/excutils.py:76
-#, python-format
-msgid "Original exception being dropped: %s"
-msgstr "Exception d'origine en cours de suppression : %s"
-
-#: heat/openstack/common/excutils.py:105
-#, python-format
-msgid "Unexpected exception occurred %d time(s)... retrying."
-msgstr "Exception inattendue survenue %d fois... Nouvel essai."
 
 #: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"

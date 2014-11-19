@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-26 06:00+0000\n"
-"PO-Revision-Date: 2014-10-24 01:08+0000\n"
+"POT-Creation-Date: 2014-11-19 06:00+0000\n"
+"PO-Revision-Date: 2014-11-18 11:39+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: heat/api/aws/ec2token.py:162
+#: heat/api/aws/ec2token.py:161
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
@@ -57,8 +57,18 @@ msgstr "신뢰할 수 있는 token 재설정 실패!"
 msgid "Trust impersonation failed"
 msgstr "트러스트의 위장이 실패했습니다."
 
-#: heat/common/heat_keystoneclient.py:342
-#: heat/common/heat_keystoneclient.py:429
+#: heat/common/heat_keystoneclient.py:323
+#, python-format
+msgid "Can't find domain id for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:327
+#, python-format
+msgid "Multiple domain ids were found for %s!"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:358
+#: heat/common/heat_keystoneclient.py:445
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -83,7 +93,7 @@ msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 �
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
 
-#: heat/common/plugin_loader.py:97
+#: heat/common/plugin_loader.py:99
 #, python-format
 msgid "Failed to import module %s"
 msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
@@ -92,17 +102,17 @@ msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
-#: heat/engine/environment.py:436
+#: heat/engine/environment.py:455
 #, python-format
 msgid "Failed to read %s"
 msgstr "%s를 읽지 못했습니다."
 
-#: heat/engine/environment.py:448
+#: heat/engine/environment.py:467
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "%(file_path)s를 구문 분석하는 데 실패했습니다."
 
-#: heat/engine/environment.py:452
+#: heat/engine/environment.py:471
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "%(file_path)s를 읽는데 실패했습니다. "
@@ -117,7 +127,7 @@ msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#: heat/engine/resource.py:898 heat/engine/resource.py:925
+#: heat/engine/resource.py:922 heat/engine/resource.py:949
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
@@ -127,21 +137,21 @@ msgstr "DB %s에 오류가 있습니다. "
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/service.py:1355
+#: heat/engine/service.py:1356
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
-#: heat/engine/stack.py:710
+#: heat/engine/stack.py:723
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:829
+#: heat/engine/stack.py:845
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1068
+#: heat/engine/stack.py:1110
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
@@ -169,16 +179,6 @@ msgstr ""
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
-
-#: heat/openstack/common/excutils.py:76
-#, python-format
-msgid "Original exception being dropped: %s"
-msgstr "기존 예외가 삭제됨: %s"
-
-#: heat/openstack/common/excutils.py:105
-#, python-format
-msgid "Unexpected exception occurred %d time(s)... retrying."
-msgstr "예기치 않은 예외 %d 번 발생하였습니다... 다시 시도중."
 
 #: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
