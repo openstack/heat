@@ -138,7 +138,10 @@ class OSDBInstance(resource.Resource):
                         _('Name or UUID of Neutron port to attach this '
                           'NIC to. '
                           'Either %(port)s or %(net)s must be specified.') % {
-                              'port': PORT, 'net': NET}
+                              'port': PORT, 'net': NET},
+                        constraints=[
+                            constraints.CustomConstraint('neutron.port')
+                        ],
                     ),
                     V4_FIXED_IP: properties.Schema(
                         properties.Schema.STRING,

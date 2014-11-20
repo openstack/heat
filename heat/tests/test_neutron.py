@@ -1772,6 +1772,7 @@ class NeutronRouterTest(common.HeatTestCase):
             'ae478782-53c0-4434-ab16-49900c88016c',
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.stub_PortConstraint_validate()
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
@@ -2400,6 +2401,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.stub_PortConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -2550,6 +2552,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndRaise(qe.PortNotFoundClient(status_code=404))
+        self.stub_PortConstraint_validate()
 
         self.m.ReplayAll()
 

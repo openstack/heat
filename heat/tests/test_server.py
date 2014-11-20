@@ -1060,6 +1060,7 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
         error = self.assertRaises(exception.ResourcePropertyConflict,
@@ -2463,6 +2464,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach(new_networks[0]['port'],
                                        None, None).AndReturn(None)
+        self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()
@@ -2535,7 +2537,7 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_attach(
             new_networks[0]['port'], None, None).AndReturn(None)
         self.stub_NetworkConstraint_validate()
-
+        self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()
@@ -2598,6 +2600,7 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_attach(
             new_networks[1]['port'], None, None).AndReturn(None)
         self.stub_NetworkConstraint_validate()
+        self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()

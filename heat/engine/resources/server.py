@@ -240,7 +240,10 @@ class Server(stack_user.StackUser):
                     NETWORK_PORT: properties.Schema(
                         properties.Schema.STRING,
                         _('ID of an existing port to associate with this '
-                          'server.')
+                          'server.'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.port')
+                        ]
                     ),
                 },
             ),
