@@ -37,10 +37,12 @@ class SaharaNodeGroupTemplate(resource.Resource):
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, FLAVOR, DESCRIPTION,
         VOLUMES_PER_NODE, VOLUMES_SIZE, VOLUME_TYPE,
+        SECURITY_GROUPS, AUTO_SECURITY_GROUP,
         NODE_PROCESSES, FLOATING_IP_POOL, NODE_CONFIGS,
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'flavor', 'description',
         'volumes_per_node', 'volumes_size', 'volume_type',
+        'security_groups', 'auto_security_group',
         'node_processes', 'floating_ip_pool', 'node_configs',
     )
 
@@ -91,6 +93,19 @@ class SaharaNodeGroupTemplate(resource.Resource):
             properties.Schema.STRING,
             _("Type of the volume to create on Cinder backend."),
         ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _("List of security group names or IDs to assign to this "
+              "Node Group template."),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+            ),
+        ),
+        AUTO_SECURITY_GROUP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _("Defines whether auto-assign security group to this "
+              "Node Group template."),
+        ),
         NODE_PROCESSES: properties.Schema(
             properties.Schema.LIST,
             _("List of processes to run on every node."),
@@ -136,6 +151,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
         volumes_size = self.properties.get(self.VOLUMES_SIZE)
         volume_type = self.properties.get(self.VOLUME_TYPE)
         floating_ip_pool = self.properties.get(self.FLOATING_IP_POOL)
+        security_groups = self.properties[self.SECURITY_GROUPS]
+        auto_security_group = self.properties[self.AUTO_SECURITY_GROUP]
         if floating_ip_pool:
             floating_ip_pool = self.client_plugin(
                 'neutron').find_neutron_resource(self.properties,
@@ -152,7 +169,10 @@ class SaharaNodeGroupTemplate(resource.Resource):
             volume_type=volume_type,
             node_processes=node_processes,
             floating_ip_pool=floating_ip_pool,
-            node_configs=node_configs)
+            node_configs=node_configs,
+            security_groups=security_groups,
+            auto_security_group=auto_security_group
+        )
         LOG.info(_LI("Node Group Template '%s' has been created"),
                  node_group_template.name)
         self.resource_id_set(node_group_template.id)
