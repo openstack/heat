@@ -57,26 +57,6 @@ resources:
         super(UpdateStackTest, self).setUp()
         self.client = self.orchestration_client
 
-    def update_stack(self, stack_identifier, template, environment=None,
-                     files=None):
-        env = environment or {}
-        env_files = files or {}
-        stack_name = stack_identifier.split('/')[0]
-        self.client.stacks.update(
-            stack_id=stack_identifier,
-            stack_name=stack_name,
-            template=template,
-            files=env_files,
-            disable_rollback=True,
-            parameters={},
-            environment=env
-        )
-        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
-
-    def list_resources(self, stack_identifier):
-        resources = self.client.resources.list(stack_identifier)
-        return dict((r.resource_name, r.resource_type) for r in resources)
-
     def test_stack_update_nochange(self):
         stack_name = self._stack_rand_name()
         self.client.stacks.create(
