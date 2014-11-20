@@ -16,7 +16,7 @@
 
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone_client
-from webob.exc import HTTPUnauthorized
+from webob import exc
 
 
 class KeystonePasswordAuthProtocol(object):
@@ -56,7 +56,7 @@ class KeystonePasswordAuthProtocol(object):
     def _reject_request(self, env, start_response, auth_url):
         """Redirect client to auth server."""
         headers = [('WWW-Authenticate', 'Keystone uri=\'%s\'' % auth_url)]
-        resp = HTTPUnauthorized('Authentication required', headers)
+        resp = exc.HTTPUnauthorized('Authentication required', headers)
         return resp(env, start_response)
 
     def _build_user_headers(self, token_info):

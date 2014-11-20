@@ -13,7 +13,7 @@
 
 """Keystone Client functionality for use by resources."""
 
-from collections import namedtuple
+import collections
 import copy
 import json
 from oslo.utils import importutils
@@ -34,7 +34,7 @@ from heat.openstack.common import log as logging
 
 LOG = logging.getLogger('heat.common.keystoneclient')
 
-AccessKey = namedtuple('AccessKey', ['id', 'access', 'secret'])
+AccessKey = collections.namedtuple('AccessKey', ['id', 'access', 'secret'])
 
 _default_keystone_backend = "heat.common.heat_keystoneclient.KeystoneClientV3"
 

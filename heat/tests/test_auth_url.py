@@ -16,6 +16,7 @@
 
 import mock
 import webob
+from webob import exc
 
 from heat.common import auth_url
 from heat.tests import common
@@ -83,11 +84,11 @@ class AuthUrlFilterTest(common.HeatTestCase):
         self.assertTrue(mock_validate.called)
 
     def test_validate_auth_url_with_missing_url(self):
-        self.assertRaises(auth_url.HTTPBadRequest,
+        self.assertRaises(exc.HTTPBadRequest,
                           self.middleware._validate_auth_url,
                           auth_url='')
 
-        self.assertRaises(auth_url.HTTPBadRequest,
+        self.assertRaises(exc.HTTPBadRequest,
                           self.middleware._validate_auth_url,
                           auth_url=None)
 
@@ -95,7 +96,7 @@ class AuthUrlFilterTest(common.HeatTestCase):
     def test_validate_auth_url_with_url_not_allowed(self, mock_cfg):
         mock_cfg.auth_password.allowed_auth_uris = ['foobar']
 
-        self.assertRaises(auth_url.HTTPUnauthorized,
+        self.assertRaises(exc.HTTPUnauthorized,
                           self.middleware._validate_auth_url,
                           auth_url='not foobar')
 

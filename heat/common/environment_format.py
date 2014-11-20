@@ -12,8 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
-from heat.common.template_format import yaml
-from heat.common.template_format import yaml_loader
+from heat.common import template_format
 
 
 SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
@@ -26,8 +25,9 @@ def parse(env_str):
         return {}
 
     try:
-        env = yaml.load(env_str, Loader=yaml_loader)
-    except yaml.YAMLError as yea:
+        env = template_format.yaml.load(env_str,
+                                        Loader=template_format.yaml_loader)
+    except template_format.yaml.YAMLError as yea:
         raise ValueError(yea)
     else:
         if env is None:
