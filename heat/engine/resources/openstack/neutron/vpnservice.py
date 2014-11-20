@@ -83,10 +83,16 @@ class VPNService(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 support.DEPRECATED,
                 _('Use property %s') % ROUTER),
+            constraints=[
+                constraints.CustomConstraint('neutron.router')
+            ]
         ),
         ROUTER: properties.Schema(
             properties.Schema.STRING,
             _('The router to which the vpn service will be inserted.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.router')
+            ]
         )
     }
 
