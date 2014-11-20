@@ -32,6 +32,7 @@ import pkg_resources as pkg
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
+from heat.db.sqlalchemy import models
 from heat.tests import common
 
 
@@ -318,4 +319,39 @@ class TestHeatMigrationsPostgreSQL(HeatMigrationsCheckers,
 
 class TestHeatMigrationsSQLite(HeatMigrationsCheckers,
                                test_base.DbTestCase):
+    pass
+
+
+class ModelsMigrationSyncMixin(object):
+
+    def get_metadata(self):
+        return models.BASE.metadata
+
+    def get_engine(self):
+        return self.engine
+
+    def db_sync(self, engine):
+        migration.db_sync(engine=engine)
+
+    def include_object(self, object_, name, type_, reflected, compare_to):
+        if name in ['migrate_version'] and type_ == 'table':
+            return False
+        return True
+
+
+class ModelsMigrationsSyncMysql(ModelsMigrationSyncMixin,
+                                test_migrations.ModelsMigrationsSync,
+                                test_base.MySQLOpportunisticTestCase):
+    pass
+
+
+class ModelsMigrationsSyncPostgres(ModelsMigrationSyncMixin,
+                                   test_migrations.ModelsMigrationsSync,
+                                   test_base.PostgreSQLOpportunisticTestCase):
+    pass
+
+
+class ModelsMigrationsSyncSQLite(ModelsMigrationSyncMixin,
+                                 test_migrations.ModelsMigrationsSync,
+                                 test_base.DbTestCase):
     pass
