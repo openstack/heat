@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import cinderclient.client
 import heatclient.client
 import keystoneclient.exceptions
@@ -41,15 +43,20 @@ class ClientManager(object):
         self.volume_client = self._get_volume_client()
 
     def _get_orchestration_client(self):
-        keystone = self._get_identity_client()
         region = self.conf.region
-        token = keystone.auth_token
+        endpoint = os.environ.get('HEAT_URL')
+        if os.environ.get('OS_NO_CLIENT_AUTH') == 'True':
+            token = None
+        else:
+            keystone = self._get_identity_client()
+            token = keystone.auth_token
         try:
-            endpoint = keystone.service_catalog.url_for(
-                attr='region',
-                filter_value=region,
-                service_type='orchestration',
-                endpoint_type='publicURL')
+            if endpoint is None:
+                endpoint = keystone.service_catalog.url_for(
+                    attr='region',
+                    filter_value=region,
+                    service_type='orchestration',
+                    endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             return None
         else:
