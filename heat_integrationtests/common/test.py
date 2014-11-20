@@ -324,3 +324,25 @@ class HeatIntegrationTest(testtools.TestCase):
     def list_resources(self, stack_identifier):
         resources = self.client.resources.list(stack_identifier)
         return dict((r.resource_name, r.resource_type) for r in resources)
+
+    def stack_create(self, stack_name=None, template=None, files=None,
+                     parameters=None, environment=None):
+        name = stack_name or self._stack_rand_name()
+        templ = template or self.template
+        templ_files = files or {}
+        params = parameters or {}
+        env = environment or {}
+        self.client.stacks.create(
+            stack_name=name,
+            template=templ,
+            files=templ_files,
+            disable_rollback=True,
+            parameters=params,
+            environment=env
+        )
+        self.addCleanup(self.client.stacks.delete, name)
+
+        stack = self.client.stacks.get(name)
+        stack_identifier = '%s/%s' % (name, stack.id)
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        return stack_identifier
