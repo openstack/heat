@@ -804,18 +804,23 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         # modify the pause time and test for error
-        new_pause_time = 'PT30M'
+        # the following test, effective_capacity is 12
+        # batch_count = (effective_capacity + batch_size -1)//batch_size
+        # = (12 + 2 - 1)//2 = 6
+        # if (batch_count - 1)* pause_time > stack.time_out, to raise error
+        # (6 - 1)*14*60 > 3600, so to raise error
+        new_pause_time = 'PT14M'
+        min_in_service = 10
         updt_template = json.loads(copy.deepcopy(asg_tmpl_with_updt_policy))
         group = updt_template['Resources']['WebServerGroup']
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
         policy['PauseTime'] = new_pause_time
+        policy['MinInstancesInService'] = min_in_service
         config = updt_template['Resources']['LaunchConfig']
         config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
         updated_tmpl = template_format.parse(json.dumps(updt_template))
         updated_stack = utils.parse_stack(updated_tmpl)
-        self._stub_grp_replace(num_creates_expected_on_updt=0,
-                               num_deletes_expected_on_updt=0,
-                               num_reloads_expected_on_updt=1)
+
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
