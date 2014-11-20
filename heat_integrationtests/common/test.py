@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fixtures
 import logging
 import os
 import random
@@ -28,6 +29,7 @@ from heat_integrationtests.common import exceptions
 from heat_integrationtests.common import remote_client
 
 LOG = logging.getLogger(__name__)
+_LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 
 
 def call_until_true(func, duration, sleep_for):
@@ -81,6 +83,7 @@ class HeatIntegrationTest(testtools.TestCase):
         self.compute_client = self.manager.compute_client
         self.network_client = self.manager.network_client
         self.volume_client = self.manager.volume_client
+        self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
 
     def status_timeout(self, things, thing_id, expected_status,
                        error_status='ERROR',
