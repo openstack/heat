@@ -196,3 +196,7 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_TroveFlavorConstraint_validate(self):
         validate = self.patchobject(trove.FlavorConstraint, 'validate')
         validate.return_value = True
+
+    def stub_SubnetConstraint_validate(self):
+        validate = self.patchobject(neutron.SubnetConstraint, 'validate')
+        validate.return_value = True

@@ -1783,7 +1783,7 @@ class NeutronRouterTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
         subnet_key = 'subnet_id'
         router_key = 'router_id'
-
+        self.stub_SubnetConstraint_validate()
         if resolve_router:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -1811,6 +1811,7 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_router_interface_with_old_data(self):
+        self.stub_SubnetConstraint_validate()
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -2281,6 +2282,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
     def test_port(self):
         self.stub_NetworkConstraint_validate()
+        self.stub_SubnetConstraint_validate()
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -2393,7 +2395,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234'
-        ).AndReturn('sub1234')
+        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
@@ -2575,7 +2577,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234'
-        ).AndReturn('sub1234')
+        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
@@ -2745,7 +2747,7 @@ class NeutronPortTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234'
-        ).AndReturn('sub1234')
+        ).MultipleTimes().AndReturn('sub1234')
 
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
@@ -2892,7 +2894,7 @@ class NeutronPortTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234'
-        ).AndReturn('sub1234')
+        ).MultipleTimes().AndReturn('sub1234')
         neutronclient.Client.create_port({'port': port_prop}).AndReturn(
             {'port': {
                 "status": "BUILD",
@@ -3256,7 +3258,7 @@ class NeutronPortTest(common.HeatTestCase):
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-
+        self.stub_SubnetConstraint_validate()
         self.stub_NetworkConstraint_validate()
         neutronclient.Client.update_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',

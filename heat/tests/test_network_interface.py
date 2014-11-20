@@ -114,6 +114,7 @@ class NetworkInterfaceTest(common.HeatTestCase):
         nic_rsrc = my_stack['my_nic']
 
         self.mock_show_subnet()
+        self.stub_SubnetConstraint_validate()
         self.mock_create_network_interface()
 
         update_props = {}

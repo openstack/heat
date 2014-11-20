@@ -384,6 +384,7 @@ class PoolTest(common.HeatTestCase):
 
         stvippsn = copy.deepcopy(stvipvsn)
         stvippsn['vip']['subnet_id'] = 'sub123'
+        self.stub_SubnetConstraint_validate()
 
         if resolve_neutron and with_vip_subnet:
             neutronV20.find_resourceid_by_name_or_id(
@@ -443,7 +444,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
             'pool': {
@@ -483,7 +484,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
             'pool': {
@@ -519,7 +520,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
             'pool': {
@@ -557,7 +558,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
             'pool': {
@@ -585,7 +586,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
@@ -641,15 +642,17 @@ class PoolTest(common.HeatTestCase):
         stack = utils.parse_stack(snippet)
         resource_defns = stack.t.resource_definitions(stack)
         resource = loadbalancer.Pool('pool', resource_defns['pool'], stack)
-
+        self.stub_SubnetConstraint_validate()
+        self.m.ReplayAll()
         self.assertIsNone(resource.validate())
+        self.m.VerifyAll()
 
     def test_properties_are_prepared_for_session_persistence(self):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
 
         neutronclient.Client.create_pool({
             'pool': {
@@ -800,7 +803,7 @@ class PoolTest(common.HeatTestCase):
             mox.IsA(neutronclient.Client),
             'subnet',
             'sub123'
-        ).AndReturn('sub123')
+        ).MultipleTimes().AndReturn('sub123')
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
@@ -1063,6 +1066,7 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
                 'delay': 3, 'max_retries': 5, 'type': u'HTTP',
                 'timeout': 10, 'admin_state_up': True}}
         ).AndReturn({'health_monitor': {'id': '6666'}})
+        self.stub_SubnetConstraint_validate()
         neutronclient.Client.create_pool({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',

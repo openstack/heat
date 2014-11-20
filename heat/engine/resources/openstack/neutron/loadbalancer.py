@@ -215,14 +215,20 @@ class Pool(neutron.NeutronResource):
             support_status=support.SupportStatus(
                 support.DEPRECATED,
                 _('Use property %s.') % SUBNET),
-            required=False
+            required=False,
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
         SUBNET: properties.Schema(
             properties.Schema.STRING,
             _('The subnet for the port on which the members '
               'of the pool will be connected.'),
             required=False,
-            support_status=support.SupportStatus(version='2014.2')
+            support_status=support.SupportStatus(version='2014.2'),
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
         LB_METHOD: properties.Schema(
             properties.Schema.STRING,
@@ -264,7 +270,10 @@ class Pool(neutron.NeutronResource):
                 ),
                 VIP_SUBNET: properties.Schema(
                     properties.Schema.STRING,
-                    _('Subnet of the vip.')
+                    _('Subnet of the vip.'),
+                    constraints=[
+                        constraints.CustomConstraint('neutron.subnet')
+                    ]
                 ),
                 VIP_ADDRESS: properties.Schema(
                     properties.Schema.STRING,

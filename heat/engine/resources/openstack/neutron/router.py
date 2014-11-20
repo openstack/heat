@@ -276,12 +276,18 @@ class RouterInterface(neutron.NeutronResource):
             properties.Schema.STRING,
             support_status=support.SupportStatus(
                 support.DEPRECATED,
-                _('Use property %s.') % SUBNET)
+                _('Use property %s.') % SUBNET),
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
         SUBNET: properties.Schema(
             properties.Schema.STRING,
             _('The subnet, either subnet or port should be '
-              'specified.')
+              'specified.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
         PORT_ID: properties.Schema(
             properties.Schema.STRING,
