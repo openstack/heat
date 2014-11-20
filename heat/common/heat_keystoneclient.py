@@ -275,7 +275,11 @@ class KeystoneClientV3(object):
         trustee_user_id = self.admin_client.auth_ref.user_id
         trustor_user_id = self.client.auth_ref.user_id
         trustor_project_id = self.client.auth_ref.project_id
-        roles = cfg.CONF.trusts_delegated_roles
+        # inherit the roles of the trustor, unless set trusts_delegated_roles
+        if cfg.CONF.trusts_delegated_roles:
+            roles = cfg.CONF.trusts_delegated_roles
+        else:
+            roles = self.context.roles
         try:
             trust = self.client.trusts.create(trustor_user=trustor_user_id,
                                               trustee_user=trustee_user_id,
