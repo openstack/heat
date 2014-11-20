@@ -38,7 +38,7 @@ class ResourceDefinitionCore(object):
 
     def __init__(self, name, resource_type, properties=None, metadata=None,
                  depends=None, deletion_policy=None, update_policy=None,
-                 description=''):
+                 description=None):
         """
         Initialise with the parsed definition of a resource.
 
@@ -57,7 +57,7 @@ class ResourceDefinitionCore(object):
         depends = depends or []
         self.name = name
         self.resource_type = resource_type
-        self.description = description
+        self.description = description or ''
         self._properties = properties
         self._metadata = metadata
         self._depends = depends
@@ -67,7 +67,7 @@ class ResourceDefinitionCore(object):
         self._hash = hash(self.resource_type)
         self._rendering = None
 
-        assert isinstance(description, six.string_types)
+        assert isinstance(self.description, six.string_types)
 
         if properties is not None:
             assert isinstance(properties, (collections.Mapping,
@@ -133,12 +133,13 @@ class ResourceDefinitionCore(object):
         def reparse_snippet(snippet):
             return template.parse(stack, copy.deepcopy(snippet))
 
-        return type(self)(self.name, self.resource_type,
-                          reparse_snippet(self._properties),
-                          reparse_snippet(self._metadata),
-                          reparse_snippet(self._depends),
-                          reparse_snippet(self._deletion_policy),
-                          reparse_snippet(self._update_policy))
+        return type(self)(
+            self.name, self.resource_type,
+            properties=reparse_snippet(self._properties),
+            metadata=reparse_snippet(self._metadata),
+            depends=reparse_snippet(self._depends),
+            deletion_policy=reparse_snippet(self._deletion_policy),
+            update_policy=reparse_snippet(self._update_policy))
 
     def dependencies(self, stack):
         """

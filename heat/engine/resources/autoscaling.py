@@ -441,8 +441,8 @@ class InstanceGroup(stack_resource.StackResource):
                 lb_defn = rsrc_defn.ResourceDefinition(
                     lb_resource.name,
                     lb_resource.type(),
-                    props,
-                    lb_resource.t.get('Metadata'),
+                    properties=props,
+                    metadata=lb_resource.t.get('Metadata'),
                     deletion_policy=lb_resource.t.get('DeletionPolicy'))
 
                 scheduler.TaskRunner(lb_resource.update, lb_defn)()
@@ -843,10 +843,10 @@ class AutoScalingResourceGroup(AutoScalingGroup):
 
     def _get_instance_definition(self):
         rsrc = self.properties[self.RESOURCE]
-        return rsrc_defn.ResourceDefinition(None,
-                                            rsrc['type'],
-                                            rsrc.get('properties'),
-                                            rsrc.get('metadata'))
+        return rsrc_defn.ResourceDefinition(
+            None, rsrc['type'],
+            properties=rsrc.get('properties'),
+            metadata=rsrc.get('metadata'))
 
     def _lb_reload(self, exclude=None):
         """AutoScalingResourceGroup does not maintain load balancer

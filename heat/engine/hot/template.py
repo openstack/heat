@@ -234,11 +234,14 @@ class HOTemplate20130523(template.Template):
                     raise ValueError(_('"%s" is not a valid keyword '
                                        'inside a resource definition') % key)
 
-            defn = rsrc_defn.ResourceDefinition(name, resource_type,
-                                                properties, metadata,
-                                                depends,
-                                                deletion_policy,
-                                                update_policy)
+            defn = rsrc_defn.ResourceDefinition(
+                name, resource_type,
+                properties=properties,
+                metadata=metadata,
+                depends=depends,
+                deletion_policy=deletion_policy,
+                update_policy=update_policy,
+                description=None)
             return name, defn
 
         resources = self.t.get(self.RESOURCES) or {}
