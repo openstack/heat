@@ -151,6 +151,9 @@ class SwiftContainer(resource.Resource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
+    def handle_check(self):
+        self.swift().get_container(self.resource_id)
+
     def FnGetRefId(self):
         return unicode(self.resource_id)
 
