@@ -240,6 +240,10 @@ class VolumeNotFound(HeatException):
     msg_fmt = _("The Volume (%(volume)s) could not be found.")
 
 
+class VolumeSnapshotNotFound(HeatException):
+    msg_fmt = _("The VolumeSnapshot (%(snapshot)s) could not be found.")
+
+
 class PhysicalResourceNameAmbiguity(HeatException):
     msg_fmt = _(
         "Multiple physical resources were found with name (%(name)s).")
