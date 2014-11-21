@@ -124,6 +124,9 @@ class KeyPair(resource.Resource):
             except Exception as e:
                 self.client_plugin().ignore_not_found(e)
 
+    def handle_check(self):
+        self.nova().keypairs.get(self.resource_id)
+
     def _resolve_attribute(self, key):
         attr_fn = {'private_key': self.private_key,
                    'public_key': self.public_key}
