@@ -32,6 +32,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 from heat.engine import scheduler
 
 LOG = logging.getLogger(__name__)
@@ -410,8 +411,24 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 if len(server.networks[n]) > 0:
                     return server.networks[n][0]
 
+    def get_server(self, server):
+        try:
+            return self.client().servers.get(server)
+        except exceptions.NotFound as ex:
+            LOG.warn(_LW('Server (%(server)s) not found: %(ex)s'),
+                     {'server': server, 'ex': ex})
+            raise exception.ServerNotFound(server=server)
+
     def absolute_limits(self):
         """Return the absolute limits as a dictionary."""
         limits = self.client().limits.get()
         return dict([(limit.name, limit.value)
                     for limit in list(limits.absolute)])
+
+
+class ServerConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.ServerNotFound,)
+
+    def validate_with_client(self, client, server):
+        client.client_plugin('nova').get_server(server)
