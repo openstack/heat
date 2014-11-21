@@ -585,6 +585,16 @@ class Server(stack_user.StackUser):
                 resource_status=server.status,
                 result=_('Server is not active'))
 
+    def _check_server_status(self):
+        server = self.nova().servers.get(self.resource_id)
+        status = self.client_plugin().get_status(server)
+        checks = [{'attr': 'status', 'expected': 'ACTIVE', 'current': status}]
+        self._verify_check_conditions(checks)
+        return server
+
+    def handle_check(self):
+        self._check_server_status()
+
     @classmethod
     def _build_block_device_mapping(cls, bdm):
         if not bdm:
