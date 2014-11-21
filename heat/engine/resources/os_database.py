@@ -360,6 +360,14 @@ class OSDBInstance(resource.Resource):
                   'datastore_version': self.datastore_version})
         return True
 
+    def handle_check(self):
+        instance = self.trove().instances.get(self.resource_id)
+        status = instance.status
+        checks = [
+            {'attr': 'status', 'expected': self.ACTIVE, 'current': status},
+        ]
+        self._verify_check_conditions(checks)
+
     def handle_delete(self):
         '''
         Delete a cloud database instance.
