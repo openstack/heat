@@ -132,16 +132,23 @@ class HOTemplate20130523(template.Template):
         for resource_name, attrs in six.iteritems(resources):
             cfn_resource = {}
 
-            if isinstance(attrs, six.string_types):
-                message = _('"resources" must contain a map of resource maps.')
+            if not attrs:
+                message = _('Each resource must '
+                            'contain a type key.')
                 raise exception.StackValidationFailed(message=message)
-            for attr, attr_value in six.iteritems(attrs):
-                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
-                                           _('"%s" is not a valid keyword '
-                                             'inside a resource definition'))
-                cfn_resource[cfn_attr] = attr_value
+            try:
+                for attr, attr_value in six.iteritems(attrs):
+                    cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
+                                               _('"%s" is not a valid '
+                                                 'keyword inside a resource '
+                                                 'definition'))
+                    cfn_resource[cfn_attr] = attr_value
 
-            cfn_resources[resource_name] = cfn_resource
+                cfn_resources[resource_name] = cfn_resource
+            except AttributeError:
+                message = _('"resources" must contain a map of resource maps. '
+                            'Found a [%s] instead') % type(attrs)
+                raise exception.StackValidationFailed(message=message)
 
         return cfn_resources
 
@@ -155,13 +162,23 @@ class HOTemplate20130523(template.Template):
         for output_name, attrs in six.iteritems(outputs):
             cfn_output = {}
 
-            for attr, attr_value in six.iteritems(attrs):
-                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
-                                           _('"%s" is not a valid keyword '
-                                             'inside an output definition'))
-                cfn_output[cfn_attr] = attr_value
+            if not attrs:
+                message = _('Each output must '
+                            'contain a value key.')
+                raise exception.StackValidationFailed(message=message)
+            try:
+                for attr, attr_value in six.iteritems(attrs):
+                    cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
+                                               _('"%s" is not a valid '
+                                                 'keyword inside an output '
+                                                 'definition'))
+                    cfn_output[cfn_attr] = attr_value
 
-            cfn_outputs[output_name] = cfn_output
+                cfn_outputs[output_name] = cfn_output
+            except AttributeError:
+                message = _('"outputs" must contain a map of output maps. '
+                            'Found a [%s] instead') % type(attrs)
+                raise exception.StackValidationFailed(message=message)
 
         return cfn_outputs
 
