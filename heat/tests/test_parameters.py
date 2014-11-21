@@ -251,10 +251,9 @@ class ParameterTest(testtools.TestCase):
         self.assertIn('wibble', six.text_type(err))
 
     def test_list_value_list_default_empty(self):
-        schema = {'Type': 'CommaDelimitedList'}
-        schema['Default'] = ''
+        schema = {'Type': 'CommaDelimitedList', 'Default': ''}
         p = self.new_parameter('p', schema)
-        self.assertEqual([''], p.value())
+        self.assertEqual([], p.value())
 
     def test_list_value_list_good(self):
         schema = {'Type': 'CommaDelimitedList',
