@@ -190,9 +190,9 @@ class VPCTestBase(common.HeatTestCase):
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
             }
@@ -201,9 +201,9 @@ class VPCTestBase(common.HeatTestCase):
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': '22',
+                'port_range_min': 22,
                 'ethertype': 'IPv4',
-                'port_range_max': '22',
+                'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
                 'id': 'bbbb'
@@ -222,7 +222,7 @@ class VPCTestBase(common.HeatTestCase):
                     'security_group_rules': [{
                         'direction': 'ingress',
                         'protocol': 'tcp',
-                        'port_range_max': '22',
+                        'port_range_max': 22,
                         'id': 'bbbb',
                         'ethertype': 'IPv4',
                         'security_group_id': ('0389f747-7785-4757-b7bb-'
@@ -230,7 +230,7 @@ class VPCTestBase(common.HeatTestCase):
                         'remote_group_id': None,
                         'remote_ip_prefix': '0.0.0.0/0',
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                        'port_range_min': '22'
+                        'port_range_min': 22
                     }],
                     'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'}})
         elif group == 'INVALID-NO-REF':
