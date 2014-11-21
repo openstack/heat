@@ -347,13 +347,13 @@ class RouterGateway(neutron.NeutronResource):
         self.neutron().add_gateway_router(
             router_id,
             {'network_id': network_id})
-        self.resource_id_set(router_id)
+        self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):
         if not self.resource_id:
             return
         client = self.neutron()
-        router_id = self.resource_id.split(':')[0]
+        (router_id, network_id) = self.resource_id.split(':')
         try:
             client.remove_gateway_router(router_id)
         except Exception as ex:
