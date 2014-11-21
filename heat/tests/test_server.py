@@ -252,6 +252,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_VolumeConstraint_validate()
 
     def test_subnet_dependency(self):
         template, stack = self._setup_test_stack('subnet-test',
@@ -919,6 +920,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_VolumeConstraint_validate()
         self.m.ReplayAll()
 
         def create_server(device_name):
@@ -1934,6 +1936,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_VolumeConstraint_validate()
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourcePropertyConflict, server.validate)
@@ -1976,6 +1979,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_VolumeConstraint_validate()
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.StackValidationFailed,
