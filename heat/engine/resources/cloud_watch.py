@@ -177,6 +177,10 @@ class CloudWatchAlarm(resource.Resource):
         # Just set to NODATA, which will be re-evaluated next periodic task
         wr.state_set(wr.NODATA)
 
+    def handle_check(self):
+        watch_name = self.physical_resource_name()
+        watchrule.WatchRule.load(self.context, watch_name=watch_name)
+
     def FnGetRefId(self):
         return self.physical_resource_name_or_FnGetRefId()
 
