@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -169,8 +168,8 @@ class SoftwareConfig(resource.Resource):
         try:
             self.rpc_client().delete_software_config(
                 self.context, self.resource_id)
-        except exception.NotFound:
-            pass
+        except Exception as ex:
+            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def _resolve_attribute(self, name):
         '''
@@ -182,8 +181,8 @@ class SoftwareConfig(resource.Resource):
                 sc = self.rpc_client().show_software_config(
                     self.context, self.resource_id)
                 return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
-            except exception.NotFound:
-                return None
+            except Exception as ex:
+                self.rpc_client().ignore_error_named(ex, 'NotFound')
 
 
 def resource_mapping():

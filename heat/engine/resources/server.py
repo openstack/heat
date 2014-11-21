@@ -475,7 +475,8 @@ class Server(stack_user.StackUser):
             sc = self.rpc_client().show_software_config(
                 self.context, ud_content)
             return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
-        except exception.NotFound:
+        except Exception as ex:
+            self.rpc_client().ignore_error_named(ex, 'NotFound')
             return ud_content
 
     def handle_create(self):

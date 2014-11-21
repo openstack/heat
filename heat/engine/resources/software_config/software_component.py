@@ -135,8 +135,8 @@ class SoftwareComponent(sc.SoftwareConfig):
                 # configs list is stored in 'config' property of parent class
                 # (see handle_create)
                 return sc[rpc_api.SOFTWARE_CONFIG_CONFIG].get(self.CONFIGS)
-            except exception.NotFound:
-                return None
+            except Exception as ex:
+                self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def validate(self):
         '''Validate SoftwareComponent properties consistency.'''
