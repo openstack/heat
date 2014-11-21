@@ -119,6 +119,35 @@ class HOTemplate20130523(template.Template):
             else:
                 raise ke
 
+    def _translate_section(self, section, sub_section, data, mapping):
+        cfn_objects = {}
+        obj_name = section[:-1]
+        err_msg = _('"%%s" is not a valid keyword inside a %s '
+                    'definition') % obj_name
+        for name, attrs in six.iteritems(data):
+            cfn_object = {}
+
+            if not attrs:
+                args = {'object_name': obj_name, 'sub_section': sub_section}
+                message = _('Each %(object_name)s must contain a '
+                            '%(sub_section)s key.') % args
+                raise exception.StackValidationFailed(message=message)
+            try:
+                for attr, attr_value in six.iteritems(attrs):
+                    cfn_attr = self._translate(attr, mapping, err_msg)
+                    cfn_object[cfn_attr] = attr_value
+
+                cfn_objects[name] = cfn_object
+            except AttributeError:
+                message = _('"%(section)s" must contain a map of '
+                            '%(obj_name)s maps. Found a [%(_type)s] '
+                            'instead') % {'section': section,
+                                          '_type': type(attrs),
+                                          'obj_name': obj_name}
+                raise exception.StackValidationFailed(message=message)
+
+        return cfn_objects
+
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
         HOT_TO_CFN_ATTRS = {'type': 'Type',
@@ -128,59 +157,16 @@ class HOTemplate20130523(template.Template):
                             'deletion_policy': 'DeletionPolicy',
                             'update_policy': 'UpdatePolicy'}
 
-        cfn_resources = {}
-        for resource_name, attrs in six.iteritems(resources):
-            cfn_resource = {}
-
-            if not attrs:
-                message = _('Each resource must '
-                            'contain a type key.')
-                raise exception.StackValidationFailed(message=message)
-            try:
-                for attr, attr_value in six.iteritems(attrs):
-                    cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
-                                               _('"%s" is not a valid '
-                                                 'keyword inside a resource '
-                                                 'definition'))
-                    cfn_resource[cfn_attr] = attr_value
-
-                cfn_resources[resource_name] = cfn_resource
-            except AttributeError:
-                message = _('"resources" must contain a map of resource maps. '
-                            'Found a [%s] instead') % type(attrs)
-                raise exception.StackValidationFailed(message=message)
-
-        return cfn_resources
+        return self._translate_section('resources', 'type', resources,
+                                       HOT_TO_CFN_ATTRS)
 
     def _translate_outputs(self, outputs):
         """Get the outputs of the template translated into CFN format."""
         HOT_TO_CFN_ATTRS = {'description': 'Description',
                             'value': 'Value'}
 
-        cfn_outputs = {}
-
-        for output_name, attrs in six.iteritems(outputs):
-            cfn_output = {}
-
-            if not attrs:
-                message = _('Each output must '
-                            'contain a value key.')
-                raise exception.StackValidationFailed(message=message)
-            try:
-                for attr, attr_value in six.iteritems(attrs):
-                    cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
-                                               _('"%s" is not a valid '
-                                                 'keyword inside an output '
-                                                 'definition'))
-                    cfn_output[cfn_attr] = attr_value
-
-                cfn_outputs[output_name] = cfn_output
-            except AttributeError:
-                message = _('"outputs" must contain a map of output maps. '
-                            'Found a [%s] instead') % type(attrs)
-                raise exception.StackValidationFailed(message=message)
-
-        return cfn_outputs
+        return self._translate_section('outputs', 'value', outputs,
+                                       HOT_TO_CFN_ATTRS)
 
     def param_schemata(self):
         parameter_section = self.t.get(self.PARAMETERS)
