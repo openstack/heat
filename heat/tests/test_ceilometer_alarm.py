@@ -157,9 +157,19 @@ class CeilometerAlarmTest(HeatTestCase):
         al['description'] = mox.IgnoreArg()
         al['name'] = mox.IgnoreArg()
         al['alarm_actions'] = mox.IgnoreArg()
-        al['matching_metadata'] = dict(
-            ('metadata.metering.%s' % k, v)
-            for k, v in al['matching_metadata'].items())
+        al['insufficient_data_actions'] = None
+        al['ok_actions'] = None
+        al['repeat_actions'] = True
+        al['enabled'] = True
+        al['evaluation_periods'] = 1
+        al['period'] = 60
+        al['threshold'] = 50
+        if 'matching_metadata' in al:
+            al['matching_metadata'] = dict(
+                ('metadata.metering.%s' % k, v)
+                for k, v in al['matching_metadata'].items())
+        else:
+            al['matching_metadata'] = {}
         self.m.StubOutWithMock(self.fa.alarms, 'create')
         self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
         return stack
@@ -195,7 +205,7 @@ class CeilometerAlarmTest(HeatTestCase):
             'description': 'fruity',
             'evaluation_periods': '2',
             'period': '90',
-            'enabled': 'true',
+            'enabled': True,
             'repeat_actions': True,
             'statistic': 'max',
             'threshold': '39',
@@ -275,6 +285,24 @@ class CeilometerAlarmTest(HeatTestCase):
         self.assertIsInstance(rsrc.properties['evaluation_periods'], int)
         self.assertIsInstance(rsrc.properties['period'], int)
         self.assertIsInstance(rsrc.properties['threshold'], int)
+
+        self.m.VerifyAll()
+
+    def test_no_matching_metadata(self):
+        """Make sure that we can pass in an empty matching_metadata."""
+
+        t = template_format.parse(alarm_template)
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        properties['alarm_actions'] = ['signal_handler']
+        del properties['matching_metadata']
+
+        self.stack = self.create_stack(template=json.dumps(t))
+
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertIsNone(rsrc.validate())
 
         self.m.VerifyAll()
 
@@ -365,9 +393,12 @@ class CombinationAlarmTest(HeatTestCase):
         self.fc.alarms.create(
             alarm_actions=[],
             description=u'Do stuff in combination',
+            enabled=True,
+            insufficient_data_actions=None,
+            ok_actions=None,
             name=mox.IgnoreArg(), type='combination',
             combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
-                              'operator': u'and'}
+                              'operator': u'and', 'repeat_actions': True}
         ).AndReturn(FakeCeilometerAlarm())
         snippet = template_format.parse(combination_alarm_template)
         stack = utils.parse_stack(snippet)
