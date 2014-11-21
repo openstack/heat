@@ -119,6 +119,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
         call_kwargs['nested_depth'] = 0
+        call_kwargs['user_creds_id'] = None
         expected_message = self.rpcapi.make_msg('create_stack', **call_kwargs)
         kwargs['expected_message'] = expected_message
         self._test_engine_api('create_stack', 'call', **kwargs)
