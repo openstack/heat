@@ -181,6 +181,8 @@ class CeilometerAlarmTest(HeatTestCase):
         al2 = dict((k, mox.IgnoreArg())
                    for k, s in schema.items() if s.update_allowed)
         al2['alarm_id'] = mox.IgnoreArg()
+        del al2['enabled']
+        del al2['repeat_actions']
         self.fa.alarms.update(**al2).AndReturn(None)
 
         self.m.ReplayAll()
