@@ -1655,16 +1655,20 @@ class StackTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
                          self.stack.state)
+        self.assertIsNone(self.stack.updated_time)
 
         self.stack.suspend()
 
         self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
                          self.stack.state)
+        stack_suspend_time = self.stack.updated_time
+        self.assertIsNotNone(stack_suspend_time)
 
         self.stack.resume()
 
         self.assertEqual((self.stack.RESUME, self.stack.COMPLETE),
                          self.stack.state)
+        self.assertNotEqual(stack_suspend_time, self.stack.updated_time)
 
         self.m.VerifyAll()
 
