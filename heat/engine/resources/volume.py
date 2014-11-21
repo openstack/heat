@@ -149,6 +149,14 @@ class Volume(resource.Resource):
                 resource_status=vol.status,
                 result=_('Volume create failed'))
 
+    def handle_check(self):
+        vol = self.cinder().volumes.get(self.resource_id)
+        statuses = ['available', 'in-use']
+        checks = [
+            {'attr': 'status', 'expected': statuses, 'current': vol.status},
+        ]
+        self._verify_check_conditions(checks)
+
     def _backup(self):
         backup = self.cinder().backups.create(self.resource_id)
         while backup.status == 'creating':
