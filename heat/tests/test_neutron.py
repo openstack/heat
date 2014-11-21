@@ -1670,7 +1670,7 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertEqual("Either subnet or port_id must be specified.",
                          six.text_type(ex))
 
-    def test_gateway_router(self):
+    def test_router_gateway(self):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'network',
@@ -1696,7 +1696,47 @@ class NeutronRouterTest(common.HeatTestCase):
                 'network': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
             })
 
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
+                         rsrc.resource_id)
         scheduler.TaskRunner(rsrc.delete)()
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.m.VerifyAll()
+
+    def test_router_gateway_old_data(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        neutronclient.Client.add_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+        ).AndReturn(None)
+        neutronclient.Client.remove_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn(None)
+        neutronclient.Client.remove_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_template)
+        stack = utils.parse_stack(t)
+
+        rsrc = self.create_gateway_router(
+            t, stack, 'gateway', properties={
+                'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
+                'network': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+            })
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
+                         rsrc.resource_id)
+        (rsrc.resource_id) = ('3e46229d-8fce-4733-819a-b5fe630550f8:'
+                              'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8:'
+                         'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         rsrc.resource_id)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
