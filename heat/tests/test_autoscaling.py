@@ -114,6 +114,7 @@ class AutoScalingTest(common.HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         if with_error:
             instance.Instance.handle_create().AndRaise(
                 exception.Error(with_error))
@@ -470,6 +471,7 @@ class AutoScalingTest(common.HeatTestCase):
         instance.Instance.handle_create().AndRaise(Exception)
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -753,6 +755,8 @@ class AutoScalingTest(common.HeatTestCase):
         rsrc = stack['LaunchConfig']
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

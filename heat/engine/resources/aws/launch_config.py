@@ -124,6 +124,10 @@ class LaunchConfiguration(resource.Resource):
                                 properties.Schema.STRING,
                                 _('The ID of the snapshot to create '
                                   'a volume from.'),
+                                constraints=[
+                                    constraints.CustomConstraint(
+                                        'cinder.snapshot')
+                                ]
                             ),
                             VOLUME_SIZE: properties.Schema(
                                 properties.Schema.STRING,

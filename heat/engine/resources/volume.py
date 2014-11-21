@@ -511,7 +511,10 @@ class CinderVolume(Volume):
         ),
         SNAPSHOT_ID: properties.Schema(
             properties.Schema.STRING,
-            _('If specified, the snapshot to create the volume from.')
+            _('If specified, the snapshot to create the volume from.'),
+            constraints=[
+                constraints.CustomConstraint('cinder.snapshot')
+            ]
         ),
         BACKUP_ID: properties.Schema(
             properties.Schema.STRING,

@@ -159,10 +159,13 @@ class ScaleNotificationTest(common.HeatTestCase):
         stack.store()
         self.created_time = stack.created_time
         self.create_at = timeutils.isotime(self.created_time)
+        self.stub_SnapshotConstraint_validate()
+        self.m.ReplayAll()
         stack.create()
         self.stack = stack
         group = stack['WebServerGroup']
         self.assertEqual((group.CREATE, group.COMPLETE), group.state)
+        self.m.VerifyAll()
         return group
 
     def mock_stack_except_for_group(self):

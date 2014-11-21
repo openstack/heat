@@ -33,6 +33,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
+        self.stub_SnapshotConstraint_validate()
 
     def validate_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
