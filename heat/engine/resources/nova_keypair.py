@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -134,18 +133,6 @@ class KeyPair(resource.Resource):
 
     def FnGetRefId(self):
         return self.resource_id
-
-
-class KeypairConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (exception.UserKeyPairMissing,)
-
-    def validate_with_client(self, client, value):
-        if not value:
-            # Don't validate empty key, which can happen when you use a KeyPair
-            # resource
-            return True
-        client.client_plugin('nova').get_keypair(value)
 
 
 def resource_mapping():

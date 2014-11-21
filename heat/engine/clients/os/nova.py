@@ -432,3 +432,23 @@ class ServerConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, server):
         client.client_plugin('nova').get_server(server)
+
+
+class KeypairConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.UserKeyPairMissing,)
+
+    def validate_with_client(self, client, key_name):
+        if not key_name:
+            # Don't validate empty key, which can happen when you
+            # use a KeyPair resource
+            return True
+        client.client_plugin('nova').get_keypair(key_name)
+
+
+class FlavorConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.FlavorMissing,)
+
+    def validate_with_client(self, client, flavor):
+        client.client_plugin('nova').get_flavor_id(flavor)
