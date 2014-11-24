@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev215.g609cfc8\n"
+"Project-Id-Version: heat 2015.1.dev409.ge1447a8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-26 06:00+0000\n"
+"POT-Creation-Date: 2014-11-24 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,38 +33,38 @@ msgid ""
 "falling back to using default"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:310
+#: heat/common/heat_keystoneclient.py:313
 #, python-format
 msgid "Truncating the username %s to the last 64 characters."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:408
+#: heat/common/heat_keystoneclient.py:424
 msgid ""
 "Falling back to legacy non-domain user create, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:462
+#: heat/common/heat_keystoneclient.py:477
 msgid ""
 "Falling back to legacy non-domain user delete, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:483
-#: heat/common/heat_keystoneclient.py:500
+#: heat/common/heat_keystoneclient.py:498
+#: heat/common/heat_keystoneclient.py:515
 msgid "Falling back to legacy non-domain project, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:591
-#: heat/common/heat_keystoneclient.py:608
+#: heat/common/heat_keystoneclient.py:606
+#: heat/common/heat_keystoneclient.py:623
 msgid "Falling back to legacy non-domain keypair, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:627
+#: heat/common/heat_keystoneclient.py:642
 msgid "Falling back to legacy non-domain disable, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:637
+#: heat/common/heat_keystoneclient.py:652
 msgid "Falling back to legacy non-domain enable, configure domain in heat.conf"
 msgstr ""
 
@@ -78,12 +78,12 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:877
+#: heat/engine/resource.py:901
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1063
+#: heat/engine/resource.py:1087
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -93,17 +93,17 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/service.py:1077
+#: heat/engine/service.py:1094
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1332
+#: heat/engine/service.py:1350
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1361
+#: heat/engine/service.py:1379
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -112,7 +112,7 @@ msgstr ""
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/stack.py:235
+#: heat/engine/stack.py:237
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
@@ -121,7 +121,7 @@ msgstr ""
 msgid "Lock was already released on stack %s!"
 msgstr ""
 
-#: heat/engine/stack_resource.py:109
+#: heat/engine/stack_resource.py:115
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
@@ -150,23 +150,28 @@ msgstr ""
 msgid "Requested client \"%s\" not found"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:108 heat/engine/resources/nova_utils.py:59
+#: heat/engine/clients/os/nova.py:110 heat/engine/resources/nova_utils.py:59
 #, python-format
 msgid ""
 "Server %(name)s (%(id)s) received an OverLimit response during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:116 heat/engine/resources/nova_utils.py:68
+#: heat/engine/clients/os/nova.py:118 heat/engine/resources/nova_utils.py:68
 #, python-format
 msgid ""
 "Server \"%(name)s\" (%(id)s) received the following exception during "
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:401 heat/engine/resources/nova_utils.py:383
+#: heat/engine/clients/os/nova.py:407 heat/engine/resources/nova_utils.py:383
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
+msgstr ""
+
+#: heat/engine/clients/os/nova.py:418
+#, python-format
+msgid "Server (%(server)s) not found: %(ex)s"
 msgstr ""
 
 #: heat/engine/resources/eip.py:389
@@ -180,7 +185,7 @@ msgid ""
 "instance.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:172
+#: heat/engine/resources/swift.py:175
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
