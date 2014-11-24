@@ -304,3 +304,23 @@ class HeatIntegrationTest(testtools.TestCase):
         self._wait_for_stack_status(
             stack_identifier, 'DELETE_COMPLETE',
             success_on_not_found=True)
+
+    def update_stack(self, stack_identifier, template, environment=None,
+                     files=None):
+        env = environment or {}
+        env_files = files or {}
+        stack_name = stack_identifier.split('/')[0]
+        self.client.stacks.update(
+            stack_id=stack_identifier,
+            stack_name=stack_name,
+            template=template,
+            files=env_files,
+            disable_rollback=True,
+            parameters={},
+            environment=env
+        )
+        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
+
+    def list_resources(self, stack_identifier):
+        resources = self.client.resources.list(stack_identifier)
+        return dict((r.resource_name, r.resource_type) for r in resources)
