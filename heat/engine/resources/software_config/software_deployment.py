@@ -565,6 +565,7 @@ class SoftwareDeployments(resource_group.ResourceGroup):
         SERVERS: properties.Schema(
             properties.Schema.MAP,
             _('A map of Nova names and IDs to apply configuration to.'),
+            update_allowed=True
         ),
         CONFIG: _sd_ps[CONFIG],
         INPUT_VALUES: _sd_ps[INPUT_VALUES],
