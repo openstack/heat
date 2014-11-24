@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-23 06:00+0000\n"
-"PO-Revision-Date: 2014-10-21 00:51+0000\n"
+"POT-Creation-Date: 2014-11-24 06:00+0000\n"
+"PO-Revision-Date: 2014-11-10 07:27+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -20,36 +20,36 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: heat/api/aws/ec2token.py:141
+#: heat/api/aws/ec2token.py:140
 msgid "Checking AWS credentials.."
 msgstr "Comprobando credenciales AWS.."
 
-#: heat/api/aws/ec2token.py:148
+#: heat/api/aws/ec2token.py:147
 msgid "No AWS Signature found."
 msgstr "Firma AWS Signature no encontrada."
 
-#: heat/api/aws/ec2token.py:156
+#: heat/api/aws/ec2token.py:155
 msgid "No AWSAccessKeyId/Authorization Credential"
 msgstr "Credencial AWSAccessKeyId/Authorization no encontrada"
 
-#: heat/api/aws/ec2token.py:159
+#: heat/api/aws/ec2token.py:158
 msgid "AWS credentials found, checking against keystone."
 msgstr "Credenciales AWS encontradas, comprobándolas contra keystone."
 
-#: heat/api/aws/ec2token.py:187
+#: heat/api/aws/ec2token.py:186
 #, python-format
 msgid "Authenticating with %s"
 msgstr "Autenticándo con %s"
 
-#: heat/api/aws/ec2token.py:195
+#: heat/api/aws/ec2token.py:194
 msgid "AWS authentication successful."
 msgstr "Autenticación AWS correcta."
 
-#: heat/api/aws/ec2token.py:197
+#: heat/api/aws/ec2token.py:196
 msgid "AWS authentication failure."
 msgstr "Autenticación AWS incorrecta."
 
-#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:793
+#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:801
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -63,47 +63,47 @@ msgstr "Obteniendo datos desde %s"
 msgid "Registering %(path)s -> %(value)s"
 msgstr "Registrando %(path)s -> %(value)s"
 
-#: heat/engine/environment.py:443
+#: heat/engine/environment.py:462
 #, python-format
 msgid "Loading %s"
 msgstr "Cargando %s"
 
-#: heat/engine/resource.py:541
+#: heat/engine/resource.py:549
 #, python-format
 msgid "creating %s"
 msgstr "creando %s"
 
-#: heat/engine/resource.py:690
+#: heat/engine/resource.py:698
 #, python-format
 msgid "updating %s"
 msgstr ""
 
-#: heat/engine/resource.py:715
+#: heat/engine/resource.py:723
 #, python-format
 msgid "Checking %s"
 msgstr "Verificando %s"
 
-#: heat/engine/resource.py:736
+#: heat/engine/resource.py:760
 #, python-format
 msgid "suspending %s"
 msgstr "suspendiendo %s"
 
-#: heat/engine/resource.py:752
+#: heat/engine/resource.py:776
 #, python-format
 msgid "resuming %s"
 msgstr "reanudando %s"
 
-#: heat/engine/resource.py:757
+#: heat/engine/resource.py:781
 #, python-format
 msgid "snapshotting %s"
 msgstr "realizar instantáneas %s"
 
-#: heat/engine/resource.py:803
+#: heat/engine/resource.py:827
 #, python-format
 msgid "Validating %s"
 msgstr ""
 
-#: heat/engine/resource.py:836
+#: heat/engine/resource.py:860
 #, python-format
 msgid "deleting %s"
 msgstr "borrando %s"
@@ -131,74 +131,74 @@ msgstr "Pila %s procesando ha finalizado"
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:612
+#: heat/engine/service.py:615
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:640
+#: heat/engine/service.py:646
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:662
+#: heat/engine/service.py:668
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:697
+#: heat/engine/service.py:705
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:759
+#: heat/engine/service.py:767
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:888
+#: heat/engine/service.py:896
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:941
+#: heat/engine/service.py:949
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1242
+#: heat/engine/service.py:1246
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/stack.py:515
+#: heat/engine/stack.py:530
 #, python-format
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:946
+#: heat/engine/stack.py:963
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s user_creds_id="
 "%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:955
+#: heat/engine/stack.py:972
 #, python-format
 msgid "Tried to store a stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:972 heat/engine/stack.py:984
+#: heat/engine/stack.py:989 heat/engine/stack.py:1001
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1000
+#: heat/engine/stack.py:1017
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1020
+#: heat/engine/stack.py:1037
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
@@ -229,7 +229,7 @@ msgid ""
 "first"
 msgstr ""
 
-#: heat/engine/stack_resource.py:258
+#: heat/engine/stack_resource.py:256
 msgid "Stack not found to delete"
 msgstr ""
 
@@ -262,11 +262,6 @@ msgstr ""
 #: heat/engine/clients/os/glance.py:100
 #, python-format
 msgid "Multiple images %s were found in glance with name"
-msgstr ""
-
-#: heat/engine/resources/autoscaling.py:621
-#, python-format
-msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
 msgstr ""
 
 #: heat/engine/resources/eip.py:102 heat/engine/resources/eip.py:116
@@ -342,7 +337,7 @@ msgstr ""
 msgid "Cluster Template '%s' has been deleted."
 msgstr ""
 
-#: heat/engine/resources/server.py:948
+#: heat/engine/resources/server.py:964
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network "
@@ -350,54 +345,54 @@ msgid ""
 "property instead."
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:241
+#: heat/engine/resources/swiftsignal.py:244
 #: heat/engine/resources/wait_condition.py:367
 #, python-format
 msgid "%(name)s Failed (%(failure)s)"
 msgstr ""
 
-#: heat/engine/resources/swiftsignal.py:248
+#: heat/engine/resources/swiftsignal.py:251
 #: heat/engine/resources/wait_condition.py:372
 #, python-format
 msgid "%s Succeeded"
 msgstr ""
 
-#: heat/engine/resources/user.py:227 heat/engine/resources/user.py:247
+#: heat/engine/resources/user.py:229 heat/engine/resources/user.py:249
 #, python-format
 msgid "could not get secret for %(username)s Error:%(msg)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:242
+#: heat/engine/resources/volume.py:250
 #, python-format
 msgid "Resize failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/resources/volume.py:248 heat/engine/resources/volume.py:305
+#: heat/engine/resources/volume.py:256 heat/engine/resources/volume.py:313
 #, python-format
 msgid "%s - complete"
 msgstr ""
 
-#: heat/engine/resources/volume.py:297
+#: heat/engine/resources/volume.py:305
 #, python-format
 msgid "Attachment failed - volume %(vol)s is in %(status)s status"
 msgstr ""
 
-#: heat/engine/resources/volume.py:368
+#: heat/engine/resources/volume.py:376
 #, python-format
 msgid "%(name)s - status: %(status)s"
 msgstr ""
 
-#: heat/engine/resources/volume.py:371
+#: heat/engine/resources/volume.py:379
 #, python-format
 msgid "Detachment failed - volume %(vol)s is in %(status)s status"
 msgstr ""
 
-#: heat/engine/resources/volume.py:395
+#: heat/engine/resources/volume.py:403
 #, python-format
 msgid "Server %(srv)s still has attachment %(att)s."
 msgstr ""
 
-#: heat/engine/resources/volume.py:399
+#: heat/engine/resources/volume.py:407
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
@@ -405,6 +400,11 @@ msgstr ""
 #: heat/engine/resources/wait_condition.py:359
 #, python-format
 msgid "%(name)s Timed out (%(timeout)s)"
+msgstr ""
+
+#: heat/engine/resources/aws/autoscaling_group.py:252
+#, python-format
+msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
 msgstr ""
 
 #: heat/engine/resources/aws/scaling_policy.py:124
@@ -430,54 +430,54 @@ msgstr ""
 msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
 msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
 
-#: heat/openstack/common/service.py:176
+#: heat/openstack/common/service.py:174
 #, python-format
 msgid "Caught %s, exiting"
 msgstr "Se ha captado %s, saliendo"
 
-#: heat/openstack/common/service.py:240
+#: heat/openstack/common/service.py:232
 msgid "Parent process has died unexpectedly, exiting"
 msgstr "El proceso padre se ha detenido inesperadamente, saliendo"
 
-#: heat/openstack/common/service.py:271
+#: heat/openstack/common/service.py:263
 #, python-format
 msgid "Child caught %s, exiting"
 msgstr "Hijo captado %s, saliendo"
 
-#: heat/openstack/common/service.py:310
+#: heat/openstack/common/service.py:302
 msgid "Forking too fast, sleeping"
 msgstr "Bifurcación demasiado rápida, en reposo"
 
-#: heat/openstack/common/service.py:329
+#: heat/openstack/common/service.py:321
 #, python-format
 msgid "Started child %d"
 msgstr "Se ha iniciado el hijo %d"
 
-#: heat/openstack/common/service.py:339
+#: heat/openstack/common/service.py:331
 #, python-format
 msgid "Starting %d workers"
 msgstr "Iniciando %d trabajadores"
 
-#: heat/openstack/common/service.py:356
+#: heat/openstack/common/service.py:348
 #, python-format
 msgid "Child %(pid)d killed by signal %(sig)d"
 msgstr "Hijo %(pid)d matado por señal %(sig)d"
 
-#: heat/openstack/common/service.py:360
+#: heat/openstack/common/service.py:352
 #, python-format
 msgid "Child %(pid)s exited with status %(code)d"
 msgstr "El hijo %(pid)s ha salido con el estado %(code)d"
 
-#: heat/openstack/common/service.py:399
+#: heat/openstack/common/service.py:391
 #, python-format
 msgid "Caught %s, stopping children"
 msgstr "Se ha captado %s, deteniendo hijos"
 
-#: heat/openstack/common/service.py:408
+#: heat/openstack/common/service.py:400
 msgid "Wait called after thread killed.  Cleaning up."
 msgstr "Espéra llamada después que el hilo ha sido matado. Limpiando."
 
-#: heat/openstack/common/service.py:424
+#: heat/openstack/common/service.py:416
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "En espera de %d hijos para salir"
