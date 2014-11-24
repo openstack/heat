@@ -90,6 +90,10 @@ class MultipartMimeTest(common.HeatTestCase):
             'config': '#!/bin/bash'
         }
         result = self.config.get_message()
+        self.assertEqual(
+            '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            self.rpc_client.show_software_config.call_args[0][1])
+
         message = email.message_from_string(result)
         self.assertTrue(message.is_multipart())
         subs = message.get_payload()
@@ -104,6 +108,11 @@ class MultipartMimeTest(common.HeatTestCase):
         self.init_config(parts=parts)
         self.rpc_client.show_software_config.side_effect = exc.NotFound()
         result = self.config.get_message()
+
+        self.assertEqual(
+            '#!/bin/bash',
+            self.rpc_client.show_software_config.call_args[0][1])
+
         message = email.message_from_string(result)
         self.assertTrue(message.is_multipart())
         subs = message.get_payload()
@@ -121,6 +130,11 @@ class MultipartMimeTest(common.HeatTestCase):
             'config': '#!/bin/bash'
         }
         result = self.config.get_message()
+
+        self.assertEqual(
+            '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            self.rpc_client.show_software_config.call_args[0][1])
+
         message = email.message_from_string(result)
         self.assertTrue(message.is_multipart())
         subs = message.get_payload()
@@ -152,6 +166,11 @@ class MultipartMimeTest(common.HeatTestCase):
         }
 
         result = self.config.get_message()
+
+        self.assertEqual(
+            '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            self.rpc_client.show_software_config.call_args[0][1])
+
         message = email.message_from_string(result)
         self.assertTrue(message.is_multipart())
         subs = message.get_payload()
@@ -171,6 +190,14 @@ class MultipartMimeTest(common.HeatTestCase):
             'config': '#!/bin/bash'
         }
         result = self.config.get_message()
+
+        self.assertEqual(
+            '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            self.rpc_client.show_software_config.call_args_list[0][0][1])
+        self.assertEqual(
+            '9cab10ef-16ce-4be9-8b25-a67b7313eddb',
+            self.rpc_client.show_software_config.call_args_list[1][0][1])
+
         message = email.message_from_string(result)
         self.assertTrue(message.is_multipart())
         subs = message.get_payload()
