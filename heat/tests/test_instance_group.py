@@ -21,8 +21,8 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import resources
-from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
+from heat.engine.resources import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -399,7 +399,7 @@ class TestChildTemplate(common.HeatTestCase):
         defn = rsrc_defn.ResourceDefinition('ig', 'OS::Heat::InstanceGroup',
                                             {'Size': 2,
                                              'LaunchConfigurationName': 'foo'})
-        self.instance_group = asc.InstanceGroup('ig', defn, stack)
+        self.instance_group = instgrp.InstanceGroup('ig', defn, stack)
 
     def test_child_template(self):
         self.instance_group._create_template = mock.Mock(return_value='tpl')
