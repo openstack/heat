@@ -32,7 +32,8 @@ def generate_class(name, template_name):
     try:
         data = urlfetch.get(template_name, allowed_schemes=('file',))
     except IOError:
-        return TemplateResource
+        msg = _('No such file: %s') % template_name
+        raise exception.NotFound(msg_fmt=msg)
     tmpl = template.Template(template_format.parse(data))
     properties_schema = properties.Properties.schema_from_params(
         tmpl.param_schemata())

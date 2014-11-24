@@ -2265,10 +2265,32 @@ class StackServiceTest(common.HeatTestCase):
         schema = self.eng.resource_schema(self.ctx, type_name=type_name)
         self.assertEqual(expected, schema)
 
+    def _no_template_file(self, function):
+        info = environment.ResourceInfo(environment.ResourceRegistry,
+                                        ['ResourceWithWrongRefOnFile'],
+                                        'not_existing.yaml')
+        mock_iterable = mock.MagicMock(return_value=iter([info]))
+        with mock.patch('heat.engine.environment.ResourceRegistry.iterable_by',
+                        new=mock_iterable):
+            ex = self.assertRaises(exception.StackValidationFailed,
+                                   function,
+                                   self.ctx,
+                                   type_name='ResourceWithWrongRefOnFile')
+            msg = 'No such file: not_existing.yaml'
+            self.assertIn(msg, six.text_type(ex))
+
+    def test_resource_schema_no_template_file(self):
+        self._no_template_file(self.eng.resource_schema)
+
+    def test_generate_template_no_template_file(self):
+        self._no_template_file(self.eng.generate_template)
+
     def test_resource_schema_nonexist(self):
-        self.assertRaises(exception.ResourceTypeNotFound,
-                          self.eng.resource_schema,
-                          self.ctx, type_name='Bogus')
+        ex = self.assertRaises(exception.ResourceTypeNotFound,
+                               self.eng.resource_schema,
+                               self.ctx, type_name='Bogus')
+        msg = 'The Resource Type (Bogus) could not be found.'
+        self.assertEqual(msg, six.text_type(ex))
 
     @stack_context('service_stack_resource_describe__test_stack')
     def test_stack_resource_describe(self):
