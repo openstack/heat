@@ -29,8 +29,8 @@ what plug-ins the cloud operator has installed.
 Format
 ------
 
-It is a yaml text file with two main sections "resource_registry" and
-"parameters".
+It is a yaml text file with three main sections "resource_registry",
+"parameters" and "parameter_defaults".
 
 ------------------
 Command line usage
@@ -81,8 +81,18 @@ Usage examples
     InstanceType: m1.micro
     ImageId: F18-x86_64-cfntools
 
+2) Define defaults to parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This is especially useful when you have many template resources and
+you want the same value in each. Note: these defaults will get passed
+down into all template resources.
+::
 
-2) Deal with the mapping of Quantum to Neutron
+  parameter_defaults:
+    KeyName: heat_key
+
+
+3) Deal with the mapping of Quantum to Neutron
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
@@ -92,7 +102,7 @@ Usage examples
 So all existing resources which can be matched with "OS::Neutron*"
 will be mapped to "OS::Quantum*" accordingly.
 
-3) Override a resource type with a custom template resource
+4) Override a resource type with a custom template resource
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
@@ -103,7 +113,7 @@ Please note that the template resource URL here must end with ".yaml"
 or ".template", or it will not be treated as a custom template
 resource. The supported URL types are "http, https and file".
 
-4) Always map resource type X to Y
+5) Always map resource type X to Y
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
@@ -111,7 +121,7 @@ resource. The supported URL types are "http, https and file".
     "OS::Networking::FloatingIP": "OS::Nova::FloatingIP"
 
 
-5) Use default resources except one for a particular resource in the template
+6) Use default resources except one for a particular resource in the template
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 

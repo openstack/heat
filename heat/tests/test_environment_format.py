@@ -24,6 +24,7 @@ class YamlEnvironmentTest(common.HeatTestCase):
         yaml1 = ''
         yaml2 = '''
 parameters: {}
+parameter_defaults: {}
 resource_registry: {}
 '''
         tpl1 = environment_format.parse(yaml1)

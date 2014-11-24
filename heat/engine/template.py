@@ -139,12 +139,12 @@ class Template(collections.Mapping):
         return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
 
     @abc.abstractmethod
-    def param_schemata(self):
+    def param_schemata(self, param_defaults=None):
         '''Return a dict of parameters.Schema objects for the parameters.'''
         pass
 
     @abc.abstractmethod
-    def parameters(self, stack_identifier, user_params):
+    def parameters(self, stack_identifier, user_params, param_defaults=None):
         '''Return a parameters.Parameters object for the stack.'''
         pass
 

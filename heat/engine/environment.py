@@ -121,8 +121,10 @@ class TemplateResourceInfo(ResourceInfo):
 
     def get_class(self):
         from heat.engine.resources import template_resource
+        env = self.registry.environment
         return template_resource.generate_class(str(self.name),
-                                                self.template_name)
+                                                self.template_name,
+                                                env)
 
 
 class MapResourceInfo(ResourceInfo):
@@ -156,9 +158,10 @@ class GlobResourceInfo(MapResourceInfo):
 class ResourceRegistry(object):
     """By looking at the environment, find the resource implementation."""
 
-    def __init__(self, global_registry):
+    def __init__(self, global_registry, env):
         self._registry = {'resources': {}}
         self.global_registry = global_registry
+        self.environment = env
 
     def load(self, json_snippet):
         self._load_registry([], json_snippet)
@@ -363,20 +366,28 @@ class Environment(object):
         else:
             global_registry = None
 
-        self.registry = ResourceRegistry(global_registry)
+        self.registry = ResourceRegistry(global_registry, self)
         self.registry.load(env.get(env_fmt.RESOURCE_REGISTRY, {}))
+
+        if env_fmt.PARAMETER_DEFAULTS in env:
+            self.param_defaults = env[env_fmt.PARAMETER_DEFAULTS]
+        else:
+            self.param_defaults = {}
 
         if env_fmt.PARAMETERS in env:
             self.params = env[env_fmt.PARAMETERS]
         else:
             self.params = dict((k, v) for (k, v) in six.iteritems(env)
-                               if k != env_fmt.RESOURCE_REGISTRY)
+                               if k not in (env_fmt.PARAMETER_DEFAULTS,
+                                            env_fmt.RESOURCE_REGISTRY))
         self.constraints = {}
         self.stack_lifecycle_plugins = []
 
     def load(self, env_snippet):
         self.registry.load(env_snippet.get(env_fmt.RESOURCE_REGISTRY, {}))
         self.params.update(env_snippet.get(env_fmt.PARAMETERS, {}))
+        self.param_defaults.update(
+            env_snippet.get(env_fmt.PARAMETER_DEFAULTS, {}))
 
     def patch_previous_parameters(self, previous_env, clear_parameters=[]):
         """This instance of Environment is the new environment where
@@ -394,7 +405,8 @@ class Environment(object):
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""
         return {env_fmt.RESOURCE_REGISTRY: self.registry.as_dict(),
-                env_fmt.PARAMETERS: self.params}
+                env_fmt.PARAMETERS: self.params,
+                env_fmt.PARAMETER_DEFAULTS: self.param_defaults}
 
     def register_class(self, resource_type, resource_class):
         self.registry.register_class(resource_type, resource_class)
@@ -425,22 +437,25 @@ class Environment(object):
         return self.stack_lifecycle_plugins
 
 
-def get_custom_environment(registry, cust_params):
-    """Build a customized environment using the given registry and params.
-    This is built from the cust_params and the given registry so some
+def get_child_environment(parent_env, child_params):
+    """Build a child environment using the parent environment and params.
+    This is built from the child_params and the parent env so some
     resources can use user-provided parameters as if they come from an
     environment.
     """
     new_env = Environment()
-    new_env.registry = registry
-    cust_env = {env_fmt.PARAMETERS: {}}
-    if cust_params is not None:
-        if env_fmt.PARAMETERS not in cust_params:
-            cust_env[env_fmt.PARAMETERS] = cust_params
+    new_env.registry = copy.copy(parent_env.registry)
+    new_env.environment = new_env
+    child_env = {
+        env_fmt.PARAMETERS: {},
+        env_fmt.PARAMETER_DEFAULTS: parent_env.param_defaults}
+    if child_params is not None:
+        if env_fmt.PARAMETERS not in child_params:
+            child_env[env_fmt.PARAMETERS] = child_params
         else:
-            cust_env.update(cust_params)
+            child_env.update(child_params)
 
-    new_env.load(cust_env)
+    new_env.load(child_env)
     return new_env
 
 

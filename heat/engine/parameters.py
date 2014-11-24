@@ -207,6 +207,7 @@ class Parameter(object):
         self.name = name
         self.schema = schema
         self.user_value = value
+        self.user_default = None
 
     def validate(self, validate_value=True, context=None):
         '''
@@ -264,11 +265,15 @@ class Parameter(object):
 
     def has_default(self):
         '''Return whether the parameter has a default value.'''
-        return self.schema.default is not None
+        return (self.schema.default is not None or
+                self.user_default is not None)
 
     def default(self):
         '''Return the default value of the parameter.'''
-        return self.schema.default
+        return self.user_default or self.schema.default
+
+    def set_default(self, value):
+        self.user_default = value
 
     def __str__(self):
         '''Return a string representation of the parameter'''
@@ -421,12 +426,14 @@ class Parameters(collections.Mapping):
         'AWS::StackId', 'AWS::StackName', 'AWS::Region'
     )
 
-    def __init__(self, stack_identifier, tmpl, user_params=None):
+    def __init__(self, stack_identifier, tmpl, user_params=None,
+                 param_defaults=None):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
         user_params = user_params or {}
+        param_defaults = param_defaults or {}
 
         def user_parameter(schema_item):
             name, schema = schema_item
@@ -444,6 +451,10 @@ class Parameters(collections.Mapping):
         self.params = dict((p.name,
                             p) for p in itertools.chain(pseudo_parameters,
                                                         user_parameters))
+
+        for pd in six.iterkeys(param_defaults):
+            if pd in self.params:
+                self.params[pd].set_default(param_defaults[pd])
 
     def validate(self, validate_value=True, context=None):
         '''

@@ -285,8 +285,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c',
                          rsrc.resource_id)
-        registry = rsrc.stack.env.registry
-        env = environment.get_custom_environment(registry, {'name': 'foo'})
+        env = environment.get_child_environment(rsrc.stack.env,
+                                                {'name': 'foo'})
         args = {
             'stack_name': rsrc.physical_resource_name(),
             'template': template_format.parse(remote_template),
@@ -520,8 +520,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('bar', rsrc.properties.get('parameters')['name'])
-        registry = rsrc.stack.env.registry
-        env = environment.get_custom_environment(registry, {'name': 'bar'})
+        env = environment.get_child_environment(rsrc.stack.env,
+                                                {'name': 'bar'})
         fields = {
             'stack_id': rsrc.resource_id,
             'template': template_format.parse(remote_template),

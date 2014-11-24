@@ -392,13 +392,14 @@ params_schema = json.loads('''{
 
 class ParametersTest(testtools.TestCase):
     def new_parameters(self, stack_name, tmpl, user_params=None,
-                       stack_id=None, validate_value=True):
+                       stack_id=None, validate_value=True,
+                       param_defaults=None):
         user_params = user_params or {}
         tmpl.update({'HeatTemplateFormatVersion': '2012-12-12'})
         tmpl = template.Template(tmpl)
         params = tmpl.parameters(
             identifier.HeatIdentifier('', stack_name, stack_id),
-            user_params)
+            user_params, param_defaults=param_defaults)
         params.validate(validate_value)
         return params
 
@@ -504,6 +505,21 @@ class ParametersTest(testtools.TestCase):
                           self.new_parameters,
                           'test',
                           params)
+
+    def test_use_user_default(self):
+        template = {'Parameters': {'a': {'Type': 'Number', 'Default': '42'}}}
+        params = self.new_parameters('test_params', template,
+                                     param_defaults={'a': '77'})
+
+        self.assertEqual(77, params['a'])
+
+    def test_dont_use_user_default(self):
+        template = {'Parameters': {'a': {'Type': 'Number', 'Default': '42'}}}
+        params = self.new_parameters('test_params', template,
+                                     {'a': '111'},
+                                     param_defaults={'a': '77'})
+
+        self.assertEqual(111, params['a'])
 
 
 class ParameterSchemaTest(testtools.TestCase):
