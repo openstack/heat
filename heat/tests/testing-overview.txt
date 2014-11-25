@@ -45,5 +45,4 @@ To run the tests with a clean virtual env in the same manner as the
 OpenStack testing infrastructure does so, use tox.
 
 $ tox -epy27 # test suite on python 2.7
-$ tox -epy26 # test suite on python 2.6
 $ tox -epep8 # run full source code checker
