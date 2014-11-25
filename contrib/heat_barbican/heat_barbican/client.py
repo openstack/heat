@@ -16,18 +16,20 @@ from heat.engine.clients import client_plugin
 
 try:
     from barbicanclient import client as barbican_client
-    from barbicanclient.common import auth
 except ImportError:
     barbican_client = None
-    auth = None
 
 
 class BarbicanClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
-
         keystone_client = self.clients.client('keystone').client
-        auth_plugin = auth.KeystoneAuthV2(keystone=keystone_client)
-        client = barbican_client.Client(auth_plugin=auth_plugin)
+        endpoint_type = self._get_client_option('barbican', 'endpoint_type')
+        endpoint = self.url_for(service_type='key-manager',
+                                endpoint_type=endpoint_type)
+        # Remove version if set
+        endpoint = endpoint.rsplit("/", 1)[0]
+        client = barbican_client.Client(
+            session=keystone_client.session, endpoint=endpoint)
 
         return client
