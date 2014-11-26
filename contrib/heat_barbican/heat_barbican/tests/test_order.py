@@ -77,7 +77,7 @@ class TestOrder(common.HeatTestCase):
     def _create_resource(self, name, snippet, stack):
         res = order.Order(name, snippet, stack)
         res.check_create_complete = mock.Mock(return_value=True)
-        self.barbican.orders.Order.return_value = FakeOrder(name)
+        self.barbican.orders.create_key.return_value = FakeOrder(name)
         scheduler.TaskRunner(res.create)()
         return res
 
@@ -85,7 +85,7 @@ class TestOrder(common.HeatTestCase):
         res = self._create_resource('foo', self.res_template, self.stack)
         expected_state = (res.CREATE, res.COMPLETE)
         self.assertEqual(expected_state, res.state)
-        args = self.barbican.orders.Order.call_args[1]
+        args = self.barbican.orders.create_key.call_args[1]
         self.assertEqual('foobar-order', args['name'])
         self.assertEqual('aes', args['algorithm'])
         self.assertEqual('cbc', args['mode'])
@@ -98,7 +98,7 @@ class TestOrder(common.HeatTestCase):
         mock_order.secret_ref = 'test-secret-ref'
 
         res = self._create_resource('foo', self.res_template, self.stack)
-        self.barbican.orders.Order.return_value = mock_order
+        self.barbican.orders.get.return_value = mock_order
 
         self.assertEqual('test-order-ref', res.FnGetAtt('order_ref'))
         self.assertEqual('test-secret-ref', res.FnGetAtt('secret_ref'))
@@ -106,15 +106,15 @@ class TestOrder(common.HeatTestCase):
     def test_attributes_handle_exceptions(self):
         mock_order = mock.Mock()
         res = self._create_resource('foo', self.res_template, self.stack)
-        self.barbican.orders.Order.return_value = mock_order
+        self.barbican.orders.get.return_value = mock_order
 
         self.barbican.barbican_client.HTTPClientError = Exception
-        self.barbican.orders.Order.side_effect = Exception('boom')
+        self.barbican.orders.get.side_effect = Exception('boom')
         self.assertRaises(self.barbican.barbican_client.HTTPClientError,
                           res.FnGetAtt, 'order_ref')
 
     def test_create_order_sets_resource_id(self):
-        self.barbican.orders.Order.return_value = FakeOrder('foo')
+        self.barbican.orders.create_key.return_value = FakeOrder('foo')
         res = self._create_resource('foo', self.res_template, self.stack)
 
         self.assertEqual('foo', res.resource_id)
@@ -122,7 +122,7 @@ class TestOrder(common.HeatTestCase):
     def test_create_order_defaults_to_octet_stream(self):
         res = self._create_resource('foo', self.res_template, self.stack)
 
-        args = self.barbican.orders.Order.call_args[1]
+        args = self.barbican.orders.create_key.call_args[1]
         self.assertEqual('application/octet-stream',
                          args[res.PAYLOAD_CONTENT_TYPE])
 
@@ -133,7 +133,7 @@ class TestOrder(common.HeatTestCase):
                                             self.props)
         res = self._create_resource(defn.name, defn, self.stack)
 
-        args = self.barbican.orders.Order.call_args[1]
+        args = self.barbican.orders.create_key.call_args[1]
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
     def test_create_order_other_content_types_now_allowed(self):
@@ -146,7 +146,7 @@ class TestOrder(common.HeatTestCase):
                           scheduler.TaskRunner(res.create))
 
     def test_delete_order(self):
-        self.barbican.orders.Order.return_value = 'foo'
+        self.barbican.orders.create_key.return_value = 'foo'
         res = self._create_resource('foo', self.res_template, self.stack)
         self.assertEqual('foo', res.resource_id)
 
@@ -176,16 +176,16 @@ class TestOrder(common.HeatTestCase):
         res = order.Order('foo', self.res_template, self.stack)
 
         mock_active = mock.Mock(status='ACTIVE')
-        self.barbican.orders.Order.return_value = mock_active
+        self.barbican.orders.get.return_value = mock_active
         self.assertTrue(res.check_create_complete('foo'))
 
         mock_not_active = mock.Mock(status='PENDING')
-        self.barbican.orders.Order.return_value = mock_not_active
+        self.barbican.orders.get.return_value = mock_not_active
         self.assertFalse(res.check_create_complete('foo'))
 
         mock_not_active = mock.Mock(status='ERROR', error_reason='foo',
                                     error_status_code=500)
-        self.barbican.orders.Order.return_value = mock_not_active
+        self.barbican.orders.get.return_value = mock_not_active
         exc = self.assertRaises(exception.Error,
                                 res.check_create_complete, 'foo')
         self.assertIn('foo', six.text_type(exc))
