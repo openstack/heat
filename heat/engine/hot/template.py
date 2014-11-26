@@ -145,6 +145,9 @@ class HOTemplate20130523(template.Template):
                                           '_type': type(attrs),
                                           'obj_name': obj_name}
                 raise exception.StackValidationFailed(message=message)
+            except KeyError as e:
+                # an invalid keyword was found
+                raise exception.StackValidationFailed(message=six.text_type(e))
 
         return cfn_objects
 
