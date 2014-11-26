@@ -15,6 +15,7 @@ import mock
 from oslo.utils import timeutils
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
@@ -252,7 +253,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                                               end_capacity=2,
                                               )
         group.adjust(1)
-        self.assertEqual(2, len(group.get_instance_names()))
+        self.assertEqual(2, grouputils.get_size(group))
         mock_notify.assert_has_calls(expected)
 
         expected = self.expected_notifs_calls(group,
@@ -261,7 +262,7 @@ class ScaleNotificationTest(common.HeatTestCase):
                                               end_capacity=1,
                                               )
         group.adjust(-1)
-        self.assertEqual(1, len(group.get_instance_names()))
+        self.assertEqual(1, grouputils.get_size(group))
         mock_notify.assert_has_calls(expected)
 
     @mock.patch('heat.engine.notification.stack.send')
@@ -280,6 +281,6 @@ class ScaleNotificationTest(common.HeatTestCase):
                                                  start_capacity=1,
                                                  with_error=err_message)
         self.assertRaises(exception.Error, group.adjust, 2)
-        self.assertEqual(1, len(group.get_instance_names()))
+        self.assertEqual(1, grouputils.get_size(group))
         mock_error.assert_has_calls([error])
         mock_info.assert_has_calls([info])
