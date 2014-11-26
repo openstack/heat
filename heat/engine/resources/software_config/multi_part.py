@@ -114,7 +114,7 @@ class MultipartMime(software_config.SoftwareConfig):
 
             try:
                 sc = self.rpc_client().show_software_config(
-                    self.context, self.resource_id)
+                    self.context, config)
             except Exception as ex:
                 self.rpc_client().ignore_error_named(ex, 'NotFound')
             else:
