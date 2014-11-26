@@ -18,8 +18,7 @@ import six
 from heat.common import exception as heat_ex
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources.nova_floatingip import NovaFloatingIp
-from heat.engine.resources.nova_floatingip import NovaFloatingIpAssociation
+from heat.engine.resources import nova_floatingip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -92,7 +91,9 @@ class NovaFloatingIPTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         floating_ip = stack.t.resource_definitions(stack)['MyFloatingIP']
 
-        return NovaFloatingIp('MyFloatingIP', floating_ip, stack)
+        return nova_floatingip.NovaFloatingIp('MyFloatingIP',
+                                              floating_ip,
+                                              stack)
 
     def prepare_floating_ip_assoc(self):
         nova.NovaClientPlugin._create().AndReturn(
@@ -111,8 +112,8 @@ class NovaFloatingIPTest(common.HeatTestCase):
         resource_defns = stack.t.resource_definitions(stack)
         floating_ip_assoc = resource_defns['MyFloatingIPAssociation']
 
-        return NovaFloatingIpAssociation('MyFloatingIPAssociation',
-                                         floating_ip_assoc, stack)
+        return nova_floatingip.NovaFloatingIpAssociation(
+            'MyFloatingIPAssociation', floating_ip_assoc, stack)
 
     def test_floating_ip_create(self):
         rsrc = self.prepare_floating_ip()

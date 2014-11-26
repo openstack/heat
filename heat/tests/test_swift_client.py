@@ -12,7 +12,7 @@
 #    under the License.
 
 import mock
-from testtools.matchers import MatchesRegex
+from testtools import matchers
 
 from heat.engine.clients.os import swift
 from heat.tests import common
@@ -76,7 +76,7 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
                   "/%s\?temp_url_sig=[0-9a-f]{40}&"
                   "temp_url_expires=[0-9]{10}" %
                   (container_name, obj_name))
-        self.assertThat(url, MatchesRegex(regexp))
+        self.assertThat(url, matchers.MatchesRegex(regexp))
 
         timeout = int(url.split('=')[-1])
         self.assertTrue(timeout < swift.MAX_EPOCH)
@@ -113,4 +113,4 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
                   "/%s\?temp_url_sig=[0-9a-f]{40}&"
                   "temp_url_expires=[0-9]{10}" %
                   (container_name, obj_name))
-        self.assertThat(url, MatchesRegex(regexp))
+        self.assertThat(url, matchers.MatchesRegex(regexp))

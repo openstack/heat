@@ -21,7 +21,7 @@ import requests
 
 from heat.api.aws import ec2token
 from heat.api.aws import exception
-from heat.common.wsgi import Request
+from heat.common import wsgi
 from heat.tests import common
 
 
@@ -40,7 +40,7 @@ class Ec2TokenTest(common.HeatTestCase):
         environ = environ or {}
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ.update({'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs})
-        req = Request(environ)
+        req = wsgi.Request(environ)
         return req
 
     def test_conf_get_paste(self):

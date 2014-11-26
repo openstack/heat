@@ -15,7 +15,7 @@ import collections
 import copy
 
 from keystoneclient import exceptions as keystone_exc
-from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
 from novaclient.v1_1 import security_group_rules as nova_sgr
 from novaclient.v1_1 import security_groups as nova_sg
@@ -747,7 +747,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            NeutronClientException(status_code=409))
+            neutron_exc.NeutronClientException(status_code=409))
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
@@ -760,7 +760,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            NeutronClientException(status_code=409))
+            neutron_exc.NeutronClientException(status_code=409))
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
@@ -773,7 +773,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            NeutronClientException(status_code=409))
+            neutron_exc.NeutronClientException(status_code=409))
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
@@ -786,7 +786,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            NeutronClientException(status_code=409))
+            neutron_exc.NeutronClientException(status_code=409))
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
@@ -799,7 +799,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            NeutronClientException(status_code=409))
+            neutron_exc.NeutronClientException(status_code=409))
 
         # delete script
         neutronclient.Client.show_security_group('aaaa').AndReturn({
@@ -865,20 +865,20 @@ Resources:
                 }],
                 'id': 'aaaa'}})
         neutronclient.Client.delete_security_group_rule('bbbb').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group_rule('cccc').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group_rule('dddd').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group_rule('eeee').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group_rule('ffff').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group('aaaa').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
 
         neutronclient.Client.show_security_group('aaaa').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template_neutron)

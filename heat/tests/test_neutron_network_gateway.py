@@ -15,7 +15,6 @@
 #    limitations under the License.
 
 import mox
-from mox import IgnoreArg
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
@@ -441,7 +440,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                     'segmentation_id': 10}]
             })
         prop_diff = {'name': u'NetworkGatewayUpdate'}
-        self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
+        self.assertIsNone(rsrc.handle_update(snippet_for_update,
+                                             mox.IgnoreArg(),
                                              prop_diff))
 
         # update connections
@@ -464,11 +464,13 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                 'segmentation_type': u'flat',
                 'segmentation_id': 0}]
         }
-        self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
+        self.assertIsNone(rsrc.handle_update(snippet_for_update,
+                                             mox.IgnoreArg(),
                                              prop_diff))
 
         # update connections once more
-        self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
+        self.assertIsNone(rsrc.handle_update(snippet_for_update,
+                                             mox.IgnoreArg(),
                                              prop_diff))
 
         # update devices
@@ -490,7 +492,8 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                 'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
                 'interface_name': u'breth2'}]
         }
-        self.assertIsNone(rsrc.handle_update(snippet_for_update, IgnoreArg(),
+        self.assertIsNone(rsrc.handle_update(snippet_for_update,
+                                             mox.IgnoreArg(),
                                              prop_diff))
 
         self.m.VerifyAll()

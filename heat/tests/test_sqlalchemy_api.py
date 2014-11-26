@@ -12,8 +12,7 @@
 #    under the License.
 
 import datetime
-from json import dumps
-from json import loads
+import json
 import six
 import uuid
 
@@ -29,7 +28,7 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resource import Resource
+from heat.engine import resource as rsrc
 from heat.engine.resources import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
@@ -66,7 +65,7 @@ UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
 
 
-class MyResource(Resource):
+class MyResource(rsrc.Resource):
     properties_schema = {
         'ServerName': {'Type': 'String', 'Required': True},
         'Flavor': {'Type': 'String', 'Required': True},
@@ -311,12 +310,13 @@ class SqlAlchemyTest(common.HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         stack.create()
-        rsrc = stack['WebServer']
-        rsrc.data_set('test', 'test_data')
-        self.assertEqual('test_data', db_api.resource_data_get(rsrc, 'test'))
-        db_api.resource_data_delete(rsrc, 'test')
+        resource = stack['WebServer']
+        resource.data_set('test', 'test_data')
+        self.assertEqual('test_data', db_api.resource_data_get(resource,
+                                                               'test'))
+        db_api.resource_data_delete(resource, 'test')
         self.assertRaises(exception.NotFound,
-                          db_api.resource_data_get, rsrc, 'test')
+                          db_api.resource_data_get, resource, 'test')
 
     def test_stack_get_by_name(self):
         stack = self._setup_test_stack('stack', UUID1,
@@ -1119,7 +1119,7 @@ def create_resource(ctx, stack, **kwargs):
         'action': 'create',
         'status': 'complete',
         'status_reason': 'create_complete',
-        'rsrc_metadata': loads('{"foo": "123"}'),
+        'rsrc_metadata': json.loads('{"foo": "123"}'),
         'stack_id': stack.id
     }
     values.update(kwargs)
@@ -1153,7 +1153,7 @@ def create_event(ctx, **kwargs):
 def create_watch_rule(ctx, stack, **kwargs):
     values = {
         'name': 'test_rule',
-        'rule': loads('{"foo": "123"}'),
+        'rule': json.loads('{"foo": "123"}'),
         'state': 'normal',
         'last_evaluated': timeutils.utcnow(),
         'stack_id': stack.id,
@@ -1164,7 +1164,7 @@ def create_watch_rule(ctx, stack, **kwargs):
 
 def create_watch_data(ctx, watch_rule, **kwargs):
     values = {
-        'data': loads('{"foo": "bar"}'),
+        'data': json.loads('{"foo": "bar"}'),
         'watch_rule_id': watch_rule.id
     }
     values.update(kwargs)
@@ -1551,7 +1551,7 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertEqual('create', ret_res.action)
         self.assertEqual('complete', ret_res.status)
         self.assertEqual('create_complete', ret_res.status_reason)
-        self.assertEqual('{"foo": "123"}', dumps(ret_res.rsrc_metadata))
+        self.assertEqual('{"foo": "123"}', json.dumps(ret_res.rsrc_metadata))
         self.assertEqual(self.stack.id, ret_res.stack_id)
 
     def test_resource_get(self):
@@ -1869,7 +1869,7 @@ class DBAPIWatchRuleTest(common.HeatTestCase):
         ret_wr = db_api.watch_rule_get(self.ctx, watch_rule.id)
         self.assertIsNotNone(ret_wr)
         self.assertEqual('test_rule', ret_wr.name)
-        self.assertEqual('{"foo": "123"}', dumps(ret_wr.rule))
+        self.assertEqual('{"foo": "123"}', json.dumps(ret_wr.rule))
         self.assertEqual('normal', ret_wr.state)
         self.assertEqual(self.stack.id, ret_wr.stack_id)
 
@@ -1912,13 +1912,13 @@ class DBAPIWatchRuleTest(common.HeatTestCase):
         watch_rule = create_watch_rule(self.ctx, self.stack)
         values = {
             'name': 'test_rule_1',
-            'rule': loads('{"foo": "bar"}'),
+            'rule': json.loads('{"foo": "bar"}'),
             'state': 'nodata',
         }
         db_api.watch_rule_update(self.ctx, watch_rule.id, values)
         watch_rule = db_api.watch_rule_get(self.ctx, watch_rule.id)
         self.assertEqual('test_rule_1', watch_rule.name)
-        self.assertEqual('{"foo": "bar"}', dumps(watch_rule.rule))
+        self.assertEqual('{"foo": "bar"}', json.dumps(watch_rule.rule))
         self.assertEqual('nodata', watch_rule.state)
 
         self.assertRaises(exception.NotFound, db_api.watch_rule_update,
@@ -1950,14 +1950,14 @@ class DBAPIWatchDataTest(common.HeatTestCase):
         ret_data = db_api.watch_data_get_all(self.ctx)
         self.assertEqual(1, len(ret_data))
 
-        self.assertEqual('{"foo": "bar"}', dumps(ret_data[0].data))
+        self.assertEqual('{"foo": "bar"}', json.dumps(ret_data[0].data))
         self.assertEqual(self.watch_rule.id, ret_data[0].watch_rule_id)
 
     def test_watch_data_get_all(self):
         values = [
-            {'data': loads('{"foo": "d1"}')},
-            {'data': loads('{"foo": "d2"}')},
-            {'data': loads('{"foo": "d3"}')}
+            {'data': json.loads('{"foo": "d1"}')},
+            {'data': json.loads('{"foo": "d2"}')},
+            {'data': json.loads('{"foo": "d3"}')}
         ]
         [create_watch_data(self.ctx, self.watch_rule, **val) for val in values]
         watch_data = db_api.watch_data_get_all(self.ctx)

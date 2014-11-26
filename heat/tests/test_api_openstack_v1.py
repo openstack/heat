@@ -32,7 +32,7 @@ from heat.common import exception as heat_exc
 from heat.common import identifier
 from heat.common import policy
 from heat.common import urlfetch
-from heat.common.wsgi import Request
+from heat.common import wsgi
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.tests import common
@@ -253,7 +253,7 @@ class ControllerTest(object):
             qs = "&".join(["=".join([k, str(params[k])]) for k in params])
             environ['QUERY_STRING'] = qs
 
-        req = Request(environ)
+        req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.tenant)
         self.context = req.context
         return req
@@ -272,7 +272,7 @@ class ControllerTest(object):
         environ = self._environ(path)
         environ['REQUEST_METHOD'] = method
 
-        req = Request(environ)
+        req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.tenant)
         self.context = req.context
         req.body = data

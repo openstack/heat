@@ -23,7 +23,7 @@ from heat.tests import common
 from heat.tests import utils
 
 try:
-    from neutronclient.common.exceptions import NeutronClientException
+    from neutronclient.common import exceptions as neutron_exc
     from neutronclient.v2_0 import client as neutronclient
 except ImportError:
     neutronclient = None
@@ -235,11 +235,11 @@ class VPCTestBase(common.HeatTestCase):
                     'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'}})
         elif group == 'INVALID-NO-REF':
             neutronclient.Client.show_security_group(group).AndRaise(
-                NeutronClientException(status_code=404))
+                neutron_exc.NeutronClientException(status_code=404))
         elif group == 'RaiseException':
             neutronclient.Client.show_security_group(
                 '0389f747-7785-4757-b7bb-2ab07e4b09c3').AndRaise(
-                    NeutronClientException(status_code=403))
+                    neutron_exc.NeutronClientException(status_code=403))
 
     def mock_delete_security_group(self):
         self.mock_show_security_group()
@@ -354,7 +354,7 @@ Resources:
         neutronclient.Client.create_network(
             {
                 'network': {'name': self.vpc_name}
-            }).AndRaise(NeutronClientException())
+            }).AndRaise(neutron_exc.NeutronClientException())
 
     def test_vpc(self):
         self.mock_create_network()
@@ -408,9 +408,9 @@ Resources:
         neutronclient.Client.remove_interface_router(
             u'bbbb',
             {'subnet_id': 'cccc'}).AndRaise(
-                NeutronClientException(status_code=404))
+                neutron_exc.NeutronClientException(status_code=404))
         neutronclient.Client.delete_subnet('cccc').AndRaise(
-            NeutronClientException(status_code=404))
+            neutron_exc.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template)
@@ -446,9 +446,8 @@ Resources:
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                         'id': 'cccc'}})
 
-        neutronclient.Client.show_network(
-            'aaaa'
-        ).MultipleTimes().AndRaise(NeutronClientException(status_code=404))
+        neutronclient.Client.show_network('aaaa').MultipleTimes().AndRaise(
+            neutron_exc.NeutronClientException(status_code=404))
 
     def test_create_failed_delete_success(self):
         self._mock_create_subnet_failed()

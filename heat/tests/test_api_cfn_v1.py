@@ -22,7 +22,7 @@ import heat.api.cfn.v1.stacks as stacks
 from heat.common import exception as heat_exception
 from heat.common import identifier
 from heat.common import policy
-from heat.common.wsgi import Request
+from heat.common import wsgi
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.tests import common
@@ -66,7 +66,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         params = params or {}
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
-        req = Request(environ)
+        req = wsgi.Request(environ)
         req.context = utils.dummy_context()
         return req
 

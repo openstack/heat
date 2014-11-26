@@ -17,7 +17,7 @@ import six
 
 import mox
 from oslo.config import cfg
-from testtools.matchers import MatchesRegex
+from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
@@ -30,7 +30,7 @@ from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes11
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 asg_tmpl_without_updt_policy = '''
@@ -205,7 +205,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(AutoScalingGroupTest, self).setUp()
-        self.fc = fakes11.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
@@ -481,7 +481,8 @@ class AutoScalingGroupTest(common.HeatTestCase):
         # test that physical resource name of launch configuration is used
         conf = stack['LaunchConfig']
         conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
-        self.assertThat(conf.FnGetRefId(), MatchesRegex(conf_name_pattern))
+        self.assertThat(conf.FnGetRefId(),
+                        matchers.MatchesRegex(conf_name_pattern))
 
         # get launch conf name here to compare result after update
         conf_name = self.get_launch_conf_name(stack, 'WebServerGroup')
@@ -746,7 +747,8 @@ class AutoScalingGroupTest(common.HeatTestCase):
         # test that physical resource name of launch configuration is used
         conf = stack['LaunchConfig']
         conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
-        self.assertThat(conf.FnGetRefId(), MatchesRegex(conf_name_pattern))
+        self.assertThat(conf.FnGetRefId(),
+                        matchers.MatchesRegex(conf_name_pattern))
 
         # test the number of instances created
         nested = stack['WebServerGroup'].nested()

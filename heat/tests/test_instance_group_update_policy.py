@@ -15,7 +15,7 @@ import copy
 import json
 
 import mox
-from testtools.matchers import MatchesRegex
+from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
@@ -393,7 +393,8 @@ class InstanceGroupTest(common.HeatTestCase):
         # test that physical resource name of launch configuration is used
         conf = stack['JobServerConfig']
         conf_name_pattern = '%s-JobServerConfig-[a-zA-Z0-9]+$' % stack.name
-        self.assertThat(conf.FnGetRefId(), MatchesRegex(conf_name_pattern))
+        self.assertThat(conf.FnGetRefId(),
+                        matchers.MatchesRegex(conf_name_pattern))
 
         # get launch conf name here to compare result after update
         conf_name = self.get_launch_conf_name(stack, 'JobServerGroup')
@@ -628,7 +629,8 @@ class InstanceGroupTest(common.HeatTestCase):
         # test that physical resource name of launch configuration is used
         conf = stack['JobServerConfig']
         conf_name_pattern = '%s-JobServerConfig-[a-zA-Z0-9]+$' % stack.name
-        self.assertThat(conf.FnGetRefId(), MatchesRegex(conf_name_pattern))
+        self.assertThat(conf.FnGetRefId(),
+                        matchers.MatchesRegex(conf_name_pattern))
 
         # test the number of instances created
         nested = stack['JobServerGroup'].nested()

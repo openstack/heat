@@ -23,7 +23,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import ceilometer
 from heat.engine import parser
-from heat.engine.properties import schemata
+from heat.engine import properties as props
 from heat.engine import resource
 from heat.engine.resources.ceilometer import alarm
 from heat.engine import rsrc_defn
@@ -204,7 +204,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
 
         self.stack = self.create_stack(template=json.dumps(t))
         self.m.StubOutWithMock(self.fa.alarms, 'update')
-        schema = schemata(alarm.CeilometerAlarm.properties_schema)
+        schema = props.schemata(alarm.CeilometerAlarm.properties_schema)
         exns = ['period', 'evaluation_periods', 'threshold',
                 'statistic', 'comparison_operator', 'meter_name',
                 'matching_metadata', 'query']
@@ -230,8 +230,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.stack.create()
         rsrc = self.stack['MEMAlarmHigh']
 
-        props = copy.copy(rsrc.properties.data)
-        props.update({
+        properties = copy.copy(rsrc.properties.data)
+        properties.update({
             'comparison_operator': 'lt',
             'description': 'fruity',
             'evaluation_periods': '2',
@@ -248,7 +248,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         })
         snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                rsrc.type(),
-                                               props)
+                                               properties)
 
         scheduler.TaskRunner(rsrc.update, snippet)()
 
@@ -270,11 +270,11 @@ class CeilometerAlarmTest(common.HeatTestCase):
         self.stack.create()
         rsrc = self.stack['MEMAlarmHigh']
 
-        props = copy.copy(rsrc.properties.data)
-        props['meter_name'] = 'temp'
+        properties = copy.copy(rsrc.properties.data)
+        properties['meter_name'] = 'temp'
         snippet = rsrc_defn.ResourceDefinition(rsrc.name,
                                                rsrc.type(),
-                                               props)
+                                               properties)
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(resource.UpdateReplace, updater)

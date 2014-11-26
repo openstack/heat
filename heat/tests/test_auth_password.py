@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keystoneclient.exceptions import Unauthorized
+from keystoneclient import exceptions as keystone_exc
 from keystoneclient.v2_0 import client as keystone_client
 import webob
 
-from heat.common.auth_password import KeystonePasswordAuthProtocol
+from heat.common import auth_password
 from heat.tests import common
 
 EXPECTED_V2_DEFAULT_ENV_RESPONSE = {
@@ -78,7 +78,8 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.config = {'auth_uri': 'http://keystone.test.com:5000'}
         self.app = FakeApp(
             expected_env={'HTTP_X_AUTH_URL': self.config['auth_uri']})
-        self.middleware = KeystonePasswordAuthProtocol(self.app, self.config)
+        self.middleware = auth_password.KeystonePasswordAuthProtocol(
+            self.app, self.config)
 
     def _start_fake_response(self, status, headers):
         self.response_status = int(status.split(' ', 1)[0])
@@ -106,7 +107,7 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         mock_client = keystone_client.Client(
             username='user_name1', password='badpassword',
             tenant_id='tenant_id1', auth_url=self.config['auth_uri'])
-        mock_client.AndRaise(Unauthorized(401))
+        mock_client.AndRaise(keystone_exc.Unauthorized(401))
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'

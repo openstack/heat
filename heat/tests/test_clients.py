@@ -20,12 +20,12 @@ from keystoneclient import exceptions as keystone_exc
 from neutronclient.common import exceptions as neutron_exc
 from saharaclient.api import base as sahara_base
 from swiftclient import exceptions as swift_exc
-from troveclient.client import exceptions as trove_exc
+from troveclient import client as troveclient
 
 from heatclient import client as heatclient
 import mock
 from oslo.config import cfg
-from testtools.testcase import skip
+from testtools import testcase
 
 from heat.engine import clients
 from heat.engine.clients import client_plugin
@@ -206,7 +206,7 @@ class ClientPluginTest(common.HeatTestCase):
 
 class TestClientPluginsInitialise(common.HeatTestCase):
 
-    @skip('skipped until keystone can read context auth_ref')
+    @testcase.skip('skipped until keystone can read context auth_ref')
     def test_create_all_clients(self):
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
@@ -554,7 +554,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=False,
             plugin='trove',
-            exception=lambda: trove_exc.NotFound(message='gone'),
+            exception=lambda: troveclient.exceptions.NotFound(message='gone'),
         )),
         ('trove_exception', dict(
             is_not_found=False,
@@ -570,7 +570,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=False,
             plugin='trove',
-            exception=lambda: trove_exc.RequestEntityTooLarge(
+            exception=lambda: troveclient.exceptions.RequestEntityTooLarge(
                 message='over'),
         )),
         ('trove_conflict', dict(
@@ -579,7 +579,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=True,
             plugin='trove',
-            exception=lambda: trove_exc.Conflict(
+            exception=lambda: troveclient.exceptions.Conflict(
                 message='Conflict'),
         )),
         ('sahara_not_found', dict(

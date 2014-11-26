@@ -18,7 +18,7 @@ import time
 
 from keystoneclient import exceptions as kc_exceptions
 import mock
-from mox import IgnoreArg
+import mox
 from oslo.config import cfg
 import six
 import warnings
@@ -29,7 +29,6 @@ from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
 from heat.common import urlfetch
 import heat.db.api as db_api
-import heat.engine.cfn.functions
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_t
 from heat.engine.clients.os import keystone
@@ -44,10 +43,10 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
-from heat.tests.fakes import FakeKeystoneClient
+from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 def join(raw):
@@ -381,7 +380,7 @@ Mappings:
 
         p_snippet = {"Ref": "baz"}
         parsed = tmpl.parse(stack, p_snippet)
-        self.assertTrue(isinstance(parsed, heat.engine.cfn.functions.ParamRef))
+        self.assertTrue(isinstance(parsed, cfn_funcs.ParamRef))
 
     def test_select_from_list(self):
         tmpl = parser.Template(empty_template)
@@ -471,7 +470,7 @@ Mappings:
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template))
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        fc = fakes.FakeClient()
+        fc = fakes_v1_1.FakeClient()
         nova.NovaClientPlugin._create().AndReturn(fc)
         self.m.ReplayAll()
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stack))
@@ -1140,12 +1139,12 @@ class StackTest(common.HeatTestCase):
                               stack.timeout, True, stack.disable_rollback,
                               'parent', owner_id=None,
                               stack_user_project_id=None,
-                              created_time=IgnoreArg(),
+                              created_time=mox.IgnoreArg(),
                               updated_time=None,
                               user_creds_id=stack.user_creds_id,
                               tenant_id='test_tenant_id',
                               use_stored_context=False,
-                              username=IgnoreArg())
+                              username=mox.IgnoreArg())
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -1452,7 +1451,7 @@ class StackTest(common.HeatTestCase):
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
         self.m.StubOutWithMock(hkc, 'KeystoneClient')
         hkc.KeystoneClient(trustor_ctx).AndReturn(
-            FakeKeystoneClient(user_id='thetrustor'))
+            fakes.FakeKeystoneClient(user_id='thetrustor'))
         self.m.ReplayAll()
 
         self.stack = parser.Stack(
@@ -1485,11 +1484,11 @@ class StackTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(hkc, 'KeystoneClient')
         hkc.KeystoneClient(trustor_ctx).AndReturn(
-            FakeKeystoneClient(user_id='thetrustor'))
+            fakes.FakeKeystoneClient(user_id='thetrustor'))
         self.m.StubOutWithMock(parser.Stack, 'stored_context')
         parser.Stack.stored_context().AndReturn(stored_ctx)
         hkc.KeystoneClient(stored_ctx).AndReturn(
-            FakeKeystoneClient(user_id='nottrustor'))
+            fakes.FakeKeystoneClient(user_id='nottrustor'))
         self.m.ReplayAll()
 
         self.stack = parser.Stack(
@@ -1515,7 +1514,7 @@ class StackTest(common.HeatTestCase):
     def test_delete_trust_backup(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        class FakeKeystoneClientFail(FakeKeystoneClient):
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
@@ -1541,7 +1540,7 @@ class StackTest(common.HeatTestCase):
     def test_delete_trust_nested(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        class FakeKeystoneClientFail(FakeKeystoneClient):
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
@@ -1571,7 +1570,7 @@ class StackTest(common.HeatTestCase):
     def test_delete_trust_fail(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        class FakeKeystoneClientFail(FakeKeystoneClient):
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
@@ -1596,7 +1595,7 @@ class StackTest(common.HeatTestCase):
         self.assertIn('Error deleting trust', self.stack.status_reason)
 
     def test_delete_deletes_project(self):
-        fkc = FakeKeystoneClient()
+        fkc = fakes.FakeKeystoneClient()
         fkc.delete_stack_domain_project = mock.Mock()
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
@@ -1622,7 +1621,7 @@ class StackTest(common.HeatTestCase):
             project_id='aproject456')
 
     def test_abandon_nodelete_project(self):
-        fkc = FakeKeystoneClient()
+        fkc = fakes.FakeKeystoneClient()
         fkc.delete_stack_domain_project = mock.Mock()
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
@@ -2205,10 +2204,12 @@ class StackTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(generic_rsrc.ResWithComplexPropsAndAttrs,
                                'handle_update')
-        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(
-            IgnoreArg(), IgnoreArg(), prop_diff1)
-        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(
-            IgnoreArg(), IgnoreArg(), prop_diff2)
+        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(mox.IgnoreArg(),
+                                                               mox.IgnoreArg(),
+                                                               prop_diff1)
+        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(mox.IgnoreArg(),
+                                                               mox.IgnoreArg(),
+                                                               prop_diff2)
 
         self.m.ReplayAll()
 
@@ -3850,7 +3851,7 @@ class StackTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
         keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClient(user_id='auser123'))
+            fakes.FakeKeystoneClient(user_id='auser123'))
         self.m.ReplayAll()
 
         self.stack = parser.Stack(
@@ -4039,7 +4040,7 @@ class StackTest(common.HeatTestCase):
 
     def test_stack_user_project_id_delete_fail(self):
 
-        class FakeKeystoneClientFail(FakeKeystoneClient):
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_stack_domain_project(self, project_id):
                 raise kc_exceptions.Forbidden("Denied!")
 

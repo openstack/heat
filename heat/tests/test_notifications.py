@@ -32,7 +32,7 @@ from heat.engine import stack_resource
 from heat.tests import common
 from heat.tests import generic_resource
 # reuse the same template than autoscaling tests
-from heat.tests.test_autoscaling import as_template
+from heat.tests import test_autoscaling as test_as
 from heat.tests import utils
 
 
@@ -150,7 +150,7 @@ class ScaleNotificationTest(common.HeatTestCase):
         env = environment.Environment()
         env.load({u'parameters':
                   {u'KeyName': 'foo', 'ImageId': 'cloudimage'}})
-        t = template_format.parse(as_template)
+        t = template_format.parse(test_as.as_template)
         template = parser.Template(t)
         self.stack_name = utils.random_name()
         stack = parser.Stack(self.ctx, self.stack_name, template,
