@@ -11,26 +11,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from sqlalchemy.dialects.mysql.base import MySQLDialect
-from sqlalchemy.dialects.sqlite.base import SQLiteDialect
+from sqlalchemy.dialects.mysql import base as mysql_base
+from sqlalchemy.dialects.sqlite import base as sqlite_base
 from sqlalchemy import types
 import testtools
 
-from heat.db.sqlalchemy.types import Json
-from heat.db.sqlalchemy.types import LongText
+from heat.db.sqlalchemy import types as db_types
 
 
 class LongTextTest(testtools.TestCase):
 
     def setUp(self):
         super(LongTextTest, self).setUp()
-        self.sqltype = LongText()
+        self.sqltype = db_types.LongText()
 
     def test_load_dialect_impl(self):
-        dialect = MySQLDialect()
+        dialect = mysql_base.MySQLDialect()
         impl = self.sqltype.load_dialect_impl(dialect)
         self.assertNotEqual(types.Text, type(impl))
-        dialect = SQLiteDialect()
+        dialect = sqlite_base.SQLiteDialect()
         impl = self.sqltype.load_dialect_impl(dialect)
         self.assertEqual(types.Text, type(impl))
 
@@ -39,7 +38,7 @@ class JsonTest(testtools.TestCase):
 
     def setUp(self):
         super(JsonTest, self).setUp()
-        self.sqltype = Json()
+        self.sqltype = db_types.Json()
 
     def test_process_bind_param(self):
         dialect = None

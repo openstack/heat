@@ -13,7 +13,7 @@
 
 import base64
 import contextlib
-from datetime import datetime
+import datetime as dt
 from oslo.config import cfg
 from oslo.utils import encodeutils
 from oslo.utils import excutils
@@ -44,6 +44,8 @@ from heat.rpc import client as rpc_client
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
+
+datetime = dt.datetime
 
 
 def _register_class(resource_type, resource_class):

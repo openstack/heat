@@ -12,8 +12,8 @@
 #    under the License.
 
 import email
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.mime import multipart
+from email.mime import text
 import os
 
 from heat.common.i18n import _
@@ -127,7 +127,7 @@ class MultipartMime(software_config.SoftwareConfig):
                 subtype = item.get(self.SUBTYPE, '')
                 self._append_part(subparts, part, subtype, filename)
 
-        mime_blob = MIMEMultipart(_subparts=subparts)
+        mime_blob = multipart.MIMEMultipart(_subparts=subparts)
         self.message = mime_blob.as_string()
         return self.message
 
@@ -154,7 +154,8 @@ class MultipartMime(software_config.SoftwareConfig):
 
     @staticmethod
     def _create_message(part, subtype, filename):
-        msg = MIMEText(part, _subtype=subtype) if subtype else MIMEText(part)
+        msg = (text.MIMEText(part, _subtype=subtype)
+               if subtype else text.MIMEText(part))
         if filename:
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)

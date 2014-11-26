@@ -13,8 +13,8 @@
 """Utilities for Resources that use the OpenStack Nova API."""
 
 import email
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.mime import multipart
+from email.mime import text
 import json
 from novaclient import exceptions as nova_exceptions
 import os
@@ -155,7 +155,7 @@ def build_userdata(resource, userdata=None, instance_user=None,
     def make_subpart(content, filename, subtype=None):
         if subtype is None:
             subtype = os.path.splitext(filename)[0]
-        msg = MIMEText(content, _subtype=subtype)
+        msg = text.MIMEText(content, _subtype=subtype)
         msg.add_header('Content-Disposition', 'attachment',
                        filename=filename)
         return msg
@@ -243,7 +243,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                             'cfn-boto-cfg', 'x-cfninitdata'))
 
     subparts = [make_subpart(*args) for args in attachments]
-    mime_blob = MIMEMultipart(_subparts=subparts)
+    mime_blob = multipart.MIMEMultipart(_subparts=subparts)
 
     return mime_blob.as_string()
 

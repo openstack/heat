@@ -13,7 +13,7 @@
 
 import collections
 import copy
-from datetime import datetime
+import datetime
 import re
 import warnings
 
@@ -24,7 +24,6 @@ import six
 
 from heat.common import context as common_context
 from heat.common import exception
-from heat.common.exception import StackValidationFailed
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
@@ -36,11 +35,11 @@ from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import stack as notification
-from heat.engine.parameter_groups import ParameterGroups
+from heat.engine import parameter_groups as param_groups
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
-from heat.engine.template import Template
+from heat.engine import template as tmpl
 from heat.engine import update
 from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
@@ -277,7 +276,7 @@ class Stack(collections.Mapping):
     @classmethod
     def _from_db(cls, context, stack, parent_resource=None, resolve_data=True,
                  use_stored_context=False):
-        template = Template.load(
+        template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
         env = environment.Environment(stack.parameters)
         return cls(context, stack.name, template, env,
@@ -457,7 +456,7 @@ class Stack(collections.Mapping):
         self.parameters.validate(context=self.context)
 
         # Validate Parameter Groups
-        parameter_groups = ParameterGroups(self.t)
+        parameter_groups = param_groups.ParameterGroups(self.t)
         parameter_groups.validate()
 
         # Check duplicate names between parameters and resources
@@ -465,8 +464,8 @@ class Stack(collections.Mapping):
 
         if dup_names:
             LOG.debug("Duplicate names %s" % dup_names)
-            raise StackValidationFailed(message=_("Duplicate names %s") %
-                                        dup_names)
+            raise exception.StackValidationFailed(
+                message=_("Duplicate names %s") % dup_names)
 
         for res in self.dependencies:
             try:
@@ -476,27 +475,27 @@ class Stack(collections.Mapping):
                 raise ex
             except Exception as ex:
                 LOG.exception(ex)
-                raise StackValidationFailed(message=encodeutils.safe_decode(
-                                            six.text_type(ex)))
+                raise exception.StackValidationFailed(
+                    message=encodeutils.safe_decode(six.text_type(ex)))
             if result:
-                raise StackValidationFailed(message=result)
+                raise exception.StackValidationFailed(message=result)
 
             for val in self.outputs.values():
                 try:
                     if not val or not val.get('Value'):
                         message = _('Each Output must contain '
                                     'a Value key.')
-                        raise StackValidationFailed(message=message)
+                        raise exception.StackValidationFailed(message=message)
                     function.validate(val.get('Value'))
                 except AttributeError:
                     message = _('Output validation error: '
                                 'Outputs must contain Output. '
                                 'Found a [%s] instead') % type(val)
-                    raise StackValidationFailed(message=message)
+                    raise exception.StackValidationFailed(message=message)
                 except Exception as ex:
                     reason = _('Output validation error: '
                                '%s') % six.text_type(ex)
-                    raise StackValidationFailed(message=reason)
+                    raise exception.StackValidationFailed(message=reason)
 
     def requires_deferred_auth(self):
         '''
@@ -638,7 +637,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.check', hide_args=False)
     def check(self):
-        self.updated_time = datetime.utcnow()
+        self.updated_time = datetime.datetime.utcnow()
         checker = scheduler.TaskRunner(self.stack_task, self.CHECK,
                                        post_func=self.supports_check_action,
                                        aggregate_exceptions=True)
@@ -713,7 +712,7 @@ class Stack(collections.Mapping):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
-        self.updated_time = datetime.utcnow()
+        self.updated_time = datetime.datetime.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack,
                                        event=event)
         updater()
@@ -1066,19 +1065,19 @@ class Stack(collections.Mapping):
             self.state_set(self.RESTORE, self.FAILED,
                            "Can't restore snapshot from other stack")
             return
-        self.updated_time = datetime.utcnow()
+        self.updated_time = datetime.datetime.utcnow()
 
-        tmpl = Template(snapshot.data['template'])
+        template = tmpl.Template(snapshot.data['template'])
 
-        for name, defn in tmpl.resource_definitions(self).iteritems():
+        for name, defn in template.resource_definitions(self).iteritems():
             rsrc = resource.Resource(name, defn, self)
             data = snapshot.data['resources'].get(name)
             handle_restore = getattr(rsrc, 'handle_restore', None)
             if callable(handle_restore):
                 defn = handle_restore(defn, data)
-            tmpl.add_resource(defn, name)
+            template.add_resource(defn, name)
 
-        newstack = self.__class__(self.context, self.name, tmpl, self.env,
+        newstack = self.__class__(self.context, self.name, template, self.env,
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
         newstack.parameters.set_stack_id(self.identifier())

@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from datetime import datetime
+import datetime
 import six
 import uuid
 
@@ -109,9 +109,9 @@ class StackResourceTest(common.HeatTestCase):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
         self.ws_resname = "provider_resource"
-        t = parser.Template({'HeatTemplateFormatVersion': '2012-12-12',
-                             'Resources':
-                             {self.ws_resname: ws_res_snippet}})
+        t = parser.tmpl.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12',
+             'Resources': {self.ws_resname: ws_res_snippet}})
         self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                          t, stack_id=str(uuid.uuid4()),
                                          user_creds_id='uc123',
@@ -407,7 +407,8 @@ class StackResourceTest(common.HeatTestCase):
         new_templ = self.simple_template.copy()
         inst_snippet = new_templ["Resources"]["WebServer"].copy()
         new_templ["Resources"]["WebServer2"] = inst_snippet
-        self.parent_resource.updated_time = datetime(2014, 10, 24, 15, 40)
+        self.parent_resource.updated_time = \
+            datetime.datetime(2014, 10, 24, 15, 40)
 
         updater = self.parent_resource.update_with_template(
             new_templ, {})

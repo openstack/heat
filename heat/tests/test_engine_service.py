@@ -38,7 +38,7 @@ from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import dependencies
 from heat.engine import environment
-from heat.engine.properties import Properties
+from heat.engine import properties
 from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine import service
@@ -211,7 +211,7 @@ def get_wordpress_stack(stack_name, ctx):
 
 def get_wordpress_stack_no_params(stack_name, ctx):
     t = template_format.parse(wp_template)
-    template = parser.Template(t)
+    template = parser.tmpl.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment({}))
     return stack
@@ -723,7 +723,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
         self.m.ReplayAll()
 
-        resource.properties = Properties(
+        resource.properties = properties.Properties(
             resource.properties_schema,
             {
                 'ImageId': 'CentOS 5.2',
@@ -733,7 +733,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
             context=self.ctx)
         stack.validate()
 
-        resource.properties = Properties(
+        resource.properties = properties.Properties(
             resource.properties_schema,
             {
                 'KeyName': 'test',
@@ -989,7 +989,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         s = db_api.stack_get(self.ctx, sid)
 
         t = template_format.parse(wp_template_no_default)
-        template = parser.Template(t)
+        template = parser.tmpl.Template(t)
         env = environment.Environment({'parameters': with_params,
                                        'resource_registry': {'rsc': 'test'}})
         stack = parser.Stack(self.ctx, stack_name, template, env)

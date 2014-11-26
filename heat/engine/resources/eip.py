@@ -22,7 +22,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.vpc import VPC
+from heat.engine.resources import vpc
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -91,9 +91,10 @@ class ElasticIp(resource.Resource):
         """Allocate a floating IP for the current tenant."""
         ips = None
         if self.properties[self.DOMAIN]:
-            from heat.engine.resources.internet_gateway import InternetGateway
+            from heat.engine.resources import internet_gateway
 
-            ext_net = InternetGateway.get_external_network_id(self.neutron())
+            ext_net = internet_gateway.InternetGateway.get_external_network_id(
+                self.neutron())
             props = {'floating_network_id': ext_net}
             ips = self.neutron().create_floatingip({
                 'floatingip': props})['floatingip']
@@ -249,7 +250,7 @@ class ElasticIpAssociation(resource.Resource):
         return port_id, port_rsrc
 
     def _neutron_add_gateway_router(self, float_id, network_id):
-        router = VPC.router_for_vpc(self.neutron(), network_id)
+        router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
         if router is not None:
             floatingip = self.neutron().show_floatingip(float_id)
             floating_net_id = \

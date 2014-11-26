@@ -125,7 +125,8 @@ class StackResource(resource.Resource):
         parsed_child_template = child_template
         if isinstance(parsed_child_template, template.Template):
             parsed_child_template = parsed_child_template.t
-        return parser.Template(parsed_child_template, files=self.stack.t.files)
+        return parser.tmpl.Template(parsed_child_template,
+                                    files=self.stack.t.files)
 
     def _parse_nested_stack(self, stack_name, child_template, child_params,
                             timeout_mins=None, adopt_data=None):

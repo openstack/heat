@@ -14,7 +14,7 @@
 import functools
 import itertools
 import sys
-from time import time as wallclock
+import time
 import types
 
 import eventlet
@@ -31,6 +31,7 @@ LOG = logging.getLogger(__name__)
 
 # Whether TaskRunner._sleep actually does an eventlet sleep when called.
 ENABLE_SLEEP = True
+wallclock = time.time
 
 
 def task_description(task):

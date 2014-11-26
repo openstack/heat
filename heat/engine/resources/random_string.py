@@ -14,7 +14,7 @@
 import random
 import string
 
-from six.moves import xrange
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -170,7 +170,7 @@ class RandomString(resource.Resource):
     @staticmethod
     def _deprecated_random_string(sequence, length):
         rand = random.SystemRandom()
-        return ''.join(rand.choice(sequence) for x in xrange(length))
+        return ''.join(rand.choice(sequence) for x in six.moves.xrange(length))
 
     def _generate_random_string(self, char_sequences, char_classes, length):
         random_string = ""

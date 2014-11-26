@@ -13,8 +13,8 @@
 
 import collections
 import email
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.mime import multipart
+from email.mime import text
 import json
 import logging
 import os
@@ -201,7 +201,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         def make_subpart(content, filename, subtype=None):
             if subtype is None:
                 subtype = os.path.splitext(filename)[0]
-            msg = MIMEText(content, _subtype=subtype)
+            msg = text.MIMEText(content, _subtype=subtype)
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)
             return msg
@@ -288,7 +288,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                                 'cfn-boto-cfg', 'x-cfninitdata'))
 
         subparts = [make_subpart(*args) for args in attachments]
-        mime_blob = MIMEMultipart(_subparts=subparts)
+        mime_blob = multipart.MIMEMultipart(_subparts=subparts)
 
         return mime_blob.as_string()
 
