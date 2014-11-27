@@ -174,6 +174,9 @@ class NovaFloatingIPTest(common.HeatTestCase):
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
+        self.assertIsNotNone(rsrc.id)
+        self.assertEqual(rsrc.id, rsrc.resource_id)
+
         self.m.VerifyAll()
 
     def test_floating_ip_assoc_delete(self):
