@@ -1200,6 +1200,42 @@ class CinderVolumeTest(BaseVolumeTest):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
+    def test_cinder_volume_retype(self):
+        fv = FakeVolume('creating', 'available', size=1, name='my_vol',
+                        description='test')
+        stack_name = 'test_volume_retype'
+        new_vol_type = 'new_type'
+        self.patchobject(cinder.CinderClientPlugin, '_create',
+                         return_value=self.cinder_fc)
+        self.patchobject(self.cinder_fc.volumes, 'create', return_value=fv)
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        rsrc = self.create_volume(self.t, stack, 'volume2')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['volume_type'] = new_vol_type
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        self.patchobject(cinder.CinderClientPlugin, 'get_volume_type',
+                         return_value=new_vol_type)
+        self.patchobject(self.cinder_fc.volumes, 'retype')
+        scheduler.TaskRunner(rsrc.update, after)()
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(1, self.cinder_fc.volumes.retype.call_count)
+
+        self.cinder_fc.volume_api_version = 1
+        new_vol_type_1 = 'new_type_1'
+        props = copy.deepcopy(rsrc.properties.data)
+        props['volume_type'] = new_vol_type_1
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        # if the volume api is v1, not support to retype
+        update_task = scheduler.TaskRunner(rsrc.update, after)
+        ex = self.assertRaises(exception.ResourceFailure, update_task)
+        self.assertEqual('NotSupported: Using Cinder API V1, '
+                         'volume_type update is not supported.',
+                         six.text_type(ex))
+        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+        self.assertEqual(1, self.cinder_fc.volumes.retype.call_count)
+
     def test_cinder_volume_update_name_and_metadata(self):
         # update the name, description and metadata
         fv = FakeVolume('creating', 'available', size=1, name='my_vol',
