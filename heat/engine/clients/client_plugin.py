@@ -50,14 +50,20 @@ class ClientPlugin(object):
         return self.clients.client('keystone').url_for(**kwargs)
 
     def _get_client_option(self, client, option):
+        # look for the option in the [clients_${client}] section
+        # unknown options raise cfg.NoSuchOptError
         try:
             group_name = 'clients_' + client
             cfg.CONF.import_opt(option, 'heat.common.config',
                                 group=group_name)
-            return getattr(getattr(cfg.CONF, group_name), option)
-        except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
-            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-            return getattr(cfg.CONF.clients, option)
+            v = getattr(getattr(cfg.CONF, group_name), option)
+            if v is not None:
+                return v
+        except cfg.NoSuchGroupError:
+            pass  # do not error if the client is unknown
+        # look for the option in the generic [clients] section
+        cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+        return getattr(cfg.CONF.clients, option)
 
     def is_client_exception(self, ex):
         '''Returns True if the current exception comes from the client.'''
