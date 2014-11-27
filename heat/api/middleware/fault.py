@@ -84,6 +84,7 @@ class FaultWrapper(wsgi.Middleware):
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'InvalidTemplateParameter': webob.exc.HTTPBadRequest,
         'Invalid': webob.exc.HTTPBadRequest,
+        'ResourcePropertyConflict': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):
