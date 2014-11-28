@@ -12,6 +12,7 @@
 #    under the License.
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import properties
@@ -256,24 +257,27 @@ class FloatingIPAssociation(neutron.NeutronResource):
         floatingip_id = props.pop(self.FLOATINGIP_ID)
 
         self.neutron().update_floatingip(floatingip_id, {
-            'floatingip': props})['floatingip']
-        self.resource_id_set('%s:%s' % (floatingip_id, props[self.PORT_ID]))
+            'floatingip': props})
+        if self.id is not None:
+            self.resource_id_set(self.id)
+        else:
+            raise exception.ResourceNotAvailable(resource_name=self.name)
 
     def handle_delete(self):
         if not self.resource_id:
             return
         client = self.neutron()
-        (floatingip_id, port_id) = self.resource_id.split(':')
         try:
             client.update_floatingip(
-                floatingip_id,
+                self.properties.get(self.FLOATINGIP_ID),
                 {'floatingip': {'port_id': None}})
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            (floatingip_id, port_id) = self.resource_id.split(':')
+            floatingip_id = self.properties.get(self.FLOATINGIP_ID)
+            port_id = self.properties.get(self.PORT_ID)
             neutron_client = self.neutron()
             # if the floatingip_id is changed, disassociate the port which
             # associated with the old floatingip_id
@@ -299,7 +303,10 @@ class FloatingIPAssociation(neutron.NeutronResource):
                     'fixed_ip_address': fixed_ip_address}}
 
             neutron_client.update_floatingip(floatingip_id, request_body)
-            self.resource_id_set('%s:%s' % (floatingip_id, port_id))
+            if self.id is not None:
+                self.resource_id_set(self.id)
+            else:
+                raise exception.ResourceNotAvailable(resource_name=self.name)
 
 
 def resource_mapping():

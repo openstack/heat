@@ -2305,12 +2305,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
-        neutronclient.Client.update_floatingip(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'floatingip': {
-                'port_id': None
-            }}).AndRaise(qe.NeutronClientException(status_code=404))
-
         neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndRaise(qe.PortNotFoundClient(status_code=404))
@@ -2335,13 +2329,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         fipa = stack['floating_ip_assoc']
         scheduler.TaskRunner(fipa.create)()
         self.assertEqual((fipa.CREATE, fipa.COMPLETE), fipa.state)
+        self.assertIsNotNone(fipa.id)
+        self.assertEqual(fipa.id, fipa.resource_id)
 
         fipa.validate()
-
-        fipa_id = fipa.FnGetRefId()
-        fip_id = fip.FnGetRefId()
-        port_id = p.FnGetRefId()
-        self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
 
         # test update FloatingIpAssociation with port_id
         props = copy.deepcopy(fipa.properties.data)
@@ -2380,11 +2371,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         scheduler.TaskRunner(p.delete)()
         scheduler.TaskRunner(fip.delete)()
 
-        fipa.state_set(fipa.CREATE, fipa.COMPLETE, 'to delete again')
         fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
         p.state_set(p.CREATE, p.COMPLETE, 'to delete again')
 
-        scheduler.TaskRunner(fipa.delete)()
         self.assertIsNone(scheduler.TaskRunner(p.delete)())
         scheduler.TaskRunner(fip.delete)()
 
