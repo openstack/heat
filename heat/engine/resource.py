@@ -144,9 +144,12 @@ class Resource(object):
                 return res_info.template_name not in ancestor_list
 
             registry = stack.env.registry
-            ResourceClass = registry.get_class(definition.resource_type,
-                                               resource_name=name,
-                                               accept_fn=accept_class)
+            try:
+                ResourceClass = registry.get_class(definition.resource_type,
+                                                   resource_name=name,
+                                                   accept_fn=accept_class)
+            except exception.NotFound:
+                ResourceClass = template_resource.TemplateResource
             assert issubclass(ResourceClass, Resource)
 
         return super(Resource, cls).__new__(ResourceClass)
