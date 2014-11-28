@@ -827,6 +827,11 @@ class Server(stack_user.StackUser):
                 server = self.nova().servers.get(self.resource_id)
             self.client_plugin().rename(server, prop_diff[self.NAME])
 
+        if self.ADMIN_PASS in prop_diff:
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            server.change_password(prop_diff[self.ADMIN_PASS])
+
         if self.NETWORKS in prop_diff:
             new_networks = prop_diff.get(self.NETWORKS)
             attach_first_free_port = False
