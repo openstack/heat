@@ -758,6 +758,15 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNone(load_creds.get('trust_id'))
         self.assertIsNone(load_creds.get('trustor_user_id'))
 
+    def test_user_creds_password_too_long(self):
+        self.ctx.trust_id = None
+        self.ctx.password = 'O123456789O1234567' * 20
+        error = self.assertRaises(exception.Error,
+                                  db_api.user_creds_create,
+                                  self.ctx)
+        self.assertIn('Length of OS_PASSWORD after encryption exceeds '
+                      'Heat limit (255 chars)', six.text_type(error))
+
     def test_user_creds_trust(self):
         self.ctx.username = None
         self.ctx.password = None
