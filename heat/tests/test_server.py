@@ -1432,7 +1432,8 @@ class ServersTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
-    def _test_server_update_image_rebuild(self, status, policy='REBUILD'):
+    def _test_server_update_image_rebuild(self, status, policy='REBUILD',
+                                          password=None):
         # Server.handle_update supports changing the image, and makes
         # the change making a rebuild API call against Nova.
         return_server = self.fc.servers.list()[1]
@@ -1445,8 +1446,11 @@ class ServersTest(common.HeatTestCase):
         # current test demonstrate updating when image_update_policy was not
         # changed, so image_update_policy will be used from self.properties
         server.t['Properties']['image_update_policy'] = policy
+
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = new_image
+        if password:
+            update_template['Properties']['admin_pass'] = password
 
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.fc.servers.get('1234').MultipleTimes().AndReturn(return_server)
@@ -1454,10 +1458,12 @@ class ServersTest(common.HeatTestCase):
         # 744 is a static lookup from the fake images list
         if 'REBUILD' == policy:
             self.fc.servers.rebuild(
-                return_server, 744, password=None, preserve_ephemeral=False)
+                return_server, 744, password=password,
+                preserve_ephemeral=False)
         else:
             self.fc.servers.rebuild(
-                return_server, 744, password=None, preserve_ephemeral=True)
+                return_server, 744, password=password,
+                preserve_ephemeral=True)
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
         for stat in status:
             def activate_status(serv):
@@ -1486,6 +1492,11 @@ class ServersTest(common.HeatTestCase):
         # It is possible for us to miss the REBUILD status.
         self._test_server_update_image_rebuild(
             policy='REBUILD_PRESERVE_EPHEMERAL', status=('ACTIVE'))
+
+    def test_server_update_image_rebuild_with_new_password(self):
+        # Normally we will see 'REBUILD' first and then 'ACTIVE".
+        self._test_server_update_image_rebuild(password='new_admin_password',
+                                               status=('REBUILD', 'ACTIVE'))
 
     def test_server_update_image_rebuild_failed(self):
         # If the status after a rebuild is not REBUILD or ACTIVE, it means the

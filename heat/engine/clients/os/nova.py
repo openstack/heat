@@ -354,9 +354,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 dict(flavor=flavor, status=server.status))
 
     @scheduler.wrappertask
-    def rebuild(self, server, image_id, preserve_ephemeral=False):
+    def rebuild(self, server, image_id, password=None,
+                preserve_ephemeral=False):
         """Rebuild the server and call check_rebuild to verify."""
-        server.rebuild(image_id, preserve_ephemeral=preserve_ephemeral)
+        server.rebuild(image_id, password=password,
+                       preserve_ephemeral=preserve_ephemeral)
         yield self.check_rebuild(server, image_id)
 
     def check_rebuild(self, server, image_id):
