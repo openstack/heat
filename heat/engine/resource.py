@@ -155,9 +155,13 @@ class Resource(object):
         return super(Resource, cls).__new__(ResourceClass)
 
     def __init__(self, name, definition, stack):
-        if '/' in name:
-            raise ValueError(_('Resource name may not contain "/"'))
 
+        def _validate_name(res_name):
+            if '/' in res_name:
+                message = _('Resource name may not contain "/"')
+                raise exception.StackValidationFailed(message=message)
+
+        _validate_name(name)
         self.stack = stack
         self.context = stack.context
         self.name = name

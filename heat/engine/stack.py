@@ -86,12 +86,15 @@ class Stack(collections.Mapping):
         stack is already in the database.
         '''
 
+        def _validate_stack_name(name):
+            if not re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", name):
+                message = _('Invalid stack name %s must contain '
+                            'only alphanumeric or \"_-.\" characters, '
+                            'must start with alpha') % name
+                raise exception.StackValidationFailed(message=message)
+
         if owner_id is None:
-            if re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", stack_name) is None:
-                raise ValueError(_('Invalid stack name %s'
-                                   ' must contain only alphanumeric or '
-                                   '\"_-.\" characters, must start with alpha'
-                                   ) % stack_name)
+            _validate_stack_name(stack_name)
 
         self.id = stack_id
         self.owner_id = owner_id

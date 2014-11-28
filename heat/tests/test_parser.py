@@ -3667,38 +3667,13 @@ class StackTest(common.HeatTestCase):
         self.assertIsInstance(stack, parser.Stack)
 
     def test_stack_name_invalid(self):
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '_foo',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '1bad',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '.kcats',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, ' teststack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '^-^',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '\"stack\"',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '1234',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'cat|dog',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '$(foo)',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test/stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test\stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test::stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test;stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test~stack',
-                          self.tmpl)
-        self.assertRaises(ValueError, parser.Stack, self.ctx, '#test',
-                          self.tmpl)
+        stack_names = ['_foo', '1bad', '.kcats', 'test stack', ' teststack',
+                       '^-^', '\"stack\"', '1234', 'cat|dog', '$(foo)',
+                       'test/stack', 'test\stack', 'test::stack', 'test;stack',
+                       'test~stack', '#test']
+        for stack_name in stack_names:
+            self.assertRaises(exception.StackValidationFailed, parser.Stack,
+                              self.ctx, stack_name, self.tmpl)
 
     def test_resource_state_get_att(self):
         tmpl = {
