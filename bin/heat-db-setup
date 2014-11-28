@@ -51,9 +51,9 @@ EOF
 
 install_mysql_server() {
 	if [ -z "${ASSUME_YES}" ] ; then
-		$PACKAGE_INSTALL mysql-server
+		$PACKAGE_INSTALL $DB_SERVER
 	else
-		$PACKAGE_INSTALL -y mysql-server
+		$PACKAGE_INSTALL -y $DB_SERVER
 	fi
 }
 
@@ -83,6 +83,15 @@ case "$1" in
 		PACKAGE_INSTALL="$ELEVATE yum install"
 		PACKAGE_STATUS="rpm -q"
 		SERVICE_MYSQLD="mysqld"
+		DB_SERVER="mysql-server"
+                # Install mariadb-server in rhel7 and fedora
+		if [[ -r /etc/redhat-release ]];then
+                   ver=`grep -E -o '[0-9]+([.]?[0-9])*' /etc/redhat-release`
+		   if [[ $ver >= 7 ]];then
+		       SERVICE_MYSQLD="mariadb"
+		       DB_SERVER="mariadb-server"
+		   fi
+		fi
 		SERVICE_START="$ELEVATE service $SERVICE_MYSQLD start"
 		SERVICE_STATUS="service $SERVICE_MYSQLD status"
 		SERVICE_ENABLE="$ELEVATE chkconfig"
@@ -92,6 +101,7 @@ case "$1" in
 		PACKAGE_INSTALL="$ELEVATE apt-get install"
 		PACKAGE_STATUS="dpkg-query -s"
 		SERVICE_MYSQLD="mysql"
+		DB_SERVER="mysql-server"
 		SERVICE_START="$ELEVATE service $SERVICE_MYSQLD start"
 		SERVICE_STATUS="$ELEVATE service $SERVICE_MYSQLD status"
 		SERVICE_ENABLE=""
