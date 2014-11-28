@@ -119,6 +119,8 @@ class NovaFloatingIpAssociation(resource.Resource):
         ),
     }
 
+    default_client_name = 'nova'
+
     def FnGetRefId(self):
         return self.physical_resource_name_or_FnGetRefId()
 
