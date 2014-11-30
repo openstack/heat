@@ -102,6 +102,12 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
                     constraints=[constraints.Range(min=0)],
                     default=0),
             },
+            # A default policy has all fields with their own default values.
+            default={
+                MIN_IN_SERVICE: 0,
+                MAX_BATCH_SIZE: 1,
+                PAUSE_TIME: 0,
+            },
         ),
     }
 
@@ -126,8 +132,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             metadata=rsrc.get('metadata'))
 
     def _try_rolling_update(self, prop_diff):
-        if (self.properties[self.ROLLING_UPDATES] and
-                self.RESOURCE in prop_diff):
+        if self.RESOURCE in prop_diff:
             policy = self.properties[self.ROLLING_UPDATES]
             self._replace(policy[self.MIN_IN_SERVICE],
                           policy[self.MAX_BATCH_SIZE],

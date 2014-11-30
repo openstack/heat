@@ -360,8 +360,6 @@ def asg_tmpl_with_bad_updt_policy():
 
 def asg_tmpl_with_default_updt_policy():
     t = template_format.parse(inline_templates.as_heat_template)
-    agp = t['resources']['my-group']['properties']
-    agp['rolling_updates'] = {}
     return json.dumps(t)
 
 
@@ -392,7 +390,12 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         stack.validate()
         grp = stack['my-group']
-        self.assertFalse(grp.properties['rolling_updates'])
+        default_policy = {
+            'min_in_service': 0,
+            'pause_time': 0,
+            'max_batch_size': 1
+        }
+        self.assertEqual(default_policy, grp.properties['rolling_updates'])
 
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_updt_policy())
@@ -429,8 +432,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
     def test_parse_with_bad_pausetime_in_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
         group = tmpl['resources']['my-group']
-        policy = group['properties']['rolling_updates']
-        policy['pause_time'] = 'a-string'
+        group['properties']['rolling_updates'] = {'pause_time': 'a-string'}
         stack = utils.parse_stack(tmpl)
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
