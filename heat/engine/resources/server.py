@@ -756,6 +756,104 @@ class Server(stack_user.StackUser):
             if net is not None:
                 net['port'] = props['port']
 
+    def _update_flavor(self, server, prop_diff):
+        flavor_update_policy = (
+            prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
+            self.properties.get(self.FLAVOR_UPDATE_POLICY))
+        flavor = prop_diff[self.FLAVOR]
+
+        if flavor_update_policy == 'REPLACE':
+            raise resource.UpdateReplace(self.name)
+
+        flavor_id = self.client_plugin().get_flavor_id(flavor)
+        if not server:
+            server = self.nova().servers.get(self.resource_id)
+        return scheduler.TaskRunner(self.client_plugin().resize,
+                                    server, flavor, flavor_id)
+
+    def _update_image(self, server, prop_diff):
+        image_update_policy = (
+            prop_diff.get(self.IMAGE_UPDATE_POLICY) or
+            self.properties.get(self.IMAGE_UPDATE_POLICY))
+        if image_update_policy == 'REPLACE':
+            raise resource.UpdateReplace(self.name)
+        image = prop_diff[self.IMAGE]
+        image_id = self.client_plugin('glance').get_image_id(image)
+        if not server:
+            server = self.nova().servers.get(self.resource_id)
+        preserve_ephemeral = (
+            image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
+
+        return scheduler.TaskRunner(
+            self.client_plugin().rebuild, server, image_id,
+            preserve_ephemeral=preserve_ephemeral)
+
+    def _update_networks(self, server, prop_diff):
+        checkers = []
+        new_networks = prop_diff.get(self.NETWORKS)
+        attach_first_free_port = False
+        if not new_networks:
+            new_networks = []
+            attach_first_free_port = True
+        old_networks = self.properties.get(self.NETWORKS)
+
+        if not server:
+            server = self.nova().servers.get(self.resource_id)
+        interfaces = server.interface_list()
+
+        # if old networks is None, it means that the server got first
+        # free port. so we should detach this interface.
+        if old_networks is None:
+            for iface in interfaces:
+                checker = scheduler.TaskRunner(server.interface_detach,
+                                               iface.port_id)
+                checkers.append(checker)
+
+        # if we have any information in networks field, we should:
+        # 1. find similar networks, if they exist
+        # 2. remove these networks from new_networks and old_networks
+        #    lists
+        # 3. detach unmatched networks, which were present in old_networks
+        # 4. attach unmatched networks, which were present in new_networks
+        else:
+            # remove not updated networks from old and new networks lists,
+            # also get list these networks
+            not_updated_networks = \
+                self._get_network_matches(old_networks, new_networks)
+
+            self.update_networks_matching_iface_port(
+                old_networks + not_updated_networks, interfaces)
+
+            # according to nova interface-detach command detached port
+            # will be deleted
+            for net in old_networks:
+                checker = scheduler.TaskRunner(server.interface_detach,
+                                               net.get('port'))
+                checkers.append(checker)
+
+        # attach section similar for both variants that
+        # were mentioned above
+
+        for net in new_networks:
+            if net.get('port'):
+                checker = scheduler.TaskRunner(server.interface_attach,
+                                               net['port'], None, None)
+                checkers.append(checker)
+            elif net.get('network'):
+                checker = scheduler.TaskRunner(server.interface_attach,
+                                               None, net['network'],
+                                               net.get('fixed_ip'))
+                checkers.append(checker)
+
+        # if new_networks is None, we should attach first free port,
+        # according to similar behavior during instance creation
+        if attach_first_free_port:
+            checker = scheduler.TaskRunner(server.interface_attach,
+                                           None, None, None)
+            checkers.append(checker)
+
+        return checkers
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata_set(tmpl_diff['Metadata'])
@@ -769,38 +867,10 @@ class Server(stack_user.StackUser):
                                              prop_diff[self.METADATA])
 
         if self.FLAVOR in prop_diff:
-
-            flavor_update_policy = (
-                prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
-                self.properties.get(self.FLAVOR_UPDATE_POLICY))
-
-            if flavor_update_policy == 'REPLACE':
-                raise resource.UpdateReplace(self.name)
-
-            flavor = prop_diff[self.FLAVOR]
-            flavor_id = self.client_plugin().get_flavor_id(flavor)
-            if not server:
-                server = self.nova().servers.get(self.resource_id)
-            checker = scheduler.TaskRunner(self.client_plugin().resize,
-                                           server, flavor, flavor_id)
-            checkers.append(checker)
+            checkers.append(self._update_flavor(server, prop_diff))
 
         if self.IMAGE in prop_diff:
-            image_update_policy = (
-                prop_diff.get(self.IMAGE_UPDATE_POLICY) or
-                self.properties.get(self.IMAGE_UPDATE_POLICY))
-            if image_update_policy == 'REPLACE':
-                raise resource.UpdateReplace(self.name)
-            image = prop_diff[self.IMAGE]
-            image_id = self.client_plugin('glance').get_image_id(image)
-            if not server:
-                server = self.nova().servers.get(self.resource_id)
-            preserve_ephemeral = (
-                image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
-            checker = scheduler.TaskRunner(
-                self.client_plugin().rebuild, server, image_id,
-                preserve_ephemeral=preserve_ephemeral)
-            checkers.append(checker)
+            checkers.append(self._update_image(server, prop_diff))
 
         if self.NAME in prop_diff:
             if not server:
@@ -808,66 +878,7 @@ class Server(stack_user.StackUser):
             self.client_plugin().rename(server, prop_diff[self.NAME])
 
         if self.NETWORKS in prop_diff:
-            new_networks = prop_diff.get(self.NETWORKS)
-            attach_first_free_port = False
-            if not new_networks:
-                new_networks = []
-                attach_first_free_port = True
-            old_networks = self.properties.get(self.NETWORKS)
-
-            if not server:
-                server = self.nova().servers.get(self.resource_id)
-            interfaces = server.interface_list()
-
-            # if old networks is None, it means that the server got first
-            # free port. so we should detach this interface.
-            if old_networks is None:
-                for iface in interfaces:
-                    checker = scheduler.TaskRunner(server.interface_detach,
-                                                   iface.port_id)
-                    checkers.append(checker)
-            # if we have any information in networks field, we should:
-            # 1. find similar networks, if they exist
-            # 2. remove these networks from new_networks and old_networks
-            #    lists
-            # 3. detach unmatched networks, which were present in old_networks
-            # 4. attach unmatched networks, which were present in new_networks
-            else:
-                # remove not updated networks from old and new networks lists,
-                # also get list these networks
-                not_updated_networks = \
-                    self._get_network_matches(old_networks, new_networks)
-
-                self.update_networks_matching_iface_port(
-                    old_networks + not_updated_networks, interfaces)
-
-                # according to nova interface-detach command detached port
-                # will be deleted
-                for net in old_networks:
-                    checker = scheduler.TaskRunner(server.interface_detach,
-                                                   net.get('port'))
-                    checkers.append(checker)
-
-            # attach section similar for both variants that
-            # were mentioned above
-
-            for net in new_networks:
-                if net.get('port'):
-                    checker = scheduler.TaskRunner(server.interface_attach,
-                                                   net['port'], None, None)
-                    checkers.append(checker)
-                elif net.get('network'):
-                    checker = scheduler.TaskRunner(server.interface_attach,
-                                                   None, net['network'],
-                                                   net.get('fixed_ip'))
-                    checkers.append(checker)
-
-            # if new_networks is None, we should attach first free port,
-            # according to similar behavior during instance creation
-            if attach_first_free_port:
-                checker = scheduler.TaskRunner(server.interface_attach,
-                                               None, None, None)
-                checkers.append(checker)
+            checkers.extend(self._update_networks(server, prop_diff))
 
         # Optimization: make sure the first task is started before
         # check_update_complete.
