@@ -31,12 +31,12 @@ class Port(neutron.NeutronResource):
         NETWORK_ID, NETWORK, NAME, VALUE_SPECS,
         ADMIN_STATE_UP, FIXED_IPS, MAC_ADDRESS,
         DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
-        DEVICE_OWNER, REPLACEMENT_POLICY,
+        DEVICE_OWNER, REPLACEMENT_POLICY, VNIC_TYPE,
     ) = (
         'network_id', 'network', 'name', 'value_specs',
         'admin_state_up', 'fixed_ips', 'mac_address',
         'device_id', 'security_groups', 'allowed_address_pairs',
-        'device_owner', 'replacement_policy',
+        'device_owner', 'replacement_policy', 'binding:vnic_type',
     )
 
     _FIXED_IP_KEYS = (
@@ -166,6 +166,19 @@ class Port(neutron.NeutronResource):
             default='REPLACE_ALWAYS',
             constraints=[
                 constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
+            ],
+            update_allowed=True
+        ),
+        VNIC_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('The vnic type to be bound on the neutron port. '
+              'To support SR-IOV PCI passthrough networking, you can request '
+              'that the neutron port to be realized as normal (virtual nic), '
+              'direct (pci passthrough), or macvtap '
+              '(virtual interface with a tap-like software interface).'),
+            default='normal',
+            constraints=[
+                constraints.AllowedValues(['normal', 'direct', 'macvtap']),
             ],
             update_allowed=True
         ),

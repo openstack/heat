@@ -2034,7 +2034,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2072,7 +2073,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                     'device_id': 'd6b4d3a5-c700-476f-b609-1493dd9dadc2',
                     'device_owner': 'network:floatingip',
                     'security_groups': [
-                        '8a2f582a-e1cd-480f-b85d-b02631c10656']
+                        '8a2f582a-e1cd-480f-b85d-b02631c10656'],
+                    'binding:vnic_type': 'normal'
                 }
             }
         ).AndReturn(None)
@@ -2144,7 +2146,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2329,7 +2332,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2453,7 +2457,8 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2495,7 +2500,8 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2527,7 +2533,8 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2566,7 +2573,8 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2599,7 +2607,8 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2657,7 +2666,8 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}
 
         self._mock_create_with_security_groups(port_prop)
 
@@ -2681,7 +2691,8 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}
 
         self._mock_create_with_security_groups(port_prop)
 
@@ -2698,7 +2709,8 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp'}
+                 'device_owner': u'network:dhcp',
+                 'binding:vnic_type': 'normal'}
         new_props = props.copy()
         new_props['name'] = "new_name"
         new_props['security_groups'] = [
@@ -2782,7 +2794,8 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp'}
+                 'device_owner': u'network:dhcp',
+                 'binding:vnic_type': 'normal'}
 
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
@@ -2855,7 +2868,8 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -2917,7 +2931,8 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -2953,6 +2968,97 @@ class NeutronPortTest(common.HeatTestCase):
         log_msg = ('Failed to fetch resource attributes: ConnectionFailed: '
                    'Connection to neutron failed: Maximum attempts reached')
         self.assertIn(log_msg, self.LOG.output)
+        self.m.VerifyAll()
+
+    def test_vnic_create_update(self):
+        port_prop = {
+            'network_id': u'net1234',
+            'fixed_ips': [
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True,
+            'device_owner': 'network:dhcp',
+            'binding:vnic_type': 'direct'
+        }
+        new_port_prop = port_prop.copy()
+        new_port_prop['binding:vnic_type'] = 'normal'
+        new_port_prop['name'] = "new_name"
+        new_port_prop['security_groups'] = [
+            '8a2f582a-e1cd-480f-b85d-b02631c10656']
+        new_port_prop.pop('network_id')
+
+        prop_update = new_port_prop.copy()
+        new_port_prop['replacement_policy'] = 'AUTO'
+        new_port_prop['network'] = u'net1234'
+
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'net1234'
+        ).AndReturn('net1234')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'subnet',
+            'sub1234'
+        ).AndReturn('sub1234')
+        neutronclient.Client.create_port({'port': port_prop}).AndReturn(
+            {'port': {
+                "status": "BUILD",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.update_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'port': prop_update}
+        ).AndReturn(None)
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        prop_update2 = prop_update.copy()
+        prop_update2['binding:vnic_type'] = 'direct'
+        neutronclient.Client.update_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'port': prop_update2}
+        ).AndReturn(None)
+
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties']['binding:vnic_type'] = 'direct'
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.assertEqual('direct', port.properties['binding:vnic_type'])
+
+        # update to normal
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_port_prop)
+        scheduler.TaskRunner(port.update, update_snippet)()
+        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
+        self.assertEqual('normal', port.properties['binding:vnic_type'])
+
+        # update back to direct
+        new_port_prop['binding:vnic_type'] = 'direct'
+        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      new_port_prop)
+        scheduler.TaskRunner(port.update, update_snippet)()
+        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
+        self.assertEqual('direct', port.properties['binding:vnic_type'])
+
         self.m.VerifyAll()
 
 
