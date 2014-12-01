@@ -117,6 +117,8 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
                            'volume_type': None,
                            'security_groups': None,
                            'auto_security_group': None,
+                           'availability_zone': None,
+                           'volumes_availability_zone': None,
                            'node_processes': ['namenode', 'jobtracker'],
                            'floating_ip_pool': 'some_pool_id',
                            'node_configs': None,
