@@ -19,6 +19,7 @@ from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources import server
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 try:
@@ -32,6 +33,11 @@ LOG = logging.getLogger(__name__)
 
 class CloudServer(server.Server):
     """Resource for Rackspace Cloud Servers."""
+
+    support_status = support.SupportStatus(
+        support.DEPRECATED,
+        _('Use OS::Nova::Server instead.'),
+    )
 
     # Managed Cloud automation statuses
     MC_STATUS_IN_PROGRESS = 'In Progress'
