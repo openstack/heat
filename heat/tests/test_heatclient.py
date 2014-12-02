@@ -1426,7 +1426,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.ReplayAll()
         ctx = utils.dummy_context()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertEqual(heat_ks_client.url_for(**kwargs), service_url)
+        self.assertEqual(service_url, heat_ks_client.url_for(**kwargs))
         self.m.VerifyAll()
 
     def test_url_for(self):

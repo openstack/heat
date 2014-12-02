@@ -757,7 +757,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['WaitForTheHandle']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
         self.m.UnsetStubs()

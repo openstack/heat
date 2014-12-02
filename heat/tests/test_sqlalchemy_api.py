@@ -1228,9 +1228,9 @@ class DBAPIRawTemplateTest(common.HeatTestCase):
         updated_tp = db_api.raw_template_update(self.ctx,
                                                 orig_tp.id, new_values)
 
-        self.assertEqual(updated_tp.id, orig_tp.id)
-        self.assertEqual(updated_tp.template, new_t)
-        self.assertEqual(updated_tp.files, new_files)
+        self.assertEqual(orig_tp.id, updated_tp.id)
+        self.assertEqual(new_t, updated_tp.template)
+        self.assertEqual(new_files, updated_tp.files)
 
 
 class DBAPIUserCredsTest(common.HeatTestCase):

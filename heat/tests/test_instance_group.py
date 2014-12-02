@@ -123,7 +123,7 @@ class InstanceGroupTest(common.HeatTestCase):
                       instance_definition['Properties'])
 
         nested = rsrc.nested()
-        self.assertEqual(nested.id, rsrc.resource_id)
+        self.assertEqual(rsrc.resource_id, nested.id)
 
         rsrc.delete()
         self.m.VerifyAll()

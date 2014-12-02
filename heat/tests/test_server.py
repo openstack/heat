@@ -388,18 +388,18 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['public'][0]['port'])
         self.assertEqual('5678',
                          server.FnGetAtt('addresses')['public'][1]['port'])
-        self.assertEqual(
-            server.FnGetAtt('addresses')['public'][0]['addr'], public_ip)
-        self.assertEqual(
-            server.FnGetAtt('networks')['public'][0], public_ip)
+        self.assertEqual(public_ip,
+                         server.FnGetAtt('addresses')['public'][0]['addr'])
+        self.assertEqual(public_ip,
+                         server.FnGetAtt('networks')['public'][0])
 
         private_ip = return_server.networks['private'][0]
         self.assertEqual('1013',
                          server.FnGetAtt('addresses')['private'][0]['port'])
-        self.assertEqual(
-            server.FnGetAtt('addresses')['private'][0]['addr'], private_ip)
-        self.assertEqual(
-            server.FnGetAtt('networks')['private'][0], private_ip)
+        self.assertEqual(private_ip,
+                         server.FnGetAtt('addresses')['private'][0]['addr'])
+        self.assertEqual(private_ip,
+                         server.FnGetAtt('networks')['private'][0])
         self.assertIn(
             server.FnGetAtt('first_address'), (private_ip, public_ip))
 
@@ -2149,7 +2149,7 @@ class ServersTest(common.HeatTestCase):
         mox.Replay(get)
         self.m.ReplayAll()
 
-        self.assertEqual(server._resolve_attribute("accessIPv4"), '')
+        self.assertEqual('', server._resolve_attribute("accessIPv4"))
         self.m.VerifyAll()
 
     def test_default_instance_user(self):
