@@ -658,6 +658,24 @@ class StackResourceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_need_update_in_failed_state_for_nested_resource(self):
+        """
+        The resource in FAILED state and has nested stack,
+        should need update.
+        """
+        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
+        scheduler.TaskRunner(self.parent_resource.create)()
+        self.parent_resource.state_set('CREATE', 'FAILED')
+
+        need_update = self.parent_resource._needs_update(
+            self.parent_resource.t,
+            self.parent_resource.t,
+            self.parent_resource.properties,
+            self.parent_resource.properties,
+            self.parent_resource)
+
+        self.assertEqual(True, need_update)
+
     def test_create_complete_state_err(self):
         """
         check_create_complete should raise error when create task is
