@@ -3588,6 +3588,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         snapshot = self.engine.stack_snapshot(
             self.ctx, stack.identifier(), 'snap1')
         self.assertIsNotNone(snapshot['id'])
+        self.assertIsNotNone(snapshot['creation_time'])
         self.assertEqual('snap1', snapshot['name'])
         self.assertEqual("IN_PROGRESS", snapshot['status'])
         self.engine.thread_group_mgr.groups[stack.id].wait()
@@ -3598,6 +3599,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertEqual("COMPLETE", snapshot['data']['status'])
         self.assertEqual(stack.id, snapshot['data']['id'])
         self.assertIsNotNone(stack.updated_time)
+        self.assertIsNotNone(snapshot['creation_time'])
 
     def test_delete_snapshot_not_found(self):
         stack = self._create_stack()
@@ -3638,7 +3640,8 @@ class SnapshotServiceTest(common.HeatTestCase):
             "name": "snap1",
             "status": "COMPLETE",
             "status_reason": "Stack SNAPSHOT completed successfully",
-            "data": stack.prepare_abandon()}
+            "data": stack.prepare_abandon(),
+            "creation_time": snapshot['creation_time']}
         self.assertEqual([expected], snapshots)
 
     def test_restore_snapshot(self):
