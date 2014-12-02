@@ -87,7 +87,7 @@ case "$1" in
                 # Install mariadb-server in rhel7 and fedora
 		if [[ -r /etc/redhat-release ]];then
                    ver=`grep -E -o '[0-9]+([.]?[0-9])*' /etc/redhat-release`
-		   if [[ $ver >= 7 ]];then
+		   if [[ $ver -ge 7 ]];then
 		       SERVICE_MYSQLD="mariadb"
 		       DB_SERVER="mariadb-server"
 		   fi
