@@ -35,7 +35,7 @@ from oslo.config import cfg
 from oslo import i18n
 
 from heat.common import config
-from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
 from heat.common import wsgi
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
         port = cfg.CONF.heat_api.bind_port
         host = cfg.CONF.heat_api.bind_host
-        LOG.info(_('Starting Heat ReST API on %(host)s:%(port)s'),
+        LOG.info(_LI('Starting Heat ReST API on %(host)s:%(port)s'),
                  {'host': host, 'port': port})
         profiler.setup('heat-api', host)
         server = wsgi.Server()

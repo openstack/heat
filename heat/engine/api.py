@@ -36,7 +36,7 @@ def extract_args(params):
         try:
             timeout = int(timeout_mins)
         except (ValueError, TypeError):
-            LOG.exception(_('Timeout conversion failed'))
+            LOG.exception(_LE('Timeout conversion failed'))
         else:
             if timeout > 0:
                 kwargs[api.PARAM_TIMEOUT] = timeout

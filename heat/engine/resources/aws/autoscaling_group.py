@@ -17,6 +17,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.engine import constraints
 from heat.engine.notification import autoscaling as notification
@@ -56,11 +57,11 @@ def _calculate_new_capacity(current, adjustment, adjustment_type,
         new_capacity = current + rounded
 
     if new_capacity > maximum:
-        LOG.debug(_('truncating growth to %s') % maximum)
+        LOG.debug('truncating growth to %s' % maximum)
         return maximum
 
     if new_capacity < minimum:
-        LOG.debug(_('truncating shrinkage to %s') % minimum)
+        LOG.debug('truncating shrinkage to %s' % minimum)
         return minimum
 
     return new_capacity
@@ -288,7 +289,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                   })
                     notification.send(**notif)
                 except Exception:
-                    LOG.exception(_('Failed sending error notification'))
+                    LOG.exception(_LE('Failed sending error notification'))
         else:
             notif.update({
                 'suffix': 'end',

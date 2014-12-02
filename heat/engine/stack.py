@@ -1126,8 +1126,8 @@ class Stack(collections.Mapping):
                     res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
-                    LOG.exception(_('Resource %(name)s create failed: %(ex)s')
-                                  % {'name': res.name, 'ex': ex})
+                    LOG.exception(_LE('Resource %(name)s create failed: '
+                                      '%(ex)s') % {'name': res.name, 'ex': ex})
                     failed = True
             else:
                 res.state_set(res.CREATE, res.FAILED,

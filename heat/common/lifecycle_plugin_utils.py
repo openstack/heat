@@ -15,8 +15,8 @@
 '''
 Utility for fetching and running plug point implementation classes
 '''
-from heat.common.i18n import _
 from heat.common.i18n import _LE
+from heat.common.i18n import _LI
 from heat.engine import resources
 from heat.openstack.common import log as logging
 
@@ -113,6 +113,6 @@ def _do_ops(cinstances, opname, cnxt, stack, current_stack=None, action=None,
                 failure = True
                 failure_exception_message = ex.args[0] if ex.args else str(ex)
                 break
-        LOG.info(_("done with class=%(c)s, stackid=%(sid)s, action=%(a)s") %
+        LOG.info(_LI("done with class=%(c)s, stackid=%(sid)s, action=%(a)s") %
                  {'c': type(ci), 'sid': stack.id, 'a': action})
     return (failure, failure_exception_message, success_count)

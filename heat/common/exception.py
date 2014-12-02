@@ -23,6 +23,7 @@ import six
 from six.moves.urllib import parse as urlparse
 
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.openstack.common import log as logging
 
 
@@ -112,7 +113,7 @@ class HeatException(Exception):
             exc_info = sys.exc_info()
             #kwargs doesn't match a variable in the message
             #log the issue and the kwargs
-            LOG.exception(_('Exception in string format operation'))
+            LOG.exception(_LE('Exception in string format operation'))
             for name, value in six.iteritems(kwargs):
                 LOG.error("%s: %s" % (name, value))  # noqa
 
