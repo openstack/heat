@@ -592,7 +592,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_name = 'service_create/test_stack'
         stack = get_wordpress_stack('test_stack', self.ctx)
 
-        self.assertRaises(ValueError,
+        self.assertRaises(dispatcher.ExpectedException,
                           self.man.create_stack,
                           self.ctx, stack_name, stack.t.t, {}, None, {})
 
@@ -603,7 +603,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         tmpl['Resources']['Web/Server'] = tmpl['Resources']['WebServer']
         del tmpl['Resources']['WebServer']
 
-        self.assertRaises(ValueError,
+        self.assertRaises(dispatcher.ExpectedException,
                           self.man.create_stack,
                           self.ctx, stack_name,
                           stack.t.t, {}, None, {})

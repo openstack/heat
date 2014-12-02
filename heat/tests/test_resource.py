@@ -80,6 +80,15 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsInstance(res, generic_rsrc.GenericResource)
         self.assertEqual("INIT", res.action)
 
+    def test_resource_invalid_name(self):
+        snippet = rsrc_defn.ResourceDefinition('wrong/name',
+                                               'GenericResourceType')
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               resource.Resource, 'wrong/name',
+                               snippet, self.stack)
+        self.assertEqual('Resource name may not contain "/"',
+                         six.text_type(ex))
+
     def test_resource_new_stack_not_stored(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'GenericResourceType')
