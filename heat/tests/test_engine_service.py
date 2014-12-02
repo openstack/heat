@@ -3619,6 +3619,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertEqual("SNAPSHOT", snapshot['data']['action'])
         self.assertEqual("COMPLETE", snapshot['data']['status'])
         self.assertEqual(stack.id, snapshot['data']['id'])
+        self.assertIsNotNone(stack.updated_time)
 
     def test_delete_snapshot_not_found(self):
         stack = self._create_stack()

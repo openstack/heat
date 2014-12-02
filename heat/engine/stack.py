@@ -1016,6 +1016,7 @@ class Stack(collections.Mapping):
             LOG.info(_LI('%s is already suspended'), six.text_type(self))
             return
 
+        self.updated_time = datetime.datetime.utcnow()
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.SUSPEND,
                                         reverse=True)
@@ -1036,6 +1037,7 @@ class Stack(collections.Mapping):
             LOG.info(_LI('%s is already resumed'), six.text_type(self))
             return
 
+        self.updated_time = datetime.datetime.utcnow()
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.RESUME,
                                         reverse=False)
@@ -1044,6 +1046,7 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.snapshot', hide_args=False)
     def snapshot(self):
         '''Snapshot the stack, invoking handle_snapshot on all resources.'''
+        self.updated_time = datetime.datetime.utcnow()
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.SNAPSHOT,
                                         reverse=False)
