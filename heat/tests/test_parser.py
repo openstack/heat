@@ -4268,6 +4268,41 @@ class StackTest(common.HeatTestCase):
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 
+    def test_incorrect_outputs_cfn_incorrect_reference(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Outputs:
+          Output:
+            Value:
+              Fn::GetAtt:
+                - Resource
+                - Foo
+        """)
+        self.stack = parser.Stack(self.ctx, 'stack_with_incorrect_outputs',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn('The specified reference "Resource" '
+                      '(in unknown) is incorrect.', six.text_type(ex))
+
+    def test_incorrect_outputs_incorrect_reference(self):
+        tmpl = template_format.parse("""
+        heat_template_version: 2013-05-23
+        outputs:
+          output:
+            value: { get_attr: [resource, foo] }
+        """)
+        self.stack = parser.Stack(self.ctx, 'stack_with_incorrect_outputs',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn('The specified reference "resource" '
+                      '(in unknown) is incorrect.', six.text_type(ex))
+
     def test_incorrect_outputs_cfn_empty_output(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
