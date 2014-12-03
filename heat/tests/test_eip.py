@@ -183,10 +183,20 @@ class EIPTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
+    def _mock_server_get(self, server='WebServer', mock_server=None,
+                         multiple=False, mock_again=False):
+        if not mock_again:
+            nova.NovaClientPlugin._create().AndReturn(self.fc)
+        if multiple:
+            self.fc.servers.get(server).MultipleTimes().AndReturn(
+                mock_server)
+        else:
+            self.fc.servers.get(server).AndReturn(mock_server)
+
     def test_eip(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
-        self.fc.servers.get('WebServer')
+        mock_server = self.fc.servers.list()[0]
+        self._mock_server_get(mock_server=mock_server)
+        self._mock_server_get(mock_again=True)
 
         self.m.ReplayAll()
 
@@ -211,12 +221,12 @@ class EIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_eip_update(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         server_old = self.fc.servers.list()[0]
-        self.fc.servers.get('WebServer').AndReturn(server_old)
+        self._mock_server_get(mock_server=server_old)
 
         server_update = self.fc.servers.list()[1]
-        self.fc.servers.get('5678').MultipleTimes().AndReturn(server_update)
+        self._mock_server_get(server='5678', mock_server=server_update,
+                              multiple=True, mock_again=True)
 
         self.m.ReplayAll()
         t = template_format.parse(eip_template)
@@ -243,9 +253,8 @@ class EIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_eip(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.servers.get('WebServer').MultipleTimes() \
-            .AndReturn(self.fc.servers.list()[0])
+        server = self.fc.servers.list()[0]
+        self._mock_server_get(mock_server=server, multiple=True)
 
         self.m.ReplayAll()
 
@@ -319,8 +328,7 @@ class EIPTest(common.HeatTestCase):
         self.fc.floating_ips.create().AndReturn(floating_ip)
 
         server = self.fc.servers.list()[0]
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.servers.get('WebServer').MultipleTimes().AndReturn(server)
+        self._mock_server_get(mock_server=server, multiple=True)
 
         self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
         self.fc.servers.add_floating_ip(server, floating_ip.ip, None).\
@@ -414,6 +422,16 @@ class AllocTest(common.HeatTestCase):
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "22c26451-cf27-4d48-9031-51f5e397b84e"
         }})
+
+    def _mock_server_get(self, server='WebServer', mock_server=None,
+                         multiple=False, mock_again=False):
+        if not mock_again:
+            nova.NovaClientPlugin._create().AndReturn(self.fc)
+        if multiple:
+            self.fc.servers.get(server).MultipleTimes().AndReturn(
+                mock_server)
+        else:
+            self.fc.servers.get(server).AndReturn(mock_server)
 
     def create_eip(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -545,10 +563,9 @@ class AllocTest(common.HeatTestCase):
         })
 
     def test_neutron_eip(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
-        self.fc.servers.get('WebServer')
-
+        mock_server = self.fc.servers.list()[0]
+        self._mock_server_get(mock_server=mock_server)
+        self._mock_server_get(mock_again=True)
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template)
@@ -565,7 +582,6 @@ class AllocTest(common.HeatTestCase):
 
             self.assertRaises(exception.InvalidTemplateAttribute,
                               rsrc.FnGetAtt, 'Foo')
-
         finally:
             scheduler.TaskRunner(rsrc.destroy)()
 
@@ -599,6 +615,10 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_association_allocationid_with_instance(self):
+        server = self.fc.servers.list()[0]
+        self._mock_server_get(server='1fafbe59-2332-4f5f-bfa4-517b4d6c1b65',
+                              mock_server=server,
+                              multiple=True)
         self.mock_show_network()
 
         self.mock_create_floatingip()
@@ -625,6 +645,9 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_validate_properties_EIP_and_AllocationId(self):
+        self._mock_server_get(server='1fafbe59-2332-4f5f-bfa4-517b4d6c1b65',
+                              multiple=True)
+        self.m.ReplayAll()
         template, stack = self._setup_test_stack(
             stack_name='validate_EIP_AllocationId')
 
@@ -638,6 +661,8 @@ class AllocTest(common.HeatTestCase):
         properties.pop('AllocationId')
         properties.pop('EIP')
         self._validate_properties(stack, template, expected)
+
+        self.m.VerifyAll()
 
     def test_validate_EIP_and_InstanceId(self):
         template, stack = self._setup_test_stack(
@@ -663,10 +688,8 @@ class AllocTest(common.HeatTestCase):
         self._validate_properties(stack, template, expected)
 
     def test_delete_association_successful_if_create_failed(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         server = self.fc.servers.list()[0]
-        self.fc.servers.get('WebServer').MultipleTimes() \
-            .AndReturn(server)
+        self._mock_server_get(mock_server=server, multiple=True)
         self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
         self.fc.servers.add_floating_ip(server, '11.0.0.1').AndRaise(
             fakes.fake_exception(400))
@@ -691,12 +714,14 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_association_with_InstanceId(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         server = self.fc.servers.list()[0]
-        self.fc.servers.get('WebServer').MultipleTimes() \
-            .AndReturn(server)
+        self._mock_server_get(mock_server=server, multiple=True)
+
         server_update = self.fc.servers.list()[1]
-        self.fc.servers.get('5678').AndReturn(server_update)
+        self._mock_server_get(server='5678',
+                              mock_server=server_update,
+                              multiple=True,
+                              mock_again=True)
 
         self.m.ReplayAll()
 
@@ -719,10 +744,8 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_association_with_EIP(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         server = self.fc.servers.list()[0]
-        self.fc.servers.get('WebServer').MultipleTimes() \
-            .AndReturn(server)
+        self._mock_server_get(mock_server=server, multiple=True)
 
         self.m.ReplayAll()
 
@@ -744,10 +767,8 @@ class AllocTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_association_with_AllocationId_or_EIP(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
         server = self.fc.servers.list()[0]
-        self.fc.servers.get('WebServer').MultipleTimes()\
-            .AndReturn(server)
+        self._mock_server_get(mock_server=server, multiple=True)
 
         self.mock_list_instance_ports('WebServer')
         self.mock_show_network()
@@ -801,6 +822,8 @@ class AllocTest(common.HeatTestCase):
         self.mock_update_floatingip(
             port='a000228d-b40b-4124-8394-a4082ae1b76b')
 
+        update_server = self.fc.servers.list()[0]
+        self._mock_server_get(server='5678', mock_server=update_server)
         self.mock_list_instance_ports('5678')
         self.mock_show_network()
         self.mock_no_router_for_vpc()
