@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 import uuid
 
 from oslo.config import cfg
@@ -1164,7 +1165,7 @@ class Server(stack_user.StackUser):
         image_id = restore_data['resource_data']['snapshot_image_id']
         props = dict(
             (key, value) for (key, value) in
-            defn.properties(self.properties_schema).iteritems()
+            six.iteritems(defn.properties(self.properties_schema))
             if value is not None)
         props[self.IMAGE] = image_id
         return defn.freeze(properties=props)
