@@ -797,6 +797,8 @@ outputs:
     value: { get_attr: [secret2, resource.secret1, value]}
   test_attr2:
     value: { get_attr: [secret2, resource.secret1.value]}
+  test_ref:
+    value: { get_resource: secret2 }
 '''
 
     env_templ = '''
@@ -820,6 +822,39 @@ resource_registry:
         stack.create()
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
+
+    def test_stack_ref(self):
+        nested_templ = '''
+heat_template_version: 2014-10-16
+resources:
+  secret1:
+    type: OS::Heat::RandomString
+'''
+        stack = self._create_dummy_stack(nested_templ)
+        test_ref = stack.output('test_ref')
+        self.assertIn('arn:openstack:heat:', test_ref)
+
+    def test_transparent_ref(self):
+        """With the addition of OS::stack_id we can now use the nested resource
+        more transparently.
+        """
+        nested_templ = '''
+heat_template_version: 2014-10-16
+resources:
+  secret1:
+    type: OS::Heat::RandomString
+outputs:
+  OS::stack_id:
+    value: {get_resource: secret1}
+  nested_str:
+    value: {get_attr: [secret1, value]}
+'''
+        stack = self._create_dummy_stack(nested_templ)
+        test_ref = stack.output('test_ref')
+        test_attr = stack.output('old_way')
+
+        self.assertNotIn('arn:openstack:heat', test_ref)
+        self.assertEqual(test_attr, test_ref)
 
     def test_nested_attributes(self):
         nested_templ = '''
