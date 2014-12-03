@@ -782,6 +782,64 @@ resource_registry:
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
 
+class NestedAttributes(common.HeatTestCase):
+    """Prove that we can use the template resource references."""
+
+    main_templ = '''
+heat_template_version: 2014-10-16
+resources:
+  secret2:
+    type: My::NestedSecret
+outputs:
+  old_way:
+    value: { get_attr: [secret2, nested_str]}
+  test_attr1:
+    value: { get_attr: [secret2, resource.secret1, value]}
+  test_attr2:
+    value: { get_attr: [secret2, resource.secret1.value]}
+'''
+
+    env_templ = '''
+resource_registry:
+  "My::NestedSecret": nested.yaml
+'''
+
+    def setUp(self):
+        super(NestedAttributes, self).setUp()
+        utils.setup_dummy_db()
+
+    def _create_dummy_stack(self, nested_templ):
+        env = environment.Environment()
+        env.load(yaml.load(self.env_templ))
+        templ = parser.Template(template_format.parse(self.main_templ),
+                                files={'nested.yaml': nested_templ})
+        stack = parser.Stack(utils.dummy_context(),
+                             utils.random_name(),
+                             templ, env=env)
+        stack.store()
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+        return stack
+
+    def test_nested_attributes(self):
+        nested_templ = '''
+heat_template_version: 2014-10-16
+resources:
+  secret1:
+    type: OS::Heat::RandomString
+outputs:
+  nested_str:
+    value: {get_attr: [secret1, value]}
+'''
+        stack = self._create_dummy_stack(nested_templ)
+        old_way = stack.output('old_way')
+        test_attr1 = stack.output('test_attr1')
+        test_attr2 = stack.output('test_attr2')
+
+        self.assertEqual(old_way, test_attr1)
+        self.assertEqual(old_way, test_attr2)
+
+
 class ProviderTemplateUpdateTest(common.HeatTestCase):
     main_template = '''
 HeatTemplateFormatVersion: '2012-12-12'

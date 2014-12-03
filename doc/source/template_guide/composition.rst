@@ -121,3 +121,20 @@ Now you can use "OS::Nova::Server" in our top level template (main.yaml).
 To create the stack, run::
 
   $ heat stack-create -f main.yaml -e env.yaml example-two
+
+
+Getting access to nested attributes
+-----------------------------------
+There are implicit attributes of a template resource. These are
+accessable as follows:
+
+.. code-block:: yaml
+
+  heat_template_version: 2013-05-23
+  resources:
+    my_server:
+      type: my_nova.yaml
+
+  outputs:
+    test_out:
+      value: {get_attr: my_server, resource.server, first_address}
