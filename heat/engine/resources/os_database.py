@@ -39,8 +39,16 @@ class OSDBInstance(resource.Resource):
         'ERROR', 'FAILED', 'ACTIVE',
     )
 
-    BAD_STATUSES = (ERROR, FAILED)
+    TROVE_STATUS_REASON = {
+        FAILED: _('The database instance was created, but heat failed to set '
+                  'up the datastore. If a database instance is in the FAILED '
+                  'state, it should be deleted and a new one should be '
+                  'created.'),
+        ERROR: _('The last operation for the database instance failed due to '
+                 'an error.'),
+    }
 
+    BAD_STATUSES = (ERROR, FAILED)
     PROPERTIES = (
         NAME, FLAVOR, SIZE, DATABASES, USERS, AVAILABILITY_ZONE,
         RESTORE_POINT, DATASTORE_TYPE, DATASTORE_VERSION, NICS,
@@ -345,7 +353,9 @@ class OSDBInstance(resource.Resource):
         self._refresh_instance(instance)  # get updated attributes
         if instance.status in self.BAD_STATUSES:
             raise resource.ResourceInError(
-                resource_status=instance.status)
+                resource_status=instance.status,
+                status_reason=self.TROVE_STATUS_REASON.get(instance.status,
+                                                           _("Unknown")))
 
         if instance.status != self.ACTIVE:
             return False
