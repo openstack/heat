@@ -111,44 +111,44 @@ Resources:
         assert_min('[a-zA-Z0-9]', random_string, 32)
         self.assertRaises(exception.InvalidTemplateAttribute,
                           secret1.FnGetAtt, 'foo')
-        self.assertEqual(random_string, secret1.FnGetRefId())
+        self.assertEqual(secret1.FnGetRefId(), random_string)
 
         secret2 = stack['secret2']
         random_string = secret2.FnGetAtt('value')
         assert_min('[a-zA-Z0-9]', random_string, 10)
-        self.assertEqual(random_string, secret2.FnGetRefId())
+        self.assertEqual(secret2.FnGetRefId(), random_string)
 
         secret3 = stack['secret3']
         random_string = secret3.FnGetAtt('value')
         assert_min('[0-7]', random_string, 100)
-        self.assertEqual(random_string, secret3.FnGetRefId())
+        self.assertEqual(secret3.FnGetRefId(), random_string)
 
         secret4 = stack['secret4']
         random_string = secret4.FnGetAtt('value')
-        self.assertEqual(len(random_string), 32)
+        self.assertEqual(32, len(random_string))
         assert_min('[0-9]', random_string, 1)
         assert_min('[A-Z]', random_string, 1)
         assert_min('[a-z]', random_string, 20)
         assert_min('[(),\[\]{}]', random_string, 1)
         assert_min('[$_]', random_string, 2)
         assert_min('@', random_string, 5)
-        self.assertEqual(random_string, secret4.FnGetRefId())
+        self.assertEqual(secret4.FnGetRefId(), random_string)
 
         secret5 = stack['secret5']
         random_string = secret5.FnGetAtt('value')
-        self.assertEqual(len(random_string), 25)
+        self.assertEqual(25, len(random_string))
         assert_min('[0-9]', random_string, 1)
         assert_min('[A-Z]', random_string, 1)
         assert_min('[a-z]', random_string, 20)
-        self.assertEqual(random_string, secret5.FnGetRefId())
+        self.assertEqual(secret5.FnGetRefId(), random_string)
 
         secret6 = stack['secret6']
         random_string = secret6.FnGetAtt('value')
-        self.assertEqual(len(random_string), 10)
+        self.assertEqual(10, len(random_string))
         assert_min('[(),\[\]{}]', random_string, 1)
         assert_min('[$_]', random_string, 2)
         assert_min('@', random_string, 5)
-        self.assertEqual(random_string, secret6.FnGetRefId())
+        self.assertEqual(secret6.FnGetRefId(), random_string)
 
         # Prove the name is returned before create sets the ID
         secret6.resource_id = None
@@ -210,7 +210,7 @@ Resources:
         secret = stack['secret']
         random_string = secret.FnGetAtt('value')
         self.assertEqual(512, len(random_string))
-        self.assertEqual(random_string, secret.FnGetRefId())
+        self.assertEqual(secret.FnGetRefId(), random_string)
 
     def test_exceeds_max_length(self):
         template_random_string = '''

@@ -375,7 +375,7 @@ Resources:
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         scheduler.TaskRunner(stack.create)()
-        self.assertEqual(stack.state, (stack.CREATE, stack.FAILED))
+        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
         scheduler.TaskRunner(stack.delete)()
 
         self.m.VerifyAll()
@@ -789,7 +789,7 @@ Resources:
         self.assertResourceState(attachment, 'the_attachment')
 
         route_table = stack['the_route_table']
-        self.assertEqual(list(attachment._vpc_route_tables()), [route_table])
+        self.assertEqual([route_table], list(attachment._vpc_route_tables()))
 
         stack.delete()
         self.m.VerifyAll()

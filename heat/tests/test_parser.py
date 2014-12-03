@@ -1201,8 +1201,8 @@ class StackTest(common.HeatTestCase):
                          exp_prefix + 'None')
         self.stack.store()
         identifier = self.stack.identifier()
-        self.assertEqual(self.stack.parameters['AWS::StackId'],
-                         exp_prefix + self.stack.id)
+        self.assertEqual(exp_prefix + self.stack.id,
+                         self.stack.parameters['AWS::StackId'])
         self.assertEqual(self.stack.parameters['AWS::StackId'],
                          identifier.arn())
         self.m.VerifyAll()
@@ -1564,8 +1564,8 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_s)
         user_creds = db_api.user_creds_get(user_creds_id)
         self.assertIsNotNone(user_creds)
-        self.assertEqual(self.stack.state,
-                         (parser.Stack.DELETE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
 
     def test_delete_trust_fail(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')

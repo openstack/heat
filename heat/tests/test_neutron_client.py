@@ -84,7 +84,7 @@ class NeutronClientPluginTests(NeutronClientPluginTestCase):
                     '9887157c-d092-40f5-b547-6361915fce7d']
 
         sgs_list = self.neutron_plugin.get_secgroup_uuids(sgs_uuid)
-        self.assertEqual(sgs_list, sgs_uuid)
+        self.assertEqual(sgs_uuid, sgs_list)
         # test get from name, return only one
         sgs_non_uuid = ['security_group_1']
         expected_groups = ['0389f747-7785-4757-b7bb-2ab07e4b09c3']

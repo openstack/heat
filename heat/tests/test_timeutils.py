@@ -102,7 +102,7 @@ class RetryBackoffExponentialTest(common.HeatTestCase):
     def test_backoff_delay(self):
         delay = util.retry_backoff_delay(
             self.attempt, self.scale_factor)
-        self.assertEqual(delay, self.delay)
+        self.assertEqual(self.delay, delay)
 
 
 class RetryBackoffJitterTest(common.HeatTestCase):

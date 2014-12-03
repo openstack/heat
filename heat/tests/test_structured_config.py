@@ -235,7 +235,7 @@ class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
         expected = {'foo': ['baz', 'baz2']}
         result = self.deployment._build_derived_config(
             'CREATE', self.source, self.inputs, {})
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
 
 class StructuredDeploymentParseTest(common.HeatTestCase):
@@ -375,7 +375,7 @@ class StructuredDeploymentParseMethodsTest(common.HeatTestCase):
         input_key = 'get_input'
         expected = 'bar'
         result = sc.StructuredDeployment.get_input_key_arg(snippet, input_key)
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_get_key_args_long_snippet(self):
         snippet = {'get_input': 'bar', 'second': 'foo'}
@@ -399,7 +399,7 @@ class StructuredDeploymentParseMethodsTest(common.HeatTestCase):
         inputs = {'bar': 'baz', 'foo': 'foo2'}
         res = sc.StructuredDeployment.get_input_key_value('bar', inputs, False)
         expected = 'baz'
-        self.assertEqual(res, expected)
+        self.assertEqual(expected, res)
 
     def test_get_input_key_value_raise_exception(self):
         inputs = {'bar': 'baz', 'foo': 'foo2'}

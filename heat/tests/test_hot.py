@@ -431,7 +431,7 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = parser.Template(hot_tpl)
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
         snippet = {'list_join': ["\n", {'get_attr': ['rg', 'name']}]}
-        self.assertEqual(self.resolve(snippet, tmpl, stack), '')
+        self.assertEqual('', self.resolve(snippet, tmpl, stack))
 
     def test_str_replace(self):
         """Test str_replace function."""
@@ -827,12 +827,12 @@ class StackTest(test_parser.StackTest):
     def test_set_param_id(self):
         tmpl = parser.Template(hot_tpl_empty)
         self.stack = parser.Stack(self.ctx, 'param_id_test', tmpl)
-        self.assertEqual(self.stack.parameters['OS::stack_id'], 'None')
+        self.assertEqual('None', self.stack.parameters['OS::stack_id'])
         self.stack.store()
         stack_identifier = self.stack.identifier()
-        self.assertEqual(self.stack.parameters['OS::stack_id'], self.stack.id)
-        self.assertEqual(self.stack.parameters['OS::stack_id'],
-                         stack_identifier.stack_id)
+        self.assertEqual(self.stack.id, self.stack.parameters['OS::stack_id'])
+        self.assertEqual(stack_identifier.stack_id,
+                         self.stack.parameters['OS::stack_id'])
         self.m.VerifyAll()
 
     def test_set_wrong_param(self):
@@ -851,8 +851,8 @@ class StackTest(test_parser.StackTest):
         self.stack = parser.Stack(self.ctx, 'update_stack_id_test', tmpl)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state,
-                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
 
         stack_id = self.stack.parameters['OS::stack_id']
 
@@ -864,24 +864,24 @@ class StackTest(test_parser.StackTest):
         updated_stack = parser.Stack(self.ctx, 'updated_stack', tmpl2)
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state,
-                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
-        self.assertEqual(self.stack['AResource'].properties['Foo'], 'xyz')
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
 
-        self.assertEqual(
-            self.stack['AResource'].metadata_get()['Bar'], stack_id)
+        self.assertEqual(stack_id,
+                         self.stack['AResource'].metadata_get()['Bar'])
 
     def test_load_param_id(self):
         tmpl = parser.Template(hot_tpl_empty)
         self.stack = parser.Stack(self.ctx, 'param_load_id_test', tmpl)
         self.stack.store()
         stack_identifier = self.stack.identifier()
-        self.assertEqual(self.stack.parameters['OS::stack_id'],
-                         stack_identifier.stack_id)
+        self.assertEqual(stack_identifier.stack_id,
+                         self.stack.parameters['OS::stack_id'])
 
         newstack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
-        self.assertEqual(newstack.parameters['OS::stack_id'],
-                         stack_identifier.stack_id)
+        self.assertEqual(stack_identifier.stack_id,
+                         newstack.parameters['OS::stack_id'])
 
     def test_update_modify_param_ok_replace(self):
         tmpl = {

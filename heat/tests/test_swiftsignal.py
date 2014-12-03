@@ -677,7 +677,7 @@ class SwiftSignalTest(common.HeatTestCase):
 
         st.create()
         self.assertEqual(('CREATE', 'COMPLETE'), st.state)
-        self.assertEqual(handle.FnGetAtt('token'), '')
+        self.assertEqual('', handle.FnGetAtt('token'))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')

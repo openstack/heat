@@ -1681,12 +1681,12 @@ class PropertiesValidationTest(testtools.TestCase):
             )
         }
         props = properties.Properties(schema, {})
-        self.assertEqual(props.props['foo_sup'].support_status().status,
-                         support.SUPPORTED)
-        self.assertEqual(props.props['bar_dep'].support_status().status,
-                         support.DEPRECATED)
-        self.assertEqual(props.props['bar_dep'].support_status().message,
-                         'Do not use this ever')
+        self.assertEqual(support.SUPPORTED,
+                         props.props['foo_sup'].support_status().status)
+        self.assertEqual(support.DEPRECATED,
+                         props.props['bar_dep'].support_status().status)
+        self.assertEqual('Do not use this ever',
+                         props.props['bar_dep'].support_status().message)
 
     def test_nested_properties_schema_invalid_property_in_list(self):
         child_schema = {'Key': {'Type': 'String',

@@ -58,7 +58,7 @@ class ParameterTest(testtools.TestCase):
         p = self.new_parameter(
             'p', {'Type': 'Json', 'NoEcho': 'true'}, {"a": 1})
         self.assertTrue(p.hidden())
-        self.assertEqual(str(p), '******')
+        self.assertEqual('******', str(p))
 
     def test_new_bad_type(self):
         self.assertRaises(exception.InvalidSchemaError, self.new_parameter,

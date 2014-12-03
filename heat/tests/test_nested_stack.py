@@ -101,7 +101,7 @@ Outputs:
         stack = self.create_stack(self.test_template)
         rsrc = stack['the_nested']
         nested_name = utils.PhysName(stack.name, 'the_nested')
-        self.assertEqual(rsrc.physical_resource_name(), nested_name)
+        self.assertEqual(nested_name, rsrc.physical_resource_name())
         arn_prefix = ('arn:openstack:heat::aaaa:stacks/%s/' %
                       rsrc.physical_resource_name())
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))

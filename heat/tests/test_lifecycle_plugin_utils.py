@@ -70,9 +70,9 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         ms = mock.Mock()
         ms.__setattr__("action", 'A')
         lifecycle_plugin_utils.do_pre_ops(mc, ms, None, None)
-        self.assertEqual(mc.pre_counter_for_unit_test, 1)
+        self.assertEqual(1, mc.pre_counter_for_unit_test)
         lifecycle_plugin_utils.do_post_ops(mc, ms, None, None)
-        self.assertEqual(mc.post_counter_for_unit_test, 1)
+        self.assertEqual(1, mc.post_counter_for_unit_test)
 
         return
 
@@ -80,16 +80,16 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         lcp_mappings = []
         self.mock_lcp_class_map(lcp_mappings)
         pp_cis = lifecycle_plugin_utils.get_plug_point_class_instances()
-        self.assertEqual(len(pp_cis), 0)
+        self.assertEqual(0, len(pp_cis))
 
         # order should change with sort
         lcp_mappings = [('A::B::C2', TestLifecycleCallout2),
                         ('A::B::C1', TestLifecycleCallout1)]
         self.mock_lcp_class_map(lcp_mappings)
         pp_cis = lifecycle_plugin_utils.get_plug_point_class_instances()
-        self.assertEqual(len(pp_cis), 2)
-        self.assertEqual(pp_cis[0].get_ordinal(), 100)
-        self.assertEqual(pp_cis[1].get_ordinal(), 101)
+        self.assertEqual(2, len(pp_cis))
+        self.assertEqual(100, pp_cis[0].get_ordinal())
+        self.assertEqual(101, pp_cis[1].get_ordinal())
         self.assertEqual(TestLifecycleCallout1, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout2, pp_cis[1].__class__)
 
@@ -98,9 +98,9 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
                         ('A::B::C2', TestLifecycleCallout2)]
         self.mock_lcp_class_map(lcp_mappings)
         pp_cis = lifecycle_plugin_utils.get_plug_point_class_instances()
-        self.assertEqual(len(pp_cis), 2)
-        self.assertEqual(pp_cis[0].get_ordinal(), 100)
-        self.assertEqual(pp_cis[1].get_ordinal(), 101)
+        self.assertEqual(2, len(pp_cis))
+        self.assertEqual(100, pp_cis[0].get_ordinal())
+        self.assertEqual(101, pp_cis[1].get_ordinal())
         self.assertEqual(TestLifecycleCallout1, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout2, pp_cis[1].__class__)
 
@@ -110,9 +110,9 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
                         ('A::B::C1', TestLifecycleCallout1)]
         self.mock_lcp_class_map(lcp_mappings)
         pp_cis = lifecycle_plugin_utils.get_plug_point_class_instances()
-        self.assertEqual(len(pp_cis), 3)
-        self.assertEqual(pp_cis[2].get_ordinal(), 100)
-        self.assertEqual(pp_cis[0].get_ordinal(), 101)
+        self.assertEqual(3, len(pp_cis))
+        self.assertEqual(100, pp_cis[2].get_ordinal())
+        self.assertEqual(101, pp_cis[0].get_ordinal())
         # (can sort fail partially? If so then this test may break)
         self.assertEqual(TestLifecycleCallout2, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout3, pp_cis[1].__class__)
@@ -135,8 +135,8 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         except Exception:
             failed = True
         self.assertTrue(failed)
-        self.assertEqual(mc.pre_counter_for_unit_test, 1)
-        self.assertEqual(mc.post_counter_for_unit_test, 1)
+        self.assertEqual(1, mc.pre_counter_for_unit_test)
+        self.assertEqual(1, mc.post_counter_for_unit_test)
 
         return
 
@@ -150,7 +150,7 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         ms = mock.Mock()
         ms.__setattr__("action", 'A')
         lifecycle_plugin_utils.do_post_ops(mc, ms, None, None)
-        self.assertEqual(mc.post_counter_for_unit_test, 1)
+        self.assertEqual(1, mc.post_counter_for_unit_test)
 
         return
 
@@ -159,7 +159,7 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         ordinal = lcp.get_ordinal()
         lcp.do_pre_op(None, None, None)
         lcp.do_post_op(None, None, None)
-        self.assertEqual(ordinal, 100)
+        self.assertEqual(100, ordinal)
 
         return
 
