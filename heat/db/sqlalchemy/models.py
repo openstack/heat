@@ -164,6 +164,7 @@ class UserCreds(BASE, HeatBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     username = sqlalchemy.Column(sqlalchemy.String(255))
     password = sqlalchemy.Column(sqlalchemy.String(255))
+    region_name = sqlalchemy.Column(sqlalchemy.String(255))
     decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     tenant = sqlalchemy.Column(sqlalchemy.String(1024))
     auth_url = sqlalchemy.Column(sqlalchemy.Text)

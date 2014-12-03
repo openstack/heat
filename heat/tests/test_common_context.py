@@ -42,7 +42,8 @@ class TestRequestContext(common.HeatTestCase):
                     'user_id': 'fooUser',
                     'tenant': 'atenant',
                     'auth_url': 'http://xyz',
-                    'aws_creds': 'blah'}
+                    'aws_creds': 'blah',
+                    'region_name': 'regionOne'}
 
         super(TestRequestContext, self).setUp()
 
@@ -59,7 +60,11 @@ class TestRequestContext(common.HeatTestCase):
             roles=self.ctx.get('roles'),
             show_deleted=self.ctx.get('show_deleted'),
             is_admin=self.ctx.get('is_admin'),
-            auth_token_info=self.ctx.get('auth_token_info'))
+            auth_token_info=self.ctx.get('auth_token_info'),
+            trustor_user_id=self.ctx.get('trustor_user_id'),
+            trust_id=self.ctx.get('trust_id'),
+            user=self.ctx.get('user'),
+            region_name=self.ctx.get('region_name'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
         self.assertEqual(self.ctx, ctx_dict)

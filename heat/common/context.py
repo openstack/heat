@@ -34,7 +34,8 @@ class RequestContext(context.RequestContext):
                  tenant_id=None, auth_url=None, roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
-                 request_id=None, auth_token_info=None, **kwargs):
+                 request_id=None, auth_token_info=None, region_name=None,
+                 **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
@@ -52,6 +53,7 @@ class RequestContext(context.RequestContext):
         self.username = username
         self.user_id = user_id
         self.password = password
+        self.region_name = region_name
         self.aws_creds = aws_creds
         self.tenant_id = tenant_id
         self.auth_token_info = auth_token_info
@@ -101,7 +103,8 @@ class RequestContext(context.RequestContext):
                 'is_admin': self.is_admin,
                 'user': self.user,
                 'request_id': self.request_id,
-                'show_deleted': self.show_deleted}
+                'show_deleted': self.show_deleted,
+                'region_name': self.region_name}
 
     @classmethod
     def from_dict(cls, values):
@@ -151,6 +154,7 @@ class ContextMiddleware(wsgi.Middleware):
             token = headers.get('X-Auth-Token')
             tenant = headers.get('X-Tenant-Name')
             tenant_id = headers.get('X-Tenant-Id')
+            region_name = headers.get('X-Region-Name')
             auth_url = headers.get('X-Auth-Url')
             roles = headers.get('X-Roles')
             if roles is not None:
@@ -170,7 +174,8 @@ class ContextMiddleware(wsgi.Middleware):
                                         auth_url=auth_url,
                                         roles=roles,
                                         request_id=req_id,
-                                        auth_token_info=token_info)
+                                        auth_token_info=token_info,
+                                        region_name=region_name)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
