@@ -164,6 +164,7 @@ class MetadataRefreshTest(common.HeatTestCase):
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -227,6 +228,7 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -319,6 +321,7 @@ class MetadataRefreshTestServer(common.HeatTestCase):
 
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.StubOutWithMock(server.Server, 'handle_create')
         self.m.StubOutWithMock(server.Server, 'check_create_complete')

@@ -61,7 +61,10 @@ class LaunchConfiguration(resource.Resource):
         INSTANCE_TYPE: properties.Schema(
             properties.Schema.STRING,
             _('Nova instance type (flavor).'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('nova.flavor')
+            ]
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,

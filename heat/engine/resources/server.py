@@ -149,7 +149,10 @@ class Server(stack_user.StackUser):
             properties.Schema.STRING,
             _('The ID or name of the flavor to boot onto.'),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('nova.flavor')
+            ]
         ),
         FLAVOR_UPDATE_POLICY: properties.Schema(
             properties.Schema.STRING,

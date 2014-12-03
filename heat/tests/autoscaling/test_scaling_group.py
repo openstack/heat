@@ -52,6 +52,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         self.assertRaises(exception.NotSupported,
                           self.validate_scaling_group, t,
@@ -68,6 +69,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         stack = utils.parse_stack(t, params=inline_templates.as_params)
 
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,
@@ -87,6 +89,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         stack = utils.parse_stack(t, params=inline_templates.as_params)
 
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
@@ -106,7 +109,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.stub_ImageConstraint_validate()
-
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,
                               self.validate_scaling_group, t,
@@ -125,6 +128,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
         self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,

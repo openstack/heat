@@ -166,6 +166,7 @@ class InstanceGroupTest(common.HeatTestCase):
         parser.Stack.validate().MultipleTimes()
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
     def _stub_grp_create(self, capacity):
         """
@@ -239,6 +240,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -251,6 +253,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -271,6 +274,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -364,6 +368,7 @@ class InstanceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -691,6 +696,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.assertEqual(('UPDATE', 'FAILED'), stack.state)

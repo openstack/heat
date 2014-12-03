@@ -977,10 +977,9 @@ class ServersTest(common.HeatTestCase):
         resource_defns = templ.resource_definitions(stack)
         server = servers.Server('server_validate_test',
                                 resource_defns['WebServer'], stack)
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
 
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
@@ -1365,7 +1364,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
 
         update_template = copy.deepcopy(server.t)
-        update_template['Properties']['flavor'] = 'm1.smigish'
+        update_template['Properties']['flavor'] = 'm1.small'
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -1386,7 +1385,7 @@ class ServersTest(common.HeatTestCase):
         # the update then the updated policy is followed for a flavor
         # update
         update_template['Properties']['flavor_update_policy'] = 'REPLACE'
-        update_template['Properties']['flavor'] = 'm1.smigish'
+        update_template['Properties']['flavor'] = 'm1.small'
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -1402,9 +1401,8 @@ class ServersTest(common.HeatTestCase):
         image_id = self.getUniqueString()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
+
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)
@@ -1512,9 +1510,7 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'update_prop')
 
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        self.stub_ImageConstraint_validate()
         self.m.ReplayAll()
 
         update_template = copy.deepcopy(server.t)

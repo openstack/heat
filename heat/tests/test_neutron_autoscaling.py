@@ -20,7 +20,6 @@ from oslo.config import cfg
 
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
@@ -129,7 +128,6 @@ class AutoScalingTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        self.m.StubOutWithMock(glance.ImageConstraint, "validate")
 
     def test_lb(self):
 
@@ -255,10 +253,8 @@ class AutoScalingTest(common.HeatTestCase):
             .AndReturn(False)
         instance.Instance.check_create_complete(mox.IgnoreArg())\
             .AndReturn(True)
-
-        glance.ImageConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
-
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.4')
 

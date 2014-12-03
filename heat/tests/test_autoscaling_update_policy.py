@@ -319,6 +319,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -331,6 +332,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -353,6 +355,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -370,6 +373,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
     def test_parse_with_bad_update_policy(self):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy)
         stack = utils.parse_stack(tmpl)
@@ -380,6 +384,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
     def test_parse_with_bad_pausetime_in_update_policy(self):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
         group = tmpl['Resources']['WebServerGroup']
@@ -451,6 +456,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -461,6 +467,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_grp_create(size)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
@@ -518,6 +525,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.stub_wallclock()
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -718,6 +726,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
 
         stack.validate()
@@ -728,6 +737,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_grp_create(size)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
@@ -782,6 +792,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
         size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_grp_create(size)
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
@@ -825,6 +836,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.m.VerifyAll()
