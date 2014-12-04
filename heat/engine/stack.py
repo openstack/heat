@@ -1058,7 +1058,7 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
     def delete_snapshot(self, snapshot):
         '''Remove a snapshot from the backends.'''
-        for name, rsrc in self.resources.iteritems():
+        for name, rsrc in six.iteritems(self.resources):
             data = snapshot.data['resources'].get(name)
             scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
@@ -1075,7 +1075,7 @@ class Stack(collections.Mapping):
 
         template = tmpl.Template(snapshot.data['template'])
 
-        for name, defn in template.resource_definitions(self).iteritems():
+        for name, defn in six.iteritems(template.resource_definitions(self)):
             rsrc = resource.Resource(name, defn, self)
             data = snapshot.data['resources'].get(name)
             handle_restore = getattr(rsrc, 'handle_restore', None)

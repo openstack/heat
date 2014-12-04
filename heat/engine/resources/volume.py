@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -771,7 +772,7 @@ class CinderVolume(Volume):
             self.IMAGE_REF, self.IMAGE, self.SOURCE_VOLID, self.SIZE)
         props = dict(
             (key, value) for (key, value) in
-            defn.properties(self.properties_schema).iteritems()
+            six.iteritems(defn.properties(self.properties_schema))
             if key not in ignore_props and value is not None)
         props[self.BACKUP_ID] = backup_id
         return defn.freeze(properties=props)

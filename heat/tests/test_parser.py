@@ -4395,7 +4395,7 @@ class StackTest(common.HeatTestCase):
             def handle_restore(self, defn, data):
                 props = dict(
                     (key, value) for (key, value) in
-                    defn.properties(self.properties_schema).iteritems()
+                    six.iteritems(defn.properties(self.properties_schema))
                     if value is not None)
                 value = data['resource_data']['a_string']
                 props['a_string'] = value
