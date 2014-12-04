@@ -46,6 +46,9 @@ import webob.exc
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
+from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.common import serializers
 
 
@@ -260,7 +263,7 @@ class Server(object):
         """
         def kill_children(*args):
             """Kills the entire process group."""
-            self.LOG.error(_('SIGTERM received'))
+            self.LOG.error(_LE('SIGTERM received'))
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             self.running = False
             os.killpg(0, signal.SIGTERM)
@@ -269,7 +272,7 @@ class Server(object):
             """
             Shuts down the server(s), but allows running requests to complete
             """
-            self.LOG.error(_('SIGHUP received'))
+            self.LOG.error(_LE('SIGHUP received'))
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
             os.killpg(0, signal.SIGHUP)
             signal.signal(signal.SIGHUP, hup)
@@ -286,7 +289,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, application, self.sock)
             return
 
-        self.LOG.info(_("Starting %d workers") % conf.workers)
+        self.LOG.info(_LI("Starting %d workers") % conf.workers)
         signal.signal(signal.SIGTERM, kill_children)
         signal.signal(signal.SIGHUP, hup)
         while len(self.children) < conf.workers:
@@ -297,14 +300,14 @@ class Server(object):
             try:
                 pid, status = os.wait()
                 if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                    self.LOG.error(_('Removing dead child %s') % pid)
+                    self.LOG.error(_LE('Removing dead child %s') % pid)
                     self.children.remove(pid)
                     self.run_child()
             except OSError as err:
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
-                self.LOG.info(_('Caught keyboard interrupt. Exiting.'))
+                self.LOG.info(_LI('Caught keyboard interrupt. Exiting.'))
                 os.killpg(0, signal.SIGTERM)
                 break
         eventlet.greenio.shutdown_safe(self.sock)
@@ -327,10 +330,10 @@ class Server(object):
             signal.signal(signal.SIGHUP, signal.SIG_DFL)
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             self.run_server()
-            self.LOG.info(_('Child %d exiting normally') % os.getpid())
+            self.LOG.info(_LI('Child %d exiting normally') % os.getpid())
             return
         else:
-            self.LOG.info(_('Started child %s') % pid)
+            self.LOG.info(_LI('Started child %s') % pid)
             self.children.append(pid)
 
     def run_server(self):
@@ -353,7 +356,7 @@ class Server(object):
 
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
-        self.LOG.info(_("Starting single process server"))
+        self.LOG.info(_LI("Starting single process server"))
         eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
@@ -627,13 +630,13 @@ class Resource(object):
             action_args.update(deserialized_request)
 
             logging.debug(
-                _('Calling %(controller)s : %(action)s'),
+                ('Calling %(controller)s : %(action)s'),
                 {'controller': self.controller, 'action': action})
 
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            logging.error(_('Exception handling resource: %s') % err)
+            logging.error(_LE('Exception handling resource: %s') % err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = webob.exc.HTTPBadRequest(msg)
@@ -655,7 +658,7 @@ class Resource(object):
                 raise
             if isinstance(err, webob.exc.HTTPServerError):
                 logging.error(
-                    _("Returning %(code)s to user: %(explanation)s"),
+                    _LE("Returning %(code)s to user: %(explanation)s"),
                     {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
@@ -694,7 +697,7 @@ class Resource(object):
                     err_body = action_result.get_unserialized_body()
                     serializer.default(action_result, err_body)
                 except Exception:
-                    logging.warning(_("Unable to serialize exception "
+                    logging.warning(_LW("Unable to serialize exception "
                                     "response"))
 
             return action_result
@@ -729,7 +732,7 @@ class Resource(object):
 
 def log_exception(err, exc_info):
     args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
-    logging.error(_("Unexpected error occurred serving API: %s") % err,
+    logging.error(_LE("Unexpected error occurred serving API: %s") % err,
                   **args)
 
 

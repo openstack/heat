@@ -17,6 +17,7 @@ import osprofiler.profiler
 import osprofiler.web
 
 from heat.common import context
+from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
 from heat.openstack.common import log as logging
 
@@ -31,14 +32,14 @@ def setup(binary, host):
             "Messaging", messaging, context.get_admin_context().to_dict(),
             rpc_messaging.TRANSPORT, "heat", binary, host)
         osprofiler.notifier.set(_notifier)
-        LOG.warning("OSProfiler is enabled.\nIt means that person who knows "
-                    "any of hmac_keys that are specified in "
-                    "/etc/heat/api-paste.ini can trace his requests. \n"
-                    "In real life only operator can read this file so there "
-                    "is no security issue. Note that even if person can "
-                    "trigger profiler, only admin user can retrieve trace "
-                    "information.\n"
-                    "To disable OSprofiler set in heat.conf:\n"
-                    "[profiler]\nenabled=false")
+        LOG.warning(_LW("OSProfiler is enabled.\nIt means that person who "
+                        "knows any of hmac_keys that are specified in "
+                        "/etc/heat/api-paste.ini can trace his requests. \n"
+                        "In real life only operator can read this file so "
+                        "there is no security issue. Note that even if person "
+                        "can trigger profiler, only admin user can retrieve "
+                        "trace information.\n"
+                        "To disable OSprofiler set in heat.conf:\n"
+                        "[profiler]\nenabled=false"))
     else:
         osprofiler.web.disable()

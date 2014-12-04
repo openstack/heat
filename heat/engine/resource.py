@@ -472,7 +472,7 @@ class Resource(object):
                 try:
                     self.state_set(action, self.FAILED, '%s aborted' % action)
                 except Exception:
-                    LOG.exception(_('Error marking resource as failed'))
+                    LOG.exception(_LE('Error marking resource as failed'))
         else:
             self.state_set(action, self.COMPLETE)
 
@@ -1079,7 +1079,7 @@ class Resource(object):
                 reason_string = get_string_details()
             self._add_event('signal', self.status, reason_string)
         except Exception as ex:
-            LOG.exception(_('signal %(name)s : %(msg)s')
+            LOG.exception(_LE('signal %(name)s : %(msg)s')
                           % {'name': six.text_type(self), 'msg': ex})
             failure = exception.ResourceFailure(ex, self)
             raise failure

@@ -320,11 +320,11 @@ class KeystoneClientV3(object):
         if len(domains) == 1:
             return domains[0].id
         elif len(domains) == 0:
-            msg = _LE('Can\'t find domain id for %s!')
+            msg = _('Can\'t find domain id for %s!')
             LOG.error(msg, domain_name)
             raise exception.Error(msg % domain_name)
         else:
-            msg = _LE('Multiple domain ids were found for %s!')
+            msg = _('Multiple domain ids were found for %s!')
             LOG.error(msg, domain_name)
             raise exception.Error(msg % domain_name)
 
@@ -524,12 +524,12 @@ class KeystoneClientV3(object):
         try:
             project = self.domain_admin_client.projects.get(project=project_id)
         except kc_exception.Forbidden:
-            LOG.warning(_('Unable to get details for project %s, not deleting')
-                        % project_id)
+            LOG.warning(_LW('Unable to get details for project %s, '
+                            'not deleting') % project_id)
             return
 
         if project.domain_id != self.stack_domain_id:
-            LOG.warning(_('Not deleting non heat-domain project'))
+            LOG.warning(_LW('Not deleting non heat-domain project'))
             return
 
         try:
