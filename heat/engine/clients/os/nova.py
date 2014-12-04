@@ -425,6 +425,41 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         return dict([(limit.name, limit.value)
                     for limit in list(limits.absolute)])
 
+    def get_console_urls(self, server):
+        """Return dict-like structure of server's console urls.
+
+        The actual console url is lazily resolved on access.
+
+        """
+
+        class ConsoleUrls(collections.Mapping):
+            def __init__(self, server):
+                self.console_methods = {
+                    'novnc': server.get_vnc_console,
+                    'xvpvnc': server.get_vnc_console,
+                    'spice-html5': server.get_spice_console,
+                    'rdp-html5': server.get_rdp_console,
+                }
+
+            def __getitem__(self, key):
+                try:
+                    url = self.console_methods[key](key)['console']['url']
+                except exceptions.BadRequest as e:
+                    unavailable = 'Unavailable console type'
+                    if unavailable in e.message:
+                        url = e.message
+                    else:
+                        raise
+                return url
+
+            def __len__(self):
+                return len(self.console_methods)
+
+            def __iter__(self):
+                return (key for key in self.console_methods)
+
+        return ConsoleUrls(server)
+
 
 class ServerConstraint(constraints.BaseCustomConstraint):
 
