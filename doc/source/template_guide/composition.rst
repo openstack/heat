@@ -138,3 +138,23 @@ accessable as follows:
   outputs:
     test_out:
       value: {get_attr: my_server, resource.server, first_address}
+
+
+Making your template resource more "transparent"
+------------------------------------------------
+If you wish to be able to return the ID of one of the inner resources
+instead of the nested stack's ARN, you can add the following special
+output to your template resource.
+
+.. code-block:: yaml
+
+  resources:
+    server:
+      type: OS::Nova::Server
+
+  outputs:
+    OS::stack_id:
+      value: {get_resource: server}
+
+Now when you use "get_resource" or "get_attr" from the outer template heat
+will use nova server and not the template resource.

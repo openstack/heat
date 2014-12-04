@@ -262,6 +262,10 @@ class TemplateResource(stack_resource.StackResource):
     def FnGetRefId(self):
         if not self.nested():
             return unicode(self.name)
+
+        if 'OS::stack_id' in self.nested().outputs:
+            return self.nested().output('OS::stack_id')
+
         return self.nested().identifier().arn()
 
     def FnGetAtt(self, key, *path):
