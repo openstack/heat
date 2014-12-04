@@ -977,8 +977,6 @@ class EngineService(service.Service):
             resource_class = resources.global_env().get_class(type_name)
         except exception.StackValidationFailed:
             raise exception.ResourceTypeNotFound(type_name=type_name)
-        except exception.NotFound as ex:
-            raise exception.StackValidationFailed(message=ex.message)
 
         def properties_schema():
             for name, schema_dict in resource_class.properties_schema.items():
@@ -1009,8 +1007,6 @@ class EngineService(service.Service):
                 type_name).resource_to_template(type_name)
         except exception.StackValidationFailed:
             raise exception.ResourceTypeNotFound(type_name=type_name)
-        except exception.NotFound as ex:
-            raise exception.StackValidationFailed(message=ex.message)
 
     @request_context
     def list_events(self, cnxt, stack_identity, filters=None, limit=None,

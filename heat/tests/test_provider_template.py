@@ -435,15 +435,14 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         self.assertIsNone(temp_res.validate())
 
-    def test_get_error_for_invalid_template_name(self):
-        # assertion: if the name matches {.yaml|.template} and is valid
-        # we get the TemplateResource class, otherwise error will be raised.
+    def test_get_template_resource(self):
+        # assertion: if the name matches {.yaml|.template} we get the
+        # TemplateResource class.
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": "some_magic.yaml"}}}}
         env = environment.Environment(env_str)
-        ex = self.assertRaises(exception.NotFound, env.get_class,
-                               'OS::ResourceType', 'fred')
-        self.assertEqual('No such file: some_magic.yaml', six.text_type(ex))
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(template_resource.TemplateResource, cls)
 
     def test_get_template_resource_class(self):
         test_templ_name = 'file:///etc/heatr/frodo.yaml'
