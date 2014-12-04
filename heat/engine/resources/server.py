@@ -356,7 +356,7 @@ class Server(stack_user.StackUser):
               "can be specified as parameter to the get_attr function, "
               "e.g. get_attr: [ <server>, console_urls, novnc ]. "
               "Currently supported types are "
-              "novnc, xvpvnc, spice-html5, rdp-html5.")
+              "novnc, xvpvnc, spice-html5, rdp-html5, serial.")
         ),
     }
 

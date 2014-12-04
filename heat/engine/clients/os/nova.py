@@ -439,6 +439,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                     'xvpvnc': server.get_vnc_console,
                     'spice-html5': server.get_spice_console,
                     'rdp-html5': server.get_rdp_console,
+                    'serial': server.get_serial_console
                 }
 
             def __getitem__(self, key):

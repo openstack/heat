@@ -347,6 +347,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
         ('xvpvnc', dict(console_type='xvpvnc', srv_method='vnc')),
         ('spice', dict(console_type='spice-html5', srv_method='spice')),
         ('rdp', dict(console_type='rdp-html5', srv_method='rdp')),
+        ('serial', dict(console_type='serial', srv_method='serial')),
     ]
 
     def setUp(self):
