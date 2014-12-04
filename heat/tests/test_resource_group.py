@@ -409,6 +409,27 @@ class ResourceGroupTest(common.HeatTestCase):
         resource_names = [r.name for r in resg.nested().iter_resources()]
         self.assertEqual(['0', '1'], sorted(resource_names))
 
+    def test_props_update(self):
+        """Test update of resource_def properties."""
+        resg = self._create_dummy_stack()
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+        new_snip = copy.deepcopy(resg.t)
+        new_snip['Properties']['resource_def']['properties']['Foo'] = 'xyz'
+        preupdate_resgid = resg.id
+        preupdate_nestedid = resg.nested().id
+        scheduler.TaskRunner(resg.update, new_snip)()
+        self.stack = resg.nested()
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual(2, len(resg.nested()))
+        resource_names = [r.name for r in resg.nested().iter_resources()]
+        self.assertEqual(['0', '1'], sorted(resource_names))
+        # resource_def update should recurse and update (not replace) nested
+        self.assertEqual(preupdate_resgid, resg.id)
+        self.assertEqual(preupdate_nestedid, resg.nested().id)
+
     def test_update_nochange(self):
         """Test update with no properties change."""
         resg = self._create_dummy_stack()
