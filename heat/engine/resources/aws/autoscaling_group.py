@@ -16,6 +16,7 @@ from oslo.utils import excutils
 import six
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
@@ -214,7 +215,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         done = super(AutoScalingGroup, self).check_create_complete(task)
         if done:
             self._cooldown_timestamp(
-                "%s : %s" % (EXACT_CAPACITY, len(self.get_instances())))
+                "%s : %s" % (EXACT_CAPACITY, grouputils.get_size(self)))
         return done
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -242,7 +243,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 self.adjust(self.properties[self.DESIRED_CAPACITY],
                             adjustment_type=EXACT_CAPACITY)
             else:
-                current_capacity = len(self.get_instances())
+                current_capacity = grouputils.get_size(self)
                 self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
 
     def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY):
@@ -256,7 +257,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                       'cooldown': self.properties[self.COOLDOWN]})
             return
 
-        capacity = len(self.get_instances())
+        capacity = grouputils.get_size(self)
         lower = self.properties[self.MIN_SIZE]
         upper = self.properties[self.MAX_SIZE]
 

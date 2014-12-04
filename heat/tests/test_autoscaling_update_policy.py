@@ -20,6 +20,7 @@ from oslo.config import cfg
 from testtools import matchers
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine import function
@@ -502,8 +503,8 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         # saves info from initial list of instances for comparison later
-        init_instances = current_grp.get_instances()
-        init_names = current_grp.get_instance_names()
+        init_instances = grouputils.get_members(current_grp)
+        init_names = grouputils.get_member_names(current_grp)
         init_images = [(i.name, i.t['Properties']['ImageId'])
                        for i in init_instances]
         init_flavors = [(i.name, i.t['Properties']['InstanceType'])
@@ -536,7 +537,7 @@ class AutoScalingGroupTest(common.HeatTestCase):
 
         # test that the update policy is updated
         updated_grp = stack['WebServerGroup']
-        updt_instances = updated_grp.get_instances()
+        updt_instances = grouputils.get_members(updated_grp)
         self.assertTrue('AutoScalingRollingUpdate'
                         in updated_grp.update_policy)
         updated_policy = updated_grp.update_policy['AutoScalingRollingUpdate']
@@ -549,8 +550,8 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertNotEqual(conf_name, updated_conf_name)
 
         # test that the group size are the same
-        updt_instances = updated_grp.get_instances()
-        updt_names = updated_grp.get_instance_names()
+        updt_instances = grouputils.get_members(updated_grp)
+        updt_names = grouputils.get_member_names(updated_grp)
         self.assertEqual(len(init_names), len(updt_names))
 
         # test that appropriate number of instance names are the same

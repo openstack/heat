@@ -15,6 +15,7 @@ import copy
 
 from heat.common import environment_format
 from heat.common import exception
+from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
@@ -165,24 +166,6 @@ class InstanceGroup(stack_resource.StackResource):
                                        lc=self.LAUNCH_CONFIGURATION_NAME,
                                        ref=conf_refid))
 
-    def get_instance_names(self):
-        """Get a list of resource names of the instances in this InstanceGroup.
-
-        Failed resources will be ignored.
-        """
-        return [r.name for r in self.get_instances()]
-
-    def get_instances(self):
-        """Get a list of all the instance resources managed by this group.
-
-        Sort the list of instances first by created_time then by name.
-        """
-        resources = []
-        if self.nested():
-            resources = [resource for resource in self.nested().itervalues()
-                         if resource.status != resource.FAILED]
-        return sorted(resources, key=lambda r: (r.created_time, r.name))
-
     def _environment(self):
         """Return the environment for the nested stack."""
         return {
@@ -232,8 +215,8 @@ class InstanceGroup(stack_resource.StackResource):
             # Get the current capacity, we may need to adjust if
             # Size has changed
             if self.SIZE in prop_diff:
-                inst_list = self.get_instances()
-                if len(inst_list) != self.properties[self.SIZE]:
+                curr_size = grouputils.get_size(self)
+                if curr_size != self.properties[self.SIZE]:
                     self.resize(self.properties[self.SIZE])
 
     def _tags(self):
@@ -270,7 +253,7 @@ class InstanceGroup(stack_resource.StackResource):
     def _get_instance_templates(self):
         """Get templates for resource instances."""
         return [(instance.name, instance.t)
-                for instance in self.get_instances()]
+                for instance in grouputils.get_members(self)]
 
     def _create_template(self, num_instances, num_replace=0,
                          template_version=('HeatTemplateFormatVersion',
@@ -301,7 +284,7 @@ class InstanceGroup(stack_resource.StackResource):
         Replace the instances in the group using updated launch configuration
         """
         def changing_instances(tmpl):
-            instances = self.get_instances()
+            instances = grouputils.get_members(self)
             current = set((i.name, i.t) for i in instances)
             updated = set(tmpl.resource_definitions(self.nested()).items())
             # includes instances to be updated and deleted
@@ -374,8 +357,7 @@ class InstanceGroup(stack_resource.StackResource):
         '''
         exclude = exclude or []
         if self.properties[self.LOAD_BALANCER_NAMES]:
-            id_list = [inst.FnGetRefId() for inst in self.get_instances()
-                       if inst.FnGetRefId() not in exclude]
+            id_list = grouputils.get_member_refids(self, exclude=exclude)
             for lb in self.properties[self.LOAD_BALANCER_NAMES]:
                 lb_resource = self.stack[lb]
 
@@ -408,7 +390,7 @@ class InstanceGroup(stack_resource.StackResource):
         '''
         if name == self.INSTANCE_LIST:
             return u','.join(inst.FnGetAtt('PublicIp')
-                             for inst in self.get_instances()) or None
+                             for inst in grouputils.get_members(self)) or None
 
     def child_template(self):
         num_instances = int(self.properties[self.SIZE])

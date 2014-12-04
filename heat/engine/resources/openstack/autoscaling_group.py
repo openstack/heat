@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -148,10 +149,10 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
 
     def FnGetAtt(self, key, *path):
         if key == self.CURRENT_SIZE:
-            return len(self.get_instances())
+            return grouputils.get_size(self)
         if path:
-            attrs = ((rsrc.name,
-                      rsrc.FnGetAtt(*path)) for rsrc in self.get_instances())
+            members = grouputils.get_members(self)
+            attrs = ((rsrc.name, rsrc.FnGetAtt(*path)) for rsrc in members)
             if key == self.OUTPUTS:
                 return dict(attrs)
             if key == self.OUTPUTS_LIST:

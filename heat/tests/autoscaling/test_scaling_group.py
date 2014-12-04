@@ -16,6 +16,7 @@ from oslo.config import cfg
 import six
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -182,14 +183,14 @@ class TestGroupAdjust(common.HeatTestCase):
     def test_scaling_policy_cooldown_toosoon(self):
         """If _cooldown_inprogress() returns True don't progress."""
 
-        dont_call = self.patchobject(self.group, 'get_instances')
+        dont_call = self.patchobject(grouputils, 'get_members')
         with mock.patch.object(self.group, '_cooldown_inprogress',
                                return_value=True):
             self.group.adjust(1)
         self.assertEqual([], dont_call.call_args_list)
 
     def test_scaling_policy_cooldown_ok(self):
-        self.patchobject(self.group, 'get_instances', return_value=[])
+        self.patchobject(grouputils, 'get_members', return_value=[])
         resize = self.patchobject(self.group, 'resize')
         cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
         notify = self.patch('heat.engine.notification.autoscaling.send')
@@ -217,7 +218,7 @@ class TestGroupAdjust(common.HeatTestCase):
         cd_stamp.assert_called_once_with('ChangeInCapacity : 1')
 
     def test_scaling_policy_resize_fail(self):
-        self.patchobject(self.group, 'get_instances', return_value=[])
+        self.patchobject(grouputils, 'get_members', return_value=[])
         self.patchobject(self.group, 'resize',
                          side_effect=ValueError('test error'))
         notify = self.patch('heat.engine.notification.autoscaling.send')
