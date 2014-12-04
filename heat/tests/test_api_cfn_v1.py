@@ -13,6 +13,7 @@
 
 import json
 import os
+import six
 
 import mock
 from oslo.config import cfg
@@ -1314,7 +1315,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStackEventsResponse':
                     {'DescribeStackEventsResult':
                      {'StackEvents':
-                      [{'EventId': unicode(event_id),
+                      [{'EventId': six.text_type(event_id),
                         'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                         'ResourceStatus': u'TEST_IN_PROGRESS',
                         'ResourceType': u'AWS::EC2::Instance',

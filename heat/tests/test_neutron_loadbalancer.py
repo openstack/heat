@@ -1089,7 +1089,7 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self._create_pool_with_health_monitors()
 
         neutronclient.Client.disassociate_health_monitor(
-            '5678', mox.IsA(unicode))
+            '5678', mox.IsA(six.string_types))
 
         self.m.ReplayAll()
         snippet = template_format.parse(pool_with_health_monitors_template)

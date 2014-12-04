@@ -361,7 +361,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Boolean'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'bo', schema, 'foo')
-        self.assertIn("Unrecognized value 'foo'", unicode(err))
+        self.assertIn("Unrecognized value 'foo'", six.text_type(err))
 
     def test_missing_param(self):
         '''Test missing user parameter.'''
@@ -376,7 +376,7 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'testparam', schema, '234')
         expected = 'Parameter \'testparam\' is invalid: '\
             '"234" does not match pattern "[a-z]*"'
-        self.assertEqual(expected, unicode(err))
+        self.assertEqual(expected, six.text_type(err))
 
 
 params_schema = json.loads('''{
