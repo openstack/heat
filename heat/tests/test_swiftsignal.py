@@ -143,7 +143,8 @@ class SwiftSignalHandleTest(common.HeatTestCase):
                   "\?temp_url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}"
                   % st.id)
         res_id = st.resources['test_wait_condition_handle'].resource_id
-        self.assertThat(res_id, matchers.MatchesRegex(regexp))
+        self.assertEqual(res_id, handle.physical_resource_name())
+        self.assertThat(handle.FnGetRefId(), matchers.MatchesRegex(regexp))
 
         # Since the account key is mocked out above
         self.assertFalse(mock_swift_object.post_account.called)

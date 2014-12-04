@@ -91,8 +91,8 @@ class SwiftSignalHandle(resource.Resource):
         cplugin = self.client_plugin()
         url = cplugin.get_signal_url(self.stack.id,
                                      self.physical_resource_name())
-        self.data_set('endpoint', url)
-        self.resource_id_set(url)
+        self.data_set(self.ENDPOINT, url)
+        self.resource_id_set(self.physical_resource_name())
 
     def update(self, after, before=None, prev_resource=None):
         raise resource.UpdateReplace(self.name)
@@ -102,9 +102,10 @@ class SwiftSignalHandle(resource.Resource):
             if key == self.TOKEN:
                 return ''  # HeatWaitConditionHandle compatibility
             elif key == self.ENDPOINT:
-                return self.data().get('endpoint')
+                return self.data().get(self.ENDPOINT)
             elif key == self.CURL_CLI:
-                return ('curl -i -X PUT \'%s\'' % self.data().get('endpoint'))
+                return ('curl -i -X PUT \'%s\'' %
+                        self.data().get(self.ENDPOINT))
 
     def handle_delete(self):
         cplugin = self.client_plugin()
@@ -128,7 +129,10 @@ class SwiftSignalHandle(resource.Resource):
             else:
                 raise
 
-        self.data_delete('endpoint')
+        self.data_delete(self.ENDPOINT)
+
+    def FnGetRefId(self):
+        return self.data().get(self.ENDPOINT)
 
 
 class SwiftSignal(resource.Resource):
