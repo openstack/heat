@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 
 LOG = logging.getLogger(__name__)
@@ -85,6 +86,14 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
 
         return client
 
+    def get_volume(self, volume):
+        try:
+            return self.client().volumes.get(volume)
+        except exceptions.NotFound as ex:
+            LOG.info(_LI('Volume (%(volume)s) not found: %(ex)s'),
+                     {'volume': volume, 'ex': ex})
+            raise exception.VolumeNotFound(volume=volume)
+
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)
 
@@ -94,3 +103,11 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return (isinstance(ex, exceptions.ClientException) and
                 ex.code == 409)
+
+
+class VolumeConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.VolumeNotFound,)
+
+    def validate_with_client(self, client, volume):
+        client.client_plugin('cinder').get_volume(volume)

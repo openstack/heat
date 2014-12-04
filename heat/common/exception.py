@@ -235,6 +235,10 @@ class ServerNotFound(HeatException):
     msg_fmt = _("The server (%(server)s) could not be found.")
 
 
+class VolumeNotFound(HeatException):
+    msg_fmt = _("The Volume (%(volume)s) could not be found.")
+
+
 class PhysicalResourceNameAmbiguity(HeatException):
     msg_fmt = _(
         "Multiple physical resources were found with name (%(name)s).")
