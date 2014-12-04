@@ -47,6 +47,20 @@ class CinderClientPluginTests(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_get_snapshot(self):
+        """Tests the get_volume_snapshot function."""
+        snapshot_id = str(uuid.uuid4())
+        my_snapshot = self.m.CreateMockAnything()
+        self.cinder_client.volume_snapshots = self.m.CreateMockAnything()
+        self.cinder_client.volume_snapshots.get(snapshot_id).MultipleTimes().\
+            AndReturn(my_snapshot)
+        self.m.ReplayAll()
+
+        self.assertEqual(my_snapshot,
+                         self.cinder_plugin.get_volume_snapshot(snapshot_id))
+
+        self.m.VerifyAll()
+
 
 class VolumeConstraintTest(common.HeatTestCase):
 
@@ -65,4 +79,24 @@ class VolumeConstraintTest(common.HeatTestCase):
     def test_validation_error(self):
         self.mock_get_volume.side_effect = exception.VolumeNotFound(
             volume='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))
+
+
+class VolumeSnapshotConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(VolumeSnapshotConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_snapshot = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'cinder').get_volume_snapshot = self.mock_get_snapshot
+        self.constraint = cinder.VolumeSnapshotConstraint()
+
+    def test_validation(self):
+        self.mock_get_snapshot.return_value = 'snapshot'
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_snapshot.side_effect = exception.VolumeSnapshotNotFound(
+            snapshot='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))

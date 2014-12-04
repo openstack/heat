@@ -94,6 +94,14 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
                      {'volume': volume, 'ex': ex})
             raise exception.VolumeNotFound(volume=volume)
 
+    def get_volume_snapshot(self, snapshot):
+        try:
+            return self.client().volume_snapshots.get(snapshot)
+        except exceptions.NotFound as ex:
+            LOG.info(_LI('VolumeSnapshot (%(snapshot)s) not found: %(ex)s'),
+                     {'snapshot': snapshot, 'ex': ex})
+            raise exception.VolumeSnapshotNotFound(snapshot=snapshot)
+
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)
 
@@ -111,3 +119,11 @@ class VolumeConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, volume):
         client.client_plugin('cinder').get_volume(volume)
+
+
+class VolumeSnapshotConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.VolumeSnapshotNotFound,)
+
+    def validate_with_client(self, client, snapshot):
+        client.client_plugin('cinder').get_volume_snapshot(snapshot)
