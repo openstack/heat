@@ -390,5 +390,7 @@ def format_snapshot(snapshot):
         rpc_api.SNAPSHOT_STATUS: snapshot.status,
         rpc_api.SNAPSHOT_STATUS_REASON: snapshot.status_reason,
         rpc_api.SNAPSHOT_DATA: snapshot.data,
+        rpc_api.SNAPSHOT_CREATION_TIME: timeutils.isotime(
+            snapshot.created_at),
     }
     return result

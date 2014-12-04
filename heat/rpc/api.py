@@ -235,14 +235,16 @@ SNAPSHOT_KEYS = (
     SNAPSHOT_STACK_ID,
     SNAPSHOT_DATA,
     SNAPSHOT_STATUS,
-    SNAPSHOT_STATUS_REASON
+    SNAPSHOT_STATUS_REASON,
+    SNAPSHOT_CREATION_TIME,
 ) = (
     'id',
     'name',
     'stack_id',
     'data',
     'status',
-    'status_reason'
+    'status_reason',
+    'creation_time'
 )
 
 THREAD_MESSAGES = (THREAD_CANCEL,) = ('cancel',)
