@@ -124,7 +124,10 @@ class Server(stack_user.StackUser):
                         properties.Schema.STRING,
                         _('The ID of the volume to boot from. Only one '
                           'of volume_id or snapshot_id should be '
-                          'provided.')
+                          'provided.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.volume')
+                        ]
                     ),
                     BLOCK_DEVICE_MAPPING_SNAPSHOT_ID: properties.Schema(
                         properties.Schema.STRING,

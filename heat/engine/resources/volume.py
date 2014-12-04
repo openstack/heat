@@ -429,7 +429,10 @@ class VolumeAttachment(resource.Resource):
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
             immutable=True,
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('cinder.volume')
+            ]
         ),
         DEVICE: properties.Schema(
             properties.Schema.STRING,
@@ -793,7 +796,10 @@ class CinderVolumeAttachment(VolumeAttachment):
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('cinder.volume')
+            ]
         ),
         DEVICE: properties.Schema(
             properties.Schema.STRING,

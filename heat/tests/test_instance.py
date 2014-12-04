@@ -22,6 +22,7 @@ from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
@@ -202,6 +203,32 @@ class InstancesTest(common.HeatTestCase):
                                           'VolumeSize': '2',
                                           'DeleteOnTermination': True}},
         ]))
+
+    def test_validate_Volumes_property(self):
+        stack_name = 'validate_volumes'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        volumes = [{'Device': 'vdb', 'VolumeId': '1234'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['Volumes'] = volumes
+        resource_defns = tmpl.resource_definitions(stack)
+        instance = instances.Instance('validate_volumes',
+                                      resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(cinder.CinderClientPlugin, 'get_volume')
+        ex = exception.VolumeNotFound(volume='1234')
+        cinder.CinderClientPlugin.get_volume('1234').AndRaise(ex)
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                instance.validate)
+        self.assertIn("VolumeId Error validating value '1234': "
+                      "The Volume (1234) could not be found.",
+                      six.text_type(exc))
+
+        self.m.VerifyAll()
 
     def test_validate_BlockDeviceMappings_VolumeSize_valid_str(self):
         stack_name = 'val_VolumeSize_valid'

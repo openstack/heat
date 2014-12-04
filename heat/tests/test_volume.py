@@ -252,6 +252,7 @@ class VolumeTest(BaseVolumeTest):
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
         self.stub_ImageConstraint_validate()
+        self.stub_VolumeConstraint_validate()
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
@@ -316,8 +317,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_error_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -339,9 +340,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
-
+        self.stub_VolumeConstraint_validate()
         # delete script
         fva = FakeVolume('in-use', 'available')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
@@ -372,8 +372,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_detach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         fva = FakeVolume('in-use', 'available')
@@ -407,9 +407,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_detach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
-
+        self.stub_VolumeConstraint_validate()
         # delete script
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
@@ -433,8 +432,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         volume_detach_cycle = 'in-use', 'detaching', 'available'
@@ -467,8 +466,8 @@ class VolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         fva = FakeVolume('in-use', 'error')
@@ -758,6 +757,7 @@ class VolumeTest(BaseVolumeTest):
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -945,8 +945,8 @@ class CinderVolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         fva = FakeVolume('in-use', 'available')
@@ -1100,6 +1100,7 @@ class CinderVolumeTest(BaseVolumeTest):
         # create script
         fv = FakeVolume('creating', 'available')
         stack_name = 'test_volume_stack'
+        self.stub_VolumeConstraint_validate()
         self._mock_create_volume(fv, stack_name)
 
         fva = FakeVolume('attaching', 'in-use')
@@ -1313,8 +1314,8 @@ class CinderVolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         fva = FakeVolume('in-use', 'available')
@@ -1359,6 +1360,7 @@ class CinderVolumeTest(BaseVolumeTest):
         fv2a.id = 'vol-456'
         stack_name = 'test_volume_attach_stack'
 
+        self.stub_VolumeConstraint_validate()
         self._mock_create_volume(fv, stack_name)
 
         vol2_name = utils.PhysName(stack_name, 'volume2')
@@ -1413,8 +1415,8 @@ class CinderVolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
-
         self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
 
         # delete script
         fva = FakeVolume('in-use', 'available')

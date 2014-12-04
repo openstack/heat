@@ -25,6 +25,7 @@ import testscenarios
 import testtools
 
 from heat.common import messaging
+from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
@@ -161,4 +162,9 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_FlavorConstraint_validate(self):
         self.m.StubOutWithMock(nova.FlavorConstraint, 'validate')
         nova.FlavorConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+    def stub_VolumeConstraint_validate(self):
+        self.m.StubOutWithMock(cinder.VolumeConstraint, 'validate')
+        cinder.VolumeConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)

@@ -313,7 +313,10 @@ class Instance(resource.Resource):
                     VOLUME_ID: properties.Schema(
                         properties.Schema.STRING,
                         _('The ID of the volume to be attached.'),
-                        required=True
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('cinder.volume')
+                        ]
                     ),
                 }
             )
