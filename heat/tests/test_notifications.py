@@ -24,10 +24,10 @@ from heat.engine import parser
 from heat.engine import resource
 # imports for mocking
 from heat.engine.resources.aws import autoscaling_group as aws_asg
+from heat.engine.resources.aws import wait_condition as aws_wc
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import user
-from heat.engine.resources import wait_condition as waitc
 from heat.engine import signal_responder as signal
 from heat.engine import stack_resource
 from heat.tests import common
@@ -183,7 +183,7 @@ class ScaleNotificationTest(common.HeatTestCase):
         self.patchobject(loadbalancer.LoadBalancer, 'handle_update')
         self.patchobject(user.User, 'handle_create')
         self.patchobject(user.AccessKey, 'handle_create')
-        self.patchobject(waitc.WaitCondition, 'handle_create')
+        self.patchobject(aws_wc.WaitCondition, 'handle_create')
         self.patchobject(signal.SignalResponder, 'handle_create')
 
     def expected_notifs_calls(self, group, adjust,
