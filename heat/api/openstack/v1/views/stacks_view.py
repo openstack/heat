@@ -15,21 +15,21 @@ import itertools
 
 from heat.api.openstack.v1 import util
 from heat.api.openstack.v1.views import views_common
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 
 _collection_name = 'stacks'
 
 basic_keys = (
-    engine_api.STACK_ID,
-    engine_api.STACK_NAME,
-    engine_api.STACK_DESCRIPTION,
-    engine_api.STACK_STATUS,
-    engine_api.STACK_STATUS_DATA,
-    engine_api.STACK_CREATION_TIME,
-    engine_api.STACK_DELETION_TIME,
-    engine_api.STACK_UPDATED_TIME,
-    engine_api.STACK_OWNER,
-    engine_api.STACK_PARENT,
+    rpc_api.STACK_ID,
+    rpc_api.STACK_NAME,
+    rpc_api.STACK_DESCRIPTION,
+    rpc_api.STACK_STATUS,
+    rpc_api.STACK_STATUS_DATA,
+    rpc_api.STACK_CREATION_TIME,
+    rpc_api.STACK_DELETION_TIME,
+    rpc_api.STACK_UPDATED_TIME,
+    rpc_api.STACK_OWNER,
+    rpc_api.STACK_PARENT,
 )
 
 
@@ -38,22 +38,22 @@ def format_stack(req, stack, keys=None, tenant_safe=True):
         if keys and key not in keys:
             return
 
-        if key == engine_api.STACK_ID:
+        if key == rpc_api.STACK_ID:
             yield ('id', value['stack_id'])
             yield ('links', [util.make_link(req, value)])
             if not tenant_safe:
                 yield ('project', value['tenant'])
-        elif key == engine_api.STACK_ACTION:
+        elif key == rpc_api.STACK_ACTION:
             return
-        elif (key == engine_api.STACK_STATUS and
-              engine_api.STACK_ACTION in stack):
+        elif (key == rpc_api.STACK_STATUS and
+              rpc_api.STACK_ACTION in stack):
             # To avoid breaking API compatibility, we join RES_ACTION
             # and RES_STATUS, so the API format doesn't expose the
             # internal split of state into action/status
-            yield (key, '_'.join((stack[engine_api.STACK_ACTION], value)))
+            yield (key, '_'.join((stack[rpc_api.STACK_ACTION], value)))
         else:
             # TODO(zaneb): ensure parameters can be formatted for XML
-            #elif key == engine_api.STACK_PARAMETERS:
+            #elif key == rpc_api.STACK_PARAMETERS:
             #    return key, json.dumps(value)
             yield (key, value)
 

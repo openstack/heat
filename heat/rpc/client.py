@@ -18,7 +18,7 @@ Client side of the heat engine RPC API.
 """
 
 from heat.common import messaging
-from heat.rpc import api
+from heat.rpc import api as rpc_api
 
 
 class EngineClient(object):
@@ -34,7 +34,7 @@ class EngineClient(object):
 
     def __init__(self):
         self._client = messaging.get_rpc_client(
-            topic=api.ENGINE_TOPIC,
+            topic=rpc_api.ENGINE_TOPIC,
             version=self.BASE_RPC_API_VERSION)
 
     @staticmethod

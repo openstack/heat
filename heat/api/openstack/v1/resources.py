@@ -17,7 +17,7 @@ from heat.api.openstack.v1 import util
 from heat.common import identifier
 from heat.common import serializers
 from heat.common import wsgi
-from heat.rpc import api as engine_api
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 
 
@@ -29,30 +29,30 @@ def format_resource(req, res, keys=None):
         if not include_key(key):
             return
 
-        if key == engine_api.RES_ID:
+        if key == rpc_api.RES_ID:
             identity = identifier.ResourceIdentifier(**value)
             links = [util.make_link(req, identity),
                      util.make_link(req, identity.stack(), 'stack')]
 
-            nested_id = res.get(engine_api.RES_NESTED_STACK_ID)
+            nested_id = res.get(rpc_api.RES_NESTED_STACK_ID)
             if nested_id:
                 nested_identity = identifier.HeatIdentifier(**nested_id)
                 links.append(util.make_link(req, nested_identity, 'nested'))
 
             yield ('links', links)
-        elif (key == engine_api.RES_STACK_NAME or
-              key == engine_api.RES_STACK_ID or
-              key == engine_api.RES_ACTION or
-              key == engine_api.RES_NESTED_STACK_ID):
+        elif (key == rpc_api.RES_STACK_NAME or
+              key == rpc_api.RES_STACK_ID or
+              key == rpc_api.RES_ACTION or
+              key == rpc_api.RES_NESTED_STACK_ID):
             return
-        elif (key == engine_api.RES_METADATA):
+        elif (key == rpc_api.RES_METADATA):
             return
-        elif (key == engine_api.RES_STATUS and engine_api.RES_ACTION in res):
+        elif (key == rpc_api.RES_STATUS and rpc_api.RES_ACTION in res):
             # To avoid breaking API compatibility, we join RES_ACTION
             # and RES_STATUS, so the API format doesn't expose the
             # internal split of state into action/status
-            yield (key, '_'.join((res[engine_api.RES_ACTION], value)))
-        elif (key == engine_api.RES_NAME):
+            yield (key, '_'.join((res[rpc_api.RES_ACTION], value)))
+        elif (key == rpc_api.RES_NAME):
             yield ('logical_resource_id', value)
             yield (key, value)
 
@@ -112,7 +112,7 @@ class ResourceController(object):
                                                       identity,
                                                       resource_name)
 
-        return {engine_api.RES_METADATA: res[engine_api.RES_METADATA]}
+        return {rpc_api.RES_METADATA: res[rpc_api.RES_METADATA]}
 
     @util.identified_stack
     def signal(self, req, identity, resource_name, body=None):
