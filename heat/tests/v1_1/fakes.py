@@ -257,29 +257,19 @@ class FakeHTTPClient(base_client.HTTPClient):
             assert body[action] is None
             # This one method returns a different response code
             return (204, None)
-        elif action == 'revertResize':
-            assert body[action] is None
-        elif action == 'migrate':
-            assert body[action] is None
-        elif action == 'rescue':
-            assert body[action] is None
-        elif action == 'unrescue':
-            assert body[action] is None
-        elif action == 'lock':
-            assert body[action] is None
-        elif action == 'unlock':
-            assert body[action] is None
-        elif action == 'suspend':
-            assert body[action] is None
-        elif action == 'resume':
+        elif action in ['revertResize',
+                        'migrate',
+                        'rescue', 'unrescue',
+                        'suspend', 'resume',
+                        'lock', 'unlock',
+                        ]:
             assert body[action] is None
         elif action == 'addFixedIp':
             assert body[action].keys() == ['networkId']
-        elif action == 'removeFixedIp':
-            assert body[action].keys() == ['address']
-        elif action == 'addFloatingIp':
-            assert body[action].keys() == ['address']
-        elif action == 'removeFloatingIp':
+        elif action in ['removeFixedIp',
+                        'addFloatingIp',
+                        'removeFloatingIp',
+                        ]:
             assert body[action].keys() == ['address']
         elif action == 'createImage':
             assert set(body[action].keys()) == set(['name', 'metadata'])
@@ -305,9 +295,9 @@ class FakeHTTPClient(base_client.HTTPClient):
         resp = 202
         assert len(body.keys()) == 1
         action = body.keys()[0]
-        if action == 'addFloatingIp':
-            assert body[action].keys() == ['address']
-        elif action == 'removeFloatingIp':
+        if action in ['addFloatingIp',
+                      'removeFloatingIp',
+                      ]:
             assert body[action].keys() == ['address']
 
         return (resp, _body)
