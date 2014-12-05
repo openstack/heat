@@ -67,19 +67,21 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), key_type, props.get(key))
 
+    def _resolve(self, props, key, id_key, key_type):
+        if props.get(key):
+            props[id_key] = self.find_neutron_resource(
+                props, key, key_type)
+            props.pop(key)
+        return props[id_key]
+
     def resolve_network(self, props, net_key, net_id_key):
-        if props.get(net_key):
-            props[net_id_key] = self.find_neutron_resource(
-                props, net_key, 'network')
-            props.pop(net_key)
-        return props[net_id_key]
+        return self._resolve(props, net_key, net_id_key, 'network')
 
     def resolve_subnet(self, props, subnet_key, subnet_id_key):
-        if props.get(subnet_key):
-            props[subnet_id_key] = self.find_neutron_resource(
-                props, subnet_key, 'subnet')
-            props.pop(subnet_key)
-        return props[subnet_id_key]
+        return self._resolve(props, subnet_key, subnet_id_key, 'subnet')
+
+    def resolve_router(self, props, router_key, router_id_key):
+        return self._resolve(props, router_key, router_id_key, 'router')
 
     def network_id_from_subnet_id(self, subnet_id):
         subnet_info = self.client().show_subnet(subnet_id)
