@@ -122,7 +122,7 @@ class ExceptionGroup(Exception):
                         for ex in self.exceptions]).encode('utf-8')
 
     def __unicode__(self):
-        return unicode(map(unicode, self.exceptions))
+        return six.text_type(map(six.text_type, self.exceptions))
 
 
 class TaskRunner(object):
