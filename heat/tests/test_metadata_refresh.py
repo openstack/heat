@@ -19,9 +19,9 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resources.aws import wait_condition_handle as aws_wch
 from heat.engine.resources import instance
 from heat.engine.resources import server
-from heat.engine.resources import wait_condition as wc
 from heat.engine import scheduler
 from heat.engine import service
 from heat.tests import common
@@ -238,8 +238,8 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
 
         id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
                                            stack.id, '', 'WH')
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
-        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
+        aws_wch.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         return stack

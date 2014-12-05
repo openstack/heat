@@ -26,9 +26,9 @@ from heat.engine.clients.os import nova
 from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parser
+from heat.engine.resources.aws import wait_condition_handle as aws_wch
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
-from heat.engine.resources import wait_condition as wc
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -216,8 +216,8 @@ class AutoScalingGroupTest(common.HeatTestCase):
         parser.Stack.validate().MultipleTimes()
 
     def _stub_lb_create(self):
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
     def _stub_lb_reload(self, num=1, setup=True):
         if setup:

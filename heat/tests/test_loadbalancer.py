@@ -24,9 +24,9 @@ from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import resource
+from heat.engine.resources.aws import wait_condition_handle as aws_wch
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
-from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -144,8 +144,8 @@ class LoadBalancerTest(common.HeatTestCase):
         if stub_meta:
             resource.Resource.metadata_set(mox.IgnoreArg()).AndReturn(None)
 
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
     def test_loadbalancer(self):
         self._mock_get_image_id_success(u'F20-x86_64-cfntools', 746)

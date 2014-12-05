@@ -28,6 +28,8 @@ from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine.resources.aws import wait_condition_handle as aws_wch
+from heat.engine.resources.openstack import wait_condition_handle as heat_wch
 from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -161,20 +163,21 @@ class WaitConditionTest(common.HeatTestCase):
         if stub:
             id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                                stack.id, '', 'WaitHandle')
-            self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
-            wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+            self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
+            aws_wch.WaitConditionHandle.identifier().\
+                MultipleTimes().AndReturn(id)
 
         if stub_status:
-            self.m.StubOutWithMock(wc.WaitConditionHandle,
+            self.m.StubOutWithMock(aws_wch.WaitConditionHandle,
                                    'get_status')
 
         return stack
 
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         self.m.ReplayAll()
 
@@ -191,9 +194,9 @@ class WaitConditionTest(common.HeatTestCase):
 
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn(['FAILURE'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['FAILURE'])
 
         self.m.ReplayAll()
 
@@ -211,11 +214,13 @@ class WaitConditionTest(common.HeatTestCase):
 
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS'])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS',
-                                                       'SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                            'SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                            'SUCCESS',
+                                                            'SUCCESS'])
 
         self.m.ReplayAll()
 
@@ -232,9 +237,10 @@ class WaitConditionTest(common.HeatTestCase):
 
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'FAILURE'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                            'FAILURE'])
 
         self.m.ReplayAll()
 
@@ -264,9 +270,9 @@ class WaitConditionTest(common.HeatTestCase):
         scheduler.wallclock().AndReturn(st)
         scheduler.wallclock().AndReturn(st + 0.001)
         scheduler.wallclock().AndReturn(st + 0.1)
-        wc.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
         scheduler.wallclock().AndReturn(st + 4.1)
-        wc.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
         scheduler.wallclock().AndReturn(st + 5.1)
 
         self.m.ReplayAll()
@@ -283,7 +289,7 @@ class WaitConditionTest(common.HeatTestCase):
 
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         self.m.ReplayAll()
         self.stack.create()
@@ -428,13 +434,13 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack_id = stack.id
 
         # Stub waitcondition status so all goes CREATE_COMPLETE
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                            stack.id, '', 'WaitHandle')
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
-        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
+        aws_wch.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         self.m.ReplayAll()
         stack.create()
@@ -602,12 +608,14 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         with utils.UUIDStub(self.stack_id):
             stack.store()
 
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS'])
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS',
-                                                       'SUCCESS'])
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
+        aws_wch.WaitConditionHandle.get_status().AndReturn([])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                            'SUCCESS'])
+        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                            'SUCCESS',
+                                                            'SUCCESS'])
 
         return stack
 
@@ -796,24 +804,25 @@ class HeatWaitConditionTest(common.HeatTestCase):
         if stub:
             id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                                stack.id, '', 'wait_handle')
-            self.m.StubOutWithMock(wc.HeatWaitConditionHandle, 'identifier')
-            wc.HeatWaitConditionHandle.identifier().MultipleTimes().AndReturn(
-                id)
+            self.m.StubOutWithMock(heat_wch.HeatWaitConditionHandle,
+                                   'identifier')
+            heat_wch.HeatWaitConditionHandle.\
+                identifier().MultipleTimes().AndReturn(id)
 
         if stub_status:
-            self.m.StubOutWithMock(wc.HeatWaitConditionHandle,
+            self.m.StubOutWithMock(heat_wch.HeatWaitConditionHandle,
                                    'get_status')
 
         return stack
 
     def test_post_complete_to_handle(self):
         self.stack = self.create_stack()
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                           'SUCCESS'])
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                           'SUCCESS',
-                                                           'SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                                 'SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                                 'SUCCESS',
+                                                                 'SUCCESS'])
 
         self.m.ReplayAll()
 
@@ -830,12 +839,12 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
     def test_post_failed_to_handle(self):
         self.stack = self.create_stack()
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                           'SUCCESS'])
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                           'SUCCESS',
-                                                           'FAILURE'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                                 'SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS',
+                                                                 'SUCCESS',
+                                                                 'FAILURE'])
 
         self.m.ReplayAll()
 
@@ -866,9 +875,9 @@ class HeatWaitConditionTest(common.HeatTestCase):
         scheduler.wallclock().AndReturn(st)
         scheduler.wallclock().AndReturn(st + 0.001)
         scheduler.wallclock().AndReturn(st + 0.1)
-        wc.HeatWaitConditionHandle.get_status().AndReturn([])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn([])
         scheduler.wallclock().AndReturn(st + 4.1)
-        wc.HeatWaitConditionHandle.get_status().AndReturn([])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn([])
         scheduler.wallclock().AndReturn(st + 5.1)
 
         self.m.ReplayAll()
@@ -886,7 +895,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
     def _create_heat_wc_and_handle(self):
         self.stack = self.create_stack(
             template=test_template_heat_waitcondition)
-        wc.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        heat_wch.HeatWaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         self.m.ReplayAll()
         self.stack.create()
