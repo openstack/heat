@@ -123,6 +123,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
                            'node_processes': ['namenode', 'jobtracker'],
                            'floating_ip_pool': 'some_pool_id',
                            'node_configs': None,
+                           'image_id': None,
                            }
         self.ngt_mgr.create.assert_called_once_with(*expected_args,
                                                     **expected_kwargs)
