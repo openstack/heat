@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import six
 import uuid
 
 from heat.common import exception
@@ -236,9 +237,9 @@ class WaitConditionHandle(BaseWaitConditionHandle):
         '''
         if self.resource_id:
             wc = signal_responder.WAITCONDITION
-            return unicode(self._get_signed_url(signal_type=wc))
+            return six.text_type(self._get_signed_url(signal_type=wc))
         else:
-            return unicode(self.name)
+            return six.text_type(self.name)
 
     def metadata_update(self, new_metadata=None):
         """DEPRECATED. Should use handle_signal instead."""
@@ -411,7 +412,7 @@ class HeatWaitCondition(resource.Resource):
                          'key': key,
                          'res': res})
 
-            return unicode(json.dumps(res))
+            return six.text_type(json.dumps(res))
 
 
 class WaitCondition(HeatWaitCondition):

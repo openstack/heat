@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from six.moves.urllib import parse as urlparse
 
@@ -155,7 +156,7 @@ class SwiftContainer(resource.Resource):
         self.swift().get_container(self.resource_id)
 
     def FnGetRefId(self):
-        return unicode(self.resource_id)
+        return six.text_type(self.resource_id)
 
     def _resolve_attribute(self, key):
         parsed = list(urlparse.urlparse(self.swift().url))

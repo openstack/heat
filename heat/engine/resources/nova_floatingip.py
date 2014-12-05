@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from oslo.utils import excutils
 
@@ -93,7 +94,7 @@ class NovaFloatingIp(resource.Resource):
             self.POOL_ATTR: getattr(floating_ip, self.POOL_ATTR, None),
             self.IP: floating_ip.ip
         }
-        return unicode(attributes[key])
+        return six.text_type(attributes[key])
 
 
 class NovaFloatingIpAssociation(resource.Resource):

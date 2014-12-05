@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
+import six
 
 from oslo.config import cfg
 
@@ -527,7 +528,7 @@ class LoadBalancer(stack_resource.StackResource):
                         'Interval must be larger than Timeout'}
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        return six.text_type(self.name)
 
     def _resolve_attribute(self, name):
         '''

@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -157,7 +158,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
 
     def _resolve_attribute(self, name):
         if name == self.ALARM_URL and self.resource_id is not None:
-            return unicode(self._get_signed_url())
+            return six.text_type(self._get_signed_url())
 
     def FnGetRefId(self):
         return resource.Resource.FnGetRefId(self)

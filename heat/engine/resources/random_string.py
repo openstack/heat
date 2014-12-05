@@ -280,7 +280,7 @@ class RandomString(resource.Resource):
         if self.resource_id is not None:
             return self.data().get('value')
         else:
-            return unicode(self.name)
+            return six.text_type(self.name)
 
 
 def resource_mapping():

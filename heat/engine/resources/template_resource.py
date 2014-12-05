@@ -261,7 +261,7 @@ class TemplateResource(stack_resource.StackResource):
 
     def FnGetRefId(self):
         if not self.nested():
-            return unicode(self.name)
+            return six.text_type(self.name)
 
         if 'OS::stack_id' in self.nested().outputs:
             return self.nested().output('OS::stack_id')

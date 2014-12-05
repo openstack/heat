@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import six
 import urlparse
 
 from heat.common import exception
@@ -338,7 +339,7 @@ class SwiftSignal(resource.Resource):
 
     def _resolve_attribute(self, key):
         if key == self.DATA:
-            return unicode(json.dumps(self.get_data()))
+            return six.text_type(json.dumps(self.get_data()))
 
 
 def resource_mapping():
