@@ -191,16 +191,22 @@ class Router(neutron.NeutronResource):
 
 class RouterInterface(neutron.NeutronResource):
     PROPERTIES = (
-        ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID,
+        ROUTER, ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID,
     ) = (
-        'router_id', 'subnet_id', 'subnet', 'port_id',
+        'router', 'router_id', 'subnet_id', 'subnet', 'port_id',
     )
 
     properties_schema = {
+        ROUTER: properties.Schema(
+            properties.Schema.STRING,
+            _('The router.')
+        ),
         ROUTER_ID: properties.Schema(
             properties.Schema.STRING,
-            _('The router id.'),
-            required=True
+            _('ID of the router.'),
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s.') % ROUTER)
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
@@ -220,24 +226,26 @@ class RouterInterface(neutron.NeutronResource):
     }
 
     @staticmethod
-    def _validate_depr_subnet_keys(properties, subnet_key, depr_subnet_key):
-        subnet_value = properties.get(subnet_key)
-        subnet_id_value = properties.get(depr_subnet_key)
-        if subnet_value and subnet_id_value:
-            raise exception.ResourcePropertyConflict(subnet_key,
-                                                     depr_subnet_key)
-        if not subnet_value and not subnet_id_value:
+    def _validate_deprecated_keys(props, key, deprecated_key):
+        value = props.get(key)
+        deprecated_value = props.get(deprecated_key)
+        if value and deprecated_value:
+            raise exception.ResourcePropertyConflict(key,
+                                                     deprecated_key)
+        if not value and not deprecated_value:
             return False
         return True
 
     def validate(self):
-        '''
-        Validate any of the provided params
-        '''
+        """Validate any of the provided params."""
         super(RouterInterface, self).validate()
 
-        prop_subnet_exists = self._validate_depr_subnet_keys(
+        prop_subnet_exists = self._validate_deprecated_keys(
             self.properties, self.SUBNET, self.SUBNET_ID)
+        if not self._validate_deprecated_keys(
+                self.properties, self.ROUTER, self.ROUTER_ID):
+            raise exception.PropertyUnspecifiedError(self.ROUTER,
+                                                     self.ROUTER_ID)
 
         port_id = self.properties.get(self.PORT_ID)
         if prop_subnet_exists and port_id:
@@ -248,7 +256,8 @@ class RouterInterface(neutron.NeutronResource):
                                                      self.PORT_ID)
 
     def handle_create(self):
-        router_id = self.properties.get(self.ROUTER_ID)
+        router_id = self.client_plugin().resolve_router(
+            dict(self.properties), self.ROUTER, self.ROUTER_ID)
         key = 'subnet_id'
         value = self.client_plugin().resolve_subnet(
             dict(self.properties), self.SUBNET, key)

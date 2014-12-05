@@ -1543,10 +1543,17 @@ class NeutronRouterTest(common.HeatTestCase):
     def test_router_interface(self):
         self._test_router_interface()
 
-    def test_router_interface_deprecated(self):
-        self._test_router_interface(resolve_neutron=False)
+    def test_router_interface_depr_router(self):
+        self._test_router_interface(resolve_router=False)
 
-    def _test_router_interface(self, resolve_neutron=True):
+    def test_router_interface_depr_subnet(self):
+        self._test_router_interface(resolve_subnet=False)
+
+    def test_router_interface_depr_router_and_subnet(self):
+        self._test_router_interface(resolve_router=False, resolve_subnet=False)
+
+    def _test_router_interface(self, resolve_subnet=True,
+                               resolve_router=True):
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -1561,25 +1568,30 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-        if resolve_neutron:
+        subnet_key = 'subnet_id'
+        router_key = 'router_id'
+
+        if resolve_router:
+            neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'router',
+                '3e46229d-8fce-4733-819a-b5fe630550f8'
+            ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
+            router_key = 'router'
+        if resolve_subnet:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
                 'subnet',
                 '91e47a57-7508-46fe-afc9-fc454e8580e1'
             ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
-            self.m.ReplayAll()
-            rsrc = self.create_router_interface(
-                t, stack, 'router_interface', properties={
-                    'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
-                    'subnet': '91e47a57-7508-46fe-afc9-fc454e8580e1'
-                })
-        else:
-            self.m.ReplayAll()
-            rsrc = self.create_router_interface(
-                t, stack, 'router_interface', properties={
-                    'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
-                    'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'
-                })
+            subnet_key = 'subnet'
+
+        self.m.ReplayAll()
+        rsrc = self.create_router_interface(
+            t, stack, 'router_interface', properties={
+                router_key: '3e46229d-8fce-4733-819a-b5fe630550f8',
+                subnet_key: '91e47a57-7508-46fe-afc9-fc454e8580e1'
+            })
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
