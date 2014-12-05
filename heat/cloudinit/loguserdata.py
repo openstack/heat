@@ -21,9 +21,6 @@ import pkg_resources
 import subprocess
 import sys
 
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-
 
 VAR_PATH = '/var/lib/heat-cfntools'
 LOG = logging.getLogger('heat-provision')
@@ -62,14 +59,14 @@ def call(args):
     except OSError:
         ex_type, ex, tb = sys.exc_info()
         if ex.errno == errno.ENOEXEC:
-            LOG.error(_LE('Userdata empty or not executable: %s'), ex)
+            LOG.error('Userdata empty or not executable: %s', ex)
             return os.EX_OK
         else:
-            LOG.error(_LE('OS error running userdata: %s'), ex)
+            LOG.error('OS error running userdata: %s', ex)
             return os.EX_OSERR
     except Exception:
         ex_type, ex, tb = sys.exc_info()
-        LOG.error(_LE('Unknown error running userdata: %s'), ex)
+        LOG.error('Unknown error running userdata: %s', ex)
         return os.EX_SOFTWARE
     return p.returncode
 
@@ -78,16 +75,16 @@ def main():
 
     if not chk_ci_version():
         # pre 0.6.0 - user data executed via cloudinit, not this helper
-        LOG.error(_LE('Unable to log provisioning, need a newer version '
-                      'of cloud-init'))
+        LOG.error('Unable to log provisioning, need a newer version of '
+                  'cloud-init')
         return -1
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
     os.chmod(userdata_path, int("700", 8))
 
-    LOG.info(_LI('Provision began: %s'), datetime.datetime.now())
+    LOG.info('Provision began: %s', datetime.datetime.now())
     returncode = call([userdata_path])
-    LOG.info(_LI('Provision done: %s'), datetime.datetime.now())
+    LOG.info('Provision done: %s', datetime.datetime.now())
     if returncode:
         return returncode
 
@@ -97,7 +94,7 @@ if __name__ == '__main__':
 
     code = main()
     if code:
-        LOG.error(_LE('Provision failed with exit code %s'), code)
+        LOG.error('Provision failed with exit code %s', code)
         sys.exit(code)
 
     provision_log = os.path.join(VAR_PATH, 'provision-finished')
