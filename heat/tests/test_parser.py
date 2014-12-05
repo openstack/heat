@@ -1399,10 +1399,12 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_user_creds_gone_missing(self):
-        '''It may happen that user_creds were deleted when a delete
-           operation was stopped. We should be resilient to this and still
-           complete the delete operation.
-           '''
+        '''Do not block stack deletion if user_creds is missing.
+
+        It may happen that user_creds were deleted when a delete operation was
+        stopped. We should be resilient to this and still complete the delete
+        operation.
+        '''
         self.stack = parser.Stack(self.ctx, 'delete_test',
                                   self.tmpl)
         stack_id = self.stack.store()
@@ -1424,6 +1426,29 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_creds)
         del_db_s = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
         self.assertIsNone(del_db_s.user_creds_id)
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+    def test_delete_user_creds_fail(self):
+        '''Do not stop deleting stacks even failed deleting user_creds.
+
+        It may happen that user_creds were incorrectly saved (truncated) and
+        thus cannot be correctly retrieved (and decrypted). In this case,
+        stack delete should not be stopped.
+        '''
+        self.stack = parser.Stack(self.ctx, 'delete_test', self.tmpl)
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+        self.assertIsNotNone(db_s.user_creds_id)
+        exc = exception.Error('Cannot get user credentials')
+        self.patchobject(db_api, 'user_creds_get').side_effect = exc
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNone(db_s)
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
 

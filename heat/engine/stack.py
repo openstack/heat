@@ -868,13 +868,25 @@ class Stack(collections.Mapping):
 
         stack.delete(backup=True)
 
+    def _try_get_user_creds(self, user_creds_id):
+        # There are cases where the user_creds cannot be returned
+        # due to credentials truncated when being saved to DB.
+        # Ignore this error instead of blocking stack deletion.
+        user_creds = None
+        try:
+            user_creds = db_api.user_creds_get(self.user_creds_id)
+        except exception.Error as err:
+            LOG.exception(err)
+            pass
+        return user_creds
+
     def _delete_credentials(self, stack_status, reason, abandon):
         # Cleanup stored user_creds so they aren't accessible via
         # the soft-deleted stack which remains in the DB
         # The stack_status and reason passed in are current values, which
         # may get rewritten and returned from this method
         if self.user_creds_id:
-            user_creds = db_api.user_creds_get(self.user_creds_id)
+            user_creds = self._try_get_user_creds(self.user_creds_id)
             # If we created a trust, delete it
             if user_creds is not None:
                 trust_id = user_creds.get('trust_id')
