@@ -133,7 +133,10 @@ class Server(stack_user.StackUser):
                     BLOCK_DEVICE_MAPPING_SNAPSHOT_ID: properties.Schema(
                         properties.Schema.STRING,
                         _('The ID of the snapshot to create a volume '
-                          'from.')
+                          'from.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.snapshot')
+                        ]
                     ),
                     BLOCK_DEVICE_MAPPING_VOLUME_SIZE: properties.Schema(
                         properties.Schema.INTEGER,

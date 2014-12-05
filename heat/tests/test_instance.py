@@ -116,6 +116,7 @@ class InstancesTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_SnapshotConstraint_validate()
 
         if stub_create:
             self.m.StubOutWithMock(self.fc.servers, 'create')
@@ -217,6 +218,7 @@ class InstancesTest(common.HeatTestCase):
         self._mock_get_image_id_success('F17-x86_64-gold', 1)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+        self.stub_SnapshotConstraint_validate()
         self.m.StubOutWithMock(cinder.CinderClientPlugin, 'get_volume')
         ex = exception.VolumeNotFound(volume='1234')
         cinder.CinderClientPlugin.get_volume('1234').AndRaise(ex)
@@ -243,6 +245,7 @@ class InstancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], stack)
 
         self._mock_get_image_id_success('F17-x86_64-gold', 1)
+        self.stub_SnapshotConstraint_validate()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
 
@@ -531,6 +534,7 @@ class InstancesTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         self._mock_get_image_id_success('1', 1)
+        self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
         self.assertIsNone(instance.validate())

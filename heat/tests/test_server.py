@@ -1936,6 +1936,7 @@ class ServersTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
         self.m.ReplayAll()
 
         self.assertRaises(exception.ResourcePropertyConflict, server.validate)
