@@ -109,7 +109,7 @@ class StackResourceTest(common.HeatTestCase):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
         self.ws_resname = "provider_resource"
-        t = parser.tmpl.Template(
+        t = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12',
              'Resources': {self.ws_resname: ws_res_snippet}})
         self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
