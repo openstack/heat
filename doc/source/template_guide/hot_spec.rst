@@ -438,11 +438,14 @@ For example:
 Pseudo Parameters
 -----------------
 
-In addition to parameters defined by a template author, Heat also creates two
-parameters for every stack that allow referential access to the stack's name
-and identifier. These parameters are named ``OS::stack_name`` for the stack
-name and ``OS::stack_id`` for the stack identifier. These values are accessible
-via the `get_param`_ intrinsic function just like user-defined parameters.
+In addition to parameters defined by a template author, Heat also
+creates three parameters for every stack that allow referential access
+to the stack's name, stack's identifier and project's
+identifier. These parameters are named ``OS::stack_name`` for the
+stack name, ``OS::stack_id`` for the stack identifier and
+``OS::project_id`` for the project identifier. These values are
+accessible via the `get_param`_ intrinsic function just like
+user-defined parameters.
 
 .. _hot_spec_resources:
 
