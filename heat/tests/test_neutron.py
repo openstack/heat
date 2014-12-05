@@ -551,7 +551,7 @@ class NeutronTest(common.HeatTestCase):
                           p, 'network', 'network_id')
         data = {}
         p = properties.Properties(subnet.Subnet.properties_schema, data)
-        self.assertRaises(exception.StackValidationFailed,
+        self.assertRaises(exception.PropertyUnspecifiedError,
                           nr.NeutronResource._validate_depr_property_required,
                           p, 'network', 'network_id')
 
@@ -1687,8 +1687,10 @@ class NeutronRouterTest(common.HeatTestCase):
         res = router.RouterInterface('router_interface',
                                      resource_defns['router_interface'],
                                      stack)
-        ex = self.assertRaises(exception.StackValidationFailed, res.validate)
-        self.assertEqual("Either subnet or port_id must be specified.",
+        ex = self.assertRaises(exception.PropertyUnspecifiedError,
+                               res.validate)
+        self.assertEqual("At least one of the following properties "
+                         "must be specified: subnet, port_id",
                          six.text_type(ex))
 
     def test_gateway_router(self):

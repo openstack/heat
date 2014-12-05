@@ -300,6 +300,8 @@ def map_remote_error(ex):
         'UserParameterMissing',
         'InvalidTemplateParameter',
         'MissingCredentialError',
+        'ResourcePropertyConflict',
+        'PropertyUnspecifiedError',
     )
     denied_errors = ('Forbidden', 'NotAuthorized')
     already_exists_errors = ('StackExists')

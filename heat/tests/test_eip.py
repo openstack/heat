@@ -683,9 +683,15 @@ class AllocTest(common.HeatTestCase):
         properties.pop('EIP')
         allocation_id = '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
         properties['AllocationId'] = allocation_id
-        expected = ("Must specify at least one of 'InstanceId' "
-                    "or 'NetworkInterfaceId'.")
-        self._validate_properties(stack, template, expected)
+        resource_defns = template.resource_definitions(stack)
+        rsrc = eip.ElasticIpAssociation('validate_eip_ass',
+                                        resource_defns['IPAssoc'],
+                                        stack)
+        exc = self.assertRaises(exception.PropertyUnspecifiedError,
+                                rsrc.validate)
+        self.assertIn('At least one of the following properties '
+                      'must be specified: InstanceId, NetworkInterfaceId',
+                      six.text_type(exc))
 
     def test_delete_association_successful_if_create_failed(self):
         server = self.fc.servers.list()[0]

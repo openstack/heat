@@ -86,6 +86,7 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidTemplateParameter': webob.exc.HTTPBadRequest,
         'Invalid': webob.exc.HTTPBadRequest,
         'ResourcePropertyConflict': webob.exc.HTTPBadRequest,
+        'PropertyUnspecifiedError': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):

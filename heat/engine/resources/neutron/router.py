@@ -244,8 +244,8 @@ class RouterInterface(neutron.NeutronResource):
             raise exception.ResourcePropertyConflict(self.SUBNET,
                                                      self.PORT_ID)
         if not prop_subnet_exists and not port_id:
-            msg = 'Either subnet or port_id must be specified.'
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.PropertyUnspecifiedError(self.SUBNET,
+                                                     self.PORT_ID)
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)
