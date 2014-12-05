@@ -26,7 +26,7 @@ from heat.engine import resources
 from heat.engine import service
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 test_template_volumeattach = '''
 {
@@ -843,8 +843,8 @@ class validateTest(common.HeatTestCase):
     def setUp(self):
         super(validateTest, self).setUp()
         resources.initialise()
-        self.fc = fakes.FakeClient()
-        self.gc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
+        self.gc = fakes_v1_1.FakeClient()
         resources.initialise()
         self.ctx = utils.dummy_context()
         self.patch('heat.engine.service.warnings')

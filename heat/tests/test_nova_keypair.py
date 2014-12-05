@@ -21,7 +21,7 @@ from heat.engine.resources import nova_keypair
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class NovaKeyPairTest(common.HeatTestCase):
@@ -157,7 +157,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         test_res.resource_id = "key_name"
         test_res.state_set(test_res.CREATE, test_res.COMPLETE)
         (self.fake_keypairs.delete("key_name")
-            .AndRaise(fakes.fake_exception()))
+            .AndRaise(fakes_v1_1.fake_exception()))
         self.m.ReplayAll()
         scheduler.TaskRunner(test_res.delete)()
         self.assertEqual((test_res.DELETE, test_res.COMPLETE), test_res.state)

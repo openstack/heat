@@ -23,7 +23,7 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class SecurityGroupTest(common.HeatTestCase):
@@ -85,7 +85,7 @@ Resources:
 
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
         self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')

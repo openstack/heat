@@ -29,7 +29,7 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 NovaSG = collections.namedtuple('NovaSG',
@@ -130,7 +130,7 @@ Resources:
 
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
@@ -603,16 +603,16 @@ Resources:
 
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', 22, 22, '0.0.0.0/0', None).AndRaise(
-                fakes.fake_exception(400, 'Rule already exists'))
+                fakes_v1_1.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(
-                fakes.fake_exception(400, 'Rule already exists'))
+                fakes_v1_1.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(
-                fakes.fake_exception(400, 'Rule already exists'))
+                fakes_v1_1.fake_exception(400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'icmp', None, None, None, '1').AndReturn(
-                fakes.fake_exception(400, 'Rule already exists'))
+                fakes_v1_1.fake_exception(400, 'Rule already exists'))
 
         # delete script
         nova_sg.SecurityGroupManager.get(2).AndReturn(NovaSG(
@@ -664,17 +664,17 @@ Resources:
             }]
         ))
         nova_sgr.SecurityGroupRuleManager.delete(130).AndRaise(
-            fakes.fake_exception())
+            fakes_v1_1.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(131).AndRaise(
-            fakes.fake_exception())
+            fakes_v1_1.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(132).AndRaise(
-            fakes.fake_exception())
+            fakes_v1_1.fake_exception())
         nova_sgr.SecurityGroupRuleManager.delete(133).AndRaise(
-            fakes.fake_exception())
+            fakes_v1_1.fake_exception())
         nova_sg.SecurityGroupManager.delete(2).AndReturn(None)
 
         nova_sg.SecurityGroupManager.get(2).AndRaise(
-            fakes.fake_exception())
+            fakes_v1_1.fake_exception())
 
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template_nova)
