@@ -21,6 +21,7 @@ import sqlalchemy
 
 from heat.common import context
 from heat.db import api as db_api
+from heat.db.sqlalchemy import models
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine import stack
@@ -51,7 +52,7 @@ def setup_dummy_db():
     options.cfg.set_defaults(options.database_opts, sqlite_synchronous=False)
     options.set_defaults(cfg.CONF, connection="sqlite://", sqlite_db='heat.db')
     engine = get_engine()
-    db_api.db_sync(engine)
+    models.BASE.metadata.create_all(engine)
     engine.connect()
 
 
