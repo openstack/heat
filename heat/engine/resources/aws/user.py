@@ -28,7 +28,9 @@ LOG = logging.getLogger(__name__)
 #
 # We are ignoring Groups as keystone does not support them.
 # For now support users and accesskeys,
-# We also now support a limited heat-native Policy implementation
+# We also now support a limited heat-native Policy implementation, and
+# the native access policy resource is located at:
+# heat/engine/resources/openstack/access_policy.py
 #
 
 
@@ -267,43 +269,8 @@ class AccessKey(resource.Resource):
             self.resource_id, access_allowed)
 
 
-class AccessPolicy(resource.Resource):
-    PROPERTIES = (
-        ALLOWED_RESOURCES,
-    ) = (
-        'AllowedResources',
-    )
-
-    properties_schema = {
-        ALLOWED_RESOURCES: properties.Schema(
-            properties.Schema.LIST,
-            _('Resources that users are allowed to access by the '
-              'DescribeStackResource API.'),
-            required=True
-        ),
-    }
-
-    def handle_create(self):
-        pass
-
-    def validate(self):
-        """Make sure all the AllowedResources are present."""
-        super(AccessPolicy, self).validate()
-
-        resources = self.properties[self.ALLOWED_RESOURCES]
-        # All of the provided resource names must exist in this stack
-        for res in resources:
-            if res not in self.stack:
-                msg = _("AccessPolicy resource %s not in stack") % res
-                raise exception.StackValidationFailed(message=msg)
-
-    def access_allowed(self, resource_name):
-        return resource_name in self.properties[self.ALLOWED_RESOURCES]
-
-
 def resource_mapping():
     return {
         'AWS::IAM::User': User,
         'AWS::IAM::AccessKey': AccessKey,
-        'OS::Heat::AccessPolicy': AccessPolicy,
     }
