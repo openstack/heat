@@ -12,6 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+########################################################################
+#
+# THIS MODULE IS DEPRECATED
+#
+# Please refer to
+# https://etherpad.openstack.org/p/kilo-heat-library-proposals for
+# the discussion leading to this deprecation.
+#
+# We recommend checking out Barbican or the cryptography.py project
+# (https://pypi.python.org/pypi/cryptography) instead of this module.
+#
+########################################################################
+
 import base64
 
 from Crypto.Hash import HMAC

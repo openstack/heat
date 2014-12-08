@@ -34,11 +34,12 @@ class Enforcer(object):
     """Responsible for loading and enforcing rules."""
 
     def __init__(self, scope='heat', exc=exception.Forbidden,
-                 default_rule=DEFAULT_RULES['default']):
+                 default_rule=DEFAULT_RULES['default'], policy_file=None):
         self.scope = scope
         self.exc = exc
         self.default_rule = default_rule
-        self.enforcer = policy.Enforcer(default_rule=default_rule)
+        self.enforcer = policy.Enforcer(
+            default_rule=default_rule, policy_file=policy_file)
 
     def set_rules(self, rules, overwrite=True):
         """Create a new Rules object based on the provided dict of rules."""
