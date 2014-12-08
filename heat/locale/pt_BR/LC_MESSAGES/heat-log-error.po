@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-11-19 06:00+0000\n"
-"PO-Revision-Date: 2014-11-18 11:39+0000\n"
+"POT-Creation-Date: 2014-12-08 06:00+0000\n"
+"PO-Revision-Date: 2014-12-05 16:21+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/heat/"
 "language/pt_BR/)\n"
@@ -31,9 +31,13 @@ msgstr ""
 msgid "Request does not contain %s parameter!"
 msgstr "Requisição não contém parâmetro %s!"
 
-#: heat/api/cloudwatch/watch.py:254
+#: heat/api/cloudwatch/watch.py:253
 msgid "Request does not contain required MetricData"
 msgstr "Requisição não contém MetricData requerida"
+
+#: heat/common/exception.py:116
+msgid "Exception in string format operation"
+msgstr "Exceção na operação de formato de sequência"
 
 #: heat/common/heat_keystoneclient.py:134
 msgid "Admin client authentication failed"
@@ -57,16 +61,6 @@ msgstr ""
 
 #: heat/common/heat_keystoneclient.py:215
 msgid "Trust impersonation failed"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:323
-#, python-format
-msgid "Can't find domain id for %s!"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:327
-#, python-format
-msgid "Multiple domain ids were found for %s!"
 msgstr ""
 
 #: heat/common/heat_keystoneclient.py:358
@@ -98,7 +92,39 @@ msgstr ""
 msgid "Failed to import module %s"
 msgstr "Falha ao importar módulo %s"
 
-#: heat/engine/api.py:267
+#: heat/common/wsgi.py:266
+msgid "SIGTERM received"
+msgstr "SIGTERM recebido"
+
+#: heat/common/wsgi.py:275
+msgid "SIGHUP received"
+msgstr "SIGHUP recebido"
+
+#: heat/common/wsgi.py:303
+#, python-format
+msgid "Removing dead child %s"
+msgstr "Removendo filho inativo %s"
+
+#: heat/common/wsgi.py:639
+#, python-format
+msgid "Exception handling resource: %s"
+msgstr "Exceção ao manipular recurso: %s"
+
+#: heat/common/wsgi.py:661
+#, python-format
+msgid "Returning %(code)s to user: %(explanation)s"
+msgstr "Retornando %(code)s para o usuário: %(explanation)s"
+
+#: heat/common/wsgi.py:735
+#, python-format
+msgid "Unexpected error occurred serving API: %s"
+msgstr ""
+
+#: heat/engine/api.py:39
+msgid "Timeout conversion failed"
+msgstr ""
+
+#: heat/engine/api.py:294
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
@@ -127,9 +153,18 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:922 heat/engine/resource.py:949
+#: heat/engine/resource.py:475
+msgid "Error marking resource as failed"
+msgstr ""
+
+#: heat/engine/resource.py:931 heat/engine/resource.py:958
 #, python-format
 msgid "DB error %s"
+msgstr ""
+
+#: heat/engine/resource.py:1082
+#, python-format
+msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
 #: heat/engine/service.py:260
@@ -137,36 +172,41 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/service.py:1356
+#: heat/engine/service.py:1381
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/stack.py:723
+#: heat/engine/stack.py:726
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:845
+#: heat/engine/stack.py:848
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1110
+#: heat/engine/stack.py:1120
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/resources/eip.py:109
+#: heat/engine/stack.py:1129
+#, python-format
+msgid "Resource %(name)s create failed: %(ex)s"
+msgstr ""
+
+#: heat/engine/resources/eip.py:113
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in nova."
 "conf."
 msgstr ""
 
-#: heat/engine/resources/eip.py:322 heat/engine/resources/eip.py:345
+#: heat/engine/resources/eip.py:329 heat/engine/resources/eip.py:352
 msgid "Port not specified."
 msgstr ""
 
-#: heat/engine/resources/nova_floatingip.py:75
+#: heat/engine/resources/nova_floatingip.py:76
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
@@ -175,6 +215,10 @@ msgstr ""
 #: heat/engine/resources/wait_condition.py:82
 #, python-format
 msgid "Metadata failed validation for %s"
+msgstr ""
+
+#: heat/engine/resources/aws/autoscaling_group.py:293
+msgid "Failed sending error notification"
 msgstr ""
 
 #: heat/openstack/common/loopingcall.py:95

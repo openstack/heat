@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev409.ge1447a8\n"
+"Project-Id-Version: heat 2015.1.dev522.g8c1da0b\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-11-24 06:00+0000\n"
+"POT-Creation-Date: 2014-12-08 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: heat/api/cloudwatch/watch.py:203
+#: heat/api/cloudwatch/watch.py:202
 #, python-format
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
@@ -55,6 +55,15 @@ msgstr ""
 msgid "Falling back to legacy non-domain project, configure domain in heat.conf"
 msgstr ""
 
+#: heat/common/heat_keystoneclient.py:527
+#, python-format
+msgid "Unable to get details for project %s, not deleting"
+msgstr ""
+
+#: heat/common/heat_keystoneclient.py:532
+msgid "Not deleting non heat-domain project"
+msgstr ""
+
 #: heat/common/heat_keystoneclient.py:606
 #: heat/common/heat_keystoneclient.py:623
 msgid "Falling back to legacy non-domain keypair, configure domain in heat.conf"
@@ -68,6 +77,23 @@ msgstr ""
 msgid "Falling back to legacy non-domain enable, configure domain in heat.conf"
 msgstr ""
 
+#: heat/common/profiler.py:35
+msgid ""
+"OSProfiler is enabled.\n"
+"It means that person who knows any of hmac_keys that are specified in "
+"/etc/heat/api-paste.ini can trace his requests. \n"
+"In real life only operator can read this file so there is no security "
+"issue. Note that even if person can trigger profiler, only admin user can"
+" retrieve trace information.\n"
+"To disable OSprofiler set in heat.conf:\n"
+"[profiler]\n"
+"enabled=false"
+msgstr ""
+
+#: heat/common/wsgi.py:700
+msgid "Unable to serialize exception response"
+msgstr ""
+
 #: heat/engine/environment.py:199 heat/engine/environment.py:205
 #, python-format
 msgid "Removing %(item)s from %(path)s"
@@ -78,12 +104,12 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:901
+#: heat/engine/resource.py:910
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1087
+#: heat/engine/resource.py:1096
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
@@ -93,17 +119,17 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/service.py:1094
+#: heat/engine/service.py:1101
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1350
+#: heat/engine/service.py:1358
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1379
+#: heat/engine/service.py:1387
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
@@ -112,7 +138,7 @@ msgstr ""
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/stack.py:237
+#: heat/engine/stack.py:239
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
@@ -174,11 +200,11 @@ msgstr ""
 msgid "Server (%(server)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/resources/eip.py:389
+#: heat/engine/resources/eip.py:396
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/os_database.py:332
+#: heat/engine/resources/os_database.py:340
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
@@ -195,7 +221,7 @@ msgstr ""
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:310
+#: heat/engine/resources/neutron/port.py:323
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
