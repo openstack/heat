@@ -1091,7 +1091,8 @@ class EngineService(service.Service):
             raise exception.ResourceNotAvailable(resource_name=resource_name)
 
     @request_context
-    def describe_stack_resource(self, cnxt, stack_identity, resource_name):
+    def describe_stack_resource(self, cnxt, stack_identity, resource_name,
+                                with_attr=None):
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
 
@@ -1102,7 +1103,8 @@ class EngineService(service.Service):
 
         self._verify_stack_resource(stack, resource_name)
 
-        return api.format_stack_resource(stack[resource_name])
+        return api.format_stack_resource(stack[resource_name],
+                                         with_attr=with_attr)
 
     @request_context
     def resource_signal(self, cnxt, stack_identity, resource_name, details):
