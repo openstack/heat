@@ -23,10 +23,10 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import volume
 from heat.engine import scheduler
 from heat.engine import signal_responder
 from heat.engine import support
+from heat.engine import volume_tasks as vol_task
 from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
@@ -652,10 +652,10 @@ class Instance(resource.Resource):
         return server, scheduler.TaskRunner(self._attach_volumes_task())
 
     def _attach_volumes_task(self):
-        attach_tasks = (volume.VolumeAttachTask(self.stack,
-                                                self.resource_id,
-                                                volume_id,
-                                                device)
+        attach_tasks = (vol_task.VolumeAttachTask(self.stack,
+                                                  self.resource_id,
+                                                  volume_id,
+                                                  device)
                         for volume_id, device in self.volumes())
         return scheduler.PollingTaskGroup(attach_tasks)
 
@@ -861,9 +861,9 @@ class Instance(resource.Resource):
         '''
         Detach volumes from the instance
         '''
-        detach_tasks = (volume.VolumeDetachTask(self.stack,
-                                                self.resource_id,
-                                                volume_id)
+        detach_tasks = (vol_task.VolumeDetachTask(self.stack,
+                                                  self.resource_id,
+                                                  volume_id)
                         for volume_id, device in self.volumes())
         return scheduler.PollingTaskGroup(detach_tasks)
 
