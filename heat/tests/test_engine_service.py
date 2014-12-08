@@ -211,7 +211,7 @@ def get_wordpress_stack(stack_name, ctx):
 
 def get_wordpress_stack_no_params(stack_name, ctx):
     t = template_format.parse(wp_template)
-    template = parser.tmpl.Template(t)
+    template = templatem.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment({}))
     return stack
@@ -994,7 +994,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         s = db_api.stack_get(self.ctx, sid)
 
         t = template_format.parse(wp_template_no_default)
-        template = parser.tmpl.Template(t)
+        template = templatem.Template(t)
         env = environment.Environment({'parameters': with_params,
                                        'resource_registry': {'rsc': 'test'}})
         stack = parser.Stack(self.ctx, stack_name, template, env)

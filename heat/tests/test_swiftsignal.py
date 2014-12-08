@@ -30,6 +30,7 @@ from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack
+from heat.engine import template as templatem
 from heat.tests import common
 from heat.tests import utils
 
@@ -83,7 +84,7 @@ obj_header = {
 
 def create_stack(template, stack_id=None):
     tmpl = template_format.parse(template)
-    template = stack.tmpl.Template(tmpl)
+    template = templatem.Template(tmpl)
     ctx = utils.dummy_context(tenant_id='test_tenant')
     st = stack.Stack(ctx, 'test_st', template,
                      environment.Environment(),
