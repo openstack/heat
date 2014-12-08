@@ -29,7 +29,7 @@ from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws import autoscaling_group as asg
-from heat.engine.resources import instance
+from heat.engine.resources.aws import instance
 from heat.engine.resources import loadbalancer
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine import rsrc_defn

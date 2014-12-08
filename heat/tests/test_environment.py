@@ -22,6 +22,7 @@ import six
 from heat.common import environment_format
 from heat.engine import environment
 from heat.engine import resources
+from heat.engine.resources.aws import instance
 from heat.tests import common
 from heat.tests import generic_resource
 
@@ -382,7 +383,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         self.assertIsNone(g_env.get_resource_info('OS::Nova::Server'))
 
         # 4. make sure we haven't removed something we shouldn't have
-        self.assertEqual(resources.instance.Instance,
+        self.assertEqual(instance.Instance,
                          g_env.get_resource_info('AWS::EC2::Instance').value)
 
     def test_env_multi_resources_disable(self):
@@ -423,7 +424,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
 
         # 2. assert global resources are NOT gone.
         self.assertEqual(
-            resources.instance.Instance,
+            instance.Instance,
             u_env.get_resource_info('AWS::EC2::Instance').value)
 
     def test_env_ignore_files_starting_dot(self):

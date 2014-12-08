@@ -19,8 +19,8 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine.resources.aws import instance
 from heat.engine.resources.aws import wait_condition_handle as aws_wch
-from heat.engine.resources import instance
 from heat.engine.resources import server
 from heat.engine import scheduler
 from heat.engine import service

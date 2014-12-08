@@ -19,7 +19,7 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resources import instance as instances
+from heat.engine.resources.aws import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils

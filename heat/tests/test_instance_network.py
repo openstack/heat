@@ -20,7 +20,7 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resources import instance as instances
+from heat.engine.resources.aws import instance as instances
 from heat.engine.resources import network_interface as network_interfaces
 from heat.engine import scheduler
 from heat.tests import common
