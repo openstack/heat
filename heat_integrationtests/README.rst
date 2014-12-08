@@ -3,14 +3,18 @@ Heat integration tests
 ======================
 
 These tests can be run against any heat-enabled OpenStack cloud, however
-defaults match running against a recent devstack.
+defaults match running against a recent DevStack.
 
-To run the tests against devstack, do the following:
+To run the tests against DevStack, do the following:
 
-    # source devstack credentials
+    # source DevStack credentials
+
     source /opt/stack/devstack/accrc/demo/demo
+
     # run the heat integration tests with those credentials
+
     cd /opt/stack/heat
+
     tox -eintegration
 
 If custom configuration is required, copy the following file:
