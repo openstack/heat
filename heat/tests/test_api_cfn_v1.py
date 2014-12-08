@@ -483,19 +483,35 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     # TODO(shardy) : test the _get_template TemplateUrl case
 
-    def test_create(self):
-        # Format a dummy request
-        stack_name = "wordpress"
-        json_template = json.dumps(self.template)
-        params = {'Action': 'CreateStack', 'StackName': stack_name,
-                  'TemplateBody': '%s' % json_template,
-                  'TimeoutInMinutes': 30,
-                  'DisableRollback': 'true',
-                  'Parameters.member.1.ParameterKey': 'InstanceType',
-                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
-        dummy_req = self._dummy_GET_request(params)
+    def _stub_rpc_create_stack_call_failure(self, req_context, stack_name,
+                                            engine_parms, engine_args,
+                                            failure, need_stub=True):
+        if need_stub:
+            self.m.StubOutWithMock(policy.Enforcer, 'enforce')
+            self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        policy.Enforcer.enforce(req_context,
+                                'CreateStack').AndReturn(True)
+
+        # Insert an engine RPC error and ensure we map correctly to the
+        # heat exception type
+        rpc_client.EngineClient.call(
+            req_context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'stack_user_project_id': None}),
+            version='1.2'
+        ).AndRaise(failure)
+
+    def _stub_rpc_create_stack_call_success(self, stack_name, engine_parms,
+                                            engine_args, parameters):
+        dummy_req = self._dummy_GET_request(parameters)
         self._stub_enforce(dummy_req, 'CreateStack')
 
         # Stub out the RPC call to the engine with a pre-canned response
@@ -521,7 +537,24 @@ class CfnStackControllerTest(common.HeatTestCase):
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
+        return dummy_req
 
+    def test_create(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        json_template = json.dumps(self.template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'DisableRollback': 'true',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
+        dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
+                                                             engine_parms,
+                                                             engine_args,
+                                                             params)
         response = self.controller.create(dummy_req)
 
         expected = {
@@ -546,32 +579,10 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
-        dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'tenant': u't',
-                       u'stack_name': u'wordpress',
-                       u'stack_id': u'1',
-                       u'path': u''}
-
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
+                                                             engine_parms,
+                                                             engine_args,
+                                                             params)
 
         response = self.controller.create(dummy_req)
 
@@ -597,32 +608,10 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
-        dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'tenant': u't',
-                       u'stack_name': u'wordpress',
-                       u'stack_id': u'1',
-                       u'path': u''}
-
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
+                                                             engine_parms,
+                                                             engine_args,
+                                                             params)
 
         response = self.controller.create(dummy_req)
 
@@ -648,32 +637,10 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
-        dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'tenant': u't',
-                       u'stack_name': u'wordpress',
-                       u'stack_id': u'1',
-                       u'path': u''}
-
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
+                                                             engine_parms,
+                                                             engine_args,
+                                                             params)
 
         response = self.controller.create(dummy_req)
 
@@ -699,32 +666,10 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
-        dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'tenant': u't',
-                       u'stack_name': u'wordpress',
-                       u'stack_id': u'1',
-                       u'path': u''}
-
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
+                                                             engine_parms,
+                                                             engine_args,
+                                                             params)
 
         response = self.controller.create(dummy_req)
 
@@ -789,64 +734,25 @@ class CfnStackControllerTest(common.HeatTestCase):
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30'}
         dummy_req = self._dummy_GET_request(params)
-
-        self.m.StubOutWithMock(policy.Enforcer, 'enforce')
-
-        # Insert an engine RPC error and ensure we map correctly to the
-        # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-
-        policy.Enforcer.enforce(dummy_req.context, 'CreateStack'
-                                ).AndReturn(True)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndRaise(AttributeError())
-
-        policy.Enforcer.enforce(dummy_req.context, 'CreateStack'
-                                ).AndReturn(True)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndRaise(heat_exception.UnknownUserParameter(key='test'))
-
-        policy.Enforcer.enforce(dummy_req.context, 'CreateStack'
-                                ).AndReturn(True)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndRaise(heat_exception.UserParameterMissing(key='test'))
-
+        self._stub_rpc_create_stack_call_failure(dummy_req.context,
+                                                 stack_name,
+                                                 engine_parms,
+                                                 engine_args,
+                                                 AttributeError())
+        failure = heat_exception.UnknownUserParameter(key='test')
+        self._stub_rpc_create_stack_call_failure(dummy_req.context,
+                                                 stack_name,
+                                                 engine_parms,
+                                                 engine_args,
+                                                 failure,
+                                                 False)
+        failure = heat_exception.UserParameterMissing(key='test')
+        self._stub_rpc_create_stack_call_failure(dummy_req.context,
+                                                 stack_name,
+                                                 engine_parms,
+                                                 engine_args,
+                                                 failure,
+                                                 False)
         self.m.ReplayAll()
 
         result = self.controller.create(dummy_req)
@@ -869,30 +775,15 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30'}
+        failure = heat_exception.StackExists(stack_name='test')
         dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Insert an engine RPC error and ensure we map correctly to the
-        # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndRaise(heat_exception.StackExists(stack_name='test'))
+        self._stub_rpc_create_stack_call_failure(dummy_req.context,
+                                                 stack_name,
+                                                 engine_parms,
+                                                 engine_args,
+                                                 failure)
 
         self.m.ReplayAll()
-
         result = self.controller.create(dummy_req)
 
         self.assertIsInstance(result, exception.AlreadyExistsError)
@@ -908,30 +799,15 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30'}
+        failure = heat_exception.StackValidationFailed(
+            message='Something went wrong')
         dummy_req = self._dummy_GET_request(params)
-        self._stub_enforce(dummy_req, 'CreateStack')
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'stack_user_project_id': None}),
-            version='1.2'
-        ).AndRaise(heat_exception.StackValidationFailed(
-            message='Something went wrong'))
-
+        self._stub_rpc_create_stack_call_failure(dummy_req.context,
+                                                 stack_name,
+                                                 engine_parms,
+                                                 engine_args,
+                                                 failure)
         self.m.ReplayAll()
-
         result = self.controller.create(dummy_req)
 
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
