@@ -248,7 +248,7 @@ class RollingUpdatesTest(common.HeatTestCase):
             key=lambda name: rsrc.nested().resources[name].created_time)
         batches = []
 
-        def update_with_template(tmpl, env):
+        def update_with_template(tmpl):
             # keep track of the new updates to resources _in creation order_.
             definitions = tmpl.resource_definitions(stack)
             templates = [definitions[name] for name in created_order]

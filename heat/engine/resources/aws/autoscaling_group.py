@@ -200,8 +200,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
 
     def handle_create(self):
         self.validate_launchconfig()
-        return self.create_with_template(self.child_template(),
-                                         self._environment())
+        return self.create_with_template(self.child_template())
 
     def _get_conf_properties(self):
         conf, props = super(AutoScalingGroup, self)._get_conf_properties()

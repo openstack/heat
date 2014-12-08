@@ -50,7 +50,6 @@ class TestInstanceGroup(common.HeatTestCase):
                     'resource_registry': {
                         'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
         self.assertEqual(expected, self.instance_group.child_params())
-        self.assertEqual(expected, self.instance_group._environment())
 
     def test_tags_default(self):
         expected = [{'Value': u'asg',
@@ -96,13 +95,9 @@ class TestInstanceGroup(common.HeatTestCase):
 
         self.instance_group.handle_create()
 
-        expect_env = {'parameters': {},
-                      'resource_registry': {
-                          'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
         self.instance_group.validate_launchconfig.assert_called_once_with()
         self.instance_group._create_template.assert_called_once_with(2)
-        self.instance_group.create_with_template.assert_called_once_with(
-            '{}', expect_env)
+        self.instance_group.create_with_template.assert_called_once_with('{}')
 
     def test_update_in_failed(self):
         self.instance_group.state_set('CREATE', 'FAILED')

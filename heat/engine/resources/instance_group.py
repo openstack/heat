@@ -166,21 +166,12 @@ class InstanceGroup(stack_resource.StackResource):
                                        lc=self.LAUNCH_CONFIGURATION_NAME,
                                        ref=conf_refid))
 
-    def _environment(self):
-        """Return the environment for the nested stack."""
-        return {
-            environment_format.PARAMETERS: {},
-            environment_format.RESOURCE_REGISTRY: {
-                SCALED_RESOURCE_TYPE: 'AWS::EC2::Instance',
-            },
-        }
-
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
         self.validate_launchconfig()
         num_instances = self.properties[self.SIZE]
         initial_template = self._create_template(num_instances)
-        return self.create_with_template(initial_template, self._environment())
+        return self.create_with_template(initial_template)
 
     def check_create_complete(self, task):
         """
@@ -317,8 +308,7 @@ class InstanceGroup(stack_resource.StackResource):
                     efft_capacity = capacity
                 template = self._create_template(efft_capacity, efft_bat_sz)
                 self._lb_reload(exclude=changing_instances(template))
-                updater = self.update_with_template(template,
-                                                    self._environment())
+                updater = self.update_with_template(template)
                 updater.run_to_completion()
                 self.check_update_complete(updater)
                 remainder -= efft_bat_sz
@@ -338,8 +328,7 @@ class InstanceGroup(stack_resource.StackResource):
         """
         new_template = self._create_template(new_capacity)
         try:
-            updater = self.update_with_template(new_template,
-                                                self._environment())
+            updater = self.update_with_template(new_template)
             updater.run_to_completion()
             self.check_update_complete(updater)
         finally:
@@ -397,7 +386,13 @@ class InstanceGroup(stack_resource.StackResource):
         return self._create_template(num_instances)
 
     def child_params(self):
-        return self._environment()
+        """Return the environment for the nested stack."""
+        return {
+            environment_format.PARAMETERS: {},
+            environment_format.RESOURCE_REGISTRY: {
+                SCALED_RESOURCE_TYPE: 'AWS::EC2::Instance',
+            },
+        }
 
 
 def resource_mapping():

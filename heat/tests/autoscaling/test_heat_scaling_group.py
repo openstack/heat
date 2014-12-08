@@ -213,12 +213,8 @@ class TestGroupCrud(common.HeatTestCase):
 
         self.group.handle_create()
 
-        expect_env = {'parameters': {},
-                      'resource_registry': {
-                          'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
         self.group.child_template.assert_called_once_with()
-        self.group.create_with_template.assert_called_once_with(
-            '{}', expect_env)
+        self.group.create_with_template.assert_called_once_with('{}')
 
     def test_handle_update_desired_cap(self):
         self.group._try_rolling_update = mock.Mock(return_value=None)
