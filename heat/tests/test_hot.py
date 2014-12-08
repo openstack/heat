@@ -1118,6 +1118,18 @@ class StackParametersTest(common.HeatTestCase):
                                                 ['none',
                                                  'who_cares']}}},
               expected={'properties': {'prop1': ''}})),
+        ('pseudo_stack_id',
+         dict(params={},
+              snippet={'properties': {'prop1': {'get_param':
+                                                'OS::stack_id'}}},
+              expected={'properties':
+                        {'prop1': '1ba8c334-2297-4312-8c7c-43763a988ced'}})),
+        ('pseudo_stack_name',
+         dict(params={},
+              snippet={'properties': {'prop1': {'get_param':
+                                                'OS::stack_name'}}},
+              expected={'properties': {'prop1': 'test'}})),
+
     ]
 
     props_template = template_format.parse('''
@@ -1147,7 +1159,8 @@ class StackParametersTest(common.HeatTestCase):
         """Test if parameter references work."""
         tmpl = parser.Template(self.props_template)
         env = environment.Environment(self.params)
-        stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env,
+                             stack_id='1ba8c334-2297-4312-8c7c-43763a988ced')
         self.assertEqual(self.expected,
                          function.resolve(tmpl.parse(stack, self.snippet)))
 
