@@ -57,13 +57,6 @@ def _get_template_extension_manager():
 
 
 def get_template_class(template_data):
-    global _template_classes
-
-    if _template_classes is None:
-        mgr = _get_template_extension_manager()
-        _template_classes = dict((tuple(name.split('.')), mgr[name].plugin)
-                                 for name in mgr.names())
-
     available_versions = _template_classes.keys()
     version = get_version(template_data, available_versions)
     version_type = version[0]
@@ -89,6 +82,12 @@ class Template(collections.Mapping):
 
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
+        global _template_classes
+
+        if _template_classes is None:
+            mgr = _get_template_extension_manager()
+            _template_classes = dict((tuple(name.split('.')), mgr[name].plugin)
+                                     for name in mgr.names())
 
         if cls != Template:
             TemplateClass = cls
