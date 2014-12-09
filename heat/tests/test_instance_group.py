@@ -17,6 +17,7 @@ import six
 import mock
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
@@ -378,48 +379,60 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_validate_launch_conf(self):
-        t = template_format.parse(ig_template)
-        properties = t['Resources']['JobServerGroup']['Properties']
-        properties['LaunchConfigurationName'] = 'urg_i_cant_spell'
-        stack = utils.parse_stack(t)
 
-        rsrc = stack['JobServerGroup']
-        creator = scheduler.TaskRunner(rsrc.create)
+class TestInstanceGroup(common.HeatTestCase):
+    def setUp(self):
+        super(TestInstanceGroup, self).setUp()
+        t = template_format.parse(inline_templates.as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        defn = rsrc_defn.ResourceDefinition(
+            'asg', 'OS::Heat::InstanceGroup',
+            {'Size': 2, 'AvailabilityZones': ['zoneb'],
+             'LaunchConfigurationName': 'config'})
+        self.instance_group = instgrp.InstanceGroup('asg',
+                                                    defn, stack)
+
+    def test_child_template(self):
+        self.instance_group._create_template = mock.Mock(return_value='tpl')
+        self.assertEqual('tpl', self.instance_group.child_template())
+        self.instance_group._create_template.assert_called_once_with(2)
+
+    def test_child_params(self):
+        expected = {'parameters': {},
+                    'resource_registry': {
+                        'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
+        self.assertEqual(expected, self.instance_group.child_params())
+        self.assertEqual(expected, self.instance_group._environment())
+
+    def test_validate_launch_conf(self):
+        props = self.instance_group.properties.data
+        props['LaunchConfigurationName'] = 'urg_i_cant_spell'
+        creator = scheduler.TaskRunner(self.instance_group.create)
         error = self.assertRaises(exception.ResourceFailure, creator)
 
         self.assertIn('(urg_i_cant_spell) reference can not be found.',
                       six.text_type(error))
 
     def test_validate_launch_conf_no_ref(self):
-        t = template_format.parse(ig_template)
-        properties = t['Resources']['JobServerGroup']['Properties']
-        properties['LaunchConfigurationName'] = 'JobServerConfig'
-        stack = utils.parse_stack(t)
-
-        rsrc = stack['JobServerGroup']
-        creator = scheduler.TaskRunner(rsrc.create)
+        props = self.instance_group.properties.data
+        props['LaunchConfigurationName'] = 'JobServerConfig'
+        creator = scheduler.TaskRunner(self.instance_group.create)
         error = self.assertRaises(exception.ResourceFailure, creator)
-        self.assertIn('(JobServerConfig) requires a reference to the',
+        self.assertIn('(JobServerConfig) reference can not be',
                       six.text_type(error))
 
+    def test_handle_delete(self):
+        self.instance_group.delete_nested = mock.Mock(return_value=None)
+        self.instance_group.handle_delete()
+        self.instance_group.delete_nested.assert_called_once_with()
 
-class TestChildTemplate(common.HeatTestCase):
-    def setUp(self):
-        super(TestChildTemplate, self).setUp()
-        t = template_format.parse(inline_templates.as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-        defn = rsrc_defn.ResourceDefinition('ig', 'OS::Heat::InstanceGroup',
-                                            {'Size': 2,
-                                             'LaunchConfigurationName': 'foo'})
-        self.instance_group = instgrp.InstanceGroup('ig', defn, stack)
-
-    def test_child_template(self):
-        self.instance_group._create_template = mock.Mock(return_value='tpl')
-
-        self.assertEqual('tpl', self.instance_group.child_template())
-        self.instance_group._create_template.assert_called_once_with(2)
-
-    def test_child_params(self):
-        self.instance_group._environment = mock.Mock(return_value='env')
-        self.assertEqual('env', self.instance_group.child_params())
+    def test_attributes(self):
+        mock_members = self.patchobject(grouputils, 'get_members')
+        instances = []
+        for ip_ex in six.moves.range(1, 4):
+            inst = mock.Mock()
+            inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
+            instances.append(inst)
+        mock_members.return_value = instances
+        res = self.instance_group._resolve_attribute('InstanceList')
+        self.assertEqual('2.1.3.1,2.1.3.2,2.1.3.3', res)
