@@ -292,7 +292,7 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         wc_att = rsrc.FnGetAtt('Data')
-        self.assertEqual(unicode({}), wc_att)
+        self.assertEqual(six.text_type({}), wc_att)
 
         handle = self.stack['WaitHandle']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), handle.state)
@@ -467,7 +467,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
             'Signature=',
             'fHyt3XFnHq8%2FSwYaVcHdJka1hz6jdK5mHtgbo8OOKbQ%3D'])
 
-        self.assertEqual(unicode(expected_url), rsrc.FnGetRefId())
+        self.assertEqual(six.text_type(expected_url), rsrc.FnGetRefId())
         self.m.VerifyAll()
 
     def test_handle_signal(self):
@@ -895,7 +895,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(unicode({}), wc_att)
+        self.assertEqual(six.text_type({}), wc_att)
 
         handle = self.stack['wait_handle']
         self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
