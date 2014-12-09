@@ -22,8 +22,8 @@ from stevedore import extension
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.db import api as db_api
 from heat.engine import environment
+from heat.objects import raw_template as template_object
 
 LOG = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class Template(collections.Mapping):
     def load(cls, context, template_id, t=None):
         '''Retrieve a Template with the given ID from the database.'''
         if t is None:
-            t = db_api.raw_template_get(context, template_id)
+            t = template_object.RawTemplate.get_by_id(context, template_id)
         env = environment.Environment(t.environment)
         return cls(t.template, template_id=template_id, files=t.files, env=env)
 
@@ -137,10 +137,10 @@ class Template(collections.Mapping):
             'environment': self.env.user_env_as_dict()
         }
         if self.id is None:
-            new_rt = db_api.raw_template_create(context, rt)
+            new_rt = template_object.RawTemplate.create(context, rt)
             self.id = new_rt.id
         else:
-            db_api.raw_template_update(context, self.id, rt)
+            template_object.RawTemplate.update_by_id(context, self.id, rt)
         return self.id
 
     def __iter__(self):
