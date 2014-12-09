@@ -135,6 +135,20 @@ class FloatingIP(neutron.NeutronResource):
                     if port_on_subnet(d, interface_subnet):
                         deps += (self, resource)
                         break
+            # depend on Router with EXTERNAL_GATEWAY_NETWORK property
+            # this template with the same network_id as this
+            # floating_network_id
+            elif resource.has_interface('OS::Neutron::Router'):
+                gateway = resource.properties.get(
+                    router.Router.EXTERNAL_GATEWAY)
+                if gateway:
+                    gateway_network = gateway.get(
+                        router.Router.EXTERNAL_GATEWAY_NETWORK)
+                    floating_network = self.properties.get(
+                        self.FLOATING_NETWORK) or self.properties.get(
+                            self.FLOATING_NETWORK_ID)
+                    if gateway_network == floating_network:
+                        deps += (self, resource)
 
     def validate(self):
         super(FloatingIP, self).validate()

@@ -473,6 +473,14 @@ neutron_subnet_and_external_gateway_template = '''
         "enable_dhcp": false
       }
     },
+    "floating_ip": {
+      "Type": "OS::Neutron::FloatingIP",
+      "Properties": {
+        "floating_network": {
+          "Ref": "net_external"
+        },
+      }
+    },
     "router": {
       "Type": "OS::Neutron::Router",
       "Properties": {
@@ -1525,6 +1533,8 @@ class NeutronRouterTest(HeatTestCase):
         stack = utils.parse_stack(t)
         deps = stack.dependencies[stack['subnet_external']]
         self.assertIn(stack['router'], deps)
+        required_by = set(stack.dependencies.required_by(stack['router']))
+        self.assertIn(stack['floating_ip'], required_by)
 
     def test_router_interface(self):
         self._test_router_interface()
