@@ -1229,7 +1229,7 @@ class validateTest(common.HeatTestCase):
         self.assertEqual({'Error': 'u\'"DependsOn" is not a valid keyword '
                                    'inside a resource definition\''}, res)
 
-    def test_validate_template_with_invalid_resource_deletion_polciy(self):
+    def test_validate_template_with_invalid_resource_deletion_policy(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23
         resources:

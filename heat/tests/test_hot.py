@@ -190,7 +190,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"Type" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
@@ -214,7 +215,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"Properties" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
@@ -257,7 +259,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"Metadata" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
@@ -281,12 +284,13 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"DependsOn" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
 
-    def test_translate_resources_bad_deletion_polciy(self):
+    def test_translate_resources_bad_deletion_policy(self):
         """Test translation of resources including invalid keyword."""
 
         hot_tpl = template_format.parse('''
@@ -305,7 +309,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"DeletionPolicy" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
@@ -329,7 +334,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.RESOURCES)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.RESOURCES)
         self.assertEqual('u\'"UpdatePolicy" is not a valid keyword '
                          'inside a resource definition\'',
                          six.text_type(err))
@@ -394,7 +400,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.OUTPUTS)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.OUTPUTS)
         self.assertIn('Description', six.text_type(err))
 
     def test_translate_outputs_bad_value(self):
@@ -409,7 +416,8 @@ class HOTemplateTest(common.HeatTestCase):
         ''')
 
         tmpl = parser.Template(hot_tpl)
-        err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.OUTPUTS)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                tmpl.__getitem__, tmpl.OUTPUTS)
         self.assertIn('Value', six.text_type(err))
 
     def test_resource_group_list_join(self):
