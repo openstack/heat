@@ -102,7 +102,7 @@ class Restarter(signal_responder.SignalResponder):
         when there is an alarm.
         '''
         if name == self.ALARM_URL and self.resource_id is not None:
-            return unicode(self._get_signed_url())
+            return six.text_type(self._get_signed_url())
 
 
 class Instance(resource.Resource):
@@ -465,7 +465,7 @@ class Instance(resource.Resource):
 
         LOG.info(_LI('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
                  {'name': self.name, 'attname': name, 'res': res})
-        return unicode(res) if res else None
+        return six.text_type(res) if res else None
 
     def _port_data_delete(self):
         # delete the port data which implicit-created

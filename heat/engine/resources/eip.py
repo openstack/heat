@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from oslo.utils import excutils
 
@@ -175,11 +176,11 @@ class ElasticIp(resource.Resource):
                         server.remove_floating_ip(self._ipaddress())
 
     def FnGetRefId(self):
-        return unicode(self._ipaddress())
+        return six.text_type(self._ipaddress())
 
     def _resolve_attribute(self, name):
         if name == self.ALLOCATION_ID:
-            return unicode(self.resource_id)
+            return six.text_type(self.resource_id)
 
 
 class ElasticIpAssociation(resource.Resource):

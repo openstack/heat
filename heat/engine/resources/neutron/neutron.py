@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 import warnings
 
@@ -137,7 +138,7 @@ class NeutronResource(resource.Resource):
                 return
 
     def FnGetRefId(self):
-        return unicode(self.resource_id)
+        return six.text_type(self.resource_id)
 
     @staticmethod
     def get_secgroup_uuids(security_groups, client, tenant_id):

@@ -644,7 +644,7 @@ class CinderVolume(Volume):
     def _resolve_attribute(self, name):
         vol = self.cinder().volumes.get(self.resource_id)
         if name == self.METADATA_ATTR:
-            return unicode(json.dumps(vol.metadata))
+            return six.text_type(json.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
         if self.cinder().volume_api_version >= 2:
@@ -652,7 +652,7 @@ class CinderVolume(Volume):
                 return vol.name
             elif name == 'display_description':
                 return vol.description
-        return unicode(getattr(vol, name))
+        return six.text_type(getattr(vol, name))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
