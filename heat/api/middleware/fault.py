@@ -19,6 +19,7 @@
 """A middleware that turns exceptions into parsable string. Inspired by
 Cinder's faultwrapper
 """
+import six
 
 import traceback
 
@@ -113,7 +114,7 @@ class FaultWrapper(wsgi.Middleware):
         if is_remote:
             ex_type = ex_type[:-len('_Remote')]
 
-        full_message = unicode(ex)
+        full_message = six.text_type(ex)
         if full_message.find('\n') > -1 and is_remote:
             message, msg_trace = full_message.split('\n', 1)
         else:
