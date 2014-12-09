@@ -831,6 +831,102 @@ class Stack(collections.Mapping):
 
         notification.send(self)
 
+    def _delete_backup_stack(self, stack):
+        # Delete resources in the backup stack referred to by 'stack'
+
+        def failed(child):
+            return (child.action == child.CREATE and
+                    child.status in (child.FAILED, child.IN_PROGRESS))
+
+        for key, backup_res in stack.resources.items():
+            # If UpdateReplace is failed, we must restore backup_res
+            # to existing_stack in case of it may have dependencies in
+            # these stacks. curr_res is the resource that just
+            # created and failed, so put into the stack to delete anyway.
+            backup_res_id = backup_res.resource_id
+            curr_res = self.resources[key]
+            curr_res_id = curr_res.resource_id
+            if backup_res_id:
+                if (any(failed(child) for child in
+                        self.dependencies[curr_res]) or
+                        curr_res.status in
+                        (curr_res.FAILED, curr_res.IN_PROGRESS)):
+                    # If child resource failed to update, curr_res
+                    # should be replaced to resolve dependencies. But this
+                    # is not fundamental solution. If there are update
+                    # failer and success resources in the children, cannot
+                    # delete the stack.
+                    # Stack class owns dependencies as set of resource's
+                    # objects, so we switch members of the resource that is
+                    # needed to delete it.
+                    self.resources[key].resource_id = backup_res_id
+                    self.resources[key].properties = backup_res.properties
+                    stack.resources[key].resource_id = curr_res_id
+                    stack.resources[key].properties = curr_res.properties
+
+        stack.delete(backup=True)
+
+    def _delete_credentials(self, stack_status, reason, abandon):
+        # Cleanup stored user_creds so they aren't accessible via
+        # the soft-deleted stack which remains in the DB
+        # The stack_status and reason passed in are current values, which
+        # may get rewritten and returned from this method
+        if self.user_creds_id:
+            user_creds = db_api.user_creds_get(self.user_creds_id)
+            # If we created a trust, delete it
+            if user_creds is not None:
+                trust_id = user_creds.get('trust_id')
+                if trust_id:
+                    try:
+                        # If the trustor doesn't match the context user the
+                        # we have to use the stored context to cleanup the
+                        # trust, as although the user evidently has
+                        # permission to delete the stack, they don't have
+                        # rights to delete the trust unless an admin
+                        trustor_id = user_creds.get('trustor_user_id')
+                        if self.context.user_id != trustor_id:
+                            LOG.debug('Context user_id doesn\'t match '
+                                      'trustor, using stored context')
+                            sc = self.stored_context()
+                            sc.clients.client('keystone').delete_trust(
+                                trust_id)
+                        else:
+                            self.clients.client('keystone').delete_trust(
+                                trust_id)
+                    except Exception as ex:
+                        LOG.exception(ex)
+                        stack_status = self.FAILED
+                        reason = ("Error deleting trust: %s" %
+                                  six.text_type(ex))
+
+            # Delete the stored credentials
+            try:
+                db_api.user_creds_delete(self.context, self.user_creds_id)
+            except exception.NotFound:
+                LOG.info(_LI("Tried to delete user_creds that do not exist "
+                             "(stack=%(stack)s user_creds_id=%(uc)s)"),
+                         {'stack': self.id, 'uc': self.user_creds_id})
+
+            try:
+                self.user_creds_id = None
+                self.store()
+            except exception.NotFound:
+                LOG.info(_LI("Tried to store a stack that does not exist %s"),
+                         self.id)
+
+        # If the stack has a domain project, delete it
+        if self.stack_user_project_id and not abandon:
+            try:
+                keystone = self.clients.client('keystone')
+                keystone.delete_stack_domain_project(
+                    project_id=self.stack_user_project_id)
+            except Exception as ex:
+                LOG.exception(ex)
+                stack_status = self.FAILED
+                reason = "Error deleting project: %s" % six.text_type(ex)
+
+        return stack_status, reason
+
     @profiler.trace('Stack.delete', hide_args=False)
     def delete(self, action=DELETE, backup=False, abandon=False):
         '''
@@ -857,42 +953,7 @@ class Stack(collections.Mapping):
 
         backup_stack = self._backup_stack(False)
         if backup_stack:
-            def failed(child):
-                return (child.action == child.CREATE and
-                        child.status in (child.FAILED, child.IN_PROGRESS))
-
-            for key, backup_resource in backup_stack.resources.items():
-                # If UpdateReplace is failed, we must restore backup_resource
-                # to existing_stack in case of it may have dependencies in
-                # these stacks. current_resource is the resource that just
-                # created and failed, so put into the backup_stack to delete
-                # anyway.
-                backup_resource_id = backup_resource.resource_id
-                current_resource = self.resources[key]
-                current_resource_id = current_resource.resource_id
-                if backup_resource_id:
-                    if (any(failed(child) for child in
-                            self.dependencies[current_resource]) or
-                            current_resource.status in
-                            (current_resource.FAILED,
-                             current_resource.IN_PROGRESS)):
-                        # If child resource failed to update, current_resource
-                        # should be replaced to resolve dependencies. But this
-                        # is not fundamental solution. If there are update
-                        # failer and success resources in the children, cannot
-                        # delete the stack.
-                        # Stack class owns dependencies as set of resource's
-                        # objects, so we switch members of the resource that is
-                        # needed to delete it.
-                        self.resources[key].resource_id = backup_resource_id
-                        self.resources[
-                            key].properties = backup_resource.properties
-                        backup_stack.resources[
-                            key].resource_id = current_resource_id
-                        backup_stack.resources[
-                            key].properties = current_resource.properties
-
-            backup_stack.delete(backup=True)
+            self._delete_backup_stack(backup_stack)
             if backup_stack.status != backup_stack.COMPLETE:
                 errs = backup_stack.status_reason
                 failure = 'Error deleting backup resources: %s' % errs
@@ -928,62 +989,9 @@ class Stack(collections.Mapping):
         # If the stack delete succeeded, this is not a backup stack and it's
         # not a nested stack, we should delete the credentials
         if stack_status != self.FAILED and not backup and not self.owner_id:
-            # Cleanup stored user_creds so they aren't accessible via
-            # the soft-deleted stack which remains in the DB
-            if self.user_creds_id:
-                user_creds = db_api.user_creds_get(self.user_creds_id)
-                # If we created a trust, delete it
-                if user_creds is not None:
-                    trust_id = user_creds.get('trust_id')
-                    if trust_id:
-                        try:
-                            # If the trustor doesn't match the context user the
-                            # we have to use the stored context to cleanup the
-                            # trust, as although the user evidently has
-                            # permission to delete the stack, they don't have
-                            # rights to delete the trust unless an admin
-                            trustor_id = user_creds.get('trustor_user_id')
-                            if self.context.user_id != trustor_id:
-                                LOG.debug('Context user_id doesn\'t match '
-                                          'trustor, using stored context')
-                                sc = self.stored_context()
-                                sc.clients.client('keystone').delete_trust(
-                                    trust_id)
-                            else:
-                                self.clients.client('keystone').delete_trust(
-                                    trust_id)
-                        except Exception as ex:
-                            LOG.exception(ex)
-                            stack_status = self.FAILED
-                            reason = ("Error deleting trust: %s" %
-                                      six.text_type(ex))
-
-                # Delete the stored credentials
-                try:
-                    db_api.user_creds_delete(self.context, self.user_creds_id)
-                except exception.NotFound:
-                    LOG.info(_LI("Tried to delete user_creds that do not "
-                                 "exist (stack=%(stack)s user_creds_id="
-                                 "%(uc)s)"),
-                             {'stack': self.id, 'uc': self.user_creds_id})
-
-                try:
-                    self.user_creds_id = None
-                    self.store()
-                except exception.NotFound:
-                    LOG.info(_LI("Tried to store a stack that does not exist "
-                                 "%s "), self.id)
-
-            # If the stack has a domain project, delete it
-            if self.stack_user_project_id and not abandon:
-                try:
-                    keystone = self.clients.client('keystone')
-                    keystone.delete_stack_domain_project(
-                        project_id=self.stack_user_project_id)
-                except Exception as ex:
-                    LOG.exception(ex)
-                    stack_status = self.FAILED
-                    reason = "Error deleting project: %s" % six.text_type(ex)
+            stack_status, reason = self._delete_credentials(stack_status,
+                                                            reason,
+                                                            abandon)
 
         try:
             self.state_set(action, stack_status, reason)
