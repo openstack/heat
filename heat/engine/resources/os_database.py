@@ -334,7 +334,8 @@ class OSDBInstance(resource.Resource):
 
     def _refresh_instance(self, instance):
         try:
-            instance.get()
+            instance = self.trove().instances.get(instance.id)
+            return instance
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
                 LOG.warn(_LW("Stack %(name)s (%(id)s) received an "
@@ -343,6 +344,7 @@ class OSDBInstance(resource.Resource):
                          {'name': self.stack.name,
                           'id': self.stack.id,
                           'exception': exc})
+                return instance
             else:
                 raise
 
@@ -350,7 +352,7 @@ class OSDBInstance(resource.Resource):
         '''
         Check if cloud DB instance creation is complete.
         '''
-        self._refresh_instance(instance)  # get updated attributes
+        instance = self._refresh_instance(instance)  # get updated attributes
         if instance.status in self.BAD_STATUSES:
             raise resource.ResourceInError(
                 resource_status=instance.status,
