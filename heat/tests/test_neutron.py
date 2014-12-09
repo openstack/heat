@@ -1986,8 +1986,10 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         if r_iface:
-            deps = stack.dependencies[stack['router_interface']]
-            self.assertIn(stack['floating_ip'], deps)
+            required_by = set(stack.dependencies.required_by(
+                stack['router_interface']))
+            self.assertIn(stack['floating_ip_assoc'], required_by)
+            self.assertIn(stack['floating_ip'], required_by)
         else:
             deps = stack.dependencies[stack['gateway']]
             self.assertIn(stack['floating_ip'], deps)
