@@ -88,10 +88,41 @@ class TestInstanceGroup(common.HeatTestCase):
         self.assertIn('(JobServerConfig) reference can not be',
                       six.text_type(error))
 
+    def test_handle_create(self):
+        self.instance_group.create_with_template = mock.Mock(return_value=None)
+        self.instance_group.validate_launchconfig = mock.Mock(
+            return_value=None)
+        self.instance_group._create_template = mock.Mock(return_value='{}')
+
+        self.instance_group.handle_create()
+
+        expect_env = {'parameters': {},
+                      'resource_registry': {
+                          'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
+        self.instance_group.validate_launchconfig.assert_called_once_with()
+        self.instance_group._create_template.assert_called_once_with(2)
+        self.instance_group.create_with_template.assert_called_once_with(
+            '{}', expect_env)
+
     def test_handle_delete(self):
         self.instance_group.delete_nested = mock.Mock(return_value=None)
         self.instance_group.handle_delete()
         self.instance_group.delete_nested.assert_called_once_with()
+
+    def test_handle_update_size(self):
+        self.instance_group._try_rolling_update = mock.Mock(return_value=None)
+        self.instance_group.resize = mock.Mock(return_value=None)
+        get_size = self.patchobject(grouputils, 'get_size')
+        get_size.return_value = 2
+
+        props = {'Size': 5}
+        defn = rsrc_defn.ResourceDefinition(
+            'nopayload',
+            'AWS::AutoScaling::AutoScalingGroup',
+            props)
+
+        self.instance_group.handle_update(defn, None, props)
+        self.instance_group.resize.assert_called_once_with(5)
 
     def test_attributes(self):
         mock_members = self.patchobject(grouputils, 'get_members')
