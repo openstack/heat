@@ -314,11 +314,13 @@ class ResourceActionNotSupported(HeatException):
 
 
 class ResourcePropertyConflict(HeatException):
-    msg_fmt = _('Cannot define the following properties at the same time: %s.')
+    msg_fmt = _('Cannot define the following properties '
+                'at the same time: %(props)s.')
 
-    def __init__(self, *args):
-        self.msg_fmt = self.msg_fmt % ", ".join(args)
-        super(ResourcePropertyConflict, self).__init__()
+    def __init__(self, *args, **kwargs):
+        if args:
+            kwargs.update({'props': ", ".join(args)})
+        super(ResourcePropertyConflict, self).__init__(**kwargs)
 
 
 class HTTPExceptionDisguise(Exception):
