@@ -48,6 +48,18 @@ class StackResource(resource.Resource):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
 
+    def validate(self):
+        super(StackResource, self).validate()
+        try:
+            nested_stack = self._parse_nested_stack(
+                self.stack.name,
+                self.child_template(),
+                self.child_params())
+            nested_stack.validate()
+        except Exception as ex:
+            msg = _("Failed to validate: %s") % ex
+            raise exception.StackValidationFailed(message=msg)
+
     def _outputs_to_attribs(self, json_snippet):
         outputs = json_snippet.get('Outputs')
         if not self.attributes and outputs:

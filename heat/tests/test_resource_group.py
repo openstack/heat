@@ -161,6 +161,7 @@ class ResourceGroupTest(common.HeatTestCase):
         AttributeResource = generic_resource.ResourceWithComplexAttributes
         resource._register_class("dummyattr.resource",
                                  AttributeResource)
+        self.m.StubOutWithMock(stackm.Stack, 'validate')
 
     def test_build_resource_definition(self):
         stack = utils.parse_stack(template)
