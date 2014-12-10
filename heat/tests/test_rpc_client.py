@@ -208,7 +208,8 @@ class EngineRpcAPITestCase(testtools.TestCase):
     def test_describe_stack_resource(self):
         self._test_engine_api('describe_stack_resource', 'call',
                               stack_identity=self.identity,
-                              resource_name='LogicalResourceId')
+                              resource_name='LogicalResourceId',
+                              with_attr=None)
 
     def test_find_physical_resource(self):
         self._test_engine_api('find_physical_resource', 'call',

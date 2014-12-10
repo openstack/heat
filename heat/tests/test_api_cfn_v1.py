@@ -1410,9 +1410,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
+            'with_attr': None,
         }
         rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resource', args)
+            dummy_req.context, ('describe_stack_resource', args), version='1.2'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -1474,9 +1475,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
+            'with_attr': None,
         }
         rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resource', args)
+            dummy_req.context, ('describe_stack_resource', args), version='1.2'
         ).AndRaise(heat_exception.ResourceNotFound(
             resource_name='test', stack_name='test'))
 

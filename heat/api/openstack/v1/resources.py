@@ -96,9 +96,12 @@ class ResourceController(object):
         Gets detailed information for a resource
         """
 
+        whitelist = {'with_attr': 'multi'}
+        params = util.get_allowed_params(req.params, whitelist)
         res = self.rpc_client.describe_stack_resource(req.context,
                                                       identity,
-                                                      resource_name)
+                                                      resource_name,
+                                                      **params)
 
         return {'resource': format_resource(req, res)}
 
