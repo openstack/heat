@@ -6,7 +6,7 @@ include LICENSE
 include README.rst
 include MANIFEST.in pylintrc
 include openstack-common.conf
-include babel.cfg install.sh run_tests.sh tox.ini uninstall.sh
+include babel.cfg install.sh tox.ini uninstall.sh
 include heat/cloudinit/config
 include heat/cloudinit/boothook.sh
 include heat/cloudinit/loguserdata.py
