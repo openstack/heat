@@ -443,7 +443,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         env = environment.Environment(env_str)
         ex = self.assertRaises(exception.NotFound, env.get_class,
                                'OS::ResourceType', 'fred')
-        self.assertEqual('No such file: some_magic.yaml', six.text_type(ex))
+        self.assertIn('Could not fetch remote template "some_magic.yaml"',
+                      six.text_type(ex))
 
     def test_get_template_resource_class(self):
         test_templ_name = 'file:///etc/heatr/frodo.yaml'
