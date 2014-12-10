@@ -132,7 +132,7 @@ class FloatingIP(neutron.NeutronResource):
                 interface_subnet = (
                     resource.properties.get(router.RouterInterface.SUBNET) or
                     resource.properties.get(router.RouterInterface.SUBNET_ID))
-                for d in deps.graph(self):
+                for d in deps.graph()[self]:
                     if port_on_subnet(d, interface_subnet):
                         deps += (self, resource)
                         break

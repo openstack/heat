@@ -363,6 +363,13 @@ neutron_floating_no_assoc_template = '''
     "router": {
       "Type": "OS::Neutron::Router"
     },
+    "router_interface": {
+      "Type": "OS::Neutron::RouterInterface",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "subnet": "sub1234"
+      }
+    },
     "gateway": {
       "Type": "OS::Neutron::RouterGateway",
       "Properties": {
@@ -1993,7 +2000,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             required_by = set(stack.dependencies.required_by(
                 stack['router_interface']))
             self.assertIn(stack['floating_ip_assoc'], required_by)
-            self.assertIn(stack['floating_ip'], required_by)
         else:
             deps = stack.dependencies[stack['gateway']]
             self.assertIn(stack['floating_ip'], deps)
@@ -2401,6 +2407,11 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         t = template_format.parse(neutron_floating_no_assoc_template)
         stack = utils.parse_stack(t)
+
+        # check dependencies for fip resource
+        required_by = set(stack.dependencies.required_by(
+            stack['router_interface']))
+        self.assertIn(stack['floating_ip'], required_by)
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
