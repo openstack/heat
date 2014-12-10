@@ -21,7 +21,6 @@ from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import resources
 from heat.engine.resources import instance
 from heat.engine.resources import instance_group as instgrp
 from heat.engine import rsrc_defn
@@ -100,66 +99,6 @@ class InstanceGroupTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
-
-    def test_basic_create_works(self):
-        """Make sure the working case is good."""
-
-        t = template_format.parse(ig_template)
-        stack = utils.parse_stack(t)
-
-        # start with min then delete
-        self._stub_create(1)
-        self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
-
-        self.m.ReplayAll()
-        lc_rsrc = self.create_resource(t, stack, 'JobServerConfig')
-        # check bdm in configuration
-        self.assertIsNotNone(lc_rsrc.properties['BlockDeviceMappings'])
-
-        rsrc = self.create_resource(t, stack, 'JobServerGroup')
-        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
-                         rsrc.FnGetRefId())
-        self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
-        # check bdm in instance_definition
-        instance_definition = rsrc._get_instance_definition()
-        self.assertIn('BlockDeviceMappings',
-                      instance_definition['Properties'])
-
-        nested = rsrc.nested()
-        self.assertEqual(rsrc.resource_id, nested.id)
-
-        rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_override_aws_ec2_instance(self):
-        """
-        If AWS::EC2::Instance is overridden, InstanceGroup will automatically
-        use that overridden resource type.
-        """
-        # resources may need to be initialised if this is the first test run.
-        resources.initialise()
-
-        class MyInstance(instance.Instance):
-            """A customized Instance resource."""
-
-        original_instance = resources.global_env().get_class(
-            "AWS::EC2::Instance")
-        resource._register_class("AWS::EC2::Instance", MyInstance)
-        self.addCleanup(resource._register_class, "AWS::EC2::Instance",
-                        original_instance)
-
-        t = template_format.parse(ig_template)
-        stack = utils.parse_stack(t)
-        self._stub_create(1, instance_class=MyInstance)
-
-        self.m.ReplayAll()
-        self.create_resource(t, stack, 'JobServerConfig')
-        rsrc = self.create_resource(t, stack, 'JobServerGroup')
-        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
-                         rsrc.FnGetRefId())
-        rsrc.delete()
-        self.m.VerifyAll()
 
     def test_create_config_prop_validation(self):
         """Make sure that during a group create the instance
