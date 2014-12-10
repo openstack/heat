@@ -101,7 +101,8 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def test_instance_group(self):
+    def test_basic_create_works(self):
+        """Make sure the working case is good."""
 
         t = template_format.parse(ig_template)
         stack = utils.parse_stack(t)
@@ -131,7 +132,7 @@ class InstanceGroupTest(common.HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    def test_instance_group_custom_resource(self):
+    def test_override_aws_ec2_instance(self):
         """
         If AWS::EC2::Instance is overridden, InstanceGroup will automatically
         use that overridden resource type.
@@ -160,7 +161,10 @@ class InstanceGroupTest(common.HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    def test_missing_image(self):
+    def test_create_config_prop_validation(self):
+        """Make sure that during a group create the instance
+        properties are validated. And an error causes the group to fail.
+        """
 
         t = template_format.parse(ig_template)
         stack = utils.parse_stack(t)
@@ -196,7 +200,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_handle_update_size(self):
+    def test_size_updates_work(self):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
@@ -236,7 +240,7 @@ class InstanceGroupTest(common.HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    def test_create_error(self):
+    def test_create_instance_error_causes_group_error(self):
         """
         If a resource in an instance group fails to be created, the instance
         group itself will fail and the broken inner resource will remain.
@@ -271,7 +275,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_error(self):
+    def test_update_instance_error_causes_group_error(self):
         """
         If a resource in an instance group fails to be created during an
         update, the instance group itself will fail and the broken inner
@@ -321,7 +325,10 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_fail_badprop(self):
+    def test_update_group_replace(self):
+        """Make sure that during a group update the non updatable
+        properties cause a replacement.
+        """
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
@@ -344,39 +351,6 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
         rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_update_config_metadata(self):
-        t = template_format.parse(ig_template)
-        properties = t['Resources']['JobServerGroup']['Properties']
-        properties['Size'] = '2'
-        stack = utils.parse_stack(t)
-
-        self._stub_create(2)
-        self.m.ReplayAll()
-        rsrc = self.create_resource(t, stack, 'JobServerConfig')
-        self.create_resource(t, stack, 'JobServerGroup')
-
-        props = copy.copy(rsrc.properties.data)
-        metadata = copy.copy(rsrc.metadata_get())
-
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props,
-                                                      metadata)
-        # Change nothing in the first update
-        scheduler.TaskRunner(rsrc.update, update_snippet)()
-
-        self.assertEqual('bar', metadata['foo'])
-        metadata['foo'] = 'wibble'
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props,
-                                                      metadata)
-        # Changing metadata in the second update triggers UpdateReplace
-        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
-        self.assertRaises(resource.UpdateReplace, updater)
-
         self.m.VerifyAll()
 
 
@@ -455,3 +429,59 @@ class TestInstanceGroup(common.HeatTestCase):
         mock_members.return_value = instances
         res = self.instance_group._resolve_attribute('InstanceList')
         self.assertEqual('2.1.3.1,2.1.3.2,2.1.3.3', res)
+
+
+class TestLaunchConfig(common.HeatTestCase):
+    def create_resource(self, t, stack, resource_name):
+        # subsequent resources may need to reference previous created resources
+        # use the stack's resource objects instead of instantiating new ones
+        rsrc = stack[resource_name]
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        return rsrc
+
+    def test_update_metadata_replace(self):
+        """Updating the config's metadata causes a config replacement."""
+        lc_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Resources": {
+    "JobServerConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata": {"foo": "bar"},
+      "Properties": {
+        "ImageId"           : "foo",
+        "InstanceType"      : "m1.large",
+        "KeyName"           : "test",
+      }
+    }
+  }
+}
+'''
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_KeypairConstraint_validate()
+        self.m.ReplayAll()
+
+        t = template_format.parse(lc_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'JobServerConfig')
+        props = copy.copy(rsrc.properties.data)
+        metadata = copy.copy(rsrc.metadata_get())
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props,
+                                                      metadata)
+        # Change nothing in the first update
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual('bar', metadata['foo'])
+        metadata['foo'] = 'wibble'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props,
+                                                      metadata)
+        # Changing metadata in the second update triggers UpdateReplace
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        self.assertRaises(resource.UpdateReplace, updater)
+        self.m.VerifyAll()
