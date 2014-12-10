@@ -191,74 +191,72 @@ class HOTemplate20130523(template.Template):
                                         user_params=user_params,
                                         param_defaults=param_defaults)
 
-    def resource_definitions(self, stack):
+    def validate_resource_definitions(self, stack):
+        resources = self.t.get(self.RESOURCES) or {}
         allowed_keys = set(_RESOURCE_KEYS)
+
+        try:
+            for name, snippet in resources.items():
+                data = self.parse(stack, snippet)
+
+                if not self.validate_resource_key_type(RES_TYPE,
+                                                       six.string_types,
+                                                       'string',
+                                                       allowed_keys,
+                                                       name, data):
+                    args = {'name': name, 'type_key': RES_TYPE}
+                    msg = _('Resource %(name)s is missing '
+                            '"%(type_key)s"') % args
+                    raise KeyError(msg)
+
+                self.validate_resource_key_type(
+                    RES_PROPERTIES,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    RES_METADATA,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    RES_DEPENDS_ON,
+                    collections.Sequence,
+                    'list or string', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    RES_DELETION_POLICY,
+                    six.string_types,
+                    'string', allowed_keys, name, data)
+                self.validate_resource_key_type(
+                    RES_UPDATE_POLICY,
+                    (collections.Mapping, function.Function),
+                    'object', allowed_keys, name, data)
+        except (TypeError, ValueError) as ex:
+            raise exception.StackValidationFailed(message=six.text_type(ex))
+
+    def resource_definitions(self, stack):
+        resources = self.t.get(self.RESOURCES) or {}
 
         def rsrc_defn_item(name, snippet):
             data = self.parse(stack, snippet)
 
-            def get_check_type(key, valid_types, typename, default=None):
-                if key in data:
-                    field = data[key]
-                    if not isinstance(field, valid_types):
-                        args = {'name': name, 'key': key, 'typename': typename}
-                        msg = _('Resource %(name)s %(key)s type '
-                                'must be %(typename)s') % args
-                        raise TypeError(msg)
-                    return field
-                else:
-                    return default
-
-            resource_type = get_check_type(RES_TYPE,
-                                           six.string_types,
-                                           'string')
-            if resource_type is None:
-                args = {'name': name, 'type_key': RES_TYPE}
-                msg = _('Resource %(name)s is missing "%(type_key)s"') % args
-                raise KeyError(msg)
-
-            properties = get_check_type(RES_PROPERTIES,
-                                        (collections.Mapping,
-                                         function.Function),
-                                        'object')
-
-            metadata = get_check_type(RES_METADATA,
-                                      (collections.Mapping,
-                                       function.Function),
-                                      'object')
-
-            depends = get_check_type(RES_DEPENDS_ON,
-                                     collections.Sequence,
-                                     'list or string',
-                                     default=[])
-            if isinstance(depends, six.string_types):
+            depends = data.get(RES_DEPENDS_ON)
+            if not depends:
+                depends = []
+            elif isinstance(depends, six.string_types):
                 depends = [depends]
 
-            deletion_policy = get_check_type(RES_DELETION_POLICY,
-                                             six.string_types,
-                                             'string')
+            kwargs = {
+                'resource_type': data.get(RES_TYPE),
+                'properties': data.get(RES_PROPERTIES),
+                'metadata': data.get(RES_METADATA),
+                'depends': depends,
+                'deletion_policy': data.get(RES_DELETION_POLICY),
+                'update_policy': data.get(RES_UPDATE_POLICY),
+                'description': None
+            }
 
-            update_policy = get_check_type(RES_UPDATE_POLICY,
-                                           (collections.Mapping,
-                                            function.Function),
-                                           'object')
-
-            for key in data:
-                if key not in allowed_keys:
-                    raise ValueError(_('"%s" is not a valid keyword '
-                                       'inside a resource definition') % key)
-
-            defn = rsrc_defn.ResourceDefinition(
-                name, resource_type,
-                properties=properties,
-                metadata=metadata,
-                depends=depends,
-                deletion_policy=deletion_policy,
-                update_policy=update_policy,
-                description=None)
+            defn = rsrc_defn.ResourceDefinition(name, **kwargs)
             return name, defn
 
-        resources = self.t.get(self.RESOURCES) or {}
         return dict(rsrc_defn_item(name, data)
                     for name, data in resources.items())
 

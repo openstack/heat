@@ -469,6 +469,9 @@ class Stack(collections.Mapping):
         parameter_groups = param_groups.ParameterGroups(self.t)
         parameter_groups.validate()
 
+        # Validate types of sections in ResourceDefinitions
+        self.t.validate_resource_definitions(self)
+
         # Check duplicate names between parameters and resources
         dup_names = set(self.parameters.keys()) & set(self.keys())
 
