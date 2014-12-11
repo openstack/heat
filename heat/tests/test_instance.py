@@ -475,9 +475,8 @@ class InstancesTest(common.HeatTestCase):
         e = self.assertRaises(resource.ResourceUnknownStatus,
                               instance.check_create_complete,
                               (return_server, self.FakeVolumeAttach()))
-        self.assertEqual(
-            'Instance is not active - Unknown status BOGUS',
-            six.text_type(e))
+        self.assertEqual('Instance is not active - Unknown status BOGUS '
+                         'due to "Unknown"', six.text_type(e))
 
     def test_instance_create_error_status(self):
         return_server = self.fc.servers.list()[1]

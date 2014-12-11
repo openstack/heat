@@ -494,9 +494,8 @@ class ServersTest(common.HeatTestCase):
         e = self.assertRaises(resource.ResourceUnknownStatus,
                               server.check_create_complete,
                               return_server)
-        self.assertEqual(
-            'Server is not active - Unknown status BOGUS',
-            six.text_type(e))
+        self.assertEqual('Server is not active - Unknown status BOGUS due to '
+                         '"Unknown"', six.text_type(e))
 
     def test_server_create_error_status(self):
         return_server = self.fc.servers.list()[1]
