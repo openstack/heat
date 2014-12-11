@@ -20,6 +20,7 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine.resources import template_resource
 from heat.engine import stack_resource
 from heat.engine import support
 from heat.engine import template
@@ -185,7 +186,10 @@ class ResourceGroup(stack_resource.StackResource):
         test_tmpl = self._assemble_nested(["0"], include_all=True)
         val_templ = template.Template(test_tmpl)
         res_def = val_templ.resource_definitions(self.stack)["0"]
-        res_class = self.stack.env.get_class(res_def.resource_type)
+        try:
+            res_class = self.stack.env.get_class(res_def.resource_type)
+        except exception.NotFound:
+            res_class = template_resource.TemplateResource
         res_inst = res_class("%s:resource_def" % self.name, res_def,
                              self.stack)
         res_inst.validate()
