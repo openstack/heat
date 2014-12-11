@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from oslo.utils import timeutils
 
 from heat.common.i18n import _
@@ -129,7 +131,9 @@ def format_resource_attributes(resource, with_attr=None):
 
     resolver = resource.attributes
     if 'show' in resolver.keys():
-        resolver = resolver['show']
+        show_attr = resolver['show']
+        if isinstance(show_attr, collections.Mapping):
+            resolver = show_attr
 
     if not with_attr:
         with_attr = []
