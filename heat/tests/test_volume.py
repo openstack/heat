@@ -265,10 +265,13 @@ class VolumeTest(BaseVolumeTest):
         # delete script
         self.m.StubOutWithMock(instance.Instance, 'handle_delete')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_delete')
+        self.m.StubOutWithMock(vol.VolumeAttachment, 'check_delete_complete')
         instance.Instance.handle_delete().AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndRaise(
             cinder_exp.NotFound('Not found'))
-        vol.VolumeAttachment.handle_delete().AndReturn(None)
+        cookie = object()
+        vol.VolumeAttachment.handle_delete().AndReturn(cookie)
+        vol.VolumeAttachment.check_delete_complete(cookie).AndReturn(True)
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
