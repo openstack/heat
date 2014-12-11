@@ -142,6 +142,41 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.m.VerifyAll()
 
 
+class TestScalingGroupTags(common.HeatTestCase):
+    def setUp(self):
+        super(TestScalingGroupTags, self).setUp()
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = stack['WebServerGroup']
+
+    def test_tags_default(self):
+        expected = [{'Key': 'metering.groupname',
+                     'Value': u'WebServerGroup'},
+                    {'Key': 'metering.AutoScalingGroupName',
+                     'Value': u'WebServerGroup'}]
+        self.assertEqual(expected, self.group._tags())
+
+    def test_tags_with_extra(self):
+        self.group.properties.data['Tags'] = [
+            {'Key': 'fee', 'Value': 'foo'}]
+        expected = [{'Key': 'fee',
+                     'Value': 'foo'},
+                    {'Key': 'metering.groupname',
+                     'Value': u'WebServerGroup'},
+                    {'Key': 'metering.AutoScalingGroupName',
+                     'Value': u'WebServerGroup'}]
+        self.assertEqual(expected, self.group._tags())
+
+    def test_tags_with_metering(self):
+        self.group.properties.data['Tags'] = [
+            {'Key': 'metering.fee', 'Value': 'foo'}]
+        expected = [{'Key': 'metering.fee', 'Value': 'foo'},
+                    {'Key': 'metering.AutoScalingGroupName',
+                     'Value': u'WebServerGroup'}]
+
+        self.assertEqual(expected, self.group._tags())
+
+
 class TestInitialGroupSize(common.HeatTestCase):
     scenarios = [
         ('000', dict(mins=0, maxs=0, desired=0, expected=0)),

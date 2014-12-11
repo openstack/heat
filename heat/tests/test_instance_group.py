@@ -404,6 +404,25 @@ class TestInstanceGroup(common.HeatTestCase):
         self.assertEqual(expected, self.instance_group.child_params())
         self.assertEqual(expected, self.instance_group._environment())
 
+    def test_tags_default(self):
+        expected = [{'Value': u'asg',
+                     'Key': 'metering.groupname'}]
+        self.assertEqual(expected, self.instance_group._tags())
+
+    def test_tags_with_extra(self):
+        self.instance_group.properties.data['Tags'] = [
+            {'Key': 'fee', 'Value': 'foo'}]
+        expected = [{'Key': 'fee', 'Value': 'foo'},
+                    {'Value': u'asg',
+                     'Key': 'metering.groupname'}]
+        self.assertEqual(expected, self.instance_group._tags())
+
+    def test_tags_with_metering(self):
+        self.instance_group.properties.data['Tags'] = [
+            {'Key': 'metering.fee', 'Value': 'foo'}]
+        expected = [{'Key': 'metering.fee', 'Value': 'foo'}]
+        self.assertEqual(expected, self.instance_group._tags())
+
     def test_validate_launch_conf(self):
         props = self.instance_group.properties.data
         props['LaunchConfigurationName'] = 'urg_i_cant_spell'
