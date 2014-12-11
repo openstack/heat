@@ -191,9 +191,9 @@ class Router(neutron.NeutronResource):
 
 class RouterInterface(neutron.NeutronResource):
     PROPERTIES = (
-        ROUTER, ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID,
+        ROUTER, ROUTER_ID, SUBNET_ID, SUBNET, PORT_ID, PORT
     ) = (
-        'router', 'router_id', 'subnet_id', 'subnet', 'port_id',
+        'router', 'router_id', 'subnet_id', 'subnet', 'port_id', 'port'
     )
 
     properties_schema = {
@@ -216,13 +216,21 @@ class RouterInterface(neutron.NeutronResource):
         ),
         SUBNET: properties.Schema(
             properties.Schema.STRING,
-            _('The subnet, either subnet or port_id should be '
+            _('The subnet, either subnet or port should be '
               'specified.')
         ),
         PORT_ID: properties.Schema(
             properties.Schema.STRING,
-            _('The port id, either subnet or port_id should be specified.')
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Deprecated in Kilo. '
+                  'Use property %s.') % PORT)
         ),
+        PORT: properties.Schema(
+            properties.Schema.STRING,
+            _('The port, either subnet or port should be specified.'),
+            support_status=support.SupportStatus(version='2015.1')
+        )
     }
 
     @staticmethod
@@ -247,13 +255,16 @@ class RouterInterface(neutron.NeutronResource):
             raise exception.PropertyUnspecifiedError(self.ROUTER,
                                                      self.ROUTER_ID)
 
-        port_id = self.properties.get(self.PORT_ID)
-        if prop_subnet_exists and port_id:
+        prop_port_exists = self._validate_deprecated_keys(
+            self.properties, self.PORT, self.PORT_ID)
+
+        if prop_subnet_exists and prop_port_exists:
             raise exception.ResourcePropertyConflict(self.SUBNET,
-                                                     self.PORT_ID)
-        if not prop_subnet_exists and not port_id:
+                                                     self.PORT)
+
+        if not prop_subnet_exists and not prop_port_exists:
             raise exception.PropertyUnspecifiedError(self.SUBNET,
-                                                     self.PORT_ID)
+                                                     self.PORT)
 
     def handle_create(self):
         router_id = self.client_plugin().resolve_router(
@@ -262,8 +273,9 @@ class RouterInterface(neutron.NeutronResource):
         value = self.client_plugin().resolve_subnet(
             dict(self.properties), self.SUBNET, key)
         if not value:
-            key = self.PORT_ID
-            value = self.properties.get(key)
+            key = 'port_id'
+            value = self.client_plugin().resolve_port(
+                dict(self.properties), self.PORT, key)
         self.neutron().add_interface_router(
             router_id,
             {key: value})
