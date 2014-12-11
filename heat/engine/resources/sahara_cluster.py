@@ -41,6 +41,11 @@ class SaharaCluster(resource.Resource):
         "status", "info",
     )
 
+    CLUSTER_STATUSES = (
+        CLUSTER_ACTIVE, CLUSTER_ERROR
+    ) = (
+        'Active', 'Error'
+    )
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -139,10 +144,10 @@ class SaharaCluster(resource.Resource):
 
     def check_create_complete(self, cluster_id):
         cluster = self.client().clusters.get(cluster_id)
-        if cluster.status == 'Error':
+        if cluster.status == self.CLUSTER_ERROR:
             raise resource.ResourceInError(resource_status=cluster.status)
 
-        if cluster.status != 'Active':
+        if cluster.status != self.CLUSTER_ACTIVE:
             return False
 
         LOG.info(_LI("Cluster '%s' has been created"), cluster.name)
@@ -156,8 +161,26 @@ class SaharaCluster(resource.Resource):
             self.client().clusters.delete(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
+            return None
 
-        LOG.info(_LI("Cluster '%s' has been deleted"), self._cluster_name())
+        return self.resource_id
+
+    def check_delete_complete(self, resource_id):
+        if not resource_id:
+            return True
+
+        try:
+            cluster = self.client().clusters.get(resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            LOG.info(_LI("Cluster '%s' has been deleted"),
+                     self._cluster_name())
+            return True
+        else:
+            if cluster.status == self.CLUSTER_ERROR:
+                raise resource.ResourceInError(resource_status=cluster.status)
+
+        return False
 
     def _resolve_attribute(self, name):
         cluster = self.client().clusters.get(self.resource_id)

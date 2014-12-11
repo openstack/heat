@@ -100,10 +100,15 @@ class SaharaClusterTest(common.HeatTestCase):
 
     def test_cluster_delete(self):
         cluster = self._create_cluster(self.t)
+        self.cl_mgr.get.side_effect = [
+            self.fake_cl,
+            sahara.sahara_base.APIException(error_code=404)]
+        self.cl_mgr.get.reset_mock()
         scheduler.TaskRunner(cluster.delete)()
         self.assertEqual((cluster.DELETE, cluster.COMPLETE),
                          cluster.state)
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
+        self.assertEqual(2, self.cl_mgr.get.call_count)
 
     def test_cluster_create_fails(self):
         cfg.CONF.set_override('action_retry_limit', 0)
@@ -130,6 +135,32 @@ class SaharaClusterTest(common.HeatTestCase):
             error_code=404)
         scheduler.TaskRunner(cluster.delete)()
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
+
+    def test_cluster_check_delete_complete_error(self):
+        cluster = self._create_cluster(self.t)
+        self.cl_mgr.get.side_effect = [
+            self.fake_cl,
+            sahara.sahara_base.APIException()]
+        self.cl_mgr.get.reset_mock()
+        delete_task = scheduler.TaskRunner(cluster.delete)
+        ex = self.assertRaises(exception.ResourceFailure, delete_task)
+        expected = "APIException: None"
+        self.assertEqual(expected, six.text_type(ex))
+        self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
+        self.assertEqual(2, self.cl_mgr.get.call_count)
+
+    def test_cluster_delete_cluster_in_error(self):
+        cluster = self._create_cluster(self.t)
+        self.cl_mgr.get.side_effect = [
+            self.fake_cl,
+            FakeCluster(status='Error')]
+        self.cl_mgr.get.reset_mock()
+        delete_task = scheduler.TaskRunner(cluster.delete)
+        ex = self.assertRaises(exception.ResourceFailure, delete_task)
+        expected = 'ResourceInError: Went to status Error due to "Unknown"'
+        self.assertEqual(expected, six.text_type(ex))
+        self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
+        self.assertEqual(2, self.cl_mgr.get.call_count)
 
     def test_cluster_resolve_attribute(self):
         cluster = self._create_cluster(self.t)
