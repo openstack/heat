@@ -1350,6 +1350,19 @@ class HOTParamValidatorTest(common.HeatTestCase):
         value = "0"
         self.assertTrue(v(value))
 
+    def test_custom_constraint_default_skip(self):
+        schema = {
+            'type': 'string',
+            'constraints': [{
+                'custom_constraint': 'skipping',
+                'description': 'Must be skipped on default value'
+            }],
+            'default': 'foo'
+        }
+        param_schema = hot_param.HOTParamSchema.from_dict('p', schema)
+
+        param_schema.validate()
+
     def test_range_constraint_invalid_default(self):
         range_desc = 'Value must be between 30000 and 50000'
         param = {

@@ -109,12 +109,11 @@ class Schema(collections.Mapping):
         self.default = default
 
     def validate(self, context=None):
-        '''
-        Validates the schema.
+        """Validates the schema.
 
         This method checks if the schema itself is valid, and if the
         default value - if present - complies to the schema's constraints.
-        '''
+        """
         for c in self.constraints:
             if not self._is_valid_constraint(c):
                 err_msg = _('%(name)s constraint '
@@ -135,7 +134,8 @@ class Schema(collections.Mapping):
     def _validate_default(self, context):
         if self.default is not None:
             try:
-                self.validate_constraints(self.default, context)
+                self.validate_constraints(self.default, context,
+                                          [CustomConstraint])
             except (ValueError, TypeError) as exc:
                 raise exception.InvalidSchemaError(
                     message=_('Invalid default %(default)s (%(exc)s)') %
@@ -184,10 +184,14 @@ class Schema(collections.Mapping):
 
         return value
 
-    def validate_constraints(self, value, context=None):
+    def validate_constraints(self, value, context=None, skipped=None):
+        if not skipped:
+            skipped = []
+
         try:
             for constraint in self.constraints:
-                constraint.validate(value, self, context)
+                if type(constraint) not in skipped:
+                    constraint.validate(value, self, context)
         except ValueError as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
 

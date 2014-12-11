@@ -91,7 +91,7 @@ class ParameterTest(testtools.TestCase):
                   'ConstraintDescription': 'wibble',
                   'Default': 'bar'}
         err = self.assertRaises(exception.InvalidSchemaError,
-                                self.new_parameter, 'p', schema, 'foo')
+                                self.new_parameter, 'p', schema)
         self.assertIn('wibble', six.text_type(err))
 
     def test_no_echo_true(self):
