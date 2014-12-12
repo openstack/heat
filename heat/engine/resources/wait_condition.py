@@ -101,6 +101,9 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
 
 
 class HeatWaitConditionHandle(BaseWaitConditionHandle):
+
+    support_status = support.SupportStatus(version='2014.2')
+
     METADATA_KEYS = (
         DATA, REASON, STATUS, UNIQUE_ID
     ) = (
@@ -219,7 +222,7 @@ class WaitConditionHandle(BaseWaitConditionHandle):
     WaitCondition will poll it to see if has been written to.
     '''
 
-    support_status = support.SupportStatus(version='2014.2')
+    support_status = support.SupportStatus(version='2014.1')
 
     METADATA_KEYS = (
         DATA, REASON, STATUS, UNIQUE_ID
@@ -297,6 +300,9 @@ class WaitConditionTimeout(exception.Error):
 
 
 class HeatWaitCondition(resource.Resource):
+
+    support_status = support.SupportStatus(version='2014.2')
+
     PROPERTIES = (
         HANDLE, TIMEOUT, COUNT,
     ) = (
@@ -417,7 +423,7 @@ class HeatWaitCondition(resource.Resource):
 
 class WaitCondition(HeatWaitCondition):
 
-    support_status = support.SupportStatus(version='2014.2')
+    support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
         HANDLE, TIMEOUT, COUNT,
