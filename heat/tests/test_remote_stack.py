@@ -585,7 +585,9 @@ class RemoteStackTest(tests_common.HeatTestCase):
         remote_stack_id = rsrc.resource_id
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
-        error_msg = _('ResourceUnknownStatus: Resource failed - Unknown '
-                      'status UPDATE_COMPLETE')
+        reason = ('Resource action mismatch detected: expected=DELETE '
+                  'actual=UPDATE')
+        error_msg = ('ResourceUnknownStatus: Resource failed - Unknown '
+                     'status UPDATE_COMPLETE due to "%s"') % reason
         self.assertEqual(error_msg, six.text_type(error))
         self.heat.stacks.delete.assert_called_with(stack_id=remote_stack_id)
