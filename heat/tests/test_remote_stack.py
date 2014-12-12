@@ -417,11 +417,11 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc.action = rsrc.SUSPEND
 
         self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
-        self.heat.stacks.resume = mock.MagicMock()
+        self.heat.actions.resume = mock.MagicMock()
         scheduler.TaskRunner(rsrc.resume)()
 
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-        self.heat.stacks.resume.assert_called_with(stack_id=rsrc.resource_id)
+        self.heat.actions.resume.assert_called_with(stack_id=rsrc.resource_id)
 
     def test_resume_failed(self):
         returns = [get_stack(stack_status='RESUME_IN_PROGRESS'),
@@ -435,14 +435,14 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc.action = rsrc.SUSPEND
 
         self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
-        self.heat.stacks.resume = mock.MagicMock()
+        self.heat.actions.resume = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.resume))
         error_msg = ('ResourceInError: Went to status RESUME_FAILED due to '
                      '"Remote stack resume failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.RESUME, rsrc.FAILED), rsrc.state)
-        self.heat.stacks.resume.assert_called_with(stack_id=rsrc.resource_id)
+        self.heat.actions.resume.assert_called_with(stack_id=rsrc.resource_id)
 
     def test_resume_failed_not_created(self):
         self.initialize()
@@ -464,11 +464,11 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc = self.create_remote_stack()
 
         self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
-        self.heat.stacks.suspend = mock.MagicMock()
+        self.heat.actions.suspend = mock.MagicMock()
         scheduler.TaskRunner(rsrc.suspend)()
 
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-        self.heat.stacks.suspend.assert_called_with(stack_id=rsrc.resource_id)
+        self.heat.actions.suspend.assert_called_with(stack_id=rsrc.resource_id)
 
     def test_suspend_failed(self):
         stacks = [get_stack(stack_status='SUSPEND_IN_PROGRESS'),
@@ -481,24 +481,28 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc = self.create_remote_stack()
 
         self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
-        self.heat.stacks.suspend = mock.MagicMock()
+        self.heat.actions.suspend = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.suspend))
         error_msg = ('ResourceInError: Went to status SUSPEND_FAILED due to '
                      '"Remote stack suspend failed"')
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
-        self.heat.stacks.suspend.assert_called_with(stack_id=rsrc.resource_id)
+        # assert suspend was not called
+        self.heat.actions.suspend.assert_has_calls([])
 
     def test_suspend_failed_not_created(self):
         self.initialize()
         rsrc = self.parent['remote_stack']
         # Note: the resource is not created so far
+        self.heat.actions.suspend = mock.MagicMock()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.suspend))
         error_msg = 'Error: Cannot suspend remote_stack, resource not found'
         self.assertEqual(error_msg, six.text_type(error))
         self.assertEqual((rsrc.SUSPEND, rsrc.FAILED), rsrc.state)
+        # assert suspend was not called
+        self.heat.actions.suspend.assert_has_calls([])
 
     def test_update(self):
         stacks = [get_stack(stack_status='UPDATE_IN_PROGRESS'),
