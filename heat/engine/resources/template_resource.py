@@ -28,19 +28,12 @@ from heat.engine import template
 
 
 def generate_class(name, template_name):
-    try:
-        data = urlfetch.get(template_name, allowed_schemes=('file',))
-    except IOError:
-        msg = _('No such file: %s') % template_name
-        raise exception.NotFound(msg_fmt=msg)
+    data = TemplateResource.get_template_file(template_name, ('file',))
     tmpl = template.Template(template_format.parse(data))
-    properties_schema = properties.Properties.schema_from_params(
-        tmpl.param_schemata())
-    attributes_schema = attributes.Attributes.schema_from_outputs(
-        tmpl[tmpl.OUTPUTS])
+    props, attrs = TemplateResource.get_schemas(tmpl)
     cls = type(name, (TemplateResource,),
-               {"properties_schema": properties_schema,
-                "attributes_schema": attributes_schema})
+               {'properties_schema': props,
+                'attributes_schema': attrs})
     return cls
 
 
@@ -79,20 +72,34 @@ class TemplateResource(stack_resource.StackResource):
         if self.validation_exception is None:
             self._generate_schema(self.t)
 
+    @staticmethod
+    def get_template_file(template_name, allowed_schemes):
+        try:
+            return urlfetch.get(template_name, allowed_schemes=allowed_schemes)
+        except (IOError, exceptions.RequestException) as r_exc:
+            args = {'name': template_name, 'exc': six.text_type(r_exc)}
+            msg = _('Could not fetch remote template '
+                    '"%(name)s": %(exc)s') % args
+            raise exception.NotFound(msg_fmt=msg)
+
+    @staticmethod
+    def get_schemas(tmpl):
+        return ((properties.Properties.schema_from_params(
+                tmpl.param_schemata())),
+                (attributes.Attributes.schema_from_outputs(
+                tmpl[tmpl.OUTPUTS])))
+
     def _generate_schema(self, definition):
         self._parsed_nested = None
         try:
             tmpl = template.Template(self.child_template())
-        except ValueError as download_error:
+        except (exception.NotFound, ValueError) as download_error:
             self.validation_exception = download_error
             tmpl = template.Template(
                 {"HeatTemplateFormatVersion": "2012-12-12"})
 
         # re-generate the properties and attributes from the template.
-        self.properties_schema = (properties.Properties
-                                  .schema_from_params(tmpl.param_schemata()))
-        self.attributes_schema = (attributes.Attributes
-                                  .schema_from_outputs(tmpl[tmpl.OUTPUTS]))
+        self.properties_schema, self.attributes_schema = self.get_schemas(tmpl)
 
         self.properties = definition.properties(self.properties_schema,
                                                 self.context)
@@ -158,13 +165,10 @@ class TemplateResource(stack_resource.StackResource):
         t_data = self.stack.t.files.get(self.template_name)
         if not t_data and self.template_name.endswith((".yaml", ".template")):
             try:
-                t_data = urlfetch.get(self.template_name,
-                                      allowed_schemes=self.allowed_schemes)
-            except (exceptions.RequestException, IOError) as r_exc:
-                reported_excp = ValueError(_("Could not fetch remote template "
-                                             "'%(name)s': %(exc)s") % {
-                                                 'name': self.template_name,
-                                                 'exc': str(r_exc)})
+                t_data = self.get_template_file(self.template_name,
+                                                self.allowed_schemes)
+            except exception.NotFound as err:
+                reported_excp = err
 
         if t_data is None:
             if self.nested() is not None:

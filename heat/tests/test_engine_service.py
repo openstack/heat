@@ -2296,7 +2296,7 @@ class StackServiceTest(common.HeatTestCase):
                                    function,
                                    self.ctx,
                                    type_name='ResourceWithWrongRefOnFile')
-            msg = 'No such file: not_existing.yaml'
+            msg = 'Could not fetch remote template "not_existing.yaml"'
             self.assertIn(msg, six.text_type(ex))
 
     def test_resource_schema_no_template_file(self):
