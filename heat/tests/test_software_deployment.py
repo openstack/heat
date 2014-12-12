@@ -917,3 +917,9 @@ class SoftwareDeploymentsTest(HeatTestCase):
             mock.call('deploy_stderr'),
             mock.call('deploy_status_code'),
         ])
+
+    def test_validate(self):
+        stack = utils.parse_stack(self.template)
+        snip = stack.t.resource_definitions(stack)['deploy_mysql']
+        resg = sd.SoftwareDeployments('test', snip, stack)
+        self.assertIsNone(resg.validate())
