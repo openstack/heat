@@ -100,3 +100,23 @@ class VolumeSnapshotConstraintTest(common.HeatTestCase):
         self.mock_get_snapshot.side_effect = exception.VolumeSnapshotNotFound(
             snapshot='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
+
+
+class VolumeTypeConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(VolumeTypeConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.mock_get_volume_type = mock.Mock()
+        self.ctx.clients.client_plugin(
+            'cinder').get_volume_type = self.mock_get_volume_type
+        self.constraint = cinder.VolumeTypeConstraint()
+
+    def test_validation(self):
+        self.mock_get_volume_type.return_value = 'volume_type'
+        self.assertTrue(self.constraint.validate("foo", self.ctx))
+
+    def test_validation_error(self):
+        self.mock_get_volume_type.side_effect = exception.VolumeTypeNotFound(
+            volume_type='bar')
+        self.assertFalse(self.constraint.validate("bar", self.ctx))

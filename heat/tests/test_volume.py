@@ -817,6 +817,7 @@ class CinderVolumeTest(BaseVolumeTest):
 
         self.stub_SnapshotConstraint_validate()
         self.stub_VolumeConstraint_validate()
+        self.stub_VolumeTypeConstraint_validate()
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(

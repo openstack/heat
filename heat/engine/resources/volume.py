@@ -538,7 +538,10 @@ class CinderVolume(Volume):
         VOLUME_TYPE: properties.Schema(
             properties.Schema.STRING,
             _('If specified, the type of volume to use, mapping to a '
-              'specific backend.')
+              'specific backend.'),
+            constraints=[
+                constraints.CustomConstraint('cinder.vtype')
+            ]
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,

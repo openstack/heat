@@ -37,6 +37,7 @@ resources:
         plugin_name: vanilla
         hadoop_version: 2.3.0
         flavor: m1.large
+        volume_type: lvm
         floating_ip_pool: some_pool_name
         node_processes:
           - namenode
@@ -114,7 +115,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         expected_kwargs = {'description': "",
                            'volumes_per_node': None,
                            'volumes_size': None,
-                           'volume_type': None,
+                           'volume_type': 'lvm',
                            'security_groups': None,
                            'auto_security_group': None,
                            'availability_zone': None,
