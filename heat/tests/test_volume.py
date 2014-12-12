@@ -34,7 +34,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 volume_template = '''
@@ -122,7 +122,7 @@ resources:
 class BaseVolumeTest(common.HeatTestCase):
     def setUp(self):
         super(BaseVolumeTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
         self.cinder_fc.volume_api_version = 2
         self.m.StubOutWithMock(cinder.CinderClientPlugin, '_create')
@@ -352,7 +352,7 @@ class VolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         self.m.ReplayAll()
 
@@ -383,12 +383,12 @@ class VolumeTest(BaseVolumeTest):
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
 
         self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception(400))
+            'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception(400))
 
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
@@ -446,7 +446,7 @@ class VolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         self.m.ReplayAll()
 
@@ -959,7 +959,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         self.m.ReplayAll()
 
@@ -1124,7 +1124,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fvd)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # resize script
         fvr = FakeLatencyVolume(life_cycle=('extending', 'extending',
@@ -1328,7 +1328,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fva2, device=u'/dev/vdd',
@@ -1382,7 +1382,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fv2a, volume='vol-456',
@@ -1429,7 +1429,7 @@ class CinderVolumeTest(BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(fva2, server=u'AnotherServer',

@@ -25,7 +25,7 @@ from heat.engine.resources import network_interface as network_interfaces
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 wp_template = '''
@@ -152,7 +152,7 @@ class FakeNeutron(object):
 class instancesTest(common.HeatTestCase):
     def setUp(self):
         super(instancesTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
@@ -187,7 +187,7 @@ class instancesTest(common.HeatTestCase):
             d2['server']['status'] = vm_delete_status
             get().AndReturn((200, d2))
         else:
-            get().AndRaise(fakes.fake_exception())
+            get().AndRaise(fakes_v1_1.fake_exception())
 
         self.m.ReplayAll()
 

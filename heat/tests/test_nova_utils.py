@@ -23,7 +23,7 @@ from heat.common import exception
 from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class NovaUtilsTests(common.HeatTestCase):
@@ -91,7 +91,7 @@ class NovaUtilsTests(common.HeatTestCase):
         self.nova_client.keypairs.get(
             my_key_name).AndReturn(my_key)
         self.nova_client.keypairs.get(
-            'notakey').AndRaise(fakes.fake_exception())
+            'notakey').AndRaise(fakes_v1_1.fake_exception())
         self.m.ReplayAll()
         self.assertEqual(my_key, nova_utils.get_keypair(self.nova_client,
                                                         my_key_name))
@@ -147,12 +147,12 @@ class NovaUtilsRefreshServerTests(common.HeatTestCase):
 
     def test_overlimit_error(self):
         server = mock.Mock()
-        server.get.side_effect = fakes.fake_exception(413)
+        server.get.side_effect = fakes_v1_1.fake_exception(413)
         self.assertIsNone(nova_utils.refresh_server(server))
 
     def test_500_error(self):
         server = self.m.CreateMockAnything()
-        server.get().AndRaise(fakes.fake_exception(500))
+        server.get().AndRaise(fakes_v1_1.fake_exception(500))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))
@@ -160,7 +160,7 @@ class NovaUtilsRefreshServerTests(common.HeatTestCase):
 
     def test_503_error(self):
         server = self.m.CreateMockAnything()
-        server.get().AndRaise(fakes.fake_exception(503))
+        server.get().AndRaise(fakes_v1_1.fake_exception(503))
         self.m.ReplayAll()
 
         self.assertIsNone(nova_utils.refresh_server(server))
@@ -168,7 +168,7 @@ class NovaUtilsRefreshServerTests(common.HeatTestCase):
 
     def test_unhandled_exception(self):
         server = self.m.CreateMockAnything()
-        server.get().AndRaise(fakes.fake_exception(501))
+        server.get().AndRaise(fakes_v1_1.fake_exception(501))
         self.m.ReplayAll()
 
         self.assertRaises(nova_exceptions.ClientException,

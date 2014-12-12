@@ -18,7 +18,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 nokey_template = '''
@@ -43,7 +43,7 @@ nokey_template = '''
 class nokeyTest(common.HeatTestCase):
     def setUp(self):
         super(nokeyTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
 
     def test_nokey_create(self):
 

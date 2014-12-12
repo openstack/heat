@@ -23,7 +23,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 floating_ip_template = '''
@@ -149,7 +149,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
     def test_delete_floating_ip_assoc_successful_if_create_failed(self):
         rsrc = self.prepare_floating_ip_assoc()
         self.novaclient.servers.add_floating_ip(None, '11.0.0.1').AndRaise(
-            fakes.fake_exception(400))
+            fakes_v1_1.fake_exception(400))
 
         self.m.ReplayAll()
 

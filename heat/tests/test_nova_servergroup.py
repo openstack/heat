@@ -18,7 +18,7 @@ from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 sg_template = {
     "heat_template_version": "2013-05-23",
@@ -99,7 +99,7 @@ class NovaServerGroupTest(common.HeatTestCase):
 
     def test_sg_delete_not_found(self):
         self._create_sg('test')
-        self.sg_mgr.delete.side_effect = fakes.fake_exception()
+        self.sg_mgr.delete.side_effect = fakes_v1_1.fake_exception()
         scheduler.TaskRunner(self.sg.delete)()
         self.sg_mgr.delete.assert_called_once_with('test')
         self.assertEqual((self.sg.DELETE, self.sg.COMPLETE),

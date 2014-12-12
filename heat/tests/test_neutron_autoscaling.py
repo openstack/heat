@@ -27,7 +27,7 @@ from heat.engine.resources import instance
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as v1fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 as_template = '''
@@ -105,7 +105,7 @@ class AutoScalingTest(common.HeatTestCase):
         super(AutoScalingTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-        self.fc = v1fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')

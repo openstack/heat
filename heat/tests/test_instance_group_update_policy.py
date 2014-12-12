@@ -26,7 +26,7 @@ from heat.engine import parser
 from heat.engine.resources import instance
 from heat.tests import common
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 ig_tmpl_without_updt_policy = '''
@@ -160,7 +160,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        self.fc = fakes.FakeClient()
+        self.fc = fakes_v1_1.FakeClient()
 
     def _stub_validate(self):
         self.m.StubOutWithMock(parser.Stack, 'validate')
