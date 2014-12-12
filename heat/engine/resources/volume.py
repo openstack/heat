@@ -468,7 +468,12 @@ class VolumeAttachment(resource.Resource):
     def handle_delete(self):
         server_id = self.properties[self.INSTANCE_ID]
         detach_task = VolumeDetachTask(self.stack, server_id, self.resource_id)
-        scheduler.TaskRunner(detach_task)()
+        detach_runner = scheduler.TaskRunner(detach_task)
+        detach_runner.start()
+        return detach_runner
+
+    def check_delete_complete(self, detach_runner):
+        return detach_runner.step()
 
 
 class CinderVolume(Volume):
