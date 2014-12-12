@@ -59,6 +59,12 @@ class StackResource(resource.Resource):
                                                     self.attributes_schema,
                                                     self._resolve_attribute)
 
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource):
+        # Always issue an update to the nested stack and let the individual
+        # resources in it decide if they need updating.
+        return True
+
     def nested(self):
         '''
         Return a Stack object representing the nested (child) stack.
