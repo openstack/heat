@@ -229,7 +229,7 @@ class RemoteStack(resource.Resource):
                     resource_status=stack.stack_status,
                     status_reason=stack.stack_status_reason)
         else:
-            msg = _('Resource action misatch detected: expected=%(expected)s '
+            msg = _('Resource action mismatch detected: expected=%(expected)s '
                     'actual=%(actual)s') % dict(expected=action,
                                                 actual=stack.action)
             raise resource.ResourceUnknownStatus(
