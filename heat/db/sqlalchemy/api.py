@@ -482,6 +482,9 @@ def user_creds_create(context):
     else:
         user_creds_ref.update(values)
         method, password = _encrypt(values['password'])
+        if len(six.text_type(password)) > 255:
+            raise exception.Error(_("Length of OS_PASSWORD after encryption"
+                                    " exceeds Heat limit (255 chars)"))
         user_creds_ref.password = password
         user_creds_ref.decrypt_method = method
     user_creds_ref.save(_session(context))
