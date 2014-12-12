@@ -124,6 +124,14 @@ class FormatTest(common.HeatTestCase):
         self.assertIn('b', formatted_attributes)
         self.assertNotIn('a', formatted_attributes)
 
+    def test_format_resource_attributes_show_attribute_fail(self):
+        res = mock.Mock()
+        res.attributes = {'a': 'a_value', 'show': ''}
+
+        formatted_attributes = api.format_resource_attributes(res)
+        self.assertIn('a', formatted_attributes)
+        self.assertIn('show', formatted_attributes)
+
     def test_format_resource_attributes_force_attributes(self):
         res = self.stack['generic1']
         force_attrs = ['a1', 'a2']
