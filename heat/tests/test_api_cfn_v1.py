@@ -13,10 +13,10 @@
 
 import json
 import os
-import six
 
 import mock
 from oslo.config import cfg
+import six
 
 from heat.api.aws import exception
 import heat.api.cfn.v1.stacks as stacks

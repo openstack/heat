@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
-import six
 
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

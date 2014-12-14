@@ -11,10 +11,11 @@
 #    under the License.
 
 import logging
+
+from heatclient import exc
 import six
 
 from heat_integrationtests.common import test
-from heatclient import exc
 
 LOG = logging.getLogger(__name__)
 

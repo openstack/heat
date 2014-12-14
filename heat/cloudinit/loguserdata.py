@@ -17,9 +17,10 @@ from distutils import version
 import errno
 import logging
 import os
-import pkg_resources
 import subprocess
 import sys
+
+import pkg_resources
 
 
 VAR_PATH = '/var/lib/heat-cfntools'

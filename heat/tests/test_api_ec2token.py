@@ -13,11 +13,11 @@
 
 
 import json
-import six
 
 from oslo.config import cfg
 from oslo.utils import importutils
 import requests
+import six
 
 from heat.api.aws import ec2token
 from heat.api.aws import exception

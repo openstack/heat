@@ -12,12 +12,12 @@
 #    under the License.
 
 import copy
-import mock
-import six
 
 from heatclient import exc
 from heatclient.v1 import stacks
+import mock
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

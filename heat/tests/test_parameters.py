@@ -12,8 +12,8 @@
 #    under the License.
 
 import json
-import six
 
+import six
 import testtools
 
 from heat.common import exception

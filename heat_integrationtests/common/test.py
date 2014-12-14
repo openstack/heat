@@ -10,19 +10,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import fixtures
 import logging
 import os
 import random
 import re
-import six
 import subprocess
-import testscenarios
-import testtools
 import time
 
+import fixtures
 from heatclient import exc as heat_exceptions
 from oslo.utils import timeutils
+import six
+import testscenarios
+import testtools
 
 from heat_integrationtests.common import clients
 from heat_integrationtests.common import config

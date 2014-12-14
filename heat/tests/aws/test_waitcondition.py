@@ -14,12 +14,12 @@
 import copy
 import datetime
 import json
-import six
 import time
 import uuid
 
 import mox
 from oslo.config import cfg
+import six
 
 from heat.common import identifier
 from heat.common import template_format

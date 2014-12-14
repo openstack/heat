@@ -14,10 +14,10 @@ import collections
 import copy
 import itertools
 import operator
+
 import six
 
 from heat.common import exception
-
 from heat.engine import function
 from heat.engine import properties
 

@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+
 import mox
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20

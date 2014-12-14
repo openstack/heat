@@ -11,9 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 import time
 import uuid
+
+import six
 
 from heat.common import identifier
 from heat.common import template_format

@@ -13,10 +13,10 @@
 
 import copy
 import json
-import six
 
 import mox
 from oslo.config import cfg
+import six
 from testtools import matchers
 
 from heat.common import exception

@@ -11,23 +11,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from ceilometerclient import exc as ceil_exc
 from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
+from heatclient import client as heatclient
 from heatclient import exc as heat_exc
 from keystoneclient import exceptions as keystone_exc
-from neutronclient.common import exceptions as neutron_exc
-from saharaclient.api import base as sahara_base
-from swiftclient import exceptions as swift_exc
-from troveclient import client as troveclient
-
-from heatclient import client as heatclient
 import mock
+from neutronclient.common import exceptions as neutron_exc
 from oslo.config import cfg
+from saharaclient.api import base as sahara_base
+import six
+from swiftclient import exceptions as swift_exc
 from testtools import testcase
+from troveclient import client as troveclient
 
 from heat.common import exception
 from heat.engine import clients

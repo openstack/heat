@@ -12,10 +12,10 @@
 #    under the License.
 
 import copy
-from neutronclient.v2_0 import client as neutronclient
 import uuid
 
 import mox
+from neutronclient.v2_0 import client as neutronclient
 from oslo.config import cfg
 
 from heat.common import template_format

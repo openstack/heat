@@ -14,9 +14,10 @@
 
 import copy
 import json
+import uuid
+
 import mock
 import six
-import uuid
 
 from heat.common import exception
 from heat.common import template_format

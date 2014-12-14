@@ -13,6 +13,7 @@
 
 import collections
 import functools
+
 import six
 
 from heat.common import exception

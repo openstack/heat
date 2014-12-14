@@ -12,8 +12,9 @@
 #    under the License.
 
 import collections
-import six
 import warnings
+
+import six
 
 from heat.common.i18n import _
 from heat.engine import constraints as constr

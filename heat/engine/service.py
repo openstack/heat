@@ -15,6 +15,7 @@ import collections
 import functools
 import json
 import os
+import warnings
 
 import eventlet
 from oslo.config import cfg
@@ -24,7 +25,6 @@ from oslo.utils import uuidutils
 from osprofiler import profiler
 import requests
 import six
-import warnings
 import webob
 
 from heat.common import context

@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import six
-
 from six.moves.urllib import parse as urlparse
 
 from heat.common import exception

@@ -12,10 +12,10 @@
 #    under the License.
 
 import copy
-import six
 
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format

@@ -12,7 +12,6 @@
 #    under the License.
 
 from heat.common import short_id
-
 from heat.engine import template
 
 

@@ -16,7 +16,6 @@
 import collections
 import copy
 import json
-from oslo.utils import importutils
 import uuid
 
 from keystoneclient.auth.identity import v3 as kc_auth_v3
@@ -24,6 +23,7 @@ import keystoneclient.exceptions as kc_exception
 from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
 from oslo.config import cfg
+from oslo.utils import importutils
 
 from heat.common import context
 from heat.common import exception

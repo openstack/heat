@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 import uuid
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common import template_format

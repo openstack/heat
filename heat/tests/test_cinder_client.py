@@ -12,8 +12,9 @@
 #    under the License.
 """Tests for :module:'heat.engine.clients.os.cinder'."""
 
-import mock
 import uuid
+
+import mock
 
 from heat.common import exception
 from heat.engine.clients.os import cinder

@@ -15,11 +15,10 @@
 # limitations under the License.
 
 import mock
-import requests
-
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
 from novaclient.v1_1 import client
+import requests
 from six.moves.urllib import parse as urlparse
 
 from heat.tests import fakes

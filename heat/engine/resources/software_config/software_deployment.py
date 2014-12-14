@@ -12,8 +12,9 @@
 #    under the License.
 
 import copy
-import six
 import uuid
+
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

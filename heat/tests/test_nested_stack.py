@@ -14,12 +14,12 @@
 
 import copy
 import json
-import six
-import yaml
 
 import mock
 from oslo.config import cfg
 from requests import exceptions
+import six
+import yaml
 
 from heat.common import exception
 from heat.common import template_format

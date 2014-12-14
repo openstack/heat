@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+
 import mox
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions

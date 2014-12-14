@@ -12,13 +12,13 @@
 #    under the License.
 
 import copy
-import six
 import uuid
 
 from glanceclient import exc as glance_exceptions
 import mock
 import mox
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format

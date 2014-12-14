@@ -14,9 +14,9 @@
 import itertools
 import json
 import re
-import six
 
 from oslo.config import cfg
+import six
 import yaml
 
 from heat.common import exception

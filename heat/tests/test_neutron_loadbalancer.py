@@ -12,13 +12,13 @@
 #    under the License.
 
 import copy
-import mox
-from oslo.config import cfg
-import six
 
+import mox
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
+from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

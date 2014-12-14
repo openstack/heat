@@ -10,9 +10,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
 from oslo.utils import excutils
+import six
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE

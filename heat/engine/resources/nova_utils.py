@@ -16,15 +16,15 @@ import email
 from email.mime import multipart
 from email.mime import text
 import json
-from novaclient import exceptions as nova_exceptions
 import os
 import pkgutil
 import string
+import warnings
 
+from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 import six
 from six.moves.urllib import parse as urlparse
-import warnings
 
 from heat.common import exception
 from heat.common.i18n import _

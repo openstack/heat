@@ -14,11 +14,12 @@
 import base64
 import contextlib
 import datetime as dt
+import warnings
+
 from oslo.config import cfg
 from oslo.utils import encodeutils
 from oslo.utils import excutils
 import six
-import warnings
 
 from heat.common import exception
 from heat.common.i18n import _

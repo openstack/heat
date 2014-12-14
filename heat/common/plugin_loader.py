@@ -20,9 +20,10 @@ for them before loading them.
 """
 
 import pkgutil
-import six
 import sys
 import types
+
+import six
 
 from heat.common.i18n import _LE
 from heat.openstack.common import log as logging

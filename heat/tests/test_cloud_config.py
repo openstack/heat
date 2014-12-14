@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import uuid
+
+import mock
 
 from heat.engine import parser
 from heat.engine.resources.software_config import cloud_config as cc

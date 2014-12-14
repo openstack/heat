@@ -13,13 +13,13 @@
 
 '''Implementation of SQLAlchemy backend.'''
 import datetime
-import six
 import sys
 
 from oslo.config import cfg
 from oslo.db.sqlalchemy import session as db_session
 from oslo.db.sqlalchemy import utils
 import osprofiler.sqlalchemy
+import six
 import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.orm import session as orm_session

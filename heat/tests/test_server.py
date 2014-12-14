@@ -13,13 +13,13 @@
 
 import collections
 import copy
-from oslo.utils import uuidutils
-import six
-from six.moves.urllib import parse as urlparse
 
 import mock
 import mox
 from novaclient import exceptions as nova_exceptions
+from oslo.utils import uuidutils
+import six
+from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _

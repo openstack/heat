@@ -12,12 +12,13 @@
 
 import cStringIO
 import logging
-import paramiko
 import re
 import select
-import six
 import socket
 import time
+
+import paramiko
+import six
 
 from heat_integrationtests.common import exceptions
 

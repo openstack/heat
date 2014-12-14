@@ -16,7 +16,6 @@
 from oslo.config import cfg
 import requests
 from requests import exceptions
-
 from six.moves import urllib
 
 from heat.common import exception

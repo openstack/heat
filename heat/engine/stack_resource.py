@@ -12,10 +12,10 @@
 #    under the License.
 
 import hashlib
-import six
 
 from oslo.config import cfg
 from oslo.serialization import jsonutils
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

@@ -13,11 +13,12 @@
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
 import collections
+import uuid
+
 import mock
 from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
 import six
-import uuid
 
 from heat.common import exception
 from heat.engine.clients.os import nova

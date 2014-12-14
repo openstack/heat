@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+
 import six
 
 from heat.common import exception

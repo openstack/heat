@@ -11,6 +11,7 @@
 #    under the License.
 
 import collections
+
 import six
 
 from heat.common import exception

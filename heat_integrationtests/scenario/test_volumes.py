@@ -11,10 +11,10 @@
 #    under the License.
 
 import logging
-import six
-from testtools import testcase
 
 from cinderclient import exceptions as cinder_exceptions
+import six
+from testtools import testcase
 
 from heat_integrationtests.common import exceptions
 from heat_integrationtests.common import test

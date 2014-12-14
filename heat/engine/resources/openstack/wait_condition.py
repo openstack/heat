@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+
 import six
 
 from heat.common.i18n import _
@@ -23,7 +24,6 @@ from heat.engine import resource
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import scheduler
 from heat.engine import support
-
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

@@ -12,8 +12,6 @@
 #    under the License.
 
 import json
-import mox
-import six
 import uuid
 
 from keystoneclient.auth.identity import v3 as ks_auth_v3
@@ -21,7 +19,9 @@ import keystoneclient.exceptions as kc_exception
 from keystoneclient import session as ks_session
 from keystoneclient.v3 import client as kc_v3
 from keystoneclient.v3 import domains as kc_v3_domains
+import mox
 from oslo.config import cfg
+import six
 
 from heat.common import exception
 from heat.common import heat_keystoneclient

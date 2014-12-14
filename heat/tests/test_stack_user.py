@@ -11,9 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from keystoneclient import exceptions as kc_exceptions
+import six
 
 from heat.common import exception
 from heat.common import short_id

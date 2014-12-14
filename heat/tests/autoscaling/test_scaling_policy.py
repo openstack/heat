@@ -12,6 +12,7 @@
 #    under the License.
 
 import datetime
+
 import mock
 from oslo.config import cfg
 from oslo.utils import timeutils

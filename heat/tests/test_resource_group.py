@@ -12,9 +12,10 @@
 #    under the License.
 
 import copy
+import uuid
+
 import mock
 import six
-import uuid
 
 from heat.common import exception
 from heat.engine import properties

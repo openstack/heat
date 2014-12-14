@@ -13,10 +13,10 @@
 
 import json
 import os
-import six
 import uuid
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

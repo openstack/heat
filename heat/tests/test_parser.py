@@ -15,13 +15,13 @@ import collections
 import copy
 import json
 import time
+import warnings
 
 from keystoneclient import exceptions as kc_exceptions
 import mock
 import mox
 from oslo.config import cfg
 import six
-import warnings
 
 from heat.common import context
 from heat.common import exception

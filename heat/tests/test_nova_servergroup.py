@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+
 import mock
 
 from heat.common import template_format

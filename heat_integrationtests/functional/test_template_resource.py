@@ -12,6 +12,7 @@
 
 import json
 import logging
+
 import yaml
 
 from heat_integrationtests.common import test

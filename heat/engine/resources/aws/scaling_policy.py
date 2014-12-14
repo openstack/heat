@@ -15,7 +15,6 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties

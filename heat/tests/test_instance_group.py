@@ -12,9 +12,9 @@
 #    under the License.
 
 import copy
-import six
 
 import mock
+import six
 
 from heat.common import exception
 from heat.common import grouputils

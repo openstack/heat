@@ -12,10 +12,11 @@
 #    under the License.
 
 import errno
-import mox
 import os
-import pkg_resources
 import subprocess
+
+import mox
+import pkg_resources
 
 from heat.cloudinit import loguserdata
 from heat.tests import common

@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+
 import mock
 import six
 

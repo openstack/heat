@@ -15,6 +15,7 @@ import abc
 import collections
 import copy
 import functools
+
 import six
 from stevedore import extension
 

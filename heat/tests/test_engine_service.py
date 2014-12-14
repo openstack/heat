@@ -11,13 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import eventlet
 import functools
 import json
 import sys
 import uuid
 
+import eventlet
 from eventlet import event as grevent
 import mock
 import mox

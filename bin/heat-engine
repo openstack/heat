@@ -41,7 +41,6 @@ from heat.common import profiler
 from heat.engine import template
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
-
 from heat.rpc import api as rpc_api
 
 i18n.enable_lazy()
@@ -62,7 +61,7 @@ if __name__ == '__main__':
     if not mgr or not mgr.names():
         sys.exit("ERROR: No template format plugins registered")
 
-    from heat.engine import service as engine
+    from heat.engine import service as engine  # noqa
 
     profiler.setup('heat-engine', cfg.CONF.host)
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)

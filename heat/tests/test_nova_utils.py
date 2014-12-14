@@ -13,11 +13,11 @@
 
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
-import mock
-import six
 import uuid
 
+import mock
 from novaclient import exceptions as nova_exceptions
+import six
 
 from heat.common import exception
 from heat.engine.resources import nova_utils

@@ -22,7 +22,6 @@ import eventlet
 eventlet.monkey_patch(os=False)
 
 import os
-import six
 import sys
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
@@ -35,6 +34,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 from oslo.config import cfg
 from oslo import i18n
+import six
 
 from heat.common import config
 from heat.common.i18n import _LI

@@ -12,9 +12,9 @@
 #    under the License.
 
 import email
+import uuid
 
 import mock
-import uuid
 
 from heat.common import exception as exc
 from heat.engine import parser

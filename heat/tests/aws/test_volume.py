@@ -12,9 +12,9 @@
 #    under the License.
 
 import copy
-import mock
 
 from cinderclient import exceptions as cinder_exp
+import mock
 import mox
 from oslo.config import cfg
 import six

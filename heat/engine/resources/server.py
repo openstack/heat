@@ -12,12 +12,12 @@
 #    under the License.
 
 import copy
-import six
 import uuid
 
 from oslo.config import cfg
 from oslo.serialization import jsonutils
 from oslo.utils import uuidutils
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

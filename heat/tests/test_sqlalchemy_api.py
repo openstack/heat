@@ -13,12 +13,12 @@
 
 import datetime
 import json
-import six
 import uuid
 
 import mock
 import mox
 from oslo.utils import timeutils
+import six
 
 from heat.common import context
 from heat.common import exception

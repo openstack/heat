@@ -12,13 +12,13 @@
 #    under the License.
 
 import copy
-import six
 
 import mock
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
+import six
 
 from heat.common import exception
 from heat.common import template_format

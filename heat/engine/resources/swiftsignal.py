@@ -12,8 +12,9 @@
 #    under the License.
 
 import json
-import six
 import urlparse
+
+import six
 
 from heat.common import exception
 from heat.common.i18n import _

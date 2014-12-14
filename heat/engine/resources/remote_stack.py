@@ -23,7 +23,6 @@ from heat.engine import environment
 from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
-
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

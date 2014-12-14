@@ -18,9 +18,9 @@ from heat.engine import resource
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
+from heat.tests.v1_1 import fakes
 
 from ..resources import nova_flavor  # noqa
-from heat.tests.v1_1 import fakes
 
 flavor_template = {
     'heat_template_version': '2013-05-23',

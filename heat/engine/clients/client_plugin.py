@@ -12,6 +12,7 @@
 #    under the License.
 
 import abc
+
 from oslo.config import cfg
 import six
 
