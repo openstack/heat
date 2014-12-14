@@ -803,9 +803,11 @@ class Server(stack_user.StackUser):
             server = self.nova().servers.get(self.resource_id)
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
-
+        password = (prop_diff.get(self.ADMIN_PASS) or
+                    self.properties.get(self.ADMIN_PASS))
         return scheduler.TaskRunner(
             self.client_plugin().rebuild, server, image_id,
+            password=password,
             preserve_ephemeral=preserve_ephemeral)
 
     def _update_networks(self, server, prop_diff):
@@ -891,16 +893,15 @@ class Server(stack_user.StackUser):
 
         if self.IMAGE in prop_diff:
             checkers.append(self._update_image(server, prop_diff))
+        elif self.ADMIN_PASS in prop_diff:
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            server.change_password(prop_diff[self.ADMIN_PASS])
 
         if self.NAME in prop_diff:
             if not server:
                 server = self.nova().servers.get(self.resource_id)
             self.client_plugin().rename(server, prop_diff[self.NAME])
-
-        if self.ADMIN_PASS in prop_diff:
-            if not server:
-                server = self.nova().servers.get(self.resource_id)
-            server.change_password(prop_diff[self.ADMIN_PASS])
 
         if self.NETWORKS in prop_diff:
             checkers.extend(self._update_networks(server, prop_diff))
