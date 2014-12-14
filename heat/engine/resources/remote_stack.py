@@ -180,13 +180,13 @@ class RemoteStack(resource.Resource):
         if self.resource_id is None:
             raise exception.Error(_('Cannot resume %s, resource not found')
                                   % self.name)
-        self.heat().stacks.resume(stack_id=self.resource_id)
+        self.heat().actions.resume(stack_id=self.resource_id)
 
     def handle_suspend(self):
         if self.resource_id is None:
             raise exception.Error(_('Cannot suspend %s, resource not found')
                                   % self.name)
-        self.heat().stacks.suspend(stack_id=self.resource_id)
+        self.heat().actions.suspend(stack_id=self.resource_id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if self.resource_id and prop_diff:
