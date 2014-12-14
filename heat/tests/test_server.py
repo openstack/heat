@@ -1841,8 +1841,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics(
                              [{'network':
-                               'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
-                         ))
+                               'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]))
 
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics([{'network': 'public'}]))

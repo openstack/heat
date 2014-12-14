@@ -487,7 +487,7 @@ class ResourceGroupTest(common.HeatTestCase):
         reduce_snip = copy.deepcopy(resg.t)
         reduce_snip['Properties']['count'] = 2
         reduce_snip['Properties']['removal_policies'] = [{'resource_list':
-                                                        ['1', '2', '3']}]
+                                                          ['1', '2', '3']}]
         scheduler.TaskRunner(resg.update, reduce_snip)()
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
@@ -588,7 +588,7 @@ class ResourceGroupTest(common.HeatTestCase):
         reduce_snip = copy.deepcopy(resg.t)
         reduce_snip['Properties']['count'] = 2
         reduce_snip['Properties']['removal_policies'] = [{'resource_list':
-                                                        ['1', '2', '3']}]
+                                                          ['1', '2', '3']}]
         scheduler.TaskRunner(resg.update, reduce_snip)()
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
         self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)

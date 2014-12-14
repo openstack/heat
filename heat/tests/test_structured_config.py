@@ -203,8 +203,8 @@ class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
     def setUp(self):
         super(StructuredDeploymentWithStrictInputTest, self).setUp()
         self.source = {'config':
-                      {'foo': [{"get_input": "bar"},
-                               {"get_input": "barz"}]}}
+                       {'foo': [{"get_input": "bar"},
+                                {"get_input": "barz"}]}}
         self.inputs = [{'name': 'bar', 'value': 'baz'},
                        {'name': 'barz', 'value': 'baz2'}]
 

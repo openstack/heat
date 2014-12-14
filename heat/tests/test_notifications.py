@@ -191,58 +191,60 @@ class ScaleNotificationTest(common.HeatTestCase):
                               with_error=None):
 
         stack_arn = self.stack.identifier().arn()
-        expected = [mock.call(self.ctx,
-                    'orchestration.autoscaling.start',
-                    {'state_reason':
-                     'Stack CREATE completed successfully',
-                     'user_id': 'test_username',
-                     'stack_identity': stack_arn,
-                     'tenant_id': 'test_tenant',
-                     'create_at': self.create_at,
-                     'adjustment_type': 'ChangeInCapacity',
-                     'groupname': group.FnGetRefId(),
-                     'capacity': start_capacity,
-                     'adjustment': adjust,
-                     'stack_name': self.stack_name,
-                     'message': 'Start resizing the group %s' %
-                     group.FnGetRefId(),
-                     'state': 'CREATE_COMPLETE'})
-                    ]
+        expected = [mock.call(
+            self.ctx,
+            'orchestration.autoscaling.start',
+            {'state_reason': 'Stack CREATE completed successfully',
+             'user_id': 'test_username',
+             'stack_identity': stack_arn,
+             'tenant_id': 'test_tenant',
+             'create_at': self.create_at,
+             'adjustment_type': 'ChangeInCapacity',
+             'groupname': group.FnGetRefId(),
+             'capacity': start_capacity,
+             'adjustment': adjust,
+             'stack_name': self.stack_name,
+             'message': 'Start resizing the group %s' %
+             group.FnGetRefId(),
+             'state': 'CREATE_COMPLETE'})
+        ]
         if with_error:
-            expected += [mock.call(self.ctx,
-                         'orchestration.autoscaling.error',
-                         {'state_reason':
-                          'Stack CREATE completed successfully',
-                          'user_id': 'test_username',
-                          'stack_identity': stack_arn,
-                          'tenant_id': 'test_tenant',
-                          'create_at': self.create_at,
-                          'adjustment_type': 'ChangeInCapacity',
-                          'groupname': group.FnGetRefId(),
-                          'capacity': start_capacity,
-                          'adjustment': adjust,
-                          'stack_name': self.stack_name,
-                          'message': with_error,
-                          'state': 'CREATE_COMPLETE'})
-                         ]
+            expected += [mock.call(
+                self.ctx,
+                'orchestration.autoscaling.error',
+                {'state_reason':
+                 'Stack CREATE completed successfully',
+                 'user_id': 'test_username',
+                 'stack_identity': stack_arn,
+                 'tenant_id': 'test_tenant',
+                 'create_at': self.create_at,
+                 'adjustment_type': 'ChangeInCapacity',
+                 'groupname': group.FnGetRefId(),
+                 'capacity': start_capacity,
+                 'adjustment': adjust,
+                 'stack_name': self.stack_name,
+                 'message': with_error,
+                 'state': 'CREATE_COMPLETE'})
+            ]
         else:
-            expected += [mock.call(self.ctx,
-                         'orchestration.autoscaling.end',
-                         {'state_reason':
-                          'Stack CREATE completed successfully',
-                          'user_id': 'test_username',
-                          'stack_identity': stack_arn,
-                          'tenant_id': 'test_tenant',
-                          'create_at': self.create_at,
-                          'adjustment_type': 'ChangeInCapacity',
-                          'groupname': group.FnGetRefId(),
-                          'capacity': end_capacity,
-                          'adjustment': adjust,
-                          'stack_name': self.stack_name,
-                          'message': 'End resizing the group %s' %
-                          group.FnGetRefId(),
-                          'state': 'CREATE_COMPLETE'})
-                         ]
+            expected += [mock.call(
+                self.ctx,
+                'orchestration.autoscaling.end',
+                {'state_reason':
+                 'Stack CREATE completed successfully',
+                 'user_id': 'test_username',
+                 'stack_identity': stack_arn,
+                 'tenant_id': 'test_tenant',
+                 'create_at': self.create_at,
+                 'adjustment_type': 'ChangeInCapacity',
+                 'groupname': group.FnGetRefId(),
+                 'capacity': end_capacity,
+                 'adjustment': adjust,
+                 'stack_name': self.stack_name,
+                 'message': 'End resizing the group %s' %
+                 group.FnGetRefId(),
+                 'state': 'CREATE_COMPLETE'})
+            ]
 
         return expected
 
