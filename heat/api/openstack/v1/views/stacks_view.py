@@ -53,8 +53,8 @@ def format_stack(req, stack, keys=None, tenant_safe=True):
             yield (key, '_'.join((stack[rpc_api.STACK_ACTION], value)))
         else:
             # TODO(zaneb): ensure parameters can be formatted for XML
-            #elif key == rpc_api.STACK_PARAMETERS:
-            #    return key, json.dumps(value)
+            # elif key == rpc_api.STACK_PARAMETERS:
+            #     return key, json.dumps(value)
             yield (key, value)
 
     return dict(itertools.chain.from_iterable(

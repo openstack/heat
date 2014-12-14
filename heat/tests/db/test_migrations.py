@@ -139,7 +139,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertColumnExists(engine, 'raw_template', 'files')
 
     def _pre_upgrade_035(self, engine):
-        #The stacks id are for the 33 version migration
+        # The stacks id are for the 33 version migration
         event_table = utils.get_table(engine, 'event')
         data = [{
             'id': '22222222-152e-405d-b13a-35d4c816390c',
@@ -178,7 +178,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             self.assertEqual(last_id, events_in_db[index].id)
             self.assertEqual(event['id'], events_in_db[index].uuid)
 
-        #Check that the autoincremental id is ok
+        # Check that the autoincremental id is ok
         data = [{
             'uuid': '33333333-152e-405d-b13a-35d4c816390c',
             'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',

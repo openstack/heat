@@ -164,13 +164,13 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         return
 
     def is_iterable(self, obj):
-        #special case string
+        # special case string
         if not object:
             return False
         if isinstance(obj, str):
             return False
 
-        #Test for iterabilityy
+        # Test for iterabilityy
         try:
             for m in obj:
                 break

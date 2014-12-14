@@ -300,8 +300,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         # Test private_key property returns decrypted value
         self.assertEqual("fake secret", cs.my_secret)
 
-        #do this twice to verify that the orm does not commit the unencrypted
-        #value.
+        # do this twice to verify that the orm does not commit the unencrypted
+        # value.
         self.assertEqual("fake secret", cs.my_secret)
         scheduler.TaskRunner(cs.destroy)()
 
@@ -1331,13 +1331,13 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.stack_delete,
                           self.ctx, stack_id)
 
-        #Testing soft delete
+        # Testing soft delete
         ret_stack = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack_id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
 
-        #Testing child resources deletion
+        # Testing child resources deletion
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
@@ -1714,12 +1714,12 @@ class DBAPIResourceDataTest(common.HeatTestCase):
         val = db_api.resource_data_get(self.resource, 'test_resource_key')
         self.assertEqual('test_value', val)
 
-        #Updating existing resource data
+        # Updating existing resource data
         create_resource_data(self.ctx, self.resource, value='foo')
         val = db_api.resource_data_get(self.resource, 'test_resource_key')
         self.assertEqual('foo', val)
 
-        #Testing with encrypted value
+        # Testing with encrypted value
         create_resource_data(self.ctx, self.resource,
                              key='encryped_resource_key', redact=True)
         val = db_api.resource_data_get(self.resource, 'encryped_resource_key')
@@ -1945,7 +1945,7 @@ class DBAPIWatchRuleTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.watch_rule_delete,
                           self.ctx, UUID2)
 
-        #Testing associated watch data deletion
+        # Testing associated watch data deletion
         self.assertEqual([], db_api.watch_data_get_all(self.ctx))
 
 

@@ -132,7 +132,7 @@ class SubnetRouteTableAssociation(resource.Resource):
 
         router_id = self.properties.get(self.ROUTE_TABLE_ID)
 
-        #remove the default router association for this subnet.
+        # remove the default router association for this subnet.
         try:
             previous_router = self._router_for_subnet(subnet_id)
             if previous_router:

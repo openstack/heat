@@ -726,8 +726,8 @@ class ServersTest(common.HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
 
-        #self.assertEqual('4567', server.access_key)
-        #self.assertEqual('8901', server.secret_key)
+        # self.assertEqual('4567', server.access_key)
+        # self.assertEqual('8901', server.secret_key)
         self.assertEqual('1234', server._get_user_id())
 
         self.assertTrue(stack.access_allowed('1234', 'WebServer'))
@@ -2709,7 +2709,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
 
-        #update
+        # update
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -2735,7 +2735,7 @@ class ServersTest(common.HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
 
-        #update
+        # update
         updater = scheduler.TaskRunner(server.update, update_template)
         err = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual('StackValidationFailed: Property error : WebServer: '

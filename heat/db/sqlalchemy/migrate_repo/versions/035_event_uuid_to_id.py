@@ -98,11 +98,11 @@ def upgrade(migrate_engine):
 def upgrade_sqlite(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
 
-    #(pafuent) Here it isn't recommended to import the table from the models,
-    #because in future migrations the model could change and this migration
-    #could fail.
-    #I know it is ugly but it's the only way that I found to 'freeze' the model
-    #state for this migration.
+    # (pafuent) Here it isn't recommended to import the table from the models,
+    # because in future migrations the model could change and this migration
+    # could fail.
+    # I know it is ugly but it's the only way that I found to 'freeze'
+    # the model state for this migration.
     stack_table = sqlalchemy.Table('stack', meta, autoload=True)
     event_table = sqlalchemy.Table(
         'new_event', meta,
@@ -193,11 +193,11 @@ def downgrade(migrate_engine):
 def downgrade_sqlite(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
 
-    #(pafuent) Here it isn't recommended to import the table from the models,
-    #because in future migrations the model could change and this migration
-    #could fail.
-    #I know it is ugly but it's the only way that I found to 'freeze' the model
-    #state for this migration.
+    # (pafuent) Here it isn't recommended to import the table from the models,
+    # because in future migrations the model could change and this migration
+    # could fail.
+    # I know it is ugly but it's the only way that I found to 'freeze'
+    # the model state for this migration.
     stack_table = sqlalchemy.Table('stack', meta, autoload=True)
     event_table = sqlalchemy.Table(
         'new_event', meta,

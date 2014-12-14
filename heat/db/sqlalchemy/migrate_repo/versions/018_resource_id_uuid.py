@@ -33,5 +33,5 @@ def downgrade(migrate_engine):
     try:
         resource.c.id.alter(sqlalchemy.Integer, primary_key=True)
     except Exception:
-        #XXX: since there is no way to downgrade just passing
+        # NOTE(sshturm): since there is no way to downgrade just passing
         pass

@@ -2211,7 +2211,7 @@ class StackTest(common.HeatTestCase):
 
     def test_update_modify_ok_replace_int(self):
         # create
-        #========
+        # ========
         tmpl = {'heat_template_version': '2013-05-23',
                 'resources': {'AResource': {
                     'type': 'ResWithComplexPropsAndAttrs',
@@ -2242,7 +2242,7 @@ class StackTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         # update 1
-        #==========
+        # ==========
 
         self.stack = parser.Stack.load(self.ctx, stack_id=stack_id)
         tmpl2 = {'heat_template_version': '2013-05-23',
@@ -2257,7 +2257,7 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
         # update 2
-        #==========
+        # ==========
         # reload the previous stack
         self.stack = parser.Stack.load(self.ctx, stack_id=stack_id)
         tmpl3 = {'heat_template_version': '2013-05-23',

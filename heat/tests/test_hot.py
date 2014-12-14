@@ -603,11 +603,11 @@ class HOTemplateTest(common.HeatTestCase):
 
         err_str = "can not be accessed directly"
 
-        #Hot template test
+        # Hot template test
         keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'parameters')
         self.assertIn(err_str, six.text_type(keyError))
 
-        #CFN template test
+        # CFN template test
         keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'Parameters')
         self.assertIn(err_str, six.text_type(keyError))
 

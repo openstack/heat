@@ -198,7 +198,7 @@ Resources:
             'id': 'aaaa'}
         }
 
-        #create script
+        # create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
             'security_group': {
@@ -540,7 +540,7 @@ Resources:
         self.m.VerifyAll()
 
     def test_security_group_exception(self):
-        #create script
+        # create script
         sg_name = utils.PhysName('test_stack', 'the_sg')
         neutronclient.Client.create_security_group({
             'security_group': {

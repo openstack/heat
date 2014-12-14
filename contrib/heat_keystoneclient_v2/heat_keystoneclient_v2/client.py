@@ -152,7 +152,7 @@ class KeystoneClientV2(object):
         if(len(username) > 64):
             LOG.warn(_LW("Truncating the username %s to the last 64 "
                          "characters."), username)
-            #get the last 64 characters of the username
+            # get the last 64 characters of the username
             username = username[-64:]
         user = self.client.users.create(username,
                                         password,

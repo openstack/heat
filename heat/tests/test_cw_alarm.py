@@ -71,7 +71,7 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         '''
         t = template_format.parse(alarm_template)
 
-        #short circuit the alarm's references
+        # short circuit the alarm's references
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
@@ -107,7 +107,7 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         '''
         t = template_format.parse(alarm_template)
 
-        #short circuit the alarm's references
+        # short circuit the alarm's references
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
