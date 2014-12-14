@@ -411,8 +411,8 @@ class LoadBalancerTest(common.HeatTestCase):
                                       metadata={'yolo': 'heeyyy_gurl'})
 
         expected = self._set_expected(self.expected_body,
-                                      sessionPersistence=
-                                      {'persistenceType': 'HTTP_COOKIE'},
+                                      sessionPersistence={
+                                          'persistenceType': 'HTTP_COOKIE'},
                                       connectionLogging={'enabled': True},
                                       metadata=[
                                           {'key': 'yolo',
