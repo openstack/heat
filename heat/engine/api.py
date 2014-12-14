@@ -95,11 +95,11 @@ def format_stack(stack, preview=False):
         rpc_api.STACK_ID: dict(stack.identifier()),
         rpc_api.STACK_CREATION_TIME: timeutils.isotime(stack.created_time),
         rpc_api.STACK_UPDATED_TIME: updated_time,
-        rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
+        rpc_api.STACK_NOTIFICATION_TOPICS: [],  # TODO(?) Not implemented yet
         rpc_api.STACK_PARAMETERS: stack.parameters.map(str),
         rpc_api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         rpc_api.STACK_TMPL_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
-        rpc_api.STACK_CAPABILITIES: [],   # TODO Not implemented yet
+        rpc_api.STACK_CAPABILITIES: [],   # TODO(?) Not implemented yet
         rpc_api.STACK_DISABLE_ROLLBACK: stack.disable_rollback,
         rpc_api.STACK_TIMEOUT: stack.timeout_mins,
         rpc_api.STACK_OWNER: stack.username,
