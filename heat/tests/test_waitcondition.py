@@ -704,7 +704,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
     def _handle_signal(self, rsrc, metadata, times=1):
-        for time in range(times):
+        for t in range(times):
             metadata['UniqueId'] = metadata['UniqueId'] * 2
             ret = rsrc.handle_signal(metadata)
             self.assertEqual("status:%s reason:%s" %

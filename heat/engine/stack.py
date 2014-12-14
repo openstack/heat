@@ -244,8 +244,8 @@ class Stack(collections.Mapping):
     def _get_dependencies(resources):
         '''Return the dependency graph for a list of resources.'''
         deps = dependencies.Dependencies()
-        for resource in resources:
-            resource.add_dependencies(deps)
+        for res in resources:
+            res.add_dependencies(deps)
 
         return deps
 

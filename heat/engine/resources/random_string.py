@@ -180,7 +180,7 @@ class RandomString(resource.Resource):
             for char_seq in char_sequences:
                 seq = char_seq[self.CHARACTER_SEQUENCES_SEQUENCE]
                 seq_min = char_seq[self.CHARACTER_SEQUENCES_MIN]
-                for _ in xrange(seq_min):
+                for i in xrange(seq_min):
                     random_string += random.choice(seq)
 
         if char_classes:
@@ -188,7 +188,7 @@ class RandomString(resource.Resource):
                 cclass_class = char_class[self.CHARACTER_CLASSES_CLASS]
                 cclass_seq = self._sequences[cclass_class]
                 cclass_min = char_class[self.CHARACTER_CLASSES_MIN]
-                for _ in xrange(cclass_min):
+                for i in xrange(cclass_min):
                     random_string += random.choice(cclass_seq)
 
         def random_class_char():

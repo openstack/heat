@@ -504,8 +504,8 @@ class Instance(resource.Resource):
                 unsorted_nics.append(nic)
             sorted_nics = sorted(unsorted_nics,
                                  key=lambda nic: int(nic['DeviceIndex']))
-            nics = [{'port-id': nic['NetworkInterfaceId']}
-                    for nic in sorted_nics]
+            nics = [{'port-id': snic['NetworkInterfaceId']}
+                    for snic in sorted_nics]
         else:
             # if SubnetId property in Instance, ensure subnet exists
             if subnet_id:
