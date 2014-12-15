@@ -19,12 +19,12 @@ import six
 
 from heat.common import identifier
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import wait_condition_handle as h_wch
+from heat.objects import resource as resource_objects
 from heat.tests import common
 from heat.tests import utils
 
@@ -125,8 +125,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE),
                          rsrc.state)
 
-        r = db_api.resource_get_by_name_and_stack(None, 'wait_handle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'wait_handle', self.stack.id)
         self.assertEqual('wait_handle', r.name)
         self.m.VerifyAll()
 
@@ -149,8 +149,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
         reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
-        r = db_api.resource_get_by_name_and_stack(None, 'wait_handle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'wait_handle', self.stack.id)
         self.assertEqual('wait_handle', r.name)
         self.m.VerifyAll()
 

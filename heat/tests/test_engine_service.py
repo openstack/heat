@@ -48,6 +48,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
+from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
@@ -3572,7 +3573,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, server_id=server.resource_id)
         self.assertEqual([deployment], deployments)
 
-        rs = db_api.resource_get_by_physical_resource_id(self.ctx, server_id)
+        rs = resource_objects.Resource.get_by_physical_resource_id(
+            self.ctx, server_id)
         self.assertEqual(deployment['config_id'],
                          rs.rsrc_metadata.get('deployments')[0]['id'])
 
@@ -3618,7 +3620,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         # assert that metadata via metadata_software_deployments matches
         # metadata via server resource
-        rs = db_api.resource_get_by_physical_resource_id(self.ctx, server_id)
+        rs = resource_objects.Resource.get_by_physical_resource_id(
+            self.ctx, server_id)
         self.assertEqual(metadata,
                          rs.rsrc_metadata.get('deployments'))
 

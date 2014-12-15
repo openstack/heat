@@ -41,6 +41,7 @@ from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine import template as tmpl
 from heat.engine import update
+from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
 from heat.rpc import api as rpc_api
 
@@ -218,8 +219,9 @@ class Stack(collections.Mapping):
             return None
         if self._db_resources is None:
             try:
-                self._db_resources = db_api.resource_get_all_by_stack(
+                _db_resources = resource_objects.Resource.get_all_by_stack(
                     self.context, self.id)
+                self._db_resources = _db_resources
             except exception.NotFound:
                 return None
         return self._db_resources.get(name)
