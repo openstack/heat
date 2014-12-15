@@ -26,7 +26,7 @@ from heat.tests import utils
 from ..resources import cloudnetworks  # noqa
 
 try:
-    from pyrax.exceptions import NotFound
+    from pyrax.exceptions import NotFound  # noqa
 except ImportError:
     from ..resources.cloudnetworks import NotFound  # noqa
 
@@ -144,10 +144,25 @@ class CloudNetworkTest(common.HeatTestCase):
         exc = self.assertRaises(NotFound, self.fake_cnw.get, res_id)
         self.assertIn(res_id, six.text_type(exc))
 
+    def test_delete_in_use(self, mock_client):
+        self._setup_stack(mock_client)
+        res = self.stack['cnw']
+        fake_network = res.network()
+        fake_network.delete = mock.Mock()
+        fake_network.delete.side_effect = [cloudnetworks.NetworkInUse(), True]
+        fake_network.get = mock.Mock(side_effect=cloudnetworks.NotFound())
+
+        scheduler.TaskRunner(res.delete)()
+        self.assertEqual((res.DELETE, res.COMPLETE), res.state)
+
     def test_delete_not_complete(self, mock_client):
         self._setup_stack(mock_client)
         res = self.stack['cnw']
-        self.assertFalse(res.check_delete_complete(res.network()))
+        fake_network = res.network()
+        fake_network.get = mock.Mock()
+
+        task = res.handle_delete()
+        self.assertFalse(res.check_delete_complete(task))
 
     def test_delete_not_found(self, mock_client):
         self._setup_stack(mock_client)
