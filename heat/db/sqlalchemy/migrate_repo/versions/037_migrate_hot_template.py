@@ -11,9 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from migrate.versioning import util as migrate_util
+from oslo.serialization import jsonutils
 import six
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -32,16 +31,19 @@ def upgrade(migrate_engine):
     raw_templates = templ_table.select().execute()
 
     for raw_template in raw_templates:
-        if ('heat_template_version' in raw_template.template
-                and 'parameters' in raw_template.template):
+        template = jsonutils.loads(raw_template.template)
+        if ('heat_template_version' in template
+                and 'parameters' in template):
 
-            template = copy.deepcopy(raw_template.template)
             for parameter, schema in six.iteritems(template['parameters']):
                 changed = False
 
                 def _commit_schema(parameter, schema):
                     template['parameters'][parameter] = schema
-                    raw_template.template = template
+                    (templ_table.update().
+                        where(templ_table.c.id == raw_template.id).
+                        values(template=jsonutils.dumps(template)).
+                        execute())
                     session.commit()
 
                 if 'Type' in schema:
