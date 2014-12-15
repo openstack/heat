@@ -100,45 +100,6 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def test_create_config_prop_validation(self):
-        """Make sure that during a group create the instance
-        properties are validated. And an error causes the group to fail.
-        """
-
-        t = template_format.parse(ig_template)
-        stack = utils.parse_stack(t)
-        self.stub_ImageConstraint_validate()
-        self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
-
-        self.m.ReplayAll()
-
-        self.create_resource(t, stack, 'JobServerConfig')
-        rsrc = stack['JobServerGroup']
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        not_found = exception.ImageNotFound(image_name='bla')
-        instance.Instance.handle_create().AndRaise(not_found)
-        self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate()
-
-        self.stub_KeypairConstraint_validate()
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
-
-        self.m.ReplayAll()
-
-        create = scheduler.TaskRunner(rsrc.create)
-        self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-
-        self.m.VerifyAll()
-
     def test_create_instance_error_causes_group_error(self):
         """
         If a resource in an instance group fails to be created, the instance
