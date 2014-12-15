@@ -173,3 +173,8 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.m.StubOutWithMock(cinder.VolumeSnapshotConstraint, 'validate')
         cinder.VolumeSnapshotConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+    def stub_VolumeTypeConstraint_validate(self):
+        self.m.StubOutWithMock(cinder.VolumeTypeConstraint, 'validate')
+        cinder.VolumeTypeConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)

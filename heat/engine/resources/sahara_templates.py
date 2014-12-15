@@ -94,6 +94,9 @@ class SaharaNodeGroupTemplate(resource.Resource):
         VOLUME_TYPE: properties.Schema(
             properties.Schema.STRING,
             _("Type of the volume to create on Cinder backend."),
+            constraints=[
+                constraints.CustomConstraint('cinder.vtype')
+            ]
         ),
         SECURITY_GROUPS: properties.Schema(
             properties.Schema.LIST,
