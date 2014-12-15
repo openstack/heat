@@ -816,6 +816,7 @@ class CinderVolumeTest(BaseVolumeTest):
         stack_name = 'test_volume_stack'
 
         self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(

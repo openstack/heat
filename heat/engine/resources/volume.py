@@ -562,7 +562,10 @@ class CinderVolume(Volume):
         ),
         SOURCE_VOLID: properties.Schema(
             properties.Schema.STRING,
-            _('If specified, the volume to use as source.')
+            _('If specified, the volume to use as source.'),
+            constraints=[
+                constraints.CustomConstraint('cinder.volume')
+            ]
         ),
         CINDER_SCHEDULER_HINTS: properties.Schema(
             properties.Schema.MAP,
