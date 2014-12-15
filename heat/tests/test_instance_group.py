@@ -139,46 +139,6 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_size_updates_work(self):
-        t = template_format.parse(ig_template)
-        properties = t['Resources']['JobServerGroup']['Properties']
-        properties['Size'] = '2'
-        stack = utils.parse_stack(t)
-
-        self._stub_create(2)
-        self.m.ReplayAll()
-        self.create_resource(t, stack, 'JobServerConfig')
-        rsrc = self.create_resource(t, stack, 'JobServerGroup')
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        # Increase min size to 5
-        self._stub_create(3)
-        self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.2')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.3')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.4')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.5')
-        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.6')
-
-        self.m.ReplayAll()
-
-        props = copy.copy(rsrc.properties.data)
-        props['Size'] = 5
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props)
-        tmpl_diff = {'Properties': {'Size': '5'}}
-        prop_diff = {'Size': '5'}
-        self.assertIsNone(rsrc.handle_update(update_snippet, tmpl_diff,
-                                             prop_diff))
-        self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
-                         rsrc.FnGetAtt('InstanceList'))
-
-        rsrc.delete()
-        self.m.VerifyAll()
-
     def test_create_instance_error_causes_group_error(self):
         """
         If a resource in an instance group fails to be created, the instance

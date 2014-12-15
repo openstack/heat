@@ -87,6 +87,10 @@ outputs:
         if not self.conf.instance_type:
             raise self.skipException("No flavor configured to test")
 
+    def assert_instance_count(self, stack, expected_count):
+        inst_list = self._stack_output(stack, 'InstanceList')
+        self.assertEqual(expected_count, len(inst_list.split(',')))
+
     def test_basic_create_works(self):
         """Make sure the working case is good.
         Note this combines test_override_aws_ec2_instance into this test as
@@ -95,34 +99,45 @@ outputs:
         use that overridden resource type.
         """
 
-        stack_name = self._stack_rand_name()
         files = {'provider.yaml': self.instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 4,
                               'image': self.conf.image_ref,
                               'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
-
-        self.client.stacks.create(
-            stack_name=stack_name,
-            template=self.template,
-            files=files,
-            disable_rollback=True,
-            parameters={},
-            environment=env
-        )
-        self.addCleanup(self.client.stacks.delete, stack_name)
-
-        stack = self.client.stacks.get(stack_name)
-        stack_identifier = '%s/%s' % (stack_name, stack.id)
-
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        stack_identifier = self.stack_create(template=self.template,
+                                             files=files, environment=env)
         initial_resources = {
             'JobServerConfig': 'AWS::AutoScaling::LaunchConfiguration',
             'JobServerGroup': 'OS::Heat::InstanceGroup'}
         self.assertEqual(initial_resources,
                          self.list_resources(stack_identifier))
 
-        stack = self.client.stacks.get(stack_name)
-        inst_list = self._stack_output(stack, 'InstanceList')
-        self.assertEqual(4, len(inst_list.split(',')))
+        stack = self.client.stacks.get(stack_identifier)
+        self.assert_instance_count(stack, 4)
+
+    def test_size_updates_work(self):
+        files = {'provider.yaml': self.instance_template}
+        env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
+               'parameters': {'size': 2,
+                              'image': self.conf.image_ref,
+                              'keyname': self.conf.keypair_name,
+                              'flavor': self.conf.instance_type}}
+
+        stack_identifier = self.stack_create(template=self.template,
+                                             files=files,
+                                             environment=env)
+        stack = self.client.stacks.get(stack_identifier)
+        self.assert_instance_count(stack, 2)
+
+        # Increase min size to 5
+        env2 = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
+                'parameters': {'size': 5,
+                               'image': self.conf.image_ref,
+                               'keyname': self.conf.keypair_name,
+                               'flavor': self.conf.instance_type}}
+        self.update_stack(stack_identifier, self.template,
+                          environment=env2, files=files)
+        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
+        stack = self.client.stacks.get(stack_identifier)
+        self.assert_instance_count(stack, 5)
