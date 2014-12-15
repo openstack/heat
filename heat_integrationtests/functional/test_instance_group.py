@@ -170,3 +170,35 @@ outputs:
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
         stack = self.client.stacks.get(stack_identifier)
         self.assert_instance_count(stack, 5)
+
+    def test_update_group_replace(self):
+        """Make sure that during a group update the non updatable
+        properties cause a replacement.
+        """
+        files = {'provider.yaml': self.instance_template}
+        env = {'resource_registry':
+               {'AWS::EC2::Instance': 'provider.yaml'},
+               'parameters': {'size': 1,
+                              'image': self.conf.image_ref,
+                              'keyname': self.conf.keypair_name,
+                              'flavor': self.conf.instance_type}}
+
+        stack_identifier = self.stack_create(template=self.template,
+                                             files=files,
+                                             environment=env)
+        rsrc = self.client.resources.get(stack_identifier, 'JobServerGroup')
+        orig_asg_id = rsrc.physical_resource_id
+
+        env2 = {'resource_registry':
+                {'AWS::EC2::Instance': 'provider.yaml'},
+                'parameters': {'size': '2',
+                               'AZ': 'wibble',
+                               'image': self.conf.image_ref,
+                               'keyname': self.conf.keypair_name,
+                               'flavor': self.conf.instance_type}}
+        self.update_stack(stack_identifier, self.template,
+                          environment=env2, files=files)
+
+        # replacement will cause the resource physical_resource_id to change.
+        rsrc = self.client.resources.get(stack_identifier, 'JobServerGroup')
+        self.assertNotEqual(orig_asg_id, rsrc.physical_resource_id)

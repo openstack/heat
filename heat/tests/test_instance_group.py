@@ -185,34 +185,6 @@ class InstanceGroupTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_group_replace(self):
-        """Make sure that during a group update the non updatable
-        properties cause a replacement.
-        """
-        t = template_format.parse(ig_template)
-        properties = t['Resources']['JobServerGroup']['Properties']
-        properties['Size'] = '2'
-        stack = utils.parse_stack(t)
-
-        self._stub_create(2)
-
-        self.m.ReplayAll()
-        self.create_resource(t, stack, 'JobServerConfig')
-        rsrc = self.create_resource(t, stack, 'JobServerGroup')
-
-        self.m.ReplayAll()
-
-        props = copy.copy(rsrc.properties.data)
-        props['AvailabilityZones'] = ['wibble']
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props)
-        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
-        self.assertRaises(resource.UpdateReplace, updater)
-
-        rsrc.delete()
-        self.m.VerifyAll()
-
 
 class TestInstanceGroup(common.HeatTestCase):
     def setUp(self):
