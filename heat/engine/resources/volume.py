@@ -541,7 +541,8 @@ class CinderVolume(Volume):
               'specific backend.'),
             constraints=[
                 constraints.CustomConstraint('cinder.vtype')
-            ]
+            ],
+            update_allowed=True
         ),
         METADATA: properties.Schema(
             properties.Schema.MAP,
@@ -685,7 +686,18 @@ class CinderVolume(Volume):
                 vol = cinder.volumes.get(self.resource_id)
             metadata = prop_diff.get(self.METADATA)
             cinder.volumes.update_all_metadata(vol, metadata)
-
+        # retype
+        if self.VOLUME_TYPE in prop_diff:
+            if self.cinder().volume_api_version == 1:
+                LOG.info(_LI('Volume type update not supported '
+                             'by Cinder API V1.'))
+                raise exception.NotSupported(
+                    feature=_('Using Cinder API V1, volume_type update'))
+            else:
+                if not vol:
+                    vol = cinder.volumes.get(self.resource_id)
+                new_vol_type = prop_diff.get(self.VOLUME_TYPE)
+                cinder.volumes.retype(vol, new_vol_type, 'never')
         # extend volume size
         if self.SIZE in prop_diff:
             if not vol:
