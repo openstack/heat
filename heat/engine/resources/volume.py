@@ -852,7 +852,7 @@ class CinderVolumeAttachment(VolumeAttachment):
             if self.DEVICE in prop_diff:
                 device = prop_diff.get(self.DEVICE)
 
-            server_id = self.properties.get(self.INSTANCE_ID)
+            server_id = self._stored_properties_data.get(self.INSTANCE_ID)
             detach_task = VolumeDetachTask(self.stack, server_id,
                                            self.resource_id)
             checkers.append(scheduler.TaskRunner(detach_task))
