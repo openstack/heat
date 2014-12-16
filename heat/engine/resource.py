@@ -660,10 +660,7 @@ class Resource(object):
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource):
         if self.status == self.FAILED:
-            if hasattr(self, 'nested'):
-                return True
-            else:
-                raise UpdateReplace(self)
+            raise UpdateReplace(self)
 
         if prev_resource is not None:
             cur_class_def, cur_ver = self.implementation_signature()

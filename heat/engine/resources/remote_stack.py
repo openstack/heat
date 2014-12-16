@@ -188,6 +188,12 @@ class RemoteStack(resource.Resource):
                                   % self.name)
         self.heat().actions.suspend(stack_id=self.resource_id)
 
+    def _needs_update(self, after, before, after_props, before_props,
+                      prev_resource):
+        # Always issue an update to the remote stack and let the individual
+        # resources in it decide if they need updating.
+        return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if self.resource_id and prop_diff:
             snippet = json_snippet.get('Properties', {})

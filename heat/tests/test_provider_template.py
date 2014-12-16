@@ -973,7 +973,7 @@ Outputs:
     Value: {'Fn::GetAtt': [NestedResource, value]}
 '''
 
-    EXPECTED = (REPLACE, UPDATE, NOCHANGE) = ('replace', 'update', 'nochange')
+    EXPECTED = (UPDATE, NOCHANGE) = ('update', 'nochange')
     scenarios = [
         ('no_changes', dict(template=main_template,
                             provider=initial_tmpl,
@@ -986,10 +986,10 @@ Outputs:
                                  expect=UPDATE)),
         ('provider_props_change', dict(template=main_template,
                                        provider=prop_change_tmpl,
-                                       expect=REPLACE)),
+                                       expect=NOCHANGE)),
         ('provider_attr_change', dict(template=main_template,
                                       provider=attr_change_tmpl,
-                                      expect=REPLACE)),
+                                      expect=NOCHANGE)),
     ]
 
     def setUp(self):
@@ -1015,19 +1015,12 @@ Outputs:
         updated_stack = parser.Stack(self.ctx, stack.name, tmpl)
         stack.update(updated_stack)
         self.assertEqual(('UPDATE', 'COMPLETE'), stack.state)
-        if self.expect == self.REPLACE:
-            self.assertNotEqual(initial_id,
-                                stack.output('identifier'))
-            self.assertNotEqual(initial_val,
-                                stack.output('value'))
-        elif self.expect == self.NOCHANGE:
-            self.assertEqual(initial_id,
-                             stack.output('identifier'))
+        self.assertEqual(initial_id,
+                         stack.output('identifier'))
+        if self.expect == self.NOCHANGE:
             self.assertEqual(initial_val,
                              stack.output('value'))
         else:
-            self.assertEqual(initial_id,
-                             stack.output('identifier'))
             self.assertNotEqual(initial_val,
                                 stack.output('value'))
         self.m.VerifyAll()
