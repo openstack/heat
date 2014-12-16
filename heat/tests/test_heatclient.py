@@ -1368,7 +1368,7 @@ class KeystoneClientTest(common.HeatTestCase):
     def _stub_domain_user_pw_auth(self):
         self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                            username='duser',
+                            user_id='duser',
                             password='apassw',
                             project_id='aproject',
                             user_domain_id='adomain123').AndReturn('dummyauth')
@@ -1391,7 +1391,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         token = heat_ks_client.stack_domain_user_token(
-            username='duser', project_id='aproject', password='apassw')
+            user_id='duser', project_id='aproject', password='apassw')
         self.assertEqual('dummytoken', token)
 
     def test_stack_domain_user_token_err_nodomain(self):
@@ -1402,7 +1402,7 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(exception.Error,
                           heat_ks_client.stack_domain_user_token,
-                          username='user',
+                          user_id='user',
                           project_id='aproject',
                           password='password')
 
@@ -1527,7 +1527,7 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
     def _stub_domain_user_pw_auth(self):
         self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
-                            username='duser',
+                            user_id='duser',
                             password='apassw',
                             project_id='aproject',
                             user_domain_name='fake_domain_name'
