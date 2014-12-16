@@ -61,7 +61,7 @@ class StackUser(resource.Resource):
             raise ValueError(_("Can't get user token without password"))
 
         return self.keystone().stack_domain_user_token(
-            username=self.physical_resource_name(),
+            user_id=self._get_user_id(),
             project_id=project_id, password=password)
 
     def _get_user_id(self):

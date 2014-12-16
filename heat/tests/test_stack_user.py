@@ -357,15 +357,13 @@ class StackUserTest(HeatTestCase):
     def test_user_token(self):
         rsrc = self._user_create(stack_name='user_test123',
                                  project_id='aproject123',
-                                 user_id='auser123',
+                                 user_id='aabbcc',
                                  password='apassword')
 
-        short_id.get_id(rsrc.id).AndReturn('aabbcc')
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'stack_domain_user_token')
-        username = 'user_test123-user-aabbcc'
         fakes.FakeKeystoneClient.stack_domain_user_token(
-            username=username, project_id='aproject123',
+            user_id='aabbcc', project_id='aproject123',
             password='apassword').AndReturn('atoken123')
         self.m.ReplayAll()
 

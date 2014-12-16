@@ -365,7 +365,7 @@ class KeystoneClientV3(object):
 
         return user.id
 
-    def stack_domain_user_token(self, username, project_id, password):
+    def stack_domain_user_token(self, user_id, project_id, password):
         """Get a token for a stack domain user."""
         if not self.stack_domain:
             # Note, no legacy fallback path as we don't want to deploy
@@ -391,8 +391,8 @@ class KeystoneClientV3(object):
         body = {'auth': {'scope':
                          {'project': {'id': project_id}},
                          'identity': {'password': {'user': {
-                         'domain': domain,
-                         'password': password, 'name': username}},
+                             'domain': domain,
+                             'password': password, 'id': user_id}},
                              'methods': ['password']}}}
         t = sess.post(token_url, headers=headers, json=body,
                       authenticated=False)
