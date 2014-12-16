@@ -24,17 +24,13 @@ from heat.openstack.common import log as logging
 
 try:
     from pyrax.exceptions import NotFound  # noqa
+    PYRAX_INSTALLED = True
 except ImportError:
+    PYRAX_INSTALLED = False
 
     class NotFound(Exception):
         """Dummy pyrax exception - only used for testing."""
 
-    def resource_mapping():
-        return {}
-else:
-
-    def resource_mapping():
-        return {'Rackspace::Cloud::Network': CloudNetwork}
 
 LOG = logging.getLogger(__name__)
 
@@ -137,3 +133,13 @@ class CloudNetwork(resource.Resource):
         if net:
             return unicode(getattr(net, name))
         return ""
+
+
+def resource_mapping():
+    return {'Rackspace::Cloud::Network': CloudNetwork}
+
+
+def available_resource_mapping():
+    if PYRAX_INSTALLED:
+        return resource_mapping()
+    return {}
