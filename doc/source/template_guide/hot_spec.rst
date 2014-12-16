@@ -890,6 +890,6 @@ provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the str_replace function.
 
 Fn::Select
----------
+----------
 *Fn::Select* is a function borrowed from CFN template.  Please check the CFN
 template guide for a description.

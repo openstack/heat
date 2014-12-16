@@ -481,16 +481,13 @@ class Properties(collections.Mapping):
         :param schema: A resource type's properties_schema
         :returns: A tuple of params and properties dicts
 
-        ex: input:  {'foo': {'Type': 'String'}}
-            output: {'foo': {'Type': 'String'}},
-                    {'foo': {'Ref': 'foo'}}
+        ex: input:  {'foo': {'Type': 'List'}}
+            output: {'foo': {'Type': 'CommaDelimitedList'}},
+                    {'foo': {'Fn::Split': {'Ref': 'foo'}}}
 
-        ex: input:  {'foo': {'Type': 'List'}, 'bar': {'Type': 'Map'}}
-            output: {'foo': {'Type': 'CommaDelimitedList'}
-                     'bar': {'Type': 'Json'}},
-                    {'foo': {'Fn::Split': {'Ref': 'foo'}},
-                     'bar': {'Ref': 'bar'}}
-
+        ex: input:  {'foo': {'Type': 'String'}, 'bar': {'Type': 'Map'}}
+            output: {'foo': {'Type': 'String'}, 'bar': {'Type': 'Json'}},
+                    {'foo': {'Ref': 'foo'}, 'bar': {'Ref': 'bar'}}
         """
         def param_prop_def_items(name, schema):
             param_def = cls._param_def_from_prop(schema)

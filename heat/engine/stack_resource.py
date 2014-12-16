@@ -76,8 +76,8 @@ class StackResource(resource.Resource):
         return True
 
     def nested(self, force_reload=False, show_deleted=False):
-        '''
-        Return a Stack object representing the nested (child) stack.
+        '''Return a Stack object representing the nested (child) stack.
+
         :param force_reload: Forces reloading from the DB instead of returning
                              the locally cached Stack object
         :param show_deleted: Returns the stack even if it's been deleted
