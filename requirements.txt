@@ -26,7 +26,7 @@ posix_ipc
 pycrypto>=2.6
 python-ceilometerclient>=1.0.6
 python-cinderclient>=1.1.0
-python-glanceclient>=0.14.0
+python-glanceclient>=0.15.0
 python-heatclient>=0.2.9
 python-keystoneclient>=0.11.1
 python-neutronclient>=2.3.6,<3
