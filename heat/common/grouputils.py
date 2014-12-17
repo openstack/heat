@@ -13,6 +13,8 @@
 
 import six
 
+from heat.common import exception
+
 
 def get_size(group, include_failed=False):
     """Get number of member resources managed by the specified group.
@@ -61,3 +63,33 @@ def get_member_names(group):
     Failed resources will be ignored.
     """
     return [r.name for r in get_members(group)]
+
+
+def get_resource(stack, resource_name, use_indices, key):
+    nested_stack = stack.nested()
+    try:
+        if use_indices:
+            return get_members(stack)[int(resource_name)]
+        else:
+            return nested_stack[resource_name]
+    except (IndexError, KeyError):
+        raise exception.InvalidTemplateAttribute(resource=stack.name,
+                                                 key=key)
+
+
+def get_rsrc_attr(stack, key, use_indices, resource_name, *attr_path):
+    resource = get_resource(stack, resource_name, use_indices, key)
+    return resource.FnGetAtt(*attr_path)
+
+
+def get_rsrc_id(stack, key, use_indices, resource_name):
+    resource = get_resource(stack, resource_name, use_indices, key)
+    return resource.FnGetRefId()
+
+
+def get_nested_attrs(stack, key, use_indices, *path):
+    path = key.split(".", 2)[1:] + list(path)
+    if len(path) > 1:
+        return get_rsrc_attr(stack, key, use_indices, *path)
+    else:
+        return get_rsrc_id(stack, key, use_indices, *path)

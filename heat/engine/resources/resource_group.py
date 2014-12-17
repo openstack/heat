@@ -17,6 +17,7 @@ import copy
 import six
 
 from heat.common import exception
+from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -258,41 +259,22 @@ class ResourceGroup(stack_resource.StackResource):
         return self.delete_nested()
 
     def FnGetAtt(self, key, *path):
-        nested_stack = self.nested()
-
-        def get_resource(resource_name):
-            try:
-                return nested_stack[resource_name]
-            except KeyError:
-                raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                         key=key)
-
-        def get_rsrc_attr(resource_name, *attr_path):
-            resource = get_resource(resource_name)
-            return resource.FnGetAtt(*attr_path)
-
-        def get_rsrc_id(resource_name):
-            resource = get_resource(resource_name)
-            return resource.FnGetRefId()
-
         if key.startswith("resource."):
-            path = key.split(".", 2)[1:] + list(path)
-            if len(path) > 1:
-                return get_rsrc_attr(*path)
-            else:
-                return get_rsrc_id(*path)
+            return grouputils.get_nested_attrs(self, key, False, *path)
 
         names = self._resource_names()
         if key == self.REFS:
-            return [get_rsrc_id(n) for n in names]
+            return [grouputils.get_rsrc_id(self, key, False, n) for n in names]
         if key == self.ATTR_ATTRIBUTES:
             if not path:
                 raise exception.InvalidTemplateAttribute(
                     resource=self.name, key=key)
-            return dict((n, get_rsrc_attr(n, *path)) for n in names)
+            return dict((n, grouputils.get_rsrc_attr(
+                self, key, False, n, *path)) for n in names)
 
         path = [key] + list(path)
-        return [get_rsrc_attr(n, *path) for n in names]
+        return [grouputils.get_rsrc_attr(self, key, False, n, *path)
+                for n in names]
 
     def _build_resource_definition(self, include_all=False):
         res_def = self.properties[self.RESOURCE_DEF]

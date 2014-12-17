@@ -158,6 +158,9 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             if key == self.OUTPUTS_LIST:
                 return [value for name, value in attrs]
 
+        if key.startswith("resource."):
+            return grouputils.get_nested_attrs(self, key, True, *path)
+
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
 
