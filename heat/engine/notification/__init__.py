@@ -48,3 +48,7 @@ def notify(context, event_type, level, body):
 
     method = getattr(client, level.lower())
     method(context, "%s.%s" % (SERVICE, event_type), body)
+
+
+def list_opts():
+    yield None, notifier_opts

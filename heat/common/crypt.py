@@ -61,3 +61,7 @@ def heat_decrypt(auth_info):
     cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
     res = cipher.decrypt(auth[AES.block_size:])
     return res
+
+
+def list_opts():
+    yield None, auth_opts

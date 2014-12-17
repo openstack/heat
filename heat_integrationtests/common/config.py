@@ -11,7 +11,6 @@
 #    under the License.
 
 import os
-import sys
 
 from oslo.config import cfg
 
@@ -108,7 +107,5 @@ def init_conf(read_conf=True):
     return conf
 
 
-if __name__ == '__main__':
-    cfg.CONF = init_conf(False)
-    import heat.openstack.common.config.generator as generate
-    generate.generate(sys.argv[1:])
+def list_opts():
+    yield None, IntegrationTestGroup

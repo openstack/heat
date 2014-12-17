@@ -86,3 +86,8 @@ def _load_global_resources(env):
     _register_resources(env, resource_mapping.load_all(manager))
 
     _register_constraints(env, constraint_mapping.load_all(manager))
+
+
+def list_opts():
+    from heat.engine.resources import loadbalancer
+    yield None, loadbalancer.loadbalancer_opts

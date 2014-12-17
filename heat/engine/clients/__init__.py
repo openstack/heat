@@ -157,3 +157,7 @@ def initialise():
         namespace='heat.clients',
         invoke_on_load=False,
         verify_requirements=True)
+
+
+def list_opts():
+    yield None, cloud_opts

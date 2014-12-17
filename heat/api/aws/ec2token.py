@@ -235,3 +235,7 @@ def EC2Token_filter_factory(global_conf, **local_conf):
         return EC2Token(app, conf)
 
     return filter
+
+
+def list_opts():
+    yield 'ec2authtoken', opts

@@ -688,3 +688,7 @@ class KeystoneClient(object):
                 cfg.CONF.keystone_backend,
                 context
             )
+
+
+def list_opts():
+    yield None, keystone_opts
