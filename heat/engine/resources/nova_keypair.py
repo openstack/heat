@@ -43,7 +43,7 @@ class KeyPair(resource.Resource):
     )
 
     ATTRIBUTES = (
-        PUBLIC_KEY_ATTR, PRIVATE_KEY,
+        PUBLIC_KEY_ATTR, PRIVATE_KEY_ATTR,
     ) = (
         'public_key', 'private_key',
     )
@@ -72,10 +72,10 @@ class KeyPair(resource.Resource):
     }
 
     attributes_schema = {
-        PUBLIC_KEY: attributes.Schema(
+        PUBLIC_KEY_ATTR: attributes.Schema(
             _('The public key.')
         ),
-        PRIVATE_KEY: attributes.Schema(
+        PRIVATE_KEY_ATTR: attributes.Schema(
             _('The private key if it has been saved.'),
             cache_mode=attributes.Schema.CACHE_NONE
         ),
@@ -128,8 +128,8 @@ class KeyPair(resource.Resource):
         self.nova().keypairs.get(self.resource_id)
 
     def _resolve_attribute(self, key):
-        attr_fn = {'private_key': self.private_key,
-                   'public_key': self.public_key}
+        attr_fn = {self.PRIVATE_KEY_ATTR: self.private_key,
+                   self.PUBLIC_KEY_ATTR: self.public_key}
         return six.text_type(attr_fn[key])
 
     def FnGetRefId(self):

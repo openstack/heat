@@ -660,9 +660,9 @@ class CinderVolume(Volume):
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
         if self.cinder().volume_api_version >= 2:
-            if name == 'display_name':
+            if name == self.DISPLAY_NAME_ATTR:
                 return vol.name
-            elif name == 'display_description':
+            elif name == self.DISPLAY_DESCRIPTION_ATTR:
                 return vol.description
         return six.text_type(getattr(vol, name))
 
