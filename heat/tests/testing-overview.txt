@@ -1,23 +1,20 @@
 Heat testing
 ------------
 
-All tests are to be placed in the heat/tests directory. The directory
-is organized by test type (unit, functional, etc). Within each type
-directory one may create another directory for additional test files as
-well as a separate __init__.py, which should be blank.
+All unit tests are to be placed in the heat/tests directory,
+and tests might be organized by tested subsystem. Each subsystem directory
+must contain a separate blank __init__.py for tests discovery to function.
 
 An example directory structure illustrating the above:
 
 heat/tests
-|-- examples
+|-- autoscaling
 |   |-- __init__.py
 |   |-- test1.py
 |   |-- test2.py
 |   |-- test3.py
 |-- __init__.py
-`-- unit
-    |-- __init__.py
-    |-- test_template_convert.py
+|-- test_template_convert.py
 
 If a given test has no overlapping requirements (variables or same
 routines) a new test does not need to create a subdirectory under the
@@ -30,19 +27,36 @@ Testrepository - http://pypi.python.org/pypi/testrepository is used to
 find and run tests, parallelize their runs, and record timing/results.
 
 If new dependencies are introduced upon the development of a test, the
-tools/test-requires file needs to be updated so that the virtual
+test-requirements.txt file needs to be updated so that the virtual
 environment will be able to successfully execute all tests.
 
 Running the tests
 -----------------
 
-During development, the simplest way to run tests is to simply invoke
-testr directly.
+Advised way of running tests is the same as in OpenStack testing
+infrastructure, that is using tox.
 
-$ testr run
+$ tox
 
-To run the tests with a clean virtual env in the same manner as the
-OpenStack testing infrastructure does so, use tox.
+This by default will run unit tests suite with Python 2.7 and PEP8/HACKING
+style checks. To run only one type of tests you can explicitly provide tox
+with the test environment to use.
 
 $ tox -epy27 # test suite on python 2.7
 $ tox -epep8 # run full source code checker
+
+To run only a subset of tests, you can provide tox with a regex argument
+defining which tests to execute.
+
+$ tox -epy27 -- VolumeTests
+
+To use debugger like pdb during test run, one has to run tests directly
+with other, non-concurrent test runner instead of testr.
+That also presumes that you have a virtual env with all heat dependencies active.
+Below is an example bash script using testtools test runner that also allows
+running single tests by providing a regex.
+
+#! /usr/bin/env sh
+testlist=$(mktemp)
+testr list-tests "$1" > $testlist
+python -m testtools.run --load-list $testlist
