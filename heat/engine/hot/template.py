@@ -171,17 +171,21 @@ class HOTemplate20130523(template.Template):
         return self._translate_section('outputs', 'value', outputs,
                                        HOT_TO_CFN_ATTRS)
 
-    def param_schemata(self):
-        parameter_section = self.t.get(self.PARAMETERS)
-        if parameter_section is None:
-            parameter_section = {}
+    def param_schemata(self, param_defaults=None):
+        parameter_section = self.t.get(self.PARAMETERS) or {}
+        pdefaults = param_defaults or {}
+        for name, schema in six.iteritems(parameter_section):
+            if name in pdefaults:
+                parameter_section[name]['default'] = pdefaults[name]
+
         params = six.iteritems(parameter_section)
         return dict((name, parameters.HOTParamSchema.from_dict(name, schema))
                     for name, schema in params)
 
-    def parameters(self, stack_identifier, user_params):
+    def parameters(self, stack_identifier, user_params, param_defaults=None):
         return parameters.HOTParameters(stack_identifier, self,
-                                        user_params=user_params)
+                                        user_params=user_params,
+                                        param_defaults=param_defaults)
 
     def resource_definitions(self, stack):
         allowed_keys = set(_RESOURCE_KEYS)

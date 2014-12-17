@@ -17,6 +17,7 @@ import random
 import re
 import six
 import subprocess
+import testscenarios
 import testtools
 import time
 
@@ -63,7 +64,8 @@ def rand_name(name=''):
         return randbits
 
 
-class HeatIntegrationTest(testtools.TestCase):
+class HeatIntegrationTest(testscenarios.WithScenarios,
+                          testtools.TestCase):
 
     def setUp(self):
         super(HeatIntegrationTest, self).setUp()

@@ -135,9 +135,8 @@ class RemoteStack(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
         try:
-            registry = self.stack.env.registry
             params = self.properties[self.PARAMETERS]
-            env = environment.get_custom_environment(registry, params)
+            env = environment.get_child_environment(self.stack.env, params)
             tmpl = template_format.parse(self.properties[self.TEMPLATE])
             args = {
                 'template': tmpl,
@@ -153,9 +152,8 @@ class RemoteStack(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
-        registry = self.stack.env.registry
         params = self.properties[self.PARAMETERS]
-        env = environment.get_custom_environment(registry, params)
+        env = environment.get_child_environment(self.stack.env, params)
         tmpl = template_format.parse(self.properties[self.TEMPLATE])
         args = {
             'stack_name': self.physical_resource_name_or_FnGetRefId(),
@@ -203,8 +201,7 @@ class RemoteStack(resource.Resource):
                                                     self.name)
 
             params = self.properties[self.PARAMETERS]
-            registry = self.stack.env.registry
-            env = environment.get_custom_environment(registry, params)
+            env = environment.get_child_environment(self.stack.env, params)
             tmpl = template_format.parse(self.properties[self.TEMPLATE])
             fields = {
                 'stack_id': self.resource_id,

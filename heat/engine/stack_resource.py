@@ -170,13 +170,12 @@ class StackResource(resource.Resource):
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
-        child_env = environment.get_custom_environment(
-            self.stack.env.registry,
-            child_params)
+        child_env = environment.get_child_environment(
+            self.stack.env, child_params)
         nested = parser.Stack(self.context,
                               stack_name,
                               parsed_template,
-                              child_env,
+                              env=child_env,
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
                               parent_resource=self,

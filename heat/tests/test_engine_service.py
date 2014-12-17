@@ -2286,7 +2286,8 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(expected, schema)
 
     def _no_template_file(self, function):
-        info = environment.ResourceInfo(environment.ResourceRegistry,
+        env = environment.Environment()
+        info = environment.ResourceInfo(env.registry,
                                         ['ResourceWithWrongRefOnFile'],
                                         'not_existing.yaml')
         mock_iterable = mock.MagicMock(return_value=iter([info]))

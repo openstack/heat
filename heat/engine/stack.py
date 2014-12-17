@@ -131,8 +131,10 @@ class Stack(collections.Mapping):
         resources.initialise()
 
         self.env = env or environment.Environment({})
-        self.parameters = self.t.parameters(self.identifier(),
-                                            user_params=self.env.params)
+        self.parameters = self.t.parameters(
+            self.identifier(),
+            user_params=self.env.params,
+            param_defaults=self.env.param_defaults)
         self._set_param_stackid()
 
         if resolve_data:

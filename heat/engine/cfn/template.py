@@ -69,14 +69,20 @@ class CfnTemplate(template.Template):
         # to be consistent with an empty json section.
         return self.t.get(section) or default
 
-    def param_schemata(self):
+    def param_schemata(self, param_defaults=None):
         params = self.t.get(self.PARAMETERS) or {}
+        pdefaults = param_defaults or {}
+        for name, schema in six.iteritems(params):
+            if name in pdefaults:
+                params[name][parameters.DEFAULT] = pdefaults[name]
+
         return dict((name, parameters.Schema.from_dict(name, schema))
                     for name, schema in six.iteritems(params))
 
-    def parameters(self, stack_identifier, user_params):
+    def parameters(self, stack_identifier, user_params, param_defaults=None):
         return parameters.Parameters(stack_identifier, self,
-                                     user_params=user_params)
+                                     user_params=user_params,
+                                     param_defaults=param_defaults)
 
     def resource_definitions(self, stack):
         def rsrc_defn_item(name, snippet):

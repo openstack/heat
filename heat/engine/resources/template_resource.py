@@ -27,10 +27,10 @@ from heat.engine import stack_resource
 from heat.engine import template
 
 
-def generate_class(name, template_name):
+def generate_class(name, template_name, env):
     data = TemplateResource.get_template_file(template_name, ('file',))
     tmpl = template.Template(template_format.parse(data))
-    props, attrs = TemplateResource.get_schemas(tmpl)
+    props, attrs = TemplateResource.get_schemas(tmpl, env.param_defaults)
     cls = type(name, (TemplateResource,),
                {'properties_schema': props,
                 'attributes_schema': attrs})
@@ -83,9 +83,9 @@ class TemplateResource(stack_resource.StackResource):
             raise exception.NotFound(msg_fmt=msg)
 
     @staticmethod
-    def get_schemas(tmpl):
+    def get_schemas(tmpl, param_defaults):
         return ((properties.Properties.schema_from_params(
-                tmpl.param_schemata())),
+                tmpl.param_schemata(param_defaults))),
                 (attributes.Attributes.schema_from_outputs(
                 tmpl[tmpl.OUTPUTS])))
 
@@ -99,7 +99,8 @@ class TemplateResource(stack_resource.StackResource):
                 {"HeatTemplateFormatVersion": "2012-12-12"})
 
         # re-generate the properties and attributes from the template.
-        self.properties_schema, self.attributes_schema = self.get_schemas(tmpl)
+        self.properties_schema, self.attributes_schema = self.get_schemas(
+            tmpl, self.stack.env.param_defaults)
 
         self.properties = definition.properties(self.properties_schema,
                                                 self.context)

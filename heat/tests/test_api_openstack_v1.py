@@ -163,6 +163,7 @@ blarg: wibble
     def test_parameters(self):
         params = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'parameters': params,
+                'parameter_defaults': {},
                 'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(body, data.environment())
@@ -178,6 +179,7 @@ blarg: wibble
                 'environment': {'parameters': {'blarg': 'wibble'}}}
         expect = {'parameters': {'blarg': 'wibble',
                                  'foo': 'bar'},
+                  'parameter_defaults': {},
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(expect, data.environment())
@@ -192,6 +194,7 @@ blarg: wibble
         expect = {'parameters': {'blarg': 'wibble',
                                  'foo': 'bar',
                                  'tester': 'Yes'},
+                  'parameter_defaults': {},
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(expect, data.environment())
@@ -206,7 +209,8 @@ blarg: wibble
         env = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'not the environment': env}
         data = stacks.InstantiationData(body)
-        self.assertEqual({'parameters': {}, 'resource_registry': {}},
+        self.assertEqual({'parameters': {}, 'parameter_defaults': {},
+                          'resource_registry': {}},
                          data.environment())
 
     def test_args(self):
@@ -710,6 +714,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': identity.stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -770,6 +775,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': identity.stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30,
@@ -835,6 +841,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': identity.stack_name,
              'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {'my.yaml': 'This is the file contents.'},
               'args': {'timeout_mins': 30},
@@ -877,6 +884,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -892,6 +900,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -907,6 +916,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -959,6 +969,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -1017,6 +1028,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_name': stack_name,
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30},
@@ -1415,6 +1427,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30}})
@@ -1450,6 +1463,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {u'parameters': parameters,
+                         u'parameter_defaults': {},
                          u'resource_registry': {}},
               'files': {},
               'args': {'timeout_mins': 30}})
@@ -1509,6 +1523,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {'parameters': {},
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1544,6 +1559,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1581,6 +1597,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {'parameters': {},
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1620,6 +1637,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
              {'stack_identity': dict(identity),
               'template': template,
               'params': {'parameters': parameters,
+                         'parameter_defaults': {},
                          'resource_registry': {}},
               'files': {},
               'args': {rpc_api.PARAM_EXISTING: True,
@@ -1757,6 +1775,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
             ('validate_template',
              {'template': template,
               'params': {'parameters': {},
+                         'parameter_defaults': {},
                          'resource_registry': {}}})
         ).AndReturn(engine_response)
         self.m.ReplayAll()
@@ -1780,6 +1799,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
             ('validate_template',
              {'template': template,
               'params': {'parameters': {},
+                         'parameter_defaults': {},
                          'resource_registry': {}}})
         ).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()

@@ -27,7 +27,7 @@ class ParameterGroups(object):
     '''
     def __init__(self, tmpl):
         self.tmpl = tmpl
-        self.parameters = tmpl.parameters(None, {})
+        self.parameters = tmpl.parameters(None, {}, param_defaults={})
         LOG.debug(self.tmpl)
         LOG.debug(self.parameters)
         self.parameter_names = []
