@@ -569,7 +569,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
@@ -582,7 +582,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
@@ -595,7 +595,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
         neutronclient.Client.show_security_group('aaaa').AndReturn({
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
@@ -617,7 +617,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
@@ -630,7 +630,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
@@ -643,7 +643,7 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            neutron_exc.NeutronClientException(status_code=409))
+            neutron_exc.Conflict())
 
         # delete script
         neutronclient.Client.show_security_group('aaaa').AndReturn({
