@@ -14,9 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from keystoneclient import exceptions as keystone_exceptions
-from keystoneclient.v2_0 import client as keystone_client
 from webob import exc
+
+
+from heat.common import context
+from heat.common import heat_keystoneclient
+
+
+LOG = logging.getLogger(__name__)
 
 
 class KeystonePasswordAuthProtocol(object):
@@ -41,16 +49,18 @@ class KeystonePasswordAuthProtocol(object):
         if not tenant:
             return self._reject_request(env, start_response, auth_url)
         try:
-            client = keystone_client.Client(
-                username=username, password=password, tenant_id=tenant,
-                auth_url=auth_url)
+            ctx = context.RequestContext(username=username, password=password,
+                                         tenant_id=tenant, auth_url=auth_url,
+                                         is_admin=False)
+            hc = heat_keystoneclient.KeystoneClient(ctx)
+            client = hc.client
         except (keystone_exceptions.Unauthorized,
                 keystone_exceptions.Forbidden,
                 keystone_exceptions.NotFound,
                 keystone_exceptions.AuthorizationFailure):
             return self._reject_request(env, start_response, auth_url)
-        env['keystone.token_info'] = client.auth_ref
         env.update(self._build_user_headers(client.auth_ref))
+
         return self.app(env, start_response)
 
     def _reject_request(self, env, start_response, auth_url):
@@ -61,16 +71,30 @@ class KeystonePasswordAuthProtocol(object):
 
     def _build_user_headers(self, token_info):
         """Build headers that represent authenticated user from auth token."""
-        tenant_id = token_info['token']['tenant']['id']
-        tenant_name = token_info['token']['tenant']['name']
-        user_id = token_info['user']['id']
-        user_name = token_info['user']['name']
-        roles = ','.join(
-            [role['name'] for role in token_info['user']['roles']])
-        service_catalog = token_info['serviceCatalog']
-        auth_token = token_info['token']['id']
+
+        if token_info.get('version') == 'v3':
+            keystone_token_info = {'token': token_info}
+            tenant_id = token_info['project']['id']
+            tenant_name = token_info['project']['name']
+            user_id = token_info['user']['id']
+            user_name = token_info['user']['name']
+            roles = ','.join(
+                [role['name'] for role in token_info['roles']])
+            service_catalog = None
+            auth_token = token_info['auth_token']
+        else:
+            keystone_token_info = token_info
+            tenant_id = token_info['token']['tenant']['id']
+            tenant_name = token_info['token']['tenant']['name']
+            user_id = token_info['user']['id']
+            user_name = token_info['user']['name']
+            roles = ','.join(
+                [role['name'] for role in token_info['user']['roles']])
+            service_catalog = token_info['serviceCatalog']
+            auth_token = token_info['token']['id']
 
         headers = {
+            'keystone.token_info': keystone_token_info,
             'HTTP_X_IDENTITY_STATUS': 'Confirmed',
             'HTTP_X_PROJECT_ID': tenant_id,
             'HTTP_X_PROJECT_NAME': tenant_name,
