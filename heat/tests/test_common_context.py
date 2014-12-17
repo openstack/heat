@@ -19,7 +19,6 @@ import webob
 
 from heat.common import context
 from heat.common import exception
-from heat.openstack.common import policy as base_policy
 from heat.tests import common
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
@@ -244,10 +243,7 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
             cfg.StrOpt('project', default='heat'),
         ]
         cfg.CONF.register_opts(opts)
-        pf = policy_path + 'check_admin.json'
-        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
-        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
-        self.m.ReplayAll()
+        cfg.CONF.set_override('policy_file', 'check_admin.json')
 
     def test_context_middleware(self):
 
