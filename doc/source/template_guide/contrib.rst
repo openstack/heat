@@ -56,4 +56,4 @@ find more information in the `NOVA_FLAVOR_README
 <https://github.com/openstack/heat/blob/master/contrib/nova_flavor
 /README.md>`_.
 
-.. resourcepages:: NovaFlavor::
+.. resourcepages:: OS::Nova::Flavor
