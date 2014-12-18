@@ -1,0 +1,107 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from oslo.utils import timeutils
+
+from heat.common import context
+from heat.common.i18n import _LE
+from heat.common.i18n import _LW
+from heat.db import api as db_api
+from heat.engine import stack
+from heat.engine import watchrule
+from heat.openstack.common import log as logging
+from heat.rpc import api as rpc_api
+
+LOG = logging.getLogger(__name__)
+
+
+class StackWatch(object):
+    def __init__(self, thread_group_mgr):
+        self.thread_group_mgr = thread_group_mgr
+
+    def start_watch_task(self, stack_id, cnxt):
+
+        def stack_has_a_watchrule(sid):
+            wrs = db_api.watch_rule_get_all_by_stack(cnxt, sid)
+
+            now = timeutils.utcnow()
+            start_watch_thread = False
+            for wr in wrs:
+                # reset the last_evaluated so we don't fire off alarms when
+                # the engine has not been running.
+                db_api.watch_rule_update(cnxt, wr.id, {'last_evaluated': now})
+
+                if wr.state != rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
+                    start_watch_thread = True
+
+            children = db_api.stack_get_all_by_owner_id(cnxt, sid)
+            for child in children:
+                if stack_has_a_watchrule(child.id):
+                    start_watch_thread = True
+
+            return start_watch_thread
+
+        if stack_has_a_watchrule(stack_id):
+            self.thread_group_mgr.add_timer(
+                stack_id,
+                self.periodic_watcher_task,
+                sid=stack_id)
+
+    def check_stack_watches(self, sid):
+        # Retrieve the stored credentials & create context
+        # Require tenant_safe=False to the stack_get to defeat tenant
+        # scoping otherwise we fail to retrieve the stack
+        LOG.debug("Periodic watcher task for stack %s" % sid)
+        admin_context = context.get_admin_context()
+        db_stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
+                                    eager_load=True)
+        if not db_stack:
+            LOG.error(_LE("Unable to retrieve stack %s for periodic task"),
+                      sid)
+            return
+        stk = stack.Stack.load(admin_context, stack=db_stack,
+                               use_stored_context=True)
+
+        # recurse into any nested stacks.
+        children = db_api.stack_get_all_by_owner_id(admin_context, sid)
+        for child in children:
+            self.check_stack_watches(child.id)
+
+        # Get all watchrules for this stack and evaluate them
+        try:
+            wrs = db_api.watch_rule_get_all_by_stack(admin_context, sid)
+        except Exception as ex:
+            LOG.warn(_LW('periodic_task db error watch rule removed? %(ex)s'),
+                     ex)
+            return
+
+        def run_alarm_action(stk, actions, details):
+            for action in actions:
+                action(details=details)
+            for res in stk.itervalues():
+                res.metadata_update()
+
+        for wr in wrs:
+            rule = watchrule.WatchRule.load(stk.context, watch=wr)
+            actions = rule.evaluate()
+            if actions:
+                self.thread_group_mgr.start(sid, run_alarm_action, stk,
+                                            actions, rule.get_details())
+
+    def periodic_watcher_task(self, sid):
+        """
+        Periodic task, created for each stack, triggers watch-rule
+        evaluation for all rules defined for the stack
+        sid = stack ID
+        """
+        self.check_stack_watches(sid)
