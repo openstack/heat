@@ -556,14 +556,12 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
         self.m.VerifyAll()
 
-    def test_stack_adopt_with_params(self):
-        cfg.CONF.set_override('enable_stack_adopt', True)
+    def _get_stack_adopt_data_and_template(self, environment=None):
         template = {
             "heat_template_version": "2013-05-23",
             "parameters": {"app_dbx": {"type": "string"}},
             "resources": {"res1": {"type": "GenericResourceType"}}}
 
-        environment = {'parameters': {"app_dbx": "test"}}
         adopt_data = {
             "status": "COMPLETE",
             "name": "rtrove1",
@@ -578,7 +576,13 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                     "action": "CREATE",
                     "type": "GenericResourceType",
                     "metadata": {}}}}
+        return template, adopt_data
 
+    def test_stack_adopt_with_params(self):
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        environment = {'parameters': {"app_dbx": "test"}}
+        template, adopt_data = self._get_stack_adopt_data_and_template(
+            environment)
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
         result = self.man.create_stack(self.ctx, "test_adopt_stack",
@@ -589,6 +593,23 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual(template, stack.raw_template.template)
         self.assertEqual(environment['parameters'],
                          stack.parameters['parameters'])
+
+    def test_stack_adopt_disabled(self):
+        # to test disable stack adopt
+        cfg.CONF.set_override('enable_stack_adopt', False)
+        environment = {'parameters': {"app_dbx": "test"}}
+        template, adopt_data = self._get_stack_adopt_data_and_template(
+            environment)
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
+        ex = self.assertRaises(
+            dispatcher.ExpectedException,
+            self.man.create_stack,
+            self.ctx, "test_adopt_stack_disabled",
+            template, {}, None,
+            {'adopt_stack_data': str(adopt_data)})
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
+        self.assertIn('Stack Adopt', six.text_type(ex.exc_info[1]))
 
     def test_stack_create_invalid_stack_name(self):
         stack_name = 'service_create/test_stack'
