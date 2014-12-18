@@ -414,7 +414,7 @@ class DependencyTaskGroupTest(common.HeatTestCase):
                 dummy.do_step(2, 'B').InAnyOrder('2')
                 dummy.do_step(3, 'B')
 
-        exc = self.assertRaises(Exception, run_tasks_with_exceptions)
+        exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
 
     def test_exception_grace_period_expired(self):
@@ -436,7 +436,7 @@ class DependencyTaskGroupTest(common.HeatTestCase):
                 dummy.do_step(3, 'B')
                 dummy.do_step(4, 'B').WithSideEffects(sleep)
 
-        exc = self.assertRaises(Exception, run_tasks_with_exceptions)
+        exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
 
 
