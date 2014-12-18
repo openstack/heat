@@ -575,11 +575,14 @@ class EngineService(service.Service):
                                            params, files, args, owner_id=None,
                                            nested_depth=0, user_creds_id=None,
                                            stack_user_project_id=None):
-        tmpl = templatem.Template(template, files=files)
-        self._validate_new_stack(cnxt, stack_name, tmpl)
-
         # If it is stack-adopt, use parameters from adopt_stack_data
         common_params = api.extract_args(args)
+        if (rpc_api.PARAM_ADOPT_STACK_DATA in common_params and
+                not cfg.CONF.enable_stack_adopt):
+            raise exception.NotSupported(feature='Stack Adopt')
+
+        tmpl = templatem.Template(template, files=files)
+        self._validate_new_stack(cnxt, stack_name, tmpl)
 
         if rpc_api.PARAM_ADOPT_STACK_DATA in common_params:
             params[rpc_api.STACK_PARAMETERS] = common_params[
@@ -661,9 +664,6 @@ class EngineService(service.Service):
 
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
-                if not cfg.CONF.enable_stack_adopt:
-                    raise exception.NotSupported(feature='Stack Adopt')
-
                 stack.adopt()
             elif stack.status != stack.FAILED:
                 stack.create()
