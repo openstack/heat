@@ -204,11 +204,12 @@ class StackResourceTest(common.HeatTestCase):
         self.assertNotEqual(sig2, sig2a)
 
     def test_propagated_files(self):
+        """Makes sure that the files map in the top level stack
+        are passed on to the child stack.
+        """
         self.parent_stack.t.files["foo"] = "bar"
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-        self.stack = self.parent_resource.nested()
-        self.assertEqual({"foo": "bar"}, self.stack.t.files)
+        parsed_t = self.parent_resource._parse_child_template(self.templ)
+        self.assertEqual({"foo": "bar"}, parsed_t.files)
 
     @mock.patch('heat.engine.environment.get_child_environment')
     @mock.patch.object(stack_resource.parser, 'Stack')
