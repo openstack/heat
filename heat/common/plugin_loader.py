@@ -88,9 +88,9 @@ def load_modules(package, ignore_error=False):
 
     for importer, module_name, is_package in pkgutil.walk_packages(path,
                                                                    pkg_prefix):
-        # NOTE(chmouel): Skips tests package or this will try to load
-        # them when loading plugins.
-        if '.tests.' in module_name:
+        # Skips tests or setup packages so as not to load tests in general
+        # or setup.py during doc generation.
+        if '.tests.' in module_name or module_name.endswith('.setup'):
             continue
 
         try:
