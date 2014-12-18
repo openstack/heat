@@ -40,8 +40,8 @@ class CinderClientPluginTests(common.HeatTestCase):
         volume_id = str(uuid.uuid4())
         my_volume = self.m.CreateMockAnything()
         self.cinder_client.volumes = self.m.CreateMockAnything()
-        self.cinder_client.volumes.get(volume_id).MultipleTimes().\
-            AndReturn(my_volume)
+        self.cinder_client.volumes.get(
+            volume_id).MultipleTimes().AndReturn(my_volume)
         self.m.ReplayAll()
 
         self.assertEqual(my_volume, self.cinder_plugin.get_volume(volume_id))
@@ -53,8 +53,8 @@ class CinderClientPluginTests(common.HeatTestCase):
         snapshot_id = str(uuid.uuid4())
         my_snapshot = self.m.CreateMockAnything()
         self.cinder_client.volume_snapshots = self.m.CreateMockAnything()
-        self.cinder_client.volume_snapshots.get(snapshot_id).MultipleTimes().\
-            AndReturn(my_snapshot)
+        self.cinder_client.volume_snapshots.get(
+            snapshot_id).MultipleTimes().AndReturn(my_snapshot)
         self.m.ReplayAll()
 
         self.assertEqual(my_snapshot,

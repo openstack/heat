@@ -197,8 +197,8 @@ class ResourceRegistry(object):
             if name.endswith('*'):
                 # delete all matching entries.
                 for res_name in registry.keys():
-                    if isinstance(registry[res_name], ResourceInfo) and \
-                       res_name.startswith(name[:-1]):
+                    if (isinstance(registry[res_name], ResourceInfo) and
+                            res_name.startswith(name[:-1])):
                         LOG.warn(_LW('Removing %(item)s from %(path)s'), {
                             'item': res_name,
                             'path': descriptive_path})

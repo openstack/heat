@@ -299,14 +299,14 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
 
-        self.fc.servers.get(mox.IgnoreArg()).\
-            MultipleTimes().AndReturn(return_server)
+        self.fc.servers.get(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(return_server)
         self.fc.client.post_servers_1234_action(
-            body={'resize': {'flavorRef': 3}}).\
-            MultipleTimes().AndReturn((202, None))
+            body={'resize': {'flavorRef': 3}}
+        ).MultipleTimes().AndReturn((202, None))
         self.fc.client.post_servers_1234_action(
-            body={'confirmResize': None}).\
-            MultipleTimes().AndReturn((202, None))
+            body={'confirmResize': None}
+        ).MultipleTimes().AndReturn((202, None))
 
         self._stub_grp_replace(num_creates_expected_on_updt,
                                num_deletes_expected_on_updt,

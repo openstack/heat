@@ -841,8 +841,8 @@ class Server(stack_user.StackUser):
         else:
             # remove not updated networks from old and new networks lists,
             # also get list these networks
-            not_updated_networks = \
-                self._get_network_matches(old_networks, new_networks)
+            not_updated_networks = self._get_network_matches(
+                old_networks, new_networks)
 
             self.update_networks_matching_iface_port(
                 old_networks + not_updated_networks, interfaces)
@@ -986,8 +986,8 @@ class Server(stack_user.StackUser):
         # record if any networks include explicit ports
         networks_with_port = False
         for network in networks:
-            networks_with_port = networks_with_port or \
-                network.get(self.NETWORK_PORT)
+            networks_with_port = (networks_with_port or
+                                  network.get(self.NETWORK_PORT))
             if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
                 msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
                         'to the network "%(network)s" for the server '

@@ -52,8 +52,8 @@ class nokeyTest(common.HeatTestCase):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['InstanceType'] = \
-            '256 MB Server'
+        t['Resources']['WebServer']['Properties'][
+            'InstanceType'] = '256 MB Server'
         resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('create_instance_name',
                                       resource_defns['WebServer'], stack)

@@ -124,10 +124,10 @@ engine_opts = [
                       'retries.')),
     cfg.IntOpt('event_purge_batch_size',
                default=10,
-               help=_('Controls how many events will be pruned whenever a '
-                      ' stack\'s events exceed max_events_per_stack. Set this'
-                      ' lower to keep more events at the expense of more'
-                      ' frequent purges.')),
+               help=_("Controls how many events will be pruned whenever a "
+                      "stack's events exceed max_events_per_stack. Set this "
+                      "lower to keep more events at the expense of more "
+                      "frequent purges.")),
     cfg.IntOpt('max_events_per_stack',
                default=1000,
                help=_('Maximum events that will be available per stack. Older'

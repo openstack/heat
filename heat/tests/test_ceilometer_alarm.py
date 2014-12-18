@@ -326,8 +326,8 @@ class CeilometerAlarmTest(common.HeatTestCase):
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         # Test for bug/1383521, where meter_name is in NOVA_METERS
         properties[alarm.CeilometerAlarm.METER_NAME] = 'memory.usage'
-        properties['matching_metadata'] =\
-            {'metadata.user_metadata.groupname': 'foo'}
+        properties['matching_metadata'] = {'metadata.user_metadata.groupname':
+                                           'foo'}
 
         self.stack = self.create_stack(template=json.dumps(t))
 

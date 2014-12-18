@@ -901,8 +901,8 @@ class Stack(collections.Mapping):
                         # rights to delete the trust unless an admin
                         trustor_id = user_creds.get('trustor_user_id')
                         if self.context.user_id != trustor_id:
-                            LOG.debug('Context user_id doesn\'t match '
-                                      'trustor, using stored context')
+                            LOG.debug("Context user_id doesn't match "
+                                      "trustor, using stored context")
                             sc = self.stored_context()
                             sc.clients.client('keystone').delete_trust(
                                 trust_id)

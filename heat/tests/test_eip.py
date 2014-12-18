@@ -332,14 +332,16 @@ class EIPTest(common.HeatTestCase):
         self._mock_server_get(mock_server=server, multiple=True)
 
         self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
-        self.fc.servers.add_floating_ip(server, floating_ip.ip, None).\
-            AndRaise(nova_exceptions.BadRequest(400))
+        self.fc.servers.add_floating_ip(
+            server, floating_ip.ip, None
+        ).AndRaise(nova_exceptions.BadRequest(400))
 
         self.m.StubOutWithMock(self.fc.servers, 'remove_floating_ip')
         msg = ("ClientException: Floating ip 172.24.4.13 is not associated "
                "with instance 1234.")
-        self.fc.servers.remove_floating_ip(server, floating_ip.ip).\
-            AndRaise(nova_exceptions.ClientException(422, msg))
+        self.fc.servers.remove_floating_ip(
+            server, floating_ip.ip
+        ).AndRaise(nova_exceptions.ClientException(422, msg))
         self.m.StubOutWithMock(self.fc.floating_ips, 'delete')
         self.fc.floating_ips.delete(mox.IsA(object))
 

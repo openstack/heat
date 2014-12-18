@@ -146,18 +146,18 @@ class ResourceGroup(stack_resource.StackResource):
                 schema={
                     REMOVAL_RSRC_LIST: properties.Schema(
                         properties.Schema.LIST,
-                        _('List of resources to be removed '
-                          'when doing an update which requires removal of '
-                          'specific resources. '
-                          'The resource may be specified several ways: '
-                          '(1) The resource name, as in the nested stack, '
-                          '(2) The resource reference returned from '
-                          'get_resource in a template, as available via '
-                          'the \'refs\' attribute '
-                          'Note this is destructive on update when specified; '
-                          'even if the count is not being reduced, and once '
-                          'a resource name is removed, it\'s name is never '
-                          'reused in subsequent updates'
+                        _("List of resources to be removed "
+                          "when doing an update which requires removal of "
+                          "specific resources. "
+                          "The resource may be specified several ways: "
+                          "(1) The resource name, as in the nested stack, "
+                          "(2) The resource reference returned from "
+                          "get_resource in a template, as available via "
+                          "the 'refs' attribute "
+                          "Note this is destructive on update when specified; "
+                          "even if the count is not being reduced, and once "
+                          "a resource name is removed, it's name is never "
+                          "reused in subsequent updates"
                           ),
                         default=[]
                     ),

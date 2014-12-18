@@ -75,8 +75,8 @@ class WatchRuleTest(common.HeatTestCase):
         if action_expected:
             dummy_action = DummyAction()
             self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
-            parser.Stack.resource_by_refid(mox.IgnoreArg()).\
-                MultipleTimes().AndReturn(dummy_action)
+            parser.Stack.resource_by_refid(
+                mox.IgnoreArg()).MultipleTimes().AndReturn(dummy_action)
 
         self.m.ReplayAll()
 

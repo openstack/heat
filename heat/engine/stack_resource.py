@@ -154,8 +154,8 @@ class StackResource(resource.Resource):
     def _parse_nested_stack(self, stack_name, child_template, child_params,
                             timeout_mins=None, adopt_data=None):
         if self.stack.nested_depth >= cfg.CONF.max_nested_stack_depth:
-            msg = _("Recursion depth exceeds %d.") % \
-                cfg.CONF.max_nested_stack_depth
+            msg = _("Recursion depth exceeds %d."
+                    ) % cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
 
         parsed_template = self._parse_child_template(child_template)

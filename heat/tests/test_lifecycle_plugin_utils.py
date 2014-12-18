@@ -43,8 +43,8 @@ class LifecyclePluginUtilsTests(common.HeatTestCase):
         self.m.UnsetStubs()
         self.m.StubOutWithMock(resources.global_env(),
                                'get_stack_lifecycle_plugins')
-        resources.global_env().get_stack_lifecycle_plugins().\
-            MultipleTimes().AndReturn(lcp_mappings)
+        resources.global_env().get_stack_lifecycle_plugins(
+        ).MultipleTimes().AndReturn(lcp_mappings)
         self.m.ReplayAll()
         # reset cache
         lifecycle_plugin_utils.pp_class_instances = None

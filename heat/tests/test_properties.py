@@ -917,8 +917,8 @@ class PropertyTest(testtools.TestCase):
         p = properties.Property({'Type': 'List', 'Schema': list_schema})
         ex = self.assertRaises(exception.StackValidationFailed,
                                p.get_value, [42, 'fish'], True)
-        self.assertEqual('Property error : 1 Value \'fish\' is not '
-                         'an integer', six.text_type(ex))
+        self.assertEqual("Property error : 1 Value 'fish' is not "
+                         "an integer", six.text_type(ex))
 
 
 class PropertiesTest(testtools.TestCase):
@@ -1613,8 +1613,9 @@ class PropertiesValidationTest(testtools.TestCase):
 
         prop_expected = {'foo': {'Ref': 'foo'}}
         param_expected = {'foo': {'Type': 'Json'}}
-        (parameters, props) = \
-            properties.Properties.schema_to_parameters_and_properties(schema)
+        (parameters,
+         props) = properties.Properties.schema_to_parameters_and_properties(
+             schema)
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
 
@@ -1628,8 +1629,9 @@ class PropertiesValidationTest(testtools.TestCase):
 
         prop_expected = {'foo': {'Fn::Split': [",", {'Ref': 'foo'}]}}
         param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
-        (parameters, props) = \
-            properties.Properties.schema_to_parameters_and_properties(schema)
+        (parameters,
+         props) = properties.Properties.schema_to_parameters_and_properties(
+             schema)
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
 
@@ -1648,8 +1650,9 @@ class PropertiesValidationTest(testtools.TestCase):
 
         prop_expected = {'foo': {'Fn::Split': [",", {'Ref': 'foo'}]}}
         param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
-        (parameters, props) = \
-            properties.Properties.schema_to_parameters_and_properties(schema)
+        (parameters,
+         props) = properties.Properties.schema_to_parameters_and_properties(
+             schema)
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
 
@@ -1661,8 +1664,9 @@ class PropertiesValidationTest(testtools.TestCase):
         prop_expected = {'foo': {'Ref': 'foo'}}
         param_expected = {'foo': {'Type': 'String'}}
 
-        (parameters, props) = \
-            properties.Properties.schema_to_parameters_and_properties(schema)
+        (parameters,
+         props) = properties.Properties.schema_to_parameters_and_properties(
+             schema)
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
 
@@ -1769,8 +1773,9 @@ class PropertiesValidationTest(testtools.TestCase):
     def test_schema_to_template_empty_schema(self):
         schema = {}
 
-        (parameters, props) = \
-            properties.Properties.schema_to_parameters_and_properties(schema)
+        (parameters,
+         props) = properties.Properties.schema_to_parameters_and_properties(
+             schema)
         self.assertEqual({}, parameters)
         self.assertEqual({}, props)
 

@@ -63,9 +63,9 @@ common_properties_schema = {
     ),
     REPEAT_ACTIONS: properties.Schema(
         properties.Schema.BOOLEAN,
-        _('False to trigger actions when the threshold is reached AND '
-          'the alarm\'s state has changed. By default, actions are called '
-          'each time the threshold is reached.'),
+        _("False to trigger actions when the threshold is reached AND "
+          "the alarm's state has changed. By default, actions are called "
+          "each time the threshold is reached."),
         default='true',
         update_allowed=True
     )

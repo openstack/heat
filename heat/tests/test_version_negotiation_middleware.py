@@ -106,8 +106,9 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         major_version = 1
         minor_version = 0
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers['Accept'] = 'application/vnd.openstack.' \
-            'orchestration-v{0}.{1}'.format(major_version, minor_version)
+        request.headers['Accept'] = (
+            'application/vnd.openstack.orchestration-v{0}.{1}'.format(
+                major_version, minor_version))
 
         response = version_negotiation.process_request(request)
 
@@ -119,8 +120,8 @@ class VersionNegotiationMiddlewareTest(common.HeatTestCase):
         version_negotiation = vn.VersionNegotiationFilter(
             self._version_controller_factory, None, None)
         request = webob.Request({'PATH_INFO': 'resource'})
-        request.headers['Accept'] = 'application/vnd.openstack.' \
-            'orchestration-v2.0'
+        request.headers['Accept'] = (
+            'application/vnd.openstack.orchestration-v2.0')
 
         response = version_negotiation.process_request(request)
 

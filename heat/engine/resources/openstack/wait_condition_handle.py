@@ -101,11 +101,11 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
                 return self.data().get('endpoint')
             elif key == self.CURL_CLI:
                 # Construct curl command for template-author convenience
-                return ('curl -i -X POST '
-                        '-H \'X-Auth-Token: %(token)s\' '
-                        '-H \'Content-Type: application/json\' '
-                        '-H \'Accept: application/json\' '
-                        '%(endpoint)s' %
+                return ("curl -i -X POST "
+                        "-H 'X-Auth-Token: %(token)s' "
+                        "-H 'Content-Type: application/json' "
+                        "-H 'Accept: application/json' "
+                        "%(endpoint)s" %
                         dict(token=self.data().get('token'),
                              endpoint=self.data().get('endpoint')))
 

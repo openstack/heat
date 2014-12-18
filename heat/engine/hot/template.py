@@ -39,10 +39,13 @@ class HOTemplate20130523(template.Template):
     A Heat Orchestration Template format stack template.
     """
 
-    SECTIONS = (VERSION, DESCRIPTION, PARAMETER_GROUPS, PARAMETERS,
-                RESOURCES, OUTPUTS, MAPPINGS) = \
-               ('heat_template_version', 'description', 'parameter_groups',
-                'parameters', 'resources', 'outputs', '__undefined__')
+    SECTIONS = (
+        VERSION, DESCRIPTION, PARAMETER_GROUPS,
+        PARAMETERS, RESOURCES, OUTPUTS, MAPPINGS
+    ) = (
+        'heat_template_version', 'description', 'parameter_groups',
+        'parameters', 'resources', 'outputs', '__undefined__'
+    )
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION])
 

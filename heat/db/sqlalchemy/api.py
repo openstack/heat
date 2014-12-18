@@ -123,10 +123,13 @@ def resource_get(context, resource_id):
 
 
 def resource_get_by_name_and_stack(context, resource_name, stack_id):
-    result = model_query(context, models.Resource).\
-        filter_by(name=resource_name).\
-        filter_by(stack_id=stack_id).\
-        options(orm.joinedload("data")).first()
+    result = model_query(
+        context, models.Resource
+    ).filter_by(
+        name=resource_name
+    ).filter_by(
+        stack_id=stack_id
+    ).options(orm.joinedload("data")).first()
     return result
 
 
@@ -258,9 +261,11 @@ def resource_create(context, values):
 
 
 def resource_get_all_by_stack(context, stack_id):
-    results = model_query(context, models.Resource).\
-        filter_by(stack_id=stack_id).\
-        options(orm.joinedload("data")).all()
+    results = model_query(
+        context, models.Resource
+    ).filter_by(
+        stack_id=stack_id
+    ).options(orm.joinedload("data")).all()
 
     if not results:
         raise exception.NotFound(_("no resources for stack_id %s were found")
@@ -269,23 +274,22 @@ def resource_get_all_by_stack(context, stack_id):
 
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
-    query = soft_delete_aware_query(context, models.Stack).\
-        filter(sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id
-        )).\
-        filter_by(name=stack_name).\
-        filter_by(owner_id=owner_id)
+    query = soft_delete_aware_query(
+        context, models.Stack
+    ).filter(sqlalchemy.or_(
+             models.Stack.tenant == context.tenant_id,
+             models.Stack.stack_user_project_id == context.tenant_id)
+             ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
     return query.first()
 
 
 def stack_get_by_name(context, stack_name):
-    query = soft_delete_aware_query(context, models.Stack).\
-        filter(sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id
-        )).\
-        filter_by(name=stack_name)
+    query = soft_delete_aware_query(
+        context, models.Stack
+    ).filter(sqlalchemy.or_(
+             models.Stack.tenant == context.tenant_id,
+             models.Stack.stack_user_project_id == context.tenant_id)
+             ).filter_by(name=stack_name)
     return query.first()
 
 
@@ -310,8 +314,8 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True,
 
 
 def stack_get_all_by_owner_id(context, owner_id):
-    results = soft_delete_aware_query(context, models.Stack).\
-        filter_by(owner_id=owner_id).all()
+    results = soft_delete_aware_query(
+        context, models.Stack).filter_by(owner_id=owner_id).all()
     return results
 
 
@@ -353,13 +357,13 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
 def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
                          show_nested=False):
     if show_nested:
-        query = soft_delete_aware_query(context, models.Stack,
-                                        show_deleted=show_deleted).\
-            filter_by(backup=False)
+        query = soft_delete_aware_query(
+            context, models.Stack, show_deleted=show_deleted
+        ).filter_by(backup=False)
     else:
-        query = soft_delete_aware_query(context, models.Stack,
-                                        show_deleted=show_deleted).\
-            filter_by(owner_id=None)
+        query = soft_delete_aware_query(
+            context, models.Stack, show_deleted=show_deleted
+        ).filter_by(owner_id=None)
 
     if tenant_safe:
         query = query.filter_by(tenant=context.tenant_id)
@@ -450,9 +454,10 @@ def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
     session = get_session()
     with session.begin():
         lock = session.query(models.StackLock).get(stack_id)
-        rows_affected = session.query(models.StackLock).\
-            filter_by(stack_id=stack_id, engine_id=old_engine_id).\
-            update({"engine_id": new_engine_id})
+        rows_affected = session.query(
+            models.StackLock
+        ).filter_by(stack_id=stack_id, engine_id=old_engine_id
+                    ).update({"engine_id": new_engine_id})
     if not rows_affected:
         return lock.engine_id if lock is not None else True
 
@@ -460,9 +465,9 @@ def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
 def stack_lock_release(stack_id, engine_id):
     session = get_session()
     with session.begin():
-        rows_affected = session.query(models.StackLock).\
-            filter_by(stack_id=stack_id, engine_id=engine_id).\
-            delete()
+        rows_affected = session.query(
+            models.StackLock
+        ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
     if not rows_affected:
         return True
 
@@ -523,8 +528,9 @@ def event_get(context, event_id):
 def event_get_all(context):
     stacks = soft_delete_aware_query(context, models.Stack)
     stack_ids = [stack.id for stack in stacks]
-    results = model_query(context, models.Event).\
-        filter(models.Event.stack_id.in_(stack_ids)).all()
+    results = model_query(
+        context, models.Event
+    ).filter(models.Event.stack_id.in_(stack_ids)).all()
     return results
 
 
@@ -532,16 +538,16 @@ def event_get_all_by_tenant(context, limit=None, marker=None,
                             sort_keys=None, sort_dir=None, filters=None):
     query = model_query(context, models.Event)
     query = db_filters.exact_filter(query, models.Event, filters)
-    query = query.join(models.Event.stack).\
-        filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
+    query = query.join(
+        models.Event.stack
+    ).filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
     filters = None
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 
 
 def _query_all_by_stack(context, stack_id):
-    query = model_query(context, models.Event).\
-        filter_by(stack_id=stack_id)
+    query = model_query(context, models.Event).filter_by(stack_id=stack_id)
     return query
 
 
@@ -568,8 +574,8 @@ def _events_paginate_query(context, query, model, limit=None, sort_keys=None,
     if marker:
         # not to use model_query(context, model).get(marker), because
         # user can only see the ID(column 'uuid') and the ID as the marker
-        model_marker = model_query(context, model).filter_by(uuid=marker).\
-            first()
+        model_marker = model_query(
+            context, model).filter_by(uuid=marker).first()
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
@@ -634,8 +640,8 @@ def watch_rule_get(context, watch_rule_id):
 
 
 def watch_rule_get_by_name(context, watch_rule_name):
-    result = model_query(context, models.WatchRule).\
-        filter_by(name=watch_rule_name).first()
+    result = model_query(
+        context, models.WatchRule).filter_by(name=watch_rule_name).first()
     return result
 
 
@@ -645,8 +651,8 @@ def watch_rule_get_all(context):
 
 
 def watch_rule_get_all_by_stack(context, stack_id):
-    results = model_query(context, models.WatchRule).\
-        filter_by(stack_id=stack_id).all()
+    results = model_query(
+        context, models.WatchRule).filter_by(stack_id=stack_id).all()
     return results
 
 
@@ -745,12 +751,12 @@ def software_deployment_get(context, deployment_id):
 
 def software_deployment_get_all(context, server_id=None):
     sd = models.SoftwareDeployment
-    query = model_query(context, sd).\
-        filter(sqlalchemy.or_(
-            sd.tenant == context.tenant_id,
-            sd.stack_user_project_id == context.tenant_id
-        )).\
-        order_by(sd.created_at)
+    query = model_query(
+        context, sd
+    ).filter(sqlalchemy.or_(
+             sd.tenant == context.tenant_id,
+             sd.stack_user_project_id == context.tenant_id)
+             ).order_by(sd.created_at)
     if server_id:
         query = query.filter_by(server_id=server_id)
     return query.all()
@@ -837,10 +843,11 @@ def purge_deleted(age, granularity='days'):
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
     user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
 
-    stmt = sqlalchemy.select([stack.c.id,
-                              stack.c.raw_template_id,
-                              stack.c.user_creds_id]).\
-        where(stack.c.deleted_at < time_line)
+    stmt = sqlalchemy.select(
+        [stack.c.id,
+         stack.c.raw_template_id,
+         stack.c.user_creds_id]
+    ).where(stack.c.deleted_at < time_line)
     deleted_stacks = engine.execute(stmt)
 
     for s in deleted_stacks:
@@ -848,8 +855,8 @@ def purge_deleted(age, granularity='days'):
         engine.execute(event_del)
         stack_del = stack.delete().where(stack.c.id == s[0])
         engine.execute(stack_del)
-        raw_template_del = raw_template.delete().\
-            where(raw_template.c.id == s[1])
+        raw_template_del = raw_template.delete().where(
+            raw_template.c.id == s[1])
         engine.execute(raw_template_del)
         user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
         engine.execute(user_creds_del)

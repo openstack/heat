@@ -326,7 +326,7 @@ class KeystoneClientV3(object):
         if len(domains) == 1:
             return domains[0].id
         elif len(domains) == 0:
-            msg = _('Can\'t find domain id for %s!')
+            msg = _("Can't find domain id for %s!")
             LOG.error(msg, domain_name)
             raise exception.Error(msg % domain_name)
         else:

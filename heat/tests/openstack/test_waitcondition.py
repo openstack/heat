@@ -99,8 +99,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
                                                stack.id, '', 'wait_handle')
             self.m.StubOutWithMock(heat_wch.HeatWaitConditionHandle,
                                    'identifier')
-            heat_wch.HeatWaitConditionHandle.\
-                identifier().MultipleTimes().AndReturn(id)
+            heat_wch.HeatWaitConditionHandle.identifier(
+            ).MultipleTimes().AndReturn(id)
 
         if stub_status:
             self.m.StubOutWithMock(heat_wch.HeatWaitConditionHandle,

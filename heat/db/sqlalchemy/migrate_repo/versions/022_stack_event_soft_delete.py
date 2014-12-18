@@ -32,18 +32,19 @@ def downgrade(migrate_engine):
 
     # Remove soft deleted data
     not_deleted = None
-    stmt = sqlalchemy.select([stack.c.id,
-                              stack.c.raw_template_id,
-                              stack.c.user_creds_id]).\
-        where(stack.c.deleted_at != not_deleted)
+    stmt = sqlalchemy.select(
+        [stack.c.id,
+         stack.c.raw_template_id,
+         stack.c.user_creds_id]
+    ).where(stack.c.deleted_at != not_deleted)
     deleted_stacks = migrate_engine.execute(stmt)
     for s in deleted_stacks:
         event_del = event.delete().where(event.c.stack_id == s[0])
         migrate_engine.execute(event_del)
         stack_del = stack.delete().where(stack.c.id == s[0])
         migrate_engine.execute(stack_del)
-        raw_template_del = raw_template.delete().\
-            where(raw_template.c.id == s[1])
+        raw_template_del = raw_template.delete(
+        ).where(raw_template.c.id == s[1])
         migrate_engine.execute(raw_template_del)
         user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
         migrate_engine.execute(user_creds_del)

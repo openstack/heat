@@ -152,8 +152,8 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
         if num is None:
             glance.ImageConstraint.validate(
-                mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().\
-                AndReturn(True)
+                mox.IgnoreArg(), mox.IgnoreArg()
+            ).MultipleTimes().AndReturn(True)
         else:
             for x in range(num):
                 glance.ImageConstraint.validate(

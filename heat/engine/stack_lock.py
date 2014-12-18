@@ -73,8 +73,8 @@ class StackLock(object):
                                      'stack': self.stack.id})
             return
 
-        if lock_engine_id == self.engine_id or \
-           self.engine_alive(self.context, lock_engine_id):
+        if (lock_engine_id == self.engine_id or
+                self.engine_alive(self.context, lock_engine_id)):
             LOG.debug("Lock on stack %(stack)s is owned by engine "
                       "%(engine)s" % {'stack': self.stack.id,
                                       'engine': lock_engine_id})

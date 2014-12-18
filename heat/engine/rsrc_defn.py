@@ -127,8 +127,8 @@ class ResourceDefinitionCore(object):
         This returns a new resource definition, with all of the functions
         parsed in the context of the specified stack and template.
         """
-        assert not getattr(self, '_frozen', False), \
-            "Cannot re-parse a frozen definition"
+        assert not getattr(self, '_frozen', False
+                           ), "Cannot re-parse a frozen definition"
 
         def reparse_snippet(snippet):
             return template.parse(stack, copy.deepcopy(snippet))

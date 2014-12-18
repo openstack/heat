@@ -225,11 +225,11 @@ class AutoScalingTest(common.HeatTestCase):
         memberc_ret_block = copy.deepcopy(memberc_block)
         memberc_ret_block['member']['id'] = str(uuid.uuid4())
 
-        neutronclient.Client.create_health_monitor(mon_block).\
-            AndReturn(mon_ret_block)
+        neutronclient.Client.create_health_monitor(
+            mon_block).AndReturn(mon_ret_block)
 
-        neutronclient.Client.create_pool(pool_block).\
-            AndReturn(pool_ret_block)
+        neutronclient.Client.create_pool(
+            pool_block).AndReturn(pool_ret_block)
 
         neutronclient.Client.associate_health_monitor(
             pool_ret_block['pool']['id'],
@@ -237,57 +237,57 @@ class AutoScalingTest(common.HeatTestCase):
                 'id': mon_ret_block['health_monitor']['id']
             }}).AndReturn(None)
 
-        neutronclient.Client.create_vip(vip_block).\
-            AndReturn(vip_ret_block)
+        neutronclient.Client.create_vip(
+            vip_block).AndReturn(vip_ret_block)
 
-        neutronclient.Client.show_pool(pool_ret_block['pool']['id']).\
-            AndReturn(pool_ret_block)
+        neutronclient.Client.show_pool(
+            pool_ret_block['pool']['id']).AndReturn(pool_ret_block)
 
-        neutronclient.Client.show_vip(vip_ret_block['vip']['id']).\
-            AndReturn(vip_ret_block)
+        neutronclient.Client.show_vip(
+            vip_ret_block['vip']['id']).AndReturn(vip_ret_block)
 
         parser.Stack.validate()
         instid = str(uuid.uuid4())
         instance.Instance.handle_create().AndReturn(instid)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(False)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(True)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(False)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(True)
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.4')
 
-        neutronclient.Client.create_member(membera_block).\
-            AndReturn(membera_ret_block)
+        neutronclient.Client.create_member(
+            membera_block).AndReturn(membera_ret_block)
 
         # Start of update
         parser.Stack.validate()
         instid = str(uuid.uuid4())
         instance.Instance.handle_create().AndReturn(instid)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(False)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(True)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(False)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(True)
 
         instid = str(uuid.uuid4())
         instance.Instance.handle_create().AndReturn(instid)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(False)
-        instance.Instance.check_create_complete(mox.IgnoreArg())\
-            .AndReturn(True)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(False)
+        instance.Instance.check_create_complete(
+            mox.IgnoreArg()).AndReturn(True)
 
         nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.5')
 
-        neutronclient.Client.create_member(memberb_block).\
-            AndReturn(memberb_ret_block)
+        neutronclient.Client.create_member(
+            memberb_block).AndReturn(memberb_ret_block)
 
         nova.NovaClientPlugin.server_to_ipaddress(
             mox.IgnoreArg()).AndReturn('1.2.3.6')
 
-        neutronclient.Client.create_member(memberc_block).\
-            AndReturn(memberc_ret_block)
+        neutronclient.Client.create_member(
+            memberc_block).AndReturn(memberc_ret_block)
 
         self.m.ReplayAll()
 

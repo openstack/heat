@@ -35,11 +35,13 @@ _RESOURCE_KEYS = (
 class CfnTemplate(template.Template):
     '''A stack template.'''
 
-    SECTIONS = (VERSION, ALTERNATE_VERSION, DESCRIPTION, MAPPINGS,
-                PARAMETERS, RESOURCES, OUTPUTS) = \
-               ('AWSTemplateFormatVersion', 'HeatTemplateFormatVersion',
-                'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs'
-                )
+    SECTIONS = (
+        VERSION, ALTERNATE_VERSION,
+        DESCRIPTION, MAPPINGS, PARAMETERS, RESOURCES, OUTPUTS
+    ) = (
+        'AWSTemplateFormatVersion', 'HeatTemplateFormatVersion',
+        'Description', 'Mappings', 'Parameters', 'Resources', 'Outputs'
+    )
 
     SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS, VERSION, ALTERNATE_VERSION])
 

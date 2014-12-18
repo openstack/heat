@@ -526,8 +526,8 @@ backend servers
         if res:
             return res
 
-        if cfg.CONF.loadbalancer_template and \
-                not os.access(cfg.CONF.loadbalancer_template, os.R_OK):
+        if (cfg.CONF.loadbalancer_template and
+                not os.access(cfg.CONF.loadbalancer_template, os.R_OK)):
             msg = _('Custom LoadBalancer template can not be found')
             raise exception.StackValidationFailed(message=msg)
 

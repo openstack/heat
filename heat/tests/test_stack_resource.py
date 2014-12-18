@@ -303,8 +303,8 @@ class StackResourceTest(common.HeatTestCase):
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
-        stk_resource.child_template = \
-            mock.Mock(return_value=templatem.Template(self.simple_template))
+        stk_resource.child_template = mock.Mock(
+            return_value=templatem.Template(self.simple_template))
         stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
@@ -320,8 +320,8 @@ class StackResourceTest(common.HeatTestCase):
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
-        stk_resource.child_template = \
-            mock.Mock(return_value=self.simple_template)
+        stk_resource.child_template = mock.Mock(
+            return_value=self.simple_template)
         stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
