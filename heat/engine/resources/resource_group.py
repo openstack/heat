@@ -192,7 +192,11 @@ class ResourceGroup(stack_resource.StackResource):
             res_class = template_resource.TemplateResource
         res_inst = res_class("%s:resource_def" % self.name, res_def,
                              self.stack)
-        res_inst.validate()
+        # Only validate the resource definition (which may be a
+        # nested template) if count is non-zero, to enable folks
+        # to disable features via a zero count if they wish
+        if self.properties[self.COUNT]:
+            res_inst.validate()
 
     def _name_blacklist(self):
         """Resolve the remove_policies to names for removal."""
