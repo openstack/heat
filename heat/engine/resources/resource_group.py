@@ -175,7 +175,9 @@ class ResourceGroup(stack_resource.StackResource):
         ),
         ATTR_ATTRIBUTES: attributes.Schema(
             _("A map of resource names to the specified attribute of each "
-              "individual resource.")
+              "individual resource.  "
+              "Requires heat_template_version: 2014-10-16."),
+            support_status=support.SupportStatus(version='2014.2')
         ),
     }
 
