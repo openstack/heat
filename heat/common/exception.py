@@ -327,6 +327,16 @@ class ResourcePropertyConflict(HeatException):
         super(ResourcePropertyConflict, self).__init__(**kwargs)
 
 
+class PropertyUnspecifiedError(HeatException):
+    msg_fmt = _('At least one of the following properties '
+                'must be specified: %(props)s')
+
+    def __init__(self, *args, **kwargs):
+        if args:
+            kwargs.update({'props': ", ".join(args)})
+        super(PropertyUnspecifiedError, self).__init__(**kwargs)
+
+
 class HTTPExceptionDisguise(Exception):
     """Disguises HTTP exceptions so they can be handled by the webob fault
     application in the wsgi pipeline.

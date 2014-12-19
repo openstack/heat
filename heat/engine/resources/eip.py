@@ -239,9 +239,8 @@ class ElasticIpAssociation(resource.Resource):
         # to check InstanceId and NetworkInterfaceId, should provide
         # at least one
         if not instance_id and not ni_id:
-            msg = _("Must specify at least one of 'InstanceId' "
-                    "or 'NetworkInterfaceId'.")
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.PropertyUnspecifiedError('InstanceId',
+                                                     'NetworkInterfaceId')
 
     def _get_port_info(self, ni_id=None, instance_id=None):
         port_id = None

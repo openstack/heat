@@ -59,11 +59,8 @@ class NeutronResource(resource.Resource):
                 raise exception.ResourcePropertyConflict(prop_key,
                                                          depr_prop_key)
             if not prop_value and not depr_prop_value:
-                msg = _('Either %(prop_key)s or %(depr_prop_key)s'
-                        ' should be specified.'
-                        ) % {'prop_key': prop_key,
-                             'depr_prop_key': depr_prop_key}
-                raise exception.StackValidationFailed(message=msg)
+                raise exception.PropertyUnspecifiedError(prop_key,
+                                                         depr_prop_key)
 
     @staticmethod
     def prepare_properties(properties, name):
