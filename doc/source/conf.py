@@ -47,10 +47,9 @@ for f in glob.glob(os.path.join(ENV_DIR, "*.yaml")):
 
 sys.path.insert(0, ROOT)
 sys.path.insert(0, BASE_DIR)
-sys.path = PLUGIN_DIRS + sys.path
 
 cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-#cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
+cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
 
 cfg.CONF.import_opt('environment_dir', 'heat.common.config')
 cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR)
@@ -60,17 +59,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'openstack_dashboard.settings'
 
 
 def write_autodoc_index():
-
-    def get_contrib_sources():
-        module_dirs = glob.glob(os.path.join(CONTRIB_DIR, '*'))
-        module_names = map(os.path.basename, module_dirs)
-
-        return dict(
-            ('contrib/%s' % module_name,
-             {'module': module_name,
-              'path': os.path.join(CONTRIB_DIR, module_name)}
-             )
-            for module_name in module_names)
 
     def find_autodoc_modules(module_name, sourcedir):
         """Return a list of modules in the SOURCE directory."""
@@ -93,9 +81,7 @@ def write_autodoc_index():
         return modlist
 
     RSTDIR = os.path.abspath(os.path.join(BASE_DIR, "sourcecode"))
-    SRCS = {'heat': {'module': 'heat',
-                     'path': ROOT}}
-    SRCS.update(get_contrib_sources())
+    SOURCES = {'heat': {'module': 'heat', 'path': ROOT}}
 
     EXCLUDED_MODULES = ('heat.testing',
                         'heat.cmd',
@@ -120,7 +106,7 @@ def write_autodoc_index():
     INDEXOUT.write("Source Code Index\n")
     INDEXOUT.write("=================\n")
 
-    for title, info in SRCS.items():
+    for title, info in SOURCES.items():
         path = info['path']
         modulename = info['module']
         sys.stdout.write("Generating source documentation for %s\n" %
