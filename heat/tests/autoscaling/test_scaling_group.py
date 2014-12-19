@@ -18,6 +18,7 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
+from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
@@ -282,3 +283,66 @@ class TestGroupAdjust(common.HeatTestCase):
                 stack=self.group.stack)]
 
         self.assertEqual(expected_notifies, notify.call_args_list)
+
+
+class TestGroupCrud(common.HeatTestCase):
+    def setUp(self):
+        super(TestGroupCrud, self).setUp()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://server.test:8000/v1/waitcondition')
+        self.stub_keystoneclient()
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = stack['WebServerGroup']
+        self.assertIsNone(self.group.validate())
+
+    def test_handle_create(self):
+        self.group.create_with_template = mock.Mock(return_value=None)
+        self.group.child_template = mock.Mock(return_value='{}')
+
+        self.group.handle_create()
+
+        expect_env = {'parameters': {},
+                      'resource_registry': {
+                          'OS::Heat::ScaledResource': 'AWS::EC2::Instance'}}
+        self.group.child_template.assert_called_once_with()
+        self.group.create_with_template.assert_called_once_with(
+            '{}', expect_env)
+
+    def test_handle_update_desired_cap(self):
+        self.group._try_rolling_update = mock.Mock(return_value=None)
+        self.group.adjust = mock.Mock(return_value=None)
+
+        props = {'DesiredCapacity': 4}
+        defn = rsrc_defn.ResourceDefinition(
+            'nopayload',
+            'AWS::AutoScaling::AutoScalingGroup',
+            props)
+
+        self.group.handle_update(defn, None, props)
+
+        self.group.adjust.assert_called_once_with(
+            4, adjustment_type='ExactCapacity')
+        self.group._try_rolling_update.assert_called_once_with(props)
+
+    def test_handle_update_desired_nocap(self):
+        self.group._try_rolling_update = mock.Mock(return_value=None)
+        self.group.adjust = mock.Mock(return_value=None)
+        get_size = self.patchobject(grouputils, 'get_size')
+        get_size.return_value = 6
+
+        props = {'Tags': []}
+        defn = rsrc_defn.ResourceDefinition(
+            'nopayload',
+            'AWS::AutoScaling::AutoScalingGroup',
+            props)
+
+        self.group.handle_update(defn, None, props)
+
+        self.group.adjust.assert_called_once_with(
+            6, adjustment_type='ExactCapacity')
+        self.group._try_rolling_update.assert_called_once_with(props)
