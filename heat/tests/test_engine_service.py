@@ -31,7 +31,6 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
-from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
@@ -42,6 +41,7 @@ from heat.engine import properties
 from heat.engine import resource as res
 from heat.engine.resources import instance as instances
 from heat.engine import service
+from heat.engine import service_stack_watch
 from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
@@ -100,38 +100,6 @@ wp_template_no_default = '''
         "InstanceType"   : "m1.large",
         "KeyName"        : "test",
         "UserData"       : "wordpress"
-      }
-    }
-  }
-}
-'''
-
-nested_alarm_template = '''
-HeatTemplateFormatVersion: '2012-12-12'
-Resources:
-  the_nested:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: https://server.test/alarm.template
-'''
-
-alarm_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "alarming",
-  "Resources" : {
-    "service_alarm": {
-      "Type": "AWS::CloudWatch::Alarm",
-      "Properties": {
-        "EvaluationPeriods": "1",
-        "AlarmActions": [],
-        "AlarmDescription": "do the thing",
-        "Namespace": "dev/null",
-        "Period": "300",
-        "ComparisonOperator": "GreaterThanThreshold",
-        "Statistic": "SampleCount",
-        "Threshold": "2",
-        "MetricName": "ServiceFailure"
       }
     }
   }
@@ -1633,7 +1601,7 @@ class StackServiceTest(common.HeatTestCase):
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
 
-    @mock.patch.object(service.StackWatch, 'start_watch_task')
+    @mock.patch.object(service_stack_watch.StackWatch, 'start_watch_task')
     @mock.patch.object(service.db_api, 'stack_get_all')
     @mock.patch.object(service.service.Service, 'start')
     def test_start_watches_all_stacks(self, mock_super_start, mock_get_all,
@@ -2632,48 +2600,6 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
 
         self.m.VerifyAll()
-
-    @stack_context('periodic_watch_task_not_created')
-    def test_periodic_watch_task_not_created(self):
-        self.eng.thread_group_mgr.groups[self.stack.id] = DummyThreadGroup()
-        self.eng.stack_watch.start_watch_task(self.stack.id, self.ctx)
-        self.assertEqual(
-            [], self.eng.thread_group_mgr.groups[self.stack.id].threads)
-
-    def test_periodic_watch_task_created(self):
-        stack = get_stack('period_watch_task_created',
-                          utils.dummy_context(),
-                          alarm_template)
-        self.stack = stack
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-        self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
-        self.eng.stack_watch.start_watch_task(stack.id, self.ctx)
-        expected = [self.eng.stack_watch.periodic_watcher_task]
-        observed = self.eng.thread_group_mgr.groups[stack.id].threads
-        self.assertEqual(expected, observed)
-        self.stack.delete()
-
-    def test_periodic_watch_task_created_nested(self):
-        self.m.StubOutWithMock(urlfetch, 'get')
-        urlfetch.get('https://server.test/alarm.template').MultipleTimes().\
-            AndReturn(alarm_template)
-        self.m.ReplayAll()
-
-        stack = get_stack('period_watch_task_created_nested',
-                          utils.dummy_context(),
-                          nested_alarm_template)
-        setup_keystone_mocks(self.m, stack)
-        self.stack = stack
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-        self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
-        self.eng.stack_watch.start_watch_task(stack.id, self.ctx)
-        self.assertEqual([self.eng.stack_watch.periodic_watcher_task],
-                         self.eng.thread_group_mgr.groups[stack.id].threads)
-        self.stack.delete()
 
     @stack_context('service_show_watch_test_stack', False)
     def test_show_watch(self):
