@@ -167,7 +167,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
         security_groups = self.properties[self.SECURITY_GROUPS]
         auto_security_group = self.properties[self.AUTO_SECURITY_GROUP]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
-        vol_availability_sone = self.properties[self.VOLUMES_AVAILABILITY_ZONE]
+        vol_availability_zone = self.properties[self.VOLUMES_AVAILABILITY_ZONE]
         if floating_ip_pool:
             floating_ip_pool = self.client_plugin(
                 'neutron').find_neutron_resource(self.properties,
@@ -188,7 +188,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             security_groups=security_groups,
             auto_security_group=auto_security_group,
             availability_zone=availability_zone,
-            volumes_availability_zone=vol_availability_sone
+            volumes_availability_zone=vol_availability_zone
         )
         LOG.info(_LI("Node Group Template '%s' has been created"),
                  node_group_template.name)
