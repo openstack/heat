@@ -31,11 +31,8 @@ from oslo.config import cfg
 import six
 import stevedore.named
 
-from heat.openstack.common import gettextutils
 from heat.common import i18n
 from heat.openstack.common import importutils
-
-gettextutils.install('heat')
 
 STROPT = "StrOpt"
 BOOLOPT = "BoolOpt"
