@@ -51,7 +51,7 @@ class InstanceGroupTest(test.HeatIntegrationTest):
         "InstanceType"      : {"Ref": "flavor"},
         "KeyName"           : {"Ref": "keyname"},
         "SecurityGroups"    : [ "sg-1" ],
-        "UserData"          : "jsconfig data",
+        "UserData"          : "jsconfig data"
       }
     }
   },
