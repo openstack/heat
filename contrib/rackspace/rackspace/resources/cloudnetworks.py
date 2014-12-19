@@ -20,6 +20,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 try:
@@ -45,6 +46,11 @@ class CloudNetwork(resource.Resource):
     See http://www.rackspace.com/cloud/networks/ for service
     documentation.
     """
+
+    support_status = support.SupportStatus(
+        support.DEPRECATED,
+        _('Use OS::Neutron::Net instead.'),
+    )
 
     PROPERTIES = (
         LABEL, CIDR
