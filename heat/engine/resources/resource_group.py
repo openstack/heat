@@ -195,7 +195,10 @@ class ResourceGroup(stack_resource.StackResource):
         # Only validate the resource definition (which may be a
         # nested template) if count is non-zero, to enable folks
         # to disable features via a zero count if they wish
-        if self.properties[self.COUNT]:
+        # Use self._resource_names() to determine if any resources will
+        # be created, not the COUNT property, because this doesn't exist
+        # in the SoftwareDeployments subclass properties schema.
+        if self._resource_names():
             res_inst.validate()
 
     def _name_blacklist(self):
