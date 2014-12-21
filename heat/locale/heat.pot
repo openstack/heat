@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev640\n"
+"Project-Id-Version: heat 2015.1.dev2\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-12-18 06:04+0000\n"
+"POT-Creation-Date: 2014-12-21 06:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -679,41 +679,46 @@ msgstr ""
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr ""
 
-#: heat/common/exception.py:341
+#: heat/common/exception.py:331
+#, python-format
+msgid "At least one of the following properties must be specified: %(props)s"
+msgstr ""
+
+#: heat/common/exception.py:351
 msgid ""
 "Egress rules are only allowed when Neutron is used and the 'VpcId' "
 "property is set."
 msgstr ""
 
-#: heat/common/exception.py:353
+#: heat/common/exception.py:363
 msgid "Not found"
 msgstr ""
 
-#: heat/common/exception.py:359
+#: heat/common/exception.py:369
 #, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr ""
 
-#: heat/common/exception.py:363
+#: heat/common/exception.py:373
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr ""
 
-#: heat/common/exception.py:367
+#: heat/common/exception.py:377
 msgid "Maximum resources per stack exceeded."
 msgstr ""
 
-#: heat/common/exception.py:371
+#: heat/common/exception.py:381
 #, python-format
 msgid "Stack %(stack_name)s already has an action (%(action)s) in progress."
 msgstr ""
 
-#: heat/common/exception.py:376
+#: heat/common/exception.py:386
 #, python-format
 msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
 
-#: heat/common/exception.py:381
+#: heat/common/exception.py:391
 #, python-format
 msgid ""
 "Failed to send message to stack (%(stack_name)s) on other engine "
@@ -1402,31 +1407,31 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:565
+#: heat/engine/service.py:484
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:720
+#: heat/engine/service.py:639
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:724
+#: heat/engine/service.py:643
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:774
+#: heat/engine/service.py:693
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:813
+#: heat/engine/service.py:732
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1457
+#: heat/engine/service.py:1376
 msgid "server_id must be specified"
 msgstr ""
 
@@ -1929,11 +1934,7 @@ msgstr ""
 msgid "Must specify 'InstanceId' if you specify 'EIP'."
 msgstr ""
 
-#: heat/engine/resources/eip.py:242
-msgid "Must specify at least one of 'InstanceId' or 'NetworkInterfaceId'."
-msgstr ""
-
-#: heat/engine/resources/eip.py:331 heat/engine/resources/eip.py:354
+#: heat/engine/resources/eip.py:330 heat/engine/resources/eip.py:353
 msgid "Failed to update, can not found port info."
 msgstr ""
 
@@ -4525,12 +4526,7 @@ msgstr ""
 msgid "segmentation_id cannot be specified except 0 for using flat"
 msgstr ""
 
-#: heat/engine/resources/neutron/neutron.py:62
-#, python-format
-msgid "Either %(prop_key)s or %(depr_prop_key)s should be specified."
-msgstr ""
-
-#: heat/engine/resources/neutron/neutron.py:118
+#: heat/engine/resources/neutron/neutron.py:115
 msgid "Resource is not built"
 msgstr ""
 

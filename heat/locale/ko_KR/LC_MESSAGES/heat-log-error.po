@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-12-18 06:04+0000\n"
+"POT-Creation-Date: 2014-12-21 06:02+0000\n"
 "PO-Revision-Date: 2014-12-17 02:38+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
@@ -171,14 +171,14 @@ msgstr "DB %s에 오류가 있습니다. "
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:260
+#: heat/engine/service.py:1308
+msgid "Filtering by namespace/metric not yet supported"
+msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
+
+#: heat/engine/service_stack_watch.py:69
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
-
-#: heat/engine/service.py:1389
-msgid "Filtering by namespace/metric not yet supported"
-msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
 #: heat/engine/stack.py:728
 #, python-format
@@ -208,7 +208,7 @@ msgstr ""
 "기본 유동 IP pool을 구성하지 않습니다. nova.conf에서 "
 "'default_floating_pool'을 설정합니다."
 
-#: heat/engine/resources/eip.py:330 heat/engine/resources/eip.py:353
+#: heat/engine/resources/eip.py:329 heat/engine/resources/eip.py:352
 msgid "Port not specified."
 msgstr "Port가 정의되지 않았습니다."
 
