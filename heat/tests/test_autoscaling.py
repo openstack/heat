@@ -568,28 +568,6 @@ class AutoScalingTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_lb_reload_invalid_resource(self):
-        t = template_format.parse(as_template)
-        t['Resources']['ElasticLoadBalancer'] = {
-            'Type': 'AWS::EC2::Volume',
-            'Properties': {
-                'AvailabilityZone': 'nova'
-            }
-        }
-
-        self._stub_create(1)
-        self.m.ReplayAll()
-        stack = utils.parse_stack(t, params=self.params)
-        error = self.assertRaises(
-            exception.ResourceFailure,
-            self.create_scaling_group, t, stack, 'WebServerGroup')
-        self.assertEqual(
-            "Error: Unsupported resource 'ElasticLoadBalancer' in "
-            "LoadBalancerNames",
-            six.text_type(error))
-
-        self.m.VerifyAll()
-
     def test_scaling_policy_bad_group(self):
         t = template_format.parse(as_template_bad_group)
         stack = utils.parse_stack(t, params=self.params)
