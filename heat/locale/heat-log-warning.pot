@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev522.g8c1da0b\n"
+"Project-Id-Version: heat 2015.1.dev2\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-12-08 06:00+0000\n"
+"POT-Creation-Date: 2014-12-21 06:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,47 +33,47 @@ msgid ""
 "falling back to using default"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:313
+#: heat/common/heat_keystoneclient.py:319
 #, python-format
 msgid "Truncating the username %s to the last 64 characters."
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:424
+#: heat/common/heat_keystoneclient.py:430
 msgid ""
 "Falling back to legacy non-domain user create, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:477
+#: heat/common/heat_keystoneclient.py:483
 msgid ""
 "Falling back to legacy non-domain user delete, configure domain in "
 "heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:498
-#: heat/common/heat_keystoneclient.py:515
+#: heat/common/heat_keystoneclient.py:504
+#: heat/common/heat_keystoneclient.py:521
 msgid "Falling back to legacy non-domain project, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:527
+#: heat/common/heat_keystoneclient.py:533
 #, python-format
 msgid "Unable to get details for project %s, not deleting"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:532
+#: heat/common/heat_keystoneclient.py:538
 msgid "Not deleting non heat-domain project"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:606
-#: heat/common/heat_keystoneclient.py:623
+#: heat/common/heat_keystoneclient.py:612
+#: heat/common/heat_keystoneclient.py:629
 msgid "Falling back to legacy non-domain keypair, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:642
+#: heat/common/heat_keystoneclient.py:648
 msgid "Falling back to legacy non-domain disable, configure domain in heat.conf"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:652
+#: heat/common/heat_keystoneclient.py:658
 msgid "Falling back to legacy non-domain enable, configure domain in heat.conf"
 msgstr ""
 
@@ -94,51 +94,51 @@ msgstr ""
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/engine/environment.py:199 heat/engine/environment.py:205
+#: heat/engine/environment.py:202 heat/engine/environment.py:208
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:218
+#: heat/engine/environment.py:221
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
-#: heat/engine/resource.py:910
+#: heat/engine/resource.py:913
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1096
+#: heat/engine/resource.py:1099
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:275
-#, python-format
-msgid "periodic_task db error watch rule removed? %(ex)s"
-msgstr ""
-
-#: heat/engine/service.py:1101
+#: heat/engine/service.py:1028
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1358
+#: heat/engine/service.py:1285
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1387
+#: heat/engine/service.py:1314
 #, python-format
 msgid "show_metric (all) db error %s"
+msgstr ""
+
+#: heat/engine/service_stack_watch.py:84
+#, python-format
+msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
 #: heat/engine/signal_responder.py:68
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/stack.py:239
+#: heat/engine/stack.py:241
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
@@ -147,7 +147,7 @@ msgstr ""
 msgid "Lock was already released on stack %s!"
 msgstr ""
 
-#: heat/engine/stack_resource.py:115
+#: heat/engine/stack_resource.py:133
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
@@ -190,12 +190,12 @@ msgid ""
 "server.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:407 heat/engine/resources/nova_utils.py:383
+#: heat/engine/clients/os/nova.py:409 heat/engine/resources/nova_utils.py:383
 #, python-format
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:418
+#: heat/engine/clients/os/nova.py:420
 #, python-format
 msgid "Server (%(server)s) not found: %(ex)s"
 msgstr ""
@@ -204,19 +204,19 @@ msgstr ""
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/os_database.py:340
+#: heat/engine/resources/os_database.py:341
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
 "instance.get(): %(exception)s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:175
+#: heat/engine/resources/swift.py:176
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:69
+#: heat/engine/resources/wait_condition.py:70
 #, python-format
 msgid "Overwriting Metadata item for id %s!"
 msgstr ""
@@ -236,32 +236,32 @@ msgstr ""
 msgid "pid %d not in child list"
 msgstr ""
 
-#: heat/tests/generic_resource.py:36
+#: heat/tests/generic_resource.py:37
 #, python-format
 msgid "Creating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:40
+#: heat/tests/generic_resource.py:41
 #, python-format
 msgid "Updating generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:44
+#: heat/tests/generic_resource.py:45
 #, python-format
 msgid "Deleting generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:51
+#: heat/tests/generic_resource.py:52
 #, python-format
 msgid "Suspending generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:55
+#: heat/tests/generic_resource.py:56
 #, python-format
 msgid "Resuming generic resource (Type \"%s\")"
 msgstr ""
 
-#: heat/tests/generic_resource.py:144
+#: heat/tests/generic_resource.py:145
 #, python-format
 msgid "Signaled resource (Type \"%(type)s\") %(details)s"
 msgstr ""
