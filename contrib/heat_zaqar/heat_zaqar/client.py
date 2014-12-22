@@ -18,13 +18,17 @@ LOG = logging.getLogger(__name__)
 
 try:
     from zaqarclient.queues.v1 import client as zaqarclient
+    from zaqarclient.transport import errors as zaqar_errors
 except ImportError:
     zaqarclient = None
+    zaqar_errors = None
 
 from heat.engine.clients import client_plugin
 
 
 class ZaqarClientPlugin(client_plugin.ClientPlugin):
+
+    exception_module = zaqar_errors
 
     def _create(self):
 
@@ -47,3 +51,6 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
         client = zaqarclient.Client(url=endpoint, conf=conf)
 
         return client
+
+    def is_not_found(self, ex):
+        return isinstance(ex, zaqar_errors.ResourceNotFound)

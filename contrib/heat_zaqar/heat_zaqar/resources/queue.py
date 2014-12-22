@@ -104,9 +104,12 @@ class ZaqarQueue(resource.Resource):
         """Delete a zaqar message queue."""
         if not self.resource_id:
             return
-
-        queue = self.client().queue(self.resource_id, auto_create=False)
-        queue.delete()
+        try:
+            queue = self.client().queue(self.resource_id, auto_create=False)
+        except Exception as exc:
+            self.client_plugin().ignore_not_found(exc)
+        else:
+            queue.delete()
 
     def href(self):
         api_endpoint = self.client().api_url
