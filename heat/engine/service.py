@@ -1028,7 +1028,9 @@ class EngineService(service.Service):
                 LOG.warn(_LW("Access denied to resource %s"), resource_name)
                 raise exception.Forbidden()
 
-        self._verify_stack_resource(stack, resource_name)
+        if resource_name not in stack:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
 
         return api.format_stack_resource(stack[resource_name],
                                          with_attr=with_attr)
