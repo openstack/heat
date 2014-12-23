@@ -76,6 +76,9 @@ class SaharaNodeGroupTemplate(resource.Resource):
             properties.Schema.STRING,
             _('Name or ID Nova flavor for the nodes.'),
             required=True,
+            constraints=[
+                constraints.CustomConstraint('nova.flavor')
+            ]
         ),
         VOLUMES_PER_NODE: properties.Schema(
             properties.Schema.INTEGER,

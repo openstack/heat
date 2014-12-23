@@ -157,6 +157,18 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.assertEqual('floating_ip_pool must be provided.',
                          six.text_type(ex))
 
+    def test_validate_flavor_constraint_return_false(self):
+        self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
+        self.t['resources']['node-group']['properties'].pop('volume_type')
+        ngt = self._init_ngt(self.t)
+        self.patchobject(st.constraints.CustomConstraint, '_is_valid'
+                         ).return_value = False
+        self.patchobject(ngt, 'is_using_neutron').return_value = False
+
+        ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
+        self.assertEqual(u"Property error : node-group: flavor Error "
+                         u"validating value u'm1.large'", six.text_type(ex))
+
 
 class SaharaClusterTemplateTest(common.HeatTestCase):
     def setUp(self):
