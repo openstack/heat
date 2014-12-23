@@ -2054,8 +2054,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True,
-            'binding:vnic_type': 'normal'}}
+            'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2093,8 +2092,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                     'device_id': 'd6b4d3a5-c700-476f-b609-1493dd9dadc2',
                     'device_owner': 'network:floatingip',
                     'security_groups': [
-                        '8a2f582a-e1cd-480f-b85d-b02631c10656'],
-                    'binding:vnic_type': 'normal'
+                        '8a2f582a-e1cd-480f-b85d-b02631c10656']
                 }
             }
         ).AndReturn(None)
@@ -2166,8 +2164,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True,
-            'binding:vnic_type': 'normal'}}
+            'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2352,8 +2349,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'admin_state_up': True,
-            'binding:vnic_type': 'normal'}}
+            'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2482,8 +2478,7 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}}
+            'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2525,8 +2520,7 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}}
+            'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2558,8 +2552,7 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}}
+            'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2598,8 +2591,7 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True,
-            'binding:vnic_type': 'normal'}}
+            'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2632,8 +2624,7 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'admin_state_up': True,
-            'binding:vnic_type': 'normal'}}
+            'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -2691,8 +2682,7 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}
+            'device_owner': u'network:dhcp'}
 
         self._mock_create_with_security_groups(port_prop)
 
@@ -2716,8 +2706,7 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}
+            'device_owner': u'network:dhcp'}
 
         self._mock_create_with_security_groups(port_prop)
 
@@ -2734,8 +2723,7 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp',
-                 'binding:vnic_type': 'normal'}
+                 'device_owner': u'network:dhcp'}
         new_props = props.copy()
         new_props['name'] = "new_name"
         new_props['security_groups'] = [
@@ -2819,8 +2807,7 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName('test_stack', 'port'),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp',
-                 'binding:vnic_type': 'normal'}
+                 'device_owner': u'network:dhcp'}
 
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
@@ -2893,8 +2880,7 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}}
+            'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -2956,8 +2942,7 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp',
-            'binding:vnic_type': 'normal'}}
+            'device_owner': u'network:dhcp'}}
         ).AndReturn({'port': {
             'status': 'BUILD',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
