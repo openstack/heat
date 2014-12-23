@@ -11,10 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from heat.common import environment_format
-from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common import timeutils as iso8601utils
@@ -24,6 +21,7 @@ from heat.engine import properties
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack_resource
+from heat.scaling import lbutils
 from heat.scaling import template
 
 
@@ -348,37 +346,10 @@ class InstanceGroup(stack_resource.StackResource):
             self._lb_reload()
 
     def _lb_reload(self, exclude=None):
-        '''
-        Notify the LoadBalancer to reload its config to include
-        the changes in instances we have just made.
-
-        This must be done after activation (instance in ACTIVE state),
-        otherwise the instances' IP addresses may not be available.
-        '''
-        exclude = exclude or []
-        if self.properties[self.LOAD_BALANCER_NAMES]:
-            id_list = grouputils.get_member_refids(self, exclude=exclude)
-            for lb in self.properties[self.LOAD_BALANCER_NAMES]:
-                lb_resource = self.stack[lb]
-
-                props = copy.copy(lb_resource.properties.data)
-                if 'Instances' in lb_resource.properties_schema:
-                    props['Instances'] = id_list
-                elif 'members' in lb_resource.properties_schema:
-                    props['members'] = id_list
-                else:
-                    raise exception.Error(
-                        _("Unsupported resource '%s' in LoadBalancerNames") %
-                        (lb,))
-
-                lb_defn = rsrc_defn.ResourceDefinition(
-                    lb_resource.name,
-                    lb_resource.type(),
-                    properties=props,
-                    metadata=lb_resource.t.get('Metadata'),
-                    deletion_policy=lb_resource.t.get('DeletionPolicy'))
-
-                scheduler.TaskRunner(lb_resource.update, lb_defn)()
+        lb_names = self.properties.get(self.LOAD_BALANCER_NAMES, None)
+        if lb_names:
+            lb_dict = dict((name, self.stack[name]) for name in lb_names)
+            lbutils.reload_loadbalancers(self, lb_dict, exclude)
 
     def FnGetRefId(self):
         return self.physical_resource_name_or_FnGetRefId()
