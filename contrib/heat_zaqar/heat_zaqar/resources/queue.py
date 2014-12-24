@@ -29,6 +29,8 @@ def resource_mapping():
 
 class ZaqarQueue(resource.Resource):
 
+    default_client_name = "zaqar"
+
     PROPERTIES = (
         NAME, METADATA,
     ) = (
@@ -63,16 +65,13 @@ class ZaqarQueue(resource.Resource):
         ),
     }
 
-    def zaqar(self):
-        return self.clients.client('zaqar')
-
     def physical_resource_name(self):
         return self.properties[self.NAME]
 
     def handle_create(self):
         """Create a zaqar message queue."""
         queue_name = self.physical_resource_name()
-        queue = self.zaqar().queue(queue_name, auto_create=False)
+        queue = self.client().queue(queue_name, auto_create=False)
         # Zaqar client doesn't report an error if an queue with the same
         # id/name already exists, which can cause issue with stack update.
         if queue.exists():
@@ -97,7 +96,7 @@ class ZaqarQueue(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update queue metadata."""
         if 'metadata' in prop_diff:
-            queue = self.zaqar().queue(self.resource_id, auto_create=False)
+            queue = self.client().queue(self.resource_id, auto_create=False)
             metadata = prop_diff['metadata']
             queue.metadata(new_meta=metadata)
 
@@ -106,11 +105,11 @@ class ZaqarQueue(resource.Resource):
         if not self.resource_id:
             return
 
-        queue = self.zaqar().queue(self.resource_id, auto_create=False)
+        queue = self.client().queue(self.resource_id, auto_create=False)
         queue.delete()
 
     def href(self):
-        api_endpoint = self.zaqar().api_url
+        api_endpoint = self.client().api_url
         queue_name = self.physical_resource_name()
         if api_endpoint.endswith('/'):
             return '%squeues/%s' % (api_endpoint, queue_name)

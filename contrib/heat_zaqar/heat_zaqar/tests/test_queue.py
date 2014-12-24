@@ -90,8 +90,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue(queue.physical_resource_name(), auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -120,8 +120,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -141,8 +141,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.parse_stack(t)
 
         queue = self.stack['MyQueue2']
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -167,8 +167,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
 
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
 
         fake_q = FakeQueue("myqueue", auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
@@ -188,8 +188,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.parse_stack(t)
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
         fake_q = FakeQueue('myqueue', auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
         self.fc.queue('myqueue',
@@ -216,8 +216,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.parse_stack(t)
         queue = self.stack['MyQueue2']
         queue.resource_id_set(queue.properties.get('name'))
-        self.m.StubOutWithMock(queue, 'zaqar')
-        queue.zaqar().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
         fake_q = FakeQueue('myqueue', auto_create=False)
         self.m.StubOutWithMock(self.fc, 'queue')
         self.fc.queue('myqueue',
