@@ -57,7 +57,7 @@ class Stack(
         'current_deps': heat_fields.JsonField(),
         'prev_raw_template_id': fields.IntegerField(),
         'prev_raw_template': fields.ObjectField('RawTemplate'),
-        'tag': fields.ObjectField('StackTag'),
+        'tags': fields.ObjectField('StackTagList'),
     }
 
     @staticmethod
@@ -67,13 +67,12 @@ class Stack(
                 stack['raw_template'] = (
                     raw_template.RawTemplate.get_by_id(
                         context, db_stack['raw_template_id']))
-            elif field == 'tag':
+            elif field == 'tags':
                 if db_stack.get(field) is not None:
-                    stack['tag'] = stack_tag.StackTag.get_obj(
-                        db_stack.get(field)
-                    )
+                    stack['tags'] = stack_tag.StackTagList.get(
+                        context, db_stack['id'])
                 else:
-                    stack['tag'] = None
+                    stack['tags'] = None
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context

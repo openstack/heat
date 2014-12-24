@@ -15,6 +15,7 @@ import collections
 
 from oslo_log import log as logging
 from oslo_utils import timeutils
+import six
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -62,6 +63,25 @@ def extract_args(params):
             raise ValueError(_('Invalid adopt data: %s') % exc)
         kwargs[rpc_api.PARAM_ADOPT_STACK_DATA] = adopt_data
 
+    tags = params.get(rpc_api.PARAM_TAGS)
+    if tags:
+        if not isinstance(tags, list):
+            raise ValueError(_('Invalid tags, not a list: %s') % tags)
+
+        for tag in tags:
+            if not isinstance(tag, six.string_types):
+                raise ValueError(_('Invalid tag, "%s" is not a string') % tag)
+
+            if len(tag) > 80:
+                raise ValueError(_('Invalid tag, "%s" is longer than 80 '
+                                   'characters') % tag)
+
+            # Comma is not allowed as per the API WG tagging guidelines
+            if ',' in tag:
+                raise ValueError(_('Invalid tag, "%s" contains a comma') % tag)
+
+        kwargs[rpc_api.PARAM_TAGS] = tags
+
     return kwargs
 
 
@@ -105,6 +125,7 @@ def format_stack(stack, preview=False):
         rpc_api.STACK_OWNER: stack.username,
         rpc_api.STACK_PARENT: stack.owner_id,
         rpc_api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,
+        rpc_api.STACK_TAGS: stack.tags,
     }
 
     if not preview:

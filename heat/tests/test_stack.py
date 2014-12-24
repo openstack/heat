@@ -32,6 +32,7 @@ from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
 from heat.objects import stack as stack_object
+from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
 from heat.tests import common
 from heat.tests import fakes
@@ -290,7 +291,8 @@ class StackTest(common.HeatTestCase):
                              use_stored_context=False,
                              username=mox.IgnoreArg(),
                              convergence=False,
-                             current_traversal=None)
+                             current_traversal=None,
+                             tags=mox.IgnoreArg())
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -1123,6 +1125,35 @@ class StackTest(common.HeatTestCase):
         ctx_expected = ctx_init.to_dict()
         ctx_expected['auth_token'] = None
         self.assertEqual(ctx_expected, self.stack.stored_context().to_dict())
+
+    def test_load_reads_tags(self):
+        self.stack = stack.Stack(self.ctx, 'stack_tags', self.tmpl)
+        self.stack.store()
+        stack_id = self.stack.id
+        test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertIsNone(test_stack.tags)
+
+        self.stack = stack.Stack(self.ctx, 'stack_name', self.tmpl,
+                                 tags=['tag1', 'tag2'])
+        self.stack.store()
+        stack_id = self.stack.id
+        test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
+        self.assertEqual(['tag1', 'tag2'], test_stack.tags)
+
+    def test_store_saves_tags(self):
+        self.stack = stack.Stack(self.ctx, 'tags_stack', self.tmpl)
+        self.stack.store()
+        db_tags = stack_tag_object.StackTagList.get(self.stack.context,
+                                                    self.stack.id)
+        self.assertIsNone(db_tags)
+
+        self.stack = stack.Stack(self.ctx, 'tags_stack', self.tmpl,
+                                 tags=['tag1', 'tag2'])
+        self.stack.store()
+        db_tags = stack_tag_object.StackTagList.get(self.stack.context,
+                                                    self.stack.id)
+        self.assertEqual('tag1', db_tags[0].tag)
+        self.assertEqual('tag2', db_tags[1].tag)
 
     def test_store_saves_creds(self):
         """

@@ -1324,6 +1324,38 @@ class DBAPIUserCredsTest(common.HeatTestCase):
         self.assertIn(exp_msg, six.text_type(err))
 
 
+class DBAPIStackTagTest(common.HeatTestCase):
+    def setUp(self):
+        super(DBAPIStackTagTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.template = create_raw_template(self.ctx)
+        self.user_creds = create_user_creds(self.ctx)
+        self.stack = create_stack(self.ctx, self.template, self.user_creds)
+
+    def test_stack_tags_set(self):
+        tags = db_api.stack_tags_set(self.ctx, self.stack.id, ['tag1', 'tag2'])
+        self.assertEqual(self.stack.id, tags[0].stack_id)
+        self.assertEqual('tag1', tags[0].tag)
+
+        tags = db_api.stack_tags_set(self.ctx, self.stack.id, [])
+        self.assertIsNone(tags)
+
+    def test_stack_tags_get(self):
+        db_api.stack_tags_set(self.ctx, self.stack.id, ['tag1', 'tag2'])
+        tags = db_api.stack_tags_get(self.ctx, self.stack.id)
+        self.assertEqual(self.stack.id, tags[0].stack_id)
+        self.assertEqual('tag1', tags[0].tag)
+
+        tags = db_api.stack_tags_get(self.ctx, UUID1)
+        self.assertIsNone(tags)
+
+    def test_stack_tags_delete(self):
+        db_api.stack_tags_set(self.ctx, self.stack.id, ['tag1', 'tag2'])
+        db_api.stack_tags_delete(self.ctx, self.stack.id)
+        tags = db_api.stack_tags_get(self.ctx, self.stack.id)
+        self.assertIsNone(tags)
+
+
 class DBAPIStackTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIStackTest, self).setUp()

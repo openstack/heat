@@ -19,6 +19,8 @@ StackTag object
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
+from heat.db import api as db_api
+
 
 class StackTag(base.VersionedObject,
                base.VersionedObjectDictCompat,
@@ -32,7 +34,11 @@ class StackTag(base.VersionedObject,
     }
 
     @staticmethod
-    def _from_db_object(tag, db_tag):
+    def _from_db_object(context, tag, db_tag):
+        """Method to help with migration to objects.
+
+        Converts a database entity to a formal object.
+        """
         if db_tag is None:
             return None
         for field in tag.fields:
@@ -42,5 +48,32 @@ class StackTag(base.VersionedObject,
 
     @classmethod
     def get_obj(cls, context, tag):
-        tag_obj = cls._from_db_object(cls(context), tag)
-        return tag_obj
+        return cls._from_db_object(cls(context), tag)
+
+
+class StackTagList(base.VersionedObject,
+                   base.ObjectListBase):
+
+    fields = {
+        'objects': fields.ListOfObjectsField('StackTag'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        self._changed_fields = set()
+        super(StackTagList, self).__init__()
+
+    @classmethod
+    def get(cls, context, stack_id):
+        db_tags = db_api.stack_tags_get(context, stack_id)
+        if db_tags:
+            return base.obj_make_list(context, cls(), StackTag, db_tags)
+
+    @classmethod
+    def set(cls, context, stack_id, tags):
+        db_tags = db_api.stack_tags_set(context, stack_id, tags)
+        if db_tags:
+            return base.obj_make_list(context, cls(), StackTag, db_tags)
+
+    @classmethod
+    def delete(cls, context, stack_id):
+        db_api.stack_tags_delete(context, stack_id)

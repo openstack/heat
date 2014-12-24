@@ -44,6 +44,7 @@ from heat.engine import update
 from heat.objects import resource as resource_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
+from heat.objects import stack_tag as stack_tag_object
 from heat.objects import user_creds as ucreds_object
 from heat.rpc import api as rpc_api
 
@@ -83,7 +84,7 @@ class Stack(collections.Mapping):
                  user_creds_id=None, tenant_id=None,
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
-                 current_traversal=None):
+                 current_traversal=None, tags=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -126,6 +127,7 @@ class Stack(collections.Mapping):
         self.strict_validate = strict_validate
         self.convergence = convergence
         self.current_traversal = current_traversal
+        self.tags = tags
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -371,6 +373,9 @@ class Stack(collections.Mapping):
                  use_stored_context=False):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
+        tags = None
+        if stack.tags:
+            tags = [t.tag for t in stack.tags]
         return cls(context, stack.name, template,
                    stack_id=stack.id,
                    action=stack.action, status=stack.status,
@@ -386,7 +391,7 @@ class Stack(collections.Mapping):
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
                    use_stored_context=use_stored_context,
                    username=stack.username, convergence=stack.convergence,
-                   current_traversal=stack.current_traversal)
+                   current_traversal=stack.current_traversal, tags=tags)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
@@ -464,6 +469,9 @@ class Stack(collections.Mapping):
             new_s = stack_object.Stack.create(self.context, s)
             self.id = new_s.id
             self.created_time = new_s.created_at
+
+        if self.tags:
+            stack_tag_object.StackTagList.set(self.context, self.id, self.tags)
 
         self._set_param_stackid()
 
@@ -919,6 +927,13 @@ class Stack(collections.Mapping):
             self.disable_rollback = newstack.disable_rollback
             self.timeout_mins = newstack.timeout_mins
             self._set_param_stackid()
+
+            self.tags = newstack.tags
+            if newstack.tags:
+                stack_tag_object.StackTagList.set(self.context, self.id,
+                                                  newstack.tags)
+            else:
+                stack_tag_object.StackTagList.delete(self.context, self.id)
 
             try:
                 updater.start(timeout=self.timeout_secs())
