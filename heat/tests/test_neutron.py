@@ -1470,14 +1470,67 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def test_router_validate(self):
+    def test_router_validate_distribute_l3_agents(self):
         t = template_format.parse(neutron_template)
         props = t['Resources']['router']['Properties']
+
+        # test distributed can not specify l3_agent_id
         props['distributed'] = True
         stack = utils.parse_stack(t)
         rsrc = stack['router']
-        self.assertRaises(exception.ResourcePropertyConflict,
-                          rsrc.validate)
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                rsrc.validate)
+        self.assertIn('distributed, l3_agent_id/l3_agent_ids',
+                      six.text_type(exc))
+        # test distributed can not specify l3_agent_ids
+        props['l3_agent_ids'] = ['id1', 'id2']
+        stack = utils.parse_stack(t)
+        rsrc = stack['router']
+        rsrc.t['Properties'].pop('l3_agent_id')
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                rsrc.validate)
+        self.assertIn('distributed, l3_agent_id/l3_agent_ids',
+                      six.text_type(exc))
+
+    def test_router_validate_l3_agents(self):
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['router']['Properties']
+
+        # test l3_agent_id and l3_agent_ids can not specify at the same time
+        props['l3_agent_ids'] = ['id1', 'id2']
+        stack = utils.parse_stack(t)
+        rsrc = stack['router']
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                rsrc.validate)
+        self.assertIn('l3_agent_id, l3_agent_ids', six.text_type(exc))
+
+    def test_router_validate_ha_distribute(self):
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['router']['Properties']
+
+        # test distributed and ha can not specify at the same time
+        props['ha'] = True
+        props['distributed'] = True
+        stack = utils.parse_stack(t)
+        rsrc = stack['router']
+        rsrc.t['Properties'].pop('l3_agent_id')
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                rsrc.validate)
+        self.assertIn('distributed, ha', six.text_type(exc))
+
+    def test_router_validate_ha_l3_agents(self):
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['router']['Properties']
+        # test non ha can not specify more than one l3 agent id
+        props['ha'] = False
+        props['l3_agent_ids'] = ['id1', 'id2']
+        stack = utils.parse_stack(t)
+        rsrc = stack['router']
+        rsrc.t['Properties'].pop('l3_agent_id')
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn('Non HA routers can only have one L3 agent.',
+                      six.text_type(exc))
 
     def test_router(self):
         neutronclient.Client.create_router({
@@ -1597,7 +1650,46 @@ class NeutronRouterTest(common.HeatTestCase):
                 'admin_state_up': False
             }}
         )
-
+        # Update again script
+        neutronclient.Client.list_l3_agent_hosting_routers(
+            u'3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({
+            "agents": [{
+                "admin_state_up": True,
+                "agent_type": "L3 agent",
+                "alive": True,
+                "binary": "neutron-l3-agent",
+                "configurations": {
+                    "ex_gw_ports": 1,
+                    "floating_ips": 0,
+                    "gateway_external_network_id": "",
+                    "handle_internal_only_routers": True,
+                    "interface_driver": "DummyDriver",
+                    "interfaces": 1,
+                    "router_id": "",
+                    "routers": 1,
+                    "use_namespaces": True},
+                "created_at": "2014-03-11 05:00:05",
+                "description": None,
+                "heartbeat_timestamp": "2014-03-11 05:01:49",
+                "host": "l3_agent_host",
+                "id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216",
+                "started_at": "2014-03-11 05:00:05",
+                "topic": "l3_agent"
+            }]
+        })
+        neutronclient.Client.remove_router_from_l3_agent(
+            u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+            u'3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn(None)
+        neutronclient.Client.add_router_to_l3_agent(
+            u'4c692423-2c5f-4dad-b3ae-e2339f58539f',
+            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
+        ).AndReturn(None)
+        neutronclient.Client.add_router_to_l3_agent(
+            u'8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4',
+            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
+        ).AndReturn(None)
         # Delete script
         neutronclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
@@ -1628,6 +1720,16 @@ class NeutronRouterTest(common.HeatTestCase):
             "admin_state_up": False,
             "name": "myrouter",
             "l3_agent_id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"
+        }
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
+                                                      props)
+        rsrc.handle_update(update_snippet, {}, prop_diff)
+
+        prop_diff = {
+            "l3_agent_ids": ["4c692423-2c5f-4dad-b3ae-e2339f58539f",
+                             "8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4"]
         }
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
