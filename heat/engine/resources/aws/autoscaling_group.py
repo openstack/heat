@@ -230,21 +230,18 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                                 self.context)
                 self.update_policy = up
 
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
         if prop_diff:
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
-
             # Replace instances first if launch configuration has changed
             self._try_rolling_update(prop_diff)
 
-            if (self.DESIRED_CAPACITY in prop_diff and
-                    self.properties[self.DESIRED_CAPACITY] is not None):
-
-                self.adjust(self.properties[self.DESIRED_CAPACITY],
-                            adjustment_type=EXACT_CAPACITY)
-            else:
-                current_capacity = grouputils.get_size(self)
-                self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
+        if self.properties[self.DESIRED_CAPACITY] is not None:
+            self.adjust(self.properties[self.DESIRED_CAPACITY],
+                        adjustment_type=EXACT_CAPACITY)
+        else:
+            current_capacity = grouputils.get_size(self)
+            self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
 
     def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY):
         """
@@ -263,8 +260,9 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
 
         new_capacity = _calculate_new_capacity(capacity, adjustment,
                                                adjustment_type, lower, upper)
-
-        if new_capacity == capacity:
+        total = grouputils.get_size(self, include_failed=True)
+        # if there are failed resources in nested_stack, has to change
+        if new_capacity == total:
             LOG.debug('no change in capacity %d' % capacity)
             return
 

@@ -33,12 +33,12 @@ class TestInstanceGroup(common.HeatTestCase):
         super(TestInstanceGroup, self).setUp()
         t = template_format.parse(inline_templates.as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
-        defn = rsrc_defn.ResourceDefinition(
+        self.defn = rsrc_defn.ResourceDefinition(
             'asg', 'OS::Heat::InstanceGroup',
             {'Size': 2, 'AvailabilityZones': ['zoneb'],
              'LaunchConfigurationName': 'config'})
         self.instance_group = instgrp.InstanceGroup('asg',
-                                                    defn, stack)
+                                                    self.defn, stack)
 
     def test_child_template(self):
         self.instance_group._create_template = mock.Mock(return_value='tpl')
@@ -104,6 +104,14 @@ class TestInstanceGroup(common.HeatTestCase):
         self.instance_group.create_with_template.assert_called_once_with(
             '{}', expect_env)
 
+    def test_update_in_failed(self):
+        self.instance_group.state_set('CREATE', 'FAILED')
+        # to update the failed instance_group
+        self.instance_group.resize = mock.Mock(return_value=None)
+
+        self.instance_group.handle_update(self.defn, None, None)
+        self.instance_group.resize.assert_called_once_with(2)
+
     def test_handle_delete(self):
         self.instance_group.delete_nested = mock.Mock(return_value=None)
         self.instance_group.handle_delete()
@@ -112,8 +120,6 @@ class TestInstanceGroup(common.HeatTestCase):
     def test_handle_update_size(self):
         self.instance_group._try_rolling_update = mock.Mock(return_value=None)
         self.instance_group.resize = mock.Mock(return_value=None)
-        get_size = self.patchobject(grouputils, 'get_size')
-        get_size.return_value = 2
 
         props = {'Size': 5}
         defn = rsrc_defn.ResourceDefinition(

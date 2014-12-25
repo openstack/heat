@@ -14,14 +14,15 @@
 import six
 
 
-def get_size(group):
+def get_size(group, include_failed=False):
     """Get number of member resources managed by the specified group.
 
-    The list of members are not sorted or returned.
+    The size exclude failed members default, set include_failed=True
+    to get total size.
     """
     if group.nested():
         resources = [r for r in six.itervalues(group.nested())
-                     if r.status != r.FAILED]
+                     if include_failed or r.status != r.FAILED]
         return len(resources)
     else:
         return 0

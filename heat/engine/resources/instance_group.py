@@ -205,19 +205,19 @@ class InstanceGroup(stack_resource.StackResource):
                                                 self.context)
                 self.update_policy = up
 
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
         if prop_diff:
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
-
             # Replace instances first if launch configuration has changed
             self._try_rolling_update(prop_diff)
 
-            # Get the current capacity, we may need to adjust if
-            # Size has changed
-            if self.SIZE in prop_diff:
-                curr_size = grouputils.get_size(self)
-                if curr_size != self.properties[self.SIZE]:
-                    self.resize(self.properties[self.SIZE])
+        # Get the current capacity, we may need to adjust if
+        # Size has changed
+        if self.properties[self.SIZE] is not None:
+            self.resize(self.properties[self.SIZE])
+        else:
+            curr_size = grouputils.get_size(self)
+            self.resize(curr_size)
 
     def _tags(self):
         """
