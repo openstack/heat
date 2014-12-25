@@ -172,7 +172,7 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.stub_keystoneclient()
 
-    def create_vpnservice(self, resolve_neutron=True):
+    def create_vpnservice(self, resolve_neutron=True, resolve_router=True):
         if resolve_neutron:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -182,6 +182,15 @@ class VPNServiceTest(common.HeatTestCase):
             snippet = template_format.parse(vpnservice_template)
         else:
             snippet = template_format.parse(vpnservice_template_deprecated)
+        if resolve_router:
+            neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'router',
+                'rou123'
+            ).AndReturn('rou123')
+            props = snippet['Resources']['VPNService']['Properties']
+            props['router'] = 'rou123'
+            del props['router_id']
         neutronclient.Client.create_vpnservice(
             self.VPN_SERVICE_CONF).AndReturn({'vpnservice': {'id': 'vpn123'}})
 
@@ -197,8 +206,11 @@ class VPNServiceTest(common.HeatTestCase):
     def test_create(self):
         self._test_create()
 
-    def _test_create(self, resolve_neutron=True):
-        rsrc = self.create_vpnservice(resolve_neutron)
+    def test_create_router_id(self):
+        self._test_create(resolve_router=False)
+
+    def _test_create(self, resolve_neutron=True, resolve_router=True):
+        rsrc = self.create_vpnservice(resolve_neutron, resolve_router)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

@@ -26,10 +26,10 @@ class VPNService(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP,
-        SUBNET_ID, SUBNET, ROUTER_ID,
+        SUBNET_ID, SUBNET, ROUTER_ID, ROUTER
     ) = (
         'name', 'description', 'admin_state_up',
-        'subnet_id', 'subnet', 'router_id',
+        'subnet_id', 'subnet', 'router_id', 'router'
     )
 
     ATTRIBUTES = (
@@ -73,8 +73,14 @@ class VPNService(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Unique identifier for the router to which the vpn service '
               'will be inserted.'),
-            required=True
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Use property %s') % ROUTER),
         ),
+        ROUTER: properties.Schema(
+            properties.Schema.STRING,
+            _('The router to which the vpn service will be inserted.'),
+        )
     }
 
     attributes_schema = {
@@ -113,12 +119,15 @@ class VPNService(neutron.NeutronResource):
         super(VPNService, self).validate()
         self._validate_depr_property_required(
             self.properties, self.SUBNET, self.SUBNET_ID)
+        self._validate_depr_property_required(
+            self.properties, self.ROUTER, self.ROUTER_ID)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
         self.client_plugin().resolve_subnet(props, self.SUBNET, 'subnet_id')
+        self.client_plugin().resolve_router(props, self.ROUTER, 'router_id')
         vpnservice = self.neutron().create_vpnservice({'vpnservice': props})[
             'vpnservice']
         self.resource_id_set(vpnservice['id'])
