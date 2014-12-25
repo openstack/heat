@@ -1066,6 +1066,11 @@ class NeutronSubnetTest(common.HeatTestCase):
             "allocation_pools": [
                 {"start": "10.0.3.20", "end": "10.0.3.150"}],
             "dns_nameservers": ["8.8.8.8", "192.168.1.254"],
+            "host_routes": [
+                {"destination": "192.168.1.0/24", "nexthop": "194.168.1.2"}
+            ]
+
+
         }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
@@ -1181,7 +1186,11 @@ class NeutronSubnetTest(common.HeatTestCase):
                 {'subnet': {
                  'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
                  'name': 'mysubnet',
-                 'enable_dhcp': True
+                 'enable_dhcp': True,
+                 'host_routes': [
+                     {'destination': '192.168.1.0/24',
+                      'nexthop': '194.168.1.2'}
+                 ]
                  }}
             )
 

@@ -143,7 +143,8 @@ class Subnet(neutron.NeutronResource):
                         required=True
                     ),
                 },
-            )
+            ),
+            update_allowed=True
         ),
     }
 
