@@ -46,6 +46,7 @@ class CloudWatchAlarm(resource.Resource):
                                            'LessThanThreshold',
                                            'LessThanOrEqualToThreshold']),
             ],
+            required=True,
             update_allowed=True
         ),
         ALARM_DESCRIPTION: properties.Schema(
@@ -56,19 +57,23 @@ class CloudWatchAlarm(resource.Resource):
         EVALUATION_PERIODS: properties.Schema(
             properties.Schema.STRING,
             _('Number of periods to evaluate over.'),
+            required=True,
             update_allowed=True
         ),
         METRIC_NAME: properties.Schema(
             properties.Schema.STRING,
-            _('Metric name watched by the alarm.')
+            _('Metric name watched by the alarm.'),
+            required=True
         ),
         NAMESPACE: properties.Schema(
             properties.Schema.STRING,
-            _('Namespace for the metric.')
+            _('Namespace for the metric.'),
+            required=True
         ),
         PERIOD: properties.Schema(
             properties.Schema.STRING,
             _('Period (seconds) to evaluate over.'),
+            required=True,
             update_allowed=True
         ),
         STATISTIC: properties.Schema(
@@ -78,6 +83,7 @@ class CloudWatchAlarm(resource.Resource):
                 constraints.AllowedValues(['SampleCount', 'Average', 'Sum',
                                            'Minimum', 'Maximum']),
             ],
+            required=True,
             update_allowed=True
         ),
         ALARM_ACTIONS: properties.Schema(
@@ -104,6 +110,7 @@ class CloudWatchAlarm(resource.Resource):
         THRESHOLD: properties.Schema(
             properties.Schema.STRING,
             _('Threshold to evaluate against.'),
+            required=True,
             update_allowed=True
         ),
         UNITS: properties.Schema(
