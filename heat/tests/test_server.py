@@ -13,9 +13,9 @@
 
 import collections
 import copy
+from oslo.utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
-import uuid
 
 import mock
 import mox
@@ -34,7 +34,6 @@ from heat.engine import resource
 from heat.engine.resources import server as servers
 from heat.engine import scheduler
 from heat.engine import template
-from heat.openstack.common import uuidutils
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -123,7 +122,7 @@ class ServersTest(common.HeatTestCase):
         templ = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              environment.Environment({'key_name': 'test'}),
-                             stack_id=str(uuid.uuid4()),
+                             stack_id=uuidutils.generate_uuid(),
                              stack_user_project_id='8888')
         return (templ, stack)
 
@@ -973,7 +972,7 @@ class ServersTest(common.HeatTestCase):
         t = template_format.parse(nova_keypair_template)
         templ = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
-                             stack_id=str(uuid.uuid4()))
+                             stack_id=uuidutils.generate_uuid())
 
         resource_defns = templ.resource_definitions(stack)
         server = servers.Server('server_validate_test',

@@ -17,6 +17,7 @@ import uuid
 
 from oslo.config import cfg
 from oslo.serialization import jsonutils
+from oslo.utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -30,7 +31,6 @@ from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support
 from heat.openstack.common import log as logging
-from heat.openstack.common import uuidutils
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')

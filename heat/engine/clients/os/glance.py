@@ -13,6 +13,7 @@
 
 from glanceclient import client as gc
 from glanceclient import exc
+from oslo.utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -20,7 +21,6 @@ from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 from heat.openstack.common import log as logging
-from heat.openstack.common import uuidutils
 
 LOG = logging.getLogger(__name__)
 

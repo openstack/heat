@@ -14,6 +14,7 @@
 import mock
 import mox
 from oslo.config import cfg
+from oslo.utils import uuidutils
 import six
 
 from heat.common import exception
@@ -23,7 +24,6 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
-from heat.openstack.common import uuidutils
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes
