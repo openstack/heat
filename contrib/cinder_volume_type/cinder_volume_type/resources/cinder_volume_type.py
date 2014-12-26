@@ -14,6 +14,7 @@
 from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class CinderVolumeType(resource.Resource):
@@ -23,6 +24,7 @@ class CinderVolumeType(resource.Resource):
     Note that default cinder security policy usage of this resource
     is limited to being used by administrators only.
     """
+    support_status = support.SupportStatus(version='2015.1')
 
     PROPERTIES = (
         NAME, METADATA,
