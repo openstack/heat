@@ -72,6 +72,7 @@ class swiftTest(common.HeatTestCase):
         self.m.CreateMock(sc.Connection)
         self.m.StubOutWithMock(sc.Connection, 'post_account')
         self.m.StubOutWithMock(sc.Connection, 'put_container')
+        self.m.StubOutWithMock(sc.Connection, 'get_container')
         self.m.StubOutWithMock(sc.Connection, 'delete_container')
         self.m.StubOutWithMock(sc.Connection, 'head_container')
         self.m.StubOutWithMock(sc.Connection, 'get_auth')
@@ -252,6 +253,50 @@ class swiftTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         scheduler.TaskRunner(rsrc.delete)()
+
+        self.m.VerifyAll()
+
+    def test_delete_conflict_non_empty(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {}).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndRaise(
+            sc.ClientException('Conflict',
+                               http_status=409))
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       [{'name': 'test'}]))
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        deleter = scheduler.TaskRunner(rsrc.delete)
+        ex = self.assertRaises(exception.ResourceFailure, deleter)
+        self.assertIn('NotSupported: Deleting non-empty container',
+                      six.text_type(ex))
+
+        self.m.VerifyAll()
+
+    def test_delete_conflict_other(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {}).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndRaise(
+            sc.ClientException('Conflict',
+                               http_status=409))
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name}, []))
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        deleter = scheduler.TaskRunner(rsrc.delete)
+        ex = self.assertRaises(exception.ResourceFailure, deleter)
+        self.assertIn('Conflict', six.text_type(ex))
 
         self.m.VerifyAll()
 

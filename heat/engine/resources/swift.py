@@ -14,6 +14,7 @@ import six
 
 from six.moves.urllib import parse as urlparse
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
@@ -150,6 +151,13 @@ class SwiftContainer(resource.Resource):
         try:
             self.swift().delete_container(self.resource_id)
         except Exception as ex:
+            if self.client_plugin().is_conflict(ex):
+                container, objects = self.swift().get_container(
+                    self.resource_id)
+                if objects:
+                    msg = _("Deleting non-empty container (%s)"
+                            ) % self.resource_id
+                    raise exception.NotSupported(feature=msg)
             self.client_plugin().ignore_not_found(ex)
 
     def handle_check(self):
