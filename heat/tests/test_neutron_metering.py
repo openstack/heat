@@ -33,7 +33,8 @@ metering_template = '''
       "Type": "OS::Neutron::MeteringLabel",
       "Properties": {
         "name": "TestLabel",
-        "description": "Description of TestLabel"
+        "description": "Description of TestLabel",
+        "shared": True,
        }
     },
     "rule": {
@@ -69,7 +70,8 @@ class MeteringLabelTest(common.HeatTestCase):
         neutronclient.Client.create_metering_label({
             'metering_label': {
                 'name': 'TestLabel',
-                'description': 'Description of TestLabel'}
+                'description': 'Description of TestLabel',
+                'shared': True}
         }).AndReturn({'metering_label': {'id': '1234'}})
 
         snippet = template_format.parse(metering_template)
@@ -89,7 +91,8 @@ class MeteringLabelTest(common.HeatTestCase):
         neutronclient.Client.create_metering_label({
             'metering_label': {
                 'name': 'TestLabel',
-                'description': 'Description of TestLabel'}
+                'description': 'Description of TestLabel',
+                'shared': True}
         }).AndRaise(exceptions.NeutronClientException())
         self.m.ReplayAll()
 
@@ -150,12 +153,14 @@ class MeteringLabelTest(common.HeatTestCase):
         ).AndReturn(
             {'metering_label':
                 {'name': 'TestLabel',
-                 'description': 'Description of TestLabel'}})
+                 'description': 'Description of TestLabel',
+                 'shared': True}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual('TestLabel', rsrc.FnGetAtt('name'))
         self.assertEqual('Description of TestLabel',
                          rsrc.FnGetAtt('description'))
+        self.assertEqual(True, rsrc.FnGetAtt('shared'))
         self.m.VerifyAll()
 
 
