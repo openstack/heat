@@ -17,6 +17,7 @@ import uuid
 
 import mock
 import mox
+from oslo_config import cfg
 from oslo_utils import timeutils
 import six
 
@@ -552,6 +553,26 @@ class SqlAlchemyTest(common.HeatTestCase):
         db_api.stack_get_all(self.ctx, sort_keys=sort_keys)
         self.assertEqual(['id'], sort_keys)
 
+    def test_stack_get_all_hidden_tags(self):
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks[0].tags = ['hidden']
+        stacks[0].store()
+        stacks[1].tags = ['random']
+        stacks[1].store()
+
+        st_db = db_api.stack_get_all(self.ctx, show_hidden=True)
+        self.assertEqual(3, len(st_db))
+
+        st_db_visible = db_api.stack_get_all(self.ctx, show_hidden=False)
+        self.assertEqual(2, len(st_db_visible))
+
+        # Make sure the hidden stack isn't in the stacks returned by
+        # stack_get_all_visible()
+        for stack in st_db_visible:
+            self.assertNotEqual(stacks[0].id, stack.id)
+
     def test_stack_count_all(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
@@ -571,6 +592,21 @@ class SqlAlchemyTest(common.HeatTestCase):
         # show deleted
         st_db = db_api.stack_count_all(self.ctx, show_deleted=True)
         self.assertEqual(3, st_db)
+
+    def test_count_all_hidden_tags(self):
+        cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
+
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks[0].tags = ['hidden']
+        stacks[0].store()
+        stacks[1].tags = ['random']
+        stacks[1].store()
+
+        st_db = db_api.stack_count_all(self.ctx, show_hidden=True)
+        self.assertEqual(3, st_db)
+
+        st_db_visible = db_api.stack_count_all(self.ctx, show_hidden=False)
+        self.assertEqual(2, st_db_visible)
 
     def test_stack_count_all_with_filters(self):
         self._setup_test_stack('foo', UUID1)

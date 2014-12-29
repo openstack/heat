@@ -385,7 +385,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
-                        'show_deleted': False, 'show_nested': False}
+                        'show_deleted': False, 'show_nested': False,
+                        'show_hidden': False}
         mock_call.assert_called_once_with(
             req.context, ('list_stacks', default_args))
 
@@ -406,7 +407,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(8, len(engine_args))
+        self.assertEqual(9, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
@@ -664,7 +665,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
-                        'show_deleted': False, 'show_nested': False}
+                        'show_deleted': False, 'show_nested': False,
+                        'show_hidden': False}
         mock_call.assert_called_once_with(
             req.context, ('list_stacks', default_args))
 
