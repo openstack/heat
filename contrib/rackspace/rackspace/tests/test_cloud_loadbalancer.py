@@ -174,6 +174,12 @@ class FakeNode(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def update(self):
+        pass
+
+    def delete(self):
+        pass
+
 
 class FakeVirtualIP(object):
     def __init__(self, address=None, port=None, condition=None,
@@ -720,6 +726,55 @@ class LoadBalancerTest(common.HeatTestCase):
         resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         lbres = lb.CloudLoadBalancer("test", resdef, stack)
         self.assertIsNone(lbres._resolve_attribute("PublicIp"))
+
+    def test_update_nodes_immutable(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        current_nodes = [
+            FakeNode(address=u"1.1.1.1", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"2.2.2.2", port=80, condition=u"ENABLED"),
+            FakeNode(address=u"3.3.3.3", port=80, condition=u"ENABLED"),
+        ]
+        fake_loadbalancer.nodes = current_nodes
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        expected_ip = '4.4.4.4'
+        update_template['Properties']['nodes'] = [
+            {"addresses": ["1.1.1.1"], "port": 80, "condition": "ENABLED"},
+            {"addresses": ["2.2.2.2"], "port": 80, "condition": "DISABLED"},
+            {"addresses": [expected_ip], "port": 80, "condition": "ENABLED"},
+        ]
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        msg = ("Load Balancer is immutable. Status: 'PENDING_UPDATE'")
+        exc = Exception(msg)
+
+        # Add node `expected_ip`
+        new_nodes = [fake_loadbalancer.Node(address=expected_ip, port=80,
+                                            condition='ENABLED')]
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
+        fake_loadbalancer.add_nodes(new_nodes).AndRaise(exc)
+        fake_loadbalancer.add_nodes(new_nodes).AndReturn(None)
+
+        # Update node 2.2.2.2
+        self.m.StubOutWithMock(current_nodes[1], 'update')
+        current_nodes[1].update().AndRaise(exc)
+        current_nodes[1].update().AndReturn(None)
+
+        # Delete node 3.3.3.3
+        self.m.StubOutWithMock(current_nodes[2], 'delete')
+        current_nodes[2].delete().AndRaise(exc)
+        current_nodes[2].delete().AndReturn(None)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
     def test_update_immutable(self):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,

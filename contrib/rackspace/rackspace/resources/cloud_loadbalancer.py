@@ -29,7 +29,7 @@ from heat.engine import scheduler
 from heat.openstack.common import log as logging
 
 try:
-    from pyrax.exceptions import NotFound
+    from pyrax.exceptions import NotFound  # noqa
     PYRAX_INSTALLED = True
 except ImportError:
     #Setup fake exception for testing without pyrax
@@ -631,6 +631,18 @@ class CloudLoadBalancer(resource.Resource):
         return checkers
 
     def _update_nodes(self, lb, updated_nodes):
+        @retry_if_immutable
+        def add_nodes(lb, new_nodes):
+            lb.add_nodes(new_nodes)
+
+        @retry_if_immutable
+        def remove_node(known, node):
+            known[node].delete()
+
+        @retry_if_immutable
+        def update_node(known, node):
+            known[node].update()
+
         checkers = []
         current_nodes = lb.nodes
         diff_nodes = self._process_nodes(updated_nodes)
@@ -662,25 +674,23 @@ class CloudLoadBalancer(resource.Resource):
         """
         new_nodes = [self.clb.Node(**new[lb_node]) for lb_node in added]
         if new_nodes:
-            checker = scheduler.TaskRunner(lb.add_nodes, new_nodes)
-            checkers.append(checker)
+            checkers.append(scheduler.TaskRunner(add_nodes, lb, new_nodes))
 
         # Delete loadbalancers in the old dict that are not in the
         # new dict.
         for node in deleted:
-            checker = scheduler.TaskRunner(old[node].delete)
-            checkers.append(checker)
+            checkers.append(scheduler.TaskRunner(remove_node, old, node))
 
         # Update nodes that have been changed
         for node in updated:
             node_changed = False
             for attribute in new[node].keys():
-                if new[node][attribute] != getattr(old[node], attribute):
+                new_value = new[node][attribute]
+                if new_value and new_value != getattr(old[node], attribute):
                     node_changed = True
-                    setattr(old[node], attribute, new[node][attribute])
+                    setattr(old[node], attribute, new_value)
             if node_changed:
-                checker = scheduler.TaskRunner(old[node].update)
-                checkers.append(checker)
+                checkers.append(scheduler.TaskRunner(update_node, old, node))
 
         return checkers
 
