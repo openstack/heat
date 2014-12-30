@@ -74,6 +74,7 @@ class swiftTest(common.HeatTestCase):
         self.m.StubOutWithMock(sc.Connection, 'put_container')
         self.m.StubOutWithMock(sc.Connection, 'get_container')
         self.m.StubOutWithMock(sc.Connection, 'delete_container')
+        self.m.StubOutWithMock(sc.Connection, 'delete_object')
         self.m.StubOutWithMock(sc.Connection, 'head_container')
         self.m.StubOutWithMock(sc.Connection, 'get_auth')
         self.stub_keystoneclient()
@@ -87,6 +88,11 @@ class swiftTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
+
+    def stub_delete_empty(self, res_id):
+        sc.Connection.get_container(res_id).AndReturn(
+            ({'name': res_id}, []))
+        sc.Connection.delete_container(res_id).AndReturn(None)
 
     def test_create_container_name(self):
         self.m.ReplayAll()
@@ -134,7 +140,7 @@ class swiftTest(common.HeatTestCase):
             container_name, {}).AndReturn(None)
         sc.Connection.head_container(
             mox.IgnoreArg()).MultipleTimes().AndReturn(headers)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -163,7 +169,7 @@ class swiftTest(common.HeatTestCase):
         sc.Connection.put_container(
             container_name,
             {'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -180,7 +186,7 @@ class swiftTest(common.HeatTestCase):
             container_name,
             {'X-Container-Write': '.r:*',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -199,7 +205,7 @@ class swiftTest(common.HeatTestCase):
             {'X-Container-Meta-Web-Error': 'error.html',
              'X-Container-Meta-Web-Index': 'index.html',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -213,7 +219,7 @@ class swiftTest(common.HeatTestCase):
         sc.Connection.put_container(container_name, {})
         sc.Connection.post_account(
             {'X-Account-Meta-Temp-Url-Key': 'secret'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -227,6 +233,9 @@ class swiftTest(common.HeatTestCase):
         sc.Connection.put_container(
             container_name,
             {}).AndReturn(None)
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       []))
         sc.Connection.delete_container(container_name).AndRaise(
             sc.ClientException('Test delete failure'))
 
@@ -244,6 +253,9 @@ class swiftTest(common.HeatTestCase):
         sc.Connection.put_container(
             container_name,
             {}).AndReturn(None)
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       []))
         sc.Connection.delete_container(container_name).AndRaise(
             sc.ClientException('Its gone',
                                http_status=404))
@@ -256,17 +268,14 @@ class swiftTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_delete_conflict_non_empty(self):
+    def test_delete_non_empty_not_allowed(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
         sc.Connection.put_container(
             container_name,
             {}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Conflict',
-                               http_status=409))
         sc.Connection.get_container(
             container_name).AndReturn(({'name': container_name},
-                                       [{'name': 'test'}]))
+                                       [{'name': 'test_object'}]))
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -274,30 +283,82 @@ class swiftTest(common.HeatTestCase):
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         deleter = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, deleter)
-        self.assertIn('NotSupported: Deleting non-empty container',
+        self.assertIn('ResourceActionNotSupported: '
+                      'Deleting non-empty container',
                       six.text_type(ex))
 
         self.m.VerifyAll()
 
-    def test_delete_conflict_other(self):
+    def test_delete_non_empty_allowed(self):
         container_name = utils.PhysName('test_stack', 'test_resource')
         sc.Connection.put_container(
             container_name,
             {}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Conflict',
-                               http_status=409))
         sc.Connection.get_container(
-            container_name).AndReturn(({'name': container_name}, []))
+            container_name).AndReturn(({'name': container_name},
+                                       [{'name': 'test_object1'},
+                                        {'name': 'test_object2'}]))
+        sc.Connection.delete_object(container_name, 'test_object2'
+                                    ).AndReturn(None)
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       [{'name': 'test_object1'}]))
+        sc.Connection.delete_object(container_name, 'test_object1'
+                                    ).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
+        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        deleter = scheduler.TaskRunner(rsrc.delete)
-        ex = self.assertRaises(exception.ResourceFailure, deleter)
-        self.assertIn('Conflict', six.text_type(ex))
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
 
+    def test_delete_non_empty_allowed_ignores_not_found(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {}).AndReturn(None)
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       [{'name': 'test_object'}]))
+        sc.Connection.delete_object(
+            container_name, 'test_object').AndRaise(
+                sc.ClientException('Object is gone', http_status=404))
+        sc.Connection.delete_container(
+            container_name).AndRaise(
+                sc.ClientException('Container is gone', http_status=404))
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_delete_non_empty_fails_delete_object(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {}).AndReturn(None)
+        sc.Connection.get_container(
+            container_name).AndReturn(({'name': container_name},
+                                       [{'name': 'test_object'}]))
+        sc.Connection.delete_object(
+            container_name, 'test_object').AndRaise(
+                sc.ClientException('Test object delete failure'))
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        t['Resources']['SwiftContainer']['Properties']['PurgeOnDelete'] = True
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.delete))
         self.m.VerifyAll()
 
     def _get_check_resource(self):
@@ -347,7 +408,7 @@ class swiftTest(common.HeatTestCase):
         container_name = utils.PhysName('test_stack', 'test_resource')
         sc.Connection.put_container(
             container_name, {}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.stub_delete_empty(container_name)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
