@@ -20,6 +20,7 @@ import eventlet
 from oslo.config import cfg
 from oslo import messaging
 from oslo.serialization import jsonutils
+from oslo.utils import uuidutils
 from osprofiler import profiler
 import requests
 import six
@@ -51,7 +52,6 @@ from heat.engine import watchrule
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
-from heat.openstack.common import uuidutils
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')

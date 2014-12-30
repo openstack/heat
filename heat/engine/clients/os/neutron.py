@@ -14,11 +14,11 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
+from oslo.utils import uuidutils
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
-from heat.openstack.common import uuidutils
 
 
 class NeutronClientPlugin(client_plugin.ClientPlugin):
