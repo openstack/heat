@@ -98,6 +98,7 @@ class ProviderTemplateTest(common.HeatTestCase):
             'Parameters': {
                 'Foo': {'Type': 'String'},
                 'AList': {'Type': 'CommaDelimitedList'},
+                'MemList': {'Type': 'CommaDelimitedList'},
                 'ListEmpty': {'Type': 'CommaDelimitedList'},
                 'ANum': {'Type': 'Number'},
                 'AMap': {'Type': 'Json'},
@@ -116,6 +117,7 @@ class ProviderTemplateTest(common.HeatTestCase):
             properties_schema = {
                 "Foo": {"Type": "String"},
                 "AList": {"Type": "List"},
+                "MemList": {"Type": "List"},
                 "ListEmpty": {"Type": "List"},
                 "ANum": {"Type": "Number"},
                 "AMap": {"Type": "Map"}
@@ -141,6 +143,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         prop_vals = {
             "Foo": "Bar",
             "AList": ["one", "two", "three"],
+            "MemList": [{"key": "name", "value": "three"},
+                        {"key": "name", "value": "four"}],
             "ListEmpty": [],
             "ANum": 5,
             "AMap": map_prop_val,
@@ -159,6 +163,10 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.assertEqual("Bar", converted_params.get("Foo"))
         # verify List conversion
         self.assertEqual("one,two,three", converted_params.get("AList"))
+        # verify Member List conversion
+        mem_exp = '.member.0.key=name,.member.0.value=three,' \
+                  '.member.1.key=name,.member.1.value=four'
+        self.assertEqual(mem_exp, converted_params.get("MemList"))
         # verify Number conversion
         self.assertEqual(5, converted_params.get("ANum"))
         # verify Map conversion
