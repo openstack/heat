@@ -1129,6 +1129,12 @@ class StackParametersTest(common.HeatTestCase):
               snippet={'properties': {'prop1': {'get_param':
                                                 'OS::stack_name'}}},
               expected={'properties': {'prop1': 'test'}})),
+        ('pseudo_project_id',
+         dict(params={},
+              snippet={'properties': {'prop1': {'get_param':
+                                                'OS::project_id'}}},
+              expected={'properties':
+                        {'prop1': '9913ef0a-b8be-4b33-b574-9061441bd373'}})),
 
     ]
 
@@ -1160,7 +1166,8 @@ class StackParametersTest(common.HeatTestCase):
         tmpl = parser.Template(self.props_template)
         env = environment.Environment(self.params)
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env,
-                             stack_id='1ba8c334-2297-4312-8c7c-43763a988ced')
+                             stack_id='1ba8c334-2297-4312-8c7c-43763a988ced',
+                             tenant_id='9913ef0a-b8be-4b33-b574-9061441bd373')
         self.assertEqual(self.expected,
                          function.resolve(tmpl.parse(stack, self.snippet)))
 
