@@ -13,13 +13,13 @@
 
 from oslo.middleware import request_id as oslo_request_id
 from oslo.utils import importutils
+from oslo_context import context
 
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
 from heat.db import api as db_api
 from heat.engine import clients
-from heat.openstack.common import context
 from heat.openstack.common import local
 
 
