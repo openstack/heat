@@ -413,6 +413,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_create_complete(sd))
 
+    def test_check_create_complete_none(self):
+        self._create_stack(self.template)
+        self.assertTrue(self.deployment.check_create_complete(sd=None))
+
     def test_check_update_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
@@ -423,6 +427,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_update_complete(sd))
+
+    def test_check_update_complete_none(self):
+        self._create_stack(self.template)
+        self.assertTrue(self.deployment.check_update_complete(sd=None))
 
     def test_check_suspend_complete(self):
         self._create_stack(self.template)
@@ -435,6 +443,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_suspend_complete(sd))
 
+    def test_check_suspend_complete_none(self):
+        self._create_stack(self.template)
+        self.assertTrue(self.deployment.check_suspend_complete(sd=None))
+
     def test_check_resume_complete(self):
         self._create_stack(self.template)
         sd = self.mock_deployment()
@@ -445,6 +457,10 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         sd['status'] = self.deployment.IN_PROGRESS
         self.assertFalse(self.deployment.check_resume_complete(sd))
+
+    def test_check_resume_complete_none(self):
+        self._create_stack(self.template)
+        self.assertTrue(self.deployment.check_resume_complete(sd=None))
 
     def test_check_create_complete_error(self):
         self._create_stack(self.template)

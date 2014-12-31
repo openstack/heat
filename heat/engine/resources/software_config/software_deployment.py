@@ -380,6 +380,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.data_set('password', password, True)
 
     def check_create_complete(self, sd):
+        if not sd:
+            return True
         return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -390,6 +392,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._handle_action(self.UPDATE)
 
     def check_update_complete(self, sd):
+        if not sd:
+            return True
         return self._check_complete()
 
     def handle_delete(self):
@@ -433,12 +437,16 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._handle_action(self.SUSPEND)
 
     def check_suspend_complete(self, sd):
+        if not sd:
+            return True
         return self._check_complete()
 
     def handle_resume(self):
         return self._handle_action(self.RESUME)
 
     def check_resume_complete(self, sd):
+        if not sd:
+            return True
         return self._check_complete()
 
     def handle_signal(self, details):
