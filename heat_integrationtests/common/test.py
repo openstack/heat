@@ -22,8 +22,8 @@ import testtools
 import time
 
 from heatclient import exc as heat_exceptions
+from oslo.utils import timeutils
 
-from heat.openstack.common import timeutils
 from heat_integrationtests.common import clients
 from heat_integrationtests.common import config
 from heat_integrationtests.common import exceptions
