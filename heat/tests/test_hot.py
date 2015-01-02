@@ -1173,7 +1173,7 @@ class StackParametersTest(common.HeatTestCase):
 
 
 class HOTParamValidatorTest(common.HeatTestCase):
-    """Test HOTParamValidator"""
+    """Test HOTParamValidator."""
 
     def test_multiple_constraint_descriptions(self):
         len_desc = 'string length should be between 8 and 16'
