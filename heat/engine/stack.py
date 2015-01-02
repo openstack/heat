@@ -79,7 +79,7 @@ class Stack(collections.Mapping):
                  created_time=None, updated_time=None,
                  user_creds_id=None, tenant_id=None,
                  use_stored_context=False, username=None,
-                 nested_depth=0):
+                 nested_depth=0, strict_validate=True):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -117,6 +117,7 @@ class Stack(collections.Mapping):
         self.updated_time = updated_time
         self.user_creds_id = user_creds_id
         self.nested_depth = nested_depth
+        self.strict_validate = strict_validate
 
         if use_stored_context:
             self.context = self.stored_context()

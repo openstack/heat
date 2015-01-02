@@ -840,7 +840,7 @@ class Resource(object):
 
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
-        return self.properties.validate()
+        return self.properties.validate(with_value=self.stack.strict_validate)
 
     @classmethod
     def validate_deletion_policy(cls, policy):

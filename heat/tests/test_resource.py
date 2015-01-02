@@ -1407,6 +1407,29 @@ class ResourceDependenciesTest(common.HeatTestCase):
                                stack.validate)
         self.assertIn('"baz" (in bar.Properties.Foo)', six.text_type(ex))
 
+    def test_validate_value_fail(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'bar': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {
+                        'FooInt': 'notanint',
+                    }
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               stack.validate)
+        expected = "FooInt Value 'notanint' is not an integer"
+        self.assertIn(expected, six.text_type(ex))
+
+        # You can turn off value validation via strict_validate
+        stack_novalidate = parser.Stack(utils.dummy_context(), 'test', tmpl,
+                                        strict_validate=False)
+        self.assertIsNone(stack_novalidate.validate())
+
     def test_getatt(self):
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
