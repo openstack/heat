@@ -706,7 +706,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
-        resg = self._create_dummy_stack(template_attr)
+        resg = self._create_dummy_stack(template_attr,
+                                        expect_attrs={'0': 2, '1': 2})
         self.assertEqual(2, resg.FnGetAtt('resource.0',
                                           'nested_dict', 'dict', 'b'))
         self.assertEqual(2, resg.FnGetAtt('resource.1',
@@ -717,18 +718,10 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         Test attribute aggregation and that we mimic the nested resource's
         attributes.
         """
-        resg = self._create_dummy_stack(template_attr)
+        resg = self._create_dummy_stack(template_attr,
+                                        expect_attrs={'0': 3, '1': 3})
         expected = [3, 3]
         self.assertEqual(expected, resg.FnGetAtt('nested_dict', 'list', 2))
-
-    def test_get_attr_path(self):
-        """
-        Test attribute aggregation and that we mimic the nested resource's
-        attributes.
-        """
-        resg = self._create_dummy_stack(template_attr)
-        expected = ['abc', 'abc']
-        self.assertEqual(expected, resg.stack.output('nested_strings'))
 
     def test_aggregate_refs(self):
         """
@@ -742,8 +735,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         """
         Test outputs aggregation
         """
-        resg = self._create_dummy_stack(template_attr)
         expected = {'0': ['foo', 'bar'], '1': ['foo', 'bar']}
+        resg = self._create_dummy_stack(template_attr, expect_attrs=expected)
         self.assertEqual(expected, resg.FnGetAtt('attributes', 'list'))
 
     def test_aggregate_outputs_no_path(self):
@@ -762,13 +755,25 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
                           'resource.2')
 
-    def _create_dummy_stack(self, template_data=template, expect_count=2):
+    def _create_dummy_stack(self, template_data=template, expect_count=2,
+                            expect_attrs=None):
         stack = utils.parse_stack(template_data)
         resg = stack['group1']
-        scheduler.TaskRunner(resg.create)()
-        self.stack = resg.nested()
-        self.assertEqual(expect_count, len(resg.nested()))
-        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
+        fake_res = {}
+        if expect_attrs is None:
+            expect_attrs = {}
+        for resc in range(expect_count):
+            res = str(resc)
+            fake_res[res] = mock.Mock()
+            fake_res[res].FnGetRefId.return_value = 'ID-%s' % res
+            if res in expect_attrs:
+                fake_res[res].FnGetAtt.return_value = expect_attrs[res]
+            else:
+                fake_res[res].FnGetAtt.return_value = res
+        resg.nested = mock.Mock(return_value=fake_res)
+
+        names = [str(name) for name in range(expect_count)]
+        resg._resource_names = mock.Mock(return_value=names)
         return resg
 
     def test_adopt(self):
