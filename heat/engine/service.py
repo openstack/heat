@@ -267,7 +267,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.2'
+    RPC_API_VERSION = '1.3'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1034,7 +1034,27 @@ class EngineService(service.Service):
                                          with_attr=with_attr)
 
     @request_context
-    def resource_signal(self, cnxt, stack_identity, resource_name, details):
+    def resource_signal(self, cnxt, stack_identity, resource_name, details,
+                        sync_call=False):
+        '''
+        :param sync_call: indicates whether a synchronized call behavior is
+                          expected. This is reserved for CFN WaitCondition
+                          implementation.
+        '''
+
+        def _resource_signal(rsrc, details):
+            stack = rsrc.stack
+            LOG.debug("signaling resource %s:%s" % (stack.name, rsrc.name))
+            rsrc.signal(details)
+
+            # Refresh the metadata for all other resources, since signals can
+            # update metadata which is used by other resources, e.g
+            # when signalling a WaitConditionHandle resource, and other
+            # resources may refer to WaitCondition Fn::GetAtt Data
+            for r in stack.dependencies:
+                if r.name != rsrc.name and r.id is not None:
+                    r.metadata_update()
+
         s = self._get_stack(cnxt, stack_identity)
 
         # This is not "nice" converting to the stored context here,
@@ -1044,18 +1064,14 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
         self._verify_stack_resource(stack, resource_name)
 
-        if callable(stack[resource_name].signal):
-            stack[resource_name].signal(details)
-
-        # Refresh the metadata for all other resources, since signals can
-        # update metadata which is used by other resources, e.g
-        # when signalling a WaitConditionHandle resource, and other
-        # resources may refer to WaitCondition Fn::GetAtt Data
-        for res in stack.dependencies:
-            if res.name != resource_name and res.id is not None:
-                res.metadata_update()
-
-        return stack[resource_name].metadata_get()
+        rsrc = stack[resource_name]
+        if callable(rsrc.signal):
+            if sync_call:
+                _resource_signal(rsrc, details)
+                return rsrc.metadata_get()
+            else:
+                self.thread_group_mgr.start(stack.id, _resource_signal,
+                                            rsrc, details)
 
     @request_context
     def find_physical_resource(self, cnxt, physical_resource_id):

@@ -2158,9 +2158,9 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_list_resource_types_deprecated(self):
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
-        self.assertEqual({'OS::Neutron::RouterGateway',
-                          'OS::Heat::CWLiteAlarm',
-                          'OS::Heat::HARestarter'}, set(resources))
+        self.assertEqual(set(['OS::Neutron::RouterGateway',
+                              'OS::Heat::CWLiteAlarm',
+                              'OS::Heat::HARestarter']), set(resources))
 
     def test_list_resource_types_supported(self):
         resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")
@@ -2463,7 +2463,42 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_signal_reception(self):
+    def test_signal_reception_async(self):
+        stack = get_stack('signal_reception',
+                          self.ctx,
+                          policy_template)
+        self.stack = stack
+        setup_keystone_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        test_data = {'food': 'yum'}
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+
+        # Mock out the aync work of thread starting
+        self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
+        self.m.StubOutWithMock(self.eng.thread_group_mgr, 'start')
+        self.eng.thread_group_mgr.start(stack.id,
+                                        mox.IgnoreArg(),
+                                        mox.IgnoreArg(),
+                                        mox.IgnoreArg()).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        self.eng.resource_signal(self.ctx,
+                                 dict(self.stack.identifier()),
+                                 'WebServerScaleDownPolicy',
+                                 test_data)
+
+        self.m.VerifyAll()
+
+        self.stack.delete()
+
+    def test_signal_reception_sync(self):
         stack = get_stack('signal_reception',
                           self.ctx,
                           policy_template)
@@ -2486,7 +2521,9 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.resource_signal(self.ctx,
                                  dict(self.stack.identifier()),
                                  'WebServerScaleDownPolicy',
-                                 test_data)
+                                 test_data,
+                                 sync_call=True)
+
         self.m.VerifyAll()
         self.stack.delete()
 
@@ -2541,7 +2578,9 @@ class StackServiceTest(common.HeatTestCase):
         md = self.eng.resource_signal(self.ctx,
                                       dict(self.stack.identifier()),
                                       'WebServerScaleDownPolicy', None)
-        self.assertEqual(test_metadata, md)
+
+        self.eng.thread_group_mgr.groups[stack.id].wait()
+        self.assertIsNone(md)
         self.m.VerifyAll()
 
     @stack_context('service_metadata_test_stack')
