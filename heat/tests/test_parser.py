@@ -27,7 +27,6 @@ from heat.common import context
 from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
-from heat.common import urlfetch
 import heat.db.api as db_api
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.cfn import template as cfn_t
@@ -1047,75 +1046,71 @@ class StackTest(common.HeatTestCase):
                              status_reason='blarg')
         self.assertEqual(1, stack.total_resources())
 
-    def _setup_nested(self, name):
-        nested_tpl = ('{"HeatTemplateFormatVersion" : "2012-12-12",'
-                      '"Resources":{'
-                      '"A": {"Type": "GenericResourceType"},'
-                      '"B": {"Type": "GenericResourceType"}}}')
-        tpl = {'HeatTemplateFormatVersion': "2012-12-12",
-               'Resources':
-               {'A': {'Type': 'AWS::CloudFormation::Stack',
-                      'Properties':
-                      {'TemplateURL': 'http://server.test/nested.json'}},
-                'B': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(urlfetch, 'get')
-        urlfetch.get('http://server.test/nested.json').AndReturn(nested_tpl)
-        self.m.ReplayAll()
-        self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
-                                  status_reason=name)
-        self.stack.store()
-        self.stack.create()
-
     def test_total_resources_nested(self):
-        self._setup_nested('zyzzyx')
-        self.assertEqual(4, self.stack.total_resources())
-        self.assertIsNotNone(self.stack['A'].nested())
-        self.assertEqual(
-            2, self.stack['A'].nested().total_resources())
-        self.assertEqual(
-            4,
-            self.stack['A'].nested().root_stack.total_resources())
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
+
+        stack['A'].nested = mock.Mock()
+        stack['A'].nested.return_value.total_resources.return_value = 3
+        self.assertEqual(4, stack.total_resources())
 
     def test_iter_resources(self):
-        self._setup_nested('iter_resources')
-        nested_stack = self.stack['A'].nested()
-        resource_generator = self.stack.iter_resources()
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
+
+        def get_more(nested_depth=0):
+            yield 'X'
+            yield 'Y'
+            yield 'Z'
+
+        stack['A'].nested = mock.MagicMock()
+        stack['A'].nested.return_value.iter_resources.side_effect = get_more
+
+        resource_generator = stack.iter_resources()
         self.assertIsNot(resource_generator, list)
 
         first_level_resources = list(resource_generator)
         self.assertEqual(2, len(first_level_resources))
-        self.assertIn(self.stack['A'], first_level_resources)
-        self.assertIn(self.stack['B'], first_level_resources)
+        all_resources = list(stack.iter_resources(1))
+        self.assertEqual(5, len(all_resources))
 
-        all_resources = list(self.stack.iter_resources(1))
-        self.assertIn(self.stack['A'], first_level_resources)
-        self.assertIn(self.stack['B'], first_level_resources)
-        self.assertIn(nested_stack['A'], all_resources)
-        self.assertIn(nested_stack['B'], all_resources)
+    def test_root_stack_no_parent(self):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
 
-    def test_root_stack(self):
-        self._setup_nested('toor')
-        self.assertEqual(self.stack, self.stack.root_stack)
-        self.assertIsNotNone(self.stack['A'].nested())
-        self.assertEqual(
-            self.stack, self.stack['A'].nested().root_stack)
+        self.assertEqual(stack, stack.root_stack)
 
-    def test_nested_stack_abandon(self):
-        self._setup_nested('nestedstack')
-        ret = self.stack.prepare_abandon()
-        self.assertIsNotNone(self.stack['A'].nested())
-        self.assertEqual(
-            self.stack, self.stack['A'].nested().root_stack)
+    def test_root_stack_parent_no_stack(self):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
 
-        keys = ['name', 'id', 'action', 'status', 'template', 'resources',
-                'project_id', 'stack_user_project_id', 'environment']
+        stack.parent_resource = mock.Mock()
+        stack.parent_resource.stack = None
+        self.assertEqual(stack, stack.root_stack)
 
-        self.assertEqual(len(keys), len(ret))
-        nested_stack_data = ret['resources']['A']
-        self.assertEqual(len(keys), len(nested_stack_data))
-        for key in keys:
-            self.assertIn(key, ret)
-            self.assertIn(key, nested_stack_data)
+    def test_root_stack_with_parent(self):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
+
+        stack.parent_resource = mock.Mock()
+        stack.parent_resource.stack.root_stack = 'test value'
+        self.assertEqual('test value', stack.root_stack)
 
     def test_load_parent_resource(self):
         self.stack = parser.Stack(self.ctx, 'load_parent_resource',
@@ -1851,12 +1846,17 @@ class StackTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def _get_stack_to_check(self, name):
+        tpl = {"HeatTemplateFormatVersion": "2012-12-12",
+               "Resources": {
+                   "A": {"Type": "GenericResourceType"},
+                   "B": {"Type": "GenericResourceType"}}}
+        self.stack = parser.Stack(self.ctx, name, parser.Template(tpl),
+                                  status_reason=name)
+        self.stack.store()
+
         def _mock_check(res):
             res.handle_check = mock.Mock()
-            if hasattr(res, 'nested'):
-                [_mock_check(r) for r in res.nested().resources.values()]
 
-        self._setup_nested(name)
         [_mock_check(res) for res in self.stack.resources.values()]
         return self.stack
 
@@ -1869,18 +1869,6 @@ class StackTest(common.HeatTestCase):
         [self.assertTrue(res.handle_check.called)
          for res in stack.resources.values()]
         self.assertNotIn('not fully supported', stack.status_reason)
-
-    def test_check_nested_stack(self):
-        def _mock_check(res):
-            res.handle_check = mock.Mock()
-
-        self._setup_nested('check-nested-stack')
-        nested = self.stack['A'].nested()
-        [_mock_check(res) for res in nested.resources.values()]
-        self.stack.check()
-
-        [self.assertTrue(res.handle_check.called)
-         for res in nested.resources.values()]
 
     def test_check_not_supported(self):
         stack = self._get_stack_to_check('check-not-supported')

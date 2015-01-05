@@ -420,3 +420,56 @@ Outputs:
         self.assert_resource_is_a_stack(stack_identifier, 'the_nested')
         stack = self.client.stacks.get(stack_identifier)
         self.assertEqual('goopie', self._stack_output(stack, 'value'))
+
+
+class TemplateResourceCheckTest(test.HeatIntegrationTest):
+    """Prove that we can do template resource check."""
+
+    main_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: the.yaml
+    Properties:
+      one: my_name
+Outputs:
+  identifier:
+    Value: {Ref: the_nested}
+  value:
+    Value: {'Fn::GetAtt': [the_nested, the_str]}
+'''
+
+    nested_templ = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Default: foo
+    Type: String
+Resources:
+  RealRandom:
+    Type: OS::Heat::RandomString
+    Properties:
+      salt: {Ref: one}
+Outputs:
+  the_str:
+    Value: {'Fn::GetAtt': [RealRandom, value]}
+'''
+
+    def setUp(self):
+        super(TemplateResourceCheckTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_check(self):
+        stack_name = self._stack_rand_name()
+        self.client.stacks.create(
+            stack_name=stack_name,
+            template=self.main_template,
+            files={'the.yaml': self.nested_templ},
+            disable_rollback=True,
+        )
+        stack = self.client.stacks.get(stack_name)
+        stack_identifier = '%s/%s' % (stack_name, stack.id)
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+
+        self.client.actions.check(stack_id=stack_identifier)
+        self._wait_for_stack_status(stack_identifier, 'CHECK_COMPLETE')
