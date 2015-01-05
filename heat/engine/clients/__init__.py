@@ -11,11 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from oslo.config import cfg
 from oslo.utils import importutils
 from stevedore import extension
 import warnings
 
+from heat.common import exception
+from heat.common.i18n import _LE
 from heat.common.i18n import _LW
 from heat.openstack.common import log as logging
 
@@ -132,10 +136,14 @@ class ClientBackend(object):
         if cfg.CONF.cloud_backend == _default_backend:
             return OpenStackClients(context)
         else:
-            return importutils.import_object(
-                cfg.CONF.cloud_backend,
-                context
-            )
+            try:
+                return importutils.import_object(cfg.CONF.cloud_backend,
+                                                 context)
+            except (ImportError, RuntimeError) as err:
+                msg = _LE('Invalid cloud_backend setting in heat.conf '
+                          'detected  - %s') % six.text_type(err)
+                LOG.error(msg)
+                raise exception.Invalid(reason=msg)
 
 
 Clients = ClientBackend
