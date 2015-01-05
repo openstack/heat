@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-
 from oslo import messaging
 
 from heat.common import exception
@@ -62,10 +61,6 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
-
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
                                 self.engine_id).AndReturn(None)
@@ -73,6 +68,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
         self.m.VerifyAll()
 
@@ -81,13 +77,10 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndReturn(True)
-
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        self.patchobject(slock, 'engine_alive', return_value=True)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
@@ -95,10 +88,6 @@ class StackLockTest(HeatTestCase):
         self.m.StubOutWithMock(db_api, "stack_lock_create")
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(
@@ -108,6 +97,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
@@ -116,10 +106,6 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
-
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(
             self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
@@ -127,15 +113,13 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
-
         db_api.stack_lock_steal(
             self.stack.id, "fake-engine-id", self.engine_id).AndReturn(None)
 
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
         self.m.VerifyAll()
 
@@ -144,10 +128,6 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        self.m.StubOutWithMock(messaging.rpc.client._CallContext, "call")
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
-
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(
             self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
@@ -155,15 +135,13 @@ class StackLockTest(HeatTestCase):
         db_api.stack_lock_create(
             self.stack.id, self.engine_id).AndReturn("fake-engine-id")
 
-        messaging.rpc.client._CallContext.call(
-            self.context, "listening").AndRaise(messaging.MessagingTimeout)
-
         db_api.stack_lock_steal(
             self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
 
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
         self.m.VerifyAll()
 
@@ -218,3 +196,27 @@ class StackLockTest(HeatTestCase):
                 raise self.TestThreadLockException
         self.assertRaises(self.TestThreadLockException, check_thread_lock)
         assert not db_api.stack_lock_release.called
+
+    def test_engine_alive_ok(self):
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        mget_client = self.patchobject(stack_lock.rpc_messaging,
+                                       'get_rpc_client')
+        mclient = mget_client.return_value
+        mclient_ctx = mclient.prepare.return_value
+        mclient_ctx.call.return_value = True
+        ret = slock.engine_alive(self.context, self.engine_id)
+        self.assertTrue(ret)
+        mclient.prepare.assert_called_once_with(timeout=2)
+        mclient_ctx.call.assert_called_once_with(self.context, 'listening')
+
+    def test_engine_alive_timeout(self):
+        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        mget_client = self.patchobject(stack_lock.rpc_messaging,
+                                       'get_rpc_client')
+        mclient = mget_client.return_value
+        mclient_ctx = mclient.prepare.return_value
+        mclient_ctx.call.side_effect = messaging.MessagingTimeout('too slow')
+        ret = slock.engine_alive(self.context, self.engine_id)
+        self.assertIs(False, ret)
+        mclient.prepare.assert_called_once_with(timeout=2)
+        mclient_ctx.call.assert_called_once_with(self.context, 'listening')
