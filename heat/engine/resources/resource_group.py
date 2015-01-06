@@ -121,7 +121,8 @@ class ResourceGroup(stack_resource.StackResource):
                     _('Property values for the resources in the group')
                 ),
             },
-            required=True
+            required=True,
+            update_allowed=True
         ),
     }
 
