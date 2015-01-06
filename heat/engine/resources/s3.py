@@ -14,6 +14,7 @@ import six
 
 from six.moves.urllib import parse as urlparse
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -153,6 +154,13 @@ class S3Bucket(resource.Resource):
         try:
             self.swift().delete_container(self.resource_id)
         except Exception as ex:
+            if self.client_plugin().is_conflict(ex):
+                container, objects = self.swift().get_container(
+                    self.resource_id)
+                if objects:
+                    msg = _("The bucket you tried to delete is not empty (%s)."
+                            ) % self.resource_id
+                    raise exception.ResourceActionNotSupported(action=msg)
             self.client_plugin().ignore_not_found(ex)
 
     def FnGetRefId(self):

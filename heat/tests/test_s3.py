@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import six
 import swiftclient.client as sc
 
 from heat.common import exception
@@ -67,6 +67,7 @@ class s3Test(common.HeatTestCase):
         super(s3Test, self).setUp()
         self.m.CreateMock(sc.Connection)
         self.m.StubOutWithMock(sc.Connection, 'put_container')
+        self.m.StubOutWithMock(sc.Connection, 'get_container')
         self.m.StubOutWithMock(sc.Connection, 'delete_container')
         self.m.StubOutWithMock(sc.Connection, 'get_auth')
         self.stub_keystoneclient()
@@ -230,6 +231,48 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
+
+        self.m.VerifyAll()
+
+    def test_delete_conflict_not_empty(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndRaise(
+            sc.ClientException('Not empty', http_status=409))
+        sc.Connection.get_container(container_name).AndReturn(
+            ({'name': container_name}, [{'name': 'test_object'}]))
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'S3Bucket')
+        deleter = scheduler.TaskRunner(rsrc.delete)
+        ex = self.assertRaises(exception.ResourceFailure, deleter)
+        self.assertIn("ResourceActionNotSupported: The bucket "
+                      "you tried to delete is not empty", six.text_type(ex))
+
+        self.m.VerifyAll()
+
+    def test_delete_conflict_empty(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        sc.Connection.put_container(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
+        sc.Connection.delete_container(container_name).AndRaise(
+            sc.ClientException('Conflict', http_status=409))
+        sc.Connection.get_container(container_name).AndReturn(
+            ({'name': container_name}, []))
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'S3Bucket')
+        deleter = scheduler.TaskRunner(rsrc.delete)
+        ex = self.assertRaises(exception.ResourceFailure, deleter)
+        self.assertIn("Conflict", six.text_type(ex))
 
         self.m.VerifyAll()
 
