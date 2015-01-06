@@ -39,3 +39,7 @@ class SSLMiddleware(wsgi.Middleware):
     def process_request(self, req):
         req.environ['wsgi.url_scheme'] = req.environ.get(
             self.secure_proxy_ssl_header, req.environ['wsgi.url_scheme'])
+
+
+def list_opts():
+    yield None, ssl_middleware_opts
