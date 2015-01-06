@@ -23,7 +23,7 @@ from heat.tests import common
 from heat.tests import utils
 
 
-as_template = inline_templates.as_template
+as_template = inline_templates.as_heat_template
 as_params = inline_templates.as_params
 
 
@@ -45,7 +45,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         """If the details don't have 'alarm' then don't progress."""
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         test = {'current': 'not_an_alarm'}
         with mock.patch.object(pol, '_cooldown_inprogress',
@@ -57,7 +57,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         """If _cooldown_inprogress() returns True don't progress."""
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
         test = {'current': 'alarm'}
 
         with mock.patch.object(pol.stack, 'resource_by_refid',
@@ -71,7 +71,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
     def test_scaling_policy_cooldown_ok(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
         test = {'current': 'alarm'}
 
         group = self.patchobject(pol.stack, 'resource_by_refid').return_value
@@ -100,7 +100,7 @@ class TestCooldownMixin(common.HeatTestCase):
     def test_is_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
         previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
@@ -110,7 +110,7 @@ class TestCooldownMixin(common.HeatTestCase):
     def test_not_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
         previous_meta = {timeutils.strtime(awhile_ago): 'ChangeInCapacity : 1'}
@@ -120,12 +120,12 @@ class TestCooldownMixin(common.HeatTestCase):
     def test_scaling_policy_cooldown_zero(self):
         t = template_format.parse(as_template)
 
-        # Create the scaling policy (with Cooldown=0) and scale up one
-        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
-        properties['Cooldown'] = '0'
+        # Create the scaling policy (with cooldown=0) and scale up one
+        properties = t['resources']['my-policy']['properties']
+        properties['cooldown'] = '0'
 
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
         previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
@@ -135,13 +135,13 @@ class TestCooldownMixin(common.HeatTestCase):
     def test_scaling_policy_cooldown_none(self):
         t = template_format.parse(as_template)
 
-        # Create the scaling policy no Cooldown property, should behave the
-        # same as when Cooldown==0
-        properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
-        del properties['Cooldown']
+        # Create the scaling policy no cooldown property, should behave the
+        # same as when cooldown==0
+        properties = t['resources']['my-policy']['properties']
+        del properties['cooldown']
 
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         now = timeutils.utcnow()
         previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
@@ -151,7 +151,7 @@ class TestCooldownMixin(common.HeatTestCase):
     def test_metadata_is_written(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'WebServerScaleUpPolicy')
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
 
         nowish = timeutils.strtime()
         reason = 'cool as'
@@ -165,14 +165,34 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
     def setUp(self):
         super(ScalingPolicyAttrTest, self).setUp()
         self.stub_keystoneclient()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://server.test:8000/v1/waitcondition')
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        self.policy = stack['WebServerScaleUpPolicy']
+        self.policy = stack['my-policy']
         self.assertIsNone(self.policy.validate())
         scheduler.TaskRunner(self.policy.create)()
         self.assertEqual((self.policy.CREATE, self.policy.COMPLETE),
                          self.policy.state)
 
     def test_alarm_attribute(self):
-        self.assertIn("WebServerScaleUpPolicy",
-                      self.policy.FnGetAtt('AlarmUrl'))
+        alarm_url = self.policy.FnGetAtt('alarm_url')
+
+        base = alarm_url.split('?')[0].split('%3A')
+        self.assertEqual('http://server.test:8000/v1/signal/arn', base[0])
+        self.assertEqual('openstack', base[1])
+        self.assertEqual('heat', base[2])
+        self.assertEqual('test_tenant_id', base[4])
+
+        res = base[5].split('%2F')
+        self.assertEqual('stacks', res[0])
+        self.assertEqual('test_stack', res[1])
+        self.assertEqual('resources', res[3])
+        self.assertEqual('my-policy', res[4])
+
+        args = alarm_url.split('?')[1].split('&')
+        self.assertEqual('Timestamp', args[0].split('=')[0])
+        self.assertEqual('SignatureMethod', args[1].split('=')[0])
+        self.assertEqual('AWSAccessKeyId', args[2].split('=')[0])
+        self.assertEqual('SignatureVersion', args[3].split('=')[0])
+        self.assertEqual('Signature', args[4].split('=')[0])
