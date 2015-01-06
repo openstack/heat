@@ -744,19 +744,8 @@ def translate_exception(exc, locale):
         exc.message = i18n.translate(six.text_type(exc), locale)
 
     if isinstance(exc, webob.exc.HTTPError):
-        # If the explanation is not a Message, that means that the
-        # explanation is the default, generic and not translatable explanation
-        # from webop.exc. Since the explanation is the error shown when the
-        # exception is converted to a response, let's actually swap it with
-        # message, since message is what gets passed in at construction time
-        # in the API
-        if not isinstance(exc.explanation, i18n._message.Message):
-            exc.explanation = six.text_type(exc)
-            exc.detail = ''
-        else:
-            exc.explanation = \
-                i18n.translate(exc.explanation, locale)
-            exc.detail = i18n.translate(exc.detail, locale)
+        exc.explanation = i18n.translate(exc.explanation, locale)
+        exc.detail = i18n.translate(getattr(exc, 'detail', ''), locale)
     return exc
 
 
