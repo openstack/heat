@@ -541,6 +541,19 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self._create_stack(self.template)
         self.assertTrue(self.deployment.check_delete_complete())
 
+    def test_check_delete_complete_delete_sd(self):
+        # handle_delete will return None if NO_SIGNAL,
+        # in this case also need to call the _delete_resource(),
+        # otherwise the sd data will residue in db
+        self._create_stack(self.template)
+        sd = self.mock_deployment()
+        self.deployment.resource_id = sd['id']
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.assertTrue(self.deployment.check_delete_complete())
+        self.assertEqual(
+            (self.ctx, sd['id']),
+            self.rpc_client.delete_software_deployment.call_args[0])
+
     def test_handle_update(self):
         self._create_stack(self.template)
 

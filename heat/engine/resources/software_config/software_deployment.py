@@ -406,9 +406,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self._delete_resource()
 
     def check_delete_complete(self, sd=None):
-        if not sd:
-            return True
-        if self._check_complete():
+        if not sd or self._check_complete():
             self._delete_resource()
             return True
 
