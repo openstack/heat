@@ -459,7 +459,8 @@ class Stack(collections.Mapping):
         self.t.validate()
 
         # Validate parameters
-        self.parameters.validate(context=self.context)
+        self.parameters.validate(context=self.context,
+                                 validate_value=self.strict_validate)
 
         # Validate Parameter Groups
         parameter_groups = param_groups.ParameterGroups(self.t)

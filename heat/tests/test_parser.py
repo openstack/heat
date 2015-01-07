@@ -4344,6 +4344,49 @@ class StackTest(common.HeatTestCase):
                       'Found a [%s] instead' % six.text_type,
                       six.text_type(ex))
 
+    def test_prop_validate_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          AResource:
+            Type: ResourceWithPropsType
+            Properties:
+              FooInt: notanint
+        """)
+        self.stack = parser.Stack(self.ctx, 'stack_with_bad_property',
+                                  template.Template(tmpl))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn("'notanint' is not an integer",
+                      six.text_type(ex))
+
+        self.stack.strict_validate = False
+        self.assertIsNone(self.stack.validate())
+
+    def test_param_validate_value(self):
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Parameters:
+          foo:
+            Type: Number
+        """)
+
+        env1 = {'parameters': {'foo': 'abc'}}
+        self.stack = parser.Stack(self.ctx, 'stack_with_bad_param',
+                                  template.Template(tmpl),
+                                  env=environment.Environment(env1))
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               self.stack.validate)
+
+        self.assertIn("could not convert string to float: abc",
+                      six.text_type(ex))
+
+        self.stack.strict_validate = False
+        self.assertIsNone(self.stack.validate())
+
     def test_incorrect_outputs_cfn_list_data(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'
