@@ -33,7 +33,9 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
             'input_auth_token': self.auth_token,
             'auth_url': con.auth_url,
             'project_name': con.tenant,
-            'sahara_url': endpoint
+            'sahara_url': endpoint,
+            'insecure': self._get_client_option('sahara', 'insecure'),
+            'cacert': self._get_client_option('sahara', 'ca_file')
         }
         client = sahara_client.Client('1.1', **args)
         return client
