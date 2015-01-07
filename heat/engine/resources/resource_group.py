@@ -20,7 +20,6 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources import template_resource
 from heat.engine import stack_resource
 from heat.engine import support
 from heat.engine import template
@@ -182,26 +181,18 @@ class ResourceGroup(stack_resource.StackResource):
     }
 
     def validate(self):
-        # validate our basic properties
-        super(ResourceGroup, self).validate()
-        # make sure the nested resource is valid
         test_tmpl = self._assemble_nested(["0"], include_all=True)
         val_templ = template.Template(test_tmpl)
         res_def = val_templ.resource_definitions(self.stack)["0"]
+        # make sure we can resolve the nested resource type
         try:
-            res_class = self.stack.env.get_class(res_def.resource_type)
+            self.stack.env.get_class(res_def.resource_type)
         except exception.NotFound:
-            res_class = template_resource.TemplateResource
-        res_inst = res_class("%s:resource_def" % self.name, res_def,
-                             self.stack)
-        # Only validate the resource definition (which may be a
-        # nested template) if count is non-zero, to enable folks
-        # to disable features via a zero count if they wish
-        # Use self._resource_names() to determine if any resources will
-        # be created, not the COUNT property, because this doesn't exist
-        # in the SoftwareDeployments subclass properties schema.
-        if self._resource_names():
-            res_inst.validate()
+            # its a template resource
+            pass
+
+        # validate the nested template definition
+        super(ResourceGroup, self).validate()
 
     def _name_blacklist(self):
         """Resolve the remove_policies to names for removal."""
