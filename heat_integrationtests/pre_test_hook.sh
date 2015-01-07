@@ -14,3 +14,5 @@
 
 # This script is executed inside pre_test_hook function in devstack gate.
 
+localrc_path=$BASE/new/devstack/localrc
+echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path

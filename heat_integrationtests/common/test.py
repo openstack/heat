@@ -326,6 +326,22 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         )
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
 
+    def assert_resource_is_a_stack(self, stack_identifier, res_name):
+        rsrc = self.client.resources.get(stack_identifier, res_name)
+        nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
+        nested_href = nested_link[0]['href']
+        nested_id = nested_href.split('/')[-1]
+        nested_identifier = '/'.join(nested_href.split('/')[-2:])
+        self.assertEqual(rsrc.physical_resource_id, nested_id)
+
+        nested_stack = self.client.stacks.get(nested_id)
+        nested_identifier2 = '%s/%s' % (nested_stack.stack_name,
+                                        nested_stack.id)
+        self.assertEqual(nested_identifier, nested_identifier2)
+        parent_id = stack_identifier.split("/")[-1]
+        self.assertEqual(parent_id, nested_stack.parent)
+        return nested_identifier
+
     def list_resources(self, stack_identifier):
         resources = self.client.resources.list(stack_identifier)
         return dict((r.resource_name, r.resource_type) for r in resources)
@@ -350,4 +366,26 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
         self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        return stack_identifier
+
+    def stack_adopt(self, stack_name=None, files=None,
+                    parameters=None, environment=None, adopt_data=None,
+                    wait_for_status='ADOPT_COMPLETE'):
+        name = stack_name or self._stack_rand_name()
+        templ_files = files or {}
+        params = parameters or {}
+        env = environment or {}
+        self.client.stacks.create(
+            stack_name=name,
+            files=templ_files,
+            disable_rollback=True,
+            parameters=params,
+            environment=env,
+            adopt_stack_data=adopt_data,
+        )
+        self.addCleanup(self.client.stacks.delete, name)
+
+        stack = self.client.stacks.get(name)
+        stack_identifier = '%s/%s' % (name, stack.id)
+        self._wait_for_stack_status(stack_identifier, wait_for_status)
         return stack_identifier

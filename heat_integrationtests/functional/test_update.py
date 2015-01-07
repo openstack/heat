@@ -101,13 +101,9 @@ resources:
                          self.list_resources(stack_identifier))
 
         # Prove the resource is backed by a nested stack, save the ID
-        rsrc = self.client.resources.get(stack_identifier, 'random1')
-        nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
-        nested_href = nested_link[0]['href']
-        nested_id = nested_href.split('/')[-1]
-        nested_identifier = '/'.join(nested_href.split('/')[-2:])
-        physical_resource_id = rsrc.physical_resource_id
-        self.assertEqual(physical_resource_id, nested_id)
+        nested_identifier = self.assert_resource_is_a_stack(stack_identifier,
+                                                            'random1')
+        nested_id = nested_identifier.split('/')[-1]
 
         # Then check the expected resources are in the nested stack
         nested_resources = {'random1': 'OS::Heat::RandomString'}
@@ -153,14 +149,8 @@ resources:
                          self.list_resources(stack_identifier))
 
         # Prove the resource is backed by a nested stack, save the ID
-        rsrc = self.client.resources.get(stack_identifier, 'random_group')
-        physical_resource_id = rsrc.physical_resource_id
-
-        nested_stack = self.client.stacks.get(physical_resource_id)
-        nested_identifier = '%s/%s' % (nested_stack.stack_name,
-                                       nested_stack.id)
-        parent_id = stack_identifier.split("/")[-1]
-        self.assertEqual(parent_id, nested_stack.parent)
+        nested_identifier = self.assert_resource_is_a_stack(stack_identifier,
+                                                            'random_group')
 
         # Then check the expected resources are in the nested stack
         nested_resources = {'0': 'My::RandomString',
