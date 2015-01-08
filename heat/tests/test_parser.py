@@ -972,7 +972,7 @@ class StackTest(common.HeatTestCase):
     def test_no_auth_token(self):
         ctx = utils.dummy_context()
         ctx.auth_token = None
-        self.stub_keystoneclient()
+        self.stub_auth()
 
         self.m.ReplayAll()
         stack = parser.Stack(ctx, 'test_stack', self.tmpl)

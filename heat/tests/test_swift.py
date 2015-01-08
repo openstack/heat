@@ -77,7 +77,7 @@ class swiftTest(common.HeatTestCase):
         self.m.StubOutWithMock(sc.Connection, 'delete_object')
         self.m.StubOutWithMock(sc.Connection, 'head_container')
         self.m.StubOutWithMock(sc.Connection, 'get_auth')
-        self.stub_keystoneclient()
+        self.stub_auth()
 
     def create_resource(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)

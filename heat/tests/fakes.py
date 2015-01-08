@@ -19,7 +19,8 @@ wrong the tests might raise AssertionError. I've indicated in comments the
 places where actual behavior differs from the spec.
 """
 
-from keystoneclient import exceptions
+from keystoneclient import auth
+from keystoneclient import session
 
 from heat.common import context
 
@@ -77,26 +78,40 @@ class FakeClient(object):
         pass
 
 
+class FakeAuth(auth.BaseAuthPlugin):
+
+    def __init__(self, auth_token='abcd1234', only_services=None):
+        self.auth_token = auth_token
+        self.only_services = only_services
+
+    def get_token(self, session, **kwargs):
+        return self.auth_token
+
+    def get_endpoint(self, session, service_type=None, **kwargs):
+        if (self.only_services is not None and
+                service_type not in self.only_services):
+            return None
+
+        return 'http://example.com:1234/v1'
+
+
 class FakeKeystoneClient(object):
     def __init__(self, username='test_user', password='apassword',
                  user_id='1234', access='4567', secret='8901',
-                 credential_id='abcdxyz', auth_token='abcd1234',
-                 only_services=None):
+                 credential_id='abcdxyz'):
         self.username = username
         self.password = password
         self.user_id = user_id
         self.access = access
         self.secret = secret
+        self.session = session.Session()
         self.credential_id = credential_id
-        self.only_services = only_services
 
         class FakeCred(object):
             id = self.credential_id
             access = self.access
             secret = self.secret
         self.creds = FakeCred()
-
-        self.auth_token = auth_token
 
     def create_stack_user(self, username, password=''):
         self.username = username
@@ -130,15 +145,6 @@ class FakeKeystoneClient(object):
 
     def disable_stack_user(self, user_id):
         pass
-
-    def url_for(self, **kwargs):
-        if self.only_services is not None:
-            if ('service_type' in kwargs and
-                    kwargs['service_type'] not in self.only_services):
-                # keystone client throws keystone exceptions, not cinder
-                # exceptions.
-                raise exceptions.EndpointNotFound()
-        return 'http://example.com:1234/v1'
 
     def create_trust_context(self):
         return context.RequestContext(username=self.username,
