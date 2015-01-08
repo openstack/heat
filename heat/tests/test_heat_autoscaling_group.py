@@ -201,47 +201,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertRaises(exception.Error, rsrc.adjust, 1)
         self.assertEqual(1, grouputils.get_size(rsrc))
 
-    def test_scaling_group_truncate_adjustment(self):
-        # Create initial group, 2 instances
-        properties = self.parsed['resources']['my-group']['properties']
-        properties['desired_capacity'] = 2
-        rsrc = self.create_stack(self.parsed)['my-group']
-        self.assertEqual(2, grouputils.get_size(rsrc))
-
-        rsrc.adjust(4)
-        self.assertEqual(5, grouputils.get_size(rsrc))
-
-        rsrc.adjust(-5)
-        self.assertEqual(1, grouputils.get_size(rsrc))
-
-        rsrc.adjust(0)
-        self.assertEqual(1, grouputils.get_size(rsrc))
-
-    def _do_test_scaling_group_percent(self, decrease, lowest,
-                                       increase, create, highest):
-        # Create initial group, 2 instances
-        properties = self.parsed['resources']['my-group']['properties']
-        properties['desired_capacity'] = 2
-        rsrc = self.create_stack(self.parsed)['my-group']
-        self.assertEqual(2, grouputils.get_size(rsrc))
-
-        # reduce by decrease %
-        rsrc.adjust(decrease, 'percentage_change_in_capacity')
-        self.assertEqual(lowest, grouputils.get_size(rsrc))
-
-        # raise by increase %
-        rsrc.adjust(increase, 'percentage_change_in_capacity')
-        self.assertEqual(highest, grouputils.get_size(rsrc))
-
-    def test_scaling_group_percent(self):
-        self._do_test_scaling_group_percent(-50, 1, 200, 2, 3)
-
-    def test_scaling_group_percent_round_up(self):
-        self._do_test_scaling_group_percent(-33, 1, 33, 1, 2)
-
-    def test_scaling_group_percent_round_down(self):
-        self._do_test_scaling_group_percent(-66, 1, 225, 2, 3)
-
     def test_min_min_size(self):
         self.parsed['resources']['my-group']['properties']['min_size'] = -1
         stack = utils.parse_stack(self.parsed)
