@@ -105,10 +105,10 @@ class KeystoneClientV3(object):
         if self.stack_domain:
             if not (self.domain_admin_user and self.domain_admin_password):
                 raise exception.Error(_('heat.conf misconfigured, cannot '
-                                      'specify "stack_user_domain_id" or '
-                                      '"stack_user_domain_name" without '
-                                      '"stack_domain_admin" and '
-                                      '"stack_domain_admin_password"'))
+                                        'specify "stack_user_domain_id" or '
+                                        '"stack_user_domain_name" without '
+                                        '"stack_domain_admin" and '
+                                        '"stack_domain_admin_password"'))
         else:
             LOG.warn(_LW('stack_user_domain_id or stack_user_domain_name not '
                          'set in heat.conf falling back to using default'))

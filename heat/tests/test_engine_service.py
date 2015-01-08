@@ -667,9 +667,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                             generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
-               'A': {'Type': 'GenericResourceType'},
-               'B': {'Type': 'GenericResourceType'},
-               'C': {'Type': 'GenericResourceType'}}}
+                   'A': {'Type': 'GenericResourceType'},
+                   'B': {'Type': 'GenericResourceType'},
+                   'C': {'Type': 'GenericResourceType'}}}
 
         template = templatem.Template(tpl)
         stack = parser.Stack(self.ctx, stack_name, template,
@@ -708,9 +708,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                             generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
-               'A': {'Type': 'GenericResourceType'},
-               'B': {'Type': 'GenericResourceType'},
-               'C': {'Type': 'GenericResourceType'}}}
+                   'A': {'Type': 'GenericResourceType'},
+                   'B': {'Type': 'GenericResourceType'},
+                   'C': {'Type': 'GenericResourceType'}}}
         cfg.CONF.set_override('max_resources_per_stack', 2)
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.create_stack, self.ctx, stack_name,
@@ -1108,9 +1108,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                             generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
-               'A': {'Type': 'GenericResourceType'},
-               'B': {'Type': 'GenericResourceType'},
-               'C': {'Type': 'GenericResourceType'}}}
+                   'A': {'Type': 'GenericResourceType'},
+                   'B': {'Type': 'GenericResourceType'},
+                   'C': {'Type': 'GenericResourceType'}}}
 
         template = templatem.Template(tpl)
 
@@ -1209,9 +1209,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                             generic_rsrc.GenericResource)
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources': {
-               'A': {'Type': 'GenericResourceType'},
-               'B': {'Type': 'GenericResourceType'},
-               'C': {'Type': 'GenericResourceType'}}}
+                   'A': {'Type': 'GenericResourceType'},
+                   'B': {'Type': 'GenericResourceType'},
+                   'C': {'Type': 'GenericResourceType'}}}
 
         template = templatem.Template(tpl)
         old_stack = parser.Stack(self.ctx, stack_name, template)

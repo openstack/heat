@@ -264,20 +264,20 @@ class CfnStackControllerTest(common.HeatTestCase):
                                         u'DBRootPassword': u'admin',
                                         u'DBPassword': u'admin',
                                         u'DBName': u'wordpress'},
-                       u'outputs':
-                       [{u'output_key': u'WebsiteURL',
-                         u'description': u'URL for Wordpress wiki',
-                         u'output_value': u'http://10.0.0.8/wordpress'}],
-                       u'stack_status_reason': u'Stack successfully created',
-                       u'creation_time': u'2012-07-09T09:12:45Z',
-                       u'stack_name': u'wordpress',
-                       u'notification_topics': [],
-                       u'stack_action': u'CREATE',
-                       u'stack_status': u'COMPLETE',
-                       u'description': u'blah',
-                       u'disable_rollback': 'true',
-                       u'timeout_mins':60,
-                       u'capabilities':[]}]
+                        u'outputs':
+                        [{u'output_key': u'WebsiteURL',
+                          u'description': u'URL for Wordpress wiki',
+                          u'output_value': u'http://10.0.0.8/wordpress'}],
+                        u'stack_status_reason': u'Stack successfully created',
+                        u'creation_time': u'2012-07-09T09:12:45Z',
+                        u'stack_name': u'wordpress',
+                        u'notification_topics': [],
+                        u'stack_action': u'CREATE',
+                        u'stack_status': u'COMPLETE',
+                        u'description': u'blah',
+                        u'disable_rollback': 'true',
+                        u'timeout_mins':60,
+                        u'capabilities':[]}]
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(

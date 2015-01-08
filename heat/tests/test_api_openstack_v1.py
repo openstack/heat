@@ -839,7 +839,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
             req.context,
             ('create_stack',
              {'stack_name': identity.stack_name,
-             'template': template,
+              'template': template,
               'params': {'parameters': parameters,
                          'parameter_defaults': {},
                          'resource_registry': {}},

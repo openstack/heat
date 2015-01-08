@@ -128,8 +128,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                                     "fa:16:3e:8c:33:bb"}],
                                         "private": [{"version": 4,
                                                      "addr": "10.13.12.13",
-                                                    "OS-EXT-IPS-MAC:mac_addr":
-                                                    "fa:16:3e:8c:44:cc"}]},
+                                                     "OS-EXT-IPS-MAC:mac_addr":
+                                                     "fa:16:3e:8c:44:cc"}]},
                           "metadata": {}},
                          {"id": "9101",
                           "name": "hard-reboot",

@@ -212,8 +212,8 @@ class CloudLoadBalancer(resource.Resource):
                         properties.Schema.LIST,
                         required=True,
                         description=(_("IP addresses for the load balancer "
-                                     "node. Must have at least one "
-                                     "address.")),
+                                       "node. Must have at least one "
+                                       "address.")),
                         schema=properties.Schema(
                             properties.Schema.STRING
                         )
