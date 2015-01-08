@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 import six
 import uuid
 
@@ -414,71 +413,6 @@ class StackResourceTest(common.HeatTestCase):
                           self.parent_resource._validate_nested_resources,
                           template)
 
-    def test_create_with_template_ok(self):
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-        self.stack = self.parent_resource.nested()
-
-        self.assertEqual(self.parent_resource, self.stack.parent_resource)
-        self.assertEqual("cb2f2b28-a663-4683-802c-4b40c916e1ff",
-                         self.stack.name)
-        self.assertEqual(self.templ, self.stack.t.t)
-        self.assertEqual(self.stack.id, self.parent_resource.resource_id)
-        self.assertEqual(1, self.stack.nested_depth)
-        self.assertIsNone(self.stack.timeout_mins)
-        self.assertEqual('aprojectid', self.stack.stack_user_project_id)
-
-    def test_create_with_template_timeout_mins(self):
-        self.assertIsNone(self.parent_stack.timeout_mins)
-        self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
-        self.parent_stack.timeout_mins = 100
-        self.m.ReplayAll()
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-        self.stack = self.parent_resource.nested()
-        self.assertEqual(100, self.stack.timeout_mins)
-        self.m.VerifyAll()
-
-    def test_adopt_with_template_ok(self):
-        adopt_data = {
-            "resources": {
-                "WebServer": {
-                    "resource_id": "test-res-id"
-                }
-            }
-        }
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"},
-                                                  adopt_data=adopt_data)
-        self.stack = self.parent_resource.nested()
-
-        self.assertEqual(self.stack.ADOPT, self.stack.action)
-        self.assertEqual('test-res-id',
-                         self.stack.resources['WebServer'].resource_id)
-        self.assertEqual(self.parent_resource, self.stack.parent_resource)
-        self.assertEqual("cb2f2b28-a663-4683-802c-4b40c916e1ff",
-                         self.stack.name)
-        self.assertEqual(self.templ, self.stack.t.t)
-        self.assertEqual(self.stack.id, self.parent_resource.resource_id)
-
-    def test_prepare_abandon(self):
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-        ret = self.parent_resource.prepare_abandon()
-        # check abandoned data contains all the necessary information.
-        # (no need to check stack/resource IDs, because they are
-        # randomly generated uuids)
-        self.assertEqual(9, len(ret))
-        self.assertEqual('CREATE', ret['action'])
-        self.assertIn('name', ret)
-        self.assertIn('id', ret)
-        self.assertIn('resources', ret)
-        self.assertEqual(template_format.parse(param_template),
-                         ret['template'])
-        self.assertIn('stack_user_project_id', ret)
-        self.assertIn('project_id', ret)
-        self.assertIn('environment', ret)
-
     def test_create_with_template_validates(self):
         """
         Creating a stack with a template validates the created stack, so that
@@ -506,81 +440,6 @@ class StackResourceTest(common.HeatTestCase):
             exception.StackValidationFailed,
             self.parent_resource.update_with_template,
             template, {'WebServer': 'foo'})
-
-    def test_update_with_template_ok(self):
-        """
-        The update_with_template method updates the nested stack with the
-        given template and user parameters.
-        """
-        create_result = self.parent_resource.create_with_template(
-            self.simple_template, {})
-        while not create_result.step():
-            pass
-        self.stack = self.parent_resource.nested()
-
-        new_templ = self.simple_template.copy()
-        inst_snippet = new_templ["Resources"]["WebServer"].copy()
-        new_templ["Resources"]["WebServer2"] = inst_snippet
-        self.parent_resource.updated_time = \
-            datetime.datetime(2014, 10, 24, 15, 40)
-
-        updater = self.parent_resource.update_with_template(
-            new_templ, {})
-        updater.run_to_completion()
-        self.assertIs(True,
-                      self.parent_resource.check_update_complete(updater))
-        self.assertEqual(('UPDATE', 'COMPLETE'), self.stack.state)
-        self.assertEqual(set(["WebServer", "WebServer2"]),
-                         set(self.stack.keys()))
-        self.assertIsNone(self.stack.timeout_mins)
-        self.assertIsNotNone(self.stack.updated_time)
-
-        # The stack's owner_id is maintained.
-        saved_stack = parser.Stack.load(
-            self.parent_stack.context, self.stack.id)
-        self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
-        # Check the stack's updated_time is saved and same as the resource
-        self.assertEqual(self.parent_resource.updated_time,
-                         saved_stack.updated_time)
-
-    def test_update_with_template_timeout_mins(self):
-        self.assertIsNone(self.parent_stack.timeout_mins)
-        self.m.StubOutWithMock(self.parent_stack, 'timeout_mins')
-        self.parent_stack.timeout_mins = 100
-        self.m.ReplayAll()
-
-        create_result = self.parent_resource.create_with_template(
-            self.simple_template, {})
-        while not create_result.step():
-            pass
-        self.stack = self.parent_resource.nested()
-        self.assertEqual(100, self.stack.timeout_mins)
-
-        self.parent_stack.timeout_mins = 200
-        self.m.ReplayAll()
-
-        updater = self.parent_resource.update_with_template(
-            self.simple_template, {})
-        updater.run_to_completion()
-        self.assertEqual(200, self.stack.timeout_mins)
-        self.m.VerifyAll()
-
-    def test_update_with_template_files(self):
-        create_result = self.parent_resource.create_with_template(
-            self.simple_template, {})
-        while not create_result.step():
-            pass
-        self.stack = self.parent_resource.nested()
-
-        new_templ = self.simple_template.copy()
-        inst_snippet = new_templ["Resources"]["WebServer"].copy()
-        new_templ["Resources"]["WebServer2"] = inst_snippet
-        self.parent_stack.t.files["foo"] = "bar"
-        updater = self.parent_resource.update_with_template(
-            new_templ, {})
-        updater.run_to_completion()
-
-        self.assertEqual({"foo": "bar"}, self.stack.t.files)
 
     def test_update_with_template_state_err(self):
         """
