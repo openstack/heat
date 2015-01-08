@@ -275,8 +275,8 @@ class AutoScalingTest(HeatTestCase):
 
     def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         # Then set a stub to ensure the metadata update is as
         # expected based on the timestamp and data
@@ -1071,8 +1071,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.UnsetStubs()
 
         now = now + datetime.timedelta(seconds=10)
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         self.m.StubOutWithMock(resource.Resource, 'metadata_get')
         rsrc.metadata_get().AndReturn(previous_meta)
@@ -1356,8 +1356,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.UnsetStubs()
 
         now = now + datetime.timedelta(seconds=10)
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         self.m.StubOutWithMock(resource.Resource, 'metadata_get')
         up_policy.metadata_get().AndReturn(previous_meta)

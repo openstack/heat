@@ -69,8 +69,8 @@ class WatchRuleTest(HeatTestCase):
 
     def _action_set_stubs(self, now, action_expected=True):
         # Setup stubs for the action tests
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         if action_expected:
             dummy_action = DummyAction()
@@ -336,9 +336,8 @@ class WatchRuleTest(HeatTestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
-        self.m.ReplayAll()
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         # It's not time to evaluate, so should stay NODATA
         last = now - datetime.timedelta(seconds=299)
@@ -393,9 +392,8 @@ class WatchRuleTest(HeatTestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
-        self.m.ReplayAll()
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         # Now data breaches Threshold, but we're suspended
         last = now - datetime.timedelta(seconds=300)
