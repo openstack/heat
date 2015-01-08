@@ -24,7 +24,7 @@ try:
     from pyrax.exceptions import NotFound
     PYRAX_INSTALLED = True
 except ImportError:
-    #Setup fake exception for testing without pyrax
+    # Setup fake exception for testing without pyrax
     class NotFound(Exception):
         pass
 

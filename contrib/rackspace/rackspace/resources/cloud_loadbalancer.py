@@ -32,7 +32,7 @@ try:
     from pyrax.exceptions import NotFound  # noqa
     PYRAX_INSTALLED = True
 except ImportError:
-    #Setup fake exception for testing without pyrax
+    # Setup fake exception for testing without pyrax
     class NotFound(Exception):
         pass
     PYRAX_INSTALLED = False
@@ -860,8 +860,8 @@ class CloudLoadBalancer(resource.Resource):
                            % self.HALF_CLOSED)
                 raise exception.StackValidationFailed(message=message)
 
-        #health_monitor connect and http types require completely different
-        #schema
+        # health_monitor connect and http types require completely different
+        # schema
         if self.properties.get(self.HEALTH_MONITOR):
             prop_val = self.properties[self.HEALTH_MONITOR]
             health_monitor = self._remove_none(prop_val)

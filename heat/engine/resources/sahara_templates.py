@@ -24,7 +24,7 @@ from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
-#NOTE(pshchelo): copied from sahara/utils/api_validator.py
+# NOTE(pshchelo): copied from sahara/utils/api_validator.py
 SAHARA_NAME_REGEX = (r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]"
                      r"*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z]"
                      r"[A-Za-z0-9\-]*[A-Za-z0-9])$")
@@ -213,7 +213,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
         res = super(SaharaNodeGroupTemplate, self).validate()
         if res:
             return res
-        #NOTE(pshchelo): floating ip pool must be set for Neutron
+        # NOTE(pshchelo): floating ip pool must be set for Neutron
         if (self.is_using_neutron() and
                 not self.properties.get(self.FLOATING_IP_POOL)):
             msg = _("%s must be provided.") % self.FLOATING_IP_POOL
@@ -372,7 +372,7 @@ class SaharaClusterTemplate(resource.Resource):
         if res:
             return res
         # check if running on neutron and MANAGEMENT_NETWORK missing
-        #NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
+        # NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
         # overall stack validation will fail due to neutron.network constraint,
         # although the message will be not really relevant.
         if (self.is_using_neutron() and

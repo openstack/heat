@@ -169,7 +169,7 @@ class SaharaCluster(resource.Resource):
             return res
 
         # check if running on neutron and MANAGEMENT_NETWORK missing
-        #NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
+        # NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
         # overall stack validation will fail due to neutron.network constraint,
         # although the message will be not really relevant.
         if (self.is_using_neutron() and

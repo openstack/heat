@@ -535,12 +535,12 @@ def is_json_content_type(request):
             aws_content_type = request.params.get("ContentType")
         except Exception:
             aws_content_type = None
-        #respect aws_content_type when both available
+        # respect aws_content_type when both available
         content_type = aws_content_type or request.content_type
     else:
         content_type = request.content_type
-    #bug #1887882
-    #for back compatible for null or plain content type
+    # bug #1887882
+    # for back compatible for null or plain content type
     if not content_type or content_type.startswith('text/plain'):
         content_type = 'application/json'
     if content_type in ('JSON', 'application/json')\

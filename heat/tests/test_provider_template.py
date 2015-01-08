@@ -540,7 +540,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         """
         env = {'resource_registry': {'http://example.com/test.template': None,
                                      'resources': {}}}
-        #A KeyError will be thrown prior to this fix.
+        # A KeyError will be thrown prior to this fix.
         environment.Environment(env=env)
 
     def test_system_template_retrieve_by_file(self):

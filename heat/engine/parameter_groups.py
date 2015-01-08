@@ -43,7 +43,7 @@ class ParameterGroups(object):
         LOG.debug('Validating Parameter Groups.')
         LOG.debug(self.parameter_names)
         if self.parameter_groups is not None:
-            #Loop through groups and validate parameters
+            # Loop through groups and validate parameters
             grouped_parameters = []
             for group in self.parameter_groups:
                 parameters = group.get(PARAMETERS)
@@ -54,7 +54,7 @@ class ParameterGroups(object):
                         'each Parameter Group.'))
 
                 for param in parameters:
-                    #Check if param has been added to a previous group
+                    # Check if param has been added to a previous group
                     if param in grouped_parameters:
                         raise exception.StackValidationFailed(message=_(
                             'The %s parameter must be assigned to one '
@@ -62,7 +62,7 @@ class ParameterGroups(object):
                     else:
                         grouped_parameters.append(param)
 
-                    #Check that grouped parameter references a valid Parameter
+                    # Check that grouped parameter references a valid Parameter
                     if param not in self.parameter_names:
                         raise exception.StackValidationFailed(message=_(
                             'The Parameter name (%s) does not reference '

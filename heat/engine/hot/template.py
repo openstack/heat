@@ -73,7 +73,7 @@ class HOTemplate20130523(template.Template):
 
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
-        #first translate from CFN into HOT terminology if necessary
+        # first translate from CFN into HOT terminology if necessary
         if section not in self.SECTIONS:
             section = HOTemplate20130523._translate(
                 section, self._CFN_TO_HOT_SECTIONS,

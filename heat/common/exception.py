@@ -111,8 +111,8 @@ class HeatException(Exception):
             self.message = self.msg_fmt % kwargs
         except KeyError:
             exc_info = sys.exc_info()
-            #kwargs doesn't match a variable in the message
-            #log the issue and the kwargs
+            # kwargs doesn't match a variable in the message
+            # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation'))
             for name, value in six.iteritems(kwargs):
                 LOG.error("%s: %s" % (name, value))  # noqa
@@ -159,7 +159,7 @@ class Forbidden(HeatException):
     msg_fmt = _("You are not authorized to complete this action.")
 
 
-#NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.
+# NOTE(bcwaldon): here for backwards-compatibility, need to deprecate.
 class NotAuthorized(Forbidden):
     msg_fmt = _("You are not authorized to complete this action.")
 

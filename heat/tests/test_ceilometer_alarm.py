@@ -195,7 +195,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         Make sure that we can change the update-able properties
         without replacing the Alarm rsrc.
         '''
-        #short circuit the alarm's references
+        # short circuit the alarm's references
         t = template_format.parse(alarm_template)
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['alarm_actions'] = ['signal_handler']

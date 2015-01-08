@@ -404,7 +404,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_alter_properties(self):
-        #test alter properties functions
+        # test alter properties functions
         template = self._set_template(self.lb_template,
                                       sessionPersistence='HTTP_COOKIE',
                                       connectionLogging=True,
@@ -455,7 +455,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertIn("Must specify VIP type and version", str(exc))
 
     def test_validate_half_closed(self):
-        #test failure (invalid protocol)
+        # test failure (invalid protocol)
         template = self._set_template(self.lb_template, halfClosed=True)
         expected = self._set_expected(self.expected_body, halfClosed=True)
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -466,7 +466,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertIn('The halfClosed property is only available for the TCP'
                       ' or TCP_CLIENT_FIRST protocols', str(exc))
 
-        #test TCP protocol
+        # test TCP protocol
         template = self._set_template(template, protocol='TCP')
         expected = self._set_expected(expected, protocol='TCP')
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -474,7 +474,7 @@ class LoadBalancerTest(common.HeatTestCase):
                                                           expected)
         self.assertIsNone(rsrc.validate())
 
-        #test TCP_CLIENT_FIRST protocol
+        # test TCP_CLIENT_FIRST protocol
         template = self._set_template(template,
                                       protocol='TCP_CLIENT_FIRST')
         expected = self._set_expected(expected,
@@ -485,7 +485,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
 
     def test_validate_health_monitor(self):
-        #test connect success
+        # test connect success
         health_monitor = {
             'type': 'CONNECT',
             'attemptsBeforeDeactivation': 1,
@@ -502,8 +502,8 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.assertIsNone(rsrc.validate())
 
-        #test connect failure
-        #bodyRegex is only valid for type 'HTTP(S)'
+        # test connect failure
+        # bodyRegex is only valid for type 'HTTP(S)'
         health_monitor['bodyRegex'] = 'dfawefawe'
         template = self._set_template(template,
                                       healthMonitor=health_monitor)
@@ -516,7 +516,7 @@ class LoadBalancerTest(common.HeatTestCase):
                                 rsrc.validate)
         self.assertIn('Unknown Property bodyRegex', str(exc))
 
-        #test http fields
+        # test http fields
         health_monitor['type'] = 'HTTP'
         health_monitor['bodyRegex'] = 'bodyRegex'
         health_monitor['statusRegex'] = 'statusRegex'
@@ -539,7 +539,7 @@ class LoadBalancerTest(common.HeatTestCase):
             'secureTrafficOnly': True
         }
 
-        #test ssl termination enabled without required fields failure
+        # test ssl termination enabled without required fields failure
         template = self._set_template(self.lb_template,
                                       sslTermination=ssl_termination)
         expected = self._set_expected(self.expected_body,
