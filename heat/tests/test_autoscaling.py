@@ -252,8 +252,8 @@ class AutoScalingTest(common.HeatTestCase):
 
     def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now
-        self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
 
         # Then set a stub to ensure the metadata update is as
         # expected based on the timestamp and data
