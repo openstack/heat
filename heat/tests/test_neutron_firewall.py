@@ -37,6 +37,7 @@ firewall_template = '''
         "name": "test-firewall",
         "firewall_policy_id": "policy-id",
         "admin_state_up": True,
+        "shared": True,
       }
     }
   }
@@ -98,7 +99,7 @@ class FirewallTest(common.HeatTestCase):
         neutronclient.Client.create_firewall({
             'firewall': {
                 'name': 'test-firewall', 'admin_state_up': True,
-                'firewall_policy_id': 'policy-id'}}
+                'firewall_policy_id': 'policy-id', 'shared': True}}
         ).AndReturn({'firewall': {'id': '5678'}})
 
         snippet = template_format.parse(firewall_template)
@@ -118,7 +119,7 @@ class FirewallTest(common.HeatTestCase):
         neutronclient.Client.create_firewall({
             'firewall': {
                 'name': 'test-firewall', 'admin_state_up': True,
-                'firewall_policy_id': 'policy-id'}}
+                'firewall_policy_id': 'policy-id', 'shared': True}}
         ).AndRaise(exceptions.NeutronClientException())
         self.m.ReplayAll()
 
@@ -179,10 +180,12 @@ class FirewallTest(common.HeatTestCase):
         neutronclient.Client.show_firewall('5678').MultipleTimes(
         ).AndReturn(
             {'firewall': {'admin_state_up': True,
-                          'firewall_policy_id': 'policy-id'}})
+                          'firewall_policy_id': 'policy-id',
+                          'shared': True}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertIs(True, rsrc.FnGetAtt('shared'))
         self.assertEqual('policy-id', rsrc.FnGetAtt('firewall_policy_id'))
         self.m.VerifyAll()
 
