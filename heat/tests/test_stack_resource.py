@@ -15,11 +15,9 @@ import six
 import uuid
 
 import mock
-import mox
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import environment
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -441,39 +439,6 @@ class StackResourceTest(common.HeatTestCase):
             self.parent_resource.update_with_template,
             template, {'WebServer': 'foo'})
 
-    def test_update_with_template_state_err(self):
-        """
-        update_with_template_state_err method should raise error when update
-        task is done but the nested stack is in (UPDATE, FAILED) state.
-        """
-        create_creator = self.parent_resource.create_with_template(
-            self.simple_template, {})
-        create_creator.run_to_completion()
-        self.stack = self.parent_resource.nested()
-
-        new_templ = self.simple_template.copy()
-        inst_snippet = new_templ["Resources"]["WebServer"].copy()
-        new_templ["Resources"]["WebServer2"] = inst_snippet
-
-        def update_task():
-            yield
-            self.stack.state_set(parser.Stack.UPDATE, parser.Stack.FAILED, '')
-
-        self.m.StubOutWithMock(self.stack, 'update_task')
-        self.stack.update_task(mox.IgnoreArg()).AndReturn(update_task())
-        self.m.ReplayAll()
-
-        updater = self.parent_resource.update_with_template(new_templ, {})
-        updater.run_to_completion()
-        self.assertEqual((self.stack.UPDATE, self.stack.FAILED),
-                         self.stack.state)
-        ex = self.assertRaises(exception.Error,
-                               self.parent_resource.check_update_complete,
-                               updater)
-        self.assertEqual('Nested stack UPDATE failed: ', six.text_type(ex))
-
-        self.m.VerifyAll()
-
     def test_load_nested_ok(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -567,6 +532,32 @@ class StackResourceTest(common.HeatTestCase):
 
         self.assertIsNone(self.parent_resource.delete_nested())
 
+    def test_need_update_in_failed_state_for_nested_resource(self):
+        """
+        The resource in any state and has nested stack,
+        should need update.
+        """
+        need_update = self.parent_resource._needs_update(
+            self.parent_resource.t,
+            self.parent_resource.t,
+            self.parent_resource.properties,
+            self.parent_resource.properties,
+            self.parent_resource)
+
+        self.assertEqual(True, need_update)
+
+    def test_check_nested_resources(self):
+        def _mock_check(res):
+            res.handle_check = mock.Mock()
+
+        self.parent_resource.create_with_template(self.templ, {"KeyName": "k"})
+        nested = self.parent_resource.nested()
+        [_mock_check(res) for res in nested.resources.values()]
+
+        scheduler.TaskRunner(self.parent_resource.check)()
+        [self.assertTrue(res.handle_check.called)
+         for res in nested.resources.values()]
+
     def test_get_output_ok(self):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
@@ -631,141 +622,70 @@ class StackResourceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_need_update_in_failed_state_for_nested_resource(self):
+
+class StackResourceCheckCompleteTest(common.HeatTestCase):
+    scenarios = [
+        ('create', dict(action='create')),
+        ('update', dict(action='update')),
+        ('suspend', dict(action='suspend')),
+        ('resume', dict(action='resume')),
+        ('delete', dict(action='delete')),
+    ]
+
+    def setUp(self):
+        super(StackResourceCheckCompleteTest, self).setUp()
+        resource._register_class('some_magic_type',
+                                 MyStackResource)
+        self.ws_resname = "provider_resource"
+        t = templatem.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12',
+             'Resources': {self.ws_resname: ws_res_snippet}})
+        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                         t, stack_id=str(uuid.uuid4()),
+                                         user_creds_id='uc123',
+                                         stack_user_project_id='aprojectid')
+        resource_defns = t.resource_definitions(self.parent_stack)
+        self.parent_resource = MyStackResource('test',
+                                               resource_defns[self.ws_resname],
+                                               self.parent_stack)
+
+        self.nested = mock.MagicMock()
+        self.parent_resource._nested = self.nested
+        setattr(self.nested, self.action.upper(), self.action.upper())
+        self.nested.COMPLETE = 'COMPLETE'
+
+    def test_state_ok(self):
         """
-        The resource in FAILED state and has nested stack,
-        should need update.
+        check_create_complete should return True create task is
+        done and the nested stack is in (<action>,COMPLETE) state.
         """
-        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
-        scheduler.TaskRunner(self.parent_resource.create)()
-        self.parent_resource.state_set('CREATE', 'FAILED')
+        self.nested.state = (self.action.upper(), 'COMPLETE')
+        task = mock.MagicMock()
+        task.step.return_value = True
 
-        need_update = self.parent_resource._needs_update(
-            self.parent_resource.t,
-            self.parent_resource.t,
-            self.parent_resource.properties,
-            self.parent_resource.properties,
-            self.parent_resource)
+        complete = getattr(self.parent_resource,
+                           'check_%s_complete' % self.action)
+        self.assertIs(True, complete(task))
 
-        self.assertEqual(True, need_update)
-
-    def test_create_complete_state_err(self):
+    def test_state_err(self):
         """
         check_create_complete should raise error when create task is
-        done but the nested stack is not in (CREATE,COMPLETE) state
+        done but the nested stack is not in (<action>,COMPLETE) state
         """
-        del self.templ['Resources']['WebServer']
-        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
 
-        ctx = self.parent_resource.context
-        phy_id = "cb2f2b28-a663-4683-802c-4b40c916e1ff"
-        templ = templatem.Template(self.templ)
-        env = environment.Environment({"KeyName": "test"})
-        self.stack = parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
-                                  disable_rollback=True,
-                                  parent_resource=self.parent_resource,
-                                  stack_user_project_id='aprojectid')
+        self.nested.state = (self.action.upper(), 'FAILED')
+        self.nested.status_reason = 'broken on purpose'
+        task = mock.MagicMock()
+        task.step.return_value = True
 
-        self.m.StubOutWithMock(environment, 'Environment')
-        environment.Environment().AndReturn(env)
+        complete = getattr(self.parent_resource,
+                           'check_%s_complete' % self.action)
+        self.assertRaises(exception.Error, complete, task)
 
-        self.m.StubOutWithMock(parser, 'Stack')
-        parser.Stack(ctx, phy_id, templ, env=env, timeout_mins=None,
-                     disable_rollback=True,
-                     parent_resource=self.parent_resource,
-                     owner_id=self.parent_stack.id,
-                     user_creds_id=self.parent_stack.user_creds_id,
-                     adopt_stack_data=None,
-                     stack_user_project_id='aprojectid',
-                     nested_depth=1).AndReturn(self.stack)
+    def test_step_false(self):
+        task = mock.MagicMock()
+        task.step.return_value = False
 
-        st_set = self.stack.state_set
-        self.m.StubOutWithMock(self.stack, 'state_set')
-        self.stack.state_set(self.stack.CREATE, self.stack.IN_PROGRESS,
-                             "Stack CREATE started").WithSideEffects(st_set)
-
-        self.stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
-                             "Stack CREATE completed successfully")
-        self.m.ReplayAll()
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(self.parent_resource.create))
-        self.assertEqual(('CREATE', 'FAILED'), self.parent_resource.state)
-        self.assertEqual(('Error: Stack CREATE started'),
-                         self.parent_resource.status_reason)
-
-        self.m.VerifyAll()
-        # Restore state_set to let clean up proceed
-        self.stack.state_set = st_set
-
-    def test_suspend_complete_state_err(self):
-        """
-        check_suspend_complete should raise error when suspend task is
-        done but the nested stack is not in (SUSPEND,COMPLETE) state
-        """
-        del self.templ['Resources']['WebServer']
-        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
-        scheduler.TaskRunner(self.parent_resource.create)()
-        self.stack = self.parent_resource.nested()
-
-        st_set = self.stack.state_set
-        self.m.StubOutWithMock(self.stack, 'state_set')
-        self.stack.state_set(parser.Stack.SUSPEND, parser.Stack.IN_PROGRESS,
-                             "Stack SUSPEND started").WithSideEffects(st_set)
-
-        self.stack.state_set(parser.Stack.SUSPEND, parser.Stack.COMPLETE,
-                             "Stack SUSPEND completed successfully")
-        self.m.ReplayAll()
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(self.parent_resource.suspend))
-        self.assertEqual(('SUSPEND', 'FAILED'), self.parent_resource.state)
-        self.assertEqual(('Error: Stack SUSPEND started'),
-                         self.parent_resource.status_reason)
-
-        self.m.VerifyAll()
-        # Restore state_set to let clean up proceed
-        self.stack.state_set = st_set
-
-    def test_resume_complete_state_err(self):
-        """
-        check_resume_complete should raise error when resume task is
-        done but the nested stack is not in (RESUME,COMPLETE) state
-        """
-        del self.templ['Resources']['WebServer']
-        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
-        scheduler.TaskRunner(self.parent_resource.create)()
-        self.stack = self.parent_resource.nested()
-
-        scheduler.TaskRunner(self.parent_resource.suspend)()
-
-        st_set = self.stack.state_set
-        self.m.StubOutWithMock(self.stack, 'state_set')
-        self.stack.state_set(parser.Stack.RESUME, parser.Stack.IN_PROGRESS,
-                             "Stack RESUME started").WithSideEffects(st_set)
-
-        self.stack.state_set(parser.Stack.RESUME, parser.Stack.COMPLETE,
-                             "Stack RESUME completed successfully")
-        self.m.ReplayAll()
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(self.parent_resource.resume))
-        self.assertEqual(('RESUME', 'FAILED'), self.parent_resource.state)
-        self.assertEqual(('Error: Stack RESUME started'),
-                         self.parent_resource.status_reason)
-
-        self.m.VerifyAll()
-        # Restore state_set to let clean up proceed
-        self.stack.state_set = st_set
-
-    def test_check_nested_resources(self):
-        def _mock_check(res):
-            res.handle_check = mock.Mock()
-
-        self.parent_resource.create_with_template(self.templ, {"KeyName": "k"})
-        nested = self.parent_resource.nested()
-        [_mock_check(res) for res in nested.resources.values()]
-
-        scheduler.TaskRunner(self.parent_resource.check)()
-        [self.assertTrue(res.handle_check.called)
-         for res in nested.resources.values()]
+        complete = getattr(self.parent_resource,
+                           'check_%s_complete' % self.action)
+        self.assertIs(False, complete(task))
