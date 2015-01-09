@@ -12,8 +12,6 @@
 #    under the License.
 
 import copy
-import re
-import six
 
 import mock
 import mox
@@ -175,13 +173,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
-        ha_cfg = rsrc._haproxy_config(rsrc.properties['Instances'])
-
-        self.assertRegexpMatches(ha_cfg, 'bind \*:80')
-        self.assertRegexpMatches(ha_cfg, 'server server1 1\.2\.3\.4:80 '
-                                 'check inter 30s fall 5 rise 3')
-        self.assertRegexpMatches(ha_cfg, 'timeout check 5s')
-
         id_list = []
         resource_defns = s.t.resource_definitions(s)
         for inst_name in ['WikiServerOne1', 'WikiServerOne2']:
@@ -220,16 +211,6 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
         self.assertEqual('LoadBalancer', rsrc.name)
         self.m.VerifyAll()
-
-    def assertRegexpMatches(self, text, expected_regexp, msg=None):
-        """Fail the test unless the text matches the regular expression."""
-        if isinstance(expected_regexp, six.string_types):
-            expected_regexp = re.compile(expected_regexp)
-        if not expected_regexp.search(text):
-            msg = msg or "Regexp didn't match"
-            msg = '%s: %r not found in %r' % (msg,
-                                              expected_regexp.pattern, text)
-            raise self.failureException(msg)
 
     def test_loadbalancer_validate_badtemplate(self):
         cfg.CONF.set_override('loadbalancer_template', '/a/noexist/x.y')
@@ -281,3 +262,138 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc.get_parsed_template = mock.Mock(return_value='foo')
 
         self.assertEqual('foo', rsrc.child_template())
+
+
+class HaProxyConfigTest(common.HeatTestCase):
+    def setUp(self):
+        super(HaProxyConfigTest, self).setUp()
+        stack = utils.parse_stack(template_format.parse(lb_template))
+        resource_name = 'LoadBalancer'
+        lb_defn = stack.t.resource_definitions(stack)[resource_name]
+        self.lb = lb.LoadBalancer(resource_name, lb_defn, stack)
+        self.lb.client_plugin = mock.Mock()
+
+    def _mock_props(self, props):
+        def get_props(name):
+            return props[name]
+
+        self.lb.properties = mock.MagicMock()
+        self.lb.properties.__getitem__.side_effect = get_props
+
+    def test_combined(self):
+        self.lb._haproxy_config_global = mock.Mock(return_value='one,')
+        self.lb._haproxy_config_frontend = mock.Mock(return_value='two,')
+        self.lb._haproxy_config_backend = mock.Mock(return_value='three,')
+        self.lb._haproxy_config_servers = mock.Mock(return_value='four')
+        actual = self.lb._haproxy_config([3, 5])
+        self.assertEqual('one,two,three,four\n', actual)
+
+        self.lb._haproxy_config_global.assert_called_once_with()
+        self.lb._haproxy_config_frontend.assert_called_once_with()
+        self.lb._haproxy_config_backend.assert_called_once_with()
+        self.lb._haproxy_config_servers.assert_called_once_with([3, 5])
+
+    def test_global(self):
+        exp = '''
+global
+    daemon
+    maxconn 256
+    stats socket /tmp/.haproxy-stats
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+'''
+        actual = self.lb._haproxy_config_global()
+        self.assertEqual(exp, actual)
+
+    def test_frontend(self):
+        props = {'HealthCheck': {},
+                 'Listeners': [{'LoadBalancerPort': 4014}]}
+        self._mock_props(props)
+
+        exp = '''
+frontend http
+    bind *:4014
+    default_backend servers
+'''
+        actual = self.lb._haproxy_config_frontend()
+        self.assertEqual(exp, actual)
+
+    def test_backend_with_timeout(self):
+        props = {'HealthCheck': {'Timeout': 43}}
+        self._mock_props(props)
+
+        actual = self.lb._haproxy_config_backend()
+        exp = '''
+backend servers
+    balance roundrobin
+    option http-server-close
+    option forwardfor
+    option httpchk
+    timeout check 43s
+'''
+        self.assertEqual(exp, actual)
+
+    def test_backend_no_timeout(self):
+        self._mock_props({'HealthCheck': None})
+        be = self.lb._haproxy_config_backend()
+
+        exp = '''
+backend servers
+    balance roundrobin
+    option http-server-close
+    option forwardfor
+    option httpchk
+
+'''
+        self.assertEqual(exp, be)
+
+    def test_servers_none(self):
+        props = {'HealthCheck': {},
+                 'Listeners': [{'InstancePort': 1234}]}
+        self._mock_props(props)
+        actual = self.lb._haproxy_config_servers([])
+        exp = ''
+        self.assertEqual(exp, actual)
+
+    def test_servers_no_check(self):
+        props = {'HealthCheck': {},
+                 'Listeners': [{'InstancePort': 4511}]}
+        self._mock_props(props)
+
+        def fake_to_ipaddr(inst):
+            return '192.168.1.%s' % inst
+
+        to_ip = self.lb.client_plugin.return_value.server_to_ipaddress
+        to_ip.side_effect = fake_to_ipaddr
+
+        actual = self.lb._haproxy_config_servers(range(1, 3))
+        exp = '''
+    server server1 192.168.1.1:4511
+    server server2 192.168.1.2:4511'''
+        self.assertEqual(exp.replace('\n', '', 1), actual)
+
+    def test_servers_servers_and_check(self):
+        props = {'HealthCheck': {'HealthyThreshold': 1,
+                                 'Interval': 2,
+                                 'Target': 'HTTP:80/',
+                                 'Timeout': 45,
+                                 'UnhealthyThreshold': 5
+                                 },
+                 'Listeners': [{'InstancePort': 1234}]}
+        self._mock_props(props)
+
+        def fake_to_ipaddr(inst):
+            return '192.168.1.%s' % inst
+
+        to_ip = self.lb.client_plugin.return_value.server_to_ipaddress
+        to_ip.side_effect = fake_to_ipaddr
+
+        actual = self.lb._haproxy_config_servers(range(1, 3))
+        exp = '''
+    server server1 192.168.1.1:1234 check inter 2s fall 5 rise 1
+    server server2 192.168.1.2:1234 check inter 2s fall 5 rise 1'''
+        self.assertEqual(exp.replace('\n', '', 1), actual)
