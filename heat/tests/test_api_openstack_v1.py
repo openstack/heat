@@ -16,6 +16,7 @@ import json
 import mock
 from oslo.config import cfg
 from oslo.messaging._drivers import common as rpc_common
+from oslo.messaging import exceptions
 import six
 import webob.exc
 
@@ -25,6 +26,7 @@ import heat.api.openstack.v1.actions as actions
 import heat.api.openstack.v1.build_info as build_info
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.resources as resources
+import heat.api.openstack.v1.services as services
 import heat.api.openstack.v1.software_configs as software_configs
 import heat.api.openstack.v1.software_deployments as software_deployments
 import heat.api.openstack.v1.stacks as stacks
@@ -3663,6 +3665,17 @@ class RoutesTest(common.HeatTestCase):
              'stack_id': 'stack_id', 'allowed_methods': 'GET,PUT,PATCH,DELETE'}
         )
 
+    def test_services(self):
+        self.assertRoute(
+            self.m,
+            '/aaaa/services',
+            'GET',
+            'index',
+            'ServiceController',
+            {
+                'tenant_id': 'aaaa'
+            })
+
 
 @mock.patch.object(policy.Enforcer, 'enforce')
 class ActionControllerTest(ControllerTest, common.HeatTestCase):
@@ -4268,3 +4281,37 @@ class SoftwareDeploymentControllerTest(ControllerTest, common.HeatTestCase):
                 req, deployment_id=deployment_id, tenant_id=self.tenant)
             self.assertEqual(404, resp.json['code'])
             self.assertEqual('NotFound', resp.json['error']['type'])
+
+
+class ServiceControllerTest(ControllerTest, common.HeatTestCase):
+
+    def setUp(self):
+        super(ServiceControllerTest, self).setUp()
+        self.controller = services.ServiceController({})
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index(self, mock_enforce):
+        self._mock_enforce_setup(
+            mock_enforce, 'index')
+        req = self._get('/services')
+        return_value = []
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'list_services',
+                return_value=return_value):
+            resp = self.controller.index(req, tenant_id=self.tenant)
+            self.assertEqual(
+                {'services': []}, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index_503(self, mock_enforce):
+        self._mock_enforce_setup(
+            mock_enforce, 'index')
+        req = self._get('/services')
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'list_services',
+                side_effect=exceptions.MessagingTimeout()):
+            self.assertRaises(
+                webob.exc.HTTPServiceUnavailable,
+                self.controller.index, req, tenant_id=self.tenant)

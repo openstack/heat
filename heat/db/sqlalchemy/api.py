@@ -18,6 +18,7 @@ import sys
 from oslo.config import cfg
 from oslo.db.sqlalchemy import session as db_session
 from oslo.db.sqlalchemy import utils
+from oslo.utils import timeutils
 import osprofiler.sqlalchemy
 import six
 import sqlalchemy
@@ -816,6 +817,50 @@ def snapshot_get_all(context, stack_id):
         stack_id=stack_id, tenant=context.tenant_id)
 
 
+def service_create(context, values):
+    service = models.Service()
+    service.update(values)
+    service.save(_session(context))
+    return service
+
+
+def service_update(context, service_id, values):
+    service = service_get(context, service_id)
+    values.update({'updated_at': timeutils.utcnow()})
+    service.update(values)
+    service.save(_session(context))
+    return service
+
+
+def service_delete(context, service_id, soft_delete=True):
+    service = service_get(context, service_id)
+    session = orm_session.Session.object_session(service)
+    if soft_delete:
+        service.soft_delete(session=session)
+    else:
+        session.delete(service)
+    session.flush()
+
+
+def service_get(context, service_id):
+    result = model_query(context, models.Service).get(service_id)
+    if result is None:
+        raise exception.ServiceNotFound(service_id=service_id)
+    return result
+
+
+def service_get_all(context):
+    return (model_query(context, models.Service).
+            filter_by(deleted_at=None).all())
+
+
+def service_get_all_by_args(context, host, binary, hostname):
+    return (model_query(context, models.Service).
+            filter_by(host=host).
+            filter_by(binary=binary).
+            filter_by(hostname=hostname).all())
+
+
 def purge_deleted(age, granularity='days'):
     try:
         age = int(age)
@@ -840,6 +885,7 @@ def purge_deleted(age, granularity='days'):
     meta = sqlalchemy.MetaData()
     meta.bind = engine
 
+    # Purge deleted stacks
     stack = sqlalchemy.Table('stack', meta, autoload=True)
     event = sqlalchemy.Table('event', meta, autoload=True)
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
@@ -862,6 +908,16 @@ def purge_deleted(age, granularity='days'):
         engine.execute(raw_template_del)
         user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
         engine.execute(user_creds_del)
+
+    # Purge deleted services
+    service = sqlalchemy.Table('service', meta, autoload=True)
+    stmt = (sqlalchemy.select([service.c.id]).
+            where(service.c.deleted_at < time_line))
+    deleted_services = engine.execute(stmt)
+
+    for s in deleted_services:
+        stmt = service.delete().where(service.c.id == s[0])
+        engine.execute(stmt)
 
 
 def db_sync(engine, version=None):

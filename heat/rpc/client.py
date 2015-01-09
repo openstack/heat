@@ -28,6 +28,7 @@ class EngineClient(object):
 
         1.0 - Initial version.
         1.1 - Add support_status argument to list_resource_types()
+        1.4 - Add support for service list
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -564,3 +565,6 @@ class EngineClient(object):
         return self.call(cnxt, self.make_msg('stack_restore',
                                              stack_identity=stack_identity,
                                              snapshot_id=snapshot_id))
+
+    def list_services(self, cnxt):
+        return self.call(cnxt, self.make_msg('list_services'), version='1.4')

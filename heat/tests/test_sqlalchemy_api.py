@@ -1187,6 +1187,20 @@ def create_watch_data(ctx, watch_rule, **kwargs):
     return db_api.watch_data_create(ctx, values)
 
 
+def create_service(ctx, **kwargs):
+    values = {
+        'id': '7079762f-c863-4954-ba61-9dccb68c57e2',
+        'engine_id': 'f9aff81e-bc1f-4119-941d-ad1ea7f31d19',
+        'host': 'engine-1',
+        'hostname': 'host1.devstack.org',
+        'binary': 'heat-engine',
+        'topic': 'engine',
+        'report_interval': 60}
+
+    values.update(kwargs)
+    return db_api.service_create(ctx, values)
+
+
 class DBAPIRawTemplateTest(common.HeatTestCase):
     def setUp(self):
         super(DBAPIRawTemplateTest, self).setUp()
@@ -1981,3 +1995,77 @@ class DBAPIWatchDataTest(common.HeatTestCase):
 
         data = [wd.data for wd in watch_data]
         [self.assertIn(val['data'], data) for val in values]
+
+
+class DBAPIServiceTest(common.HeatTestCase):
+    def setUp(self):
+        super(DBAPIServiceTest, self).setUp()
+        self.ctx = utils.dummy_context()
+
+    def test_service_create_get(self):
+        service = create_service(self.ctx)
+        ret_service = db_api.service_get(self.ctx, service.id)
+        self.assertIsNotNone(ret_service)
+        self.assertEqual(service.id, ret_service.id)
+        self.assertEqual(service.hostname, ret_service.hostname)
+        self.assertEqual(service.binary, ret_service.binary)
+        self.assertEqual(service.host, ret_service.host)
+        self.assertEqual(service.topic, ret_service.topic)
+        self.assertEqual(service.engine_id, ret_service.engine_id)
+        self.assertEqual(service.report_interval, ret_service.report_interval)
+        self.assertIsNotNone(service.created_at)
+        self.assertIsNone(service.updated_at)
+        self.assertIsNone(service.deleted_at)
+
+    def test_service_get_all_by_args(self):
+        # Host-1
+        values = [{'id': str(uuid.uuid4()),
+                   'hostname': 'host-1',
+                   'host': 'engine-1'}]
+        # Host-2
+        for i in [0, 1, 2]:
+            values.append({'id': str(uuid.uuid4()),
+                           'hostname': 'host-2',
+                           'host': 'engine-%s' % i})
+
+        [create_service(self.ctx, **val) for val in values]
+
+        services = db_api.service_get_all(self.ctx)
+        self.assertEqual(4, len(services))
+
+        services_by_args = db_api.service_get_all_by_args(self.ctx,
+                                                          hostname='host-2',
+                                                          binary='heat-engine',
+                                                          host='engine-0')
+        self.assertEqual(1, len(services_by_args))
+        self.assertEqual('host-2', services_by_args[0].hostname)
+        self.assertEqual('heat-engine', services_by_args[0].binary)
+        self.assertEqual('engine-0', services_by_args[0].host)
+
+    def test_service_update(self):
+        service = create_service(self.ctx)
+        values = {'hostname': 'host-updated',
+                  'host': 'engine-updated',
+                  'retry_interval': 120}
+        service = db_api.service_update(self.ctx, service.id, values)
+        self.assertEqual('host-updated', service.hostname)
+        self.assertEqual(120, service.retry_interval)
+        self.assertEqual('engine-updated', service.host)
+
+        # simple update, expected the updated_at is updated
+        old_updated_date = service.updated_at
+        service = db_api.service_update(self.ctx, service.id, dict())
+        self.assertGreater(service.updated_at, old_updated_date)
+
+    def test_service_delete_soft_delete(self):
+        service = create_service(self.ctx)
+
+        # Soft delete
+        db_api.service_delete(self.ctx, service.id)
+        ret_service = db_api.service_get(self.ctx, service.id)
+        self.assertEqual(ret_service.id, service.id)
+
+        # Delete
+        db_api.service_delete(self.ctx, service.id, False)
+        self.assertRaises(exception.ServiceNotFound, db_api.service_get,
+                          self.ctx, service.id)

@@ -302,6 +302,30 @@ def snapshot_get_all(context, stack_id):
     return IMPL.snapshot_get_all(context, stack_id)
 
 
+def service_create(context, values):
+    return IMPL.service_create(context, values)
+
+
+def service_update(context, service_id, values):
+    return IMPL.service_update(context, service_id, values)
+
+
+def service_delete(context, service_id, soft_delete=True):
+    return IMPL.service_delete(context, service_id, soft_delete)
+
+
+def service_get(context, service_id):
+    return IMPL.service_get(context, service_id)
+
+
+def service_get_all(context):
+    return IMPL.service_get_all(context)
+
+
+def service_get_all_by_args(context, host, binary, hostname):
+    return IMPL.service_get_all_by_args(context, host, binary, hostname)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)

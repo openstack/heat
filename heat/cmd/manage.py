@@ -21,7 +21,9 @@ import sys
 
 from oslo.config import cfg
 
+from heat.common import context
 from heat.common.i18n import _
+from heat.common import service_utils
 from heat.db import api
 from heat.db import utils
 from heat.openstack.common import log
@@ -42,6 +44,39 @@ def do_db_sync():
     creating first if necessary.
     """
     api.db_sync(api.get_engine(), CONF.command.version)
+
+
+class ServiceManageCommand(object):
+    def service_list(self):
+        ctxt = context.get_admin_context()
+        services = [service_utils.format_service(service)
+                    for service in api.service_get_all(ctxt)]
+
+        print_format = "%-16s %-16s %-36s %-10s %-10s %-10s %-10s"
+        print(print_format % (_('Hostname'),
+                              _('Binary'),
+                              _('Engine_Id'),
+                              _('Host'),
+                              _('Topic'),
+                              _('Status'),
+                              _('Updated At')))
+
+        for svc in services:
+            print(print_format % (svc['hostname'],
+                                  svc['binary'],
+                                  svc['engine_id'],
+                                  svc['host'],
+                                  svc['topic'],
+                                  svc['status'],
+                                  svc['updated_at']))
+
+    @staticmethod
+    def add_service_parsers(subparsers):
+        service_parser = subparsers.add_parser('service')
+        service_parser.set_defaults(command_object=ServiceManageCommand)
+        service_subparsers = service_parser.add_subparsers(dest='action')
+        list_parser = service_subparsers.add_parser('list')
+        list_parser.set_defaults(func=ServiceManageCommand().service_list)
 
 
 def purge_deleted():
@@ -68,6 +103,8 @@ def add_command_parsers(subparsers):
         '-g', '--granularity', default='days',
         choices=['days', 'hours', 'minutes', 'seconds'],
         help=_('Granularity to use for age argument, defaults to days.'))
+
+    ServiceManageCommand.add_service_parsers(subparsers)
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',

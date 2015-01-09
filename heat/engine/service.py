@@ -15,6 +15,7 @@ import collections
 import functools
 import json
 import os
+import socket
 import warnings
 
 import eventlet
@@ -35,6 +36,7 @@ from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
+from heat.common import service_utils
 from heat.db import api as db_api
 from heat.engine import api
 from heat.engine import attributes
@@ -267,13 +269,15 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.3'
+    RPC_API_VERSION = '1.4'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
         resources.initialise()
         self.host = host
         self.topic = topic
+        self.binary = 'heat-engine'
+        self.hostname = socket.gethostname()
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
@@ -282,6 +286,8 @@ class EngineService(service.Service):
         self.engine_id = None
         self.thread_group_mgr = None
         self.target = None
+        self.service_id = None
+        self.manage_thread_grp = None
 
         if cfg.CONF.instance_user:
             warnings.warn('The "instance_user" option in heat.conf is '
@@ -327,6 +333,10 @@ class EngineService(service.Service):
         self._client = rpc_messaging.get_rpc_client(
             version=self.RPC_API_VERSION)
 
+        self.manage_thread_grp = threadgroup.ThreadGroup()
+        self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
+                                         self.service_manage_report)
+
         super(EngineService, self).start()
 
     def stop(self):
@@ -347,6 +357,11 @@ class EngineService(service.Service):
             # Stop threads gracefully
             self.thread_group_mgr.stop(stack_id, True)
             LOG.info(_LI("Stack %s processing was finished"), stack_id)
+
+        self.manage_thread_grp.stop()
+        ctxt = context.get_admin_context()
+        db_api.service_delete(ctxt, self.service_id)
+        LOG.info(_LI('Service %s is deleted'), self.service_id)
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
@@ -1478,3 +1493,53 @@ class EngineService(service.Service):
     @request_context
     def delete_software_deployment(self, cnxt, deployment_id):
         db_api.software_deployment_delete(cnxt, deployment_id)
+
+    @request_context
+    def list_services(self, cnxt):
+        result = [service_utils.format_service(srv)
+                  for srv in db_api.service_get_all(cnxt)]
+        return result
+
+    def service_manage_report(self):
+        cnxt = context.get_admin_context()
+
+        if self.service_id is not None:
+            # Service is already running
+            db_api.service_update(
+                cnxt,
+                self.service_id,
+                dict())
+            LOG.info(_LI('Service %s is updated'), self.service_id)
+        else:
+            service_refs = db_api.service_get_all_by_args(cnxt,
+                                                          self.host,
+                                                          self.binary,
+                                                          self.hostname)
+            if len(service_refs) == 1:
+                # Service was aborted or stopped
+                service_ref = service_refs[0]
+
+                if service_ref['deleted_at'] is None:
+                    LOG.info(_LI('Service %s was aborted'), self.service_id)
+
+                service_ref = db_api.service_update(
+                    cnxt,
+                    service_ref['id'],
+                    dict(engine_id=self.engine_id,
+                         deleted_at=None,
+                         report_interval=cfg.CONF.periodic_interval))
+                self.service_id = service_ref['id']
+                LOG.info(_LI('Service %s is restarted'), self.service_id)
+            elif len(service_refs) == 0:
+                # Service is started now
+                service_ref = db_api.service_create(
+                    cnxt,
+                    dict(host=self.host,
+                         hostname=self.hostname,
+                         binary=self.binary,
+                         engine_id=self.engine_id,
+                         topic=self.topic,
+                         report_interval=cfg.CONF.periodic_interval)
+                )
+                self.service_id = service_ref['id']
+                LOG.info(_LI('Service %s is started'), self.service_id)

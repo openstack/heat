@@ -390,3 +390,7 @@ class StopActionFailed(HeatException):
 class EventSendFailed(HeatException):
     msg_fmt = _("Failed to send message to stack (%(stack_name)s) "
                 "on other engine (%(engine_id)s)")
+
+
+class ServiceNotFound(HeatException):
+    msg_fmt = _("Service %(service_id)s does not found")
