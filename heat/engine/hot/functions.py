@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import itertools
 
 import six
 
@@ -264,3 +265,72 @@ class Removed(function.Function):
 
     def result(self):
         return super(Removed, self).result()
+
+
+class Repeat(function.Function):
+    '''
+    A function for iterating over a list of items.
+
+    Takes the form::
+
+        repeat:
+            template:
+                <body>
+            for_each:
+                <var>: <list>
+
+    The result is a new list of the same size as <list>, where each element
+    is a copy of <body> with any occurrences of <var> replaced with the
+    corresponding item of <list>.
+    '''
+    def __init__(self, stack, fn_name, args):
+        super(Repeat, self).__init__(stack, fn_name, args)
+
+        self._for_each, self._template = self._parse_args()
+
+    def _parse_args(self):
+        if not isinstance(self.args, collections.Mapping):
+            raise TypeError(_('Arguments to "%s" must be a map') %
+                            self.fn_name)
+
+        try:
+            for_each = self.args['for_each']
+            template = self.args['template']
+        except (KeyError, TypeError):
+            example = ('''repeat:
+              template: This is %var%
+              for_each:
+                %var%: ['a', 'b', 'c']''')
+            raise KeyError(_('"repeat" syntax should be %s') %
+                           example)
+
+        if not isinstance(for_each, collections.Mapping):
+            raise TypeError(_('The "for_each" argument to "%s" must contain '
+                              'a map') % self.fn_name)
+        for v in six.itervalues(for_each):
+            if not isinstance(v, list):
+                raise TypeError(_('The values of the "for_each" argument to '
+                                  '"%s" must be lists') % self.fn_name)
+
+        return for_each, template
+
+    def _do_replacement(self, keys, values, template):
+        if isinstance(template, six.string_types):
+            for (key, value) in zip(keys, values):
+                template = template.replace(key, value)
+            return template
+        elif isinstance(template, collections.Sequence):
+            return [self._do_replacement(keys, values, elem)
+                    for elem in template]
+        elif isinstance(template, collections.Mapping):
+            return dict((self._do_replacement(keys, values, k),
+                         self._do_replacement(keys, values, v))
+                        for (k, v) in template.items())
+
+    def result(self):
+        for_each = function.resolve(self._for_each)
+        keys = for_each.keys()
+        lists = [for_each[key] for key in keys]
+        template = function.resolve(self._template)
+        return [self._do_replacement(keys, items, template)
+                for items in itertools.product(*lists)]
