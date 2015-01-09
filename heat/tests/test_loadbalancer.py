@@ -156,21 +156,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
 
-        hc = {
-            'Target': 'HTTP:80/',
-            'HealthyThreshold': '3',
-            'UnhealthyThreshold': '5',
-            'Interval': '30',
-            'Timeout': '5'}
-        rsrc.t['Properties']['HealthCheck'] = hc
-        self.assertIsNone(rsrc.validate())
-
-        hc['Timeout'] = 35
-        self.assertEqual(
-            {'Error': 'Interval must be larger than Timeout'},
-            rsrc.validate())
-        hc['Timeout'] = 5
-
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
         id_list = []
@@ -212,17 +197,35 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertEqual('LoadBalancer', rsrc.name)
         self.m.VerifyAll()
 
+    def test_loadbalancer_validate_hchk_good(self):
+        rsrc = self.setup_loadbalancer()
+        rsrc._parse_nested_stack = mock.Mock()
+        hc = {
+            'Target': 'HTTP:80/',
+            'HealthyThreshold': '3',
+            'UnhealthyThreshold': '5',
+            'Interval': '30',
+            'Timeout': '5'}
+        rsrc.t['Properties']['HealthCheck'] = hc
+        self.assertIsNone(rsrc.validate())
+
+    def test_loadbalancer_validate_hchk_int_gt_tmo(self):
+        rsrc = self.setup_loadbalancer()
+        rsrc._parse_nested_stack = mock.Mock()
+        hc = {
+            'Target': 'HTTP:80/',
+            'HealthyThreshold': '3',
+            'UnhealthyThreshold': '5',
+            'Interval': '30',
+            'Timeout': '35'}
+        rsrc.t['Properties']['HealthCheck'] = hc
+        self.assertEqual(
+            {'Error': 'Interval must be larger than Timeout'},
+            rsrc.validate())
+
     def test_loadbalancer_validate_badtemplate(self):
         cfg.CONF.set_override('loadbalancer_template', '/a/noexist/x.y')
-
-        t = template_format.parse(lb_template)
-        s = utils.parse_stack(t)
-        s.store()
-
-        resource_defns = s.t.resource_definitions(s)
-        rsrc = lb.LoadBalancer('LoadBalancer',
-                               resource_defns['LoadBalancer'],
-                               s)
+        rsrc = self.setup_loadbalancer()
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 
     def setup_loadbalancer(self, include_keyname=True):
