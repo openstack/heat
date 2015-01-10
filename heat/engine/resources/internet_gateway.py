@@ -100,11 +100,11 @@ class VPCGatewayAttachment(resource.Resource):
     default_client_name = 'neutron'
 
     def _vpc_route_tables(self):
-        for resource in self.stack.itervalues():
-            if (resource.has_interface('AWS::EC2::RouteTable') and
-                resource.properties.get(route_table.RouteTable.VPC_ID) ==
+        for res in self.stack.itervalues():
+            if (res.has_interface('AWS::EC2::RouteTable') and
+                res.properties.get(route_table.RouteTable.VPC_ID) ==
                     self.properties.get(self.VPC_ID)):
-                        yield resource
+                        yield res
 
     def add_dependencies(self, deps):
         super(VPCGatewayAttachment, self).add_dependencies(deps)
@@ -112,8 +112,8 @@ class VPCGatewayAttachment(resource.Resource):
         # VpcId as this VpcId.
         # All route tables must exist before gateway attachment
         # as attachment happens to routers (not VPCs)
-        for route_table in self._vpc_route_tables():
-            deps += (self, route_table)
+        for route_tbl in self._vpc_route_tables():
+            deps += (self, route_tbl)
 
     def handle_create(self):
         client = self.neutron()
