@@ -20,6 +20,7 @@ from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -28,10 +29,10 @@ LOG = logging.getLogger(__name__)
 class SwiftContainer(resource.Resource):
     PROPERTIES = (
         NAME, X_CONTAINER_READ, X_CONTAINER_WRITE, X_CONTAINER_META,
-        X_ACCOUNT_META
+        X_ACCOUNT_META, PURGE_ON_DELETE,
     ) = (
         'name', 'X-Container-Read', 'X-Container-Write', 'X-Container-Meta',
-        'X-Account-Meta'
+        'X-Account-Meta', 'PurgeOnDelete',
     )
 
     ATTRIBUTES = (
@@ -71,6 +72,16 @@ class SwiftContainer(resource.Resource):
               'account. Each key in the map will set the header '
               'X-Account-Meta-{key} with the corresponding value.'),
             default={}
+        ),
+        PURGE_ON_DELETE: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _("If True, delete any objects in the container "
+              "when the container is deleted. "
+              "Otherwise, deleting a non-empty container "
+              "will result in an error."),
+            default=False,
+            support_status=support.SupportStatus(
+                version='2015.1')
         ),
     }
 
@@ -144,21 +155,58 @@ class SwiftContainer(resource.Resource):
 
         self.resource_id_set(container)
 
+    def _get_objects(self):
+        try:
+            container, objects = self.swift().get_container(self.resource_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return None
+        return objects
+
+    def _deleter(self, obj=None):
+        """Delete the underlying container or an object inside it."""
+        args = [self.resource_id]
+        if obj:
+            deleter = self.swift().delete_object
+            args.append(obj['name'])
+        else:
+            deleter = self.swift().delete_container
+        try:
+            deleter(*args)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+
     def handle_delete(self):
-        """Perform specified delete policy."""
         if self.resource_id is None:
             return
-        try:
-            self.swift().delete_container(self.resource_id)
-        except Exception as ex:
-            if self.client_plugin().is_conflict(ex):
-                container, objects = self.swift().get_container(
-                    self.resource_id)
-                if objects:
-                    msg = _("Deleting non-empty container (%s)"
-                            ) % self.resource_id
-                    raise exception.NotSupported(feature=msg)
-            self.client_plugin().ignore_not_found(ex)
+
+        objects = self._get_objects()
+
+        if objects:
+            if self.properties[self.PURGE_ON_DELETE]:
+                self._deleter(objects.pop())  # save first container refresh
+            else:
+                msg = _("Deleting non-empty container (%(id)s) "
+                        "when %(prop)s is False") % {
+                            'id': self.resource_id,
+                            'prop': self.PURGE_ON_DELETE}
+                raise exception.ResourceActionNotSupported(action=msg)
+        return objects
+
+    def check_delete_complete(self, objects):
+        if objects is None:  # resource was not created or is gone already
+            return True
+        if objects:  # an (empty) list from the first invocation
+            objs = self._get_objects()
+            if objs is None:
+                return True  # container is gone already
+            if objs:
+                self._deleter(objs.pop())
+                if objs:  # save one last _get_objects() API call
+                    return False
+
+        self._deleter()
+        return True
 
     def handle_check(self):
         self.swift().get_container(self.resource_id)
