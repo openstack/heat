@@ -15,6 +15,7 @@
 import copy
 import json
 import six
+import yaml
 
 import mock
 from oslo.config import cfg
@@ -26,6 +27,7 @@ from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine.resources import stack as stack_res
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -671,3 +673,66 @@ Outputs:
         self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
         self.assertRaises(exception.NotFound, db_api.resource_data_get, res,
                           'test')
+
+
+class NestedStackCrudTest(common.HeatTestCase):
+    nested_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Outputs:
+  Foo:
+    Value: bar
+'''
+
+    def setUp(self):
+        super(NestedStackCrudTest, self).setUp()
+
+        ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+        empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
+        stack = parser.Stack(ctx, 'test', parser.Template(empty_template))
+        stack.store()
+
+        self.patchobject(urlfetch, 'get', return_value=self.nested_template)
+        self.nested_parsed = yaml.load(self.nested_template)
+        self.nested_params = {"KeyName": "foo"}
+        self.defn = rsrc_defn.ResourceDefinition(
+            'test_t_res',
+            'AWS::CloudFormation::Stack',
+            {"TemplateURL": "https://server.test/the.template",
+             "Parameters": self.nested_params})
+        self.res = stack_res.NestedStack('test_t_res',
+                                         self.defn, stack)
+        self.assertIsNone(self.res.validate())
+
+    def test_handle_create(self):
+        self.res.create_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_create()
+
+        self.res.create_with_template.assert_called_once_with(
+            self.nested_parsed, self.nested_params, None, adopt_data=None)
+
+    def test_handle_adopt(self):
+        self.res.create_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_adopt(resource_data={'resource_id': 'fred'})
+
+        self.res.create_with_template.assert_called_once_with(
+            self.nested_parsed, self.nested_params, None,
+            adopt_data={'resource_id': 'fred'})
+
+    def test_handle_update(self):
+        self.res.update_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_update(self.defn, None, None)
+
+        self.res.update_with_template.assert_called_once_with(
+            self.nested_parsed, self.nested_params, None)
+
+    def test_handle_delete(self):
+        self.res.nested = mock.MagicMock()
+        self.res.nested.return_value.delete.return_value = None
+        self.res.handle_delete()
+        self.res.nested.return_value.delete.assert_called_once_with()

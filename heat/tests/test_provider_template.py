@@ -1108,3 +1108,70 @@ Outputs:
                          stack.output('value'))
 
         self.m.VerifyAll()
+
+
+class TemplateResourceCrudTest(common.HeatTestCase):
+    provider = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Parameters': {
+            'Foo': {'Type': 'String'},
+            'Blarg': {'Type': 'String', 'Default': 'wibble'},
+        },
+    }
+
+    def setUp(self):
+        super(TemplateResourceCrudTest, self).setUp()
+        files = {'test_resource.template': json.dumps(self.provider)}
+
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.STRING,
+                                                   required=True)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(empty_template, files=files),
+                             env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        self.defn = rsrc_defn.ResourceDefinition('test_t_res',
+                                                 "DummyResource",
+                                                 {"Foo": "bar"})
+        self.res = template_resource.TemplateResource('test_t_res',
+                                                      self.defn, stack)
+        self.assertIsNone(self.res.validate())
+
+    def test_handle_create(self):
+        self.res.create_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_create()
+
+        self.res.create_with_template.assert_called_once_with(
+            self.provider, {'Foo': 'bar'})
+
+    def test_handle_adopt(self):
+        self.res.create_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_adopt(resource_data={'resource_id': 'fred'})
+
+        self.res.create_with_template.assert_called_once_with(
+            self.provider, {'Foo': 'bar'}, adopt_data={'resource_id': 'fred'})
+
+    def test_handle_update(self):
+        self.res.update_with_template = mock.Mock(return_value=None)
+
+        self.res.handle_update(self.defn, None, None)
+
+        self.res.update_with_template.assert_called_once_with(
+            self.provider, {'Foo': 'bar'})
+
+    def test_handle_delete(self):
+        self.res.nested = mock.MagicMock()
+        self.res.nested.return_value.delete.return_value = None
+        self.res.handle_delete()
+        self.res.nested.return_value.delete.assert_called_once_with()
