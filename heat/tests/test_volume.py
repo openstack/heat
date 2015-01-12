@@ -28,8 +28,9 @@ from heat.db import api as db_api
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
+from heat.engine.resources.aws import volume as aws_vol
 from heat.engine.resources import instance
-from heat.engine.resources import volume as vol
+from heat.engine.resources.openstack import volume as os_vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -159,11 +160,11 @@ class BaseVolumeTest(common.HeatTestCase):
 
     def create_volume(self, t, stack, resource_name):
         if self.use_cinder:
-            Volume = vol.CinderVolume
+            Volume = os_vol.CinderVolume
         else:
             data = t['Resources'][resource_name]
             data['Properties']['AvailabilityZone'] = 'nova'
-            Volume = vol.Volume
+            Volume = aws_vol.Volume
         rsrc = Volume(resource_name,
                       stack.t.resource_definitions(stack)[resource_name],
                       stack)
@@ -174,9 +175,9 @@ class BaseVolumeTest(common.HeatTestCase):
 
     def create_attachment(self, t, stack, resource_name):
         if self.use_cinder:
-            Attachment = vol.CinderVolumeAttachment
+            Attachment = os_vol.CinderVolumeAttachment
         else:
-            Attachment = vol.VolumeAttachment
+            Attachment = aws_vol.VolumeAttachment
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = Attachment(resource_name,
                           resource_defns[resource_name],
@@ -242,8 +243,10 @@ class VolumeTest(BaseVolumeTest):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         self.m.StubOutWithMock(instance.Instance, '_resolve_attribute')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'check_create_complete')
+        self.m.StubOutWithMock(aws_vol.VolumeAttachment,
+                               'handle_create')
+        self.m.StubOutWithMock(aws_vol.VolumeAttachment,
+                               'check_create_complete')
 
         instance.Instance.handle_create().AndReturn(None)
         instance.Instance.check_create_complete(None).AndReturn(True)
@@ -259,19 +262,22 @@ class VolumeTest(BaseVolumeTest):
             description=vol_name,
             name=vol_name,
             metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
-        vol.VolumeAttachment.handle_create().AndReturn(None)
-        vol.VolumeAttachment.check_create_complete(None).AndReturn(True)
+        aws_vol.VolumeAttachment.handle_create().AndReturn(None)
+        aws_vol.VolumeAttachment.check_create_complete(
+            None).AndReturn(True)
 
         # delete script
         self.m.StubOutWithMock(instance.Instance, 'handle_delete')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_delete')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'check_delete_complete')
+        self.m.StubOutWithMock(aws_vol.VolumeAttachment, 'handle_delete')
+        self.m.StubOutWithMock(aws_vol.VolumeAttachment,
+                               'check_delete_complete')
         instance.Instance.handle_delete().AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndRaise(
             cinder_exp.NotFound('Not found'))
         cookie = object()
-        vol.VolumeAttachment.handle_delete().AndReturn(cookie)
-        vol.VolumeAttachment.check_delete_complete(cookie).AndReturn(True)
+        aws_vol.VolumeAttachment.handle_delete().AndReturn(cookie)
+        aws_vol.VolumeAttachment.check_delete_complete(cookie).AndReturn(True)
+
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
@@ -672,9 +678,9 @@ class VolumeTest(BaseVolumeTest):
             'AvailabilityZone'] = 'nova'
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         resource_defns = stack.t.resource_definitions(stack)
-        rsrc = vol.Volume('DataVolume',
-                          resource_defns['DataVolume'],
-                          stack)
+        rsrc = aws_vol.Volume('DataVolume',
+                              resource_defns['DataVolume'],
+                              stack)
 
         create = scheduler.TaskRunner(rsrc.create)
         ex = self.assertRaises(exception.ResourceFailure, create)
@@ -1294,9 +1300,9 @@ class CinderVolumeTest(BaseVolumeTest):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         resource_defns = stack.t.resource_definitions(stack)
-        rsrc = vol.CinderVolume('DataVolume',
-                                resource_defns['DataVolume'],
-                                stack)
+        rsrc = os_vol.CinderVolume('DataVolume',
+                                   resource_defns['DataVolume'],
+                                   stack)
         scheduler.TaskRunner(rsrc.create)()
 
         scheduler.TaskRunner(rsrc.snapshot)()
@@ -1334,9 +1340,9 @@ class CinderVolumeTest(BaseVolumeTest):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         resource_defns = stack.t.resource_definitions(stack)
-        rsrc = vol.CinderVolume('DataVolume',
-                                resource_defns['DataVolume'],
-                                stack)
+        rsrc = os_vol.CinderVolume('DataVolume',
+                                   resource_defns['DataVolume'],
+                                   stack)
         scheduler.TaskRunner(rsrc.create)()
 
         self.assertRaises(exception.ResourceFailure,
