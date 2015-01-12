@@ -331,7 +331,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         return dict((r.resource_name, r.resource_type) for r in resources)
 
     def stack_create(self, stack_name=None, template=None, files=None,
-                     parameters=None, environment=None):
+                     parameters=None, environment=None,
+                     expected_status='CREATE_COMPLETE'):
         name = stack_name or self._stack_rand_name()
         templ = template or self.template
         templ_files = files or {}
@@ -349,5 +350,5 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        self._wait_for_stack_status(stack_identifier, expected_status)
         return stack_identifier

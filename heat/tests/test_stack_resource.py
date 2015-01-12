@@ -622,6 +622,21 @@ class StackResourceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_validate_nested_stack(self):
+        self.parent_resource.child_template = mock.Mock(return_value='foo')
+        self.parent_resource.child_params = mock.Mock(return_value={})
+        nested = self.m.CreateMockAnything()
+        nested.validate().AndReturn(True)
+        self.m.StubOutWithMock(stack_resource.StackResource,
+                               '_parse_nested_stack')
+        stack_resource.StackResource._parse_nested_stack(
+            self.parent_stack.name, 'foo', {}).AndReturn(nested)
+
+        self.m.ReplayAll()
+        self.parent_resource.validate_nested_stack()
+        self.assertFalse(nested.strict_validate)
+        self.m.VerifyAll()
+
 
 class StackResourceCheckCompleteTest(common.HeatTestCase):
     scenarios = [
