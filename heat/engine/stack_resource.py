@@ -12,6 +12,7 @@
 #    under the License.
 
 import hashlib
+import six
 
 from oslo.config import cfg
 from oslo.serialization import jsonutils
@@ -50,14 +51,18 @@ class StackResource(resource.Resource):
 
     def validate(self):
         super(StackResource, self).validate()
+        self.validate_nested_stack()
+
+    def validate_nested_stack(self):
         try:
             nested_stack = self._parse_nested_stack(
                 self.stack.name,
                 self.child_template(),
                 self.child_params())
+            nested_stack.strict_validate = False
             nested_stack.validate()
         except Exception as ex:
-            msg = _("Failed to validate: %s") % ex
+            msg = _("Failed to validate: %s") % six.text_type(ex)
             raise exception.StackValidationFailed(message=msg)
 
     def _outputs_to_attribs(self, json_snippet):
