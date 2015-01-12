@@ -90,4 +90,11 @@ as_heat_template = '''
             type: ResourceWithPropsAndAttrs
             properties:
                 Foo: hello
+      my-policy:
+        type: OS::Heat::ScalingPolicy
+        properties:
+          auto_scaling_group_id: {get_resource: my-group}
+          scaling_adjustment: 1
+          adjustment_type: change_in_capacity
+          cooldown: 60
     '''

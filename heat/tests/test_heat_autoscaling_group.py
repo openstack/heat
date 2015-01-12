@@ -200,42 +200,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertEqual(1, grouputils.get_size(rsrc))
 
 
-class ScalingPolicyTest(common.HeatTestCase):
-    # TODO(Qiming): Add more tests to the scaling policy
-    as_template = '''
-        heat_template_version: 2013-05-23
-        resources:
-          my-policy:
-            type: OS::Heat::ScalingPolicy
-            properties:
-                auto_scaling_group_id: {get_resource: my-group}
-                adjustment_type: change_in_capacity
-                scaling_adjustment: 1
-          my-group:
-            type: OS::Heat::AutoScalingGroup
-            properties:
-              max_size: 5
-              min_size: 1
-              resource:
-                type: ResourceWithProps
-                properties:
-                    Foo: hello
-    '''
-
-    def setUp(self):
-        super(ScalingPolicyTest, self).setUp()
-        resource._register_class('ResourceWithProps',
-                                 generic_resource.ResourceWithProps)
-        self.stub_keystoneclient()
-        self.parsed = template_format.parse(self.as_template)
-
-    def test_alarm_attribute(self):
-        stack = utils.parse_stack(self.parsed)
-        stack.create()
-        policy = stack['my-policy']
-        self.assertIn("my-policy", policy.FnGetAtt('alarm_url'))
-
-
 class RollingUpdatesTest(common.HeatTestCase):
 
     as_template = '''
