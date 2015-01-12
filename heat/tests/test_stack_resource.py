@@ -558,6 +558,25 @@ class StackResourceTest(common.HeatTestCase):
         [self.assertTrue(res.handle_check.called)
          for res in nested.resources.values()]
 
+
+class StackResourceAttrTest(common.HeatTestCase):
+    def setUp(self):
+        super(StackResourceAttrTest, self).setUp()
+        resource._register_class('some_magic_type',
+                                 MyStackResource)
+        ws_resname = "provider_resource"
+        t = templatem.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12',
+             'Resources': {ws_resname: ws_res_snippet}})
+        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                         t, stack_id=str(uuid.uuid4()),
+                                         user_creds_id='uc123',
+                                         stack_user_project_id='aprojectid')
+        resource_defns = t.resource_definitions(self.parent_stack)
+        self.parent_resource = MyStackResource('test',
+                                               resource_defns[ws_resname],
+                                               self.parent_stack)
+
     def test_get_output_ok(self):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')

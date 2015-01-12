@@ -373,6 +373,15 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertIsNone(resgrp.validate())
 
+    def _create_dummy_stack(self, template_data=template, expect_count=2):
+        stack = utils.parse_stack(template_data)
+        resg = stack['group1']
+        scheduler.TaskRunner(resg.create)()
+        self.stack = resg.nested()
+        self.assertEqual(expect_count, len(resg.nested()))
+        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
+        return resg
+
     def test_zero_resources(self):
         noresources = copy.deepcopy(template)
         noresources['resources']['group1']['properties']['count'] = 0
@@ -637,6 +646,33 @@ class ResourceGroupTest(common.HeatTestCase):
         errstr = '"notallowed" is not a map'
         self.assertIn(errstr, six.text_type(exc))
 
+    def test_child_template(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        resgrp._assemble_nested = mock.Mock(return_value='tmpl')
+        resgrp.properties.data[resgrp.COUNT] = 2
+
+        self.assertEqual('tmpl', resgrp.child_template())
+        resgrp._assemble_nested.assert_called_once_with(['0', '1'])
+
+    def test_child_params(self):
+        stack = utils.parse_stack(template2)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        self.assertEqual({}, resgrp.child_params())
+
+
+class ResourceGroupAttrTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(ResourceGroupAttrTest, self).setUp()
+        resource._register_class("dummy.resource",
+                                 ResourceWithPropsAndId)
+        AttributeResource = generic_resource.ResourceWithComplexAttributes
+        resource._register_class("dummyattr.resource",
+                                 AttributeResource)
+
     def test_aggregate_attribs(self):
         """
         Test attribute aggregation and that we mimic the nested resource's
@@ -734,22 +770,6 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(expect_count, len(resg.nested()))
         self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
         return resg
-
-    def test_child_template(self):
-        stack = utils.parse_stack(template2)
-        snip = stack.t.resource_definitions(stack)['group1']
-        resgrp = resource_group.ResourceGroup('test', snip, stack)
-        resgrp._assemble_nested = mock.Mock(return_value='tmpl')
-        resgrp.properties.data[resgrp.COUNT] = 2
-
-        self.assertEqual('tmpl', resgrp.child_template())
-        resgrp._assemble_nested.assert_called_once_with(['0', '1'])
-
-    def test_child_params(self):
-        stack = utils.parse_stack(template2)
-        snip = stack.t.resource_definitions(stack)['group1']
-        resgrp = resource_group.ResourceGroup('test', snip, stack)
-        self.assertEqual({}, resgrp.child_params())
 
     def test_adopt(self):
         tmpl = templatem.Template(template)
