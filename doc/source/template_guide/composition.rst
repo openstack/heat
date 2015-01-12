@@ -141,10 +141,10 @@ accessable as follows:
 
 
 Making your template resource more "transparent"
-------------------------------------------------
+================================================
 If you wish to be able to return the ID of one of the inner resources
-instead of the nested stack's ARN, you can add the following special
-output to your template resource.
+instead of the nested stack's identifier, you can add the special reserved
+output "OS::stack_id" to your template resource.
 
 .. code-block:: yaml
 
@@ -156,5 +156,5 @@ output to your template resource.
     OS::stack_id:
       value: {get_resource: server}
 
-Now when you use "get_resource" or "get_attr" from the outer template heat
-will use nova server and not the template resource.
+Now when you use "get_resource" from the outer template heat
+will use the nova server id and not the template resource identifier.
