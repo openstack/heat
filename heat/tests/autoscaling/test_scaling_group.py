@@ -346,3 +346,20 @@ class TestGroupCrud(common.HeatTestCase):
         self.group.adjust.assert_called_once_with(
             6, adjustment_type='ExactCapacity')
         self.group._try_rolling_update.assert_called_once_with(props)
+
+    def test_conf_properties_vpc_zone(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['VPCZoneIdentifier'] = ['xxxx']
+
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        # create the launch configuration resource
+        conf = stack['LaunchConfig']
+        self.assertIsNone(conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        group = stack['WebServerGroup']
+        config, props = group._get_conf_properties()
+        self.assertEqual('xxxx', props['SubnetId'])
+        conf.delete()
