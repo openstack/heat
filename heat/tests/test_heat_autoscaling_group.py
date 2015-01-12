@@ -11,11 +11,9 @@
 #    under the License.
 
 import copy
-import datetime
 import itertools
 
 from oslo.config import cfg
-from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.common import grouputils
@@ -201,99 +199,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertRaises(exception.Error, rsrc.adjust, 1)
         self.assertEqual(1, grouputils.get_size(rsrc))
 
-    def test_min_min_size(self):
-        self.parsed['resources']['my-group']['properties']['min_size'] = -1
-        stack = utils.parse_stack(self.parsed)
-        self.assertRaises(exception.StackValidationFailed,
-                          stack['my-group'].validate)
-
-    def test_min_max_size(self):
-        self.parsed['resources']['my-group']['properties']['max_size'] = -1
-        stack = utils.parse_stack(self.parsed)
-        self.assertRaises(exception.StackValidationFailed,
-                          stack['my-group'].validate)
-
-    def test_output_attribute_list(self):
-        rsrc = self.create_stack(self.parsed)['my-group']
-        member_names = rsrc.nested().resources.keys()
-        self.assertEqual(member_names, rsrc.FnGetAtt('outputs_list', 'Bar'))
-
-    def test_output_attribute_dict(self):
-        rsrc = self.create_stack(self.parsed)['my-group']
-        member_names = rsrc.nested().resources.keys()
-        self.assertEqual(dict((n, n) for n in member_names),
-                         rsrc.FnGetAtt('outputs', 'Bar'))
-
-    def test_attribute_current_size(self):
-        rsrc = self.create_stack(self.parsed)['my-group']
-        mock_instances = self.patchobject(grouputils, 'get_size')
-        mock_instances.return_value = 3
-
-        self.assertEqual(3, rsrc.FnGetAtt('current_size'))
-
-    def test_attribute_current_size_with_path(self):
-        rsrc = self.create_stack(self.parsed)['my-group']
-        mock_instances = self.patchobject(grouputils, 'get_size')
-        mock_instances.return_value = 4
-        self.assertEqual(4, rsrc.FnGetAtt('current_size', 'name'))
-
-
-class HeatScalingGroupWithCFNScalingPolicyTest(common.HeatTestCase):
-    as_template = '''
-        heat_template_version: 2013-05-23
-        description: AutoScaling Test
-        resources:
-          my-group:
-            properties:
-              max_size: 5
-              min_size: 1
-              resource:
-                type: ResourceWithProps
-                properties:
-                    Foo: hello
-            type: OS::Heat::AutoScalingGroup
-          scale-up:
-            type: AWS::AutoScaling::ScalingPolicy
-            properties:
-              AutoScalingGroupName: {get_resource: my-group}
-              ScalingAdjustment: 1
-              AdjustmentType: ChangeInCapacity
-              Cooldown: 60
-    '''
-
-    def setUp(self):
-        super(HeatScalingGroupWithCFNScalingPolicyTest, self).setUp()
-        resource._register_class('ResourceWithProps',
-                                 generic_resource.ResourceWithProps)
-        cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
-        self.parsed = template_format.parse(self.as_template)
-
-    def create_stack(self, t):
-        stack = utils.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
-        return stack
-
-    def test_scale_up(self):
-        stack = self.create_stack(self.parsed)
-        scale_up = stack['scale-up']
-        group = stack['my-group']
-        self.assertEqual(1, grouputils.get_size(group))
-        scale_up.signal()
-        self.assertEqual(2, grouputils.get_size(group))
-
-    def test_no_instance_list(self):
-        """
-        The InstanceList attribute is not inherited from
-        AutoScalingResourceGroup's superclasses.
-        """
-        stack = self.create_stack(self.parsed)
-        group = stack['my-group']
-        self.assertRaises(exception.InvalidTemplateAttribute,
-                          group.FnGetAtt, 'InstanceList')
-
 
 class ScalingPolicyTest(common.HeatTestCase):
     # TODO(Qiming): Add more tests to the scaling policy
@@ -329,41 +234,6 @@ class ScalingPolicyTest(common.HeatTestCase):
         stack.create()
         policy = stack['my-policy']
         self.assertIn("my-policy", policy.FnGetAtt('alarm_url'))
-
-    def test_signal(self):
-        stack = utils.parse_stack(self.parsed)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
-        policy = stack['my-policy']
-        group = stack['my-group']
-
-        self.assertEqual("1234", policy.FnGetRefId())
-
-        self.assertEqual(1, grouputils.get_size(group))
-        policy.signal()
-        self.assertEqual(2, grouputils.get_size(group))
-
-    def test_signal_with_cooldown(self):
-        self.parsed['resources']['my-policy']['properties']['cooldown'] = 60
-        stack = utils.parse_stack(self.parsed)
-        stack.create()
-        policy = stack['my-policy']
-        group = stack['my-group']
-
-        self.assertEqual(1, grouputils.get_size(group))
-        policy.signal()
-        self.assertEqual(2, grouputils.get_size(group))
-        policy.signal()
-        # The second signal shouldn't have changed it because of cooldown
-        self.assertEqual(2, grouputils.get_size(group))
-
-        past = timeutils.strtime(timeutils.utcnow() -
-                                 datetime.timedelta(seconds=65))
-        policy.metadata_set({past: 'ChangeInCapacity : 1'})
-
-        policy.signal()
-
-        self.assertEqual(3, grouputils.get_size(group))
 
 
 class RollingUpdatesTest(common.HeatTestCase):

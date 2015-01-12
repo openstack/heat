@@ -76,3 +76,18 @@ as_template = '''
   }
 }
 '''
+
+as_heat_template = '''
+    heat_template_version: 2013-05-23
+    description: AutoScaling Test
+    resources:
+      my-group:
+        type: OS::Heat::AutoScalingGroup
+        properties:
+          max_size: 5
+          min_size: 1
+          resource:
+            type: ResourceWithPropsAndAttrs
+            properties:
+                Foo: hello
+    '''
