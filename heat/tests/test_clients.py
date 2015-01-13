@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from ceilometerclient import exc as ceil_exc
 from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
@@ -27,6 +29,7 @@ import mock
 from oslo.config import cfg
 from testtools import testcase
 
+from heat.common import exception
 from heat.engine import clients
 from heat.engine.clients import client_plugin
 from heat.tests import common
@@ -35,6 +38,18 @@ from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class ClientsTest(common.HeatTestCase):
+
+    def test_bad_cloud_backend(self):
+        con = mock.Mock()
+        cfg.CONF.set_override('cloud_backend', 'some.weird.object')
+        exc = self.assertRaises(exception.Invalid, clients.Clients, con)
+        self.assertIn('Invalid cloud_backend setting in heat.conf detected',
+                      six.text_type(exc))
+
+        cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients')
+        exc = self.assertRaises(exception.Invalid, clients.Clients, con)
+        self.assertIn('Invalid cloud_backend setting in heat.conf detected',
+                      six.text_type(exc))
 
     def test_clients_get_heat_url(self):
         con = mock.Mock()
