@@ -175,8 +175,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
-        templ = template_format.parse(lb.lb_template_default)
-        ha_cfg = rsrc._haproxy_config(templ, rsrc.properties['Instances'])
+        ha_cfg = rsrc._haproxy_config(rsrc.properties['Instances'])
 
         self.assertRegexpMatches(ha_cfg, 'bind \*:80')
         self.assertRegexpMatches(ha_cfg, 'server server1 1\.2\.3\.4:80 '

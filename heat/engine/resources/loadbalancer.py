@@ -370,7 +370,7 @@ class LoadBalancer(stack_resource.StackResource):
         ),
     }
 
-    def _haproxy_config(self, templ, instances):
+    def _haproxy_config(self, instances):
         # initial simplifications:
         # - only one Listener
         # - only http (no tcp or ssl)
@@ -472,7 +472,7 @@ class LoadBalancer(stack_resource.StackResource):
         if self.properties[self.INSTANCES]:
             md = templ['Resources']['LB_instance']['Metadata']
             files = md['AWS::CloudFormation::Init']['config']['files']
-            cfg = self._haproxy_config(templ, self.properties[self.INSTANCES])
+            cfg = self._haproxy_config(self.properties[self.INSTANCES])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
         return self.create_with_template(templ, params)
@@ -494,8 +494,7 @@ class LoadBalancer(stack_resource.StackResource):
         if (self.INSTANCES in prop_diff and
                 (self.properties[self.INSTANCES] is not None or
                  new_props[self.INSTANCES] is not None)):
-            templ = self.get_parsed_template()
-            cfg = self._haproxy_config(templ, prop_diff[self.INSTANCES])
+            cfg = self._haproxy_config(prop_diff[self.INSTANCES])
 
             md = self.nested()['LB_instance'].metadata_get()
             files = md['AWS::CloudFormation::Init']['config']['files']
