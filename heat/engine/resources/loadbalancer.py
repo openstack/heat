@@ -370,56 +370,59 @@ class LoadBalancer(stack_resource.StackResource):
         ),
     }
 
-    def _haproxy_config(self, instances):
-        # initial simplifications:
-        # - only one Listener
-        # - only http (no tcp or ssl)
-        #
-        # option httpchk HEAD /check.txt HTTP/1.0
-        gl = '''
-    global
-        daemon
-        maxconn 256
-        stats socket /tmp/.haproxy-stats
+    def _haproxy_config_global(self):
+        return '''
+global
+    daemon
+    maxconn 256
+    stats socket /tmp/.haproxy-stats
 
-    defaults
-        mode http
-        timeout connect 5000ms
-        timeout client 50000ms
-        timeout server 50000ms
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
 '''
 
+    def _haproxy_config_frontend(self):
         listener = self.properties[self.LISTENERS][0]
         lb_port = listener[self.LISTENER_LOAD_BALANCER_PORT]
-        inst_port = listener[self.LISTENER_INSTANCE_PORT]
-        spaces = '            '
-        frontend = '''
-        frontend http
-            bind *:%s
+        return '''
+frontend http
+    bind *:%s
+    default_backend servers
 ''' % (lb_port)
 
+    def _haproxy_config_backend(self):
         health_chk = self.properties[self.HEALTH_CHECK]
         if health_chk:
-            check = 'check inter %ss fall %s rise %s' % (
+            timeout = int(health_chk[self.HEALTH_CHECK_TIMEOUT])
+            timeout_check = 'timeout check %ds' % timeout
+            spaces = '    '
+        else:
+            timeout_check = ''
+            spaces = ''
+
+        return '''
+backend servers
+    balance roundrobin
+    option http-server-close
+    option forwardfor
+    option httpchk
+%s%s
+''' % (spaces, timeout_check)
+
+    def _haproxy_config_servers(self, instances):
+        listener = self.properties[self.LISTENERS][0]
+        inst_port = listener[self.LISTENER_INSTANCE_PORT]
+        spaces = '    '
+        check = ''
+        health_chk = self.properties[self.HEALTH_CHECK]
+        if health_chk:
+            check = ' check inter %ss fall %s rise %s' % (
                     health_chk[self.HEALTH_CHECK_INTERVAL],
                     health_chk[self.HEALTH_CHECK_UNHEALTHY_THRESHOLD],
                     health_chk[self.HEALTH_CHECK_HEALTHY_THRESHOLD])
-            timeout = int(health_chk[self.HEALTH_CHECK_TIMEOUT])
-            timeout_check = 'timeout check %ds' % timeout
-        else:
-            check = ''
-            timeout_check = ''
-
-        backend = '''
-        default_backend servers
-
-        backend servers
-            balance roundrobin
-            option http-server-close
-            option forwardfor
-            option httpchk
-            %s
-''' % timeout_check
 
         servers = []
         n = 1
@@ -427,12 +430,22 @@ class LoadBalancer(stack_resource.StackResource):
         for i in instances or []:
             ip = nova_cp.server_to_ipaddress(i) or '0.0.0.0'
             LOG.debug('haproxy server:%s' % ip)
-            servers.append('%sserver server%d %s:%s %s' % (spaces, n,
-                                                           ip, inst_port,
-                                                           check))
+            servers.append('%sserver server%d %s:%s%s' % (spaces, n,
+                                                          ip, inst_port,
+                                                          check))
             n = n + 1
+        return '\n'.join(servers)
 
-        return '%s%s%s%s\n' % (gl, frontend, backend, '\n'.join(servers))
+    def _haproxy_config(self, instances):
+        # initial simplifications:
+        # - only one Listener
+        # - only http (no tcp or ssl)
+        #
+        # option httpchk HEAD /check.txt HTTP/1.0
+        return '%s%s%s%s\n' % (self._haproxy_config_global(),
+                               self._haproxy_config_frontend(),
+                               self._haproxy_config_backend(),
+                               self._haproxy_config_servers(instances))
 
     def get_parsed_template(self):
         if cfg.CONF.loadbalancer_template:
