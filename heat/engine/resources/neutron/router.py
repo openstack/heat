@@ -24,10 +24,10 @@ class Router(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
-        L3_AGENT_ID,
+        L3_AGENT_ID, DISTRIBUTED,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
-        'l3_agent_id',
+        'l3_agent_id', 'distributed',
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -89,6 +89,15 @@ class Router(neutron.NeutronResource):
               'users only.'),
             update_allowed=True
         ),
+        DISTRIBUTED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Indicates whether or not to create a distributed router. '
+              'NOTE: The default policy setting in Neutron restricts usage '
+              'of this property to administrative users only. And do not '
+              'specific L3 agent ID when creating a distributed router.'),
+            default=False,
+            support_status=support.SupportStatus(version='2015.1')
+        ),
     }
 
     attributes_schema = {
@@ -111,6 +120,15 @@ class Router(neutron.NeutronResource):
             _("All attributes.")
         ),
     }
+
+    def validate(self):
+        super(Router, self).validate()
+        is_distributed = self.properties.get(self.DISTRIBUTED)
+        l3_agent_id = self.properties.get(self.L3_AGENT_ID)
+        # do not specific l3_agent_id when creating a distributed router
+        if is_distributed and l3_agent_id:
+            raise exception.ResourcePropertyConflict(self.DISTRIBUTED,
+                                                     self.L3_AGENT_ID)
 
     def add_dependencies(self, deps):
         super(Router, self).add_dependencies(deps)
