@@ -14,7 +14,7 @@
 import mock
 import os
 from oslo.config import cfg
-from oslo.middleware import request_id
+from oslo_middleware import request_id
 import webob
 
 from heat.common import context
