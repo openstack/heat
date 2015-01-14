@@ -27,8 +27,7 @@ class InstanceGroupTest(test.HeatIntegrationTest):
   "Parameters" : {"size": {"Type": "String", "Default": "1"},
                   "AZ": {"Type": "String", "Default": "nova"},
                   "image": {"Type": "String"},
-                  "flavor": {"Type": "String"},
-                  "keyname": {"Type": "String"}},
+                  "flavor": {"Type": "String"}},
   "Resources": {
     "JobServerGroup": {
       "Type": "OS::Heat::InstanceGroup",
@@ -45,7 +44,6 @@ class InstanceGroupTest(test.HeatIntegrationTest):
       "Properties": {
         "ImageId"           : {"Ref": "image"},
         "InstanceType"      : {"Ref": "flavor"},
-        "KeyName"           : {"Ref": "keyname"},
         "SecurityGroups"    : [ "sg-1" ],
         "UserData"          : "jsconfig data"
       }
@@ -63,7 +61,6 @@ heat_template_version: 2013-05-23
 parameters:
   ImageId: {type: string}
   InstanceType: {type: string}
-  KeyName: {type: string}
   SecurityGroups: {type: comma_delimited_list}
   UserData: {type: string}
   Tags: {type: comma_delimited_list}
@@ -83,7 +80,6 @@ heat_template_version: 2013-05-23
 parameters:
   ImageId: {type: string}
   InstanceType: {type: string}
-  KeyName: {type: string}
   SecurityGroups: {type: comma_delimited_list}
   UserData: {type: string}
   Tags: {type: comma_delimited_list}
@@ -109,8 +105,6 @@ outputs:
         self.client = self.orchestration_client
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")
-        if not self.conf.keypair_name:
-            raise self.skipException("No keyname configured to test")
         if not self.conf.instance_type:
             raise self.skipException("No flavor configured to test")
 
@@ -151,7 +145,6 @@ outputs:
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 4,
                               'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
         stack_identifier = self.stack_create(template=self.template,
                                              files=files, environment=env)
@@ -169,7 +162,6 @@ outputs:
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
                               'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
@@ -182,7 +174,6 @@ outputs:
         env2 = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                 'parameters': {'size': 5,
                                'image': self.conf.image_ref,
-                               'keyname': self.conf.keypair_name,
                                'flavor': self.conf.instance_type}}
         self.update_stack(stack_identifier, self.template,
                           environment=env2, files=files)
@@ -199,7 +190,6 @@ outputs:
                {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 1,
                               'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
@@ -213,7 +203,6 @@ outputs:
                 'parameters': {'size': '2',
                                'AZ': 'wibble',
                                'image': self.conf.image_ref,
-                               'keyname': self.conf.keypair_name,
                                'flavor': self.conf.instance_type}}
         self.update_stack(stack_identifier, self.template,
                           environment=env2, files=files)
@@ -231,7 +220,6 @@ outputs:
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
                               'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
 
         self.client.stacks.create(
@@ -264,7 +252,6 @@ outputs:
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
                               'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
