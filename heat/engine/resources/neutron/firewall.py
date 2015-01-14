@@ -281,9 +281,10 @@ class FirewallRule(neutron.NeutronResource):
             properties.Schema.STRING,
             _('Protocol for the firewall rule.'),
             constraints=[
-                constraints.AllowedValues(['tcp', 'udp', 'icmp', None]),
+                constraints.AllowedValues(['tcp', 'udp', 'icmp', 'any']),
             ],
-            update_allowed=True
+            default='any',
+            update_allowed=True,
         ),
         IP_VERSION: properties.Schema(
             properties.Schema.STRING,
@@ -385,12 +386,16 @@ class FirewallRule(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        if props.get(self.PROTOCOL) == 'any':
+            props[self.PROTOCOL] = None
         firewall_rule = self.neutron().create_firewall_rule(
             {'firewall_rule': props})['firewall_rule']
         self.resource_id_set(firewall_rule['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
+            if prop_diff.get(self.PROTOCOL) == 'any':
+                prop_diff[self.PROTOCOL] = None
             self.neutron().update_firewall_rule(
                 self.resource_id, {'firewall_rule': prop_diff})
 

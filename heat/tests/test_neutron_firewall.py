@@ -371,6 +371,31 @@ class FirewallRuleTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
+    def test_validate_failed_with_string_None_protocol(self):
+        snippet = template_format.parse(firewall_rule_template)
+        stack = utils.parse_stack(snippet)
+        rsrc = stack['firewall_rule']
+        rsrc.t['Properties']['protocol'] = 'None'
+        self.assertRaises(exception.StackValidationFailed, rsrc.validate)
+
+    def test_create_with_protocol_any(self):
+        neutronclient.Client.create_firewall_rule({
+            'firewall_rule': {
+                'name': 'test-firewall-rule', 'shared': True,
+                'action': 'allow', 'protocol': None, 'enabled': True,
+                'ip_version': "4"}}
+        ).AndReturn({'firewall_rule': {'id': '5678'}})
+        self.m.ReplayAll()
+
+        snippet = template_format.parse(firewall_rule_template)
+        stack = utils.parse_stack(snippet)
+        rsrc = stack['firewall_rule']
+        rsrc.t['Properties']['protocol'] = 'any'
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
     def test_create_failed(self):
         neutronclient.Client.create_firewall_rule({
             'firewall_rule': {
@@ -465,4 +490,16 @@ class FirewallRuleTest(common.HeatTestCase):
         update_template['Properties']['protocol'] = 'icmp'
         scheduler.TaskRunner(rsrc.update, update_template)()
 
+        self.m.VerifyAll()
+
+    def test_update_protocol_to_any(self):
+        rsrc = self.create_firewall_rule()
+        neutronclient.Client.update_firewall_rule(
+            '5678', {'firewall_rule': {'protocol': None}})
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        # update to 'any' protocol
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['protocol'] = 'any'
+        scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
