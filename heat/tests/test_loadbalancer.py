@@ -156,8 +156,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
 
-        self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
-
         id_list = []
         resource_defns = s.t.resource_definitions(s)
         for inst_name in ['WikiServerOne1', 'WikiServerOne2']:
@@ -172,12 +170,6 @@ class LoadBalancerTest(common.HeatTestCase):
         update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                    props)
         rsrc.handle_update(update_defn, {}, prop_diff)
-
-        self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
-        self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroup.GroupName'))
-
-        self.assertRaises(exception.InvalidTemplateAttribute,
-                          rsrc.FnGetAtt, 'Foo')
 
         self.assertIsNone(rsrc.handle_update(rsrc.t, {}, {}))
 
@@ -237,6 +229,30 @@ class LoadBalancerTest(common.HeatTestCase):
         resource_name = 'LoadBalancer'
         lb_defn = stack.t.resource_definitions(stack)[resource_name]
         return lb.LoadBalancer(resource_name, lb_defn, stack)
+
+    def test_loadbalancer_refid(self):
+        rsrc = self.setup_loadbalancer()
+        rsrc.resource_id = mock.Mock(return_value='not-this')
+        self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
+
+    def test_loadbalancer_attr_dnsname(self):
+        rsrc = self.setup_loadbalancer()
+        rsrc.get_output = mock.Mock(return_value='1.3.5.7')
+        self.assertEqual('1.3.5.7', rsrc.FnGetAtt('DNSName'))
+        rsrc.get_output.assert_called_once_with('PublicIp')
+
+    def test_loadbalancer_attr_not_supported(self):
+        rsrc = self.setup_loadbalancer()
+        for attr in ['CanonicalHostedZoneName',
+                     'CanonicalHostedZoneNameID',
+                     'SourceSecurityGroup.GroupName',
+                     'SourceSecurityGroup.OwnerAlias']:
+            self.assertEqual('', rsrc.FnGetAtt(attr))
+
+    def test_loadbalancer_attr_invalid(self):
+        rsrc = self.setup_loadbalancer()
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          rsrc.FnGetAtt, 'Foo')
 
     def test_child_params_without_key_name(self):
         rsrc = self.setup_loadbalancer(False)
