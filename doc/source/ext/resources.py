@@ -237,6 +237,14 @@ Resources:
             note = nodes.note('', para)
             definition.append(note)
 
+        if (prop.support_status.status == support.SUPPORTED and
+            prop.support_status.version is not None):
+            tag = prop.support_status.version.title()
+            message = (_('Available since %s.') % self._version_str(tag))
+            para = nodes.paragraph('', message)
+            note = nodes.note('', para)
+            definition.append(note)
+
         if not prop.implemented:
             para = nodes.paragraph('', _('Not implemented.'))
             note = nodes.note('', para)
