@@ -71,7 +71,8 @@ class Port(neutron.NeutronResource):
 
         NETWORK: properties.Schema(
             properties.Schema.STRING,
-            _('Network this port belongs to.')
+            _('Network this port belongs to.'),
+            support_status=support.SupportStatus(version='2014.2')
         ),
 
         NAME: properties.Schema(
@@ -107,7 +108,8 @@ class Port(neutron.NeutronResource):
                     FIXED_IP_SUBNET: properties.Schema(
                         properties.Schema.STRING,
                         _('Subnet in which to allocate the IP address for '
-                          'this port.')
+                          'this port.'),
+                        support_status=support.SupportStatus(version='2014.2')
                     ),
                     FIXED_IP_IP_ADDRESS: properties.Schema(
                         properties.Schema.STRING,

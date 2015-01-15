@@ -49,7 +49,8 @@ class FloatingIP(neutron.NeutronResource):
         FLOATING_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Network to allocate floating IP from.'),
-            required=False
+            required=False,
+            support_status=support.SupportStatus(version='2014.2')
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,

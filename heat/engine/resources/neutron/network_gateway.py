@@ -104,7 +104,8 @@ class NetworkGateway(neutron.NeutronResource):
                         description=_(
                             'The internal network to connect on '
                             'the network gateway.'),
-                        required=False
+                        required=False,
+                        support_status=support.SupportStatus(version='2014.2')
                     ),
                     SEGMENTATION_TYPE: properties.Schema(
                         properties.Schema.STRING,
