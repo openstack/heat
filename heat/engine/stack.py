@@ -835,9 +835,10 @@ class Stack(collections.Mapping):
                 # created and failed, so put into the backup_stack to delete
                 # anyway.
                 backup_resource_id = backup_resource.resource_id
-                current_resource = self.resources[key]
-                current_resource_id = current_resource.resource_id
-                if backup_resource_id:
+                current_resource = self.resources.get(key)
+                if (backup_resource_id is not None and
+                        current_resource is not None):
+                    current_resource_id = current_resource.resource_id
                     if (any(failed(child) for child in
                             self.dependencies[current_resource]) or
                             current_resource.status in
