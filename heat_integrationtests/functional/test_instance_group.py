@@ -10,11 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import logging
-import yaml
-
-from heatclient import exc
 
 from heat_integrationtests.common import test
 
@@ -167,31 +163,6 @@ outputs:
 
         stack = self.client.stacks.get(stack_identifier)
         self.assert_instance_count(stack, 4)
-
-    def test_create_config_prop_validation(self):
-        """Make sure that during a group create the instance
-        properties are validated. And an error causes the group to fail.
-        """
-        stack_name = self._stack_rand_name()
-
-        # add a property without a default and don't provide a value.
-        # we use this to make the instance fail on a property validation
-        # error.
-        broken = yaml.load(copy.copy(self.instance_template))
-        broken['parameters']['no_default'] = {'type': 'string'}
-        files = {'provider.yaml': yaml.dump(broken)}
-        env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
-               'parameters': {'size': 4,
-                              'image': self.conf.image_ref,
-                              'keyname': self.conf.keypair_name,
-                              'flavor': self.conf.instance_type}}
-
-        # now with static nested stack validation, this gets raised quickly.
-        excp = self.assertRaises(exc.HTTPBadRequest, self.client.stacks.create,
-                                 stack_name=stack_name, template=self.template,
-                                 files=files, disable_rollback=True,
-                                 parameters={}, environment=env)
-        self.assertIn('Property no_default not assigned', str(excp))
 
     def test_size_updates_work(self):
         files = {'provider.yaml': self.instance_template}
