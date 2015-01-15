@@ -67,7 +67,8 @@ class VPNService(neutron.NeutronResource):
         SUBNET: properties.Schema(
             properties.Schema.STRING,
             _('Subnet in which the vpn service will be created.'),
-            required=False
+            required=False,
+            support_status=support.SupportStatus(version='2014.2')
         ),
         ROUTER_ID: properties.Schema(
             properties.Schema.STRING,

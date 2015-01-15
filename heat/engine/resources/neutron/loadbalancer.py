@@ -222,7 +222,8 @@ class Pool(neutron.NeutronResource):
             properties.Schema.STRING,
             _('The subnet for the port on which the members '
               'of the pool will be connected.'),
-            required=False
+            required=False,
+            support_status=support.SupportStatus(version='2014.2')
         ),
         LB_METHOD: properties.Schema(
             properties.Schema.STRING,
