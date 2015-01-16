@@ -10,8 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 from heatclient import exc
 import six
+import yaml
 
 from heat_integrationtests.common import test
 
@@ -128,7 +131,7 @@ resources:
             return output_value
         # verify that the resources in resource group are identically
         # configured, resource names and outputs are appropriate.
-        stack_identifier = self.stack_create('create_stack', template=template)
+        stack_identifier = self.stack_create(template=template)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
@@ -144,7 +147,7 @@ resources:
 
     def test_update_increase_decrease_count(self):
         # create stack with resource group count 2
-        stack_identifier = self.stack_create('update_stack', template=template)
+        stack_identifier = self.stack_create(template=template)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
         # verify that the resource group has 2 resources
@@ -161,3 +164,74 @@ resources:
         self.update_stack(stack_identifier, update_template)
         # verify that the resource group has 3 resources
         self._validate_resources(stack_identifier, 3)
+
+
+class ResourceGroupAdoptTest(test.HeatIntegrationTest):
+    """Prove that we can do resource group adopt."""
+
+    main_template = '''
+heat_template_version: "2013-05-23"
+resources:
+  group1:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: 2
+      resource_def:
+        type: OS::Heat::RandomString
+outputs:
+  test0:
+    value: {get_attr: [group1, resource.0.value]}
+  test1:
+    value: {get_attr: [group1, resource.1.value]}
+'''
+
+    def setUp(self):
+        super(ResourceGroupAdoptTest, self).setUp()
+        self.client = self.orchestration_client
+
+    def _yaml_to_json(self, yaml_templ):
+        return yaml.load(yaml_templ)
+
+    def test_adopt(self):
+        data = {
+            "resources": {
+                "group1": {
+                    "status": "COMPLETE",
+                    "name": "group1",
+                    "resource_data": {},
+                    "metadata": {},
+                    "resource_id": "test-group1-id",
+                    "action": "CREATE",
+                    "type": "OS::Heat::ResourceGroup",
+                    "resources": {
+                        "0": {
+                            "status": "COMPLETE",
+                            "name": "0",
+                            "resource_data": {"value": "goopie"},
+                            "resource_id": "ID-0",
+                            "action": "CREATE",
+                            "type": "OS::Heat::RandomString",
+                            "metadata": {}
+                        },
+                        "1": {
+                            "status": "COMPLETE",
+                            "name": "1",
+                            "resource_data": {"value": "different"},
+                            "resource_id": "ID-1",
+                            "action": "CREATE",
+                            "type": "OS::Heat::RandomString",
+                            "metadata": {}
+                        }
+                    }
+                }
+            },
+            "environment": {"parameters": {}},
+            "template": yaml.load(self.main_template)
+        }
+        stack_identifier = self.stack_adopt(
+            adopt_data=json.dumps(data))
+
+        self.assert_resource_is_a_stack(stack_identifier, 'group1')
+        stack = self.client.stacks.get(stack_identifier)
+        self.assertEqual('goopie', self._stack_output(stack, 'test0'))
+        self.assertEqual('different', self._stack_output(stack, 'test1'))
