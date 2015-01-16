@@ -218,7 +218,7 @@ class Subnet(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
     def _show_resource(self):
         return self.neutron().show_subnet(self.resource_id)['subnet']

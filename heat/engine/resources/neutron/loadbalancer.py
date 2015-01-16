@@ -162,7 +162,7 @@ class HealthMonitor(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class Pool(neutron.NeutronResource):
@@ -468,6 +468,15 @@ class Pool(neutron.NeutronResource):
                 self.client_plugin().ignore_not_found(ex)
                 break
 
+    def _confirm_delete(self):
+        while True:
+            try:
+                yield
+                self._show_resource()
+            except Exception as ex:
+                self.client_plugin().ignore_not_found(ex)
+                return
+
     def handle_delete(self):
         checkers = []
         if self.metadata_get():
@@ -613,7 +622,7 @@ class PoolMember(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class LoadBalancer(resource.Resource):
@@ -699,6 +708,8 @@ class LoadBalancer(resource.Resource):
 
     def handle_delete(self):
         client = self.neutron()
+        # FIXME(pshchelo): this deletes members in a tight loop,
+        # so is prone to OverLimit bug similar to LP 1265937
         for member, member_id in self.data().items():
             try:
                 client.delete_member(member_id)

@@ -310,7 +310,7 @@ class Port(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
     def _resolve_attribute(self, name):
         if name == self.SUBNETS_ATTR:
