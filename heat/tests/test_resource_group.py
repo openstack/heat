@@ -381,43 +381,6 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
         return resg
 
-    def test_zero_resources(self):
-        noresources = copy.deepcopy(template)
-        noresources['resources']['group1']['properties']['count'] = 0
-        resg = self._create_dummy_stack(noresources, expect_count=0)
-        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
-
-    def test_delete(self):
-        """Test basic delete."""
-        resg = self._create_dummy_stack()
-        self.assertIsNotNone(resg.nested())
-        scheduler.TaskRunner(resg.delete)()
-        self.assertEqual((resg.DELETE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual((resg.DELETE, resg.COMPLETE), resg.state)
-
-    def test_update(self):
-        """Test basic update."""
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-        old_snip = copy.deepcopy(resg.t)
-        new_snip = copy.deepcopy(resg.t)
-        new_snip['Properties']['count'] = 3
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(3, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1', '2'], sorted(resource_names))
-        scheduler.TaskRunner(resg.update, old_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-
     def test_props_update(self):
         """Test update of resource_def properties."""
         resg = self._create_dummy_stack()

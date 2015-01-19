@@ -19,15 +19,16 @@ import yaml
 from heat_integrationtests.common import test
 
 
-template = '''
+class ResourceGroupTest(test.HeatIntegrationTest):
+    template = '''
 heat_template_version: 2013-05-23
 resources:
   random_group:
     type: OS::Heat::ResourceGroup
     properties:
-      count: 2
+      count: 0
       resource_def:
-        type: OS::Heat::RandomString
+        type: My::RandomString
         properties:
           length: 30
 outputs:
@@ -38,9 +39,6 @@ outputs:
   all_values:
     value: {get_attr: [random_group, value]}
 '''
-
-
-class ResourceGroupTest(test.HeatIntegrationTest):
 
     def setUp(self):
         super(ResourceGroupTest, self).setUp()
@@ -66,29 +64,22 @@ class ResourceGroupTest(test.HeatIntegrationTest):
         # e.g images etc in the nested schema.
         nested_template_fail = '''
 heat_template_version: 2013-05-23
+parameters:
+  length:
+    type: string
+    default: 50
 resources:
   random:
     type: OS::Heat::RandomString
     properties:
-        length: BAD
-'''
-
-        template_zero_nested = '''
-heat_template_version: 2013-05-23
-resources:
-  random_group:
-    type: OS::Heat::ResourceGroup
-    properties:
-      count: 0
-      resource_def:
-        type: My::RandomString
+      length: BAD
 '''
 
         files = {'provider.yaml': nested_template_fail}
         env = {'resource_registry':
                {'My::RandomString': 'provider.yaml'}}
         stack_identifier = self.stack_create(
-            template=template_zero_nested,
+            template=self.template,
             files=files,
             environment=env
         )
@@ -101,8 +92,7 @@ resources:
         self.assertEqual({}, self.list_resources(nested_identifier))
 
         # Prove validation works for non-zero create/update
-        template_two_nested = template_zero_nested.replace("count: 0",
-                                                           "count: 2")
+        template_two_nested = self.template.replace("count: 0", "count: 2")
         expected_err = "length Value 'BAD' is not an integer"
         ex = self.assertRaises(exc.HTTPBadRequest, self.update_stack,
                                stack_identifier, template_two_nested,
@@ -119,7 +109,7 @@ resources:
         resources = self.list_resources(nested_identifier)
         self.assertEqual(expected_count, len(resources))
         expected_resources = dict(
-            (str(idx), 'OS::Heat::RandomString')
+            (str(idx), 'My::RandomString')
             for idx in range(expected_count))
 
         self.assertEqual(expected_resources, resources)
@@ -131,7 +121,11 @@ resources:
             return output_value
         # verify that the resources in resource group are identically
         # configured, resource names and outputs are appropriate.
-        stack_identifier = self.stack_create(template=template)
+        env = {'resource_registry':
+               {'My::RandomString': 'OS::Heat::RandomString'}}
+        create_template = self.template.replace("count: 0", "count: 2")
+        stack_identifier = self.stack_create(template=create_template,
+                                             environment=env)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
@@ -147,21 +141,25 @@ resources:
 
     def test_update_increase_decrease_count(self):
         # create stack with resource group count 2
-        stack_identifier = self.stack_create(template=template)
+        env = {'resource_registry':
+               {'My::RandomString': 'OS::Heat::RandomString'}}
+        create_template = self.template.replace("count: 0", "count: 2")
+        stack_identifier = self.stack_create(template=create_template,
+                                             environment=env)
         self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
         # verify that the resource group has 2 resources
         self._validate_resources(stack_identifier, 2)
 
         # increase the resource group count to 5
-        update_template = template.replace("count: 2", "count: 5")
-        self.update_stack(stack_identifier, update_template)
+        update_template = self.template.replace("count: 0", "count: 5")
+        self.update_stack(stack_identifier, update_template, environment=env)
         # verify that the resource group has 5 resources
         self._validate_resources(stack_identifier, 5)
 
         # decrease the resource group count to 3
-        update_template = template.replace("count: 2", "count: 3")
-        self.update_stack(stack_identifier, update_template)
+        update_template = self.template.replace("count: 0", "count: 3")
+        self.update_stack(stack_identifier, update_template, environment=env)
         # verify that the resource group has 3 resources
         self._validate_resources(stack_identifier, 3)
 
