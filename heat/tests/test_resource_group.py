@@ -409,8 +409,8 @@ class ResourceGroupTest(common.HeatTestCase):
         new_snip = copy.deepcopy(resg.t)
         scheduler.TaskRunner(resg.update, new_snip)()
         self.stack = resg.nested()
-        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.nested().state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
+        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
         self.assertEqual(2, len(resg.nested()))
         resource_names = [r.name for r in resg.nested().iter_resources()]
         self.assertEqual(['0', '1'], sorted(resource_names))

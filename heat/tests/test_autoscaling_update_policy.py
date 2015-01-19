@@ -660,7 +660,7 @@ class AutoScalingGroupTest(HeatTestCase):
                                       num_updates_expected_on_updt=9,
                                       num_creates_expected_on_updt=1,
                                       num_deletes_expected_on_updt=1,
-                                      num_reloads_expected_on_updt=12,
+                                      num_reloads_expected_on_updt=13,
                                       update_replace=True,
                                       update_image_id=update_image)
 
