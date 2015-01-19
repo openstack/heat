@@ -276,7 +276,7 @@ class Parameter(object):
         self.user_default = value
 
     def __str__(self):
-        '''Return a string representation of the parameter'''
+        '''Return a string representation of the parameter.'''
         value = self.value()
         if self.hidden():
             return '******'
@@ -288,11 +288,11 @@ class NumberParam(Parameter):
     '''A template parameter of type "Number".'''
 
     def __int__(self):
-        '''Return an integer representation of the parameter'''
+        '''Return an integer representation of the parameter.'''
         return int(super(NumberParam, self).value())
 
     def __float__(self):
-        '''Return a float representation of the parameter'''
+        '''Return a float representation of the parameter.'''
         return float(super(NumberParam, self).value())
 
     def _validate(self, val, context):

@@ -261,9 +261,9 @@ class Dependencies(object):
             return self._graph.copy()
 
     def __iter__(self):
-        '''Return a topologically sorted iterator'''
+        '''Return a topologically sorted iterator.'''
         return Graph.toposort(self.graph())
 
     def __reversed__(self):
-        '''Return a reverse topologically sorted iterator'''
+        '''Return a reverse topologically sorted iterator.'''
         return Graph.toposort(self.graph(reverse=True))
