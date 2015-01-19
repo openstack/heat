@@ -31,7 +31,7 @@ from heat.tests import utils
 class TestFunction(function.Function):
     def validate(self):
         if len(self.args) < 2:
-            raise Exception(_('Need more arguments'))
+            raise TypeError(_('Need more arguments'))
 
     def dependencies(self, path):
         return ['foo', 'bar']
@@ -107,7 +107,7 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_func(self):
         self.assertIsNone(function.validate(self.func))
         self.func = TestFunction(None, 'foo', ['bar'])
-        ex = self.assertRaises(Exception, function.validate, self.func)
+        ex = self.assertRaises(TypeError, function.validate, self.func)
         self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_dict(self):
@@ -116,7 +116,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(Exception, function.validate, snippet)
+        ex = self.assertRaises(TypeError, function.validate, snippet)
         self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_list(self):
@@ -125,7 +125,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(Exception, function.validate, snippet)
+        ex = self.assertRaises(TypeError, function.validate, snippet)
         self.assertEqual('Need more arguments', six.text_type(ex))
 
     def test_validate_all(self):
@@ -134,7 +134,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(Exception, function.validate, snippet)
+        ex = self.assertRaises(TypeError, function.validate, snippet)
         self.assertEqual('Need more arguments', six.text_type(ex))
 
 
