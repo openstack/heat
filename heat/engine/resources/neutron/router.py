@@ -93,9 +93,8 @@ class Router(neutron.NeutronResource):
             properties.Schema.BOOLEAN,
             _('Indicates whether or not to create a distributed router. '
               'NOTE: The default policy setting in Neutron restricts usage '
-              'of this property to administrative users only. And do not '
-              'specific L3 agent ID when creating a distributed router.'),
-            default=False,
+              'of this property to administrative users only. This property '
+              'can not be used in conjunction with the L3 agent ID.'),
             support_status=support.SupportStatus(version='2015.1')
         ),
     }

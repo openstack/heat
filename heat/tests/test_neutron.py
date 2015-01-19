@@ -1391,7 +1391,6 @@ class NeutronRouterTest(common.HeatTestCase):
             'router': {
                 'name': utils.PhysName('test_stack', 'router'),
                 'admin_state_up': True,
-                'distributed': False,
             }
         }).AndReturn({
             "router": {
@@ -1401,7 +1400,6 @@ class NeutronRouterTest(common.HeatTestCase):
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-                "distributed": False,
             }
         })
         neutronclient.Client.list_l3_agent_hosting_routers(
@@ -1771,7 +1769,6 @@ class NeutronRouterTest(common.HeatTestCase):
                     'enable_snat': True
                 },
                 "admin_state_up": True,
-                "distributed": False,
             }
         }).AndReturn({
             "router": {
@@ -1781,7 +1778,6 @@ class NeutronRouterTest(common.HeatTestCase):
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-                "distributed": False,
             }
         })
 
@@ -1851,7 +1847,6 @@ class NeutronRouterTest(common.HeatTestCase):
                     'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                 },
                 "admin_state_up": True,
-                "distributed": False,
             }
         }).AndReturn({
             "router": {
@@ -1861,7 +1856,6 @@ class NeutronRouterTest(common.HeatTestCase):
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-                "distributed": False
             }
         })
 
