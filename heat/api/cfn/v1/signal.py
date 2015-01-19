@@ -30,7 +30,8 @@ class SignalController(object):
                 con,
                 stack_identity=dict(identity.stack()),
                 resource_name=identity.resource_name,
-                details=body)
+                details=body,
+                sync_call=True)
         except Exception as ex:
             return exception.map_remote_error(ex)
 

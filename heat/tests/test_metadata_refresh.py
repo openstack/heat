@@ -215,6 +215,7 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
         self.patch('heat.engine.service.warnings')
 
         self.man = service.EngineService('a-host', 'a-topic')
+        self.man.create_periodic_tasks()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
@@ -266,7 +267,8 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
                                      dict(self.stack.identifier()),
                                      'WH',
                                      {'Data': data, 'Reason': reason,
-                                      'Status': 'SUCCESS', 'UniqueId': id})
+                                      'Status': 'SUCCESS', 'UniqueId': id},
+                                     sync_call=True)
 
         def post_success(sleep_time):
             update_metadata('123', 'foo', 'bar')
@@ -286,6 +288,7 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
         self.assertEqual('{"123": "foo"}', inst.metadata_get()['test'])
 
         update_metadata('456', 'blarg', 'wibble')
+
         self.assertEqual('{"123": "foo", "456": "blarg"}',
                          watch.FnGetAtt('Data'))
         self.assertEqual('{"123": "foo"}',

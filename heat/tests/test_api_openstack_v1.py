@@ -2544,10 +2544,11 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('resource_signal',
-             {'stack_identity': stack_identity,
-              'resource_name': res_name,
-              'details': 'Signal content'}))
+            ('resource_signal', {'stack_identity': stack_identity,
+                                 'resource_name': res_name,
+                                 'details': 'Signal content',
+                                 'sync_call': False}),
+            version='1.3')
         self.m.ReplayAll()
 
         result = self.controller.signal(req, tenant_id=self.tenant,

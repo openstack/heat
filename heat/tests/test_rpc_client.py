@@ -247,7 +247,8 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self._test_engine_api('resource_signal', 'call',
                               stack_identity=self.identity,
                               resource_name='LogicalResourceId',
-                              details={u'wordpress': []})
+                              details={u'wordpress': []},
+                              sync_call=True)
 
     def test_create_watch_data(self):
         self._test_engine_api('create_watch_data', 'call',
