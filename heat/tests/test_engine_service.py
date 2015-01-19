@@ -2516,6 +2516,35 @@ class StackServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
         self.stack.delete()
 
+    def test_signal_reception_unavailable_resource(self):
+        stack = get_stack('signal_reception_unavailable_resource',
+                          self.ctx,
+                          policy_template)
+        stack.store()
+        self.stack = stack
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(
+            self.ctx, stack=mox.IgnoreArg(),
+            use_stored_context=mox.IgnoreArg()
+        ).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        test_data = {'food': 'yum'}
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal, self.ctx,
+                               dict(self.stack.identifier()),
+                               'WebServerScaleDownPolicy',
+                               test_data)
+        self.assertEqual(exception.ResourceNotAvailable, ex.exc_info[0])
+        self.m.VerifyAll()
+        self.stack.delete()
+
     def test_signal_returns_metadata(self):
         stack = get_stack('signal_reception',
                           self.ctx,
