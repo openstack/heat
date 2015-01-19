@@ -1,5 +1,5 @@
 # Translations template for heat.
-# Copyright (C) 2014 ORGANIZATION
+# Copyright (C) 2015 ORGANIZATION
 # This file is distributed under the same license as the heat project.
 #
 # Translators:
@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-12-21 06:02+0000\n"
-"PO-Revision-Date: 2014-12-17 02:38+0000\n"
+"POT-Creation-Date: 2015-01-19 06:02+0000\n"
+"PO-Revision-Date: 2015-01-13 20:51+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -184,24 +184,29 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "Impossible de récupérer la stack %s pour la tache périodique"
 
-#: heat/engine/stack.py:728
+#: heat/engine/stack.py:730
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "Action inattendu %s à mettre à jour!"
 
-#: heat/engine/stack.py:946
+#: heat/engine/stack.py:960
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "Action inattendu %s à supprimer!"
 
-#: heat/engine/stack.py:1130
+#: heat/engine/stack.py:1144
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "Ressource %(name)s échec de suppression: %(ex)s"
 
-#: heat/engine/stack.py:1139
+#: heat/engine/stack.py:1153
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
+msgstr ""
+
+#: heat/engine/clients/__init__.py:143
+#, python-format
+msgid "Invalid cloud_backend setting in heat.conf detected  - %s"
 msgstr ""
 
 #: heat/engine/resources/eip.py:114
@@ -225,12 +230,12 @@ msgstr ""
 msgid "exception: %s"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:83
+#: heat/engine/resources/wait_condition.py:71
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "Echec de validation de metadata pour %s"
 
-#: heat/engine/resources/aws/autoscaling_group.py:293
+#: heat/engine/resources/aws/autoscaling_group.py:291
 msgid "Failed sending error notification"
 msgstr ""
 
