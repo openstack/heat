@@ -20,7 +20,6 @@ from heat.common import exception
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import resource_group
-from heat.engine import scheduler
 from heat.engine import stack as stackm
 from heat.tests import common
 from heat.tests import generic_resource
@@ -84,24 +83,6 @@ template_repl = {
                             "%index%_1",
                             "%index%_2"
                         ]
-                    }
-                }
-            }
-        }
-    }
-}
-
-template_repl2 = {
-    "heat_template_version": "2013-05-23",
-    "resources": {
-        "group1": {
-            "type": "OS::Heat::ResourceGroup",
-            "properties": {
-                "count": 2,
-                "resource_def": {
-                    "type": "dummy.resource",
-                    "properties": {
-                        "Foo": "Bar%index%"
                     }
                 }
             }
@@ -371,71 +352,6 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertIsNone(resgrp.validate())
-
-    def _create_dummy_stack(self, template_data=template, expect_count=2):
-        stack = utils.parse_stack(template_data)
-        resg = stack['group1']
-        scheduler.TaskRunner(resg.create)()
-        self.stack = resg.nested()
-        self.assertEqual(expect_count, len(resg.nested()))
-        self.assertEqual((resg.CREATE, resg.COMPLETE), resg.state)
-        return resg
-
-    def test_props_update(self):
-        """Test update of resource_def properties."""
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-        new_snip = copy.deepcopy(resg.t)
-        new_snip['Properties']['resource_def']['properties']['Foo'] = 'xyz'
-        preupdate_resgid = resg.id
-        preupdate_nestedid = resg.nested().id
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-        # resource_def update should recurse and update (not replace) nested
-        self.assertEqual(preupdate_resgid, resg.id)
-        self.assertEqual(preupdate_nestedid, resg.nested().id)
-
-    def test_update_nochange(self):
-        """Test update with no properties change."""
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-        new_snip = copy.deepcopy(resg.t)
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-
-    def test_update_nochange_resource_needs_update(self):
-        """Test update when the resource definition has changed."""
-        # Test the scenario when the ResourceGroup update happens without
-        # any changed properties, this can happen if the definition of
-        # a contained provider resource changes (files map changes), then
-        # the group and underlying nested stack should end up updated.
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-        new_snip = copy.deepcopy(resg.t)
-        resg._needs_update = mock.Mock(return_value=True)
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
 
     def test_invalid_removal_policies_nolist(self):
         """Test that error raised for malformed removal_policies."""

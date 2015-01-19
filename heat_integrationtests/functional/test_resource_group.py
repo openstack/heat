@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import json
 
 from heatclient import exc
@@ -31,6 +32,7 @@ resources:
         type: My::RandomString
         properties:
           length: 30
+          salt: initial
 outputs:
   random1:
     value: {get_attr: [random_group, resource.0.value]}
@@ -68,6 +70,9 @@ parameters:
   length:
     type: string
     default: 50
+  salt:
+    type: string
+    default: initial
 resources:
   random:
     type: OS::Heat::RandomString
@@ -162,6 +167,124 @@ resources:
         self.update_stack(stack_identifier, update_template, environment=env)
         # verify that the resource group has 3 resources
         self._validate_resources(stack_identifier, 3)
+
+    def test_props_update(self):
+        """Test update of resource_def properties behaves as expected."""
+
+        env = {'resource_registry':
+               {'My::RandomString': 'OS::Heat::RandomString'}}
+        template_one = self.template.replace("count: 0", "count: 1")
+        stack_identifier = self.stack_create(template=template_one,
+                                             environment=env)
+        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+                         self.list_resources(stack_identifier))
+
+        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual({'0': 'My::RandomString'},
+                         self.list_resources(initial_nested_ident))
+        # get the resource id
+        res = self.client.resources.get(initial_nested_ident, '0')
+        initial_res_id = res.physical_resource_id
+
+        # change the salt (this should replace the RandomString but
+        # not the nested stack or resource group.
+        template_salt = template_one.replace("salt: initial", "salt: more")
+        self.update_stack(stack_identifier, template_salt, environment=env)
+        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual(initial_nested_ident, updated_nested_ident)
+
+        # compare the resource id, we expect a change.
+        res = self.client.resources.get(updated_nested_ident, '0')
+        updated_res_id = res.physical_resource_id
+        self.assertNotEqual(initial_res_id, updated_res_id)
+
+    def test_update_nochange(self):
+        """Test update with no properties change."""
+
+        env = {'resource_registry':
+               {'My::RandomString': 'OS::Heat::RandomString'}}
+        template_one = self.template.replace("count: 0", "count: 1")
+        stack_identifier = self.stack_create(template=template_one,
+                                             environment=env)
+        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+                         self.list_resources(stack_identifier))
+
+        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual({'0': 'My::RandomString'},
+                         self.list_resources(initial_nested_ident))
+        # get the output
+        stack0 = self.client.stacks.get(stack_identifier)
+        initial_rand = self._stack_output(stack0, 'random1')
+
+        template_copy = copy.deepcopy(template_one)
+        self.update_stack(stack_identifier, template_copy, environment=env)
+        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual(initial_nested_ident, updated_nested_ident)
+
+        # compare the random number, we expect no change.
+        stack1 = self.client.stacks.get(stack_identifier)
+        updated_rand = self._stack_output(stack1, 'random1')
+        self.assertEqual(initial_rand, updated_rand)
+
+    def test_update_nochange_resource_needs_update(self):
+        """Test update when the resource definition has changed."""
+        # Test the scenario when the ResourceGroup update happens without
+        # any changed properties, this can happen if the definition of
+        # a contained provider resource changes (files map changes), then
+        # the group and underlying nested stack should end up updated.
+
+        random_templ1 = '''
+heat_template_version: 2013-05-23
+parameters:
+  length:
+    type: string
+    default: not-used
+  salt:
+    type: string
+    default: not-used
+resources:
+  random1:
+    type: OS::Heat::RandomString
+    properties:
+      salt: initial
+outputs:
+  value:
+    value: {get_attr: [random1, value]}
+'''
+        files1 = {'my_random.yaml': random_templ1}
+
+        random_templ2 = random_templ1.replace('salt: initial',
+                                              'salt: more')
+        files2 = {'my_random.yaml': random_templ2}
+
+        env = {'resource_registry':
+               {'My::RandomString': 'my_random.yaml'}}
+
+        template_one = self.template.replace("count: 0", "count: 1")
+        stack_identifier = self.stack_create(template=template_one,
+                                             environment=env,
+                                             files=files1)
+        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+                         self.list_resources(stack_identifier))
+
+        initial_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual({'0': 'My::RandomString'},
+                         self.list_resources(initial_nested_ident))
+        # get the output
+        stack0 = self.client.stacks.get(stack_identifier)
+        initial_rand = self._stack_output(stack0, 'random1')
+
+        # change the environment so we use a different TemplateResource.
+        # note "files2".
+        self.update_stack(stack_identifier, template_one,
+                          environment=env, files=files2)
+        updated_nested_ident = self._group_nested_identifier(stack_identifier)
+        self.assertEqual(initial_nested_ident, updated_nested_ident)
+
+        # compare the output, we expect a change.
+        stack1 = self.client.stacks.get(stack_identifier)
+        updated_rand = self._stack_output(stack1, 'random1')
+        self.assertNotEqual(initial_rand, updated_rand)
 
 
 class ResourceGroupAdoptTest(test.HeatIntegrationTest):
