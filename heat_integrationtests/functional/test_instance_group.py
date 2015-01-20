@@ -10,7 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+import json
 import logging
+
+from testtools import matchers
 
 from heat_integrationtests.common import test
 
@@ -51,7 +55,9 @@ class InstanceGroupTest(test.HeatIntegrationTest):
   },
   "Outputs": {
     "InstanceList": {"Value": {
-      "Fn::GetAtt": ["JobServerGroup", "InstanceList"]}}
+      "Fn::GetAtt": ["JobServerGroup", "InstanceList"]}},
+    "JobServerConfigRef": {"Value": {
+      "Ref": "JobServerConfig"}}
   }
 }
 '''
@@ -68,7 +74,8 @@ parameters:
 resources:
   random1:
     type: OS::Heat::RandomString
-
+    properties:
+      salt: {get_param: ImageId}
 outputs:
   PublicIp:
     value: {get_attr: [random1, value]}
@@ -105,23 +112,14 @@ outputs:
         self.client = self.orchestration_client
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")
+        if not self.conf.minimal_image_ref:
+            raise self.skipException("No minimal image configured to test")
         if not self.conf.instance_type:
             raise self.skipException("No flavor configured to test")
 
     def assert_instance_count(self, stack, expected_count):
         inst_list = self._stack_output(stack, 'InstanceList')
         self.assertEqual(expected_count, len(inst_list.split(',')))
-
-    def _get_nested_identifier(self, stack_identifier):
-        rsrc = self.client.resources.get(stack_identifier, 'JobServerGroup')
-        nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
-        self.assertEqual(1, len(nested_link))
-        nested_href = nested_link[0]['href']
-        nested_id = nested_href.split('/')[-1]
-        nested_identifier = '/'.join(nested_href.split('/')[-2:])
-        physical_resource_id = rsrc.physical_resource_id
-        self.assertEqual(physical_resource_id, nested_id)
-        return nested_identifier
 
     def _assert_instance_state(self, nested_identifier,
                                num_complete, num_failed):
@@ -132,6 +130,9 @@ outputs:
                 num_failed = num_failed - 1
         self.assertEqual(0, num_failed)
         self.assertEqual(0, num_complete)
+
+
+class InstanceGroupBasicTest(InstanceGroupTest):
 
     def test_basic_create_works(self):
         """Make sure the working case is good.
@@ -240,7 +241,8 @@ outputs:
         self.assertEqual(initial_resources,
                          self.list_resources(stack_identifier))
 
-        nested_ident = self._get_nested_identifier(stack_identifier)
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
         self._assert_instance_state(nested_ident, 0, 2)
 
     def test_update_instance_error_causes_group_error(self):
@@ -265,7 +267,8 @@ outputs:
 
         stack = self.client.stacks.get(stack_identifier)
         self.assert_instance_count(stack, 2)
-        nested_ident = self._get_nested_identifier(stack_identifier)
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
         self._assert_instance_state(nested_ident, 2, 0)
 
         env['parameters']['size'] = 3
@@ -281,5 +284,206 @@ outputs:
         self._wait_for_stack_status(stack_identifier, 'UPDATE_FAILED')
 
         # assert that there are 3 bad instances
-        nested_ident = self._get_nested_identifier(stack_identifier)
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
         self._assert_instance_state(nested_ident, 0, 3)
+
+
+class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
+
+    def ig_tmpl_with_updt_policy(self):
+        templ = json.loads(copy.deepcopy(self.template))
+        up = {"RollingUpdate": {
+            "MinInstancesInService": "1",
+            "MaxBatchSize": "2",
+            "PauseTime": "PT1S"}}
+        templ['Resources']['JobServerGroup']['UpdatePolicy'] = up
+        return templ
+
+    def update_instance_group(self, updt_template,
+                              num_updates_expected_on_updt,
+                              num_creates_expected_on_updt,
+                              num_deletes_expected_on_updt,
+                              update_replace):
+
+        # setup stack from the initial template
+        files = {'provider.yaml': self.instance_template}
+        size = 10
+        env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
+               'parameters': {'size': size,
+                              'image': self.conf.image_ref,
+                              'flavor': self.conf.instance_type}}
+        stack_name = self._stack_rand_name()
+        stack_identifier = self.stack_create(
+            stack_name=stack_name,
+            template=self.ig_tmpl_with_updt_policy(),
+            files=files,
+            environment=env)
+        stack = self.client.stacks.get(stack_identifier)
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
+
+        # test that physical resource name of launch configuration is used
+        conf_name = self._stack_output(stack, 'JobServerConfigRef')
+        conf_name_pattern = '%s-JobServerConfig-[a-zA-Z0-9]+$' % stack_name
+        self.assertThat(conf_name,
+                        matchers.MatchesRegex(conf_name_pattern))
+
+        # test the number of instances created
+        self.assert_instance_count(stack, size)
+        # saves info from initial list of instances for comparison later
+        init_instances = self.client.resources.list(nested_ident)
+        init_names = [inst.resource_name for inst in init_instances]
+
+        # test stack update
+        self.update_stack(stack_identifier, updt_template,
+                          environment=env, files=files)
+        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
+        updt_stack = self.client.stacks.get(stack_identifier)
+
+        # test that the launch configuration is replaced
+        updt_conf_name = self._stack_output(updt_stack, 'JobServerConfigRef')
+        self.assertThat(updt_conf_name,
+                        matchers.MatchesRegex(conf_name_pattern))
+        self.assertNotEqual(conf_name, updt_conf_name)
+
+        # test that the group size are the same
+        updt_instances = self.client.resources.list(nested_ident)
+        updt_names = [inst.resource_name for inst in updt_instances]
+        self.assertEqual(len(init_names), len(updt_names))
+        for res in updt_instances:
+            self.assertEqual('UPDATE_COMPLETE', res.resource_status)
+
+        # test that the appropriate number of instance names are the same
+        matched_names = set(updt_names) & set(init_names)
+        self.assertEqual(num_updates_expected_on_updt, len(matched_names))
+
+        # test that the appropriate number of new instances are created
+        self.assertEqual(num_creates_expected_on_updt,
+                         len(set(updt_names) - set(init_names)))
+
+        # test that the appropriate number of instances are deleted
+        self.assertEqual(num_deletes_expected_on_updt,
+                         len(set(init_names) - set(updt_names)))
+
+        # test that the older instances are the ones being deleted
+        if num_deletes_expected_on_updt > 0:
+            deletes_expected = init_names[:num_deletes_expected_on_updt]
+            self.assertNotIn(deletes_expected, updt_names)
+
+    def test_instance_group_update_replace(self):
+        """
+        Test simple update replace with no conflict in batch size and
+        minimum instances in service.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        grp = updt_template['Resources']['JobServerGroup']
+        policy = grp['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '1'
+        policy['MaxBatchSize'] = '3'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=10,
+                                   num_creates_expected_on_updt=0,
+                                   num_deletes_expected_on_updt=0,
+                                   update_replace=True)
+
+    def test_instance_group_update_replace_with_adjusted_capacity(self):
+        """
+        Test update replace with capacity adjustment due to conflict in
+        batch size and minimum instances in service.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        grp = updt_template['Resources']['JobServerGroup']
+        policy = grp['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '8'
+        policy['MaxBatchSize'] = '4'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=8,
+                                   num_creates_expected_on_updt=2,
+                                   num_deletes_expected_on_updt=2,
+                                   update_replace=True)
+
+    def test_instance_group_update_replace_huge_batch_size(self):
+        """
+        Test update replace with a huge batch size.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        group = updt_template['Resources']['JobServerGroup']
+        policy = group['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '0'
+        policy['MaxBatchSize'] = '20'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=10,
+                                   num_creates_expected_on_updt=0,
+                                   num_deletes_expected_on_updt=0,
+                                   update_replace=True)
+
+    def test_instance_group_update_replace_huge_min_in_service(self):
+        """
+        Test update replace with a huge number of minimum instances in service.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        group = updt_template['Resources']['JobServerGroup']
+        policy = group['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '20'
+        policy['MaxBatchSize'] = '1'
+        policy['PauseTime'] = 'PT0S'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=9,
+                                   num_creates_expected_on_updt=1,
+                                   num_deletes_expected_on_updt=1,
+                                   update_replace=True)
+
+    def test_instance_group_update_no_replace(self):
+        """
+        Test simple update only and no replace (i.e. updated instance flavor
+        in Launch Configuration) with no conflict in batch size and
+        minimum instances in service.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        group = updt_template['Resources']['JobServerGroup']
+        policy = group['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '1'
+        policy['MaxBatchSize'] = '3'
+        policy['PauseTime'] = 'PT0S'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['InstanceType'] = 'm1.tiny'
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=10,
+                                   num_creates_expected_on_updt=0,
+                                   num_deletes_expected_on_updt=0,
+                                   update_replace=False)
+
+    def test_instance_group_update_no_replace_with_adjusted_capacity(self):
+        """
+        Test update only and no replace (i.e. updated instance flavor in
+        Launch Configuration) with capacity adjustment due to conflict in
+        batch size and minimum instances in service.
+        """
+        updt_template = self.ig_tmpl_with_updt_policy()
+        group = updt_template['Resources']['JobServerGroup']
+        policy = group['UpdatePolicy']['RollingUpdate']
+        policy['MinInstancesInService'] = '8'
+        policy['MaxBatchSize'] = '4'
+        policy['PauseTime'] = 'PT0S'
+        config = updt_template['Resources']['JobServerConfig']
+        config['Properties']['InstanceType'] = 'm1.tiny'
+
+        self.update_instance_group(updt_template,
+                                   num_updates_expected_on_updt=8,
+                                   num_creates_expected_on_updt=2,
+                                   num_deletes_expected_on_updt=2,
+                                   update_replace=False)
