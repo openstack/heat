@@ -2222,8 +2222,7 @@ class StackServiceTest(common.HeatTestCase):
         msg = 'The Resource Type (Bogus) could not be found.'
         self.assertEqual(msg, six.text_type(ex))
 
-    @stack_context('service_stack_resource_describe__test_stack')
-    def test_stack_resource_describe(self):
+    def _test_describe_stack_resource(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
                           stack=mox.IgnoreArg()).AndReturn(self.stack)
@@ -2249,6 +2248,10 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual('WebServer', r['resource_name'])
 
         self.m.VerifyAll()
+
+    @stack_context('service_stack_resource_describe__test_stack')
+    def test_stack_resource_describe(self):
+        self._test_describe_stack_resource()
 
     def test_stack_resource_describe_nonexist_stack(self):
         non_exist_identifier = identifier.HeatIdentifier(
@@ -2282,6 +2285,11 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
 
         self.m.VerifyAll()
+
+    @stack_context('service_resource_describe_noncreated_test_stack',
+                   create_res=False)
+    def test_stack_resource_describe_noncreated_resource(self):
+        self._test_describe_stack_resource()
 
     @stack_context('service_resource_describe_user_deny_test_stack')
     def test_stack_resource_describe_stack_user_deny(self):
