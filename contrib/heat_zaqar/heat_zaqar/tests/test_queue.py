@@ -46,7 +46,7 @@ wp_template = '''
   },
   "Outputs" : {
     "queue_id": {
-      "Value": { "Fn::GetAtt" : [ "MyQueue2", "queue_id" ]},
+      "Value": { "Ref" : "MyQueue2" },
       "Description": "queue name"
     },
     "queue_href": {
@@ -116,7 +116,6 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
 
         scheduler.TaskRunner(queue.create)()
         self.fc.api_url = 'http://127.0.0.1:8888/v1'
-        self.assertEqual('myqueue', queue.FnGetAtt('queue_id'))
         self.assertEqual('http://127.0.0.1:8888/v1/queues/myqueue',
                          queue.FnGetAtt('href'))
 
