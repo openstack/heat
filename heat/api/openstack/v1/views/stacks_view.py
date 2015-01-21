@@ -30,6 +30,7 @@ basic_keys = (
     engine_api.STACK_UPDATED_TIME,
     engine_api.STACK_OWNER,
     engine_api.STACK_PARENT,
+    engine_api.STACK_USER_PROJECT_ID,
 )
 
 

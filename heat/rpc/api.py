@@ -32,7 +32,7 @@ STACK_KEYS = (
     STACK_PARAMETERS, STACK_OUTPUTS, STACK_ACTION,
     STACK_STATUS, STACK_STATUS_DATA, STACK_CAPABILITIES,
     STACK_DISABLE_ROLLBACK, STACK_TIMEOUT, STACK_OWNER,
-    STACK_PARENT
+    STACK_PARENT, STACK_USER_PROJECT_ID
 ) = (
     'stack_name', 'stack_identity',
     'creation_time', 'updated_time', 'deletion_time',
@@ -41,7 +41,7 @@ STACK_KEYS = (
     'parameters', 'outputs', 'stack_action',
     'stack_status', 'stack_status_reason', 'capabilities',
     'disable_rollback', 'timeout_mins', 'stack_owner',
-    'parent'
+    'parent', 'stack_user_project_id'
 )
 
 STACK_OUTPUT_KEYS = (
