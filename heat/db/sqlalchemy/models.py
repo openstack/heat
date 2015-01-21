@@ -135,6 +135,7 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
                                               nullable=True)
     backup = sqlalchemy.Column('backup', sqlalchemy.Boolean)
     nested_depth = sqlalchemy.Column('nested_depth', sqlalchemy.Integer)
+    tags = sqlalchemy.Column('tags', types.Json)
 
     # Override timestamp column to store the correct value: it should be the
     # time the create/update call was issued, not the time the DB entry is
