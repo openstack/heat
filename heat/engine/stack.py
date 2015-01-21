@@ -1193,7 +1193,11 @@ class Stack(collections.Mapping):
         }
 
     def resolve_static_data(self, snippet):
-        return self.t.parse(self, snippet)
+        try:
+            return self.t.parse(self, snippet)
+        except Exception as ex:
+            raise exception.StackValidationFailed(
+                message=encodeutils.safe_decode(six.text_type(ex)))
 
     def resolve_runtime_data(self, snippet):
         """DEPRECATED. Use heat.engine.function.resolve() instead."""
