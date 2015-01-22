@@ -437,151 +437,6 @@ class ResourceGroupTest(common.HeatTestCase):
         resource_names = [r.name for r in resg.nested().iter_resources()]
         self.assertEqual(['0', '1'], sorted(resource_names))
 
-    def test_update_remove_resource_list_name(self):
-        """Test update specifying victims."""
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-
-        new_snip = copy.deepcopy(resg.t)
-        new_snip['Properties']['count'] = 5
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(5, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1', '2', '3', '4'], sorted(resource_names))
-
-        # Reduce by three, specifying the middle resources to be removed
-        reduce_snip = copy.deepcopy(resg.t)
-        reduce_snip['Properties']['count'] = 2
-        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
-                                                          ['1', '2', '3']}]
-        scheduler.TaskRunner(resg.update, reduce_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '4'], sorted(resource_names))
-
-        # Increase to 3 again leaving the force remove, the indexes are skipped
-        increase_snip = copy.deepcopy(resg.t)
-        increase_snip['Properties']['count'] = 3
-        scheduler.TaskRunner(resg.update, increase_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(3, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '4', '5'], sorted(resource_names))
-
-        # Increase to 5 clearing the resource_list, the blacklist should be
-        # maintained so no resource names are reused
-        increase_snip2 = copy.deepcopy(resg.t)
-        increase_snip2['Properties']['count'] = 5
-        del(increase_snip2['Properties']['removal_policies'])
-        scheduler.TaskRunner(resg.update, increase_snip2)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(5, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '4', '5', '6', '7'], sorted(resource_names))
-
-        # Reduce by 3 only passing two resource_list victims, the remaining
-        # removal should be the largest numbered/newest, as normal
-        reduce_snip = copy.deepcopy(resg.t)
-        reduce_snip['Properties']['count'] = 2
-        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
-                                                         ['4', '5']}]
-        scheduler.TaskRunner(resg.update, reduce_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '6'], sorted(resource_names))
-
-    def test_update_remove_resource_list_refid(self):
-        """Test update specifying victims."""
-        resg = self._create_dummy_stack()
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-
-        # Update to remove a specific resource ref without affecting the size
-        # we should remove resource 0 and build a replacement
-        r_id = resg.nested()['0'].FnGetRefId()
-        self.assertIsNotNone(r_id)
-        reduce_snip = copy.deepcopy(resg.t)
-        reduce_snip['Properties']['count'] = 2
-        reduce_snip['Properties']['removal_policies'] = [
-            {'resource_list': [r_id]}]
-        scheduler.TaskRunner(resg.update, reduce_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['1', '2'], sorted(resource_names))
-        self.assertIsNone(resg.nested().resource_by_refid(r_id))
-
-        # We now should not do anything on subsequent updates
-        reduce_snip = copy.deepcopy(resg.t)
-        del(reduce_snip['Properties']['removal_policies'])
-        scheduler.TaskRunner(resg.update, reduce_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['1', '2'], sorted(resource_names))
-        self.assertIsNone(resg.nested().resource_by_refid(r_id))
-
-    def test_update_remove_add_index_replacement(self):
-        """Test update removal/add indexes are consistent."""
-        resg = self._create_dummy_stack(template_data=template_repl2)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1'], sorted(resource_names))
-
-        new_snip = copy.deepcopy(resg.t)
-        new_snip['Properties']['count'] = 5
-        scheduler.TaskRunner(resg.update, new_snip)()
-        self.stack = resg.nested()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(5, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '1', '2', '3', '4'], sorted(resource_names))
-        for r in ['0', '1', '2', '3', '4']:
-            prop_val = 'Bar%s' % r
-            self.assertEqual(prop_val, resg.nested()[r].properties.get('Foo'))
-
-        # Reduce by three, specifying the middle resources to be removed
-        reduce_snip = copy.deepcopy(resg.t)
-        reduce_snip['Properties']['count'] = 2
-        reduce_snip['Properties']['removal_policies'] = [{'resource_list':
-                                                          ['1', '2', '3']}]
-        scheduler.TaskRunner(resg.update, reduce_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(2, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '4'], sorted(resource_names))
-        self.assertEqual('Bar0', resg.nested()['0'].properties.get('Foo'))
-        self.assertEqual('Bar4', resg.nested()['4'].properties.get('Foo'))
-
-        # Increase to 3 again leaving the force remove, the indexes are skipped
-        increase_snip = copy.deepcopy(resg.t)
-        increase_snip['Properties']['count'] = 3
-        scheduler.TaskRunner(resg.update, increase_snip)()
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.state)
-        self.assertEqual((resg.UPDATE, resg.COMPLETE), resg.nested().state)
-        self.assertEqual(3, len(resg.nested()))
-        resource_names = [r.name for r in resg.nested().iter_resources()]
-        self.assertEqual(['0', '4', '5'], sorted(resource_names))
-        self.assertEqual('Bar0', resg.nested()['0'].properties.get('Foo'))
-        self.assertEqual('Bar4', resg.nested()['4'].properties.get('Foo'))
-        self.assertEqual('Bar5', resg.nested()['5'].properties.get('Foo'))
-
     def test_invalid_removal_policies_nolist(self):
         """Test that error raised for malformed removal_policies."""
         tmp = copy.deepcopy(template)
@@ -623,6 +478,105 @@ class ResourceGroupTest(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertEqual({}, resgrp.child_params())
+
+
+class ResourceGroupBlackList(common.HeatTestCase):
+    """This class tests ResourceGroup._name_blacklist()."""
+
+    # 1) no resource_list, empty blacklist
+    # 2) no resource_list, existing blacklist
+    # 3) resource_list not in nested()
+    # 4) resource_list (refid) not in nested()
+    # 5) resource_list in nested() -> saved
+    # 6) resource_list (refid) in nested() -> saved
+    scenarios = [
+        ('1', dict(data_in=None, rm_list=[],
+                   nested_rsrcs={}, expected=[],
+                   saved=False)),
+        ('2', dict(data_in='0,1,2', rm_list=[],
+                   nested_rsrcs={}, expected=['0', '1', '2'],
+                   saved=False)),
+        ('3', dict(data_in='1,3', rm_list=['6'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['1', '3'],
+                   saved=False)),
+        ('4', dict(data_in='0,1', rm_list=['id-7'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['0', '1'],
+                   saved=False)),
+        ('5', dict(data_in='0,1', rm_list=['3'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['0', '1', '3'],
+                   saved=True)),
+        ('6', dict(data_in='0,1', rm_list=['id-3'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['0', '1', '3'],
+                   saved=True)),
+    ]
+
+    def test_blacklist(self):
+        stack = utils.parse_stack(template)
+        resg = stack['group1']
+
+        # mock properties
+        resg.properties = mock.MagicMock()
+        resg.properties.__getitem__.return_value = [
+            {'resource_list': self.rm_list}]
+
+        # mock data get/set
+        resg.data = mock.Mock()
+        resg.data.return_value.get.return_value = self.data_in
+        resg.data_set = mock.Mock()
+
+        # mock nested access
+        def stack_contains(name):
+            return name in self.nested_rsrcs
+
+        def by_refid(name):
+            rid = name.replace('id-', '')
+            if rid not in self.nested_rsrcs:
+                return None
+            res = mock.Mock()
+            res.name = rid
+            return res
+
+        nested = mock.MagicMock()
+        nested.__contains__.side_effect = stack_contains
+        nested.resource_by_refid.side_effect = by_refid
+        resg.nested = mock.Mock(return_value=nested)
+
+        self.assertEqual(self.expected, resg._name_blacklist())
+        if self.saved:
+            resg.data_set.assert_called_once_with('name_blacklist',
+                                                  ','.join(self.expected))
+
+
+class ResourceGroupNameListTest(common.HeatTestCase):
+    """This class tests ResourceGroup._resource_names()."""
+
+    # 1) no blacklist, 0 count
+    # 2) no blacklist, x count
+    # 3) blacklist (not effecting)
+    # 4) blacklist with pruning
+    scenarios = [
+        ('1', dict(blacklist=[], count=0,
+                   expected=[])),
+        ('2', dict(blacklist=[], count=4,
+                   expected=['0', '1', '2', '3'])),
+        ('3', dict(blacklist=['5', '6'], count=3,
+                   expected=['0', '1', '2'])),
+        ('4', dict(blacklist=['2', '4'], count=4,
+                   expected=['0', '1', '3', '5'])),
+    ]
+
+    def test_names(self):
+        stack = utils.parse_stack(template)
+        resg = stack['group1']
+
+        resg.properties = mock.MagicMock()
+        resg.properties.get.return_value = self.count
+        resg._name_blacklist = mock.MagicMock(return_value=self.blacklist)
+        self.assertEqual(self.expected, resg._resource_names())
 
 
 class ResourceGroupAttrTest(common.HeatTestCase):
