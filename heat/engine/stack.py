@@ -101,7 +101,8 @@ class Stack(collections.Mapping):
         self.context = context
         self.t = tmpl
         self.name = stack_name
-        self.action = self.CREATE if action is None else action
+        self.action = (self.ADOPT if adopt_stack_data else
+                       self.CREATE if action is None else action)
         self.status = self.IN_PROGRESS if status is None else status
         self.status_reason = status_reason
         self.timeout_mins = timeout_mins
