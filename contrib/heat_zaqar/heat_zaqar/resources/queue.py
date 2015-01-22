@@ -17,6 +17,7 @@ from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 def resource_mapping():
@@ -58,7 +59,13 @@ class ZaqarQueue(resource.Resource):
     attributes_schema = {
         QUEUE_ID: attributes.Schema(
             _("ID of the queue."),
-            cache_mode=attributes.Schema.CACHE_NONE
+            cache_mode=attributes.Schema.CACHE_NONE,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                message=_("Deprecated in kilo. "
+                          "Use get_resource|Ref command instead. "
+                          "For example: { get_resource : <resource_name> }")
+            )
         ),
         HREF: attributes.Schema(
             _("The resource href of the queue.")
