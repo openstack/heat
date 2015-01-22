@@ -24,6 +24,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import neutron
+from heat.engine.hot import functions
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import net
@@ -527,18 +528,29 @@ class NeutronTest(HeatTestCase):
         vs['foo'] = '1234'
         self.assertIsNone(qr.validate_properties(p))
 
-    def test_validate_depr_properties_required(self):
+    def test_validate_depr_properties_required_both(self):
         data = {'network_id': '1234',
                 'network': 'abc'}
         p = properties.Properties(subnet.Subnet.properties_schema, data)
         self.assertRaises(exception.ResourcePropertyConflict,
                           qr._validate_depr_property_required,
                           p, 'network', 'network_id')
+
+    def test_validate_depr_properties_required_neither(self):
         data = {}
         p = properties.Properties(subnet.Subnet.properties_schema, data)
         self.assertRaises(exception.StackValidationFailed,
                           qr._validate_depr_property_required,
                           p, 'network', 'network_id')
+
+    def test_validate_depr_properties_required_with_refs(self):
+        funct = functions.GetParam(mock.Mock(),
+                                   'get_param', 'private_subnet_id')
+        data = {'network_id': funct}
+        p = properties.Properties(subnet.Subnet.properties_schema, data,
+                                  resolver=lambda d: None)
+        # no assert, as we are looking for no exception.
+        qr._validate_depr_property_required(p, 'network', 'network_id')
 
     def test_prepare_properties(self):
         data = {'admin_state_up': False,
