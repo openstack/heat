@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -24,11 +25,11 @@ class Subnet(neutron.NeutronResource):
     PROPERTIES = (
         NETWORK_ID, NETWORK, CIDR, VALUE_SPECS, NAME, IP_VERSION,
         DNS_NAMESERVERS, GATEWAY_IP, ENABLE_DHCP, ALLOCATION_POOLS,
-        TENANT_ID, HOST_ROUTES,
+        TENANT_ID, HOST_ROUTES, IPV6_RA_MODE, IPV6_ADDRESS_MODE,
     ) = (
         'network_id', 'network', 'cidr', 'value_specs', 'name', 'ip_version',
         'dns_nameservers', 'gateway_ip', 'enable_dhcp', 'allocation_pools',
-        'tenant_id', 'host_routes',
+        'tenant_id', 'host_routes', 'ipv6_ra_mode', 'ipv6_address_mode',
     )
 
     _ALLOCATION_POOL_KEYS = (
@@ -41,6 +42,12 @@ class Subnet(neutron.NeutronResource):
         ROUTE_DESTINATION, ROUTE_NEXTHOP,
     ) = (
         'destination', 'nexthop',
+    )
+
+    _IPV6_DHCP_MODES = (
+        DHCPV6_STATEFUL, DHCPV6_STATELESS, SLAAC,
+    ) = (
+        'dhcpv6-stateful', 'dhcpv6-stateless', 'slaac',
     )
 
     ATTRIBUTES = (
@@ -146,6 +153,26 @@ class Subnet(neutron.NeutronResource):
             ),
             update_allowed=True
         ),
+        IPV6_RA_MODE: properties.Schema(
+            properties.Schema.STRING,
+            _('IPv6 RA (Router Advertisement) mode.'
+              ' dhcpv6-stateful, dhcpv6-stateless, or slaac.'),
+            constraints=[
+                constraints.AllowedValues([DHCPV6_STATEFUL, DHCPV6_STATELESS,
+                                           SLAAC]),
+            ],
+            support_status=support.SupportStatus(version='2015.1')
+        ),
+        IPV6_ADDRESS_MODE: properties.Schema(
+            properties.Schema.STRING,
+            _('IPv6 address mode.'
+              ' dhcpv6-stateful, dhcpv6-stateless, or slaac.'),
+            constraints=[
+                constraints.AllowedValues([DHCPV6_STATEFUL, DHCPV6_STATELESS,
+                                           SLAAC]),
+            ],
+            support_status=support.SupportStatus(version='2015.1')
+        ),
     }
 
     attributes_schema = {
@@ -200,6 +227,17 @@ class Subnet(neutron.NeutronResource):
         super(Subnet, self).validate()
         self._validate_depr_property_required(self.properties,
                                               self.NETWORK, self.NETWORK_ID)
+        ra_mode = self.properties.get(self.IPV6_RA_MODE)
+        address_mode = self.properties.get(self.IPV6_ADDRESS_MODE)
+        if (self.properties.get(self.IP_VERSION) == 4) and (
+                ra_mode or address_mode):
+            msg = _('ipv6_ra_mode and ipv6_address_mode are not supported '
+                    'for ipv4.')
+            raise exception.StackValidationFailed(message=msg)
+        if ra_mode and address_mode and (ra_mode != address_mode):
+            msg = _('When both ipv6_ra_mode and ipv6_address_mode are set, '
+                    'they must be equal.')
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         props = self.prepare_properties(

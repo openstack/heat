@@ -1336,6 +1336,86 @@ class NeutronSubnetTest(common.HeatTestCase):
             'gateway_ip': None
         }, p)
 
+    def test_ipv6_subnet(self):
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'None'
+        ).AndReturn('None')
+        neutronclient.Client.create_subnet({
+            'subnet': {
+                'name': utils.PhysName('test_stack', 'test_subnet'),
+                'network_id': u'None',
+                'dns_nameservers': [u'2001:4860:4860::8844'],
+                'ip_version': 6,
+                'enable_dhcp': True,
+                'cidr': u'fdfa:6a50:d22b::/64',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'ipv6_address_mode': 'slaac',
+                'ipv6_ra_mode': 'slaac'
+            }
+        }).AndReturn({
+            "subnet": {
+                "allocation_pools": [
+                    {"start": "fdfa:6a50:d22b::2",
+                     "end": "fdfa:6a50:d22b:0:ffff:ffff:ffff:fffe"}],
+                "cidr": "fd00:1::/64",
+                "enable_dhcp": True,
+                "gateway_ip": "fdfa:6a50:d22b::1",
+                "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                "ip_version": 6,
+                "name": "name",
+                "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                'ipv6_address_mode': 'slaac',
+                'ipv6_ra_mode': 'slaac'
+            }
+        })
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['subnet']['Properties']
+        props.pop('allocation_pools')
+        props.pop('host_routes')
+        props['ip_version'] = 6
+        props['ipv6_address_mode'] = 'slaac'
+        props['ipv6_ra_mode'] = 'slaac'
+        props['cidr'] = 'fdfa:6a50:d22b::/64'
+        props['dns_nameservers'] = ['2001:4860:4860::8844']
+        stack = utils.parse_stack(t)
+        rsrc = self.create_subnet(t, stack, 'subnet')
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.validate()
+        self.m.VerifyAll()
+
+    def test_ipv6_validate_ra_mode(self):
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['subnet']['Properties']
+        props['ipv6_address_mode'] = 'dhcpv6-stateful'
+        props['ipv6_ra_mode'] = 'slaac'
+        props['ip_version'] = 6
+        stack = utils.parse_stack(t)
+        rsrc = stack['subnet']
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        self.assertEqual("When both ipv6_ra_mode and ipv6_address_mode are "
+                         "set, they must be equal.", six.text_type(ex))
+
+    def test_ipv6_validate_ip_version(self):
+        t = template_format.parse(neutron_template)
+        props = t['Resources']['subnet']['Properties']
+        props['ipv6_address_mode'] = 'slaac'
+        props['ipv6_ra_mode'] = 'slaac'
+        props['ip_version'] = 4
+        stack = utils.parse_stack(t)
+        rsrc = stack['subnet']
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               rsrc.validate)
+        self.assertEqual("ipv6_ra_mode and ipv6_address_mode are not "
+                         "supported for ipv4.", six.text_type(ex))
+
 
 class NeutronRouterTest(common.HeatTestCase):
 
