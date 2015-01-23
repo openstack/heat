@@ -14,20 +14,19 @@
 import copy
 import datetime
 import json
-import time
 import uuid
 
-import mox
 from oslo.config import cfg
+from oslo_utils import timeutils
 import six
 
+from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources.aws import wait_condition_handle as aws_wch
-from heat.engine.resources import wait_condition as wc
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
@@ -199,23 +198,20 @@ class WaitConditionTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_timeout(self):
-        st = time.time()
-
         self.stack = self.create_stack()
 
         # Avoid the stack create exercising the timeout code at the same time
         self.m.StubOutWithMock(self.stack, 'timeout_secs')
         self.stack.timeout_secs().MultipleTimes().AndReturn(None)
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        now = timeutils.utcnow()
+        fake_clock = [now + datetime.timedelta(0, t)
+                      for t in (0, 0.001, 0.1, 4.1, 5.1)]
+        timeutils.set_time_override(fake_clock)
+        self.addCleanup(timeutils.clear_time_override)
 
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.001)
-        scheduler.wallclock().AndReturn(st + 0.1)
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.wallclock().AndReturn(st + 4.1)
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.wallclock().AndReturn(st + 5.1)
+        aws_wch.WaitConditionHandle.get_status(
+        ).MultipleTimes().AndReturn([])
 
         self.m.ReplayAll()
 
@@ -529,11 +525,6 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
-        scheduler.ENABLE_SLEEP = False
-
-    def tearDown(self):
-        super(WaitConditionUpdateTest, self).tearDown()
-        scheduler.ENABLE_SLEEP = True
 
     def create_stack(self, tmpl=None):
         if tmpl is None:
@@ -594,34 +585,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
-    def test_handle_update(self):
-        self.stack = self.create_stack()
-        self.m.ReplayAll()
-        self.stack.create()
-
-        rsrc = self.stack['WaitForTheHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        wait_condition_handle = self.stack['WaitHandle']
-        test_metadata = {'Data': 'foo', 'Reason': 'bar',
-                         'Status': 'SUCCESS', 'UniqueId': '1'}
-        self._handle_signal(wait_condition_handle, test_metadata, 5)
-
-        prop_diff = {"Count": 5}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                   props)
-        updater = rsrc.handle_update(update_defn, {}, prop_diff)
-        updater.run_to_completion()
-
-        self.assertEqual(5, rsrc.properties['Count'])
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-    def test_handle_update_restored_from_db(self):
+    def test_update_restored_from_db(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
         self.stack.create()
@@ -642,16 +606,17 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         rsrc = self.stack['WaitForTheHandle']
 
         self._handle_signal(wait_condition_handle, test_metadata, 3)
-        prop_diff = {"Count": 5}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                   props)
-        updater = rsrc.handle_update(update_defn, {}, prop_diff)
-        updater.run_to_completion()
 
-        self.assertEqual(5, rsrc.properties['Count'])
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        uprops = copy.copy(rsrc.properties.data)
+        uprops['Count'] = '5'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      uprops)
+
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        updater()
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
     def _handle_signal(self, rsrc, metadata, times=1):
         for t in range(times):
@@ -661,7 +626,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
                              (metadata[rsrc.STATUS], metadata[rsrc.REASON]),
                              ret)
 
-    def test_handle_update_timeout(self):
+    def test_update_timeout(self):
         self.stack = self.create_stack()
         self.m.ReplayAll()
         self.stack.create()
@@ -672,31 +637,27 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        st = time.time()
+        now = timeutils.utcnow()
+        fake_clock = [now + datetime.timedelta(0, t)
+                      for t in (0, 0.001, 0.1, 4.1, 5.1)]
+        timeutils.set_time_override(fake_clock)
+        self.addCleanup(timeutils.clear_time_override)
 
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IgnoreArg()).MultipleTimes().AndReturn(
-            None)
-
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.001)
-        scheduler.wallclock().AndReturn(st + 0.1)
-        scheduler.wallclock().AndReturn(st + 4.1)
-        scheduler.wallclock().AndReturn(st + 5.1)
+        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
+        aws_wch.WaitConditionHandle.get_status().MultipleTimes().AndReturn([])
 
         self.m.ReplayAll()
 
-        prop_diff = {"Count": 5}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                   props)
-        updater = rsrc.handle_update(update_defn, {}, prop_diff)
+        uprops = copy.copy(rsrc.properties.data)
+        uprops['Count'] = '5'
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      uprops)
+
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        ex = self.assertRaises(exception.ResourceFailure,
+                               updater)
+        self.assertEqual("WaitConditionTimeout: 0 of 5 received",
+                         six.text_type(ex))
         self.assertEqual(5, rsrc.properties['Count'])
-        ex = self.assertRaises(wc.WaitConditionTimeout,
-                               updater.run_to_completion)
-        self.assertEqual("0 of 5 received", six.text_type(ex))
         self.m.VerifyAll()
-        self.m.UnsetStubs()
