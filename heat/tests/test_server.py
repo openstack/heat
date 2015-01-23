@@ -23,7 +23,6 @@ from six.moves.urllib import parse as urlparse
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
@@ -34,6 +33,7 @@ from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
 from heat.engine import scheduler
 from heat.engine import template
+from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -2774,7 +2774,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.SNAPSHOT, server.COMPLETE), server.state)
 
         self.assertEqual({'snapshot_image_id': '1'},
-                         db_api.resource_data_get_all(server))
+                         resource_data_object.ResourceData.get_all(server))
         self.m.VerifyAll()
 
     def test_server_dont_validate_personality_if_personality_isnt_set(self):

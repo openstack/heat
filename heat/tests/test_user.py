@@ -16,10 +16,10 @@ from oslo_config import cfg
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine.resources.aws.iam import user
 from heat.engine.resources.openstack.heat import access_policy as ap
 from heat.engine import scheduler
+from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests import utils
@@ -321,7 +321,7 @@ class AccessKeyTest(common.HeatTestCase):
                          rsrc._secret)
 
         # Ensure the resource data has been stored correctly
-        rs_data = db_api.resource_data_get_all(rsrc)
+        rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual(self.fc.secret, rs_data.get('secret_key'))
         self.assertEqual(self.fc.credential_id, rs_data.get('credential_id'))
         self.assertEqual(2, len(rs_data.keys()))
@@ -355,9 +355,9 @@ class AccessKeyTest(common.HeatTestCase):
         # Delete the resource data for secret_key, to test that existing
         # stacks which don't have the resource_data stored will continue
         # working via retrieving the keypair from keystone
-        db_api.resource_data_delete(rsrc, 'credential_id')
-        db_api.resource_data_delete(rsrc, 'secret_key')
-        rs_data = db_api.resource_data_get_all(rsrc)
+        resource_data_object.ResourceData.delete(rsrc, 'credential_id')
+        resource_data_object.ResourceData.delete(rsrc, 'secret_key')
+        rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual(0, len(rs_data.keys()))
 
         rsrc._secret = None
