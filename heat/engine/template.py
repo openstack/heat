@@ -52,7 +52,16 @@ def _get_template_extension_manager():
     return extension.ExtensionManager(
         namespace='heat.templates',
         invoke_on_load=False,
-        verify_requirements=True)
+        verify_requirements=True,
+        on_load_failure_callback=raise_extension_exception)
+
+
+def raise_extension_exception(extmanager, ep, err):
+    raise TemplatePluginNotRegistered(name=ep.name, error=six.text_type(err))
+
+
+class TemplatePluginNotRegistered(exception.HeatException):
+    msg_fmt = _("Could not load %(name)s: %(error)s")
 
 
 def get_template_class(template_data):
