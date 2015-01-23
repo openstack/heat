@@ -83,6 +83,9 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def resolve_router(self, props, router_key, router_id_key):
         return self._resolve(props, router_key, router_id_key, 'router')
 
+    def resolve_port(self, props, port_key, port_id_key):
+        return self._resolve(props, port_key, port_id_key, 'port')
+
     def network_id_from_subnet_id(self, subnet_id):
         subnet_info = self.client().show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']

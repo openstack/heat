@@ -1651,11 +1651,26 @@ class NeutronRouterTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
-    def test_router_interface_with_port_id(self):
+    def test_router_interface_with_port(self):
+        self._test_router_interface_with_port()
+
+    def test_router_interface_with_deprecated_port(self):
+        self._test_router_interface_with_port(resolve_port=False)
+
+    def _test_router_interface_with_port(self, resolve_port=True):
+        port_key = 'port_id'
         neutronclient.Client.add_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         ).AndReturn(None)
+        if resolve_port:
+            port_key = 'port'
+            neutronV20.find_resourceid_by_name_or_id(
+                mox.IsA(neutronclient.Client),
+                'port',
+                '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+            ).AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
+
         neutronclient.Client.remove_interface_router(
             'ae478782-53c0-4434-ab16-49900c88016c',
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
@@ -1672,7 +1687,7 @@ class NeutronRouterTest(common.HeatTestCase):
         rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
                 'router_id': 'ae478782-53c0-4434-ab16-49900c88016c',
-                'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'
+                port_key: '9577cafd-8e98-4059-a2e6-8a771b4d318e'
             })
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
@@ -1720,7 +1735,7 @@ class NeutronRouterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.PropertyUnspecifiedError,
                                res.validate)
         self.assertEqual("At least one of the following properties "
-                         "must be specified: subnet, port_id",
+                         "must be specified: subnet, port",
                          six.text_type(ex))
 
     def test_gateway_router(self):
