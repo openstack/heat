@@ -308,10 +308,13 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self._mock_create_server_volume_script(fva)
         self.stub_VolumeConstraint_validate()
         # delete script
-        self.fc.volumes.get_server_volume(u'WikiDatabase',
-                                          'vol-123').AndReturn(fva)
+        self.fc.volumes.delete_server_volume(u'WikiDatabase',
+                                             'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get(fva.id).AndRaise(
             cinder_exp.NotFound('Not found'))
+        self.fc.volumes.get_server_volume(u'WikiDatabase', 'vol-123'
+                                          ).AndRaise(
+                                              fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 
@@ -333,9 +336,12 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self._mock_create_server_volume_script(fva)
         self.stub_VolumeConstraint_validate()
         # delete script
-        self.fc.volumes.get_server_volume(u'WikiDatabase',
-                                          'vol-123').AndReturn(fva)
+        self.fc.volumes.delete_server_volume(u'WikiDatabase',
+                                             'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
+        self.fc.volumes.get_server_volume(u'WikiDatabase', 'vol-123'
+                                          ).AndRaise(
+                                              fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 
@@ -395,11 +401,8 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.stub_VolumeConstraint_validate()
         # delete script
         fva = vt_base.FakeVolume('in-use')
-        self.fc.volumes.get_server_volume(u'WikiDatabase',
-                                          'vol-123').AndReturn(fva)
-        self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
         self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+            'WikiDatabase', 'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get(fva.id).AndReturn(
             vt_base.FakeVolume('error', id=fva.id))
         self.m.ReplayAll()
@@ -445,12 +448,8 @@ class VolumeTest(vt_base.BaseVolumeTest):
                                       stack_name)
 
         self.cinder_fc.volumes.get(fv.id).AndReturn(
-            vt_base.FakeVolume('available'))
-        self.cinder_fc.volumes.delete(fv.id).AndReturn(True)
-        self.cinder_fc.volumes.get(fv.id).AndReturn(
             vt_base.FakeVolume('deleting'))
-        self.cinder_fc.volumes.get(fv.id).AndRaise(
-            cinder_exp.NotFound('Not found'))
+
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
@@ -533,8 +532,10 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         # snapshot script
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create(fv.id).AndReturn(
-            vt_base.FakeBackup('available'))
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
+        fb = vt_base.FakeBackup('available')
+        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.cinder_fc.backups.get(fb.id).AndReturn(fb)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self._mock_delete_volume(fv)
 
@@ -555,10 +556,11 @@ class VolumeTest(vt_base.BaseVolumeTest):
                                       stack_name)
 
         # snapshot script
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
         fb = vt_base.FakeBackup('error')
         self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.cinder_fc.backups.get(fb.id).AndReturn(fb)
         self.m.ReplayAll()
 
         self.t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'

@@ -337,7 +337,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('available',
                                 size=1, attachments=[])
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2)
         self.cinder_fc.volumes.get(fv.id).AndReturn(
             vt_base.FakeVolume('extending'))
@@ -371,7 +370,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('available',
                                 size=1, attachments=[])
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2).AndRaise(
             cinder_exp.OverLimit(413))
         self.m.ReplayAll()
@@ -399,7 +397,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         # update script
         fv = vt_base.FakeVolume('available',
                                 size=1, attachments=[])
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2)
         self.cinder_fc.volumes.get(fv.id).AndReturn(

@@ -19,12 +19,12 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import attributes
+from heat.engine.clients.os import cinder as heat_cinder
 from heat.engine import constraints
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine.resources import volume_base as vb
-from heat.engine import scheduler
 from heat.engine import support
-from heat.engine import volume_tasks as vol_task
 
 LOG = logging.getLogger(__name__)
 
@@ -236,10 +236,41 @@ class CinderVolume(vb.BaseVolume):
 
         return vol_id
 
+    def _extend_volume(self, new_size):
+        try:
+            self.client().volumes.extend(self.resource_id, new_size)
+        except Exception as ex:
+            if self.client_plugin().is_client_exception(ex):
+                raise exception.Error(_(
+                    "Failed to extend volume %(vol)s - %(err)s") % {
+                        'vol': self.resource_id, 'err': str(ex)})
+            else:
+                raise
+        return True
+
+    def _check_extend_volume_complete(self):
+        vol = self.client().volumes.get(self.resource_id)
+        if vol.status == 'extending':
+            LOG.debug("Volume %s is being extended" % vol.id)
+            return False
+
+        if vol.status != 'available':
+            LOG.info(_LI("Resize failed: Volume %(vol)s "
+                         "is in %(status)s state."),
+                     {'vol': vol.id, 'status': vol.status})
+            raise resource.ResourceUnknownStatus(
+                resource_status=vol.status,
+                result=_('Volume resize failed'))
+
+        LOG.info(_LI('Volume %(id)s resize complete'), {'id': vol.id})
+        return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
-        checkers = []
         cinder = self.client()
+        prg_resize = None
+        prg_attach = None
+        prg_detach = None
         # update the name and description for cinder volume
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
             vol = cinder.volumes.get(self.resource_id)
@@ -268,6 +299,10 @@ class CinderVolume(vb.BaseVolume):
                     vol = cinder.volumes.get(self.resource_id)
                 new_vol_type = prop_diff.get(self.VOLUME_TYPE)
                 cinder.volumes.retype(vol, new_vol_type, 'never')
+        # update read_only access mode
+        if self.READ_ONLY in prop_diff:
+            flag = prop_diff.get(self.READ_ONLY)
+            cinder.volumes.update_readonly_flag(self.resource_id, flag)
         # extend volume size
         if self.SIZE in prop_diff:
             if not vol:
@@ -278,6 +313,7 @@ class CinderVolume(vb.BaseVolume):
                 raise exception.NotSupported(feature=_("Shrinking volume"))
 
             elif new_size > vol.size:
+                prg_resize = heat_cinder.VolumeResizeProgress(size=new_size)
                 if vol.attachments:
                     # NOTE(pshchelo):
                     # this relies on current behavior of cinder attachments,
@@ -289,35 +325,59 @@ class CinderVolume(vb.BaseVolume):
                     server_id = vol.attachments[0]['server_id']
                     device = vol.attachments[0]['device']
                     attachment_id = vol.attachments[0]['id']
-                    detach_task = vol_task.VolumeDetachTask(
-                        self.stack, server_id, attachment_id)
-                    checkers.append(scheduler.TaskRunner(detach_task))
-                    extend_task = vol_task.VolumeExtendTask(
-                        self.stack, vol.id, new_size)
-                    checkers.append(scheduler.TaskRunner(extend_task))
-                    attach_task = vol_task.VolumeAttachTask(
-                        self.stack, server_id, vol.id, device)
-                    checkers.append(scheduler.TaskRunner(attach_task))
+                    prg_detach = heat_cinder.VolumeDetachProgress(
+                        server_id, vol.id, attachment_id)
+                    prg_attach = heat_cinder.VolumeAttachProgress(
+                        server_id, vol.id, device)
 
-                else:
-                    extend_task = vol_task.VolumeExtendTask(
-                        self.stack, vol.id, new_size)
-                    checkers.append(scheduler.TaskRunner(extend_task))
-        # update read_only access mode
-        if self.READ_ONLY in prop_diff:
-            flag = prop_diff.get(self.READ_ONLY)
-            cinder.volumes.update_readonly_flag(self.resource_id, flag)
+        return prg_detach, prg_resize, prg_attach
 
-        if checkers:
-            checkers[0].start()
-        return checkers
+    def _detach_volume_to_complete(self, prg_detach):
+        if not prg_detach.called:
+            self.client_plugin('nova').detach_volume(prg_detach.srv_id,
+                                                     prg_detach.attach_id)
+            prg_detach.called = True
+            return False
+        if not prg_detach.cinder_complete:
+            cinder_complete_res = self.client_plugin(
+            ).check_detach_volume_complete(prg_detach.vol_id)
+            prg_detach.cinder_complete = cinder_complete_res
+            return False
+        if not prg_detach.nova_complete:
+            prg_detach.nova_complete = self.client_plugin(
+                'nova').check_detach_volume_complete(prg_detach.srv_id,
+                                                     prg_detach.attach_id)
+            return False
+
+    def _attach_volume_to_complete(self, prg_attach):
+        if not prg_attach.called:
+            prg_attach.called = self.client_plugin('nova').attach_volume(
+                prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
+            return False
+        if not prg_attach.complete:
+            prg_attach.complete = self.client_plugin(
+            ).check_attach_volume_complete(prg_attach.vol_id)
+            return prg_attach.complete
 
     def check_update_complete(self, checkers):
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
+        prg_detach, prg_resize, prg_attach = checkers
+        if not prg_resize:
+            return True
+        # detach volume
+        if prg_detach:
+            if not prg_detach.nova_complete:
+                self._detach_volume_to_complete(prg_detach)
                 return False
+        # resize volume
+        if not prg_resize.called:
+            prg_resize.called = self._extend_volume(prg_resize.size)
+            return False
+        if not prg_resize.complete:
+            prg_resize.complete = self._check_extend_volume_complete()
+            return prg_resize.complete and not prg_attach
+        # reattach volume back
+        if prg_attach:
+            return self._attach_volume_to_complete(prg_attach)
         return True
 
     def handle_snapshot(self):
@@ -334,24 +394,25 @@ class CinderVolume(vb.BaseVolume):
         raise exception.Error(backup.fail_reason)
 
     def handle_delete_snapshot(self, snapshot):
-        backup_id = snapshot['resource_data'].get('backup_id')
+        backup_id = snapshot['resource_data']['backup_id']
+        try:
+            self.client().backups.delete(backup_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return
+        else:
+            return backup_id
 
-        def delete():
-            cinder = self.client()
-            try:
-                cinder.backups.delete(backup_id)
-                while True:
-                    yield
-                    cinder.backups.get(backup_id)
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-
-        delete_task = scheduler.TaskRunner(delete)
-        delete_task.start()
-        return delete_task
-
-    def check_delete_snapshot_complete(self, delete_task):
-        return delete_task.step()
+    def check_delete_snapshot_complete(self, backup_id):
+        if not backup_id:
+            return True
+        try:
+            self.client().backups.get(backup_id)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return True
+        else:
+            return False
 
     def _build_exclusive_options(self):
         exclusive_options = []
@@ -463,13 +524,21 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
     }
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        checkers = []
+        prg_attach = None
+        prg_detach = None
         if prop_diff:
             # Even though some combinations of changed properties
             # could be updated in UpdateReplace manner,
             # we still first detach the old resource so that
             # self.resource_id is not replaced prematurely
             volume_id = self.properties[self.VOLUME_ID]
+            server_id = self._stored_properties_data.get(self.INSTANCE_ID)
+            self.client_plugin('nova').detach_volume(server_id,
+                                                     self.resource_id)
+            prg_detach = heat_cinder.VolumeDetachProgress(
+                server_id, volume_id, self.resource_id)
+            prg_detach.called = True
+
             if self.VOLUME_ID in prop_diff:
                 volume_id = prop_diff.get(self.VOLUME_ID)
 
@@ -477,29 +546,36 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             if self.DEVICE in prop_diff:
                 device = prop_diff.get(self.DEVICE)
 
-            server_id = self._stored_properties_data.get(self.INSTANCE_ID)
-            detach_task = vol_task.VolumeDetachTask(
-                self.stack, server_id, self.resource_id)
-            checkers.append(scheduler.TaskRunner(detach_task))
-
             if self.INSTANCE_ID in prop_diff:
                 server_id = prop_diff.get(self.INSTANCE_ID)
-            attach_task = vol_task.VolumeAttachTask(
-                self.stack, server_id, volume_id, device)
+            prg_attach = heat_cinder.VolumeAttachProgress(
+                server_id, volume_id, device)
 
-            checkers.append(scheduler.TaskRunner(attach_task))
-
-        if checkers:
-            checkers[0].start()
-        return checkers
+        return prg_detach, prg_attach
 
     def check_update_complete(self, checkers):
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
-                return False
-        self.resource_id_set(checkers[-1]._task.attachment_id)
+        prg_detach, prg_attach = checkers
+        if not (prg_detach and prg_attach):
+            return True
+        if not prg_detach.cinder_complete:
+            prg_detach.cinder_complete = self.client_plugin(
+            ).check_detach_volume_complete(prg_detach.vol_id)
+            return False
+        if not prg_detach.nova_complete:
+            prg_detach.nova_complete = self.client_plugin(
+                'nova').check_detach_volume_complete(prg_detach.srv_id,
+                                                     self.resource_id)
+            return False
+        if not prg_attach.called:
+            prg_attach.called = self.client_plugin('nova').attach_volume(
+                prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
+            return False
+        if not prg_attach.complete:
+            prg_attach.complete = self.client_plugin(
+            ).check_attach_volume_complete(prg_attach.vol_id)
+            if prg_attach.complete:
+                self.resource_id_set(prg_attach.called)
+            return prg_attach.complete
         return True
 
 
