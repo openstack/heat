@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+from heat.api.aws import exception as aws_exception
 from heat.api.aws import utils as api_utils
+from heat.common import exception as common_exception
 from heat.tests import common
 
 
@@ -182,3 +183,39 @@ class AWSCommonTest(common.HeatTestCase):
         expected = {"bar": 123}
         result = api_utils.reformat_dict_keys(keymap, data)
         self.assertEqual(expected, result)
+
+    def test_get_param_value(self):
+        params = {"foo": 123}
+        self.assertEqual(123, api_utils.get_param_value(params, "foo"))
+
+    def test_get_param_value_missing(self):
+        params = {"foo": 123}
+        self.assertRaises(
+            aws_exception.HeatMissingParameterError,
+            api_utils.get_param_value, params, "bar")
+
+    def test_map_remote_error(self):
+        ex = Exception()
+        expected = aws_exception.HeatInternalFailureError
+        self.assertIsInstance(aws_exception.map_remote_error(ex), expected)
+
+    def test_map_remote_error_inval_param_error(self):
+        ex = AttributeError()
+        expected = aws_exception.HeatInvalidParameterValueError
+        self.assertIsInstance(aws_exception.map_remote_error(ex), expected)
+
+    def test_map_remote_error_denied_error(self):
+        ex = common_exception.Forbidden()
+        expected = aws_exception.HeatAccessDeniedError
+        self.assertIsInstance(aws_exception.map_remote_error(ex), expected)
+
+    def test_map_remote_error_already_exists_error(self):
+        ex = common_exception.StackExists(stack_name="teststack")
+        expected = aws_exception.AlreadyExistsError
+        self.assertIsInstance(aws_exception.map_remote_error(ex), expected)
+
+    def test_map_remote_error_invalid_action_error(self):
+        ex = common_exception.ActionInProgress(stack_name="teststack",
+                                               action="testing")
+        expected = aws_exception.HeatActionInProgressError
+        self.assertIsInstance(aws_exception.map_remote_error(ex), expected)
