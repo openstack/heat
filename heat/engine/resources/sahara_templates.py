@@ -283,7 +283,7 @@ class SaharaClusterTemplate(resource.Resource):
             properties.Schema.STRING,
             _("ID of the default image to use for the template."),
             constraints=[
-                constraints.CustomConstraint('glance.image')
+                constraints.CustomConstraint('sahara.image'),
             ],
         ),
         MANAGEMENT_NETWORK: properties.Schema(
