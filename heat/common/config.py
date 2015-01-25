@@ -91,9 +91,6 @@ engine_opts = [
                       "If it's empty, Heat will use the default user set up "
                       "with your cloud image (for OS::Nova::Server) or "
                       "'ec2-user' (for AWS::EC2::Instance).")),
-    cfg.StrOpt('instance_driver',
-               default='heat.engine.nova',
-               help=_('Driver to use for controlling instances.')),
     cfg.ListOpt('plugin_dirs',
                 default=['/usr/lib64/heat', '/usr/lib/heat'],
                 help=_('List of directories to search for plug-ins.')),
