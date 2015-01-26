@@ -189,6 +189,14 @@ class StackResourceTest(common.HeatTestCase):
         preview = self.parent_resource.preview()
         self.assertIsInstance(preview, stack_resource.StackResource)
 
+    def test_nested_stack_abandon(self):
+        nest = mock.MagicMock()
+        self.parent_resource.nested = nest
+        nest.return_value.prepare_abandon.return_value = {'X': 'Y'}
+        ret = self.parent_resource.prepare_abandon()
+        nest.return_value.prepare_abandon.assert_called_once_with()
+        self.assertEqual({'X': 'Y'}, ret)
+
     def test_implementation_signature(self):
         self.parent_resource.child_template = mock.Mock(
             return_value=self.simple_template)
