@@ -254,7 +254,8 @@ def list_opts():
     yield 'clients', default_clients_opts
 
     for client in ('nova', 'swift', 'neutron', 'cinder',
-                   'ceilometer', 'keystone', 'heat', 'glance', 'trove'):
+                   'ceilometer', 'keystone', 'heat', 'glance', 'trove',
+                   'sahara'):
         client_specific_group = 'clients_' + client
         yield client_specific_group, clients_opts
 
