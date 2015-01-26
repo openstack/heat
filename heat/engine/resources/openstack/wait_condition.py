@@ -13,6 +13,7 @@
 
 import json
 
+from oslo_utils import timeutils
 import six
 
 from heat.common.i18n import _
@@ -22,7 +23,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import wait_condition as wc_base
-from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import log as logging
 
@@ -87,36 +87,33 @@ class HeatWaitCondition(resource.Resource):
     def _get_handle_resource(self):
         return self.stack.resource_by_refid(self.properties[self.HANDLE])
 
-    def _wait(self, handle):
-        while True:
-            try:
-                yield
-            except scheduler.Timeout:
-                timeout = wc_base.WaitConditionTimeout(self, handle)
-                LOG.info(_LI('%(name)s Timed out (%(timeout)s)'),
-                         {'name': str(self), 'timeout': str(timeout)})
-                raise timeout
+    def _wait(self, handle, started_at, timeout_in):
+        if timeutils.is_older_than(started_at, timeout_in):
+            exc = wc_base.WaitConditionTimeout(self, handle)
+            LOG.info(_LI('%(name)s Timed out (%(timeout)s)'),
+                     {'name': str(self), 'timeout': str(exc)})
+            raise exc
 
-            handle_status = handle.get_status()
+        handle_status = handle.get_status()
 
-            if any(s != handle.STATUS_SUCCESS for s in handle_status):
-                failure = wc_base.WaitConditionFailure(self, handle)
-                LOG.info(_LI('%(name)s Failed (%(failure)s)'),
-                         {'name': str(self), 'failure': str(failure)})
-                raise failure
+        if any(s != handle.STATUS_SUCCESS for s in handle_status):
+            failure = wc_base.WaitConditionFailure(self, handle)
+            LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+                     {'name': str(self), 'failure': str(failure)})
+            raise failure
 
-            if len(handle_status) >= self.properties[self.COUNT]:
-                LOG.info(_LI("%s Succeeded"), str(self))
-                return
+        if len(handle_status) >= self.properties[self.COUNT]:
+            LOG.info(_LI("%s Succeeded"), str(self))
+            return True
+        return False
 
     def handle_create(self):
         handle = self._get_handle_resource()
-        runner = scheduler.TaskRunner(self._wait, handle)
-        runner.start(timeout=float(self.properties[self.TIMEOUT]))
-        return runner
+        started_at = timeutils.utcnow()
+        return handle, started_at, float(self.properties[self.TIMEOUT])
 
-    def check_create_complete(self, runner):
-        return runner.step()
+    def check_create_complete(self, data):
+        return self._wait(*data)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -124,12 +121,11 @@ class HeatWaitCondition(resource.Resource):
                                                       self.context)
 
         handle = self._get_handle_resource()
-        runner = scheduler.TaskRunner(self._wait, handle)
-        runner.start(timeout=float(self.properties[self.TIMEOUT]))
-        return runner
+        started_at = timeutils.utcnow()
+        return handle, started_at, float(self.properties[self.TIMEOUT])
 
-    def check_update_complete(self, runner):
-        return runner.step()
+    def check_update_complete(self, data):
+        return self._wait(*data)
 
     def handle_delete(self):
         handle = self._get_handle_resource()
@@ -140,8 +136,7 @@ class HeatWaitCondition(resource.Resource):
         handle = self._get_handle_resource()
         if key == self.DATA:
             meta = handle.metadata_get(refresh=True)
-            # Note, can't use a dict generator on python 2.6, hence:
-            res = dict([(k, meta[k][handle.DATA]) for k in meta])
+            res = {k: meta[k][handle.DATA] for k in meta}
             LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
                       % {'name': self.name,
                          'key': key,

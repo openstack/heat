@@ -184,6 +184,8 @@ class ScaleNotificationTest(common.HeatTestCase):
         self.patchobject(user.User, 'handle_create')
         self.patchobject(user.AccessKey, 'handle_create')
         self.patchobject(aws_wc.WaitCondition, 'handle_create')
+        self.patchobject(aws_wc.WaitCondition,
+                         'check_create_complete').return_value = True
         self.patchobject(signal.SignalResponder, 'handle_create')
 
     def expected_notifs_calls(self, group, adjust,
