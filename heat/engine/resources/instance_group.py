@@ -238,9 +238,15 @@ class InstanceGroup(stack_resource.StackResource):
     def _get_conf_properties(self):
         conf_refid = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_refid)
-
         props = function.resolve(conf.properties.data)
+        if 'InstanceId' in props:
+            props = conf.rebuild_lc_properties(props['InstanceId'])
+
         props['Tags'] = self._tags()
+        # if the launch configuration is created from an existing instance.
+        # delete the 'InstanceId' property
+        props.pop('InstanceId', None)
+
         return conf, props
 
     def _get_instance_definition(self):
