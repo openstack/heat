@@ -150,8 +150,8 @@ class SoftwareComponent(sc.SoftwareConfig):
             actions = config.get(self.CONFIG_ACTIONS)
             if any(action in config_actions for action in actions):
                 msg = _('Defining more than one configuration for the same '
-                        'action in SoftwareComponent "%s" is not allowed.')\
-                    % self.name
+                        'action in SoftwareComponent "%s" is not allowed.'
+                        ) % self.name
                 raise exception.StackValidationFailed(message=msg)
             config_actions.update(actions)
 

@@ -167,14 +167,14 @@ class ServersTest(common.HeatTestCase):
                            image_id=None):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['image'] = \
-            image_id or 'CentOS 5.2'
-        tmpl.t['Resources']['WebServer']['Properties']['flavor'] = \
-            '256 MB Server'
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'image'] = image_id or 'CentOS 5.2'
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'flavor'] = '256 MB Server'
 
         if server_name is not None:
-            tmpl.t['Resources']['WebServer']['Properties']['name'] = \
-                server_name
+            tmpl.t['Resources']['WebServer']['Properties'][
+                'name'] = server_name
 
         return tmpl, stack
 
@@ -235,8 +235,8 @@ class ServersTest(common.HeatTestCase):
             imageId_input).MultipleTimes().AndReturn(imageId)
 
         if server_rebuild:
-            glance.GlanceClientPlugin.get_image_id('F17-x86_64-gold').\
-                MultipleTimes().AndReturn(744)
+            glance.GlanceClientPlugin.get_image_id(
+                'F17-x86_64-gold').MultipleTimes().AndReturn(744)
 
     def _mock_get_image_id_fail(self, image_id, exp):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
@@ -244,8 +244,8 @@ class ServersTest(common.HeatTestCase):
 
     def _mock_get_keypair_success(self, keypair_input, keypair):
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_keypair')
-        nova.NovaClientPlugin.get_keypair(keypair_input).MultipleTimes().\
-            AndReturn(keypair)
+        nova.NovaClientPlugin.get_keypair(
+            keypair_input).MultipleTimes().AndReturn(keypair)
 
     def _server_validate_mock(self, server):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -331,8 +331,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'create_metadata_test_stack'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl['Resources']['WebServer']['Properties']['metadata'] = \
-            {'a': 1}
+        tmpl['Resources']['WebServer']['Properties'][
+            'metadata'] = {'a': 1}
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('create_metadata_test_server',
                                 resource_defns['WebServer'], stack)
@@ -426,9 +426,9 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : WebServer: '
-            'image Error validating value \'Slackware\': '
-            'The Image (Slackware) could not be found.',
+            "StackValidationFailed: Property error : WebServer: "
+            "image Error validating value 'Slackware': "
+            "The Image (Slackware) could not be found.",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -477,9 +477,9 @@ class ServersTest(common.HeatTestCase):
         create = scheduler.TaskRunner(server.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : WebServer: '
-            'image Error validating value \'1\': '
-            'The Image (1) could not be found.',
+            "StackValidationFailed: Property error : WebServer: "
+            "image Error validating value '1': "
+            "The Image (1) could not be found.",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -524,8 +524,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'raw_userdata_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
-            'RAW'
+        tmpl['Resources']['WebServer']['Properties'][
+            'user_data_format'] = 'RAW'
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -556,10 +556,10 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'raw_userdata_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
-            'RAW'
-        tmpl['Resources']['WebServer']['Properties']['user_data'] = \
-            '8c813873-f6ee-4809-8eec-959ef39acb55'
+        tmpl['Resources']['WebServer']['Properties'][
+            'user_data_format'] = 'RAW'
+        tmpl['Resources']['WebServer']['Properties'][
+            'user_data'] = '8c813873-f6ee-4809-8eec-959ef39acb55'
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
@@ -597,8 +597,8 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
         sc_id = '8c813873-f6ee-4809-8eec-959ef39acb55'
-        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
-            'RAW'
+        tmpl['Resources']['WebServer']['Properties'][
+            'user_data_format'] = 'RAW'
         tmpl['Resources']['WebServer']['Properties']['user_data'] = sc_id
 
         resource_defns = tmpl.resource_definitions(stack)
@@ -635,8 +635,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'software_config_s'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl['Resources']['WebServer']['Properties']['user_data_format'] = \
-            'SOFTWARE_CONFIG'
+        tmpl['Resources']['WebServer']['Properties'][
+            'user_data_format'] = 'SOFTWARE_CONFIG'
 
         stack.stack_user_project_id = '8888'
         resource_defns = tmpl.resource_definitions(stack)
@@ -1006,8 +1006,8 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   server.validate)
         self.assertEqual(
-            'Property error : WebServer: key_name Error validating '
-            'value \'test2\': The Key (test2) could not be found.',
+            "Property error : WebServer: key_name Error validating "
+            "value 'test2': The Key (test2) could not be found.",
             six.text_type(error))
         self.m.VerifyAll()
 
@@ -1049,8 +1049,8 @@ class ServersTest(common.HeatTestCase):
 
         tmpl['Resources']['WebServer']['Properties']['networks'] = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
-        tmpl['Resources']['WebServer']['Properties']['security_groups'] = \
-            ['my_security_group']
+        tmpl['Resources']['WebServer']['Properties'][
+            'security_groups'] = ['my_security_group']
 
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_net_security_groups',
@@ -1988,8 +1988,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
-        msg = 'Either volume_id or snapshot_id must be specified for device' +\
-              ' mapping vdb'
+        msg = ("Either volume_id or snapshot_id must be specified "
+               "for device mapping vdb")
         self.assertEqual(msg, six.text_type(ex))
 
         self.m.VerifyAll()
@@ -2012,8 +2012,8 @@ class ServersTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
-        msg = 'Neither image nor bootable volume is specified for instance %s'\
-            % server.name
+        msg = ('Neither image nor bootable volume is specified '
+               'for instance %s' % server.name)
         self.assertEqual(msg, six.text_type(ex))
 
         self.m.VerifyAll()
@@ -2069,13 +2069,13 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
-            {"/fake/path1": "fake contents1",
-             "/fake/path2": "fake_contents2",
-             "/fake/path3": "fake_contents3",
-             "/fake/path4": "fake_contents4",
-             "/fake/path5": "fake_contents5",
-             "/fake/path6": "fake_contents6"}
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "fake contents1",
+                              "/fake/path2": "fake_contents2",
+                              "/fake/path3": "fake_contents3",
+                              "/fake/path4": "fake_contents4",
+                              "/fake/path5": "fake_contents5",
+                              "/fake/path6": "fake_contents6"}
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -2098,12 +2098,12 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
-            {"/fake/path1": "fake contents1",
-             "/fake/path2": "fake_contents2",
-             "/fake/path3": "fake_contents3",
-             "/fake/path4": "fake_contents4",
-             "/fake/path5": "fake_contents5"}
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "fake contents1",
+                              "/fake/path2": "fake_contents2",
+                              "/fake/path3": "fake_contents3",
+                              "/fake/path4": "fake_contents4",
+                              "/fake/path5": "fake_contents5"}
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -2123,8 +2123,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
-            {"/fake/path1": "a" * 10240}
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "a" * 10240}
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -2144,8 +2144,8 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['personality'] = \
-            {"/fake/path1": "a" * 10241}
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "a" * 10241}
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -2160,9 +2160,9 @@ class ServersTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
-        self.assertEqual("The contents of personality file \"/fake/path1\" "
-                         "is larger than the maximum allowed personality "
-                         "file size (10240 bytes).", six.text_type(exc))
+        self.assertEqual('The contents of personality file "/fake/path1" '
+                         'is larger than the maximum allowed personality '
+                         'file size (10240 bytes).', six.text_type(exc))
         self.m.VerifyAll()
 
     def test_resolve_attribute_server_not_found(self):

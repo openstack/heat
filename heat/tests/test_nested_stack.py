@@ -96,8 +96,8 @@ Outputs:
         return stack
 
     def test_nested_stack_create(self):
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
@@ -124,19 +124,20 @@ Outputs:
     def test_nested_stack_adopt(self):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn('''
-            HeatTemplateFormatVersion: '2012-12-12'
-            Parameters:
-              KeyName:
-                Type: String
-            Resources:
-              NestedResource:
-                Type: GenericResource
-            Outputs:
-              Foo:
-                Value: bar
-            ''')
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(
+            '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: bar
+''')
         self.m.ReplayAll()
 
         adopt_data = {
@@ -166,19 +167,20 @@ Outputs:
     def test_nested_stack_adopt_fail(self):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn('''
-            HeatTemplateFormatVersion: '2012-12-12'
-            Parameters:
-              KeyName:
-                Type: String
-            Resources:
-              NestedResource:
-                Type: GenericResource
-            Outputs:
-              Foo:
-                Value: bar
-            ''')
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(
+            '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: bar
+''')
         self.m.ReplayAll()
 
         adopt_data = {
@@ -200,8 +202,8 @@ Outputs:
         self.m.VerifyAll()
 
     def test_nested_stack_create_with_timeout(self):
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
         self.m.ReplayAll()
 
         timeout_template = template_format.parse(
@@ -217,8 +219,9 @@ Outputs:
         cfg.CONF.set_override('max_resources_per_stack', 1)
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn('''
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(
+            '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   KeyName:
@@ -245,8 +248,9 @@ Outputs:
         cfg.CONF.set_override('max_resources_per_stack', 2)
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn('''
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(
+            '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   KeyName:
@@ -270,10 +274,10 @@ Outputs:
         self.m.VerifyAll()
 
     def test_nested_stack_update(self):
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template').MultipleTimes().\
-            AndReturn(self.update_template)
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/new.template'
+                     ).MultipleTimes().AndReturn(self.update_template)
 
         self.m.ReplayAll()
 
@@ -312,10 +316,11 @@ Outputs:
     def test_nested_stack_update_equals_resource_limit(self):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template').MultipleTimes().\
-            AndReturn('''
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/new.template'
+                     ).MultipleTimes().AndReturn(
+            '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   KeyName:
@@ -352,10 +357,11 @@ Outputs:
     def test_nested_stack_update_exceeds_limit(self):
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template').MultipleTimes().\
-            AndReturn('''
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/new.template'
+                     ).MultipleTimes().AndReturn(
+            '''
 HeatTemplateFormatVersion: '2012-12-12'
 Parameters:
   KeyName:
@@ -567,8 +573,8 @@ Resources:
         self.m.VerifyAll()
 
     def test_nested_stack_delete(self):
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
@@ -583,8 +589,8 @@ Resources:
         self.m.VerifyAll()
 
     def test_nested_stack_delete_then_delete_parent_stack(self):
-        urlfetch.get('https://server.test/the.template').MultipleTimes().\
-            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/the.template'
+                     ).MultipleTimes().AndReturn(self.nested_template)
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)

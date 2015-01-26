@@ -68,83 +68,77 @@ test_template_ref = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        },
-        "DataVolume" : {
-          "Type" : "AWS::EC2::Volume",
-          "Properties" : {
-            "Size" : "6",
-            "AvailabilityZone" : "nova"
-          }
-        },
-        "MountPoint" : {
-          "Type" : "AWS::EC2::VolumeAttachment",
-          "Properties" : {
-            "InstanceId" : { "Ref" : "%s" },
-            "VolumeId"  : { "Ref" : "DataVolume" },
-            "Device" : "/dev/vdb"
-          }
-        }
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
+      }
+    },
+    "DataVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : "6",
+        "AvailabilityZone" : "nova"
+      }
+    },
+    "MountPoint" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "%s" },
+        "VolumeId"  : { "Ref" : "DataVolume" },
+        "Device" : "/dev/vdb"
       }
     }
-    '''
+  }
+}
+'''
 test_template_findinmap_valid = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "test.",
   "Parameters" : {
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2 KeyPair to' + \
-    'enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        },
-        "DataVolume" : {
-          "Type" : "AWS::EC2::Volume",
-          "Properties" : {
-            "Size" : "6",
-            "AvailabilityZone" : "nova"
-          }
-        },
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
+      }
+    },
+    "DataVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : "6",
+        "AvailabilityZone" : "nova"
+      }
+    },
 
-        "MountPoint" : {
-          "Type" : "AWS::EC2::VolumeAttachment",
-          "Properties" : {
-            "InstanceId" : { "Ref" : "WikiDatabase" },
-            "VolumeId"  : { "Ref" : "DataVolume" },
-            "Device" : "/dev/vdb"
-          }
-        }
+    "MountPoint" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WikiDatabase" },
+        "VolumeId"  : { "Ref" : "DataVolume" },
+        "Device" : "/dev/vdb"
       }
     }
-    '''
+  }
+}
+'''
 test_template_findinmap_invalid = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -152,40 +146,39 @@ test_template_findinmap_invalid = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2 KeyPair to enable SSH ' + \
-    'access to the instances",' + \
-    '''      "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Mappings" : {
-        "AWSInstanceType2Arch" : {
-          "t1.micro"    : { "Arch" : "64" },
-          "m1.small"    : { "Arch" : "64" },
-          "m1.medium"   : { "Arch" : "64" },
-          "m1.large"    : { "Arch" : "64" },
-          "m1.xlarge"   : { "Arch" : "64" },
-          "m2.xlarge"   : { "Arch" : "64" },
-          "m2.2xlarge"  : { "Arch" : "64" },
-          "m2.4xlarge"  : { "Arch" : "64" },
-          "c1.medium"   : { "Arch" : "64" },
-          "c1.xlarge"   : { "Arch" : "64" },
-          "cc1.4xlarge" : { "Arch" : "64HVM" },
-          "cc2.8xlarge" : { "Arch" : "64HVM" },
-          "cg1.4xlarge" : { "Arch" : "64HVM" }
-        }
-      },
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-    ''' + \
-    '"ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : ' + \
-    '"LinuxDistribution" },' + \
-    '{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : ' + \
-    '"InstanceType" }, "Arch" ] } ] },' + \
-    '''
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "64" },
+      "m1.small"    : { "Arch" : "64" },
+      "m1.medium"   : { "Arch" : "64" },
+      "m1.large"    : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" },
+      "m2.xlarge"   : { "Arch" : "64" },
+      "m2.2xlarge"  : { "Arch" : "64" },
+      "m2.4xlarge"  : { "Arch" : "64" },
+      "c1.medium"   : { "Arch" : "64" },
+      "c1.xlarge"   : { "Arch" : "64" },
+      "cc1.4xlarge" : { "Arch" : "64HVM" },
+      "cc2.8xlarge" : { "Arch" : "64HVM" },
+      "cg1.4xlarge" : { "Arch" : "64HVM" }
+    }
+  },
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : {
+          "Fn::FindInMap" : [
+            "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+              { "Fn::FindInMap" : [
+              "AWSInstanceType2Arch",
+                { "Ref" : "InstanceType" }, "Arch" ] } ]
+        },
         "InstanceType": "m1.large",
         "KeyName": { "Ref" : "KeyName"}
       }
@@ -242,13 +235,10 @@ test_template_invalid_property = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2 KeyPai",
+      "Type" : "String"
+    }
+  },
 
       "Resources" : {
         "WikiDatabase": {
@@ -271,27 +261,24 @@ test_template_unimplemented_property = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" },
-            "SourceDestCheck": "false"
-          }
-        }
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" },
+        "SourceDestCheck": "false"
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_invalid_deletion_policy = '''
 {
@@ -300,27 +287,24 @@ test_template_invalid_deletion_policy = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "DeletionPolicy": "Destroy",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        }
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "DeletionPolicy": "Destroy",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_snapshot_deletion_policy = '''
 {
@@ -329,27 +313,24 @@ test_template_snapshot_deletion_policy = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "WikiDatabase": {
-          "Type": "AWS::EC2::Instance",
-          "DeletionPolicy": "Snapshot",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        }
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "DeletionPolicy": "Snapshot",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_volume_snapshot = '''
 {
@@ -375,26 +356,23 @@ test_unregistered_key = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "Instance": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        }
+  "Resources" : {
+    "Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_image = '''
 {
@@ -403,26 +381,23 @@ test_template_image = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "Instance": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" }
-          }
-        }
+  "Resources" : {
+    "Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" }
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_invalid_secgroups = '''
 {
@@ -431,28 +406,25 @@ test_template_invalid_secgroups = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "Instance": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" },
-            "SecurityGroups": [ "default" ],
-            "NetworkInterfaces": [ "mgmt", "data" ]
-          }
-        }
+  "Resources" : {
+    "Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" },
+        "SecurityGroups": [ "default" ],
+        "NetworkInterfaces": [ "mgmt", "data" ]
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_invalid_secgroupids = '''
 {
@@ -461,28 +433,25 @@ test_template_invalid_secgroupids = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    }
+  },
 
-      "Resources" : {
-        "Instance": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" },
-            "SecurityGroupIds": [ "default" ],
-            "NetworkInterfaces": [ "mgmt", "data" ]
-          }
-        }
+  "Resources" : {
+    "Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" },
+        "SecurityGroupIds": [ "default" ],
+        "NetworkInterfaces": [ "mgmt", "data" ]
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_glance_client_exception = '''
 {
@@ -508,34 +477,28 @@ test_template_unique_logical_name = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String"
+    },
     "AName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String"
-        }
-      },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String",
+    }
+  },
 
-      "Resources" : {
-        "AName": {
-          "Type": "AWS::EC2::Instance",
-          "Properties": {
-            "ImageId": "image_name",
-            "InstanceType": "m1.large",
-            "KeyName": { "Ref" : "KeyName" },
-            "NetworkInterfaces": [ "mgmt", "data" ]
-          }
-        }
+  "Resources" : {
+    "AName": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": { "Ref" : "KeyName" },
+        "NetworkInterfaces": [ "mgmt", "data" ]
       }
     }
-    '''
+  }
+}
+'''
 
 test_template_cfn_parameter_label = '''
 {
@@ -544,13 +507,10 @@ test_template_cfn_parameter_label = '''
   "Parameters" : {
 
     "KeyName" : {
-''' + \
-    '"Description" : "Name of an existing EC2' + \
-    'KeyPair to enable SSH access to the instances",' + \
-    '''
-          "Type" : "String",
-          "Label" : "Nova KeyPair Name"
-        },
+      "Description" : "Name of an existing EC2KeyPair",
+      "Type" : "String",
+      "Label" : "Nova KeyPair Name"
+    }
   },
 
   "Resources" : {
@@ -930,8 +890,7 @@ class validateTest(common.HeatTestCase):
         # API layer in heat.engine.api.format_validate_parameter.
         expected = {'KeyName': {
             'Type': 'String',
-            'Description': 'Name of an existing EC2KeyPair to enable SSH '
-                           'access to the instances',
+            'Description': 'Name of an existing EC2KeyPair',
             'NoEcho': 'false',
             'Label': 'KeyName'}}
         self.assertEqual(expected, res['Parameters'])
@@ -1002,8 +961,7 @@ class validateTest(common.HeatTestCase):
 
         expected = {'KeyName': {
             'Type': 'String',
-            'Description': 'Name of an existing EC2KeyPair to enable SSH '
-                           'access to the instances',
+            'Description': 'Name of an existing EC2KeyPair',
             'NoEcho': 'false',
             'Label': 'Nova KeyPair Name'}}
         self.assertEqual(expected, parameters)

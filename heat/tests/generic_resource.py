@@ -160,7 +160,7 @@ class StackUserResource(stack_user.StackUser):
 
 
 class ResourceWithCustomConstraint(GenericResource):
-    properties_schema = \
-        {'Foo': properties.Schema(
+    properties_schema = {
+        'Foo': properties.Schema(
             properties.Schema.STRING,
             constraints=[constraints.CustomConstraint('neutron.network')])}

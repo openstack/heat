@@ -140,8 +140,8 @@ class ElasticIp(resource.Resource):
                     server.remove_floating_ip(self._ipaddress())
             except Exception as e:
                 is_not_found = self.client_plugin('nova').is_not_found(e)
-                is_unprocessable_entity = self.client_plugin('nova').\
-                    is_unprocessable_entity(e)
+                is_unprocessable_entity = self.client_plugin(
+                    'nova').is_unprocessable_entity(e)
 
                 if (not is_not_found and not is_unprocessable_entity):
                     raise
@@ -259,8 +259,7 @@ class ElasticIpAssociation(resource.Resource):
         router = vpc.VPC.router_for_vpc(self.neutron(), network_id)
         if router is not None:
             floatingip = self.neutron().show_floatingip(float_id)
-            floating_net_id = \
-                floatingip['floatingip']['floating_network_id']
+            floating_net_id = floatingip['floatingip']['floating_network_id']
             self.neutron().add_gateway_router(
                 router['id'], {'network_id': floating_net_id})
 

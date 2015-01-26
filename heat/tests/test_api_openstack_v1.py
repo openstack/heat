@@ -65,9 +65,9 @@ class InstantiationDataTest(common.HeatTestCase):
         data = {"AWSTemplateFormatVersion": "2010-09-09",
                 "key1": ["val1[0]", "val1[1]"],
                 "key2": "val2"}
-        json_repr = '{"AWSTemplateFormatVersion" : "2010-09-09",' \
-                    '"key1": [ "val1[0]", "val1[1]" ], ' \
-                    '"key2": "val2" }'
+        json_repr = ('{"AWSTemplateFormatVersion" : "2010-09-09",'
+                     '"key1": [ "val1[0]", "val1[1]" ], '
+                     '"key2": "val2" }')
         parsed = stacks.InstantiationData.format_parse(json_repr, 'foo')
         self.assertEqual(data, parsed)
 
@@ -108,8 +108,8 @@ parameters:
         self.assertEqual(template, data.template())
 
     def test_template_string_json(self):
-        template = '{"heat_template_version": "2013-05-23",' \
-                   '"foo": "bar", "blarg": "wibble"}'
+        template = ('{"heat_template_version": "2013-05-23",'
+                    '"foo": "bar", "blarg": "wibble"}')
         body = {'template': template}
         data = stacks.InstantiationData(body)
         self.assertEqual(json.loads(template), data.template())

@@ -2310,8 +2310,8 @@ class StackTest(common.HeatTestCase):
             {'Type': 'ResourceWithPropsType',
              'Properties': {'Foo': 'xyz'}},
             {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}}).WithSideEffects(check_props) \
-                                           .AndRaise(resource.UpdateReplace)
+             'Properties': {'Foo': 'abc'}}
+        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -3082,8 +3082,8 @@ class StackTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
 
-        generic_rsrc.ResourceWithProps.handle_create().MultipleTimes().\
-            AndReturn(None)
+        generic_rsrc.ResourceWithProps.handle_create().MultipleTimes(
+        ).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -3696,7 +3696,7 @@ class StackTest(common.HeatTestCase):
 
     def test_stack_name_invalid(self):
         stack_names = ['_foo', '1bad', '.kcats', 'test stack', ' teststack',
-                       '^-^', '\"stack\"', '1234', 'cat|dog', '$(foo)',
+                       '^-^', '"stack"', '1234', 'cat|dog', '$(foo)',
                        'test/stack', 'test\stack', 'test::stack', 'test;stack',
                        'test~stack', '#test']
         for stack_name in stack_names:

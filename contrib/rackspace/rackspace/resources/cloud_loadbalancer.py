@@ -541,8 +541,8 @@ class CloudLoadBalancer(resource.Resource):
 
         virtual_ips = self._setup_properties(vips, self.clb.VirtualIP)
 
-        (session_persistence, connection_logging, metadata) = \
-            self._alter_properties_for_api()
+        (session_persistence, connection_logging, metadata
+         ) = self._alter_properties_for_api()
 
         lb_body = {
             'port': self.properties[self.PORT],

@@ -363,7 +363,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resg.validate)
-        errstr = 'removal_policies "\'notallowed\'" is not a list'
+        errstr = "removal_policies \"'notallowed'\" is not a list"
         self.assertIn(errstr, six.text_type(exc))
 
     def test_invalid_removal_policies_nomap(self):

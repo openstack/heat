@@ -510,9 +510,8 @@ class Instance(resource.Resource):
             # if SubnetId property in Instance, ensure subnet exists
             if subnet_id:
                 neutronclient = self.neutron()
-                network_id = \
-                    self.client_plugin('neutron').network_id_from_subnet_id(
-                        subnet_id)
+                network_id = self.client_plugin(
+                    'neutron').network_id_from_subnet_id(subnet_id)
                 # if subnet verified, create a port to use this subnet
                 # if port is not created explicitly, nova will choose
                 # the first subnet in the given network.
@@ -525,9 +524,8 @@ class Instance(resource.Resource):
                     }
 
                     if security_groups:
-                        props['security_groups'] = \
-                            self.client_plugin('neutron').get_secgroup_uuids(
-                                security_groups)
+                        props['security_groups'] = self.client_plugin(
+                            'neutron').get_secgroup_uuids(security_groups)
 
                     port = neutronclient.create_port({'port': props})['port']
 

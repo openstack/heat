@@ -106,8 +106,8 @@ class WaitConditionTest(common.HeatTestCase):
             id = identifier.ResourceIdentifier('test_tenant', stack.name,
                                                stack.id, '', 'WaitHandle')
             self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
-            aws_wch.WaitConditionHandle.identifier().\
-                MultipleTimes().AndReturn(id)
+            aws_wch.WaitConditionHandle.identifier(
+            ).MultipleTimes().AndReturn(id)
 
         if stub_status:
             self.m.StubOutWithMock(aws_wch.WaitConditionHandle,

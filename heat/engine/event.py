@@ -51,14 +51,14 @@ class Event(object):
         '''Retrieve an Event from the database.'''
         from heat.engine import stack as parser
 
-        ev = event if event is not None else\
-            db_api.event_get(context, event_id)
+        ev = (event if event is not None else
+              db_api.event_get(context, event_id))
         if ev is None:
             message = _('No event exists with id "%s"') % str(event_id)
             raise exception.NotFound(message)
 
-        st = stack if stack is not None else\
-            parser.Stack.load(context, ev.stack_id)
+        st = (stack if stack is not None else
+              parser.Stack.load(context, ev.stack_id))
 
         return cls(context, st, ev.resource_action, ev.resource_status,
                    ev.resource_status_reason, ev.physical_resource_id,

@@ -65,7 +65,7 @@ class KeystonePasswordAuthProtocol(object):
 
     def _reject_request(self, env, start_response, auth_url):
         """Redirect client to auth server."""
-        headers = [('WWW-Authenticate', 'Keystone uri=\'%s\'' % auth_url)]
+        headers = [('WWW-Authenticate', "Keystone uri='%s'" % auth_url)]
         resp = exc.HTTPUnauthorized('Authentication required', headers)
         return resp(env, start_response)
 

@@ -339,8 +339,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         # availability zones, it will be possible to specify multiple subnets.
         # For now, only one subnet can be specified. The bug #1096017 tracks
         # this issue.
-        if self.properties.get(self.VPCZONE_IDENTIFIER) and \
-                len(self.properties[self.VPCZONE_IDENTIFIER]) != 1:
+        if (self.properties.get(self.VPCZONE_IDENTIFIER) and
+                len(self.properties[self.VPCZONE_IDENTIFIER]) != 1):
             raise exception.NotSupported(feature=_("Anything other than one "
                                          "VPCZoneIdentifier"))
 

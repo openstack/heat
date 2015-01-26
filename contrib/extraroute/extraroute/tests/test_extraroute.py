@@ -76,8 +76,8 @@ class NeutronExtraRouteTest(common.HeatTestCase):
     def test_extraroute(self):
         # add first route
         neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8')\
-            .AndReturn({'router': {'routes': []}})
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({'router': {'routes': []}})
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {"router": {
@@ -87,9 +87,9 @@ class NeutronExtraRouteTest(common.HeatTestCase):
             }}).AndReturn(None)
         # add second route
         neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8')\
-            .AndReturn({'router': {'routes': [{"destination": "192.168.0.0/24",
-                                               "nexthop": "1.1.1.1"}]}})
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({'router': {'routes': [{"destination": "192.168.0.0/24",
+                                            "nexthop": "1.1.1.1"}]}})
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {"router": {
@@ -100,12 +100,12 @@ class NeutronExtraRouteTest(common.HeatTestCase):
             }}).AndReturn(None)
         # first delete
         neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8')\
-            .AndReturn({'router':
-                        {'routes': [{"destination": "192.168.0.0/24",
-                                     "nexthop": "1.1.1.1"},
-                                    {"destination": "192.168.255.0/24",
-                                     "nexthop": "1.1.1.1"}]}})
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({'router':
+                     {'routes': [{"destination": "192.168.0.0/24",
+                                  "nexthop": "1.1.1.1"},
+                                 {"destination": "192.168.255.0/24",
+                                  "nexthop": "1.1.1.1"}]}})
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {"router": {
@@ -115,10 +115,10 @@ class NeutronExtraRouteTest(common.HeatTestCase):
             }}).AndReturn(None)
         # second delete
         neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8')\
-            .AndReturn({'router':
-                        {'routes': [{"destination": "192.168.255.0/24",
-                                     "nexthop": "1.1.1.1"}]}})
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn({'router':
+                     {'routes': [{"destination": "192.168.255.0/24",
+                                  "nexthop": "1.1.1.1"}]}})
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)

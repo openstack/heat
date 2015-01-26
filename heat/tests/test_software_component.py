@@ -89,8 +89,8 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.component.resource_id = None
         self.assertIsNone(self.component._resolve_attribute('configs'))
         self.component.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        configs = self.\
-            template['resources']['mysql_component']['properties']['configs']
+        configs = self.template['resources']['mysql_component'
+                                             ]['properties']['configs']
         # configs list is stored in 'config' property of SoftwareConfig
         value = {'config': {'configs': configs}}
         self.rpc_client.show_software_config.return_value = value

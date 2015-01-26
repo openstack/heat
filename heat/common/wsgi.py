@@ -543,8 +543,8 @@ def is_json_content_type(request):
     # for back compatible for null or plain content type
     if not content_type or content_type.startswith('text/plain'):
         content_type = 'application/json'
-    if content_type in ('JSON', 'application/json')\
-            and request.body.startswith('{'):
+    if (content_type in ('JSON', 'application/json')
+            and request.body.startswith('{')):
         return True
     return False
 
@@ -565,9 +565,9 @@ class JSONRequestDeserializer(object):
         try:
             if len(datastring) > cfg.CONF.max_json_body_size:
                 msg = _('JSON body size (%(len)s bytes) exceeds maximum '
-                        'allowed size (%(limit)s bytes).') % \
-                    {'len': len(datastring),
-                     'limit': cfg.CONF.max_json_body_size}
+                        'allowed size (%(limit)s bytes).'
+                        ) % {'len': len(datastring),
+                             'limit': cfg.CONF.max_json_body_size}
                 raise exception.RequestLimitExceeded(message=msg)
             return json.loads(datastring)
         except ValueError as ex:

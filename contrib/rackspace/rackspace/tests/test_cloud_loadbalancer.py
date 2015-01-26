@@ -32,8 +32,7 @@ from ..resources import cloud_loadbalancer as lb  # noqa
 # The following fakes are for pyrax
 
 
-cert = """\
------BEGIN CERTIFICATE-----
+cert = """-----BEGIN CERTIFICATE-----
 MIIFBjCCAu4CCQDWdcR5LY/+/jANBgkqhkiG9w0BAQUFADBFMQswCQYDVQQGEwJB
 VTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0
 cyBQdHkgTHRkMB4XDTE0MTAxNjE3MDYxNVoXDTE1MTAxNjE3MDYxNVowRTELMAkG
@@ -63,8 +62,7 @@ eF5whPl36/GK8HUixCibkCyqEOBBuNqhOz7nVLM0eg5L+TE5coizEBagxVCovYSj
 fQ9zkIgaC5oeH6L0C1FFG1vRNSWokheBk14ztVoJCJyFr6p0/6pD7SeR
 -----END CERTIFICATE-----"""
 
-private_key = """\
------BEGIN PRIVATE KEY-----
+private_key = """-----BEGIN PRIVATE KEY-----
 MIIJRAIBADANBgkqhkiG9w0BAQEFAASCCS4wggkqAgEAAoICAQDJuTXD9LTCh25U
 +lHdZPE8Wff/Ljh8FDT27xbL0sgrqY9CdLxgk427gtiOU/wl0bZyxCLfxGq5TQKn
 I2wwlrUshCrN8w5ppK3qCAxGvKcgENsnLAlxjMQzfexd/8JS2WoFDTNBcBhy2VgY
@@ -1032,8 +1030,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_session_persistence_delete(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['sessionPersistence'] = \
-            "SOURCE_IP"
+        template['Resources'][lb_name]['Properties'][
+            'sessionPersistence'] = "SOURCE_IP"
         expected_body = copy.deepcopy(self.expected_body)
         expected_body['sessionPersistence'] = {'persistenceType': "SOURCE_IP"}
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -1240,8 +1238,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_connection_logging_delete(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['connectionLogging'] = \
-            True
+        template['Resources'][lb_name]['Properties'][
+            'connectionLogging'] = True
         expected_body = copy.deepcopy(self.expected_body)
         expected_body['connectionLogging'] = {'enabled': True}
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -1267,8 +1265,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_connection_logging_disable(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['connectionLogging'] = \
-            True
+        template['Resources'][lb_name]['Properties'][
+            'connectionLogging'] = True
         expected_body = copy.deepcopy(self.expected_body)
         expected_body['connectionLogging'] = {'enabled': True}
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -1317,8 +1315,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_connection_throttle_delete(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['connectionThrottle'] = \
-            {'maxConnections': 1000}
+        template['Resources'][lb_name]['Properties'][
+            'connectionThrottle'] = {'maxConnections': 1000}
         expected_body = copy.deepcopy(self.expected_body)
         expected_body['connectionThrottle'] = {
             'maxConnections': 1000, 'maxConnectionRate': None,
@@ -1368,8 +1366,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_content_caching_deleted(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['contentCaching'] = \
-            'ENABLED'
+        template['Resources'][lb_name]['Properties'][
+            'contentCaching'] = 'ENABLED'
         # Enabling the content cache is done post-creation, so no need
         # to modify self.expected_body
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
@@ -1396,8 +1394,8 @@ class LoadBalancerTest(common.HeatTestCase):
     def test_update_content_caching_disable(self):
         template = copy.deepcopy(self.lb_template)
         lb_name = template['Resources'].keys()[0]
-        template['Resources'][lb_name]['Properties']['contentCaching'] = \
-            'ENABLED'
+        template['Resources'][lb_name]['Properties'][
+            'contentCaching'] = 'ENABLED'
         # Enabling the content cache is done post-creation, so no need
         # to modify self.expected_body
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,

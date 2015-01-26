@@ -101,15 +101,15 @@ class CloudServersTest(common.HeatTestCase):
         stack_name = '%s_s' % name
         (tmpl, stack) = self._setup_test_stack(stack_name)
 
-        tmpl.t['Resources']['WebServer']['Properties']['image'] = \
-            image_id or 'CentOS 5.2'
-        tmpl.t['Resources']['WebServer']['Properties']['flavor'] = \
-            '256 MB Server'
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'image'] = image_id or 'CentOS 5.2'
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'flavor'] = '256 MB Server'
 
         server_name = '%s' % name
         if override_name:
-            tmpl.t['Resources']['WebServer']['Properties']['name'] = \
-                server_name
+            tmpl.t['Resources']['WebServer']['Properties'][
+                'name'] = server_name
 
         resource_defns = tmpl.resource_definitions(stack)
         server = cloud_server.CloudServer(server_name,

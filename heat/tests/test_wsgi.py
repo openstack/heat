@@ -394,7 +394,7 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
         error = self.assertRaises(exception.RequestLimitExceeded,
                                   wsgi.JSONRequestDeserializer().from_json,
                                   body)
-        msg = 'Request limit exceeded: JSON body size ' + \
-              '(%s bytes) exceeds maximum allowed size (%s bytes).' % \
-              (len(body), cfg.CONF.max_json_body_size)
+        msg = ('Request limit exceeded: JSON body size '
+               '(%s bytes) exceeds maximum allowed size (%s bytes).' % (
+                   len(body), cfg.CONF.max_json_body_size))
         self.assertEqual(msg, six.text_type(error))

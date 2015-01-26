@@ -123,8 +123,8 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(imageId_input).\
-            MultipleTimes().AndReturn(imageId)
+        glance.GlanceClientPlugin.get_image_id(
+            imageId_input).MultipleTimes().AndReturn(imageId)
 
     def _create_stubs(self, key_name='test', stub_meta=True):
         server_name = utils.PhysName(

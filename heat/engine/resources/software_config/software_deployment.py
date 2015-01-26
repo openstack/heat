@@ -215,8 +215,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         config = self.rpc_client().show_software_config(
             self.context, config_id)
 
-        if action not in self.properties[self.DEPLOY_ACTIONS]\
-                and not config[rpc_api.SOFTWARE_CONFIG_GROUP] == 'component':
+        if (action not in self.properties[self.DEPLOY_ACTIONS]
+                and not config[rpc_api.SOFTWARE_CONFIG_GROUP] == 'component'):
             return
 
         props = self._build_properties(

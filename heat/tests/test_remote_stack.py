@@ -254,8 +254,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
-        msg = 'Cannot establish connection to Heat endpoint at region "%s"'\
-            % self.bad_region
+        msg = ('Cannot establish connection to Heat endpoint '
+               'at region "%s"' % self.bad_region)
         self.assertIn(msg, six.text_type(ex))
 
     def test_remote_validation_failed(self):
@@ -373,8 +373,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
         remote_stack_id = rsrc.resource_id
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
-        error_msg = 'ResourceInError: Went to status DELETE_FAILED due to '\
-                    '"Remote stack deletion failed"'
+        error_msg = ('ResourceInError: Went to status DELETE_FAILED due to '
+                     '"Remote stack deletion failed"')
         self.assertIn(error_msg, six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.heat.stacks.delete.assert_called_with(stack_id=remote_stack_id)

@@ -928,8 +928,8 @@ class StackTest(test_parser.StackTest):
             {'Type': 'ResourceWithPropsType',
              'Properties': {'Foo': 'xyz'}},
             {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}}).WithSideEffects(check_props) \
-                                           .AndRaise(resource.UpdateReplace)
+             'Properties': {'Foo': 'abc'}}
+        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)

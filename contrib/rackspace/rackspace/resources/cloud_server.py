@@ -208,12 +208,12 @@ class CloudServer(server.Server):
 
         self.client_plugin().refresh_server(server)
 
-        if 'rack_connect' in self.context.roles and not \
-           self._check_rack_connect_complete(server):
+        if ('rack_connect' in self.context.roles and not
+                self._check_rack_connect_complete(server)):
             return False
 
-        if 'rax_managed' in self.context.roles and not \
-           self._check_managed_cloud_complete(server):
+        if ('rax_managed' in self.context.roles and not
+                self._check_managed_cloud_complete(server)):
             return False
 
         return True

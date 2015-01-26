@@ -735,10 +735,10 @@ class SwiftSignalTest(common.HeatTestCase):
 
         st.create()
         self.assertEqual(('CREATE', 'COMPLETE'), st.state)
-        expected = ('curl -i -X PUT \'http://fake-host.com:8080/v1/'
-                    'AUTH_test_tenant/%s/test_st-test_wait_condition_'
-                    'handle-abcdefghijkl\?temp_url_sig=[0-9a-f]{40}&'
-                    'temp_url_expires=[0-9]{10}\'') % st.id
+        expected = ("curl -i -X PUT 'http://fake-host.com:8080/v1/"
+                    "AUTH_test_tenant/%s/test_st-test_wait_condition_"
+                    "handle-abcdefghijkl\?temp_url_sig=[0-9a-f]{40}&"
+                    "temp_url_expires=[0-9]{10}'") % st.id
         self.assertThat(handle.FnGetAtt('curl_cli'),
                         matchers.MatchesRegex(expected))
 

@@ -522,8 +522,8 @@ class Parameters(collections.Mapping):
                     raise exception.InvalidTemplateParameter(key=name)
 
     def _pseudo_parameters(self, stack_identifier):
-        stack_id = stack_identifier.arn() \
-            if stack_identifier is not None else 'None'
+        stack_id = (stack_identifier.arn()
+                    if stack_identifier is not None else 'None')
         stack_name = stack_identifier and stack_identifier.stack_name
 
         yield Parameter(self.PARAM_STACK_ID,

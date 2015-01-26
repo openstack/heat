@@ -24,8 +24,8 @@ def upgrade(migrate_engine):
     # Set backup flag for backup stacks, which are the only ones named "foo*"
     not_deleted = None
     stmt = sqlalchemy.select([stack.c.id,
-                              stack.c.name]).\
-        where(stack.c.deleted_at == not_deleted)
+                              stack.c.name]
+                             ).where(stack.c.deleted_at == not_deleted)
     stacks = migrate_engine.execute(stmt)
     for s in stacks:
         if s.name.endswith('*'):

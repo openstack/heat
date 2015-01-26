@@ -200,8 +200,8 @@ def setup_keystone_mocks(mocks, stack):
 def setup_mock_for_image_constraint(mocks, imageId_input,
                                     imageId_output=744):
     mocks.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-    glance.GlanceClientPlugin.get_image_id(imageId_input).\
-        MultipleTimes().AndReturn(imageId_output)
+    glance.GlanceClientPlugin.get_image_id(
+        imageId_input).MultipleTimes().AndReturn(imageId_output)
 
 
 def setup_mocks(mocks, stack, mock_image_constraint=True):
@@ -856,8 +856,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
-            .AndReturn(True)
+        stack_lock.StackLock.engine_alive(
+            self.ctx, "other-engine-fake-uuid").AndReturn(True)
 
         self.m.StubOutWithMock(rpc_client._CallContext, 'call')
         rpc_client._CallContext.call(
@@ -889,8 +889,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
-            .AndReturn(True)
+        stack_lock.StackLock.engine_alive(
+            self.ctx, "other-engine-fake-uuid").AndReturn(True)
 
         self.m.StubOutWithMock(rpc_client._CallContext, 'call')
         rpc_client._CallContext.call(
@@ -921,8 +921,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_lock.StackLock.try_acquire().AndReturn("other-engine-fake-uuid")
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'engine_alive')
-        stack_lock.StackLock.engine_alive(self.ctx, "other-engine-fake-uuid")\
-            .AndReturn(False)
+        stack_lock.StackLock.engine_alive(
+            self.ctx, "other-engine-fake-uuid").AndReturn(False)
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
         stack_lock.StackLock.acquire().AndReturn(None)
@@ -1878,8 +1878,10 @@ class StackServiceTest(common.HeatTestCase):
     @stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
         self.m.StubOutWithMock(parser.Stack, '_from_db')
-        parser.Stack._from_db(self.ctx, mox.IgnoreArg(), resolve_data=False)\
-            .AndReturn(self.stack)
+        parser.Stack._from_db(
+            self.ctx, mox.IgnoreArg(),
+            resolve_data=False
+        ).AndReturn(self.stack)
 
         self.m.ReplayAll()
         sl = self.eng.list_stacks(self.ctx)
@@ -2458,9 +2460,9 @@ class StackServiceTest(common.HeatTestCase):
 
         stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        service.EngineService \
-            ._get_stack(self.ctx, non_exist_identifier, show_deleted=True) \
-            .AndRaise(stack_not_found_exc)
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier, show_deleted=True
+        ).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
@@ -2860,8 +2862,8 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(watchrule.WatchRule, 'set_watch_state')
         for state in ["HGJHGJHG", "1234", "!\*(&%"]:
-            watchrule.WatchRule.set_watch_state(state)\
-                .InAnyOrder().AndRaise(ValueError)
+            watchrule.WatchRule.set_watch_state(
+                state).InAnyOrder().AndRaise(ValueError)
         self.m.ReplayAll()
 
         for state in ["HGJHGJHG", "1234", "!\*(&%"]:
@@ -2876,8 +2878,9 @@ class StackServiceTest(common.HeatTestCase):
         state = watchrule.WatchRule.ALARM   # State valid
 
         self.m.StubOutWithMock(watchrule.WatchRule, 'load')
-        watchrule.WatchRule.load(self.ctx, "nonexistent")\
-            .AndRaise(exception.WatchRuleNotFound(watch_name='test'))
+        watchrule.WatchRule.load(
+            self.ctx, "nonexistent"
+        ).AndRaise(exception.WatchRuleNotFound(watch_name='test'))
         self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
@@ -3018,8 +3021,8 @@ class StackServiceTest(common.HeatTestCase):
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
                                parsed_template)
-        msg = \
-            u'u\'"Type" is not a valid keyword inside a resource definition\''
+        msg = (u'u\'"Type" is not a valid keyword '
+               'inside a resource definition\'')
         self.assertEqual(msg, six.text_type(ex))
 
     def test_validate_new_stack_checks_incorrect_sections(self):

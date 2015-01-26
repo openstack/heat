@@ -203,7 +203,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_user,
                                 'auser', password='password')
-        self.assertIn('Can\'t find role heat_stack_user', six.text_type(err))
+        self.assertIn("Can't find role heat_stack_user", six.text_type(err))
 
     def _mock_roles_list(self, heat_stack_user='heat_stack_user'):
         mock_roles_list = []
@@ -287,7 +287,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_domain_user,
                                 username='duser', project_id='aproject')
-        self.assertIn('Can\'t find role heat_stack_user', six.text_type(err))
+        self.assertIn("Can't find role heat_stack_user", six.text_type(err))
 
     def test_delete_stack_domain_user(self):
         """Test deleting a stack domain user."""
@@ -570,7 +570,7 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         exc = self.assertRaises(exception.MissingCredentialError,
                                 heat_ks_client.create_trust_context)
-        expected = 'Missing required credential: roles [\'heat_stack_owner\']'
+        expected = "Missing required credential: roles ['heat_stack_owner']"
         self.assertIn(expected, six.text_type(exc))
 
     def test_init_domain_cfg_not_set_fallback(self):
@@ -1423,8 +1423,8 @@ class KeystoneClientTest(common.HeatTestCase):
         """
         self._stubs_v3()
         self.mock_ks_v3_client.service_catalog = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.service_catalog.url_for(**expected_kwargs)\
-            .AndReturn(service_url)
+        self.mock_ks_v3_client.service_catalog.url_for(
+            **expected_kwargs).AndReturn(service_url)
 
         self.m.ReplayAll()
         ctx = ctx or utils.dummy_context()

@@ -15,8 +15,11 @@ from heat.common.i18n import _
 from heat.common import template_format
 
 
-SECTIONS = (PARAMETERS, RESOURCE_REGISTRY, PARAMETER_DEFAULTS) = \
-           ('parameters', 'resource_registry', 'parameter_defaults')
+SECTIONS = (
+    PARAMETERS, RESOURCE_REGISTRY, PARAMETER_DEFAULTS
+) = (
+    'parameters', 'resource_registry', 'parameter_defaults'
+)
 
 
 def parse(env_str):

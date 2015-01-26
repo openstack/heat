@@ -340,8 +340,8 @@ class CinderVolume(aws_vol.Volume):
             return res
 
         # Scheduler hints are only supported from Cinder API v2
-        if self.properties.get(self.CINDER_SCHEDULER_HINTS) \
-                and self.cinder().volume_api_version == 1:
+        if (self.properties.get(self.CINDER_SCHEDULER_HINTS)
+                and self.cinder().volume_api_version == 1):
             raise exception.StackValidationFailed(
                 message=_('Scheduler hints are not supported by the current '
                           'volume API.'))

@@ -282,13 +282,13 @@ class Port(neutron.NeutronResource):
         # 'default' securityGroup. If has the 'security_groups' and the
         # value is [], which means to create the port without securityGroup.
         if props.get(self.SECURITY_GROUPS) is not None:
-            props[self.SECURITY_GROUPS] = self.client_plugin().\
-                get_secgroup_uuids(props.get(self.SECURITY_GROUPS))
+            props[self.SECURITY_GROUPS] = self.client_plugin(
+            ).get_secgroup_uuids(props.get(self.SECURITY_GROUPS))
         else:
             # And the update should has the same behavior.
             if prepare_for_update:
-                props[self.SECURITY_GROUPS] = self.client_plugin().\
-                    get_secgroup_uuids(['default'])
+                props[self.SECURITY_GROUPS] = self.client_plugin(
+                ).get_secgroup_uuids(['default'])
 
         if not props[self.FIXED_IPS]:
             del(props[self.FIXED_IPS])

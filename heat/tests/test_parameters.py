@@ -374,8 +374,8 @@ class ParameterTest(testtools.TestCase):
                   'AllowedPattern': '[a-z]*'}
         err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'testparam', schema, '234')
-        expected = 'Parameter \'testparam\' is invalid: '\
-            '"234" does not match pattern "[a-z]*"'
+        expected = ("Parameter 'testparam' is invalid: "
+                    '"234" does not match pattern "[a-z]*"')
         self.assertEqual(expected, six.text_type(err))
 
 

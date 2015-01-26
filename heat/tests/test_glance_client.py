@@ -68,8 +68,8 @@ class GlanceUtilsTests(common.HeatTestCase):
         self.glance_client.images.get(img_name).AndRaise(
             glance_exceptions.HTTPNotFound())
         filters = {'name': img_name}
-        self.glance_client.images.list(filters=filters).MultipleTimes().\
-            AndReturn([my_image])
+        self.glance_client.images.list(
+            filters=filters).MultipleTimes().AndReturn([my_image])
         self.m.ReplayAll()
 
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
@@ -101,8 +101,8 @@ class GlanceUtilsTests(common.HeatTestCase):
         self.glance_client.images.get(img_name).AndRaise(
             glance_exceptions.HTTPNotFound())
         filters = {'name': img_name}
-        self.glance_client.images.list(filters=filters).MultipleTimes().\
-            AndReturn([])
+        self.glance_client.images.list(
+            filters=filters).MultipleTimes().AndReturn([])
         self.m.ReplayAll()
 
         self.assertRaises(exception.ImageNotFound,
@@ -118,8 +118,8 @@ class GlanceUtilsTests(common.HeatTestCase):
 
         self.glance_client.images = self.m.CreateMockAnything()
         filters = {'name': img_name}
-        self.glance_client.images.list(filters=filters).MultipleTimes().\
-            AndReturn(image_list)
+        self.glance_client.images.list(
+            filters=filters).MultipleTimes().AndReturn(image_list)
         self.m.ReplayAll()
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
                           self.glance_plugin.get_image_id, img_name)

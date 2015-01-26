@@ -106,7 +106,7 @@ class SwiftSignalHandle(resource.Resource):
             elif key == self.ENDPOINT:
                 return self.data().get(self.ENDPOINT)
             elif key == self.CURL_CLI:
-                return ('curl -i -X PUT \'%s\'' %
+                return ("curl -i -X PUT '%s'" %
                         self.data().get(self.ENDPOINT))
 
     def handle_delete(self):

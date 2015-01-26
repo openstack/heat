@@ -135,8 +135,8 @@ class MissingCredentialError(HeatException):
 
 
 class BadAuthStrategy(HeatException):
-    msg_fmt = _("Incorrect auth strategy, expected \"%(expected)s\" but "
-                "received \"%(received)s\"")
+    msg_fmt = _('Incorrect auth strategy, expected "%(expected)s" but '
+                'received "%(received)s"')
 
 
 class AuthBadRequest(HeatException):
@@ -216,8 +216,8 @@ class InvalidTemplateAttribute(HeatException):
 
 
 class InvalidTemplateReference(HeatException):
-    msg_fmt = _("The specified reference \"%(resource)s\" (in %(key)s)"
-                " is incorrect.")
+    msg_fmt = _('The specified reference "%(resource)s" (in %(key)s)'
+                ' is incorrect.')
 
 
 class UserKeyPairMissing(HeatException):
