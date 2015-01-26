@@ -325,7 +325,9 @@ class Server(stack_user.StackUser):
             _('A dict of all server details as returned by the API.')
         ),
         ADDRESSES: attributes.Schema(
-            _('A dict of all network addresses with corresponding port_id.')
+            _('A dict of all network addresses with corresponding port_id. '
+              'The port ID may be obtained through the following expression: '
+              '"{get_attr: [<server>, addresses, <network name>, 0, port]}".')
         ),
         NETWORKS_ATTR: attributes.Schema(
             _('A dict of assigned network addresses of the form: '
