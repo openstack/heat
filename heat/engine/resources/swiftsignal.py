@@ -14,6 +14,7 @@
 import json
 import urlparse
 
+from oslo_utils import timeutils
 import six
 
 from heat.common import exception
@@ -24,7 +25,6 @@ from heat.engine.clients.os import swift
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import scheduler
 from heat.engine import support
 from heat.openstack.common import log as logging
 
@@ -227,35 +227,8 @@ class SwiftSignal(resource.Resource):
 
     def handle_create(self):
         self._validate_handle_url()
-        runner = scheduler.TaskRunner(self._wait)
-        runner.start(timeout=float(self.properties.get(self.TIMEOUT)))
-        return runner
-
-    def _wait(self):
-        while True:
-            try:
-                yield
-            except scheduler.Timeout:
-                count = self.properties.get(self.COUNT)
-                raise SwiftSignalTimeout(self)
-
-            count = self.properties.get(self.COUNT)
-            statuses = self.get_status()
-            if not statuses:
-                continue
-
-            for status in statuses:
-                if status == self.STATUS_FAILURE:
-                    failure = SwiftSignalFailure(self)
-                    LOG.info(_LI('%(name)s Failed (%(failure)s)'),
-                             {'name': str(self), 'failure': str(failure)})
-                    raise failure
-                elif status != self.STATUS_SUCCESS:
-                    raise exception.Error(_("Unknown status: %s") % status)
-
-            if len(statuses) >= count:
-                LOG.info(_LI("%s Succeeded"), str(self))
-                return
+        started_at = timeutils.utcnow()
+        return started_at, float(self.properties[self.TIMEOUT])
 
     def get_signals(self):
         try:
@@ -335,8 +308,25 @@ class SwiftSignal(resource.Resource):
             data[signal[self.UNIQUE_ID]] = signal[self.DATA]
         return data
 
-    def check_create_complete(self, runner):
-        return runner.step()
+    def check_create_complete(self, create_data):
+        if timeutils.is_older_than(*create_data):
+            raise SwiftSignalTimeout(self)
+
+        statuses = self.get_status()
+
+        for status in statuses:
+            if status == self.STATUS_FAILURE:
+                failure = SwiftSignalFailure(self)
+                LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+                         {'name': str(self), 'failure': str(failure)})
+                raise failure
+            elif status != self.STATUS_SUCCESS:
+                raise exception.Error(_("Unknown status: %s") % status)
+
+        if len(statuses) >= self.properties[self.COUNT]:
+            LOG.info(_LI("%s Succeeded"), str(self))
+            return True
+        return False
 
     def _resolve_attribute(self, key):
         if key == self.DATA:

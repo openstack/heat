@@ -12,11 +12,12 @@
 #    under the License.
 
 import copy
+import datetime
 import json
-import time
 import uuid
 
 import mock
+from oslo_utils import timeutils
 import six
 from swiftclient import client as swiftclient_client
 from swiftclient import exceptions as swiftclient_exceptions
@@ -362,11 +363,9 @@ class SwiftSignalTest(common.HeatTestCase):
         st.create()
         self.assertEqual(('CREATE', 'COMPLETE'), st.state)
 
-    @mock.patch.object(scheduler, 'wallclock')
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
-    def test_multiple_signals_same_id_timeout(self, mock_name, mock_swift,
-                                              mock_clock):
+    def test_multiple_signals_same_id_timeout(self, mock_name, mock_swift):
         st = create_stack(swiftsignal_template)
         handle = st['test_wait_condition_handle']
 
@@ -382,9 +381,11 @@ class SwiftSignalTest(common.HeatTestCase):
         mock_swift_object.get_object.return_value = (obj_header,
                                                      json.dumps({'id': 1}))
 
-        time_now = time.time()
-        time_series = [t + time_now for t in xrange(1, 100)]
-        scheduler.wallclock.side_effect = time_series
+        time_now = timeutils.utcnow()
+        time_series = [datetime.timedelta(0, t) + time_now
+                       for t in xrange(1, 100)]
+        timeutils.set_time_override(time_series)
+        self.addCleanup(timeutils.clear_time_override)
 
         st.create()
         self.assertIn("Resource CREATE failed: SwiftSignalTimeout",
