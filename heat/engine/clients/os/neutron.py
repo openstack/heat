@@ -54,9 +54,9 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
                 ex.status_code == 404)
 
     def is_conflict(self, ex):
-        if not isinstance(ex, exceptions.NeutronClientException):
-            return False
-        return ex.status_code == 409
+        bad_conflicts = (exceptions.OverQuotaClient,)
+        return (isinstance(ex, exceptions.Conflict) and
+                not isinstance(ex, bad_conflicts))
 
     def is_over_limit(self, ex):
         if not isinstance(ex, exceptions.NeutronClientException):

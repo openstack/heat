@@ -478,8 +478,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=True,
             plugin='neutron',
-            exception=lambda: neutron_exc.NeutronClientException(
-                status_code=409),
+            exception=lambda: neutron_exc.Conflict(),
         )),
         ('nova_not_found', dict(
             is_not_found=True,
