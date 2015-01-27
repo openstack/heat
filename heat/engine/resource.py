@@ -391,10 +391,10 @@ class Resource(object):
             if self.resource_id:
                 text = '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
                                             self.resource_id,
-                                            unicode(self.stack))
+                                            six.text_type(self.stack))
             else:
                 text = '%s "%s" %s' % (self.__class__.__name__, self.name,
-                                       unicode(self.stack))
+                                       six.text_type(self.stack))
         else:
             text = '%s "%s"' % (self.__class__.__name__, self.name)
         return encodeutils.safe_decode(text)
@@ -1014,14 +1014,14 @@ class Resource(object):
         :results: the id or name of the resource.
         '''
         if self.resource_id is not None:
-            return unicode(self.resource_id)
+            return six.text_type(self.resource_id)
         else:
-            return unicode(self.name)
+            return six.text_type(self.name)
 
     def physical_resource_name_or_FnGetRefId(self):
         res_name = self.physical_resource_name()
         if res_name is not None:
-            return unicode(res_name)
+            return six.text_type(res_name)
         else:
             return Resource.FnGetRefId(self)
 

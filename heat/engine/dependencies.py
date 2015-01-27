@@ -89,7 +89,7 @@ class Node(object):
 
     def __unicode__(self):
         '''Return a human-readable string representation of the node.'''
-        text = '{%s}' % ', '.join(unicode(n) for n in self)
+        text = '{%s}' % ', '.join(six.text_type(n) for n in self)
         return encodeutils.safe_decode(text)
 
     def __repr__(self):
@@ -148,7 +148,7 @@ class Graph(collections.defaultdict):
 
     def __unicode__(self):
         '''Convert the graph to a human-readable string.'''
-        pairs = ('%s: %s' % (unicode(k), unicode(v))
+        pairs = ('%s: %s' % (six.text_type(k), six.text_type(v))
                  for k, v in six.iteritems(self))
         text = '{%s}' % ', '.join(pairs)
         return encodeutils.safe_decode(text)
@@ -245,7 +245,7 @@ class Dependencies(object):
         '''
         Return a human-readable string representation of the dependency graph
         '''
-        return unicode(self._graph)
+        return six.text_type(self._graph)
 
     def __repr__(self):
         '''Return a string representation of the object.'''
