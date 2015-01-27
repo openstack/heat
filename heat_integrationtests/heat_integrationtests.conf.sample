@@ -23,6 +23,9 @@
 # Visible fixed network name  (string value)
 #fixed_network_name = private
 
+# Visible fixed sub-network name  (string value)
+#fixed_subnet_name = private-subnet
+
 # Name of image to use for tests which boot servers. (string value)
 #image_ref = <None>
 

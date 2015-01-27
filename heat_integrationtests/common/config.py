@@ -68,6 +68,9 @@ IntegrationTestGroup = [
     cfg.StrOpt('fixed_network_name',
                default='private',
                help="Visible fixed network name "),
+    cfg.StrOpt('fixed_subnet_name',
+               default='private-subnet',
+               help="Visible fixed sub-network name "),
     cfg.IntOpt('ssh_timeout',
                default=300,
                help="Timeout in seconds to wait for authentication to "
