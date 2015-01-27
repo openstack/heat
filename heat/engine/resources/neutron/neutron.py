@@ -18,7 +18,6 @@ import warnings
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import resource
-from heat.engine import scheduler
 
 
 class NeutronResource(resource.Resource):
@@ -125,15 +124,6 @@ class NeutronResource(resource.Resource):
 
         return attributes[name]
 
-    def _confirm_delete(self):
-        while True:
-            try:
-                yield
-                self._show_resource()
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return
-
     def FnGetRefId(self):
         return six.text_type(self.resource_id)
 
@@ -176,11 +166,15 @@ class NeutronResource(resource.Resource):
                         raise exception.PhysicalResourceNameAmbiguity(name=sg)
         return seclist
 
-    def _delete_task(self):
-        delete_task = scheduler.TaskRunner(self._confirm_delete)
-        delete_task.start()
-        return delete_task
+    def check_delete_complete(self, check):
+        # NOTE(pshchelo): when longer check is needed, check is returned
+        # as True, otherwise None is implicitly returned as check
+        if not check:
+            return True
 
-    def check_delete_complete(self, delete_task):
-        # if the resource was already deleted, delete_task will be None
-        return delete_task is None or delete_task.step()
+        try:
+            self._show_resource()
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return True
+        return False

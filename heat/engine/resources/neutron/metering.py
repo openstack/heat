@@ -78,7 +78,7 @@ class MeteringLabel(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class MeteringRule(neutron.NeutronResource):
@@ -166,7 +166,7 @@ class MeteringRule(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 def resource_mapping():

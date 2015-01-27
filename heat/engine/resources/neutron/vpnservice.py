@@ -145,7 +145,7 @@ class VPNService(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class IPsecSiteConnection(neutron.NeutronResource):
@@ -367,7 +367,7 @@ class IPsecSiteConnection(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class IKEPolicy(neutron.NeutronResource):
@@ -527,7 +527,7 @@ class IKEPolicy(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class IPsecPolicy(neutron.NeutronResource):
@@ -689,7 +689,7 @@ class IPsecPolicy(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 def resource_mapping():

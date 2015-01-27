@@ -128,7 +128,7 @@ class Firewall(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class FirewallPolicy(neutron.NeutronResource):
@@ -230,7 +230,7 @@ class FirewallPolicy(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 class FirewallRule(neutron.NeutronResource):
@@ -406,7 +406,7 @@ class FirewallRule(neutron.NeutronResource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            return self._delete_task()
+            return True
 
 
 def resource_mapping():
