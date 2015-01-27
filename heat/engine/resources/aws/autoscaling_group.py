@@ -21,6 +21,7 @@ from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
@@ -99,6 +100,12 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         MIN_INSTANCES_IN_SERVICE, MAX_BATCH_SIZE, PAUSE_TIME
     ) = (
         'MinInstancesInService', 'MaxBatchSize', 'PauseTime'
+    )
+
+    ATTRIBUTES = (
+        INSTANCE_LIST,
+    ) = (
+        'InstanceList',
     )
 
     properties_schema = {
@@ -183,6 +190,13 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         ),
     }
 
+    attributes_schema = {
+        INSTANCE_LIST: attributes.Schema(
+            _("A comma-delimited list of server ip addresses. "
+              "(Heat extension).")
+        ),
+    }
+
     rolling_update_schema = {
         MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.INTEGER,
                                                     default=0),
@@ -193,9 +207,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
     }
 
     update_policy_schema = {
-        ROLLING_UPDATE: properties.Schema(
-            properties.Schema.MAP,
-            schema=rolling_update_schema)
+        ROLLING_UPDATE: properties.Schema(properties.Schema.MAP,
+                                          schema=rolling_update_schema)
     }
 
     def handle_create(self):
@@ -343,6 +356,15 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 len(self.properties[self.VPCZONE_IDENTIFIER]) != 1):
             raise exception.NotSupported(feature=_("Anything other than one "
                                          "VPCZoneIdentifier"))
+
+    def _resolve_attribute(self, name):
+        '''
+        heat extension: "InstanceList" returns comma delimited list of server
+        ip addresses.
+        '''
+        if name == self.INSTANCE_LIST:
+            return u','.join(inst.FnGetAtt('PublicIp')
+                             for inst in grouputils.get_members(self)) or None
 
     def child_template(self):
         if self.properties[self.DESIRED_CAPACITY]:
