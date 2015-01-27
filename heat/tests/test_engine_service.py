@@ -21,8 +21,6 @@ from eventlet import event as grevent
 import mock
 import mox
 from oslo.config import cfg
-from oslo import messaging
-from oslo.messaging.rpc import client as rpc_client
 from oslo.messaging.rpc import dispatcher
 from oslo.serialization import jsonutils
 import six
@@ -859,11 +857,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_lock.StackLock.engine_alive(
             self.ctx, "other-engine-fake-uuid").AndReturn(True)
 
-        self.m.StubOutWithMock(rpc_client._CallContext, 'call')
-        rpc_client._CallContext.call(
-            self.ctx, 'stop_stack',
+        self.m.StubOutWithMock(self.man, '_remote_call')
+        self.man._remote_call(
+            self.ctx, 'other-engine-fake-uuid', 'stop_stack',
             stack_identity=mox.IgnoreArg()
-        ).AndRaise(messaging.MessagingTimeout)
+        ).AndReturn(False)
         self.m.ReplayAll()
 
         ex = self.assertRaises(dispatcher.ExpectedException,
@@ -892,9 +890,9 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_lock.StackLock.engine_alive(
             self.ctx, "other-engine-fake-uuid").AndReturn(True)
 
-        self.m.StubOutWithMock(rpc_client._CallContext, 'call')
-        rpc_client._CallContext.call(
-            self.ctx, 'stop_stack',
+        self.m.StubOutWithMock(self.man, '_remote_call')
+        self.man._remote_call(
+            self.ctx, 'other-engine-fake-uuid', 'stop_stack',
             stack_identity=mox.IgnoreArg()).AndReturn(None)
 
         self.m.StubOutWithMock(stack_lock.StackLock, 'acquire')
