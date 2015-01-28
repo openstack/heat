@@ -1159,6 +1159,13 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
+        if stack.status == stack.IN_PROGRESS:
+            LOG.info(_LI('%(stack)s is in state %(action)s_IN_PROGRESS, '
+                         'snapshot is not permitted.'), {
+                             'stack': six.text_type(stack),
+                             'action': stack.action})
+            raise exception.ActionInProgress(stack_name=stack.name,
+                                             action=stack.action)
 
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
 
