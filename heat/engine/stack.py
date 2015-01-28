@@ -848,9 +848,9 @@ class Stack(collections.Mapping):
             # these stacks. curr_res is the resource that just
             # created and failed, so put into the stack to delete anyway.
             backup_res_id = backup_res.resource_id
-            curr_res = self.resources[key]
-            curr_res_id = curr_res.resource_id
-            if backup_res_id:
+            curr_res = self.resources.get(key)
+            if backup_res_id is not None and curr_res is not None:
+                curr_res_id = curr_res.resource_id
                 if (any(failed(child) for child in
                         self.dependencies[curr_res]) or
                         curr_res.status in
