@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import time
 
 from migrate.versioning import util as migrate_util
+from oslo.serialization import jsonutils
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
@@ -41,11 +41,10 @@ def upgrade(migrate_engine):
 
     for raw_template in raw_templates:
         for key, date in version_map:
-            if key in raw_template.template:
-                template = copy.deepcopy(raw_template.template)
+            template = jsonutils.loads(raw_template.template)
+            if key in template:
 
                 version = template[key]
-
                 try:
                     dt = time.strptime(version, '%Y-%m-%d')
                 except (TypeError, ValueError):
@@ -53,7 +52,10 @@ def upgrade(migrate_engine):
 
                 if dt is None or dt < patch_date:
                     template[key] = date
-                    raw_template.template = template
+                    (templ_table.update().
+                        where(templ_table.c.id == raw_template.id).
+                        values(template=jsonutils.dumps(template)).
+                        execute())
                     session.commit()
     session.close()
 

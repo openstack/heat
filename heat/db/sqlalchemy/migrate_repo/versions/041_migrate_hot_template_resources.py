@@ -10,9 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from migrate.versioning import util as migrate_util
+from oslo.serialization import jsonutils
 import six
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -52,10 +51,10 @@ def upgrade(migrate_engine):
         return changed
 
     for raw_template in raw_templates:
-        if 'heat_template_version' in raw_template.template:
+        template = jsonutils.loads(raw_template.template)
+        if 'heat_template_version' in template:
 
             changed = False
-            template = copy.deepcopy(raw_template.template)
 
             resources = template.get('resources', {})
             if _translate(resources, CFN_TO_HOT_RESOURCE_ATTRS):
@@ -66,7 +65,10 @@ def upgrade(migrate_engine):
                 changed = True
 
             if changed:
-                raw_template.template = template
+                (templ_table.update().
+                    where(templ_table.c.id == raw_template.id).
+                    values(template=jsonutils.dumps(template)).
+                    execute())
                 session.commit()
     session.close()
 
