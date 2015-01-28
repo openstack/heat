@@ -280,19 +280,6 @@ class KeystoneClientV3(object):
         # get the last 64 characters of the username
         return username[-64:]
 
-    def _get_domain_id_from_name(self, domain_name):
-        domains = self.domain_admin_client.domains.list(name=domain_name)
-        if len(domains) == 1:
-            return domains[0].id
-        elif len(domains) == 0:
-            msg = _("Can't find domain id for %s!")
-            LOG.error(msg, domain_name)
-            raise exception.Error(msg % domain_name)
-        else:
-            msg = _('Multiple domain ids were found for %s!')
-            LOG.error(msg, domain_name)
-            raise exception.Error(msg % domain_name)
-
     def create_stack_user(self, username, password=''):
         """Create a user defined as part of a stack.
 
@@ -409,8 +396,8 @@ class KeystoneClientV3(object):
             if self._stack_domain_is_id:
                 self._stack_domain_id = self.stack_domain
             else:
-                domain_id = self._get_domain_id_from_name(self.stack_domain)
-                self._stack_domain_id = domain_id
+                self._stack_domain_id = (
+                    self._domain_admin_client.auth_ref.domain_id)
         return self._stack_domain_id
 
     def _check_stack_domain_user(self, user_id, project_id, action):
