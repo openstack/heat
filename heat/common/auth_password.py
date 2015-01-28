@@ -52,14 +52,14 @@ class KeystonePasswordAuthProtocol(object):
             ctx = context.RequestContext(username=username, password=password,
                                          tenant_id=tenant, auth_url=auth_url,
                                          is_admin=False)
-            hc = heat_keystoneclient.KeystoneClient(ctx)
-            client = hc.client
+            session = heat_keystoneclient.KeystoneClient(ctx).session
+            auth_ref = ctx.auth_plugin.get_access(session)
         except (keystone_exceptions.Unauthorized,
                 keystone_exceptions.Forbidden,
                 keystone_exceptions.NotFound,
                 keystone_exceptions.AuthorizationFailure):
             return self._reject_request(env, start_response, auth_url)
-        env.update(self._build_user_headers(client.auth_ref))
+        env.update(self._build_user_headers(auth_ref))
 
         return self.app(env, start_response)
 

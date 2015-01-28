@@ -24,6 +24,7 @@ from oslotest import mockpatch
 import testscenarios
 import testtools
 
+from heat.common import context
 from heat.common import messaging
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
@@ -136,6 +137,13 @@ class HeatTestCase(testscenarios.WithScenarios,
     def patch(self, target, **kwargs):
         mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
         return mockfixture.mock
+
+    def stub_auth(self, ctx=None, **kwargs):
+        auth = self.patchobject(ctx or context.RequestContext,
+                                "_create_auth_plugin")
+        fake_auth = fakes.FakeAuth(**kwargs)
+        auth.return_value = fake_auth
+        return auth
 
     def stub_keystoneclient(self, fake_client=None, **kwargs):
         client = self.patchobject(keystone.KeystoneClientPlugin, "_create")

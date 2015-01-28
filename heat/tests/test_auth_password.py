@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from keystoneclient.auth.identity import v3 as ks_v3_auth
 from keystoneclient import exceptions as keystone_exc
-from keystoneclient.v3 import client as keystone_client
+from keystoneclient import session as ks_session
+import mox
 from oslo.config import cfg
 import webob
 
@@ -76,6 +78,7 @@ TOKEN_V3_RESPONSE = {
             'id': 'tenant_id1',
             'name': 'tenant_name1',
         },
+        'methods': ['password'],
     },
     'user': {
         'id': 'user_id1',
@@ -120,21 +123,20 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.response_headers = dict(headers)
 
     def test_valid_v2_request(self):
-        mock_client = self.m.CreateMock(keystone_client.Client)
-        self.m.StubOutWithMock(keystone_client, 'Client')
-        keystone_client.Client(
+        mock_auth = self.m.CreateMock(ks_v3_auth.Password)
+        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+
+        ks_v3_auth.Password(
             auth_url=self.config['auth_uri'],
-            cacert=None,
-            cert=None,
-            endpoint=self.config['auth_uri'],
-            insecure=False,
-            key=None,
             password='goodpassword',
             project_id='tenant_id1',
-            username='user_name1').AndReturn(mock_client)
-        mock_client.auth_ref = TOKEN_V2_RESPONSE
+            user_domain_id='default',
+            username='user_name1').AndReturn(mock_auth)
+
+        m = mock_auth.get_access(mox.IsA(ks_session.Session))
+        m.AndReturn(TOKEN_V2_RESPONSE)
+
         self.app.expected_env['keystone.token_info'] = TOKEN_V2_RESPONSE
-        mock_client.authenticate().AndReturn(None)
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
@@ -144,23 +146,21 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_valid_v3_request(self):
-        mock_client = self.m.CreateMock(keystone_client.Client)
-        self.m.StubOutWithMock(keystone_client, 'Client')
-        keystone_client.Client(
-            auth_url=self.config['auth_uri'],
-            cacert=None,
-            cert=None,
-            endpoint=self.config['auth_uri'],
-            insecure=False,
-            key=None,
-            password='goodpassword',
-            project_id='tenant_id1',
-            username='user_name1').AndReturn(mock_client)
-        mock_client.auth_ref = TOKEN_V3_RESPONSE
+        mock_auth = self.m.CreateMock(ks_v3_auth.Password)
+        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+
+        ks_v3_auth.Password(auth_url=self.config['auth_uri'],
+                            password='goodpassword',
+                            project_id='tenant_id1',
+                            user_domain_id='default',
+                            username='user_name1').AndReturn(mock_auth)
+
+        m = mock_auth.get_access(mox.IsA(ks_session.Session))
+        m.AndReturn(TOKEN_V3_RESPONSE)
+
         self.app.expected_env['keystone.token_info'] = {
             'token': TOKEN_V3_RESPONSE
         }
-        mock_client.authenticate().AndReturn(None)
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
@@ -170,18 +170,15 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_request_with_bad_credentials(self):
-        self.m.StubOutWithMock(
-            keystone_client, 'Client', use_mock_anything=True)
-        keystone_client.Client(
-            auth_url=self.config['auth_uri'],
-            cacert=None,
-            cert=None,
-            endpoint=self.config['auth_uri'],
-            insecure=False,
-            key=None,
-            password='badpassword',
-            project_id='tenant_id1',
-            username='user_name1').AndRaise(keystone_exc.Unauthorized(401))
+        self.m.StubOutWithMock(ks_v3_auth, 'Password')
+
+        m = ks_v3_auth.Password(auth_url=self.config['auth_uri'],
+                                password='badpassword',
+                                project_id='tenant_id1',
+                                user_domain_id='default',
+                                username='user_name1')
+        m.AndRaise(keystone_exc.Unauthorized(401))
+
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'

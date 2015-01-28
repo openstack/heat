@@ -11,16 +11,60 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneclient import access
+from keystoneclient.auth.identity import base
+from keystoneclient.auth.identity import v3
+from keystoneclient.auth import token_endpoint
+from oslo.config import cfg
+from oslo.middleware import request_id as oslo_request_id
 from oslo.utils import importutils
 from oslo_context import context
-from oslo_middleware import request_id as oslo_request_id
 
 from heat.common import exception
+from heat.common.i18n import _LE
 from heat.common import policy
 from heat.common import wsgi
 from heat.db import api as db_api
 from heat.engine import clients
 from heat.openstack.common import local
+from heat.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
+
+
+# FIXME(jamielennox): I copied this out of a review that is proposed against
+# keystoneclient which can be used when available.
+# https://review.openstack.org/#/c/143338/
+class _AccessInfoPlugin(base.BaseIdentityPlugin):
+    """A plugin that turns an existing AccessInfo object into a usable plugin.
+
+    In certain circumstances you already have an auth_ref/AccessInfo object
+    that you just want to reuse. This could have been from a cache, in
+    auth_token middleware or other.
+
+    Turn that existing object into a simple identity plugin. This plugin cannot
+    be refreshed as the AccessInfo object does not contain any authorizing
+    information.
+
+    :param auth_ref: the existing AccessInfo object.
+    :type auth_ref: keystoneclient.access.AccessInfo
+    :param auth_url: the url where this AccessInfo was retrieved from. Required
+                     if using the AUTH_INTERFACE with get_endpoint. (optional)
+    """
+
+    def __init__(self, auth_url, auth_ref):
+        super(_AccessInfoPlugin, self).__init__(auth_url=auth_url,
+                                                reauthenticate=False)
+        self.auth_ref = auth_ref
+
+    def get_auth_ref(self, session, **kwargs):
+        return self.auth_ref
+
+    def invalidate(self):
+        # NOTE(jamielennox): Don't allow the default invalidation to occur
+        # because on next authentication request we will only get the same
+        # auth_ref object again.
+        return False
 
 
 class RequestContext(context.RequestContext):
@@ -35,7 +79,7 @@ class RequestContext(context.RequestContext):
                  read_only=False, show_deleted=False,
                  overwrite=True, trust_id=None, trustor_user_id=None,
                  request_id=None, auth_token_info=None, region_name=None,
-                 **kwargs):
+                 auth_plugin=None, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
@@ -66,6 +110,7 @@ class RequestContext(context.RequestContext):
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
         self.policy = policy.Enforcer()
+        self._auth_plugin = auth_plugin
 
         if is_admin is None:
             self.is_admin = self.policy.check_is_admin(self)
@@ -109,6 +154,59 @@ class RequestContext(context.RequestContext):
     @classmethod
     def from_dict(cls, values):
         return cls(**values)
+
+    @property
+    def _keystone_v3_endpoint(self):
+        if self.auth_url:
+            auth_uri = self.auth_url
+        else:
+            importutils.import_module('keystonemiddleware.auth_token')
+            auth_uri = cfg.CONF.keystone_authtoken.auth_uri
+
+        return auth_uri.replace('v2.0', 'v3')
+
+    def _create_auth_plugin(self):
+        if self.trust_id:
+            importutils.import_module('keystonemiddleware.auth_token')
+            username = cfg.CONF.keystone_authtoken.admin_user
+            password = cfg.CONF.keystone_authtoken.admin_password
+
+            return v3.Password(username=username,
+                               password=password,
+                               user_domain_id='default',
+                               auth_url=self._keystone_v3_endpoint,
+                               trust_id=self.trust_id)
+
+        if self.auth_token_info:
+            auth_ref = access.AccessInfo.factory(body=self.auth_token_info,
+                                                 auth_token=self.auth_token)
+            return _AccessInfoPlugin(self._keystone_v3_endpoint, auth_ref)
+
+        if self.auth_token:
+            # FIXME(jamielennox): This is broken but consistent. If you
+            # only have a token but don't load a service catalog then
+            # url_for wont work. Stub with the keystone endpoint so at
+            # least it might be right.
+            return token_endpoint.Token(endpoint=self._keystone_v3_endpoint,
+                                        token=self.auth_token)
+
+        if self.password:
+            return v3.Password(username=self.username,
+                               password=self.password,
+                               project_id=self.tenant_id,
+                               user_domain_id='default',
+                               auth_url=self._keystone_v3_endpoint)
+
+        LOG.error(_LE("Keystone v3 API connection failed, no password "
+                      "trust or auth_token!"))
+        raise exception.AuthorizationFailure()
+
+    @property
+    def auth_plugin(self):
+        if not self._auth_plugin:
+            self._auth_plugin = self._create_auth_plugin()
+
+        return self._auth_plugin
 
 
 def get_admin_context(show_deleted=False):
@@ -160,6 +258,7 @@ class ContextMiddleware(wsgi.Middleware):
             if roles is not None:
                 roles = roles.split(',')
             token_info = environ.get('keystone.token_info')
+            auth_plugin = environ.get('keystone.token_auth')
             req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
 
         except Exception:
@@ -175,7 +274,8 @@ class ContextMiddleware(wsgi.Middleware):
                                         roles=roles,
                                         request_id=req_id,
                                         auth_token_info=token_info,
-                                        region_name=region_name)
+                                        region_name=region_name,
+                                        auth_plugin=auth_plugin)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):

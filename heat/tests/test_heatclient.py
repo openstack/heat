@@ -14,7 +14,9 @@
 import json
 import uuid
 
+from keystoneclient import access as ks_access
 from keystoneclient.auth.identity import v3 as ks_auth_v3
+from keystoneclient.auth import token_endpoint as ks_token_endpoint
 import keystoneclient.exceptions as kc_exception
 from keystoneclient import session as ks_session
 from keystoneclient.v3 import client as kc_v3
@@ -23,6 +25,7 @@ import mox
 from oslo.config import cfg
 import six
 
+from heat.common import context
 from heat.common import exception
 from heat.common import heat_keystoneclient
 from heat.tests import common
@@ -44,6 +47,9 @@ class KeystoneClientTest(common.HeatTestCase):
         self.mock_ks_v3_client_domain_mngr = self.m.CreateMock(
             kc_v3_domains.DomainManager)
         self.m.StubOutWithMock(kc_v3, "Client")
+        self.m.StubOutWithMock(ks_auth_v3, 'Password')
+        self.m.StubOutWithMock(ks_token_endpoint, 'Token')
+        self.m.StubOutWithMock(context, '_AccessInfoPlugin')
 
         dummy_url = 'http://server.test:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
@@ -100,56 +106,49 @@ class KeystoneClientTest(common.HeatTestCase):
             self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
             self.mock_admin_client.auth_ref.user_id = '1234'
 
-    def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id', auth_ref=None):
+    def _stubs_v3(self, method='token', trust_scoped=True,
+                  user_id='trustor_user_id', auth_ref=None, client=True,
+                  times=1):
+        mock_auth_ref = self.m.CreateMockAnything()
+        mock_ks_auth = self.m.CreateMockAnything()
 
         if method == 'token':
-            kc_v3.Client(
-                token='abcd1234', project_id='test_tenant_id',
-                auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None).AndReturn(self.mock_ks_v3_client)
+            p = ks_token_endpoint.Token(token='abcd1234',
+                                        endpoint='http://server.test:5000/v3')
         elif method == 'auth_ref':
-            kc_v3.Client(
-                auth_ref=auth_ref,
-                auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None).AndReturn(self.mock_ks_v3_client)
-        elif method == 'password':
-            kc_v3.Client(
-                username='test_username',
-                password='password',
-                project_id='test_tenant_id',
-                auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None).AndReturn(self.mock_ks_v3_client)
-        elif method == 'trust':
-            kc_v3.Client(
-                username='heat',
-                password='verybadpass',
-                auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3',
-                trust_id='atrust123',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None).AndReturn(self.mock_ks_v3_client)
-            self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
-            self.mock_ks_v3_client.auth_ref.user_id = user_id
-            self.mock_ks_v3_client.auth_ref.trust_scoped = trust_scoped
-            self.mock_ks_v3_client.auth_ref.auth_token = 'atrusttoken'
+            p = context._AccessInfoPlugin('http://server.test:5000/v3',
+                                          mox.IsA(ks_access.AccessInfo))
 
-        if method != 'auth_ref':
-            self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
+        elif method == 'password':
+            p = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                    username='test_username',
+                                    password='password',
+                                    project_id='test_tenant_id',
+                                    user_domain_id='default')
+
+        elif method == 'trust':
+            p = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                    username='heat',
+                                    password='verybadpass',
+                                    user_domain_id='default',
+                                    trust_id='atrust123')
+
+            mock_auth_ref.user_id = user_id
+            mock_auth_ref.trust_scoped = trust_scoped
+            mock_auth_ref.auth_token = 'atrusttoken'
+
+        p.AndReturn(mock_ks_auth)
+
+        if client:
+            c = kc_v3.Client(session=mox.IsA(ks_session.Session),
+                             auth=mock_ks_auth)
+            c.AndReturn(self.mock_ks_v3_client)
+
+            for x in xrange(0, times):
+                m = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
+                m.AndReturn(mock_auth_ref)
+
+        return mock_ks_auth, mock_auth_ref
 
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
@@ -427,7 +426,8 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.password = None
         ctx.trust_id = None
         ctx.auth_token = 'ctx_token'
-        ctx.auth_token_info = {'access': {'token': {'expires': '123'}}}
+        ctx.auth_token_info = {'access': {
+            'token': {'id': 'abcd1234', 'expires': '123'}}}
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.client
         self.assertIsNotNone(heat_ks_client._client)
@@ -437,7 +437,9 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test creating the client, token v3 auth_ref."""
 
         expected_auth_ref = {'auth_token': 'ctx_token',
-                             'expires': '456', 'version': 'v3'}
+                             'expires': '456',
+                             'version': 'v3',
+                             'methods': []}
         self._stubs_v3(method='auth_ref', auth_ref=expected_auth_ref)
         self.m.ReplayAll()
 
@@ -446,7 +448,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.password = None
         ctx.trust_id = None
         ctx.auth_token = 'ctx_token'
-        ctx.auth_token_info = {'token': {'expires': '456'}}
+        ctx.auth_token_info = {'token': {'expires': '456', 'methods': []}}
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.client
         self.assertIsNotNone(heat_ks_client._client)
@@ -510,19 +512,19 @@ class KeystoneClientTest(common.HeatTestCase):
             id = 'atrust123'
 
         self._stub_admin_client()
+        mock_client, mock_auth_ref = self._stubs_v3(times=2)
 
-        self._stubs_v3()
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         if delegate_roles:
             cfg.CONF.set_override('trusts_delegated_roles', delegate_roles)
 
         trustor_roles = ['heat_stack_owner', 'admin', '__member__']
         trustee_roles = delegate_roles or trustor_roles
-        self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.auth_ref.user_id = '5678'
-        self.mock_ks_v3_client.auth_ref.project_id = '42'
-        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
 
+        mock_auth_ref.user_id = '5678'
+        mock_auth_ref.project_id = '42'
+
+        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.create(
             trustor_user='5678',
             trustee_user='1234',
@@ -543,18 +545,15 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test create_trust_context when creating a trust."""
 
-        class MockTrust(object):
-            id = 'atrust123'
-
         self._stub_admin_client()
 
-        self._stubs_v3()
+        mock_auth, mock_auth_ref = self._stubs_v3(times=2)
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
 
-        self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.auth_ref.user_id = '5678'
-        self.mock_ks_v3_client.auth_ref.project_id = '42'
+        mock_auth_ref.user_id = '5678'
+        mock_auth_ref.project_id = '42'
+
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.create(
             trustor_user='5678',
@@ -1366,7 +1365,6 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
 
     def _stub_domain_user_pw_auth(self):
-        self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                             user_id='duser',
                             password='apassw',
@@ -1375,7 +1373,6 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def test_stack_domain_user_token(self):
         """Test stack_domain_user_token function."""
-        self._stub_domain_user_pw_auth()
         dummysession = self.m.CreateMockAnything()
         dummyresp = self.m.CreateMockAnything()
         dummyresp.headers = {'X-Subject-Token': 'dummytoken'}
@@ -1384,7 +1381,7 @@ class KeystoneClientTest(common.HeatTestCase):
                           headers={'Accept': 'application/json'},
                           json=mox.IgnoreArg()).AndReturn(dummyresp)
         self.m.StubOutWithMock(ks_session, 'Session')
-        ks_session.Session(auth='dummyauth').AndReturn(dummysession)
+        ks_session.Session.construct(mox.IsA(dict)).AndReturn(dummysession)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -1421,10 +1418,9 @@ class KeystoneClientTest(common.HeatTestCase):
         Helper function for testing url_for depending on different ways to
         pass region name.
         """
-        self._stubs_v3()
-        self.mock_ks_v3_client.service_catalog = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.service_catalog.url_for(
-            **expected_kwargs).AndReturn(service_url)
+        mock_ks_auth, mock_auth_ref = self._stubs_v3(client=False)
+        mock_ks_auth.get_endpoint(mox.IsA(ks_session.Session),
+                                  **expected_kwargs).AndReturn(service_url)
 
         self.m.ReplayAll()
         ctx = ctx or utils.dummy_context()
@@ -1525,7 +1521,6 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
             self.mock_admin_client.auth_ref.user_id = '1234'
 
     def _stub_domain_user_pw_auth(self):
-        self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                             user_id='duser',
                             password='apassw',
