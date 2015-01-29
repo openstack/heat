@@ -63,6 +63,9 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             return False
         return ex.status_code == 413
 
+    def is_no_unique(self, ex):
+        return isinstance(ex, exceptions.NeutronClientNoUniqueMatch)
+
     def find_neutron_resource(self, props, key, key_type):
         return neutronV20.find_resourceid_by_name_or_id(
             self.client(), key_type, props.get(key))

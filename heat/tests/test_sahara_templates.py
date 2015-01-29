@@ -149,13 +149,34 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.assertEqual(expected, six.text_type(ex))
         self.ngt_mgr.delete.assert_called_once_with(self.fake_ngt.id)
 
-    def test_validate_no_floatingippool_on_neutron_fails(self):
-        self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
+    def test_validate_floatingippool_on_neutron_fails(self):
         ngt = self._init_ngt(self.t)
         self.patchobject(ngt, 'is_using_neutron').return_value = True
+
+        self.patchobject(
+            neutron.NeutronClientPlugin, 'find_neutron_resource'
+        ).side_effect = [
+            neutron.exceptions.NeutronClientNoUniqueMatch(message='Too many'),
+            neutron.exceptions.NeutronClientException(message='Not found',
+                                                      status_code=404)
+        ]
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
-        self.assertEqual('floating_ip_pool must be provided.',
+        self.assertEqual('Too many',
                          six.text_type(ex))
+        ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
+        self.assertEqual('Not found',
+                         six.text_type(ex))
+
+    def test_validate_floatingippool_on_novanetwork_fails(self):
+        ngt = self._init_ngt(self.t)
+        self.patchobject(ngt, 'is_using_neutron').return_value = False
+        nova_mock = mock.MagicMock()
+        nova_mock.floating_ip_pools.find.side_effect = (
+            nova.exceptions.NotFound(404, message='Not found'))
+        self.patchobject(nova.NovaClientPlugin,
+                         '_create').return_value = nova_mock
+        ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
+        self.assertEqual('Not found', six.text_type(ex))
 
     def test_validate_flavor_constraint_return_false(self):
         self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
