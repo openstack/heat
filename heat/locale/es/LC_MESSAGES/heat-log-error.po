@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-01-19 06:02+0000\n"
-"PO-Revision-Date: 2015-01-13 20:51+0000\n"
+"POT-Creation-Date: 2015-01-29 06:17+0000\n"
+"PO-Revision-Date: 2015-01-28 07:02+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -35,6 +35,10 @@ msgstr "Solicitud no contiene parámetro %s!"
 msgid "Request does not contain required MetricData"
 msgstr "Solicitud no contiene el requisito MetricData"
 
+#: heat/common/context.py:200
+msgid "Keystone v3 API connection failed, no password trust or auth_token!"
+msgstr ""
+
 #: heat/common/exception.py:116
 msgid "Exception in string format operation"
 msgstr "Excepción en la operación de formato de cadena"
@@ -47,28 +51,20 @@ msgstr "Ha fallado la autenticación del cliente de administración"
 msgid "Domain admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:186
-msgid "Unknown version in auth_token_info"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:197
-msgid "Keystone v3 API connection failed, no password trust or auth_token!"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:209
+#: heat/common/heat_keystoneclient.py:170
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:217
+#: heat/common/heat_keystoneclient.py:176
 msgid "trust token re-scoping failed!"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:221
+#: heat/common/heat_keystoneclient.py:180
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:364
-#: heat/common/heat_keystoneclient.py:451
+#: heat/common/heat_keystoneclient.py:323
+#: heat/common/heat_keystoneclient.py:397
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -93,7 +89,7 @@ msgstr ""
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(opname) %(ci)s fallo por %(a)s en %(sid)s"
 
-#: heat/common/plugin_loader.py:99
+#: heat/common/plugin_loader.py:100
 #, python-format
 msgid "Failed to import module %s"
 msgstr "No se ha podido importar el modulo %s"
@@ -111,17 +107,17 @@ msgstr ""
 msgid "Removing dead child %s"
 msgstr "Eliminando hijo muerto %s"
 
-#: heat/common/wsgi.py:639
+#: heat/common/wsgi.py:661
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "Excepción al manejar recurso: %s"
 
-#: heat/common/wsgi.py:661
+#: heat/common/wsgi.py:683
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "Devolviendo %(code)s al usuario: %(explanation)s"
 
-#: heat/common/wsgi.py:735
+#: heat/common/wsgi.py:757
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr "Error inesperado ha ocurrido sirviendo API: %s"
@@ -130,7 +126,7 @@ msgstr "Error inesperado ha ocurrido sirviendo API: %s"
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:298
+#: heat/engine/api.py:299
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
@@ -159,21 +155,21 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:481
+#: heat/engine/resource.py:482
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:934 heat/engine/resource.py:961
+#: heat/engine/resource.py:935 heat/engine/resource.py:962
 #, python-format
 msgid "DB error %s"
 msgstr "Error de base de datos %s"
 
-#: heat/engine/resource.py:1085
+#: heat/engine/resource.py:1086
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr "señal %(name)s : %(msg)s"
 
-#: heat/engine/service.py:1308
+#: heat/engine/service.py:1326
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -213,7 +209,7 @@ msgid ""
 "conf."
 msgstr ""
 
-#: heat/engine/resources/eip.py:329 heat/engine/resources/eip.py:352
+#: heat/engine/resources/eip.py:328 heat/engine/resources/eip.py:351
 msgid "Port not specified."
 msgstr ""
 
@@ -223,7 +219,7 @@ msgid ""
 "pool is configured."
 msgstr ""
 
-#: heat/engine/resources/remote_stack.py:149
+#: heat/engine/resources/remote_stack.py:148
 #, python-format
 msgid "exception: %s"
 msgstr ""
@@ -233,7 +229,7 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:291
+#: heat/engine/resources/aws/autoscaling_group.py:305
 msgid "Failed sending error notification"
 msgstr ""
 
