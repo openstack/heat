@@ -104,6 +104,7 @@ def format_stack(stack, preview=False):
         rpc_api.STACK_TIMEOUT: stack.timeout_mins,
         rpc_api.STACK_OWNER: stack.username,
         rpc_api.STACK_PARENT: stack.owner_id,
+        rpc_api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,
     }
 
     if not preview:
