@@ -216,8 +216,12 @@ engine_opts = [
                        ' set to a list of tuples,'
                        ' (stackresourcename, stackname) with list[0] being'
                        ' (None, rootstackname), and heat_resource_name will'
-                       ' be set to the resource\'s name.'))]
-
+                       ' be set to the resource\'s name.')),
+    cfg.BoolOpt('encrypt_parameters_and_properties',
+                default=False,
+                help=_('Encrypt template parameters that were marked as'
+                       ' hidden and also all the resource properties before'
+                       ' storing them in database.'))]
 
 rpc_opts = [
     cfg.StrOpt('host',

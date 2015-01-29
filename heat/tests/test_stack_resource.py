@@ -754,7 +754,8 @@ class WithTemplateTest(StackResourceBaseTest):
     def test_create_with_template(self):
         child_env = {'parameter_defaults': {},
                      'parameters': self.params,
-                     'resource_registry': {'resources': {}}}
+                     'resource_registry': {'resources': {}},
+                     'encrypted_param_names': []}
         self.parent_resource.child_params = mock.Mock(
             return_value=self.params)
         res_name = self.parent_resource.physical_resource_name()
@@ -788,7 +789,8 @@ class WithTemplateTest(StackResourceBaseTest):
 
         child_env = {'parameter_defaults': {},
                      'parameters': self.params,
-                     'resource_registry': {'resources': {}}}
+                     'resource_registry': {'resources': {}},
+                     'encrypted_param_names': []}
         self.parent_resource.child_params = mock.Mock(
             return_value=self.params)
         rpcc = mock.Mock()

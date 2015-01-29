@@ -164,3 +164,7 @@ class Stack(
             self,
             db_stack
         )
+
+    @classmethod
+    def encrypt_hidden_parameters(cls, tmpl):
+        raw_template.RawTemplate.encrypt_hidden_parameters(tmpl)
