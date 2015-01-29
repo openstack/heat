@@ -609,6 +609,10 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
     def _check_062(self, engine, data):
         self.assertColumnExists(engine, 'stack', 'parent_resource_name')
 
+    def _check_063(self, engine, data):
+        self.assertColumnExists(engine, 'resource',
+                                'properties_data_encrypted')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

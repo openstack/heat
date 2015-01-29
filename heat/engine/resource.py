@@ -976,6 +976,10 @@ class Resource(object):
 
     def _store(self, metadata=None):
         '''Create the resource in the database.'''
+
+        properties_data_encrypted, properties_data = \
+            resource_objects.Resource.encrypt_properties_data(
+                self._stored_properties_data)
         try:
             rs = {'action': self.action,
                   'status': self.status,
@@ -984,7 +988,8 @@ class Resource(object):
                   'nova_instance': self.resource_id,
                   'name': self.name,
                   'rsrc_metadata': metadata,
-                  'properties_data': self._stored_properties_data,
+                  'properties_data': properties_data,
+                  'properties_data_encrypted': properties_data_encrypted,
                   'needed_by': self.needed_by,
                   'requires': self.requires,
                   'replaces': self.replaces,
@@ -1014,13 +1019,17 @@ class Resource(object):
         self.status = status
         self.status_reason = reason
 
+        properties_data_encrypted, properties_data = \
+            resource_objects.Resource.encrypt_properties_data(
+                self._stored_properties_data)
         data = {
             'action': self.action,
             'status': self.status,
             'status_reason': reason,
             'stack_id': self.stack.id,
             'updated_at': self.updated_time,
-            'properties_data': self._stored_properties_data,
+            'properties_data': properties_data,
+            'properties_data_encrypted': properties_data_encrypted,
             'needed_by': self.needed_by,
             'requires': self.requires,
             'replaces': self.replaces,

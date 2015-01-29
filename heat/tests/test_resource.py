@@ -25,6 +25,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import short_id
 from heat.common import timeutils
+from heat.db import api as db_api
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
@@ -1301,6 +1302,81 @@ class ResourceTest(common.HeatTestCase):
 
         res.FnGetAtt('attr2')
         self.assertIn("Attribute attr2 is not of type Map", self.LOG.output)
+
+    def test_properties_data_stored_encrypted_decrypted_on_load(self):
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
+
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        stored_properties_data = {'prop1': 'string',
+                                  'prop2': {'a': 'dict'},
+                                  'prop3': 1,
+                                  'prop4': ['a', 'list'],
+                                  'prop5': True}
+
+        # The db data should be encrypted when _store_or_update() is called
+        res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
+        res._stored_properties_data = stored_properties_data
+        res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
+        db_res = db_api.resource_get(res.context, res.id)
+        self.assertNotEqual('string',
+                            db_res.properties_data['prop1'])
+
+        # The db data should be encrypted when _store() is called
+        res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
+        res._stored_properties_data = stored_properties_data
+        res._store()
+        db_res = db_api.resource_get(res.context, res.id)
+        self.assertNotEqual('string',
+                            db_res.properties_data['prop1'])
+
+        # The properties data should be decrypted when the object is
+        # loaded using get_obj
+        res_obj = resource_objects.Resource.get_obj(res.context, res.id)
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+
+        # The properties data should be decrypted when the object is
+        # loaded using get_all_by_stack
+        res_objs = resource_objects.Resource.get_all_by_stack(res.context,
+                                                              self.stack.id)
+        res_obj = res_objs['test_res_enc']
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+
+    def test_properties_data_no_encryption(self):
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
+
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        stored_properties_data = {'prop1': 'string',
+                                  'prop2': {'a': 'dict'},
+                                  'prop3': 1,
+                                  'prop4': ['a', 'list'],
+                                  'prop5': True}
+
+        # The db data should not be encrypted when _store_or_update()
+        # is called
+        res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
+        res._stored_properties_data = stored_properties_data
+        res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
+        db_res = db_api.resource_get(res.context, res.id)
+        self.assertEqual('string', db_res.properties_data['prop1'])
+
+        # The db data should not be encrypted when _store() is called
+        res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
+        res._stored_properties_data = stored_properties_data
+        res._store()
+        db_res = db_api.resource_get(res.context, res.id)
+        self.assertEqual('string', db_res.properties_data['prop1'])
+
+        # The properties data should not be modified when the object
+        # is loaded using get_obj
+        res_obj = resource_objects.Resource.get_obj(res.context, res.id)
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+
+        # The properties data should not be modified when the object
+        # is loaded using get_all_by_stack
+        res_objs = resource_objects.Resource.get_all_by_stack(res.context,
+                                                              self.stack.id)
+        res_obj = res_objs['test_res_enc']
+        self.assertEqual('string', res_obj.properties_data['prop1'])
 
 
 class ResourceAdoptTest(common.HeatTestCase):
