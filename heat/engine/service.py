@@ -504,9 +504,11 @@ class EngineService(service.Service):
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
         if rpc_api.PARAM_ADOPT_STACK_DATA in common_params:
-            params[rpc_api.STACK_PARAMETERS] = common_params[
-                rpc_api.PARAM_ADOPT_STACK_DATA]['environment'][
-                    rpc_api.STACK_PARAMETERS]
+            # Override the params with values given with -P option
+            new_params = common_params[rpc_api.PARAM_ADOPT_STACK_DATA][
+                'environment'][rpc_api.STACK_PARAMETERS].copy()
+            new_params.update(params.get(rpc_api.STACK_PARAMETERS, {}))
+            params[rpc_api.STACK_PARAMETERS] = new_params
 
         env = environment.Environment(params)
         stack = parser.Stack(cnxt, stack_name, tmpl, env,
