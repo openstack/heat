@@ -151,8 +151,9 @@ class StackResource(resource.Resource):
         return template.Template(parsed_child_template,
                                  files=self.stack.t.files)
 
-    def _parse_nested_stack(self, stack_name, child_template, child_params,
-                            timeout_mins=None, adopt_data=None):
+    def _parse_nested_stack(self, stack_name, child_template,
+                            child_params=None, timeout_mins=None,
+                            adopt_data=None):
         if self.stack.nested_depth >= cfg.CONF.max_nested_stack_depth:
             msg = _("Recursion depth exceeds %d."
                     ) % cfg.CONF.max_nested_stack_depth
@@ -173,10 +174,13 @@ class StackResource(resource.Resource):
         stack_user_project_id = self.stack.stack_user_project_id
         new_nested_depth = self.stack.nested_depth + 1
 
-        # Note we disable rollback for nested stacks, since they
-        # should be rolled back by the parent stack on failure
+        if child_params is None:
+            child_params = self.child_params()
         child_env = environment.get_child_environment(
             self.stack.env, child_params)
+
+        # Note we disable rollback for nested stacks, since they
+        # should be rolled back by the parent stack on failure
         nested = parser.Stack(self.context,
                               stack_name,
                               parsed_template,
@@ -203,7 +207,7 @@ class StackResource(resource.Resource):
             message = exception.StackResourceLimitExceeded.msg_fmt
             raise exception.RequestLimitExceeded(message=message)
 
-    def create_with_template(self, child_template, user_params,
+    def create_with_template(self, child_template, user_params=None,
                              timeout_mins=None, adopt_data=None):
         """Create the nested stack with the given template."""
         name = self.physical_resource_name()
@@ -237,7 +241,7 @@ class StackResource(resource.Resource):
 
         return done
 
-    def update_with_template(self, child_template, user_params,
+    def update_with_template(self, child_template, user_params=None,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
         nested_stack = self.nested()
