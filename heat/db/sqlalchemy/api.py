@@ -484,6 +484,8 @@ def user_creds_create(context):
         user_creds_ref.password = None
         user_creds_ref.tenant = values.get('tenant')
         user_creds_ref.tenant_id = values.get('tenant_id')
+        user_creds_ref.auth_url = values.get('auth_url')
+        user_creds_ref.region_name = values.get('region_name')
     else:
         user_creds_ref.update(values)
         method, password = _encrypt(values['password'])
