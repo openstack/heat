@@ -274,7 +274,7 @@ class NovaUtilsMetadataTests(NovaClientPluginTestCase):
         self.assertEqual(expected, self.nova_plugin.meta_serialize(original))
 
 
-class ServerConstraintTest(NovaClientPluginTestCase):
+class ServerConstraintTest(common.HeatTestCase):
 
     def setUp(self):
         super(ServerConstraintTest, self).setUp()
