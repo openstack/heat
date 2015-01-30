@@ -103,7 +103,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_create(self):
         fv = vt_base.FakeVolume('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_stack'
 
         self.stub_SnapshotConstraint_validate()
         self.stub_VolumeConstraint_validate()
@@ -139,7 +139,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_create_from_image(self):
         fv = vt_base.FakeVolumeWithStateTransition('downloading', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_create_from_img_stack'
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
@@ -170,7 +170,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_default(self):
         fv = vt_base.FakeVolume('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_default_stack'
 
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
@@ -201,7 +201,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             status='available', bootable=False,
             created_at='2013-02-25T02:40:21.000000',
             encrypted=False, attachments=[])
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_fngetatt_stack'
 
         self._mock_create_volume(fv, stack_name)
         self.cinder_fc.volumes.get('vol-123').MultipleTimes().AndReturn(fv)
@@ -239,7 +239,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_attachment(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_cvolume_attach_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -270,7 +270,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_volume_shrink_fails(self):
         fv = vt_base.FakeVolume('creating', 'available', size=2)
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_shrink_fail_stack'
 
         # create script
         self._mock_create_volume(fv, stack_name, size=2)
@@ -300,7 +300,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_volume_extend_detached(self):
         fv = vt_base.FakeVolume('creating', 'available',
                                 size=1, attachments=[])
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_extend_det_stack'
 
         # create script
         self._mock_create_volume(fv, stack_name)
@@ -332,7 +332,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_volume_extend_fails_to_start(self):
         fv = vt_base.FakeVolume('creating', 'available',
                                 size=1, attachments=[])
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_extend_fail_start_stack'
 
         # create script
         self._mock_create_volume(fv, stack_name)
@@ -365,7 +365,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_volume_extend_fails_to_complete(self):
         fv = vt_base.FakeVolume('creating', 'available',
                                 size=1, attachments=[])
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_extend_fail_compl_stack'
 
         # create script
         self._mock_create_volume(fv, stack_name)
@@ -399,7 +399,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_volume_extend_attached(self):
         # create script
         fv = vt_base.FakeVolume('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_extend_att_stack'
         self.stub_VolumeConstraint_validate()
         self._mock_create_volume(fv, stack_name)
 
@@ -455,7 +455,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_extend_created_from_backup_with_same_size(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_extend_snapsht_stack'
         fv = vt_base.FakeVolumeWithStateTransition('restoring-backup',
                                                    'available',
                                                    size=2)
@@ -499,7 +499,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('creating', 'available',
                                 size=1, name='my_vol',
                                 description='test')
-        stack_name = 'test_volume_retype'
+        stack_name = 'test_cvolume_retype'
         new_vol_type = 'new_type'
         self.patchobject(cinder.CinderClientPlugin, '_create',
                          return_value=self.cinder_fc)
@@ -537,7 +537,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('creating', 'available',
                                 size=1, name='my_vol',
                                 description='test')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_updname_stack'
         update_name = 'update_name'
         meta = {'Key': 'New Value'}
         update_description = 'update_description'
@@ -568,7 +568,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_snapshot(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fb = vt_base.FakeBackup('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_snpsht_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
@@ -601,7 +601,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
     def test_cinder_snapshot_error(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fb = vt_base.FakeBackup('creating', 'error')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_cvolume_snpsht_err_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
@@ -634,7 +634,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
         fva2 = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_cvolume_attach_udev_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -681,7 +681,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv2.id = 'vol-456'
         fv2a = vt_base.FakeVolume('attaching', 'in-use')
         fv2a.id = 'vol-456'
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_cvolume_attach_uvol_stack'
 
         self.stub_VolumeConstraint_validate()
         self._mock_create_volume(fv, stack_name)
@@ -735,7 +735,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
         fva2 = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_cvolume_attach_usrv_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -787,7 +787,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.ReplayAll()
 
-        stack_name = 'test_volume_scheduler_hints_stack'
+        stack_name = 'test_cvolume_scheduler_hints_stack'
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume3')
         self.assertEqual('available', fv.status)
@@ -800,7 +800,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.ReplayAll()
 
-        stack_name = 'test_volume_scheduler_hints_api_v1_stack'
+        stack_name = 'test_cvolume_scheduler_hints_api_v1_stack'
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.create_volume, self.t, stack, 'volume3')
@@ -809,7 +809,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_volume_restore(self):
-        stack_name = 'test_restore_stack'
+        stack_name = 'test_cvolume_restore_stack'
         t = template_format.parse(single_cinder_volume_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
 

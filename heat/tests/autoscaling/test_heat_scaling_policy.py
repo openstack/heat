@@ -170,6 +170,7 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
+        self.stack_name = stack.name
         self.policy = stack['my-policy']
         self.assertIsNone(self.policy.validate())
         scheduler.TaskRunner(self.policy.create)()
@@ -187,7 +188,7 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
 
         res = base[5].split('%2F')
         self.assertEqual('stacks', res[0])
-        self.assertEqual('test_stack', res[1])
+        self.assertEqual(self.stack_name, res[1])
         self.assertEqual('resources', res[3])
         self.assertEqual('my-policy', res[4])
 
