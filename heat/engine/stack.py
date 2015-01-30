@@ -31,7 +31,6 @@ from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
-from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import function
 from heat.engine.notification import stack as notification
@@ -42,6 +41,7 @@ from heat.engine import scheduler
 from heat.engine import template as tmpl
 from heat.engine import update
 from heat.objects import resource as resource_objects
+from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.objects import user_creds as ucreds_object
 from heat.rpc import api as rpc_api
@@ -1031,7 +1031,8 @@ class Stack(collections.Mapping):
                                'Failed to %s : %s' % (action, failure))
                 return
 
-        snapshots = db_api.snapshot_get_all(self.context, self.id)
+        snapshots = snapshot_object.Snapshot.get_all(self.context,
+                                                     self.id)
         for snapshot in snapshots:
             self.delete_snapshot(snapshot)
 

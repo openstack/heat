@@ -52,6 +52,7 @@ from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import resource as resource_objects
+from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
@@ -1204,9 +1205,8 @@ class EngineService(service.Service):
             LOG.debug("snapshotting stack %s" % stack.name)
             stack.snapshot()
             data = stack.prepare_abandon()
-            db_api.snapshot_update(
-                cnxt,
-                snapshot.id,
+            snapshot_object.Snapshot.update(
+                cnxt, snapshot.id,
                 {'data': data, 'status': stack.status,
                  'status_reason': stack.status_reason})
 
@@ -1224,7 +1224,7 @@ class EngineService(service.Service):
         lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
 
         with lock.thread_lock(stack.id):
-            snapshot = db_api.snapshot_create(cnxt, {
+            snapshot = snapshot_object.Snapshot.create(cnxt, {
                 'tenant': cnxt.tenant_id,
                 'name': name,
                 'stack_id': stack.id,
@@ -1235,18 +1235,18 @@ class EngineService(service.Service):
 
     @context.request_context
     def show_snapshot(self, cnxt, stack_identity, snapshot_id):
-        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
         return api.format_snapshot(snapshot)
 
     @context.request_context
     def delete_snapshot(self, cnxt, stack_identity, snapshot_id):
         def _delete_snapshot(stack, snapshot):
             stack.delete_snapshot(snapshot)
-            db_api.snapshot_delete(cnxt, snapshot_id)
+            snapshot_object.Snapshot.delete(cnxt, snapshot_id)
 
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
-        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
         self.thread_group_mgr.start(
             stack.id, _delete_snapshot, stack, snapshot)
 
@@ -1269,7 +1269,7 @@ class EngineService(service.Service):
             stack.restore(snapshot)
 
         s = self._get_stack(cnxt, stack_identity)
-        snapshot = db_api.snapshot_get(cnxt, snapshot_id)
+        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
 
         stack = parser.Stack.load(cnxt, stack=s)
 
@@ -1279,7 +1279,7 @@ class EngineService(service.Service):
     @context.request_context
     def stack_list_snapshots(self, cnxt, stack_identity):
         s = self._get_stack(cnxt, stack_identity)
-        data = db_api.snapshot_get_all(cnxt, s.id)
+        data = snapshot_object.Snapshot.get_all(cnxt, s.id)
         return [api.format_snapshot(snapshot) for snapshot in data]
 
     @context.request_context
