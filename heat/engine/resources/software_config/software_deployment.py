@@ -231,6 +231,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 stack_user_project_id=self.stack.stack_user_project_id,
                 **props)
             self.resource_id_set(sd[rpc_api.SOFTWARE_DEPLOYMENT_ID])
+        elif self.resource_id is None:
+            sd = None
         else:
             sd = self.rpc_client().show_software_deployment(
                 self.context, self.resource_id)
