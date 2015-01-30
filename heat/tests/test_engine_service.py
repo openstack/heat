@@ -578,6 +578,21 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual(input_params['parameters'],
                          stack.parameters['parameters'])
 
+    def test_stack_adopt_stack_state(self):
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        env = {'parameters': {"app_dbx": "test"}}
+        template, adopt_data = self._get_stack_adopt_data_and_template(
+            env)
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
+        result = self.man.create_stack(self.ctx, "test_adopt_stack",
+                                       template, {}, None,
+                                       {'adopt_stack_data': str(adopt_data)})
+
+        stack = db_api.stack_get(self.ctx, result['stack_id'])
+        self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),
+                         (stack.action, stack.status))
+
     def test_stack_adopt_disabled(self):
         # to test disable stack adopt
         cfg.CONF.set_override('enable_stack_adopt', False)
