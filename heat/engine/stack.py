@@ -698,7 +698,10 @@ class Stack(collections.Mapping):
         def rollback():
             if not self.disable_rollback and self.state == (self.ADOPT,
                                                             self.FAILED):
-                self.delete(action=self.ROLLBACK)
+                # enter the same flow as abandon and just delete the stack
+                for res in self.resources.values():
+                    res.abandon_in_progress = True
+                self.delete(action=self.ROLLBACK, abandon=True)
 
         creator = scheduler.TaskRunner(
             self.stack_task,
