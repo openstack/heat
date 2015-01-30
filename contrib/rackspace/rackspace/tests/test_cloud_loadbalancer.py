@@ -261,6 +261,9 @@ class FakeLoadBalancer(object):
     def delete_connection_throttle(self, *args, **kwargs):
         pass
 
+    def delete(self, *args, **kwargs):
+        pass
+
 
 class LoadBalancerWithFakeClient(lb.CloudLoadBalancer):
     def cloud_lb(self):
@@ -1418,3 +1421,56 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(False, fake_loadbalancer.content_caching)
         self.m.VerifyAll()
+
+    def test_delete(self):
+        template = self._set_template(self.lb_template,
+                                      contentCaching='ENABLED')
+        rsrc, fake_lb = self._mock_loadbalancer(template, self.lb_name,
+                                                self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_lb)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+    def test_delete_immutable(self):
+        template = self._set_template(self.lb_template,
+                                      contentCaching='ENABLED')
+        rsrc, fake_lb = self._mock_loadbalancer(template, self.lb_name,
+                                                self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_lb)
+        self.m.StubOutWithMock(fake_lb, 'delete')
+        fake_lb.delete().AndRaise(Exception('immutable'))
+        fake_lb.delete().AndReturn(None)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+    def test_check_delete_complete(self):
+        mock_stack = mock.Mock()
+        mock_stack.db_resource_get.return_value = None
+        mock_resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
+        mock_loadbalancer = lb.CloudLoadBalancer("test", mock_resdef,
+                                                 mock_stack)
+
+        mock_task = mock.Mock()
+        mock_task.step.return_value = False
+
+        res = mock_loadbalancer.check_delete_complete(mock_task)
+        self.assertFalse(res)
+
+        mock_task.step.return_value = True
+
+        res = mock_loadbalancer.check_delete_complete(mock_task)
+        self.assertTrue(res)

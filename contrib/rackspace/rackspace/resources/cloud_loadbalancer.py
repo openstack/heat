@@ -827,6 +827,10 @@ class CloudLoadBalancer(resource.Resource):
         return True
 
     def handle_delete(self):
+        @retry_if_immutable
+        def delete_lb(lb):
+            lb.delete()
+
         if self.resource_id is None:
             return
         try:
@@ -835,7 +839,15 @@ class CloudLoadBalancer(resource.Resource):
             pass
         else:
             if loadbalancer.status != 'DELETED':
-                loadbalancer.delete()
+                task = scheduler.TaskRunner(delete_lb, loadbalancer)
+                task.start()
+                return task
+
+    def check_delete_complete(self, task):
+        if task and not task.step():
+            return False
+
+        return True
 
     def _remove_none(self, property_dict):
         """Remove None values that would cause schema validation problems.
