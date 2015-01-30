@@ -3575,6 +3575,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         s = db_api.stack_get(self.ctx, sid)
         if stub:
             self.m.StubOutWithMock(parser.Stack, 'load')
+        stack.state_set(stack.CREATE, stack.COMPLETE, 'mock completion')
         parser.Stack.load(self.ctx, stack=s).MultipleTimes().AndReturn(stack)
         return stack
 
@@ -3603,6 +3604,18 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertEqual(stack.id, snapshot['data']['id'])
         self.assertIsNotNone(stack.updated_time)
         self.assertIsNotNone(snapshot['creation_time'])
+
+    def test_create_snapshot_action_in_progress(self):
+        stack = self._create_stack()
+        self.m.ReplayAll()
+        stack.state_set(stack.UPDATE, stack.IN_PROGRESS, 'test_override')
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.stack_snapshot,
+                               self.ctx, stack.identifier(), 'snap_none')
+        self.assertEqual(exception.ActionInProgress, ex.exc_info[0])
+        msg = ("Stack stack already has an action (%(action)s) "
+               "in progress.") % {'action': stack.action}
+        self.assertEqual(msg, six.text_type(ex.exc_info[1]))
 
     def test_delete_snapshot_not_found(self):
         stack = self._create_stack()
