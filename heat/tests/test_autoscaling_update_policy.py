@@ -11,23 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import json
 
-import mox
+import mock
 from oslo.config import cfg
 import six
-from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import nova
 from heat.engine import function
-from heat.engine.notification import stack as notification
-from heat.engine import parser
-from heat.engine.resources.aws import wait_condition_handle as aws_wch
-from heat.engine.resources import instance
-from heat.engine.resources import loadbalancer as lb
+from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -210,107 +203,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
-    def _stub_validate(self):
-        self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate().MultipleTimes()
-
-    def _stub_lb_create(self):
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-
-    def _stub_lb_reload(self, num=1, setup=True):
-        if setup:
-            self.m.StubOutWithMock(lb.LoadBalancer, 'handle_update')
-        for i in range(num):
-            lb.LoadBalancer.handle_update(
-                mox.IgnoreArg(), mox.IgnoreArg(),
-                mox.IgnoreArg()).AndReturn(None)
-
-    def _stub_grp_create(self, capacity=0, setup_lb=True):
-        """
-        Expect creation of instances to capacity. By default, expect creation
-        of load balancer unless specified.
-        """
-        self._stub_validate()
-
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-
-        self.m.StubOutWithMock(notification, 'send')
-        notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
-
-        cookie = object()
-
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        # for load balancer setup
-        if setup_lb:
-            self._stub_lb_create()
-            self._stub_lb_reload()
-            instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(cookie).AndReturn(True)
-
-        # for each instance in group
-        for i in range(capacity):
-            instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(cookie).AndReturn(True)
-
-    def _stub_grp_replace(self,
-                          num_creates_expected_on_updt=0,
-                          num_deletes_expected_on_updt=0,
-                          num_reloads_expected_on_updt=0):
-        """
-        Expect replacement of the capacity by batch size
-        """
-        # for load balancer setup
-        self._stub_lb_reload(num_reloads_expected_on_updt)
-
-        self.m.StubOutWithMock(notification, 'send')
-        notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
-
-        # for instances in the group
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        self.m.StubOutWithMock(instance.Instance, 'destroy')
-
-        cookie = object()
-        for i in range(num_creates_expected_on_updt):
-            instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(cookie).AndReturn(True)
-        for i in range(num_deletes_expected_on_updt):
-            instance.Instance.destroy().AndReturn(None)
-
-    def _stub_grp_update(self,
-                         num_creates_expected_on_updt=0,
-                         num_deletes_expected_on_updt=0,
-                         num_reloads_expected_on_updt=0):
-        """
-        Expect update of the instances
-        """
-
-        def activate_status(server):
-            server.status = 'VERIFY_RESIZE'
-
-        return_server = self.fc.servers.list()[1]
-        return_server.id = '1234'
-        return_server.get = activate_status.__get__(return_server)
-
-        self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
-
-        self.fc.servers.get(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(return_server)
-        self.fc.client.post_servers_1234_action(
-            body={'resize': {'flavorRef': 3}}
-        ).MultipleTimes().AndReturn((202, None))
-        self.fc.client.post_servers_1234_action(
-            body={'confirmResize': None}
-        ).MultipleTimes().AndReturn((202, None))
-
-        self._stub_grp_replace(num_creates_expected_on_updt,
-                               num_deletes_expected_on_updt,
-                               num_reloads_expected_on_updt)
-
     def get_launch_conf_name(self, stack, ig_name):
         return stack[ig_name].properties['LaunchConfigurationName']
 
@@ -424,6 +316,20 @@ class AutoScalingGroupTest(common.HeatTestCase):
         expected = {u'UpdatePolicy': updated_policy}
         self.assertEqual(expected, tmpl_diff)
 
+        # test application of the new update policy in handle_update
+        update_snippet = rsrc_defn.ResourceDefinition(
+            current_grp.name,
+            current_grp.type(),
+            properties=updated_grp.t['Properties'],
+            update_policy=updated_policy)
+        current_grp._try_rolling_update = mock.MagicMock()
+        current_grp.adjust = mock.MagicMock()
+        current_grp.handle_update(update_snippet, tmpl_diff, None)
+        if updated_policy is None:
+            self.assertEqual({}, current_grp.update_policy.data)
+        else:
+            self.assertEqual(updated_policy, current_grp.update_policy.data)
+
     def test_update_policy_added(self):
         self.validate_update_policy_diff(asg_tmpl_without_updt_policy,
                                          asg_tmpl_with_updt_policy)
@@ -441,139 +347,3 @@ class AutoScalingGroupTest(common.HeatTestCase):
     def test_update_policy_removed(self):
         self.validate_update_policy_diff(asg_tmpl_with_updt_policy,
                                          asg_tmpl_without_updt_policy)
-
-    def test_autoscaling_group_update_policy_removed(self):
-
-        # setup stack from the initial template
-        tmpl = template_format.parse(asg_tmpl_with_updt_policy)
-        stack = utils.parse_stack(tmpl)
-        self.stub_ImageConstraint_validate()
-        self.stub_KeypairConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
-
-        stack.validate()
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
-        # test stack create
-        size = int(stack['WebServerGroup'].properties['MinSize'])
-        self._stub_grp_create(size)
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
-        stack.create()
-        self.m.VerifyAll()
-        self.assertEqual(('CREATE', 'COMPLETE'), stack.state)
-
-        # test that update policy is loaded
-        current_grp = stack['WebServerGroup']
-        self.assertIn('AutoScalingRollingUpdate', current_grp.update_policy)
-        current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
-        self.assertTrue(current_policy)
-        self.assertTrue(len(current_policy) > 0)
-        init_updt_policy = tmpl['Resources']['WebServerGroup']['UpdatePolicy']
-        init_roll_updt = init_updt_policy['AutoScalingRollingUpdate']
-        init_batch_sz = int(init_roll_updt['MaxBatchSize'])
-        self.assertEqual(init_batch_sz, int(current_policy['MaxBatchSize']))
-
-        # test that physical resource name of launch configuration is used
-        conf = stack['LaunchConfig']
-        conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
-        self.assertThat(conf.FnGetRefId(),
-                        matchers.MatchesRegex(conf_name_pattern))
-
-        # test the number of instances created
-        nested = stack['WebServerGroup'].nested()
-        self.assertEqual(size, len(nested.resources))
-
-        # clean up for next test
-        self.m.UnsetStubs()
-
-        # test stack update
-        updated_tmpl = template_format.parse(asg_tmpl_without_updt_policy)
-        updated_stack = utils.parse_stack(updated_tmpl)
-        self._stub_grp_replace(num_creates_expected_on_updt=0,
-                               num_deletes_expected_on_updt=0,
-                               num_reloads_expected_on_updt=1)
-        self.m.ReplayAll()
-        stack.update(updated_stack)
-        self.m.VerifyAll()
-        self.assertEqual(('UPDATE', 'COMPLETE'), stack.state)
-
-        # test that update policy is removed
-        updated_grp = stack['WebServerGroup']
-        self.assertFalse(updated_grp.update_policy['AutoScalingRollingUpdate'])
-
-    def test_autoscaling_group_update_policy_check_timeout(self):
-
-        # setup stack from the initial template
-        tmpl = template_format.parse(asg_tmpl_with_updt_policy)
-        stack = utils.parse_stack(tmpl)
-
-        # test stack create
-        size = int(stack['WebServerGroup'].properties['MinSize'])
-        self._stub_grp_create(size)
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
-        stack.create()
-        self.m.VerifyAll()
-        self.assertEqual(('CREATE', 'COMPLETE'), stack.state)
-
-        # test that update policy is loaded
-        current_grp = stack['WebServerGroup']
-        self.assertIn('AutoScalingRollingUpdate', current_grp.update_policy)
-        current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
-        self.assertTrue(current_policy)
-        self.assertTrue(len(current_policy) > 0)
-        init_updt_policy = tmpl['Resources']['WebServerGroup']['UpdatePolicy']
-        init_roll_updt = init_updt_policy['AutoScalingRollingUpdate']
-        init_batch_sz = int(init_roll_updt['MaxBatchSize'])
-        self.assertEqual(init_batch_sz, int(current_policy['MaxBatchSize']))
-
-        # test the number of instances created
-        nested = stack['WebServerGroup'].nested()
-        self.assertEqual(size, len(nested.resources))
-
-        # clean up for next test
-        self.m.UnsetStubs()
-
-        # modify the pause time and test for error
-        # the following test, effective_capacity is 12
-        # batch_count = (effective_capacity + batch_size -1)//batch_size
-        # = (12 + 2 - 1)//2 = 6
-        # if (batch_count - 1)* pause_time > stack.time_out, to raise error
-        # (6 - 1)*14*60 > 3600, so to raise error
-        new_pause_time = 'PT14M'
-        min_in_service = 10
-        updt_template = json.loads(copy.deepcopy(asg_tmpl_with_updt_policy))
-        group = updt_template['Resources']['WebServerGroup']
-        policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
-        policy['PauseTime'] = new_pause_time
-        policy['MinInstancesInService'] = min_in_service
-        config = updt_template['Resources']['LaunchConfig']
-        config['Properties']['ImageId'] = 'F17-x86_64-cfntools'
-        updated_tmpl = template_format.parse(json.dumps(updt_template))
-        updated_stack = utils.parse_stack(updated_tmpl)
-
-        self.stub_KeypairConstraint_validate()
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
-        stack.update(updated_stack)
-        self.m.VerifyAll()
-        self.assertEqual(('UPDATE', 'FAILED'), stack.state)
-
-        # test that the update policy is updated
-        updated_grp = stack['WebServerGroup']
-        self.assertIn('AutoScalingRollingUpdate', updated_grp.update_policy)
-        updated_policy = updated_grp.update_policy['AutoScalingRollingUpdate']
-        self.assertTrue(updated_policy)
-        self.assertTrue(len(updated_policy) > 0)
-        self.assertEqual(new_pause_time, updated_policy['PauseTime'])
-
-        # test that error message match
-        expected_error_message = ('The current UpdatePolicy will result '
-                                  'in stack update timeout.')
-        self.assertIn(expected_error_message, stack.status_reason)
