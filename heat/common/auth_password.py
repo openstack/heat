@@ -17,11 +17,11 @@
 import logging
 
 from keystoneclient import exceptions as keystone_exceptions
+from keystoneclient import session
+from oslo.config import cfg
 from webob import exc
 
-
 from heat.common import context
-from heat.common import heat_keystoneclient
 
 
 LOG = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class KeystonePasswordAuthProtocol(object):
     def __init__(self, app, conf):
         self.app = app
         self.conf = conf
+        self.session = session.Session.construct(self._ssl_options())
 
     def __call__(self, env, start_response):
         """Authenticate incoming request."""
@@ -46,14 +47,14 @@ class KeystonePasswordAuthProtocol(object):
         # Determine tenant id from path.
         tenant = env.get('PATH_INFO').split('/')[1]
         auth_url = env.get('HTTP_X_AUTH_URL')
+
         if not tenant:
             return self._reject_request(env, start_response, auth_url)
         try:
             ctx = context.RequestContext(username=username, password=password,
                                          tenant_id=tenant, auth_url=auth_url,
                                          is_admin=False)
-            session = heat_keystoneclient.KeystoneClient(ctx).session
-            auth_ref = ctx.auth_plugin.get_access(session)
+            auth_ref = ctx.auth_plugin.get_access(self.session)
         except (keystone_exceptions.Unauthorized,
                 keystone_exceptions.Forbidden,
                 keystone_exceptions.NotFound,
@@ -112,6 +113,25 @@ class KeystonePasswordAuthProtocol(object):
         }
 
         return headers
+
+    def _ssl_options(self):
+        opts = {'cacert': self._get_client_option('ca_file'),
+                'insecure': self._get_client_option('insecure'),
+                'cert': self._get_client_option('cert_file'),
+                'key': self._get_client_option('key_file')}
+        return opts
+
+    def _get_client_option(self, option):
+        # look for the option in the [clients_keystone] section
+        # unknown options raise cfg.NoSuchOptError
+        cfg.CONF.import_opt(option, 'heat.common.config',
+                            group='clients_keystone')
+        v = getattr(cfg.CONF.clients_keystone, option)
+        if v is not None:
+            return v
+        # look for the option in the generic [clients] section
+        cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+        return getattr(cfg.CONF.clients, option)
 
 
 def filter_factory(global_conf, **local_conf):
