@@ -1,11 +1,9 @@
-# this file lists dependencies required for the testing of heat (RPM version)
-python-setuptools
-
-python-coverage
-python-mox
-python-testrepository
-python-nose
-#openstack.nose_plugin>=0.7
-python-pep8
-python-sphinx
-python-paramiko
+gcc
+python-devel
+libxml2-devel
+libxslt-devel
+libyaml-devel
+openssl-devel
+libffi-devel
+mariadb-devel
+postgresql-devel
