@@ -132,7 +132,8 @@ class CloudWatchAlarmTest(common.HeatTestCase):
 
     def test_suspend_resume(self):
         t = template_format.parse(alarm_template)
-        stack = utils.parse_stack(t)
+        stack_name = "test_cw_alarm_sus_res_stack"
+        stack = utils.parse_stack(t, stack_name=stack_name)
         # the watch rule needs a valid stack_id
         stack.store()
 
@@ -144,7 +145,7 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         wr = watchrule.WatchRule.load(
-            self.ctx, watch_name="test_stack-MEMAlarmHigh")
+            self.ctx, watch_name="%s-MEMAlarmHigh" % stack_name)
 
         self.assertEqual(watchrule.WatchRule.SUSPENDED, wr.state)
 
@@ -152,7 +153,7 @@ class CloudWatchAlarmTest(common.HeatTestCase):
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
         wr = watchrule.WatchRule.load(
-            self.ctx, watch_name="test_stack-MEMAlarmHigh")
+            self.ctx, watch_name="%s-MEMAlarmHigh" % stack_name)
 
         self.assertEqual(watchrule.WatchRule.NODATA, wr.state)
 

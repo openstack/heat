@@ -88,7 +88,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
     def test_volume(self):
         fv = vt_base.FakeVolume('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_create_stack'
 
         # create script
         self._mock_create_volume(fv, stack_name)
@@ -117,7 +117,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
     def test_volume_default_az(self):
         fv = vt_base.FakeVolume('creating', 'available')
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_defaultaz_stack'
 
         # create script
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -259,7 +259,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_detachment_err(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('in-use', 'available')
-        stack_name = 'test_volume_detach_stack'
+        stack_name = 'test_volume_detach_err_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -294,7 +294,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_detach_non_exist(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('in-use', 'available')
-        stack_name = 'test_volume_detach_stack'
+        stack_name = 'test_volume_detach_nonexist_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -319,7 +319,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_detach_with_latency(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_volume_detach_latency__stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -353,7 +353,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_detach_with_error(self):
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_volume_detach_werr_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)
@@ -382,7 +382,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_volume_delete(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_delete_stack'
         fv = vt_base.FakeVolume('creating', 'available')
 
         self._mock_create_volume(fv, stack_name)
@@ -430,7 +430,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_volume_update_not_supported(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_updnotsup_stack'
         fv = vt_base.FakeVolume('creating', 'available')
 
         self._mock_create_volume(fv, stack_name)
@@ -471,7 +471,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_volume_check_not_available(self):
-        stack = utils.parse_stack(self.t, stack_name='volume_check')
+        stack = utils.parse_stack(self.t, stack_name='volume_check_na')
         res = stack['DataVolume']
         res.cinder = mock.Mock()
 
@@ -484,7 +484,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.assertIn('foobar', res.status_reason)
 
     def test_volume_check_fail(self):
-        stack = utils.parse_stack(self.t, stack_name='volume_check')
+        stack = utils.parse_stack(self.t, stack_name='volume_check_fail')
         res = stack['DataVolume']
         res.cinder = mock.Mock()
         res.cinder().volumes.get.side_effect = Exception('boom')
@@ -495,7 +495,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.assertIn('boom', res.status_reason)
 
     def test_snapshot(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_snapshot_stack'
         fv = vt_base.FakeVolume('creating', 'available')
         fb = vt_base.FakeBackup('creating', 'available')
 
@@ -519,7 +519,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_snapshot_error(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_snapshot_err_stack'
         fv = vt_base.FakeVolume('creating', 'available')
         fb = vt_base.FakeBackup('creating', 'error')
 
@@ -543,7 +543,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_snapshot_no_volume(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_snapshot_novol_stack'
 
         cfg.CONF.set_override('action_retry_limit', 0)
         fv = vt_base.FakeVolume('creating', 'error')
@@ -574,7 +574,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_create_from_snapshot(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_create_from_snapshot_stack'
         fv = vt_base.FakeVolumeWithStateTransition(
             'restoring-backup', 'available')
         fvbr = vt_base.FakeBackupRestore('vol-123')
@@ -601,7 +601,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_create_from_snapshot_error(self):
-        stack_name = 'test_volume_stack'
+        stack_name = 'test_volume_create_from_snap_err_stack'
         cfg.CONF.set_override('action_retry_limit', 0)
         fv = vt_base.FakeVolumeWithStateTransition(
             'restoring-backup', 'error')
@@ -645,7 +645,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
             return_value=mock.MagicMock())
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
-        stack_name = 'test_volume_attach_stack'
+        stack_name = 'test_volume_attach_updnotsup_stack'
 
         self._mock_create_volume(fv, stack_name)
         self._mock_create_server_volume_script(fva)

@@ -109,7 +109,8 @@ class NetworkInterfaceTest(common.HeatTestCase):
         neutronclient.Client.delete_port(port_id).AndReturn(None)
 
     def test_network_interface_create_update_delete(self):
-        my_stack = utils.parse_stack(test_template, stack_name='my_stack')
+        my_stack = utils.parse_stack(test_template,
+                                     stack_name='test_nif_cud_stack')
         nic_rsrc = my_stack['my_nic']
 
         self.mock_show_subnet()

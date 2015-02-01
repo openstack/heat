@@ -103,7 +103,8 @@ user_policy_template = '''
 class UserTest(common.HeatTestCase):
     def setUp(self):
         super(UserTest, self).setUp()
-        self.username = 'test_stack-CfnUser-aabbcc'
+        self.stack_name = 'test_user_stack_%s' % utils.random_name()
+        self.username = '%s-CfnUser-aabbcc' % self.stack_name
         self.fc = fakes.FakeKeystoneClient(username=self.username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
@@ -140,7 +141,7 @@ class UserTest(common.HeatTestCase):
 
     def test_user(self):
         t = template_format.parse(user_template)
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual('dummy_user', rsrc.resource_id)
@@ -174,7 +175,7 @@ class UserTest(common.HeatTestCase):
 
     def test_user_password(self):
         t = template_format.parse(user_template_password)
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
 
         rsrc = self.create_user(t, stack, 'CfnUser', password=u'myP@ssW0rd')
         self.assertEqual('dummy_user', rsrc.resource_id)
@@ -185,7 +186,7 @@ class UserTest(common.HeatTestCase):
 
     def test_user_validate_policies(self):
         t = template_format.parse(user_policy_template)
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual('dummy_user', rsrc.resource_id)
@@ -221,7 +222,7 @@ class UserTest(common.HeatTestCase):
     def test_user_create_bad_policies(self):
         t = template_format.parse(user_policy_template)
         t['Resources']['CfnUser']['Properties']['Policies'] = ['NoExistBad']
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
         resource_name = 'CfnUser'
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = user.User(resource_name,
@@ -238,7 +239,7 @@ class UserTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(user_policy_template)
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual('dummy_user', rsrc.resource_id)
@@ -259,7 +260,7 @@ class UserTest(common.HeatTestCase):
         t = template_format.parse(user_policy_template)
         t['Resources']['CfnUser']['Properties']['Policies'] = [
             'WebServerAccessPolicy', {'an_ignored': 'policy'}]
-        stack = utils.parse_stack(t)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual('dummy_user', rsrc.resource_id)
