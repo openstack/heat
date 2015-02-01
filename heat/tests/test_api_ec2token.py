@@ -519,3 +519,13 @@ class Ec2TokenTest(common.HeatTestCase):
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.m.VerifyAll()
+
+    def test_filter_factory(self):
+        ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})
+
+        self.assertEqual('xyz', ec2_filter('xyz').application)
+
+    def test_filter_factory_none_app(self):
+        ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})
+
+        self.assertEqual(None, ec2_filter(None).application)
