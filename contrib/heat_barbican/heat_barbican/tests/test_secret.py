@@ -22,7 +22,6 @@ from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 
-from .. import client  # noqa
 from ..resources import secret  # noqa
 
 stack_template = '''
