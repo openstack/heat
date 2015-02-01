@@ -798,6 +798,18 @@ resources:
       name: { get_param: net_name }
 '''
 
+test_template_invalid_outputs = '''
+heat_template_version: 2013-05-23
+
+resources:
+  random_str:
+    type: OS::Heat::RandomString
+
+outputs:
+  string:
+    value: {get_attr: [[random_str, value]]}
+'''
+
 
 class validateTest(common.HeatTestCase):
     def setUp(self):
@@ -1447,3 +1459,12 @@ class validateTest(common.HeatTestCase):
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
+
+    def test_validate_invalid_outputs(self):
+        t = template_format.parse(test_template_invalid_outputs)
+        template = parser.Template(t)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                parser.Stack, self.ctx, 'test_stack', template)
+        error_message = ('Arguments to "get_attr" must be of the form '
+                         '[resource_name, attribute, (path), ...]')
+        self.assertEqual(error_message, six.text_type(err))
