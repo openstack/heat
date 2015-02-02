@@ -54,11 +54,11 @@ class VolumeExtendTask(object):
 
         yield
 
-        vol.get()
+        vol = cinder.get(self.volume_id)
         while vol.status == 'extending':
             LOG.debug("Volume %s is being extended" % self.volume_id)
             yield
-            vol.get()
+            vol = cinder.get(self.volume_id)
 
         if vol.status != 'available':
             LOG.info(_LI("Resize failed: Volume %(vol)s is in %(status)s "
@@ -108,12 +108,14 @@ class VolumeAttachTask(object):
         self.attachment_id = va.id
         yield
 
-        vol = self.clients.client('cinder').volumes.get(self.volume_id)
+        cinder = self.clients.client('cinder')
+
+        vol = cinder.volumes.get(self.volume_id)
         while vol.status == 'available' or vol.status == 'attaching':
             LOG.debug('%(name)s - volume status: %(status)s'
                       % {'name': str(self), 'status': vol.status})
             yield
-            vol.get()
+            vol = cinder.volumes.get(self.volume_id)
 
         if vol.status != 'in-use':
             LOG.info(_LI("Attachment failed - volume %(vol)s "
@@ -157,11 +159,12 @@ class VolumeDetachTask(object):
         nova_plugin = self.clients.client_plugin('nova')
         cinder_plugin = self.clients.client_plugin('cinder')
         server_api = self.clients.client('nova').volumes
+        cinder = self.clients.client('cinder')
         # get reference to the volume while it is attached
         try:
             nova_vol = server_api.get_server_volume(self.server_id,
                                                     self.attachment_id)
-            vol = self.clients.client('cinder').volumes.get(nova_vol.id)
+            vol = cinder.volumes.get(nova_vol.id)
         except Exception as ex:
             if (cinder_plugin.is_not_found(ex) or
                     nova_plugin.is_not_found(ex) or
@@ -185,7 +188,7 @@ class VolumeDetachTask(object):
             while vol.status in ('in-use', 'detaching'):
                 LOG.debug('%s - volume still in use' % str(self))
                 yield
-                vol.get()
+                vol = cinder.volumes.get(nova_vol.id)
 
             LOG.info(_LI('%(name)s - status: %(status)s'),
                      {'name': str(self), 'status': vol.status})
