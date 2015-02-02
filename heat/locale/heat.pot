@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev272\n"
+"Project-Id-Version: heat 2015.1.dev307\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-01-29 06:17+0000\n"
+"POT-Creation-Date: 2015-02-02 06:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -941,49 +941,49 @@ msgstr ""
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:491
+#: heat/db/sqlalchemy/api.py:493
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:516
+#: heat/db/sqlalchemy/api.py:518
 #, python-format
 msgid "Attempt to delete user creds with id %(id)s that does not exist"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:670
+#: heat/db/sqlalchemy/api.py:672
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:681
+#: heat/db/sqlalchemy/api.py:683
 #, python-format
 msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:720
+#: heat/db/sqlalchemy/api.py:722
 #, python-format
 msgid "Software config with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:747
+#: heat/db/sqlalchemy/api.py:749
 #, python-format
 msgid "Deployment with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:793
+#: heat/db/sqlalchemy/api.py:795
 #, python-format
 msgid "Snapshot with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:821
+#: heat/db/sqlalchemy/api.py:823
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:823
+#: heat/db/sqlalchemy/api.py:825
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:827
+#: heat/db/sqlalchemy/api.py:829
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
@@ -1178,7 +1178,7 @@ msgstr ""
 msgid "No event exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/parameter_groups.py:52 heat/tests/test_validate.py:1380
+#: heat/engine/parameter_groups.py:52 heat/tests/test_validate.py:1392
 msgid "Parameters must be provided for each Parameter Group."
 msgstr ""
 
@@ -1384,12 +1384,12 @@ msgstr ""
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:991 heat/engine/stack.py:519
+#: heat/engine/resource.py:991 heat/engine/stack.py:520
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:994 heat/engine/stack.py:522
+#: heat/engine/resource.py:994 heat/engine/stack.py:523
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
@@ -1406,24 +1406,24 @@ msgid ""
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:639
+#: heat/engine/service.py:641
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:643
+#: heat/engine/service.py:645
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:693
+#: heat/engine/service.py:695
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:732
+#: heat/engine/service.py:734
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1394
+#: heat/engine/service.py:1403
 msgid "server_id must be specified"
 msgstr ""
 
@@ -1434,30 +1434,30 @@ msgid ""
 "characters, must start with alpha"
 msgstr ""
 
-#: heat/engine/stack.py:158
+#: heat/engine/stack.py:159
 msgid "Attempt to use stored_context with no user_creds"
 msgstr ""
 
-#: heat/engine/stack.py:262
+#: heat/engine/stack.py:263
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:475
+#: heat/engine/stack.py:476
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:493
+#: heat/engine/stack.py:494
 msgid "Each Output must contain a Value key."
 msgstr ""
 
-#: heat/engine/stack.py:498
+#: heat/engine/stack.py:499
 #, python-format
 msgid "Output validation error: Outputs must contain Output. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/stack.py:503
+#: heat/engine/stack.py:504
 #, python-format
 msgid "Output validation error: %s"
 msgstr ""
@@ -1471,32 +1471,32 @@ msgstr ""
 msgid "Nested stack not found in DB"
 msgstr ""
 
-#: heat/engine/stack_resource.py:157
+#: heat/engine/stack_resource.py:158
 #, python-format
 msgid "Recursion depth exceeds %d."
 msgstr ""
 
-#: heat/engine/stack_resource.py:245
+#: heat/engine/stack_resource.py:249
 #, python-format
 msgid "Cannot update %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:268
+#: heat/engine/stack_resource.py:272
 #, python-format
 msgid "Nested stack UPDATE failed: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:302
+#: heat/engine/stack_resource.py:306
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:324
+#: heat/engine/stack_resource.py:328
 #, python-format
 msgid "Cannot resume %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:346
+#: heat/engine/stack_resource.py:350
 #, python-format
 msgid "Cannot check %s, stack not created"
 msgstr ""
@@ -2068,9 +2068,9 @@ msgstr ""
 #: heat/engine/resources/loadbalancer.py:398 heat/engine/resources/user.py:51
 #: heat/engine/resources/user.py:55 heat/engine/resources/user.py:147
 #: heat/engine/resources/user.py:157
-#: heat/engine/resources/aws/autoscaling_group.py:114
-#: heat/engine/resources/aws/autoscaling_group.py:147
-#: heat/engine/resources/aws/autoscaling_group.py:152
+#: heat/engine/resources/aws/autoscaling_group.py:119
+#: heat/engine/resources/aws/autoscaling_group.py:161
+#: heat/engine/resources/aws/autoscaling_group.py:166
 #: heat/engine/resources/aws/launch_config.py:98
 #: heat/engine/resources/aws/launch_config.py:103
 msgid "Not Implemented."
@@ -2251,7 +2251,7 @@ msgid "Cannot resume %s, resource_id not set"
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:71
-#: heat/engine/resources/aws/autoscaling_group.py:119
+#: heat/engine/resources/aws/autoscaling_group.py:124
 msgid "The reference to a LaunchConfiguration resource."
 msgstr ""
 
@@ -2260,17 +2260,17 @@ msgid "Desired number of instances."
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:83
-#: heat/engine/resources/aws/autoscaling_group.py:160
+#: heat/engine/resources/aws/autoscaling_group.py:174
 msgid "List of LoadBalancer resources."
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:87
-#: heat/engine/resources/aws/autoscaling_group.py:176
+#: heat/engine/resources/aws/autoscaling_group.py:190
 msgid "Tags to attach to this group."
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:106
-#: heat/engine/resources/aws/autoscaling_group.py:195
+#: heat/engine/resources/aws/autoscaling_group.py:209
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
@@ -2286,7 +2286,7 @@ msgid ""
 "name of the resource."
 msgstr ""
 
-#: heat/engine/resources/instance_group.py:377
+#: heat/engine/resources/instance_group.py:366
 #, python-format
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr ""
@@ -2887,13 +2887,13 @@ msgstr ""
 
 #: heat/engine/resources/sahara_cluster.py:57
 #: heat/engine/resources/sahara_templates.py:67
-#: heat/engine/resources/sahara_templates.py:259
+#: heat/engine/resources/sahara_templates.py:273
 msgid "Plugin name."
 msgstr ""
 
 #: heat/engine/resources/sahara_cluster.py:62
 #: heat/engine/resources/sahara_templates.py:72
-#: heat/engine/resources/sahara_templates.py:264
+#: heat/engine/resources/sahara_templates.py:278
 msgid "Version of Hadoop running on instances."
 msgstr ""
 
@@ -2919,7 +2919,7 @@ msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
 
 #: heat/engine/resources/sahara_cluster.py:98
-#: heat/engine/resources/sahara_templates.py:276
+#: heat/engine/resources/sahara_templates.py:290
 msgid "Name or UUID of Neutron network."
 msgstr ""
 
@@ -2939,7 +2939,7 @@ msgid ""
 msgstr ""
 
 #: heat/engine/resources/sahara_cluster.py:221
-#: heat/engine/resources/sahara_templates.py:380
+#: heat/engine/resources/sahara_templates.py:394
 #, python-format
 msgid "%s must be provided"
 msgstr ""
@@ -2989,51 +2989,49 @@ msgid "List of processes to run on every node."
 msgstr ""
 
 #: heat/engine/resources/sahara_templates.py:138
-msgid "Name or UUID of the Neutron floating IP network to use."
+msgid ""
+"Name or UUID of the Neutron floating IP network or name of the Nova "
+"floating ip pool to use. Should not be provided when used with Nova-"
+"network that auto-assign floating IPs."
 msgstr ""
 
 #: heat/engine/resources/sahara_templates.py:145
 msgid "Dictionary of node configurations."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:219
-#, python-format
-msgid "%s must be provided."
-msgstr ""
-
-#: heat/engine/resources/sahara_templates.py:246
+#: heat/engine/resources/sahara_templates.py:260
 msgid "Name for the Sahara Cluster Template."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:254
+#: heat/engine/resources/sahara_templates.py:268
 msgid "Description of the Sahara Group Template."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:269
+#: heat/engine/resources/sahara_templates.py:283
 msgid "ID of the default image to use for the template."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:283
+#: heat/engine/resources/sahara_templates.py:297
 msgid "List of processes to enable anti-affinity for."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:290
+#: heat/engine/resources/sahara_templates.py:304
 msgid "Cluster configs dictionary."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:294
+#: heat/engine/resources/sahara_templates.py:308
 msgid "Node groups."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:300
+#: heat/engine/resources/sahara_templates.py:314
 msgid "Name of the Node group."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:305
+#: heat/engine/resources/sahara_templates.py:319
 msgid "Number of instances in the Node group."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:313
+#: heat/engine/resources/sahara_templates.py:327
 msgid "ID of the Node Group Template."
 msgstr ""
 
@@ -3594,60 +3592,71 @@ msgstr ""
 msgid "Metadata format invalid"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:125
+#: heat/engine/resources/aws/autoscaling_group.py:129
+msgid ""
+"The ID of an existing instance to use to create the Auto Scaling group. "
+"If specify this property, will create the group use an existing instance "
+"instead of a launch configuration."
+msgstr ""
+
+#: heat/engine/resources/aws/autoscaling_group.py:139
 msgid "Maximum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:131
+#: heat/engine/resources/aws/autoscaling_group.py:145
 msgid "Minimum number of instances in the group."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:137
+#: heat/engine/resources/aws/autoscaling_group.py:151
 #: heat/engine/resources/aws/scaling_policy.py:72
 #: heat/engine/resources/openstack/autoscaling_group.py:73
 #: heat/engine/resources/openstack/scaling_policy.py:80
 msgid "Cooldown period, in seconds."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:142
+#: heat/engine/resources/aws/autoscaling_group.py:156
 msgid "Desired initial number of instances."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:164
+#: heat/engine/resources/aws/autoscaling_group.py:178
 msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be "
 "exactly 1."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:170
+#: heat/engine/resources/aws/autoscaling_group.py:184
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:290
+#: heat/engine/resources/aws/autoscaling_group.py:326
 #, python-format
 msgid "Start resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:310
+#: heat/engine/resources/aws/autoscaling_group.py:346
 #, python-format
 msgid "End resizing the group %(group)s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:338
+#: heat/engine/resources/aws/autoscaling_group.py:370
 msgid "MinSize can not be greater than MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:342
+#: heat/engine/resources/aws/autoscaling_group.py:374
 msgid "The size of AutoScalingGroup can not be less than zero"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:348
+#: heat/engine/resources/aws/autoscaling_group.py:380
 msgid "DesiredCapacity must be between MinSize and MaxSize"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:357
+#: heat/engine/resources/aws/autoscaling_group.py:389
 msgid "Anything other than one VPCZoneIdentifier"
+msgstr ""
+
+#: heat/engine/resources/aws/autoscaling_group.py:399
+msgid "Either 'InstanceId' or 'LaunchConfigurationName' must be provided."
 msgstr ""
 
 #: heat/engine/resources/aws/launch_config.py:74
@@ -4305,44 +4314,52 @@ msgid "The list of Nova server IDs load balanced."
 msgstr ""
 
 #: heat/engine/resources/neutron/metering.py:44
-#: heat/engine/resources/neutron/metering.py:54
+#: heat/engine/resources/neutron/metering.py:61
 msgid "Name of the metering label."
 msgstr ""
 
 #: heat/engine/resources/neutron/metering.py:48
-#: heat/engine/resources/neutron/metering.py:57
+#: heat/engine/resources/neutron/metering.py:64
 msgid "Description of the metering label."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:108
-#: heat/engine/resources/neutron/metering.py:142
+#: heat/engine/resources/neutron/metering.py:52
+msgid "Whether the metering label should be shared across all tenants."
+msgstr ""
+
+#: heat/engine/resources/neutron/metering.py:67
+msgid "Shared status of the metering label."
+msgstr ""
+
+#: heat/engine/resources/neutron/metering.py:118
+#: heat/engine/resources/neutron/metering.py:152
 msgid "The metering label ID to associate with this metering rule."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:113
+#: heat/engine/resources/neutron/metering.py:123
 msgid "Indicates remote IP prefix to be associated with this metering rule."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:119
+#: heat/engine/resources/neutron/metering.py:129
 msgid "The direction in which metering rule is applied, either ingress or egress."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:127
+#: heat/engine/resources/neutron/metering.py:137
 msgid ""
 "Specify whether the remote_ip_prefix will be excluded or not from traffic"
 " counters of the metering label. For example to not count the traffic of "
 "a specific IP address of a range."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:136
+#: heat/engine/resources/neutron/metering.py:146
 msgid "The direction in which metering rule is applied."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:139
+#: heat/engine/resources/neutron/metering.py:149
 msgid "Exclude state for cidr."
 msgstr ""
 
-#: heat/engine/resources/neutron/metering.py:145
+#: heat/engine/resources/neutron/metering.py:155
 msgid "CIDR to be associated with this metering rule."
 msgstr ""
 
@@ -5770,11 +5787,11 @@ msgstr ""
 msgid "need more memory."
 msgstr ""
 
-#: heat/tests/test_validate.py:1354
+#: heat/tests/test_validate.py:1366
 msgid "The InstanceType parameter must be assigned to one Parameter Group only."
 msgstr ""
 
-#: heat/tests/test_validate.py:1369
+#: heat/tests/test_validate.py:1381
 msgid ""
 "The Parameter name (SomethingNotHere) does not reference an existing "
 "parameter."
