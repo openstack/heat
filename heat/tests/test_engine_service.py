@@ -3361,6 +3361,125 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             deployment,
             self.engine.show_software_deployment(self.ctx, deployment_id))
 
+    @mock.patch.object(service.EngineService,
+                       '_push_metadata_software_deployments')
+    def test_signal_software_deployment(self, pmsd):
+        self.assertRaises(ValueError,
+                          self.engine.signal_software_deployment,
+                          self.ctx, None, {}, None)
+        deployment_id = str(uuid.uuid4())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.signal_software_deployment,
+                               self.ctx, deployment_id, {}, None)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+        deployment = self._create_software_deployment()
+        deployment_id = deployment['id']
+
+        # signal is ignore unless deployment is IN_PROGRESS
+        self.assertIsNone(self.engine.signal_software_deployment(
+            self.ctx, deployment_id, {}, None))
+
+        # simple signal, no data
+        deployment = self._create_software_deployment(
+            action='INIT', status='IN_PROGRESS')
+        deployment_id = deployment['id']
+        self.assertEqual(
+            'deployment succeeded',
+            self.engine.signal_software_deployment(
+                self.ctx, deployment_id, {}, None))
+        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        self.assertEqual('COMPLETE', sd.status)
+        self.assertEqual('Outputs received', sd.status_reason)
+        self.assertEqual({
+            'deploy_status_code': None,
+            'deploy_stderr': None,
+            'deploy_stdout': None
+        }, sd.output_values)
+        self.assertIsNotNone(sd.updated_at)
+
+        # simple signal, some data
+        config = self._create_software_config(outputs=[{'name': 'foo'}])
+        deployment = self._create_software_deployment(
+            config_id=config['id'], action='INIT', status='IN_PROGRESS')
+        deployment_id = deployment['id']
+        result = self.engine.signal_software_deployment(
+            self.ctx,
+            deployment_id,
+            {'foo': 'bar', 'deploy_status_code': 0},
+            None)
+        self.assertEqual('deployment succeeded', result)
+        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        self.assertEqual('COMPLETE', sd.status)
+        self.assertEqual('Outputs received', sd.status_reason)
+        self.assertEqual({
+            'deploy_status_code': 0,
+            'foo': 'bar',
+            'deploy_stderr': None,
+            'deploy_stdout': None
+        }, sd.output_values)
+        self.assertIsNotNone(sd.updated_at)
+
+        # failed signal on deploy_status_code
+        config = self._create_software_config(outputs=[
+            {'name': 'foo'}])
+        deployment = self._create_software_deployment(
+            config_id=config['id'], action='INIT', status='IN_PROGRESS')
+        deployment_id = deployment['id']
+        result = self.engine.signal_software_deployment(
+            self.ctx,
+            deployment_id,
+            {
+                'foo': 'bar',
+                'deploy_status_code': -1,
+                'deploy_stderr': 'Its gone Pete Tong'
+            },
+            None)
+        self.assertEqual('deployment failed (-1)', result)
+        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        self.assertEqual('FAILED', sd.status)
+        self.assertEqual(
+            ('deploy_status_code : Deployment exited with non-zero '
+             'status code: -1'),
+            sd.status_reason)
+        self.assertEqual({
+            'deploy_status_code': -1,
+            'foo': 'bar',
+            'deploy_stderr': 'Its gone Pete Tong',
+            'deploy_stdout': None
+        }, sd.output_values)
+        self.assertIsNotNone(sd.updated_at)
+
+        # failed signal on error_output foo
+        config = self._create_software_config(outputs=[
+            {'name': 'foo', 'error_output': True}])
+        deployment = self._create_software_deployment(
+            config_id=config['id'], action='INIT', status='IN_PROGRESS')
+        deployment_id = deployment['id']
+        result = self.engine.signal_software_deployment(
+            self.ctx,
+            deployment_id,
+            {
+                'foo': 'bar',
+                'deploy_status_code': -1,
+                'deploy_stderr': 'Its gone Pete Tong'
+            },
+            None)
+        self.assertEqual('deployment failed', result)
+        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        self.assertEqual('FAILED', sd.status)
+        self.assertEqual(
+            ('foo : bar, deploy_status_code : Deployment exited with '
+             'non-zero status code: -1'),
+            sd.status_reason)
+        self.assertEqual({
+            'deploy_status_code': -1,
+            'foo': 'bar',
+            'deploy_stderr': 'Its gone Pete Tong',
+            'deploy_stdout': None
+        }, sd.output_values)
+        self.assertIsNotNone(sd.updated_at)
+
     def test_create_software_deployment(self):
         kwargs = {
             'group': 'Heat::Chef',
