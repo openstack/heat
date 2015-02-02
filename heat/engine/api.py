@@ -177,7 +177,7 @@ def format_stack_resource(resource, detail=True, with_props=False,
     }
 
     if (hasattr(resource, 'nested') and callable(resource.nested) and
-            resource.nested()):
+            resource.nested() is not None):
         res[rpc_api.RES_NESTED_STACK_ID] = dict(resource.nested().identifier())
 
     if resource.stack.parent_resource:

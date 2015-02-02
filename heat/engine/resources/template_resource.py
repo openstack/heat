@@ -266,7 +266,7 @@ class TemplateResource(stack_resource.StackResource):
         return self.delete_nested()
 
     def FnGetRefId(self):
-        if not self.nested():
+        if self.nested() is None:
             return six.text_type(self.name)
 
         if 'OS::stack_id' in self.nested().outputs:
@@ -280,7 +280,7 @@ class TemplateResource(stack_resource.StackResource):
             return None
 
         def _get_inner_resource(resource_name):
-            if self.nested():
+            if self.nested() is not None:
                 try:
                     return self.nested()[resource_name]
                 except KeyError:
