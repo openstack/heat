@@ -71,7 +71,16 @@ class SoftwareComponentTest(common.HeatTestCase):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         value = {'id': config_id}
         self.rpc_client.create_software_config.return_value = value
+        props = dict(self.component.properties)
         self.component.handle_create()
+        self.rpc_client.create_software_config.assert_called_with(
+            self.ctx,
+            group='component',
+            name=None,
+            inputs=props['inputs'],
+            outputs=props['outputs'],
+            config={'configs': props['configs']},
+            options=None)
         self.assertEqual(config_id, self.component.resource_id)
 
     def test_handle_delete(self):

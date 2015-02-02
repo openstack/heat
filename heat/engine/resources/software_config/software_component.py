@@ -116,6 +116,7 @@ class SoftwareComponent(sc.SoftwareConfig):
         props[self.CONFIG] = {self.CONFIGS: configs}
         # set 'group' to enable component processing by in-instance hook
         props[self.GROUP] = 'component'
+        del props['configs']
 
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
