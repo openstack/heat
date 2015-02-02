@@ -15,7 +15,7 @@ import copy
 import uuid
 
 from oslo_log import log as logging
-import six
+from oslo_utils import timeutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -448,58 +448,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_signal(self, details):
-        sd = self.rpc_client().show_software_deployment(
-            self.context, self.resource_id)
-        sc = self.rpc_client().show_software_config(
-            self.context, self.properties[self.CONFIG])
-        status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
-
-        if not status == self.IN_PROGRESS:
-            # output values are only expected when in an IN_PROGRESS state
-            return
-
-        details = details or {}
-
-        ov = sd[rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES] or {}
-        status = None
-        status_reasons = {}
-        status_code = details.get(self.STATUS_CODE)
-        if status_code and str(status_code) != '0':
-            status = self.FAILED
-            status_reasons[self.STATUS_CODE] = _(
-                'Deployment exited with non-zero status code: %s'
-            ) % details.get(self.STATUS_CODE)
-            event_reason = 'deployment failed (%s)' % status_code
-        else:
-            event_reason = 'deployment succeeded'
-
-        for output in sc[rpc_api.SOFTWARE_CONFIG_OUTPUTS] or []:
-            out_key = output['name']
-            if out_key in details:
-                ov[out_key] = details[out_key]
-                if output.get('error_output', False):
-                    status = self.FAILED
-                    status_reasons[out_key] = details[out_key]
-                    event_reason = 'deployment failed'
-
-        for out_key in self.ATTRIBUTES:
-            ov[out_key] = details.get(out_key)
-
-        if status == self.FAILED:
-            # build a status reason out of all of the values of outputs
-            # flagged as error_output
-            status_reasons = [' : '.join((k, six.text_type(status_reasons[k])))
-                              for k in status_reasons]
-            status_reason = ', '.join(status_reasons)
-        else:
-            status = self.COMPLETE
-            status_reason = _('Outputs received')
-
-        self.rpc_client().update_software_deployment(
-            self.context, deployment_id=self.resource_id,
-            output_values=ov, status=status, status_reason=status_reason)
-        # Return a string describing the outcome of handling the signal data
-        return event_reason
+        return self.rpc_client().signal_software_deployment(
+            self.context, self.resource_id, details,
+            timeutils.strtime())
 
     def FnGetAtt(self, key, *path):
         '''
