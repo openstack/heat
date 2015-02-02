@@ -25,8 +25,10 @@ from oslo.messaging.rpc import dispatcher
 from oslo.serialization import jsonutils
 import six
 
+from heat.common import context
 from heat.common import exception
 from heat.common import identifier
+from heat.common import service_utils
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
@@ -3083,6 +3085,87 @@ class StackServiceTest(common.HeatTestCase):
         self.assertRaises(exception.RequestLimitExceeded,
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', parsed_template)
+
+    @mock.patch.object(service.db_api, 'service_get_all')
+    @mock.patch.object(service_utils, 'format_service')
+    def test_service_get_all(self, mock_format_service, mock_get_all):
+        mock_get_all.return_value = [mock.Mock()]
+        mock_format_service.return_value = mock.Mock()
+        self.assertEqual(1, len(self.eng.list_services(self.ctx)))
+        self.assertTrue(service.db_api.service_get_all.called)
+        mock_format_service.assert_called_once_with(mock.ANY)
+
+    @mock.patch.object(service.db_api, 'service_get_all_by_args')
+    @mock.patch.object(service.db_api, 'service_create')
+    @mock.patch.object(context, 'get_admin_context')
+    def test_service_manage_report_start(self,
+                                         mock_admin_context,
+                                         mock_service_create,
+                                         mock_get_all):
+        self.eng.service_id = None
+        mock_admin_context.return_value = self.ctx
+        mock_get_all.return_value = []
+        srv = dict(id='mock_id')
+        mock_service_create.return_value = srv
+        self.eng.service_manage_report()
+        mock_admin_context.assert_called_once_with()
+        mock_get_all.assert_called_once_with(self.ctx,
+                                             self.eng.host,
+                                             self.eng.binary,
+                                             self.eng.hostname)
+        mock_service_create.assert_called_once_with(
+            self.ctx,
+            dict(host=self.eng.host,
+                 hostname=self.eng.hostname,
+                 binary=self.eng.binary,
+                 engine_id=self.eng.engine_id,
+                 topic=self.eng.topic,
+                 report_interval=cfg.CONF.periodic_interval))
+
+        self.assertEqual(self.eng.service_id, srv['id'])
+
+    @mock.patch.object(service.db_api, 'service_get_all_by_args')
+    @mock.patch.object(service.db_api, 'service_update')
+    @mock.patch.object(context, 'get_admin_context')
+    def test_service_manage_report_restart(
+            self,
+            mock_admin_context,
+            mock_service_update,
+            mock_get_all):
+        self.eng.service_id = None
+        srv = dict(id='mock_id', deleted_at=None)
+        mock_get_all.return_value = [srv]
+        mock_admin_context.return_value = self.ctx
+        mock_service_update.return_value = srv
+        self.eng.service_manage_report()
+        mock_admin_context.assert_called_once_with()
+        mock_get_all.assert_called_once_with(self.ctx,
+                                             self.eng.host,
+                                             self.eng.binary,
+                                             self.eng.hostname)
+        mock_service_update.assert_called_once_with(
+            self.ctx,
+            srv['id'],
+            dict(engine_id=self.eng.engine_id,
+                 deleted_at=None,
+                 report_interval=cfg.CONF.periodic_interval))
+
+        self.assertEqual(self.eng.service_id, srv['id'])
+
+    @mock.patch.object(service.db_api, 'service_update')
+    @mock.patch.object(context, 'get_admin_context')
+    def test_service_manage_report_update(
+            self,
+            mock_admin_context,
+            mock_service_update):
+        self.eng.service_id = 'mock_id'
+        mock_admin_context.return_value = self.ctx
+        self.eng.service_manage_report()
+        mock_admin_context.assert_called_once_with()
+        mock_service_update.assert_called_once_with(
+            self.ctx,
+            'mock_id',
+            dict())
 
 
 class SoftwareConfigServiceTest(common.HeatTestCase):

@@ -349,3 +349,31 @@ class Snapshot(BASE, HeatBase):
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
     status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
     stack = relationship(Stack, backref=backref('snapshot'))
+
+
+class Service(BASE, HeatBase, SoftDelete):
+
+    __tablename__ = 'service'
+
+    id = sqlalchemy.Column('id',
+                           sqlalchemy.String(36),
+                           primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    engine_id = sqlalchemy.Column('engine_id',
+                                  sqlalchemy.String(36),
+                                  nullable=False)
+    host = sqlalchemy.Column('host',
+                             sqlalchemy.String(255),
+                             nullable=False)
+    hostname = sqlalchemy.Column('hostname',
+                                 sqlalchemy.String(255),
+                                 nullable=False)
+    binary = sqlalchemy.Column('binary',
+                               sqlalchemy.String(255),
+                               nullable=False)
+    topic = sqlalchemy.Column('topic',
+                              sqlalchemy.String(255),
+                              nullable=False)
+    report_interval = sqlalchemy.Column('report_interval',
+                                        sqlalchemy.Integer,
+                                        nullable=False)

@@ -338,3 +338,6 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self._test_engine_api('delete_snapshot', 'call',
                               stack_identity=self.identity,
                               snapshot_id=snapshot_id)
+
+    def test_list_services(self):
+        self._test_engine_api('list_services', 'call', version='1.4')

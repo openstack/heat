@@ -67,5 +67,7 @@
     "software_deployments:show": "rule:deny_stack_user",
     "software_deployments:update": "rule:deny_stack_user",
     "software_deployments:delete": "rule:deny_stack_user",
-    "software_deployments:metadata": ""
+    "software_deployments:metadata": "",
+
+    "service:index": "rule:context_is_admin"
 }

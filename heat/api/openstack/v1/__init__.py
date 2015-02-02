@@ -18,6 +18,7 @@ from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
 from heat.api.openstack.v1 import events
 from heat.api.openstack.v1 import resources
+from heat.api.openstack.v1 import services
 from heat.api.openstack.v1 import software_configs
 from heat.api.openstack.v1 import software_deployments
 from heat.api.openstack.v1 import stacks
@@ -395,6 +396,18 @@ class API(wsgi.Router):
                         'method': 'DELETE'
                     }
                 ])
+
+        # Services
+        service_resource = services.create_resource(conf)
+        with mapper.submapper(
+            controller=service_resource,
+            path_prefix='/{tenant_id}/services'
+        ) as sa_mapper:
+
+            sa_mapper.connect("service_index",
+                              "",
+                              action="index",
+                              conditions={'method': 'GET'})
 
         # now that all the routes are defined, add a handler for
         super(API, self).__init__(mapper)

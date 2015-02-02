@@ -87,6 +87,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         col = getattr(t.c, column)
         self.assertTrue(col.nullable)
 
+    def assertColumnIsNotNullable(self, engine, table, column_name):
+        table = utils.get_table(engine, table)
+        column = getattr(table.c, column_name)
+        self.assertFalse(column.nullable)
+
     def assertIndexExists(self, engine, table, index):
         t = utils.get_table(engine, table)
         index_names = [idx.name for idx in t.indexes]
@@ -383,6 +388,24 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
 
     def _check_049(self, engine, data):
         self.assertColumnExists(engine, 'user_creds', 'region_name')
+
+    def _check_051(self, engine, data):
+        column_list = [('id', False),
+                       ('host', False),
+                       ('topic', False),
+                       ('binary', False),
+                       ('hostname', False),
+                       ('engine_id', False),
+                       ('report_interval', False),
+                       ('updated_at', True),
+                       ('created_at', True),
+                       ('deleted_at', True)]
+        for column in column_list:
+            self.assertColumnExists(engine, 'service', column[0])
+            if not column[1]:
+                self.assertColumnIsNotNullable(engine, 'service', column[0])
+            else:
+                self.assertColumnIsNullable(engine, 'service', column[0])
 
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
