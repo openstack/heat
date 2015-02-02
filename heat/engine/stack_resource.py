@@ -241,6 +241,17 @@ class StackResource(resource.Resource):
 
         return done
 
+    def check_adopt_complete(self, stack_creator):
+        if stack_creator is None:
+            return True
+        done = stack_creator.step()
+        if done:
+            if self._nested.state != (self._nested.ADOPT,
+                                      self._nested.COMPLETE):
+                raise exception.Error(self._nested.status_reason)
+
+        return done
+
     def update_with_template(self, child_template, user_params=None,
                              timeout_mins=None):
         """Update the nested stack with the new template."""

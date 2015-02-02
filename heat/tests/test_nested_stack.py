@@ -193,7 +193,10 @@ Outputs:
             }
         }
 
-        stack = self.adopt_stack(self.test_template, adopt_data)
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t, adopt_data)
+        stack.adopt()
+        self.assertEqual((stack.ADOPT, stack.FAILED), stack.state)
         rsrc = stack['the_nested']
         self.assertEqual((rsrc.ADOPT, rsrc.FAILED), rsrc.nested().state)
         nested_name = utils.PhysName(stack.name, 'the_nested')
