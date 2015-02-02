@@ -19,7 +19,6 @@ import json
 from oslo.utils import importutils
 import uuid
 
-from keystoneclient.auth.identity import v3 as kc_auth_v3
 import keystoneclient.exceptions as kc_exception
 from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
@@ -379,19 +378,8 @@ class KeystoneClientV3(object):
         # catalog (the token is expected to be used inside an instance
         # where a specific endpoint will be specified, and user-data
         # space is limited..)
-        if self._stack_domain_is_id:
-            auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
-                                       username=username,
-                                       password=password,
-                                       project_id=project_id,
-                                       user_domain_id=self.stack_domain)
-        else:
-            auth = kc_auth_v3.Password(auth_url=self.v3_endpoint,
-                                       username=username,
-                                       password=password,
-                                       project_id=project_id,
-                                       user_domain_name=self.stack_domain)
-        sess = session.Session(auth=auth)
+
+        sess = session.Session.construct(self._ssl_options())
         # Note we do this directly via a post as there's currently
         # no way to get a nocatalog token via keystoneclient
         token_url = "%s/auth/tokens?nocatalog" % self.v3_endpoint

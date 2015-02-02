@@ -1363,7 +1363,6 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client.delete_stack_domain_project(project_id='aprojectid')
 
     def _stub_domain_user_pw_auth(self):
-        self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                             username='duser',
                             password='apassw',
@@ -1372,7 +1371,6 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_stack_domain_user_token(self):
         """Test stack_domain_user_token function."""
-        self._stub_domain_user_pw_auth()
         dummysession = self.m.CreateMockAnything()
         dummyresp = self.m.CreateMockAnything()
         dummyresp.headers = {'X-Subject-Token': 'dummytoken'}
@@ -1381,7 +1379,7 @@ class KeystoneClientTest(HeatTestCase):
                           headers={'Accept': 'application/json'},
                           json=mox.IgnoreArg()).AndReturn(dummyresp)
         self.m.StubOutWithMock(ks_session, 'Session')
-        ks_session.Session(auth='dummyauth').AndReturn(dummysession)
+        ks_session.Session.construct(mox.IsA(dict)).AndReturn(dummysession)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -1502,7 +1500,6 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
             self.mock_admin_client.auth_ref.user_id = '1234'
 
     def _stub_domain_user_pw_auth(self):
-        self.m.StubOutWithMock(ks_auth_v3, 'Password')
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                             username='duser',
                             password='apassw',
