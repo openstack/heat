@@ -88,6 +88,12 @@ IntegrationTestGroup = [
     cfg.IntOpt('volume_size',
                default=1,
                help='Default size in GB for volumes created by volumes tests'),
+    cfg.BoolOpt('skip_stack_adopt_tests',
+                default=False,
+                help="Skip Stack Adopt Integration tests"),
+    cfg.BoolOpt('skip_stack_abandon_tests',
+                default=False,
+                help="Skip Stack Abandon Integration tests"),
 ]
 
 
