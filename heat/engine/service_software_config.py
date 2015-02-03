@@ -23,6 +23,7 @@ from heat.common.i18n import _LI
 from heat.db import api as db_api
 from heat.engine import api
 from heat.objects import software_config as software_config_object
+from heat.objects import software_deployment as software_deployment_object
 from heat.openstack.common import service
 from heat.rpc import api as rpc_api
 
@@ -54,14 +55,16 @@ class SoftwareConfigService(service.Service):
         software_config_object.SoftwareConfig.delete(cnxt, config_id)
 
     def list_software_deployments(self, cnxt, server_id):
-        all_sd = db_api.software_deployment_get_all(cnxt, server_id)
+        all_sd = software_deployment_object.SoftwareDeployment.get_all(
+            cnxt, server_id)
         result = [api.format_software_deployment(sd) for sd in all_sd]
         return result
 
     def metadata_software_deployments(self, cnxt, server_id):
         if not server_id:
             raise ValueError(_('server_id must be specified'))
-        all_sd = db_api.software_deployment_get_all(cnxt, server_id)
+        all_sd = software_deployment_object.SoftwareDeployment.get_all(
+            cnxt, server_id)
         # sort the configs by config name, to give the list of metadata a
         # deterministic and controllable order.
         all_sd_s = sorted(all_sd, key=lambda sd: sd.config.name)
@@ -129,10 +132,12 @@ class SoftwareConfigService(service.Service):
                 cnxt, sd.id, jsonutils.loads(obj),
                 timeutils.strtime(last_modified))
 
-        return db_api.software_deployment_get(cnxt, sd.id)
+        return software_deployment_object.SoftwareDeployment.get_by_id(
+            cnxt, sd.id)
 
     def show_software_deployment(self, cnxt, deployment_id):
-        sd = db_api.software_deployment_get(cnxt, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            cnxt, deployment_id)
         if sd.status == rpc_api.SOFTWARE_DEPLOYMENT_IN_PROGRESS:
             c = sd.config.config
             input_values = dict((i['name'], i['value']) for i in c['inputs'])
@@ -146,7 +151,7 @@ class SoftwareConfigService(service.Service):
                                    input_values, action, status,
                                    status_reason, stack_user_project_id):
 
-        sd = db_api.software_deployment_create(cnxt, {
+        sd = software_deployment_object.SoftwareDeployment.create(cnxt, {
             'config_id': config_id,
             'server_id': server_id,
             'input_values': input_values,
@@ -164,7 +169,8 @@ class SoftwareConfigService(service.Service):
         if not deployment_id:
             raise ValueError(_('deployment_id must be specified'))
 
-        sd = db_api.software_deployment_get(cnxt, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            cnxt, deployment_id)
         status = sd.status
 
         if not status == rpc_api.SOFTWARE_DEPLOYMENT_IN_PROGRESS:
@@ -239,8 +245,8 @@ class SoftwareConfigService(service.Service):
         else:
             update_data['updated_at'] = timeutils.utcnow()
 
-        sd = db_api.software_deployment_update(cnxt,
-                                               deployment_id, update_data)
+        sd = software_deployment_object.SoftwareDeployment.update_by_id(
+            cnxt, deployment_id, update_data)
 
         # only push metadata if this update resulted in the config_id
         # changing, since metadata is just a list of configs
@@ -250,4 +256,5 @@ class SoftwareConfigService(service.Service):
         return api.format_software_deployment(sd)
 
     def delete_software_deployment(self, cnxt, deployment_id):
-        db_api.software_deployment_delete(cnxt, deployment_id)
+        software_deployment_object.SoftwareDeployment.delete(
+            cnxt, deployment_id)

@@ -49,6 +49,7 @@ from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import resource as resource_objects
+from heat.objects import software_deployment as software_deployment_object
 from heat.objects import stack as stack_object
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
@@ -3683,7 +3684,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'deployment succeeded',
             self.engine.signal_software_deployment(
                 self.ctx, deployment_id, {}, None))
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.assertEqual('COMPLETE', sd.status)
         self.assertEqual('Outputs received', sd.status_reason)
         self.assertEqual({
@@ -3704,7 +3706,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             {'foo': 'bar', 'deploy_status_code': 0},
             None)
         self.assertEqual('deployment succeeded', result)
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.assertEqual('COMPLETE', sd.status)
         self.assertEqual('Outputs received', sd.status_reason)
         self.assertEqual({
@@ -3731,7 +3734,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             },
             None)
         self.assertEqual('deployment failed (-1)', result)
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.assertEqual('FAILED', sd.status)
         self.assertEqual(
             ('deploy_status_code : Deployment exited with non-zero '
@@ -3761,7 +3765,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             },
             None)
         self.assertEqual('deployment failed', result)
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.assertEqual('FAILED', sd.status)
         self.assertEqual(
             ('foo : bar, deploy_status_code : Deployment exited with '
@@ -3822,7 +3827,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             status='IN_PROGRESS', config_id=config['id'])
 
         deployment_id = deployment['id']
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         _refresh_software_deployment.return_value = sd
         self.assertEqual(
             deployment,
@@ -4037,7 +4043,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             status='IN_PROGRESS', config_id=config['id'])
 
         deployment_id = six.text_type(deployment['id'])
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
 
         # poll with missing object
         swift_exc = swift.SwiftClientPlugin.exceptions_module
@@ -4077,9 +4084,10 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                                     timeutils.strtime(then))
 
         # second poll updated_at populated with first poll last-modified
-        db_api.software_deployment_update(
+        software_deployment_object.SoftwareDeployment.update_by_id(
             self.ctx, deployment_id, {'updated_at': then})
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.assertEqual(then, sd.updated_at)
         self.engine.software_config._refresh_software_deployment(
             self.ctx, sd, temp_url)
@@ -4101,9 +4109,10 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                                timeutils.strtime(now))
 
         # four polls result in only two signals, for then and now
-        db_api.software_deployment_update(
+        software_deployment_object.SoftwareDeployment.update_by_id(
             self.ctx, deployment_id, {'updated_at': now})
-        sd = db_api.software_deployment_get(self.ctx, deployment_id)
+        sd = software_deployment_object.SoftwareDeployment.get_by_id(
+            self.ctx, deployment_id)
         self.engine.software_config._refresh_software_deployment(
             self.ctx, sd, temp_url)
         self.assertEqual(2, len(ssd.mock_calls))
