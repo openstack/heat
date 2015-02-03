@@ -346,3 +346,13 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             self.skipTest('Testing Stack abandon disabled in conf, skipping')
         info = self.client.stacks.abandon(stack_id=stack_id)
         return info
+
+    def stack_suspend(self, stack_identifier):
+        stack_name = stack_identifier.split('/')[0]
+        self.client.actions.suspend(stack_name)
+        self._wait_for_stack_status(stack_identifier, 'SUSPEND_COMPLETE')
+
+    def stack_resume(self, stack_identifier):
+        stack_name = stack_identifier.split('/')[0]
+        self.client.actions.resume(stack_name)
+        self._wait_for_stack_status(stack_identifier, 'RESUME_COMPLETE')
