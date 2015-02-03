@@ -139,7 +139,7 @@ To create the stack run:
 Get access to nested attributes
 ===============================
 There are implicit attributes of a template resource. These are
-accessable as follows:
+accessible as follows:
 
 .. code-block:: yaml
 
