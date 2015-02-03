@@ -244,15 +244,6 @@ class TemplateResource(stack_resource.StackResource):
                                          self.child_params(),
                                          adopt_data=resource_data)
 
-    def check_adopt_complete(self, stack_creator):
-        done = stack_creator.step()
-        if done:
-            if self._nested.state != (self._nested.ADOPT,
-                                      self._nested.COMPLETE):
-                raise exception.Error(self._nested.status_reason)
-
-        return done
-
     def handle_create(self):
         return self.create_with_template(self.child_template(),
                                          self.child_params())
