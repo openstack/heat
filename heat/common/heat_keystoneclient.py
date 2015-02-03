@@ -525,6 +525,8 @@ class KeystoneClientV3(object):
         # to get the project, so again we should do nothing
         try:
             project = self.domain_admin_client.projects.get(project=project_id)
+        except kc_exception.NotFound:
+            return
         except kc_exception.Forbidden:
             LOG.warning(_('Unable to get details for project %s, not deleting')
                         % project_id)
