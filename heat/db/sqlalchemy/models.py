@@ -331,6 +331,7 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
         'tenant', sqlalchemy.String(64), nullable=False, index=True)
     stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
                                               nullable=True)
+    updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
 class Snapshot(BASE, HeatBase):

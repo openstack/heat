@@ -3411,7 +3411,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         updated = self.engine.update_software_deployment(
             self.ctx, deployment_id=deployment_id, config_id=config_id,
             input_values={}, output_values={}, action='DEPLOY',
-            status='WAITING', status_reason='')
+            status='WAITING', status_reason='', updated_at=None)
         self.assertIsNotNone(updated)
         self.assertEqual(config_id, updated['config_id'])
         self.assertEqual('DEPLOY', updated['action'])
@@ -3438,7 +3438,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         updated = self.engine.update_software_deployment(
             self.ctx, deployment_id=deployment_id, config_id=None,
             input_values=None, output_values={}, action='DEPLOY',
-            status='WAITING', status_reason='')
+            status='WAITING', status_reason='', updated_at=None)
         self.assertIsNotNone(updated)
         self.assertEqual('DEPLOY', updated['action'])
         self.assertEqual('WAITING', updated['status'])
@@ -3461,7 +3461,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             }
             values.update(kwargs)
             updated = self.engine.update_software_deployment(
-                self.ctx, deployment_id, **values)
+                self.ctx, deployment_id, updated_at=None, **values)
             for key, value in six.iteritems(kwargs):
                 self.assertEqual(value, updated[key])
 
