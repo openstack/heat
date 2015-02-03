@@ -18,6 +18,7 @@ import keystoneclient.exceptions
 import keystoneclient.v2_0.client
 import neutronclient.v2_0.client
 import novaclient.client
+import swiftclient
 
 import logging
 
@@ -41,6 +42,7 @@ class ClientManager(object):
         self.compute_client = self._get_compute_client()
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
+        self.object_client = self._get_object_client()
 
     def _get_orchestration_client(self):
         region = self.conf.region
@@ -125,3 +127,16 @@ class ClientManager(object):
             endpoint_type=endpoint_type,
             insecure=dscv,
             http_log_debug=True)
+
+    def _get_object_client(self):
+        dscv = self.conf.disable_ssl_certificate_validation
+        args = {
+            'auth_version': '2.0',
+            'tenant_name': self.conf.tenant_name,
+            'user': self.conf.username,
+            'key': self.conf.password,
+            'authurl': self.conf.auth_url,
+            'os_options': {'endpoint_type': 'publicURL'},
+            'insecure': dscv,
+        }
+        return swiftclient.client.Connection(**args)
