@@ -145,7 +145,7 @@ class InstanceGroup(stack_resource.StackResource):
                     raise ValueError('Maximum PauseTime is 1 hour.')
 
     def validate_launchconfig(self):
-        # It seems to be a common error to not have a dependancy on the
+        # It seems to be a common error to not have a dependency on the
         # launchconfiguration. This can happen if the the actual resource
         # name is used instead of {get_resource: launch_conf} and no
         # depends_on is used.
