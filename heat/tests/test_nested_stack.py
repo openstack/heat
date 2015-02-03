@@ -12,13 +12,8 @@
 #    under the License.
 
 
-import copy
-import json
-
 import mock
-from oslo.config import cfg
 from requests import exceptions
-import six
 import yaml
 
 from heat.common import exception
@@ -29,12 +24,9 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import stack as stack_res
 from heat.engine import rsrc_defn
-from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
-cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 
 
 class NestedStackTest(common.HeatTestCase):
@@ -80,13 +72,6 @@ Outputs:
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
 
-    def adopt_stack(self, template, adopt_data):
-        t = template_format.parse(template)
-        stack = self.parse_stack(t, adopt_data)
-        stack.adopt()
-        self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
-        return stack
-
     def parse_stack(self, t, data=None):
         ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         stack_name = 'test_stack'
@@ -94,324 +79,6 @@ Outputs:
         stack = parser.Stack(ctx, stack_name, tmpl, adopt_stack_data=data)
         stack.store()
         return stack
-
-    def test_nested_stack_create(self):
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-        rsrc = stack['the_nested']
-        nested_name = utils.PhysName(stack.name, 'the_nested')
-        self.assertEqual(nested_name, rsrc.physical_resource_name())
-        arn_prefix = ('arn:openstack:heat::aaaa:stacks/%s/' %
-                      rsrc.physical_resource_name())
-        self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
-
-        self.assertEqual('bar', rsrc.FnGetAtt('Outputs.Foo'))
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Outputs.Bar')
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Bar')
-
-        rsrc.delete()
-        self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_adopt(self):
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Foo:
-    Value: bar
-''')
-        self.m.ReplayAll()
-
-        adopt_data = {
-            "resources": {
-                "the_nested": {
-                    "resource_id": "test-res-id",
-                    "resources": {
-                        "NestedResource": {
-                            "resource_id": "test-nested-res-id"
-                        }
-                    }
-                }
-            }
-        }
-
-        stack = self.adopt_stack(self.test_template, adopt_data)
-        self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
-        rsrc = stack['the_nested']
-        self.assertEqual((rsrc.ADOPT, rsrc.COMPLETE), rsrc.state)
-        nested_name = utils.PhysName(stack.name, 'the_nested')
-        self.assertEqual(nested_name, rsrc.physical_resource_name())
-        self.assertEqual('test-nested-res-id',
-                         rsrc.nested()['NestedResource'].resource_id)
-        rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_nested_stack_adopt_fail(self):
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Foo:
-    Value: bar
-''')
-        self.m.ReplayAll()
-
-        adopt_data = {
-            "resources": {
-                "the_nested": {
-                    "resource_id": "test-res-id",
-                    "resources": {
-                    }
-                }
-            }
-        }
-
-        t = template_format.parse(self.test_template)
-        stack = self.parse_stack(t, adopt_data)
-        stack.adopt()
-        self.assertEqual((stack.ADOPT, stack.FAILED), stack.state)
-        rsrc = stack['the_nested']
-        self.assertEqual((rsrc.ADOPT, rsrc.FAILED), rsrc.nested().state)
-        nested_name = utils.PhysName(stack.name, 'the_nested')
-        self.assertEqual(nested_name, rsrc.physical_resource_name())
-        rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_nested_stack_create_with_timeout(self):
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        self.m.ReplayAll()
-
-        timeout_template = template_format.parse(
-            copy.deepcopy(self.test_template))
-        props = timeout_template['Resources']['the_nested']['Properties']
-        props['TimeoutInMinutes'] = '50'
-
-        stack = self.create_stack(json.dumps(timeout_template))
-        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
-        self.m.VerifyAll()
-
-    def test_nested_stack_create_exceeds_resource_limit(self):
-        cfg.CONF.set_override('max_resources_per_stack', 1)
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Foo:
-    Value: bar
-''')
-        self.m.ReplayAll()
-
-        t = template_format.parse(self.test_template)
-        stack = self.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
-        self.assertIn('Maximum resources per stack exceeded',
-                      stack.status_reason)
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_create_equals_resource_limit(self):
-        cfg.CONF.set_override('max_resources_per_stack', 2)
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Foo:
-    Value: bar
-''')
-        self.m.ReplayAll()
-
-        t = template_format.parse(self.test_template)
-        stack = self.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
-        self.assertIn('NestedResource',
-                      stack['the_nested'].nested())
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_update(self):
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template'
-                     ).MultipleTimes().AndReturn(self.update_template)
-
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-        rsrc = stack['the_nested']
-
-        original_nested_id = rsrc.resource_id
-        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
-        updater = rsrc.handle_update(new_res, {}, prop_diff)
-        updater.run_to_completion()
-        self.assertIs(True, rsrc.check_update_complete(updater))
-
-        # Expect the physical resource name staying the same after update,
-        # so that the nested was actually updated instead of replaced.
-        self.assertEqual(original_nested_id, rsrc.resource_id)
-        db_nested = db_api.stack_get(stack.context,
-                                     rsrc.resource_id)
-        # Owner_id should be preserved during the update process.
-        self.assertEqual(stack.id, db_nested.owner_id)
-
-        self.assertEqual('foo', rsrc.FnGetAtt('Outputs.Bar'))
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Outputs.Foo')
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Bar')
-
-        rsrc.delete()
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_update_equals_resource_limit(self):
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Bar:
-    Value: foo
-''')
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-
-        cfg.CONF.set_override('max_resources_per_stack', 2)
-
-        rsrc = stack['the_nested']
-
-        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
-        updater = rsrc.handle_update(new_res, {}, prop_diff)
-        updater.run_to_completion()
-        self.assertIs(True, rsrc.check_update_complete(updater))
-
-        self.assertEqual('foo', rsrc.FnGetAtt('Outputs.Bar'))
-
-        rsrc.delete()
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_update_exceeds_limit(self):
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        urlfetch.get('https://server.test/new.template'
-                     ).MultipleTimes().AndReturn(
-            '''
-HeatTemplateFormatVersion: '2012-12-12'
-Parameters:
-  KeyName:
-    Type: String
-Resources:
-  NestedResource:
-    Type: GenericResource
-Outputs:
-  Bar:
-    Value: foo
-''')
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-
-        cfg.CONF.set_override('max_resources_per_stack', 1)
-
-        rsrc = stack['the_nested']
-
-        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        new_res = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
-        ex = self.assertRaises(exception.RequestLimitExceeded,
-                               rsrc.handle_update, new_res, {}, prop_diff)
-        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      six.text_type(ex))
-        rsrc.delete()
-
-        self.m.VerifyAll()
-
-    def test_nested_stack_suspend_resume(self):
-        urlfetch.get('https://server.test/the.template').AndReturn(
-            self.nested_template)
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-        rsrc = stack['the_nested']
-
-        scheduler.TaskRunner(rsrc.suspend)()
-        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-
-        scheduler.TaskRunner(rsrc.resume)()
-        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-
-        rsrc.delete()
-        self.m.VerifyAll()
 
     def test_nested_stack_three_deep(self):
         root_template = '''
@@ -573,22 +240,6 @@ Resources:
         stack.create()
         self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
         self.assertIn('Recursion depth exceeds', stack.status_reason)
-        self.m.VerifyAll()
-
-    def test_nested_stack_delete(self):
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-        rsrc = stack['the_nested']
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((stack.DELETE, stack.COMPLETE), rsrc.state)
-
-        nested_stack = parser.Stack.load(utils.dummy_context(
-            'test_username', 'aaaa', 'password'), rsrc.resource_id)
-        self.assertEqual((stack.DELETE, stack.COMPLETE), nested_stack.state)
-
         self.m.VerifyAll()
 
     def test_nested_stack_delete_then_delete_parent_stack(self):

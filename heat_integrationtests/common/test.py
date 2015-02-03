@@ -85,6 +85,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.compute_client = self.manager.compute_client
         self.network_client = self.manager.network_client
         self.volume_client = self.manager.volume_client
+        self.object_client = self.manager.object_client
         self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
 
     def status_timeout(self, things, thing_id, expected_status,

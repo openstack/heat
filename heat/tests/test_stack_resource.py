@@ -14,6 +14,7 @@
 import uuid
 
 import mock
+from oslo.config import cfg
 import six
 
 from heat.common import exception
@@ -565,6 +566,55 @@ class StackResourceTest(common.HeatTestCase):
         scheduler.TaskRunner(self.parent_resource.check)()
         [self.assertTrue(res.handle_check.called)
          for res in nested.resources.values()]
+
+
+class StackResourceLimitTest(common.HeatTestCase):
+    scenarios = [
+        ('1', dict(root=3, templ=4, nested=0, max=10, error=False)),
+        ('2', dict(root=3, templ=8, nested=0, max=10, error=True)),
+        ('3', dict(root=3, templ=8, nested=2, max=10, error=False)),
+        ('4', dict(root=3, templ=12, nested=2, max=10, error=True))]
+
+    def setUp(self):
+        super(StackResourceLimitTest, self).setUp()
+        resource._register_class('some_magic_type',
+                                 MyStackResource)
+        ws_resname = "provider_resource"
+        t = templatem.Template(
+            {'HeatTemplateFormatVersion': '2012-12-12',
+             'Resources': {ws_resname: ws_res_snippet}})
+        self.ctx = utils.dummy_context()
+        self.parent_stack = parser.Stack(self.ctx, 'test_stack',
+                                         t, stack_id=str(uuid.uuid4()),
+                                         user_creds_id='uc123',
+                                         stack_user_project_id='aprojectid')
+        resource_defns = t.resource_definitions(self.parent_stack)
+        self.res = MyStackResource('test',
+                                   resource_defns[ws_resname],
+                                   self.parent_stack)
+
+    def test_resource_limit(self):
+        # mock nested resources
+        nested = mock.MagicMock()
+        nested.resources = range(self.nested)
+        self.res.nested = mock.MagicMock(return_value=nested)
+
+        # mock root total_resources
+        self.res.stack.root_stack.total_resources = mock.Mock(
+            return_value=self.root)
+
+        # setup the config max
+        cfg.CONF.set_default('max_resources_per_stack', self.max)
+
+        # fake the template
+        templ = mock.MagicMock()
+        templ.__getitem__.return_value = range(self.templ)
+        templ.RESOURCES = 'Resources'
+        if self.error:
+            self.assertRaises(exception.RequestLimitExceeded,
+                              self.res._validate_nested_resources, templ)
+        else:
+            self.assertIsNone(self.res._validate_nested_resources(templ))
 
 
 class StackResourceAttrTest(common.HeatTestCase):
