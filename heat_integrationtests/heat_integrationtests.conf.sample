@@ -4,37 +4,27 @@
 # From heat_integrationtests.common.config
 #
 
+# Username to use for API requests. (string value)
+#username = <None>
+
+# API key to use when authenticating. (string value)
+#password = <None>
+
+# Tenant name to use for API requests. (string value)
+#tenant_name = <None>
+
 # Full URI of the OpenStack Identity API (Keystone), v2 (string value)
 #auth_url = <None>
 
-# Identity API version to be used for authentication for API tests. (string
-# value)
-#auth_version = v2
-
-# Time in seconds between build status checks. (integer value)
-#build_interval = 4
-
-# Timeout in seconds to wait for a stack to build. (integer value)
-#build_timeout = 1200
-
-# Set to True if using self-signed SSL certificates. (boolean value)
-#disable_ssl_certificate_validation = false
-
-# Visible fixed network name  (string value)
-#fixed_network_name = private
-
-# Visible fixed sub-network name  (string value)
-#fixed_subnet_name = private-subnet
-
-# Name of image to use for tests which boot servers. (string value)
-#image_ref = <None>
+# The region name to us (string value)
+#region = <None>
 
 # Instance type for tests. Needs to be big enough for a full OS plus the test
 # workload (string value)
 #instance_type = <None>
 
-# IP version used for SSH connections. (integer value)
-#ip_version_for_ssh = 4
+# Name of image to use for tests which boot servers. (string value)
+#image_ref = <None>
 
 # Name of existing keypair to launch servers with. (string value)
 #keypair_name = <None>
@@ -43,29 +33,39 @@
 # (string value)
 #minimal_image_ref = <None>
 
+# Identity API version to be used for authentication for API tests. (string
+# value)
+#auth_version = v2
+
+# Set to True if using self-signed SSL certificates. (boolean value)
+#disable_ssl_certificate_validation = false
+
+# Time in seconds between build status checks. (integer value)
+#build_interval = 4
+
+# Timeout in seconds to wait for a stack to build. (integer value)
+#build_timeout = 1200
+
 # Network used for SSH connections. (string value)
 #network_for_ssh = private
 
-# API key to use when authenticating. (string value)
-#password = <None>
+# Visible fixed network name  (string value)
+#fixed_network_name = private
 
-# The region name to us (string value)
-#region = <None>
-
-# Timeout in seconds to wait for output from ssh channel. (integer value)
-#ssh_channel_timeout = 60
+# Visible fixed sub-network name  (string value)
+#fixed_subnet_name = private-subnet
 
 # Timeout in seconds to wait for authentication to succeed. (integer value)
 #ssh_timeout = 300
 
-# Tenant name to use for API requests. (string value)
-#tenant_name = <None>
+# IP version used for SSH connections. (integer value)
+#ip_version_for_ssh = 4
+
+# Timeout in seconds to wait for output from ssh channel. (integer value)
+#ssh_channel_timeout = 60
 
 # The mask bits for tenant ipv4 subnets (integer value)
 #tenant_network_mask_bits = 28
-
-# Username to use for API requests. (string value)
-#username = <None>
 
 # Default size in GB for volumes created by volumes tests (integer value)
 #volume_size = 1
