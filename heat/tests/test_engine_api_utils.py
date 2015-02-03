@@ -16,6 +16,7 @@ import json
 import uuid
 
 import mock
+from oslo.utils import timeutils
 import six
 
 from heat.common import identifier
@@ -920,9 +921,11 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
 
     def _dummy_software_config(self):
         config = mock.Mock()
+        self.now = timeutils.utcnow()
         config.name = 'config_mysql'
         config.group = 'Heat::Shell'
         config.id = str(uuid.uuid4())
+        config.created_at = self.now
         config.config = {
             'inputs': [{'name': 'bar'}],
             'outputs': [{'name': 'result'}],
@@ -942,6 +945,8 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         deployment.action = 'INIT'
         deployment.status = 'COMPLETE'
         deployment.status_reason = 'Because'
+        deployment.created_at = config.created_at
+        deployment.updated_at = config.created_at
         return deployment
 
     def test_format_software_config(self):
@@ -950,7 +955,10 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         self.assertIsNotNone(result)
         self.assertEqual([{'name': 'bar'}], result['inputs'])
         self.assertEqual([{'name': 'result'}], result['outputs'])
+        self.assertEqual([{'name': 'result'}], result['outputs'])
         self.assertEqual({}, result['options'])
+        self.assertEqual(timeutils.isotime(self.now),
+                         result['creation_time'])
 
     def test_format_software_config_none(self):
         self.assertIsNone(api.format_software_config(None))
@@ -967,6 +975,10 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         self.assertEqual(deployment.action, result['action'])
         self.assertEqual(deployment.status, result['status'])
         self.assertEqual(deployment.status_reason, result['status_reason'])
+        self.assertEqual(timeutils.isotime(self.now),
+                         result['creation_time'])
+        self.assertEqual(timeutils.isotime(self.now),
+                         result['updated_time'])
 
     def test_format_software_deployment_none(self):
         self.assertIsNone(api.format_software_deployment(None))

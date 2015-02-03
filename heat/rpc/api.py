@@ -199,6 +199,7 @@ SOFTWARE_CONFIG_KEYS = (
     SOFTWARE_CONFIG_INPUTS,
     SOFTWARE_CONFIG_OUTPUTS,
     SOFTWARE_CONFIG_OPTIONS,
+    SOFTWARE_CONFIG_CREATION_TIME
 ) = (
     'id',
     'name',
@@ -207,6 +208,7 @@ SOFTWARE_CONFIG_KEYS = (
     'inputs',
     'outputs',
     'options',
+    'creation_time'
 )
 
 SOFTWARE_DEPLOYMENT_KEYS = (
@@ -217,7 +219,9 @@ SOFTWARE_DEPLOYMENT_KEYS = (
     SOFTWARE_DEPLOYMENT_OUTPUT_VALUES,
     SOFTWARE_DEPLOYMENT_ACTION,
     SOFTWARE_DEPLOYMENT_STATUS,
-    SOFTWARE_DEPLOYMENT_STATUS_REASON
+    SOFTWARE_DEPLOYMENT_STATUS_REASON,
+    SOFTWARE_DEPLOYMENT_CREATION_TIME,
+    SOFTWARE_DEPLOYMENT_UPDATED_TIME
 ) = (
     'id',
     'config_id',
@@ -226,7 +230,9 @@ SOFTWARE_DEPLOYMENT_KEYS = (
     'output_values',
     'action',
     'status',
-    'status_reason'
+    'status_reason',
+    'creation_time',
+    'updated_time'
 )
 
 SNAPSHOT_KEYS = (
