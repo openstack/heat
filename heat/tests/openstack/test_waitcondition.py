@@ -11,9 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import time
+import datetime
 import uuid
 
+from oslo_utils import timeutils
 import six
 
 from heat.common import identifier
@@ -24,7 +25,6 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack import wait_condition_handle as heat_wch
-from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 
@@ -155,23 +155,20 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_timeout(self):
-        st = time.time()
-
         self.stack = self.create_stack()
 
         # Avoid the stack create exercising the timeout code at the same time
         self.m.StubOutWithMock(self.stack, 'timeout_secs')
         self.stack.timeout_secs().MultipleTimes().AndReturn(None)
 
-        self.m.StubOutWithMock(scheduler, 'wallclock')
+        now = timeutils.utcnow()
+        fake_clock = [now + datetime.timedelta(0, t)
+                      for t in (0, 0.001, 0.1, 4.1, 5.1)]
+        timeutils.set_time_override(fake_clock)
+        self.addCleanup(timeutils.clear_time_override)
 
-        scheduler.wallclock().AndReturn(st)
-        scheduler.wallclock().AndReturn(st + 0.001)
-        scheduler.wallclock().AndReturn(st + 0.1)
-        heat_wch.HeatWaitConditionHandle.get_status().AndReturn([])
-        scheduler.wallclock().AndReturn(st + 4.1)
-        heat_wch.HeatWaitConditionHandle.get_status().AndReturn([])
-        scheduler.wallclock().AndReturn(st + 5.1)
+        heat_wch.HeatWaitConditionHandle.get_status(
+        ).MultipleTimes().AndReturn([])
 
         self.m.ReplayAll()
 

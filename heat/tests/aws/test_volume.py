@@ -136,6 +136,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         cinder.CinderClientPlugin._create().AndReturn(
             self.cinder_fc)
         self.stub_ImageConstraint_validate()
+        self.stub_ServerConstraint_validate()
         self.stub_VolumeConstraint_validate()
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         self.cinder_fc.volumes.create(
@@ -641,8 +642,9 @@ class VolumeTest(vt_base.BaseVolumeTest):
             "range (min: 1, max: None)", six.text_type(error))
 
     def test_volume_attachment_updates_not_supported(self):
-        nova.NovaClientPlugin.get_server = mock.Mock(
-            return_value=mock.MagicMock())
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_server')
+        nova.NovaClientPlugin.get_server(mox.IgnoreArg()).AndReturn(
+            mox.MockAnything())
         fv = vt_base.FakeVolume('creating', 'available')
         fva = vt_base.FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_updnotsup_stack'
