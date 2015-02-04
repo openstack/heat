@@ -321,7 +321,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             success_on_not_found=True)
 
     def update_stack(self, stack_identifier, template, environment=None,
-                     files=None, parameters=None,
+                     files=None, parameters=None, tags=None,
                      expected_status='UPDATE_COMPLETE',
                      disable_rollback=True):
         env = environment or {}
@@ -342,7 +342,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                     files=env_files,
                     disable_rollback=disable_rollback,
                     parameters=parameters,
-                    environment=env
+                    environment=env,
+                    tags=tags
                 )
             except heat_exceptions.HTTPConflict as ex:
                 # FIXME(sirushtim): Wait a little for the stack lock to be
@@ -405,9 +406,9 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         return dict((r.resource_name, r.resource_type) for r in resources)
 
     def stack_create(self, stack_name=None, template=None, files=None,
-                     parameters=None, environment=None,
-                     expected_status='CREATE_COMPLETE', disable_rollback=True,
-                     enable_cleanup=True):
+                     parameters=None, environment=None, tags=None,
+                     expected_status='CREATE_COMPLETE',
+                     disable_rollback=True, enable_cleanup=True):
         name = stack_name or self._stack_rand_name()
         templ = template or self.template
         templ_files = files or {}
@@ -419,7 +420,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             files=templ_files,
             disable_rollback=disable_rollback,
             parameters=params,
-            environment=env
+            environment=env,
+            tags=tags
         )
         if expected_status not in ['ROLLBACK_COMPLETE'] and enable_cleanup:
             self.addCleanup(self.client.stacks.delete, name)
