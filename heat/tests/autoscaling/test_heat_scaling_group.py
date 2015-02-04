@@ -250,6 +250,27 @@ class TestGroupCrud(common.HeatTestCase):
             6, adjustment_type='ExactCapacity')
         self.group._try_rolling_update.assert_called_once_with(props)
 
+    def test_update_in_failed(self):
+        self.group.state_set('CREATE', 'FAILED')
+        # to update the failed asg
+        self.group.adjust = mock.Mock(return_value=None)
+
+        new_defn = rsrc_defn.ResourceDefinition(
+            'asg', 'OS::Heat::AutoScalingGroup',
+            {'AvailabilityZones': ['nova'],
+             'LaunchConfigurationName': 'config',
+             'max_size': 5,
+             'min_size': 1,
+             'desired_capacity': 2,
+             'resource':
+             {'type': 'ResourceWithPropsAndAttrs',
+              'properties': {
+                  'Foo': 'hello'}}})
+
+        self.group.handle_update(new_defn, None, None)
+        self.group.adjust.assert_called_once_with(
+            2, adjustment_type='ExactCapacity')
+
 
 class HeatScalingGroupAttrTest(common.HeatTestCase):
     def setUp(self):

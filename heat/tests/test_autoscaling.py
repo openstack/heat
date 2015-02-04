@@ -14,7 +14,6 @@
 import copy
 import datetime
 
-import mock
 import mox
 from oslo.config import cfg
 from oslo.utils import timeutils
@@ -214,15 +213,6 @@ class AutoScalingTest(common.HeatTestCase):
         self.assertEqual([], grouputils.get_members(rsrc))
 
         self.m.VerifyAll()
-
-    def test_update_in_failed(self):
-        self.asg.state_set('CREATE', 'FAILED')
-        # to update the failed asg
-        self.asg.adjust = mock.Mock(return_value=None)
-
-        self.asg.handle_update(self.defn, None, None)
-        self.asg.adjust.assert_called_once_with(
-            2, adjustment_type='ExactCapacity')
 
     def test_lb_reload_static_resolve(self):
         t = template_format.parse(as_template)
