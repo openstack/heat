@@ -337,6 +337,54 @@ Outputs:
                                 self._stack_output(stack, 'value'))
 
 
+class TemplateResourceUpdateFailedTest(test.HeatIntegrationTest):
+    """Prove that we can do updates on a nested stack to fix a stack."""
+    main_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  keypair:
+    Type: OS::Nova::KeyPair
+    Properties:
+      name: replace-this
+      save_private_key: false
+  server:
+    Type: server_fail.yaml
+    DependsOn: keypair
+'''
+    nested_templ = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  RealRandom:
+    Type: OS::Heat::RandomString
+'''
+
+    def setUp(self):
+        super(TemplateResourceUpdateFailedTest, self).setUp()
+        self.client = self.orchestration_client
+        if self.conf.keypair_name:
+            self.keypair_name = self.conf.keypair_name
+        else:
+            self.keypair = self.create_keypair()
+            self.keypair_name = self.keypair.id
+
+    def test_update_on_failed_create(self):
+        # create a stack with "server" dependant on "keypair", but
+        # keypair fails, so "server" is not created properly.
+        # We then fix the template and it should succeed.
+        broken_templ = self.main_template.replace('replace-this',
+                                                  self.keypair_name)
+        stack_identifier = self.stack_create(
+            template=broken_templ,
+            files={'server_fail.yaml': self.nested_templ},
+            expected_status='CREATE_FAILED')
+
+        fixed_templ = self.main_template.replace('replace-this',
+                                                 test.rand_name())
+        self.update_stack(stack_identifier,
+                          fixed_templ,
+                          files={'server_fail.yaml': self.nested_templ})
+
+
 class TemplateResourceAdoptTest(test.HeatIntegrationTest):
     """Prove that we can do template resource adopt/abandon."""
 
