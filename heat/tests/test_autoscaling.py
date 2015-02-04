@@ -41,27 +41,6 @@ from heat.tests import utils
 
 as_template = inline_templates.as_template
 
-as_template_bad_group = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Parameters" : {
-  "ImageId": {"Type": "String"},
-  "KeyName": {"Type": "String"}
-  },
-  "Resources" : {
-    "WebServerScaleUpPolicy" : {
-      "Type" : "AWS::AutoScaling::ScalingPolicy",
-      "Properties" : {
-        "AdjustmentType" : "ChangeInCapacity",
-        "AutoScalingGroupName" : "not a real group",
-        "Cooldown" : "60",
-        "ScalingAdjustment" : "1"
-      }
-    }
-  }
-}
-'''
-
 
 class AutoScalingTest(common.HeatTestCase):
     dummy_instance_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
@@ -544,22 +523,6 @@ class AutoScalingTest(common.HeatTestCase):
         self.m.ReplayAll()
         stack = utils.parse_stack(t, params=self.params)
         self.create_scaling_group(t, stack, 'WebServerGroup')
-
-        self.m.VerifyAll()
-
-    def test_scaling_policy_bad_group(self):
-        t = template_format.parse(as_template_bad_group)
-        stack = utils.parse_stack(t, params=self.params)
-
-        self.m.ReplayAll()
-        up_policy = self.create_scaling_policy(t, stack,
-                                               'WebServerScaleUpPolicy')
-
-        alarm_url = up_policy.FnGetAtt('AlarmUrl')
-        self.assertIsNotNone(alarm_url)
-        ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
-        self.assertIn('Alarm WebServerScaleUpPolicy could '
-                      'not find scaling group', six.text_type(ex))
 
         self.m.VerifyAll()
 

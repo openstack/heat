@@ -16,7 +16,9 @@ import datetime
 import mock
 from oslo.config import cfg
 from oslo.utils import timeutils
+import six
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -41,6 +43,17 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
+
+    def test_scaling_policy_bad_group(self):
+        t = template_format.parse(inline_templates.as_template_bad_group)
+        stack = utils.parse_stack(t, params=as_params)
+
+        up_policy = self.create_scaling_policy(t, stack,
+                                               'WebServerScaleUpPolicy')
+
+        ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
+        self.assertIn('Alarm WebServerScaleUpPolicy could '
+                      'not find scaling group', six.text_type(ex))
 
     def test_scaling_policy_not_alarm_state(self):
         """If the details don't have 'alarm' then don't progress."""
