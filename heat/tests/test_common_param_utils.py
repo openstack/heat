@@ -88,3 +88,11 @@ class TestExtractInt(common.HeatTestCase):
                           param_utils.extract_int, 'num', 'true')
         self.assertRaises(ValueError,
                           param_utils.extract_int, 'num', True)
+
+
+class TestExtractTags(common.HeatTestCase):
+    def test_extract_tags(self):
+        self.assertRaises(ValueError, param_utils.extract_tags, "aaaaaaaaaaaaa"
+                          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                          "aaaaaaaaaaaaaaaaa,a")
+        self.assertEqual(["foo", "bar"], param_utils.extract_tags('foo,bar'))

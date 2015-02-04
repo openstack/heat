@@ -142,10 +142,13 @@ def stack_get_by_name(context, stack_name):
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None, tenant_safe=True,
-                  show_deleted=False, show_nested=False, show_hidden=False):
+                  show_deleted=False, show_nested=False, show_hidden=False,
+                  tags=None, tags_any=None, not_tags=None,
+                  not_tags_any=None):
     return IMPL.stack_get_all(context, limit, sort_keys,
                               marker, sort_dir, filters, tenant_safe,
-                              show_deleted, show_nested, show_hidden)
+                              show_deleted, show_nested, show_hidden,
+                              tags, tags_any, not_tags, not_tags_any)
 
 
 def stack_get_all_by_owner_id(context, owner_id):
@@ -153,12 +156,18 @@ def stack_get_all_by_owner_id(context, owner_id):
 
 
 def stack_count_all(context, filters=None, tenant_safe=True,
-                    show_deleted=False, show_nested=False, show_hidden=False):
+                    show_deleted=False, show_nested=False, show_hidden=False,
+                    tags=None, tags_any=None, not_tags=None,
+                    not_tags_any=None):
     return IMPL.stack_count_all(context, filters=filters,
                                 tenant_safe=tenant_safe,
                                 show_deleted=show_deleted,
                                 show_nested=show_nested,
-                                show_hidden=show_hidden)
+                                show_hidden=show_hidden,
+                                tags=tags,
+                                tags_any=tags_any,
+                                not_tags=not_tags,
+                                not_tags_any=not_tags_any)
 
 
 def stack_create(context, values):
