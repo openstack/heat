@@ -242,30 +242,6 @@ class AutoScalingTest(common.HeatTestCase):
         for x in range(nmeta):
             resource.Resource.metadata_set(expected).AndReturn(None)
 
-    def test_scaling_group_update_replace(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=self.params)
-
-        self._stub_lb_reload(1)
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ExactCapacity : 1')
-        self._stub_create(1)
-        self.m.ReplayAll()
-        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
-                         rsrc.FnGetRefId())
-        self.assertEqual(1, len(grouputils.get_member_names(rsrc)))
-        props = copy.copy(rsrc.properties.data)
-        props['AvailabilityZones'] = ['foo']
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props)
-        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
-        self.assertRaises(resource.UpdateReplace, updater)
-
-        rsrc.delete()
-        self.m.VerifyAll()
-
     def test_scaling_group_suspend(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
