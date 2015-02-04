@@ -46,7 +46,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.addCleanup(self.m.VerifyAll)
 
     def _stubs_v2(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id'):
+                  user_id='trustor_user_id', region=None):
         self.mock_ks_client = self.m.CreateMock(heat_keystoneclient.kc.Client)
         self.m.StubOutWithMock(heat_keystoneclient.kc, "Client")
         if method == 'token':
@@ -57,7 +57,7 @@ class KeystoneClientTest(common.HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
-                region_name=None,
+                region_name=region,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         elif method == 'password':
@@ -70,7 +70,7 @@ class KeystoneClientTest(common.HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
-                region_name=None,
+                region_name=region,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         if method == 'trust':
@@ -82,7 +82,7 @@ class KeystoneClientTest(common.HeatTestCase):
                 cacert=None,
                 cert=None,
                 insecure=False,
-                region_name=None,
+                region_name=region,
                 key=None).AndReturn(self.mock_ks_client)
             self.mock_ks_client.authenticate(trust_id='atrust123',
                                              tenant_id='test_tenant_id'
@@ -211,6 +211,21 @@ class KeystoneClientTest(common.HeatTestCase):
         self.ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClientV2(self.ctx)
         self.assertIsNotNone(heat_ks_client._client)
+
+    def test_region_name(self):
+        """Test region_name is used when specified."""
+
+        self._stubs_v2(method='trust', region='region123')
+        self.m.ReplayAll()
+
+        self.ctx.username = None
+        self.ctx.password = None
+        self.ctx.auth_token = None
+        self.ctx.trust_id = 'atrust123'
+        self.ctx.trustor_user_id = 'trustor_user_id'
+        self.ctx.region_name = 'region123'
+        heat_keystoneclient.KeystoneClientV2(self.ctx)
+        self.m.VerifyAll()
 
     # ##################### #
     # V3 Compatible Methods #

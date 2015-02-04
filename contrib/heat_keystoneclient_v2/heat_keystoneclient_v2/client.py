@@ -67,6 +67,10 @@ class KeystoneClientV2(object):
             'auth_url': self.context.auth_url,
             'region_name': cfg.CONF.region_name_for_services
         }
+
+        if self.context.region_name is not None:
+            kwargs['region_name'] = self.context.region_name
+
         auth_kwargs = {}
         # Note try trust_id first, as we can't reuse auth_token in that case
         if self.context.trust_id is not None:
