@@ -28,7 +28,6 @@ from heat.engine import resource
 from heat.engine.resources.aws import autoscaling_group as asg
 from heat.engine.resources.aws import instance
 from heat.engine.resources import loadbalancer
-from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -231,41 +230,6 @@ class AutoScalingTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.update, update_snippet)()
 
         rsrc.delete()
-        self.m.VerifyAll()
-
-    def test_lb_reload_members(self):
-        t = template_format.parse(as_template)
-        t['Resources']['ElasticLoadBalancer'] = {
-            'Type': 'OS::Neutron::LoadBalancer',
-            'Properties': {
-                'protocol_port': 8080,
-                'pool_id': 'pool123'
-            }
-        }
-
-        expected = {
-            'Type': 'OS::Neutron::LoadBalancer',
-            'Properties': {
-                'protocol_port': 8080,
-                'pool_id': 'pool123',
-                'members': [u'aaaabbbbcccc']}
-        }
-
-        self.m.StubOutWithMock(short_id, 'generate_id')
-        short_id.generate_id().MultipleTimes().AndReturn('aaaabbbbcccc')
-
-        self.m.StubOutWithMock(neutron_lb.LoadBalancer, 'handle_update')
-        neutron_lb.LoadBalancer.handle_update(expected,
-                                              mox.IgnoreArg(),
-                                              mox.IgnoreArg()).AndReturn(None)
-
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ExactCapacity : 1')
-        self._stub_create(1)
-        self.m.ReplayAll()
-        stack = utils.parse_stack(t, params=self.params)
-        self.create_scaling_group(t, stack, 'WebServerGroup')
-
         self.m.VerifyAll()
 
     def test_scaling_up_meta_update(self):
