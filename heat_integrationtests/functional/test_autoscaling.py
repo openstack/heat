@@ -272,6 +272,8 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
         self._assert_instance_state(nested_ident, 2, 0)
+        initial_list = [res.resource_name
+                        for res in self.client.resources.list(nested_ident)]
 
         env['parameters']['size'] = 3
         files2 = {'provider.yaml': self.bad_instance_template}
@@ -288,7 +290,17 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         # assert that there are 3 bad instances
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
-        self._assert_instance_state(nested_ident, 0, 3)
+
+        # 2 resources should be in update failed, and one create failed.
+        for res in self.client.resources.list(nested_ident):
+            if res.resource_name in initial_list:
+                self._wait_for_resource_status(nested_ident,
+                                               res.resource_name,
+                                               'UPDATE_FAILED')
+            else:
+                self._wait_for_resource_status(nested_ident,
+                                               res.resource_name,
+                                               'CREATE_FAILED')
 
 
 class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
