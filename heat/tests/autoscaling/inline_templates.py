@@ -97,4 +97,38 @@ as_heat_template = '''
           scaling_adjustment: 1
           adjustment_type: change_in_capacity
           cooldown: 60
-    '''
+'''
+
+as_template_bad_group = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Parameters" : {
+  "ImageId": {"Type": "String"},
+  "KeyName": {"Type": "String"}
+  },
+  "Resources" : {
+    "WebServerScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : "not a real group",
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "1"
+      }
+    }
+  }
+}
+'''
+
+as_heat_template_bad_group = '''
+    heat_template_version: 2013-05-23
+    description: AutoScaling Test
+    resources:
+      my-policy:
+        type: OS::Heat::ScalingPolicy
+        properties:
+          auto_scaling_group_id: bad-group
+          scaling_adjustment: 1
+          adjustment_type: change_in_capacity
+          cooldown: 60
+'''
