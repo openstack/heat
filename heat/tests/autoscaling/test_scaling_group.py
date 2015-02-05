@@ -18,6 +18,7 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
+from heat.engine.clients.os import nova
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -34,7 +35,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
-        self.stub_SnapshotConstraint_validate()
 
     def validate_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
@@ -54,6 +54,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         properties['VPCZoneIdentifier'] = ['xxxx', 'yyyy']
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
@@ -71,6 +72,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
 
+        self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
@@ -91,6 +93,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
 
+        self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
@@ -111,6 +114,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         properties['DesiredCapacity'] = '4'
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.m.ReplayAll()
@@ -130,6 +134,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         properties['DesiredCapacity'] = '0'
 
         stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
@@ -140,6 +145,84 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
         self.assertEqual(expected_msg, six.text_type(e))
+        self.m.VerifyAll()
+
+    def test_validate_without_InstanceId_and_LaunchConfigurationName(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp.pop('LaunchConfigurationName')
+        agp.pop('LoadBalancerNames')
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['WebServerGroup']
+        error_msg = ("Either 'InstanceId' or 'LaunchConfigurationName' "
+                     "must be provided.")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(error_msg, six.text_type(exc))
+
+    def test_validate_with_InstanceId_and_LaunchConfigurationName(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['WebServerGroup']
+        error_msg = ("Either 'InstanceId' or 'LaunchConfigurationName' "
+                     "must be provided.")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(error_msg, six.text_type(exc))
+
+    def _stub_nova_server_get(self, not_found=False):
+        mock_server = mock.MagicMock()
+        mock_server.image = {'id': 'dd619705-468a-4f7d-8a06-b84794b3561a'}
+        mock_server.flavor = {'id': '1'}
+        mock_server.key_name = 'test'
+        mock_server.security_groups = [{u'name': u'hth_test'}]
+        if not_found:
+            self.patchobject(nova.NovaClientPlugin, 'get_server',
+                             side_effect=exception.ServerNotFound(
+                                 server='5678'))
+        else:
+            self.patchobject(nova.NovaClientPlugin, 'get_server',
+                             return_value=mock_server)
+
+    def test_scaling_group_create_with_instanceid(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp['InstanceId'] = '5678'
+        agp.pop('LaunchConfigurationName')
+        agp.pop('LoadBalancerNames')
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['WebServerGroup']
+
+        self._stub_nova_server_get()
+        self.m.ReplayAll()
+
+        _config, ins_props = rsrc._get_conf_properties()
+
+        self.assertEqual('dd619705-468a-4f7d-8a06-b84794b3561a',
+                         ins_props['ImageId'])
+        self.assertEqual('test', ins_props['KeyName'])
+        self.assertEqual(['hth_test'], ins_props['SecurityGroups'])
+        self.assertEqual('1', ins_props['InstanceType'])
+
+        self.m.VerifyAll()
+
+    def test_scaling_group_create_with_instanceid_not_found(self):
+        t = template_format.parse(as_template)
+        agp = t['Resources']['WebServerGroup']['Properties']
+        agp.pop('LaunchConfigurationName')
+        agp['InstanceId'] = '5678'
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        rsrc = stack['WebServerGroup']
+        self._stub_nova_server_get(not_found=True)
+        self.m.ReplayAll()
+        msg = ("Property error : WebServerGroup: InstanceId Error validating "
+               "value '5678': The server (5678) could not be found")
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                rsrc.validate)
+        self.assertIn(msg, six.text_type(exc))
+
         self.m.VerifyAll()
 
 
