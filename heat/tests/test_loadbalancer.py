@@ -14,19 +14,13 @@
 import copy
 
 import mock
-import mox
 from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
-from heat.engine import resource
-from heat.engine.resources.aws import wait_condition_handle as aws_wch
-from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
 from heat.engine import rsrc_defn
-from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -74,78 +68,54 @@ class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes_v1_1.FakeClient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.m.StubOutWithMock(resource.Resource, 'metadata_set')
-        self.stub_keystoneclient(username='test_stack.CfnLBUser')
-
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-    def create_loadbalancer(self, t, stack, resource_name):
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = lb.LoadBalancer(resource_name,
-                               resource_defns[resource_name],
-                               stack)
-        self.assertIsNone(rsrc.validate())
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        return rsrc
-
-    def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-        glance.GlanceClientPlugin.get_image_id(
-            imageId_input).MultipleTimes().AndReturn(imageId)
-
-    def _create_stubs(self, key_name='test', stub_meta=True):
-        server_name = utils.PhysName(
-            utils.PhysName('test_stack', 'LoadBalancer'),
-            'LB_instance',
-            limit=instance.Instance.physical_resource_name_limit)
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.servers.create(
-            flavor=2, image=746, key_name=key_name,
-            meta=None, nics=None, name=server_name,
-            scheduler_hints=None, userdata=mox.IgnoreArg(),
-            security_groups=None, availability_zone=None,
-            block_device_mapping=None).AndReturn(
-                self.fc.servers.list()[1])
-        if stub_meta:
-            resource.Resource.metadata_set(mox.IgnoreArg()).AndReturn(None)
-
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-
     def test_loadbalancer(self):
-        self._mock_get_image_id_success(
-            u'Fedora-Cloud-Base-20141203-21.x86_64', 746)
-        self._create_stubs()
-        self.m.ReplayAll()
-
         t = template_format.parse(lb_template)
         s = utils.parse_stack(t)
         s.store()
+        resource_name = 'LoadBalancer'
+        lb_defn = s.t.resource_definitions(s)[resource_name]
+        rsrc = lb.LoadBalancer(resource_name, lb_defn, s)
 
-        rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
+        nova.NovaClientPlugin._create = mock.Mock(return_value=self.fc)
 
-        id_list = []
-        resource_defns = s.t.resource_definitions(s)
-        for inst_name in ['WikiServerOne1', 'WikiServerOne2']:
-            inst = instance.Instance(inst_name,
-                                     resource_defns['WikiServerOne'],
-                                     s)
-            id_list.append(inst.FnGetRefId())
+        initial_md = {'AWS::CloudFormation::Init':
+                      {'config':
+                       {'files':
+                        {'/etc/haproxy/haproxy.cfg': {'content': 'initial'}}}}}
+        ha_cfg = '\n'.join(['\nglobal', '    daemon', '    maxconn 256',
+                            '    stats socket /tmp/.haproxy-stats',
+                            '\ndefaults',
+                            '    mode http\n    timeout connect 5000ms',
+                            '    timeout client 50000ms',
+                            '    timeout server 50000ms\n\nfrontend http',
+                            '    bind *:80\n    default_backend servers',
+                            '\nbackend servers\n    balance roundrobin',
+                            '    option http-server-close',
+                            '    option forwardfor\n    option httpchk',
+                            '\n    server server1 1.2.3.4:80',
+                            '    server server2 0.0.0.0:80\n'])
+        expected_md = {'AWS::CloudFormation::Init':
+                       {'config':
+                        {'files':
+                         {'/etc/haproxy/haproxy.cfg': {
+                             'content': ha_cfg}}}}}
 
-        prop_diff = {'Instances': id_list}
+        md = mock.Mock()
+        md.metadata_get.return_value = copy.deepcopy(initial_md)
+        rsrc.nested = mock.Mock(return_value={'LB_instance': md})
+
+        prop_diff = {'Instances': ['WikiServerOne1', 'WikiServerOne2']}
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
         update_defn = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                    props)
         rsrc.handle_update(update_defn, {}, prop_diff)
-
         self.assertIsNone(rsrc.handle_update(rsrc.t, {}, {}))
-
-        self.m.VerifyAll()
+        md.metadata_get.assert_called_once_with()
+        md.metadata_set.assert_called_once_with(expected_md)
 
     def test_loadbalancer_validate_hchk_good(self):
         rsrc = self.setup_loadbalancer()
