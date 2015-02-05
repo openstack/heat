@@ -1081,7 +1081,7 @@ class Resource(object):
                 reason_string = "Signal: %s" % signal_result
             else:
                 reason_string = get_string_details()
-            self._add_event('signal', self.status, reason_string)
+            self._add_event('SIGNAL', self.status, reason_string)
         except Exception as ex:
             LOG.exception(_LE('signal %(name)s : %(msg)s')
                           % {'name': six.text_type(self), 'msg': ex})

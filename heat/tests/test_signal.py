@@ -267,13 +267,13 @@ class SignalTest(common.HeatTestCase):
         self.m.StubOutWithMock(generic_resource.SignalResource,
                                '_add_event')
         generic_resource.SignalResource._add_event(
-            'signal', 'COMPLETE', ceilo_expected).AndReturn(None)
+            'SIGNAL', 'COMPLETE', ceilo_expected).AndReturn(None)
         generic_resource.SignalResource._add_event(
-            'signal', 'COMPLETE', watch_expected).AndReturn(None)
+            'SIGNAL', 'COMPLETE', watch_expected).AndReturn(None)
         generic_resource.SignalResource._add_event(
-            'signal', 'COMPLETE', str_expected).AndReturn(None)
+            'SIGNAL', 'COMPLETE', str_expected).AndReturn(None)
         generic_resource.SignalResource._add_event(
-            'signal', 'COMPLETE', none_expected).AndReturn(None)
+            'SIGNAL', 'COMPLETE', none_expected).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -301,7 +301,7 @@ class SignalTest(common.HeatTestCase):
         self.m.StubOutWithMock(generic_resource.SignalResource,
                                '_add_event')
         generic_resource.SignalResource._add_event(
-            'signal', 'COMPLETE', 'Signal: %s' % ret_expected).AndReturn(None)
+            'SIGNAL', 'COMPLETE', 'Signal: %s' % ret_expected).AndReturn(None)
         self.m.ReplayAll()
 
         rsrc.signal(details=signal_details)
