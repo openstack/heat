@@ -132,6 +132,8 @@ class StackLock(object):
         try:
             self.acquire()
             yield
+        except exception.ActionInProgress:
+            raise
         except:  # noqa
             with excutils.save_and_reraise_exception():
                 self.release(stack_id)
