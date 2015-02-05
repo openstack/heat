@@ -302,6 +302,35 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
                                                res.resource_name,
                                                'CREATE_FAILED')
 
+    def test_group_suspend_resume(self):
+
+        files = {'provider.yaml': self.instance_template}
+        env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
+               'parameters': {'size': 4,
+                              'image': self.conf.image_ref,
+                              'flavor': self.conf.instance_type}}
+        stack_identifier = self.stack_create(template=self.template,
+                                             files=files, environment=env)
+
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
+
+        self.client.actions.suspend(stack_id=stack_identifier)
+        self._wait_for_resource_status(
+            stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
+        for res in self.client.resources.list(nested_ident):
+            self._wait_for_resource_status(nested_ident,
+                                           res.resource_name,
+                                           'SUSPEND_COMPLETE')
+
+        self.client.actions.resume(stack_id=stack_identifier)
+        self._wait_for_resource_status(
+            stack_identifier, 'JobServerGroup', 'RESUME_COMPLETE')
+        for res in self.client.resources.list(nested_ident):
+            self._wait_for_resource_status(nested_ident,
+                                           res.resource_name,
+                                           'RESUME_COMPLETE')
+
 
 class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
 
