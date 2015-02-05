@@ -69,35 +69,6 @@ lb_template = '''
 }
 '''
 
-lb_template_nokey = '''
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LB Template",
-  "Resources": {
-    "WikiServerOne": {
-      "Type": "AWS::EC2::Instance",
-      "Properties": {
-        "ImageId": "F17-x86_64-gold",
-        "InstanceType"   : "m1.large",
-        "UserData"       : "some data"
-      }
-    },
-    "LoadBalancer" : {
-      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
-      "Properties" : {
-        "AvailabilityZones" : ["nova"],
-        "Instances" : [{"Ref": "WikiServerOne"}],
-        "Listeners" : [ {
-          "LoadBalancerPort" : "80",
-          "InstancePort" : "80",
-          "Protocol" : "HTTP"
-        }]
-      }
-    }
-  }
-}
-'''
-
 
 class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
@@ -174,21 +145,6 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.assertIsNone(rsrc.handle_update(rsrc.t, {}, {}))
 
-        self.m.VerifyAll()
-
-    def test_loadbalancer_nokey(self):
-        self._mock_get_image_id_success(
-            u'Fedora-Cloud-Base-20141203-21.x86_64', 746)
-        self._create_stubs(key_name=None, stub_meta=False)
-
-        self.m.ReplayAll()
-
-        t = template_format.parse(lb_template_nokey)
-        s = utils.parse_stack(t)
-        s.store()
-
-        rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
-        self.assertEqual('LoadBalancer', rsrc.name)
         self.m.VerifyAll()
 
     def test_loadbalancer_validate_hchk_good(self):
