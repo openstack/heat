@@ -72,7 +72,7 @@ resources:
 
 
 class NeutronAutoscalingTest(test.HeatIntegrationTest):
-    """"
+    """
     The class is responsible for testing of neutron resources autoscaling.
     """
 
@@ -103,8 +103,7 @@ class NeutronAutoscalingTest(test.HeatIntegrationTest):
         env = {'parameters': {"image_id": self.conf.minimal_image_ref,
                               "capacity": "1",
                               "instance_type": self.conf.instance_type,
-                              "fixed_subnet_name":
-                                  self.conf.fixed_subnet_name,
+                              "fixed_subnet_name": self.conf.fixed_subnet_name,
                               }}
 
         # Create stack
