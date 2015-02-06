@@ -482,7 +482,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.resource_id = sd['id']
         self.deployment.handle_delete()
-
+        self.deployment.check_delete_complete()
         self.assertEqual(
             (self.ctx, sd['id']),
             self.rpc_client.delete_software_deployment.call_args[0])
@@ -528,6 +528,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.rpc_client.delete_software_deployment.side_effect = nf
         self.rpc_client.delete_software_config.side_effect = nf
         self.assertIsNone(self.deployment.handle_delete())
+        self.assertTrue(self.deployment.check_delete_complete())
         self.assertEqual(
             (self.ctx, derived_sc['id']),
             self.rpc_client.delete_software_config.call_args[0])
@@ -828,19 +829,49 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self._create_stack(self.template)
 
         self.mock_software_config()
+        sd = self.mock_deployment()
+        rsrc = self.stack['deployment_mysql']
 
-        for action in ('DELETE', 'SUSPEND', 'RESUME'):
-            self.assertIsNone(self.deployment._handle_action(action))
-        for action in ('CREATE', 'UPDATE'):
-            self.assertIsNotNone(self.deployment._handle_action(action))
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.deployment.resource_id = sd['id']
+        config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
+        prop_diff = {'config': config_id}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        # by default (no 'actions' property) SoftwareDeployment must only
+        # trigger for CREATE and UPDATE
+        self.assertIsNotNone(self.deployment.handle_create())
+        self.assertIsNotNone(self.deployment.handle_update(
+            json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff))
+        # ... but it must not trigger for SUSPEND, RESUME and DELETE
+        self.assertIsNone(self.deployment.handle_suspend())
+        self.assertIsNone(self.deployment.handle_resume())
+        self.assertIsNone(self.deployment.handle_delete())
 
     def test_handle_action_for_component(self):
         self._create_stack(self.template)
 
         self.mock_software_component()
+        sd = self.mock_deployment()
+        rsrc = self.stack['deployment_mysql']
 
-        for action in ('CREATE', 'UPDATE', 'DELETE', 'SUSPEND', 'RESUME'):
-            self.assertIsNotNone(self.deployment._handle_action(action))
+        self.rpc_client.show_software_deployment.return_value = sd
+        self.deployment.resource_id = sd['id']
+        config_id = '0ff2e903-78d7-4cca-829e-233af3dae705'
+        prop_diff = {'config': config_id}
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        # for a SoftwareComponent, SoftwareDeployment must always trigger
+        self.assertIsNotNone(self.deployment.handle_create())
+        self.assertIsNotNone(self.deployment.handle_update(
+            json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff))
+        self.assertIsNotNone(self.deployment.handle_suspend())
+        self.assertIsNotNone(self.deployment.handle_resume())
+        self.assertIsNotNone(self.deployment.handle_delete())
 
 
 class SoftwareDeploymentsTest(common.HeatTestCase):

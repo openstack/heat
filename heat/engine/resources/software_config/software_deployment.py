@@ -398,13 +398,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_delete(self):
-        if self.DELETE in self.properties[self.DEPLOY_ACTIONS]:
-            try:
-                return self._handle_action(self.DELETE)
-            except Exception as ex:
-                self.rpc_client().ignore_error_named(ex, 'NotFound')
-        else:
-            self._delete_resource()
+        try:
+            return self._handle_action(self.DELETE)
+        except Exception as ex:
+            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def check_delete_complete(self, sd=None):
         if not sd or self._check_complete():
