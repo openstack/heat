@@ -41,15 +41,15 @@ LOG = logging.getLogger(__name__)
 class Server(stack_user.StackUser):
 
     PROPERTIES = (
-        NAME, IMAGE, BLOCK_DEVICE_MAPPING, FLAVOR,
-        FLAVOR_UPDATE_POLICY, IMAGE_UPDATE_POLICY, KEY_NAME,
+        NAME, IMAGE, BLOCK_DEVICE_MAPPING, BLOCK_DEVICE_MAPPING_V2,
+        FLAVOR, FLAVOR_UPDATE_POLICY, IMAGE_UPDATE_POLICY, KEY_NAME,
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
         ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT
     ) = (
-        'name', 'image', 'block_device_mapping', 'flavor',
-        'flavor_update_policy', 'image_update_policy', 'key_name',
+        'name', 'image', 'block_device_mapping', 'block_device_mapping_v2',
+        'flavor', 'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
@@ -64,6 +64,30 @@ class Server(stack_user.StackUser):
     ) = (
         'device_name', 'volume_id',
         'snapshot_id',
+        'volume_size',
+        'delete_on_termination',
+    )
+
+    _BLOCK_DEVICE_MAPPING_V2_KEYS = (
+        BLOCK_DEVICE_MAPPING_DEVICE_NAME,
+        BLOCK_DEVICE_MAPPING_VOLUME_ID,
+        BLOCK_DEVICE_MAPPING_IMAGE_ID,
+        BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
+        BLOCK_DEVICE_MAPPING_SWAP_SIZE,
+        BLOCK_DEVICE_MAPPING_DEVICE_TYPE,
+        BLOCK_DEVICE_MAPPING_DISK_BUS,
+        BLOCK_DEVICE_MAPPING_BOOT_INDEX,
+        BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
+        BLOCK_DEVICE_MAPPING_DELETE_ON_TERM,
+    ) = (
+        'device_name',
+        'volume_id',
+        'image_id',
+        'snapshot_id',
+        'swap_size',
+        'device_type',
+        'disk_bus',
+        'boot_index',
         'volume_size',
         'delete_on_termination',
     )
@@ -142,6 +166,80 @@ class Server(stack_user.StackUser):
                         _('The size of the volume, in GB. It is safe to '
                           'leave this blank and have the Compute service '
                           'infer the size.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_DELETE_ON_TERM: properties.Schema(
+                        properties.Schema.BOOLEAN,
+                        _('Indicate whether the volume should be deleted '
+                          'when the server is terminated.')
+                    ),
+                },
+            )
+        ),
+        BLOCK_DEVICE_MAPPING_V2: properties.Schema(
+            properties.Schema.LIST,
+            _('Block device mappings v2 for this server.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    BLOCK_DEVICE_MAPPING_DEVICE_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('A device name where the volume will be '
+                          'attached in the system at /dev/device_name. '
+                          'This value is typically vda.'),
+                    ),
+                    BLOCK_DEVICE_MAPPING_VOLUME_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The volume_id can be boot or non-boot device '
+                          'to the server.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.volume')
+                        ]
+                    ),
+                    BLOCK_DEVICE_MAPPING_IMAGE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID of the image to create a volume from.'),
+                        constraints=[
+                            constraints.CustomConstraint('glance.image')
+                        ],
+                    ),
+                    BLOCK_DEVICE_MAPPING_SNAPSHOT_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID of the snapshot to create a volume '
+                          'from.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.snapshot')
+                        ]
+                    ),
+                    BLOCK_DEVICE_MAPPING_SWAP_SIZE: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('The size of the swap, in MB.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_DEVICE_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Device type: at the moment we can make distinction'
+                          ' only between disk and cdrom.'),
+                        constraints=[
+                            constraints.AllowedValues(['cdrom', 'disk']),
+                        ],
+                    ),
+                    BLOCK_DEVICE_MAPPING_DISK_BUS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Bus of the device: hypervisor driver chooses a '
+                          'suitable default if omitted.'),
+                        constraints=[
+                            constraints.AllowedValues(['ide', 'lame_bus',
+                                                       'scsi', 'usb',
+                                                       'virtio']),
+                        ],
+                    ),
+                    BLOCK_DEVICE_MAPPING_BOOT_INDEX: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Integer used for ordering the boot disks.'),
+                    ),
+                    BLOCK_DEVICE_MAPPING_VOLUME_SIZE: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Size of the block device in GB. If it is omitted, '
+                          'hypervisor driver calculates size.'),
                     ),
                     BLOCK_DEVICE_MAPPING_DELETE_ON_TERM: properties.Schema(
                         properties.Schema.BOOLEAN,
@@ -555,6 +653,8 @@ class Server(stack_user.StackUser):
         nics = self._build_nics(self.properties.get(self.NETWORKS))
         block_device_mapping = self._build_block_device_mapping(
             self.properties.get(self.BLOCK_DEVICE_MAPPING))
+        block_device_mapping_v2 = self._build_block_device_mapping_v2(
+            self.properties.get(self.BLOCK_DEVICE_MAPPING_V2))
         reservation_id = self.properties.get(self.RESERVATION_ID)
         disk_config = self.properties.get(self.DISK_CONFIG)
         admin_pass = self.properties.get(self.ADMIN_PASS) or None
@@ -575,6 +675,7 @@ class Server(stack_user.StackUser):
                 nics=nics,
                 availability_zone=availability_zone,
                 block_device_mapping=block_device_mapping,
+                block_device_mapping_v2=block_device_mapping_v2,
                 reservation_id=reservation_id,
                 config_drive=self._config_drive(),
                 disk_config=disk_config,
@@ -654,6 +755,65 @@ class Server(stack_user.StackUser):
             bdm_dict[device_name] = ':'.join(mapping_parts)
 
         return bdm_dict
+
+    @classmethod
+    def _build_block_device_mapping_v2(cls, bdm_v2):
+        if not bdm_v2:
+            return None
+
+        bdm_v2_list = []
+        for mapping in bdm_v2:
+            bmd_dict = None
+            if mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_ID):
+                bmd_dict = {
+                    'uuid': mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_ID),
+                    'source_type': 'volume',
+                    'destination_type': 'volume',
+                    'boot_index': 0,
+                    'delete_on_termination': False,
+                }
+            elif mapping.get(cls.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID):
+                bmd_dict = {
+                    'uuid': mapping.get(cls.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID),
+                    'source_type': 'snapshot',
+                    'destination_type': 'volume',
+                    'boot_index': 0,
+                    'delete_on_termination': False,
+                }
+            elif mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE_ID):
+                bmd_dict = {
+                    'uuid': mapping.get(cls.BLOCK_DEVICE_MAPPING_IMAGE_ID),
+                    'source_type': 'image',
+                    'destination_type': 'volume',
+                    'boot_index': 0,
+                    'delete_on_termination': False,
+                }
+            elif mapping.get(cls.BLOCK_DEVICE_MAPPING_SWAP_SIZE):
+                bmd_dict = {
+                    'source_type': 'blank',
+                    'destination_type': 'local',
+                    'boot_index': -1,
+                    'delete_on_termination': True,
+                    'guest_format': 'swap',
+                    'volume_size': mapping.get(
+                        cls.BLOCK_DEVICE_MAPPING_SWAP_SIZE),
+                }
+
+            update_props = (cls.BLOCK_DEVICE_MAPPING_DEVICE_NAME,
+                            cls.BLOCK_DEVICE_MAPPING_DEVICE_TYPE,
+                            cls.BLOCK_DEVICE_MAPPING_DISK_BUS,
+                            cls.BLOCK_DEVICE_MAPPING_BOOT_INDEX,
+                            cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
+                            cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM)
+
+            for update_prop in update_props:
+                if mapping.get(update_prop) is not None:
+                    bmd_dict[update_prop] = mapping.get(update_prop)
+
+            if bmd_dict:
+                bdm_v2_list.append(bmd_dict)
+
+        return bdm_v2_list
 
     def _build_nics(self, networks):
         if not networks:
@@ -959,11 +1119,7 @@ class Server(stack_user.StackUser):
         if maximum != -1 and count > maximum:
             raise exception.StackValidationFailed(message=msg)
 
-    def validate(self):
-        '''
-        Validate any of the provided params
-        '''
-        super(Server, self).validate()
+    def _validate_block_device_mapping(self):
 
         # either volume_id or snapshot_id needs to be specified, but not both
         # for block device mapping.
@@ -984,6 +1140,44 @@ class Server(stack_user.StackUser):
                 msg = _('Either volume_id or snapshot_id must be specified for'
                         ' device mapping %s') % device_name
                 raise exception.StackValidationFailed(message=msg)
+
+        bdm_v2 = self.properties.get(self.BLOCK_DEVICE_MAPPING_V2) or []
+        if bdm and bdm_v2:
+            raise exception.ResourcePropertyConflict(
+                self.BLOCK_DEVICE_MAPPING, self.BLOCK_DEVICE_MAPPING_V2)
+
+        for mapping in bdm_v2:
+            volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
+            snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
+            image_id = mapping.get(self.BLOCK_DEVICE_MAPPING_IMAGE_ID)
+            swap_size = mapping.get(self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
+
+            property_tuple = (volume_id, snapshot_id, image_id, swap_size)
+
+            if property_tuple.count(None) < 3:
+                raise exception.ResourcePropertyConflict(
+                    self.BLOCK_DEVICE_MAPPING_VOLUME_ID,
+                    self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
+                    self.BLOCK_DEVICE_MAPPING_IMAGE_ID,
+                    self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
+
+            if property_tuple.count(None) == 4:
+                msg = _('Either volume_id, snapshot_id, image_id or '
+                        'swap_size must be specified.')
+                raise exception.StackValidationFailed(message=msg)
+
+            if any(volume_id, snapshot_id, image_id):
+                bootable_vol = True
+
+        return bootable_vol
+
+    def validate(self):
+        '''
+        Validate any of the provided params
+        '''
+        super(Server, self).validate()
+
+        bootable_vol = self._validate_block_device_mapping()
 
         # make sure the image exists if specified.
         image = self.properties.get(self.IMAGE)
