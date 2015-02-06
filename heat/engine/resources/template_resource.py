@@ -53,6 +53,7 @@ class TemplateResource(stack_resource.StackResource):
 
         tri = stack.env.get_resource_info(
             json_snippet['Type'],
+            resource_name=name,
             registry_type=environment.TemplateResourceInfo)
         if tri is None:
             self.validation_exception = ValueError(_(
@@ -229,6 +230,7 @@ class TemplateResource(stack_resource.StackResource):
             raise exception.StackValidationFailed(message=msg)
         cri = self.stack.env.get_resource_info(
             self.type(),
+            resource_name=self.name,
             registry_type=environment.ClassResourceInfo)
 
         # If we're using an existing resource type as a facade for this
