@@ -255,6 +255,13 @@ class TemplateResource(stack_resource.StackResource):
         return self.create_with_template(self.child_template(),
                                          self.child_params())
 
+    def metadata_update(self, new_metadata=None):
+        '''
+        Refresh the metadata if new_metadata is None
+        '''
+        if new_metadata is None:
+            self.metadata_set(self.t.metadata())
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._generate_schema(json_snippet)
         return self.update_with_template(self.child_template(),

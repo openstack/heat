@@ -443,6 +443,40 @@ class ProviderTemplateTest(HeatTestCase):
         cls = env.get_class('OS::ResourceType', 'fred')
         self.assertEqual(template_resource.TemplateResource, cls)
 
+    def test_metadata_update_called(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'Foo': {'Type': 'Boolean'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.BOOLEAN)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(
+                                 {'HeatTemplateFormatVersion': '2012-12-12'},
+                                 files=files), env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  "DummyResource",
+                                                  {"Foo": "False"})
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition, stack)
+        temp_res.metadata_set = mock.Mock()
+        temp_res.metadata_update()
+        temp_res.metadata_set.assert_called_once_with({})
+
     def test_get_template_resource_class(self):
         test_templ_name = 'file:///etc/heatr/frodo.yaml'
         minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
