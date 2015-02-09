@@ -171,15 +171,19 @@ class NeutronResource(resource.Resource):
                         raise exception.PhysicalResourceNameAmbiguity(name=sg)
         return seclist
 
+    def _not_found_in_call(self, func, *args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return True
+        else:
+            return False
+
     def check_delete_complete(self, check):
         # NOTE(pshchelo): when longer check is needed, check is returned
         # as True, otherwise None is implicitly returned as check
         if not check:
             return True
 
-        try:
-            self._show_resource()
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return True
-        return False
+        return self._not_found_in_call(self._show_resource)

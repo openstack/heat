@@ -18,7 +18,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
-from heat.engine import scheduler
 from heat.engine import support
 
 
@@ -458,49 +457,52 @@ class Pool(neutron.NeutronResource):
             return self.neutron().show_vip(self.metadata_get()['vip'])['vip']
         return super(Pool, self)._resolve_attribute(name)
 
-    def _confirm_vip_delete(self):
-        client = self.neutron()
-        while True:
-            try:
-                yield
-                client.show_vip(self.metadata_get()['vip'])
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                break
-
-    def _confirm_delete(self):
-        while True:
-            try:
-                yield
-                self._show_resource()
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-                return
-
     def handle_delete(self):
-        checkers = []
-        if self.metadata_get():
-            try:
-                self.neutron().delete_vip(self.metadata_get()['vip'])
-            except Exception as ex:
-                self.client_plugin().ignore_not_found(ex)
-            else:
-                checkers.append(scheduler.TaskRunner(self._confirm_vip_delete))
-        try:
-            self.neutron().delete_pool(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-        else:
-            checkers.append(scheduler.TaskRunner(self._confirm_delete))
-        return checkers
 
-    def check_delete_complete(self, checkers):
-        '''Push all checkers to completion in list order.'''
-        for checker in checkers:
-            if not checker.started():
-                checker.start()
-            if not checker.step():
-                return False
+        class PoolDeleteProgress(object):
+            def __init__(self, val=False):
+                self.pool = {'delete_called': val,
+                             'deleted': val}
+                self.vip = {'delete_called': val,
+                            'deleted': val}
+
+        if not self.resource_id:
+            progress = PoolDeleteProgress(True)
+            return progress
+
+        progress = PoolDeleteProgress()
+        if not self.metadata_get():
+            progress.vip['delete_called'] = True
+            progress.vip['deleted'] = True
+        return progress
+
+    def _delete_vip(self):
+        return self._not_found_in_call(
+            self.neutron().delete_vip, self.metadata_get()['vip'])
+
+    def _check_vip_deleted(self):
+        return self._not_found_in_call(
+            self.neutron().show_vip, self.metadata_get()['vip'])
+
+    def _delete_pool(self):
+        return self._not_found_in_call(
+            self.neutron().delete_pool, self.resource_id)
+
+    def check_delete_complete(self, prg):
+        if not prg.vip['delete_called']:
+            prg.vip['deleted'] = self._delete_vip()
+            prg.vip['delete_called'] = True
+            return False
+        if not prg.vip['deleted']:
+            prg.vip['deleted'] = self._check_vip_deleted()
+            return False
+        if not prg.pool['delete_called']:
+            prg.pool['deleted'] = self._delete_pool()
+            prg.pool['delete_called'] = True
+            return prg.pool['deleted']
+        if not prg.pool['deleted']:
+            prg.pool['deleted'] = super(Pool, self).check_delete_complete(True)
+            return prg.pool['deleted']
         return True
 
 
