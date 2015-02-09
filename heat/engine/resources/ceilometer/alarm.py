@@ -307,6 +307,11 @@ class CeilometerAlarm(resource.Resource):
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 
+    def handle_check(self):
+        watch_name = self.physical_resource_name()
+        watchrule.WatchRule.load(self.context, watch_name=watch_name)
+        self.ceilometer().alarms.get(self.resource_id)
+
 
 class CombinationAlarm(resource.Resource):
 
@@ -376,6 +381,9 @@ class CombinationAlarm(resource.Resource):
             self.ceilometer().alarms.delete(self.resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
+
+    def handle_check(self):
+        self.ceilometer().alarms.get(self.resource_id)
 
 
 def resource_mapping():
