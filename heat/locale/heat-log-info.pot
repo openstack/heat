@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev307\n"
+"Project-Id-Version: heat 2015.1.dev26\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-02 06:01+0000\n"
+"POT-Creation-Date: 2015-02-09 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,7 +46,7 @@ msgstr ""
 msgid "AWS authentication failure."
 msgstr ""
 
-#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:732
+#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:747
 msgid "validate_template"
 msgstr ""
 
@@ -138,67 +138,92 @@ msgstr ""
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:334
+#: heat/engine/service.py:344
 msgid "Attempting to stop engine service..."
 msgstr ""
 
-#: heat/engine/service.py:345
+#: heat/engine/service.py:355
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:349
+#: heat/engine/service.py:359
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:352
+#: heat/engine/service.py:364
+#, python-format
+msgid "Service %s is deleted"
+msgstr ""
+
+#: heat/engine/service.py:367
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:541
+#: heat/engine/service.py:556
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:575
+#: heat/engine/service.py:590
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:598
+#: heat/engine/service.py:613
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:636
+#: heat/engine/service.py:651
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:698
+#: heat/engine/service.py:713
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:827
+#: heat/engine/service.py:842
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:880
+#: heat/engine/service.py:895
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1165
+#: heat/engine/service.py:1180
 #, python-format
 msgid "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1208
+#: heat/engine/service.py:1223
 #, python-format
 msgid "Checking stack %s"
+msgstr ""
+
+#: heat/engine/service.py:1512
+#, python-format
+msgid "Service %s is updated"
+msgstr ""
+
+#: heat/engine/service.py:1523
+#, python-format
+msgid "Service %s was aborted"
+msgstr ""
+
+#: heat/engine/service.py:1532
+#, python-format
+msgid "Service %s is restarted"
+msgstr ""
+
+#: heat/engine/service.py:1545
+#, python-format
+msgid "Service %s is started"
 msgstr ""
 
 #: heat/engine/stack.py:537
@@ -259,7 +284,7 @@ msgid ""
 " first"
 msgstr ""
 
-#: heat/engine/stack_resource.py:283
+#: heat/engine/stack_resource.py:304
 msgid "Stack not found to delete"
 msgstr ""
 
@@ -343,27 +368,6 @@ msgstr ""
 msgid "ElasticIp create %s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:92
-#: heat/engine/resources/aws/scaling_policy.py:118
-#, python-format
-msgid "%(name)s Alarm, new state %(state)s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:101
-#, python-format
-msgid "%(name)s Alarm, can not find instance %(instance)s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:107
-#, python-format
-msgid "%(name)s Alarm, restarting resource: %(victim)s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:478
-#, python-format
-msgid "%(name)s._resolve_attribute(%(attname)s) == %(res)s"
-msgstr ""
-
 #: heat/engine/resources/loadbalancer.py:504
 #, python-format
 msgid "Using custom loadbalancer template %s"
@@ -432,14 +436,20 @@ msgstr ""
 msgid "%s Succeeded"
 msgstr ""
 
-#: heat/engine/resources/user.py:229 heat/engine/resources/user.py:249
-#, python-format
-msgid "could not get secret for %(username)s Error:%(msg)s"
-msgstr ""
-
 #: heat/engine/resources/aws/autoscaling_group.py:301
 #, python-format
 msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:393
+#, python-format
+msgid "%(name)s._resolve_attribute(%(attname)s) == %(res)s"
+msgstr ""
+
+#: heat/engine/resources/aws/scaling_policy.py:118
+#: heat/engine/resources/openstack/ha_restarter.py:83
+#, python-format
+msgid "%(name)s Alarm, new state %(state)s"
 msgstr ""
 
 #: heat/engine/resources/aws/scaling_policy.py:124
@@ -454,6 +464,21 @@ msgstr ""
 msgid ""
 "%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by "
 "%(filter)s"
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:231 heat/engine/resources/aws/user.py:251
+#, python-format
+msgid "could not get secret for %(username)s Error:%(msg)s"
+msgstr ""
+
+#: heat/engine/resources/openstack/ha_restarter.py:92
+#, python-format
+msgid "%(name)s Alarm, can not find instance %(instance)s"
+msgstr ""
+
+#: heat/engine/resources/openstack/ha_restarter.py:98
+#, python-format
+msgid "%(name)s Alarm, restarting resource: %(victim)s"
 msgstr ""
 
 #: heat/engine/resources/openstack/scaling_policy.py:127

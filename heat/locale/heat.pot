@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev307\n"
+"Project-Id-Version: heat 2015.1.dev26\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-02 06:01+0000\n"
+"POT-Creation-Date: 2015-02-09 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -190,6 +190,10 @@ msgstr ""
 msgid "No event %s found"
 msgstr ""
 
+#: heat/api/openstack/v1/services.py:43
+msgid "All heat engines are down."
+msgstr ""
+
 #: heat/api/openstack/v1/stacks.py:85
 #, python-format
 msgid "%(type)s not in valid format: %(error)s"
@@ -217,11 +221,39 @@ msgstr ""
 msgid "Invalid Stack address"
 msgstr ""
 
-#: heat/cmd/manage.py:66
+#: heat/cmd/manage.py:56
+msgid "Hostname"
+msgstr ""
+
+#: heat/cmd/manage.py:57
+msgid "Binary"
+msgstr ""
+
+#: heat/cmd/manage.py:58
+msgid "Engine_Id"
+msgstr ""
+
+#: heat/cmd/manage.py:59
+msgid "Host"
+msgstr ""
+
+#: heat/cmd/manage.py:60
+msgid "Topic"
+msgstr ""
+
+#: heat/cmd/manage.py:61
+msgid "Status"
+msgstr ""
+
+#: heat/cmd/manage.py:62
+msgid "Updated At"
+msgstr ""
+
+#: heat/cmd/manage.py:101
 msgid "How long to preserve deleted data."
 msgstr ""
 
-#: heat/cmd/manage.py:70
+#: heat/cmd/manage.py:105
 msgid "Granularity to use for age argument, defaults to days."
 msgstr ""
 
@@ -721,6 +753,11 @@ msgid ""
 "(%(engine_id)s)"
 msgstr ""
 
+#: heat/common/exception.py:396
+#, python-format
+msgid "Service %(service_id)s does not found"
+msgstr ""
+
 #: heat/common/heat_keystoneclient.py:107
 msgid ""
 "heat.conf misconfigured, cannot specify \"stack_user_domain_id\" or "
@@ -904,86 +941,86 @@ msgid ""
 " or otherwise incorrect."
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:92
+#: heat/db/sqlalchemy/api.py:93
 #, python-format
 msgid "raw template with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:120
+#: heat/db/sqlalchemy/api.py:121
 #, python-format
 msgid "resource with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:152
+#: heat/db/sqlalchemy/api.py:153
 msgid "no resources were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:166
+#: heat/db/sqlalchemy/api.py:167
 msgid "no resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:215
+#: heat/db/sqlalchemy/api.py:216
 msgid "No resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:271
+#: heat/db/sqlalchemy/api.py:272
 #, python-format
 msgid "no resources for stack_id %s were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:419
+#: heat/db/sqlalchemy/api.py:420
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:431
+#: heat/db/sqlalchemy/api.py:432
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:493
+#: heat/db/sqlalchemy/api.py:494
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:518
+#: heat/db/sqlalchemy/api.py:519
 #, python-format
 msgid "Attempt to delete user creds with id %(id)s that does not exist"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:672
+#: heat/db/sqlalchemy/api.py:673
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:683
+#: heat/db/sqlalchemy/api.py:684
 #, python-format
 msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:722
+#: heat/db/sqlalchemy/api.py:723
 #, python-format
 msgid "Software config with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:749
+#: heat/db/sqlalchemy/api.py:750
 #, python-format
 msgid "Deployment with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:795
+#: heat/db/sqlalchemy/api.py:796
 #, python-format
 msgid "Snapshot with id %s not found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:823
+#: heat/db/sqlalchemy/api.py:868
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:825
+#: heat/db/sqlalchemy/api.py:870
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:829
+#: heat/db/sqlalchemy/api.py:874
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
@@ -1320,9 +1357,10 @@ msgid "Went to status %(resource_status)s due to \"%(status_reason)s\""
 msgstr ""
 
 #: heat/engine/resource.py:67 heat/engine/resource.py:77
-#: heat/engine/resources/instance.py:691 heat/engine/resources/instance.py:692
 #: heat/engine/resources/os_database.py:360 heat/engine/resources/server.py:602
 #: heat/engine/resources/server.py:603
+#: heat/engine/resources/aws/instance.py:606
+#: heat/engine/resources/aws/instance.py:607
 msgid "Unknown"
 msgstr ""
 
@@ -1399,31 +1437,31 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:484
+#: heat/engine/service.py:499
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:641
+#: heat/engine/service.py:656
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:645
+#: heat/engine/service.py:660
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:695
+#: heat/engine/service.py:710
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:734
+#: heat/engine/service.py:749
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1403
+#: heat/engine/service.py:1418
 msgid "server_id must be specified"
 msgstr ""
 
@@ -1462,41 +1500,36 @@ msgstr ""
 msgid "Output validation error: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:65
+#: heat/engine/stack_resource.py:66
 #, python-format
 msgid "Failed to validate: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:101
+#: heat/engine/stack_resource.py:102
 msgid "Nested stack not found in DB"
 msgstr ""
 
-#: heat/engine/stack_resource.py:158
+#: heat/engine/stack_resource.py:159
 #, python-format
 msgid "Recursion depth exceeds %d."
 msgstr ""
 
-#: heat/engine/stack_resource.py:249
-#, python-format
-msgid "Cannot update %s, stack not created"
-msgstr ""
-
-#: heat/engine/stack_resource.py:272
+#: heat/engine/stack_resource.py:293
 #, python-format
 msgid "Nested stack UPDATE failed: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:306
+#: heat/engine/stack_resource.py:327
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:328
+#: heat/engine/stack_resource.py:349
 #, python-format
 msgid "Cannot resume %s, stack not created"
 msgstr ""
 
-#: heat/engine/stack_resource.py:350
+#: heat/engine/stack_resource.py:371
 #, python-format
 msgid "Cannot check %s, stack not created"
 msgstr ""
@@ -2010,244 +2043,29 @@ msgid ""
 "\"swift://example.com/container/obj\"."
 msgstr ""
 
-#: heat/engine/resources/instance.py:41
-msgid ""
-"The HARestarter resource type is unsupported and will be removed in a "
-"future release of Heat, once it has support for auto-healing any type of "
-"resource. Note that HARestarter does *not* actually restart servers - it "
-"deletes and then recreates them. It also does the same to all dependent "
-"resources, and may therefore exhibit unexpected and undesirable "
-"behaviour. Avoid."
-msgstr ""
-
-#: heat/engine/resources/instance.py:64
-msgid "Instance ID to be restarted."
-msgstr ""
-
-#: heat/engine/resources/instance.py:74
-msgid "A signed url to handle the alarm (Heat extension)."
-msgstr ""
-
-#: heat/engine/resources/instance.py:84
-#: heat/engine/resources/aws/scaling_policy.py:101
-#: heat/engine/resources/openstack/scaling_policy.py:110
-#: heat/tests/generic_resource.py:142
-#, python-format
-msgid "Cannot signal resource during %s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:181
-#: heat/engine/resources/aws/launch_config.py:60
-msgid "Glance image ID or name."
-msgstr ""
-
-#: heat/engine/resources/instance.py:191
-#: heat/engine/resources/aws/launch_config.py:67
-msgid "Nova instance type (flavor)."
-msgstr ""
-
-#: heat/engine/resources/instance.py:200
-#: heat/engine/resources/aws/launch_config.py:83
-msgid "Optional Nova keypair name."
-msgstr ""
-
-#: heat/engine/resources/instance.py:207
-msgid "Availability zone to launch the instance in."
-msgstr ""
-
-#: heat/engine/resources/instance.py:211 heat/engine/resources/instance.py:216
-#: heat/engine/resources/instance.py:221 heat/engine/resources/instance.py:226
-#: heat/engine/resources/instance.py:231 heat/engine/resources/instance.py:236
-#: heat/engine/resources/instance.py:254 heat/engine/resources/instance.py:299
 #: heat/engine/resources/instance_group.py:66
 #: heat/engine/resources/loadbalancer.py:369
 #: heat/engine/resources/loadbalancer.py:374
 #: heat/engine/resources/loadbalancer.py:383
 #: heat/engine/resources/loadbalancer.py:388
 #: heat/engine/resources/loadbalancer.py:393
-#: heat/engine/resources/loadbalancer.py:398 heat/engine/resources/user.py:51
-#: heat/engine/resources/user.py:55 heat/engine/resources/user.py:147
-#: heat/engine/resources/user.py:157
+#: heat/engine/resources/loadbalancer.py:398
 #: heat/engine/resources/aws/autoscaling_group.py:119
 #: heat/engine/resources/aws/autoscaling_group.py:161
 #: heat/engine/resources/aws/autoscaling_group.py:166
+#: heat/engine/resources/aws/instance.py:126
+#: heat/engine/resources/aws/instance.py:131
+#: heat/engine/resources/aws/instance.py:136
+#: heat/engine/resources/aws/instance.py:141
+#: heat/engine/resources/aws/instance.py:146
+#: heat/engine/resources/aws/instance.py:151
+#: heat/engine/resources/aws/instance.py:169
+#: heat/engine/resources/aws/instance.py:214
 #: heat/engine/resources/aws/launch_config.py:98
 #: heat/engine/resources/aws/launch_config.py:103
+#: heat/engine/resources/aws/user.py:53 heat/engine/resources/aws/user.py:57
+#: heat/engine/resources/aws/user.py:149 heat/engine/resources/aws/user.py:159
 msgid "Not Implemented."
-msgstr ""
-
-#: heat/engine/resources/instance.py:241
-#: heat/engine/resources/aws/launch_config.py:94
-msgid "Security group names to assign."
-msgstr ""
-
-#: heat/engine/resources/instance.py:245
-msgid "Security group IDs to assign."
-msgstr ""
-
-#: heat/engine/resources/instance.py:249
-msgid "Network interfaces to associate with instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:259
-msgid "Subnet ID to launch instance in."
-msgstr ""
-
-#: heat/engine/resources/instance.py:264
-msgid "Tags to attach to instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:282
-#: heat/engine/resources/aws/launch_config.py:176
-msgid "Scheduler hints to pass to Nova (Heat extension)."
-msgstr ""
-
-#: heat/engine/resources/instance.py:307
-#: heat/engine/resources/aws/launch_config.py:90
-msgid "User data to pass to instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:311
-msgid "Volumes to attach to instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:318
-#: heat/engine/resources/aws/volume.py:230
-msgid ""
-"The device where the volume is exposed on the instance. This assignment "
-"may not be honored and it is advised that the path /dev/disk/by-"
-"id/virtio-<VolumeId> be used instead."
-msgstr ""
-
-#: heat/engine/resources/instance.py:327
-#: heat/engine/resources/aws/volume.py:221
-#: heat/engine/resources/openstack/volume.py:378
-msgid "The ID of the volume to be attached."
-msgstr ""
-
-#: heat/engine/resources/instance.py:338
-#: heat/engine/resources/aws/launch_config.py:108
-msgid "Block device mappings to attach to instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:344
-#: heat/engine/resources/aws/launch_config.py:114
-msgid ""
-"A device name where the volume will be attached in the system at "
-"/dev/device_name.e.g. vdb"
-msgstr ""
-
-#: heat/engine/resources/instance.py:351
-#: heat/engine/resources/aws/launch_config.py:121
-msgid "The ebs volume to attach to the instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:355
-#: heat/engine/resources/aws/launch_config.py:125
-msgid ""
-"Indicate whether the volume should be deleted when the instance is "
-"terminated."
-msgstr ""
-
-#: heat/engine/resources/instance.py:361
-#: heat/engine/resources/aws/launch_config.py:131
-msgid "The number of I/O operations per second that the volume supports."
-msgstr ""
-
-#: heat/engine/resources/instance.py:367 heat/engine/resources/server.py:135
-#: heat/engine/resources/aws/launch_config.py:137
-msgid "The ID of the snapshot to create a volume from."
-msgstr ""
-
-#: heat/engine/resources/instance.py:376
-#: heat/engine/resources/aws/launch_config.py:146
-msgid ""
-"The size of the volume, in GB. Must be equal or greater than the size of "
-"the snapshot. It is safe to leave this blank and have the Compute service"
-" infer the size."
-msgstr ""
-
-#: heat/engine/resources/instance.py:384
-#: heat/engine/resources/aws/launch_config.py:154
-msgid "The volume type."
-msgstr ""
-
-#: heat/engine/resources/instance.py:391
-#: heat/engine/resources/aws/launch_config.py:161
-msgid "The can be used to unmap a defined device."
-msgstr ""
-
-#: heat/engine/resources/instance.py:396
-#: heat/engine/resources/aws/launch_config.py:166
-msgid ""
-"The name of the virtual device. The name must be in the form ephemeralX "
-"where X is a number starting from zero (0); for example, ephemeral0."
-msgstr ""
-
-#: heat/engine/resources/instance.py:408
-msgid "The Availability Zone where the specified instance is launched."
-msgstr ""
-
-#: heat/engine/resources/instance.py:412
-msgid "Private DNS name of the specified instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:415
-msgid "Public DNS name of the specified instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:418
-msgid "Private IP address of the specified instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:421
-msgid "Public IP address of the specified instance."
-msgstr ""
-
-#: heat/engine/resources/instance.py:690 heat/engine/resources/server.py:601
-#, python-format
-msgid "Message: %(message)s, Code: %(code)s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:697
-msgid "Instance is not active"
-msgstr ""
-
-#: heat/engine/resources/instance.py:720
-#, python-format
-msgid "Instance is not ACTIVE (was: %s)"
-msgstr ""
-
-#: heat/engine/resources/instance.py:850
-#: heat/engine/resources/aws/launch_config.py:239
-msgid ""
-"SnapshotId is missing, this is required when specifying "
-"BlockDeviceMappings."
-msgstr ""
-
-#: heat/engine/resources/instance.py:854
-#: heat/engine/resources/aws/launch_config.py:243
-msgid "Ebs is missing, this is required when specifying BlockDeviceMappings."
-msgstr ""
-
-#: heat/engine/resources/instance.py:903 heat/engine/resources/server.py:1098
-#, python-format
-msgid "Cannot suspend %s, resource_id not set"
-msgstr ""
-
-#: heat/engine/resources/instance.py:910 heat/engine/resources/instance.py:967
-#, python-format
-msgid "Failed to find instance %s"
-msgstr ""
-
-#: heat/engine/resources/instance.py:943
-#, python-format
-msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
-msgstr ""
-
-#: heat/engine/resources/instance.py:960 heat/engine/resources/server.py:1147
-#, python-format
-msgid "Cannot resume %s, resource_id not set"
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:71
@@ -2764,11 +2582,11 @@ msgstr ""
 msgid "Resource action mismatch detected: expected=%(expected)s actual=%(actual)s"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:100
+#: heat/engine/resources/resource_group.py:101
 msgid "The number of instances to create."
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:109
+#: heat/engine/resources/resource_group.py:110
 msgid ""
 "A variable that this resource will use to replace with the current index "
 "of a given resource in the group. Can be used, for example, to customize "
@@ -2776,32 +2594,32 @@ msgid ""
 "listed with nova client."
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:122
+#: heat/engine/resources/resource_group.py:123
 msgid ""
 "Resource definition for the resources in the group. The value of this "
 "property is the definition of a resource just as if it had been declared "
 "in the template itself."
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:128
+#: heat/engine/resources/resource_group.py:129
 msgid "The type of the resources in the group"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:133
+#: heat/engine/resources/resource_group.py:134
 msgid "Property values for the resources in the group"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:141
+#: heat/engine/resources/resource_group.py:142
 msgid "Policies for removal of resources on update"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:144
+#: heat/engine/resources/resource_group.py:145
 msgid ""
 "Policy to be processed when doing an update which requires removal of "
 "specific resources."
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:149
+#: heat/engine/resources/resource_group.py:150
 msgid ""
 "List of resources to be removed when doing an update which requires "
 "removal of specific resources. The resource may be specified several "
@@ -2812,11 +2630,11 @@ msgid ""
 "it's name is never reused in subsequent updates"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:174
+#: heat/engine/resources/resource_group.py:175
 msgid "A list of resource IDs for the resources in the group"
 msgstr ""
 
-#: heat/engine/resources/resource_group.py:177
+#: heat/engine/resources/resource_group.py:178
 msgid ""
 "A map of resource names to the specified attribute of each individual "
 "resource.  Requires heat_template_version: 2014-10-16."
@@ -3081,6 +2899,12 @@ msgid ""
 "should be provided."
 msgstr ""
 
+#: heat/engine/resources/server.py:135
+#: heat/engine/resources/aws/instance.py:282
+#: heat/engine/resources/aws/launch_config.py:137
+msgid "The ID of the snapshot to create a volume from."
+msgstr ""
+
 #: heat/engine/resources/server.py:143
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have "
@@ -3265,6 +3089,12 @@ msgid ""
 "are novnc, xvpvnc, spice-html5, rdp-html5, serial."
 msgstr ""
 
+#: heat/engine/resources/server.py:601
+#: heat/engine/resources/aws/instance.py:605
+#, python-format
+msgid "Message: %(message)s, Code: %(code)s"
+msgstr ""
+
 #: heat/engine/resources/server.py:608
 msgid "Server is not active"
 msgstr ""
@@ -3306,6 +3136,12 @@ msgid ""
 "allowed personality file size (%(max_size)s bytes)."
 msgstr ""
 
+#: heat/engine/resources/server.py:1098
+#: heat/engine/resources/aws/instance.py:818
+#, python-format
+msgid "Cannot suspend %s, resource_id not set"
+msgstr ""
+
 #: heat/engine/resources/server.py:1105 heat/engine/resources/server.py:1154
 #, python-format
 msgid "Failed to find server %s"
@@ -3314,6 +3150,12 @@ msgstr ""
 #: heat/engine/resources/server.py:1134
 #, python-format
 msgid "Suspend of server %(server)s failed with unknown status: %(status)s"
+msgstr ""
+
+#: heat/engine/resources/server.py:1147
+#: heat/engine/resources/aws/instance.py:875
+#, python-format
+msgid "Cannot resume %s, resource_id not set"
 msgstr ""
 
 #: heat/engine/resources/stack.py:39
@@ -3532,42 +3374,6 @@ msgstr ""
 msgid "Failed to retrieve template data: %s"
 msgstr ""
 
-#: heat/engine/resources/user.py:59
-msgid "A login profile for the user."
-msgstr ""
-
-#: heat/engine/resources/user.py:68
-msgid "Access policies to apply to the user."
-msgstr ""
-
-#: heat/engine/resources/user.py:152
-msgid "The name of the user that the new key will belong to."
-msgstr ""
-
-#: heat/engine/resources/user.py:167
-msgid "Username associated with the AccessKey."
-msgstr ""
-
-#: heat/engine/resources/user.py:171
-msgid "Keypair secret key."
-msgstr ""
-
-#: heat/engine/resources/user.py:199
-#, python-format
-msgid "could not find user %s"
-msgstr ""
-
-#: heat/engine/resources/user.py:280
-msgid ""
-"Resources that users are allowed to access by the DescribeStackResource "
-"API."
-msgstr ""
-
-#: heat/engine/resources/user.py:297
-#, python-format
-msgid "AccessPolicy resource %s not in stack"
-msgstr ""
-
 #: heat/engine/resources/vpc.py:39
 msgid "CIDR block to apply to the VPC."
 msgstr ""
@@ -3659,6 +3465,180 @@ msgstr ""
 msgid "Either 'InstanceId' or 'LaunchConfigurationName' must be provided."
 msgstr ""
 
+#: heat/engine/resources/aws/instance.py:96
+#: heat/engine/resources/aws/launch_config.py:60
+msgid "Glance image ID or name."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:106
+#: heat/engine/resources/aws/launch_config.py:67
+msgid "Nova instance type (flavor)."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:115
+#: heat/engine/resources/aws/launch_config.py:83
+msgid "Optional Nova keypair name."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:122
+msgid "Availability zone to launch the instance in."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:156
+#: heat/engine/resources/aws/launch_config.py:94
+msgid "Security group names to assign."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:160
+msgid "Security group IDs to assign."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:164
+msgid "Network interfaces to associate with instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:174
+msgid "Subnet ID to launch instance in."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:179
+msgid "Tags to attach to instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:197
+#: heat/engine/resources/aws/launch_config.py:176
+msgid "Scheduler hints to pass to Nova (Heat extension)."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:222
+#: heat/engine/resources/aws/launch_config.py:90
+msgid "User data to pass to instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:226
+msgid "Volumes to attach to instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:233
+#: heat/engine/resources/aws/volume.py:230
+msgid ""
+"The device where the volume is exposed on the instance. This assignment "
+"may not be honored and it is advised that the path /dev/disk/by-"
+"id/virtio-<VolumeId> be used instead."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:242
+#: heat/engine/resources/aws/volume.py:221
+#: heat/engine/resources/openstack/volume.py:378
+msgid "The ID of the volume to be attached."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:253
+#: heat/engine/resources/aws/launch_config.py:108
+msgid "Block device mappings to attach to instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:259
+#: heat/engine/resources/aws/launch_config.py:114
+msgid ""
+"A device name where the volume will be attached in the system at "
+"/dev/device_name.e.g. vdb"
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:266
+#: heat/engine/resources/aws/launch_config.py:121
+msgid "The ebs volume to attach to the instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:270
+#: heat/engine/resources/aws/launch_config.py:125
+msgid ""
+"Indicate whether the volume should be deleted when the instance is "
+"terminated."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:276
+#: heat/engine/resources/aws/launch_config.py:131
+msgid "The number of I/O operations per second that the volume supports."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:291
+#: heat/engine/resources/aws/launch_config.py:146
+msgid ""
+"The size of the volume, in GB. Must be equal or greater than the size of "
+"the snapshot. It is safe to leave this blank and have the Compute service"
+" infer the size."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:299
+#: heat/engine/resources/aws/launch_config.py:154
+msgid "The volume type."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:306
+#: heat/engine/resources/aws/launch_config.py:161
+msgid "The can be used to unmap a defined device."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:311
+#: heat/engine/resources/aws/launch_config.py:166
+msgid ""
+"The name of the virtual device. The name must be in the form ephemeralX "
+"where X is a number starting from zero (0); for example, ephemeral0."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:323
+msgid "The Availability Zone where the specified instance is launched."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:327
+msgid "Private DNS name of the specified instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:330
+msgid "Public DNS name of the specified instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:333
+msgid "Private IP address of the specified instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:336
+msgid "Public IP address of the specified instance."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:612
+msgid "Instance is not active"
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:635
+#, python-format
+msgid "Instance is not ACTIVE (was: %s)"
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:765
+#: heat/engine/resources/aws/launch_config.py:239
+msgid ""
+"SnapshotId is missing, this is required when specifying "
+"BlockDeviceMappings."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:769
+#: heat/engine/resources/aws/launch_config.py:243
+msgid "Ebs is missing, this is required when specifying BlockDeviceMappings."
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:825
+#: heat/engine/resources/aws/instance.py:882
+#, python-format
+msgid "Failed to find instance %s"
+msgstr ""
+
+#: heat/engine/resources/aws/instance.py:858
+#, python-format
+msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
+msgstr ""
+
 #: heat/engine/resources/aws/launch_config.py:74
 msgid ""
 "The ID of an existing instance you want to use to create the launch "
@@ -3688,10 +3668,43 @@ msgstr ""
 msgid "A signed url to handle the alarm. (Heat extension)."
 msgstr ""
 
+#: heat/engine/resources/aws/scaling_policy.py:101
+#: heat/engine/resources/openstack/ha_restarter.py:75
+#: heat/engine/resources/openstack/scaling_policy.py:110
+#: heat/tests/generic_resource.py:142
+#, python-format
+msgid "Cannot signal resource during %s"
+msgstr ""
+
 #: heat/engine/resources/aws/scaling_policy.py:133
 #: heat/engine/resources/openstack/scaling_policy.py:142
 #, python-format
 msgid "Alarm %(alarm)s could not find scaling group named \"%(group)s\""
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:61
+msgid "A login profile for the user."
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:70
+msgid "Access policies to apply to the user."
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:154
+msgid "The name of the user that the new key will belong to."
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:169
+msgid "Username associated with the AccessKey."
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:173
+msgid "Keypair secret key."
+msgstr ""
+
+#: heat/engine/resources/aws/user.py:201
+#, python-format
+msgid "could not find user %s"
 msgstr ""
 
 #: heat/engine/resources/aws/volume.py:40
@@ -3830,11 +3843,11 @@ msgstr ""
 msgid "String value with which to compare"
 msgstr ""
 
-#: heat/engine/resources/ceilometer/alarm.py:324
+#: heat/engine/resources/ceilometer/alarm.py:329
 msgid "List of alarm identifiers to combine."
 msgstr ""
 
-#: heat/engine/resources/ceilometer/alarm.py:330
+#: heat/engine/resources/ceilometer/alarm.py:335
 msgid "Operator used to combine the alarms."
 msgstr ""
 
@@ -5206,6 +5219,17 @@ msgstr ""
 msgid "The transform protocol of the ipsec policy."
 msgstr ""
 
+#: heat/engine/resources/openstack/access_policy.py:35
+msgid ""
+"Resources that users are allowed to access by the DescribeStackResource "
+"API."
+msgstr ""
+
+#: heat/engine/resources/openstack/access_policy.py:52
+#, python-format
+msgid "AccessPolicy resource %s not in stack"
+msgstr ""
+
 #: heat/engine/resources/openstack/autoscaling_group.py:50
 msgid ""
 "Resource definition for the resources in the group, in HOT format. The "
@@ -5255,6 +5279,24 @@ msgstr ""
 
 #: heat/engine/resources/openstack/autoscaling_group.py:117
 msgid "The current size of AutoscalingResourceGroup."
+msgstr ""
+
+#: heat/engine/resources/openstack/ha_restarter.py:32
+msgid ""
+"The HARestarter resource type is unsupported and will be removed in a "
+"future release of Heat, once it has support for auto-healing any type of "
+"resource. Note that HARestarter does *not* actually restart servers - it "
+"deletes and then recreates them. It also does the same to all dependent "
+"resources, and may therefore exhibit unexpected and undesirable "
+"behaviour. Avoid."
+msgstr ""
+
+#: heat/engine/resources/openstack/ha_restarter.py:55
+msgid "Instance ID to be restarted."
+msgstr ""
+
+#: heat/engine/resources/openstack/ha_restarter.py:65
+msgid "A signed url to handle the alarm (Heat extension)."
 msgstr ""
 
 #: heat/engine/resources/openstack/scaling_policy.py:58
@@ -5440,7 +5482,7 @@ msgid ""
 "represented software component."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_component.py:152
+#: heat/engine/resources/software_config/software_component.py:153
 #, python-format
 msgid ""
 "Defining more than one configuration for the same action in "
@@ -5611,39 +5653,39 @@ msgstr ""
 msgid "ID of project for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:470
+#: heat/engine/resources/software_config/software_deployment.py:467
 #, python-format
 msgid "Deployment exited with non-zero status code: %s"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:497
+#: heat/engine/resources/software_config/software_deployment.py:494
 msgid "Outputs received"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:539
+#: heat/engine/resources/software_config/software_deployment.py:536
 #, python-format
 msgid ""
 "Resource %s's property user_data_format should be set to SOFTWARE_CONFIG "
 "since there are software deployments on it."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:577
+#: heat/engine/resources/software_config/software_deployment.py:574
 msgid "A map of Nova names and IDs to apply configuration to."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:589
+#: heat/engine/resources/software_config/software_deployment.py:586
 msgid ""
 "A map of Nova names and captured stdouts from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:593
+#: heat/engine/resources/software_config/software_deployment.py:590
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:597
+#: heat/engine/resources/software_config/software_deployment.py:594
 msgid ""
 "A map of Nova names and returned status code from the configuration "
 "execution"
@@ -5783,7 +5825,7 @@ msgid ""
 "deprecated. Use only \"network\" property."
 msgstr ""
 
-#: heat/tests/test_software_deployment.py:735
+#: heat/tests/test_software_deployment.py:736
 msgid "need more memory."
 msgstr ""
 
