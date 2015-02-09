@@ -309,3 +309,19 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         mock_instances = self.patchobject(grouputils, 'get_size')
         mock_instances.return_value = 4
         self.assertEqual(4, self.group.FnGetAtt('current_size', 'name'))
+
+    def test_index_dotted_attribute(self):
+        mock_members = self.patchobject(grouputils, 'get_members')
+        members = []
+        output = []
+        for ip_ex in six.moves.range(0, 2):
+            inst = mock.Mock()
+            inst.name = str(ip_ex)
+            inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
+            output.append('2.1.3.%d' % ip_ex)
+            members.append(inst)
+        mock_members.return_value = members
+        self.assertEqual(output[0], self.group.FnGetAtt('resource.0', 'Bar'))
+        self.assertEqual(output[1], self.group.FnGetAtt('resource.1.Bar'))
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          self.group.FnGetAtt, 'resource.2')
