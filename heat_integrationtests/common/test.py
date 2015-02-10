@@ -311,7 +311,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
-        self._wait_for_stack_status(stack_identifier, expected_status)
+        if expected_status:
+            self._wait_for_stack_status(stack_identifier, expected_status)
         return stack_identifier
 
     def stack_adopt(self, stack_name=None, files=None,

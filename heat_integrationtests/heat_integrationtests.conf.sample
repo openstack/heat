@@ -67,6 +67,9 @@
 # The mask bits for tenant ipv4 subnets (integer value)
 #tenant_network_mask_bits = 28
 
+# Skip software config deployment tests (boolean value)
+#skip_software_config_tests = true
+
 # Default size in GB for volumes created by volumes tests (integer value)
 #volume_size = 1
 
