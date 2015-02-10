@@ -282,7 +282,7 @@ class SwiftSignal(resource.Resource):
             # Make sure all fields are set, since all are optional
             signal.setdefault(self.DATA, None)
             unique_id = signal.setdefault(sig_id, signal_num)
-            reason = 'Signal %s recieved' % unique_id
+            reason = 'Signal %s received' % unique_id
             signal.setdefault(self.REASON, reason)
             signal.setdefault(self.STATUS, self.STATUS_SUCCESS)
 
