@@ -915,7 +915,8 @@ class CloudLoadBalancer(resource.Resource):
                 self.PUBLIC_IP: self._public_ip(lb),
                 self.VIPS: [{"id": vip.id,
                              "type": vip.type,
-                             "ip_version": vip.ip_version}
+                             "ip_version": vip.ip_version,
+                             "address": vip.address}
                             for vip in lb.virtual_ips]
             }
             if key not in attribute_function:
