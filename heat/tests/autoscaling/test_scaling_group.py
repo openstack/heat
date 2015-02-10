@@ -442,3 +442,20 @@ class TestGroupCrud(common.HeatTestCase):
         config, props = group._get_conf_properties()
         self.assertEqual('xxxx', props['SubnetId'])
         conf.delete()
+
+    def test_update_in_failed(self):
+        self.group.state_set('CREATE', 'FAILED')
+        # to update the failed asg
+        self.group.adjust = mock.Mock(return_value=None)
+
+        new_defn = rsrc_defn.ResourceDefinition(
+            'asg', 'AWS::AutoScaling::AutoScalingGroup',
+            {'AvailabilityZones': ['nova'],
+             'LaunchConfigurationName': 'config',
+             'MaxSize': 5,
+             'MinSize': 1,
+             'DesiredCapacity': 2})
+
+        self.group.handle_update(new_defn, None, None)
+        self.group.adjust.assert_called_once_with(
+            2, adjustment_type='ExactCapacity')
