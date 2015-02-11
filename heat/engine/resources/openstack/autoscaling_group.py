@@ -125,12 +125,6 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             properties=rsrc.get('properties'),
             metadata=rsrc.get('metadata'))
 
-    def _lb_reload(self, exclude=None):
-        """AutoScalingResourceGroup does not maintain load balancer
-        connections, so we just ignore calls to update the LB.
-        """
-        pass
-
     def _try_rolling_update(self, prop_diff):
         if (self.properties[self.ROLLING_UPDATES] and
                 self.RESOURCE in prop_diff):
