@@ -147,7 +147,7 @@ class NovaFloatingIpAssociation(resource.Resource):
                     self.properties[self.FLOATING_IP])
                 self.nova().servers.remove_floating_ip(server, fl_ip.ip)
         except Exception as e:
-            self.client_plugin().ignore_not_found(e)
+            self.client_plugin().ignore_conflict_and_not_found(e)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

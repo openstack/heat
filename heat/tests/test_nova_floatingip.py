@@ -58,7 +58,6 @@ floating_ip_template_with_assoc = '''
 
 
 class NovaFloatingIPTest(common.HeatTestCase):
-
     def setUp(self):
         super(NovaFloatingIPTest, self).setUp()
 
@@ -199,6 +198,38 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
+
+    def create_delete_assoc_with_exc(self, exc_code):
+        rsrc = self.prepare_floating_ip_assoc()
+        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        self.novaclient.servers.get(
+            "67dc62f9-efde-4c8b-94af-013e00f5dc57").AndReturn("server")
+        self.novaclient.floating_ips.get('1').AndReturn(
+            self._make_obj(**{
+                "id": "1",
+                "ip": "11.0.0.1",
+                "pool": "public"
+            })
+        )
+        self.novaclient.servers.remove_floating_ip("server",
+                                                   "11.0.0.1").AndRaise(
+            fakes_v1_1.fake_exception(exc_code))
+
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_floating_ip_assoc_delete_conflict(self):
+        self.create_delete_assoc_with_exc(exc_code=409)
+
+    def test_floating_ip_assoc_delete_not_found(self):
+        self.create_delete_assoc_with_exc(exc_code=404)
 
     def test_floating_ip_assoc_update_server_id(self):
         rsrc = self.prepare_floating_ip_assoc()
