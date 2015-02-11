@@ -2011,9 +2011,13 @@ class StackTest(common.HeatTestCase):
                                   disable_rollback=False,
                                   adopt_stack_data=json.loads(adopt_data))
         self.stack.store()
-        self.stack.adopt()
-        self.assertEqual((self.stack.ROLLBACK, self.stack.COMPLETE),
-                         self.stack.state)
+        with mock.patch.object(self.stack, 'delete',
+                               side_effect=self.stack.delete) as mock_delete:
+            self.stack.adopt()
+            self.assertEqual((self.stack.ROLLBACK, self.stack.COMPLETE),
+                             self.stack.state)
+            mock_delete.assert_called_once_with(action=self.stack.ROLLBACK,
+                                                abandon=True)
 
     def test_resource_by_refid(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
