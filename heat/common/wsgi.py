@@ -20,6 +20,7 @@
 Utility methods for working with WSGI servers
 """
 
+import abc
 import errno
 import json
 import logging
@@ -771,6 +772,7 @@ def translate_exception(exc, locale):
     return exc
 
 
+@six.add_metaclass(abc.ABCMeta)
 class BasePasteFactory(object):
 
     """A base class for paste app and filter factories.
@@ -784,8 +786,9 @@ class BasePasteFactory(object):
     def __init__(self, conf):
         self.conf = conf
 
+    @abc.abstractmethod
     def __call__(self, global_conf, **local_conf):
-        raise NotImplementedError
+        return
 
     def _import_factory(self, local_conf):
         """Import an app/filter class.
