@@ -11,7 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+
 import mock
+from oslo_utils import timeutils
+import pytz
 from testtools import matchers
 
 from heat.engine.clients.os import swift
@@ -120,3 +124,15 @@ class SwiftUtilsTests(SwiftClientPluginTestCase):
                   "temp_url_expires=[0-9]{10}" %
                   (container_name, obj_name))
         self.assertThat(url, matchers.MatchesRegex(regexp))
+
+    def test_parse_last_modified(self):
+        self.assertIsNone(self.swift_plugin.parse_last_modified(None))
+        now = datetime.datetime(
+            2015, 2, 5, 1, 4, 40, 0, pytz.timezone('GMT'))
+        now_naive = datetime.datetime(
+            2015, 2, 5, 1, 4, 40, 0)
+        last_modified = timeutils.strtime(now, '%a, %d %b %Y %H:%M:%S %Z')
+        self.assertEqual('Thu, 05 Feb 2015 01:04:40 GMT', last_modified)
+        self.assertEqual(
+            now_naive,
+            self.swift_plugin.parse_last_modified(last_modified))

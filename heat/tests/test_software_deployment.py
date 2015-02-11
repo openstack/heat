@@ -12,6 +12,8 @@
 #    under the License.
 
 import copy
+import re
+import uuid
 
 import mock
 import six
@@ -19,6 +21,7 @@ import six
 from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine.clients.os import nova
+from heat.engine.clients.os import swift
 from heat.engine import parser
 from heat.engine.resources.software_config import software_deployment as sd
 from heat.engine import rsrc_defn
@@ -75,6 +78,22 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                     'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
                     'input_values': {'foo': 'bar', 'bink': 'bonk'},
                     'signal_transport': 'NO_SIGNAL',
+                    'name': '00_run_me_first'
+                }
+            }
+        }
+    }
+
+    template_temp_url_signal = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {
+                    'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+                    'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
+                    'input_values': {'foo': 'bar', 'bink': 'bonk'},
+                    'signal_transport': 'TEMP_URL_SIGNAL',
                     'name': '00_run_me_first'
                 }
             }
@@ -281,6 +300,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'name': 'deploy_resource_name',
                 'type': 'String',
                 'value': 'deployment_mysql'
+            }, {
+                'description': ('How the server should signal to heat with '
+                                'the deployment output values.'),
+                'name': 'deploy_signal_transport',
+                'type': 'String',
+                'value': 'NO_SIGNAL'
             }],
             'options': {},
             'outputs': []
@@ -372,6 +397,12 @@ class SoftwareDeploymentTest(common.HeatTestCase):
                 'name': 'deploy_resource_name',
                 'type': 'String',
                 'value': 'deployment_mysql'
+            }, {
+                'description': ('How the server should signal to heat with '
+                                'the deployment output values.'),
+                'name': 'deploy_signal_transport',
+                'type': 'String',
+                'value': 'NO_SIGNAL'
             }],
             'options': {},
             'outputs': []
@@ -813,6 +844,107 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertIsNotNone(self.deployment.handle_suspend())
         self.assertIsNotNone(self.deployment.handle_resume())
         self.assertIsNotNone(self.deployment.handle_delete())
+
+    def test_get_temp_url(self):
+        dep_data = {}
+
+        sc = mock.MagicMock()
+        scc = self.patch(
+            'heat.engine.clients.os.swift.SwiftClientPlugin._create')
+        scc.return_value = sc
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.1/v1/AUTH_test_tenant_id'
+
+        self._create_stack(self.template_temp_url_signal)
+
+        def data_set(key, value, redact=False):
+            dep_data[key] = value
+
+        self.deployment.data_set = data_set
+        self.deployment.data = mock.Mock(
+            return_value=dep_data)
+
+        self.deployment.id = str(uuid.uuid4())
+        container = self.deployment.physical_resource_name()
+
+        temp_url = self.deployment._get_temp_url()
+        temp_url_pattern = re.compile(
+            '^http://192.0.2.1/v1/AUTH_test_tenant_id/'
+            '(software_deployment_test_stack-deployment_mysql-.*)/(.*)'
+            '\\?temp_url_sig=.*&temp_url_expires=\\d*$')
+        self.assertRegex(temp_url, temp_url_pattern)
+        m = temp_url_pattern.search(temp_url)
+        object_name = m.group(2)
+        self.assertEqual(container, m.group(1))
+        self.assertEqual(dep_data['signal_object_name'], object_name)
+
+        self.assertEqual(dep_data['signal_temp_url'], temp_url)
+
+        self.assertEqual(temp_url, self.deployment._get_temp_url())
+
+        sc.put_container.assert_called_once_with(container)
+        sc.put_object.assert_called_once_with(container, object_name, '')
+
+    def test_delete_temp_url(self):
+        object_name = str(uuid.uuid4())
+        dep_data = {
+            'signal_object_name': object_name
+        }
+        self._create_stack(self.template_temp_url_signal)
+
+        self.deployment.data_delete = mock.MagicMock()
+        self.deployment.data = mock.Mock(
+            return_value=dep_data)
+
+        sc = mock.MagicMock()
+        sc.head_container.return_value = {
+            'x-container-object-count': 0
+        }
+        scc = self.patch(
+            'heat.engine.clients.os.swift.SwiftClientPlugin._create')
+        scc.return_value = sc
+
+        self.deployment.id = str(uuid.uuid4())
+        container = self.deployment.physical_resource_name()
+        self.deployment._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container, object_name)
+        self.assertEqual(
+            [mock.call('signal_object_name'), mock.call('signal_temp_url')],
+            self.deployment.data_delete.mock_calls)
+
+        swift_exc = swift.SwiftClientPlugin.exceptions_module
+        sc.delete_object.side_effect = swift_exc.ClientException(
+            'Not found', http_status=404)
+        self.deployment._delete_temp_url()
+        self.assertEqual(
+            [mock.call('signal_object_name'), mock.call('signal_temp_url'),
+             mock.call('signal_object_name'), mock.call('signal_temp_url')],
+            self.deployment.data_delete.mock_calls)
+
+        del(dep_data['signal_object_name'])
+        self.deployment.physical_resource_name = mock.Mock()
+        self.deployment._delete_temp_url()
+        self.assertFalse(self.deployment.physical_resource_name.called)
+
+    def test_handle_action_temp_url(self):
+
+        self._create_stack(self.template_temp_url_signal)
+        dep_data = {
+            'signal_temp_url': (
+                'http://192.0.2.1/v1/AUTH_a/b/c'
+                '?temp_url_sig=ctemp_url_expires=1234')
+        }
+        self.deployment.data = mock.Mock(
+            return_value=dep_data)
+
+        self.mock_software_config()
+
+        for action in ('DELETE', 'SUSPEND', 'RESUME'):
+            self.assertIsNone(self.deployment._handle_action(action))
+        for action in ('CREATE', 'UPDATE'):
+            self.assertIsNotNone(self.deployment._handle_action(action))
 
 
 class SoftwareDeploymentsTest(common.HeatTestCase):
