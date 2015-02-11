@@ -19,6 +19,7 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine.resources.aws import instance
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
@@ -391,6 +392,31 @@ class TestGroupCrud(common.HeatTestCase):
 
         self.group.child_template.assert_called_once_with()
         self.group.create_with_template.assert_called_once_with('{}')
+
+    def test_scaling_group_create_error(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        instance.Instance.handle_create().AndRaise(Exception)
+
+        self.m.ReplayAll()
+
+        conf = stack['LaunchConfig']
+        self.assertIsNone(conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        rsrc = stack['WebServerGroup']
+        self.assertIsNone(rsrc.validate())
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+
+        self.assertEqual([], grouputils.get_members(rsrc))
+
+        self.m.VerifyAll()
 
     def test_handle_update_desired_cap(self):
         self.group._try_rolling_update = mock.Mock(return_value=None)

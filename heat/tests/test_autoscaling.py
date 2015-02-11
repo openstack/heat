@@ -186,34 +186,6 @@ class AutoScalingTest(common.HeatTestCase):
         for x in range(nmeta):
             resource.Resource.metadata_set(expected).AndReturn(None)
 
-    def test_scaling_group_create_error(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=self.params)
-
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        instance.Instance.handle_create().AndRaise(Exception)
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
-
-        self.m.ReplayAll()
-
-        conf = stack['LaunchConfig']
-        self.assertIsNone(conf.validate())
-        scheduler.TaskRunner(conf.create)()
-        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
-
-        rsrc = stack['WebServerGroup']
-        self.assertIsNone(rsrc.validate())
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.create))
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-
-        self.assertEqual([], grouputils.get_members(rsrc))
-
-        self.m.VerifyAll()
-
     def test_lb_reload_static_resolve(self):
         t = template_format.parse(as_template)
         properties = t['Resources']['ElasticLoadBalancer']['Properties']
