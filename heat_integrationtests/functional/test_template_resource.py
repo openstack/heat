@@ -368,7 +368,7 @@ Resources:
             self.keypair_name = self.keypair.id
 
     def test_update_on_failed_create(self):
-        # create a stack with "server" dependant on "keypair", but
+        # create a stack with "server" dependent on "keypair", but
         # keypair fails, so "server" is not created properly.
         # We then fix the template and it should succeed.
         broken_templ = self.main_template.replace('replace-this',
