@@ -387,7 +387,9 @@ def format_software_config(sc):
         rpc_api.SOFTWARE_CONFIG_CONFIG: sc.config['config'],
         rpc_api.SOFTWARE_CONFIG_INPUTS: sc.config['inputs'],
         rpc_api.SOFTWARE_CONFIG_OUTPUTS: sc.config['outputs'],
-        rpc_api.SOFTWARE_CONFIG_OPTIONS: sc.config['options']
+        rpc_api.SOFTWARE_CONFIG_OPTIONS: sc.config['options'],
+        rpc_api.SOFTWARE_CONFIG_CREATION_TIME: timeutils.isotime(
+            sc.created_at),
     }
     return result
 
@@ -404,7 +406,12 @@ def format_software_deployment(sd):
         rpc_api.SOFTWARE_DEPLOYMENT_STATUS: sd.status,
         rpc_api.SOFTWARE_DEPLOYMENT_STATUS_REASON: sd.status_reason,
         rpc_api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
+        rpc_api.SOFTWARE_DEPLOYMENT_CREATION_TIME: timeutils.isotime(
+            sd.created_at)
     }
+    if sd.updated_at:
+        result[rpc_api.SOFTWARE_DEPLOYMENT_UPDATED_TIME] = timeutils.isotime(
+            sd.updated_at)
     return result
 
 
