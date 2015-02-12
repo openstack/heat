@@ -313,51 +313,26 @@ class CeilometerAlarm(resource.Resource):
         self.ceilometer().alarms.get(self.resource_id)
 
 
-class CombinationAlarm(resource.Resource):
-
-    support_status = support.SupportStatus(version='2014.1')
-
-    PROPERTIES = (
-        ALARM_IDS, OPERATOR,
-    ) = (
-        'alarm_ids', 'operator',
-    )
-
-    properties_schema = {
-        ALARM_IDS: properties.Schema(
-            properties.Schema.LIST,
-            _('List of alarm identifiers to combine.'),
-            required=True,
-            constraints=[constraints.Length(min=1)],
-            update_allowed=True),
-        OPERATOR: properties.Schema(
-            properties.Schema.STRING,
-            _('Operator used to combine the alarms.'),
-            constraints=[constraints.AllowedValues(['and', 'or'])],
-            update_allowed=True)
-    }
-    properties_schema.update(common_properties_schema)
-
+class BaseCeilometerAlarm(resource.Resource):
     default_client_name = 'ceilometer'
 
     def handle_create(self):
         properties = actions_to_urls(self.stack,
                                      self.properties)
         properties['name'] = self.physical_resource_name()
-        properties['type'] = 'combination'
-
+        properties['type'] = self.ceilometer_alarm_type
         alarm = self.ceilometer().alarms.create(
             **self._reformat_properties(properties))
         self.resource_id_set(alarm.alarm_id)
 
     def _reformat_properties(self, properties):
-        combination_rule = {}
-        for name in [self.ALARM_IDS, self.OPERATOR]:
+        rule = {}
+        for name in self.PROPERTIES:
             value = properties.pop(name, None)
             if value:
-                combination_rule[name] = value
-        if combination_rule:
-            properties['combination_rule'] = combination_rule
+                rule[name] = value
+        if rule:
+            properties['%s_rule' % self.ceilometer_alarm_type] = rule
         return properties
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -384,6 +359,34 @@ class CombinationAlarm(resource.Resource):
 
     def handle_check(self):
         self.ceilometer().alarms.get(self.resource_id)
+
+
+class CombinationAlarm(BaseCeilometerAlarm):
+
+    support_status = support.SupportStatus(version='2014.1')
+
+    PROPERTIES = (
+        ALARM_IDS, OPERATOR,
+    ) = (
+        'alarm_ids', 'operator',
+    )
+
+    properties_schema = {
+        ALARM_IDS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of alarm identifiers to combine.'),
+            required=True,
+            constraints=[constraints.Length(min=1)],
+            update_allowed=True),
+        OPERATOR: properties.Schema(
+            properties.Schema.STRING,
+            _('Operator used to combine the alarms.'),
+            constraints=[constraints.AllowedValues(['and', 'or'])],
+            update_allowed=True)
+    }
+    properties_schema.update(common_properties_schema)
+
+    ceilometer_alarm_type = 'combination'
 
 
 def resource_mapping():
