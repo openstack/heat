@@ -33,7 +33,7 @@ LOG = logging.getLogger(__name__)
 _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 
 
-def call_until_true(func, duration, sleep_for):
+def call_until_true(duration, sleep_for, func, *args, **kwargs):
     """
     Call the given function until it returns True (and return True) or
     until the specified duration (in seconds) elapses (and return
@@ -48,7 +48,7 @@ def call_until_true(func, duration, sleep_for):
     now = time.time()
     timeout = now + duration
     while now < timeout:
-        if func():
+        if func(*args, **kwargs):
             return True
         LOG.debug("Sleeping for %d seconds", sleep_for)
         time.sleep(sleep_for)
@@ -87,71 +87,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.volume_client = self.manager.volume_client
         self.object_client = self.manager.object_client
         self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
-
-    def status_timeout(self, things, thing_id, expected_status,
-                       error_status='ERROR',
-                       not_found_exception=heat_exceptions.NotFound):
-        """
-        Given a thing and an expected status, do a loop, sleeping
-        for a configurable amount of time, checking for the
-        expected status to show. At any time, if the returned
-        status of the thing is ERROR, fail out.
-        """
-        self._status_timeout(things, thing_id,
-                             expected_status=expected_status,
-                             error_status=error_status,
-                             not_found_exception=not_found_exception)
-
-    def _status_timeout(self,
-                        things,
-                        thing_id,
-                        expected_status=None,
-                        allow_notfound=False,
-                        error_status='ERROR',
-                        not_found_exception=heat_exceptions.NotFound):
-
-        log_status = expected_status if expected_status else ''
-        if allow_notfound:
-            log_status += ' or NotFound' if log_status != '' else 'NotFound'
-
-        def check_status():
-            # python-novaclient has resources available to its client
-            # that all implement a get() method taking an identifier
-            # for the singular resource to retrieve.
-            try:
-                thing = things.get(thing_id)
-            except not_found_exception:
-                if allow_notfound:
-                    return True
-                raise
-            except Exception as e:
-                if allow_notfound and self.not_found_exception(e):
-                    return True
-                raise
-
-            new_status = thing.status
-
-            # Some components are reporting error status in lower case
-            # so case sensitive comparisons can really mess things
-            # up.
-            if new_status.lower() == error_status.lower():
-                message = ("%s failed to get to expected status (%s). "
-                           "In %s state.") % (thing, expected_status,
-                                              new_status)
-                raise exceptions.BuildErrorException(message,
-                                                     server_id=thing_id)
-            elif new_status == expected_status and expected_status is not None:
-                return True  # All good.
-            LOG.debug("Waiting for %s to get to %s status. "
-                      "Currently in %s status",
-                      thing, log_status, new_status)
-        if not call_until_true(
-                check_status,
-                self.conf.build_timeout,
-                self.conf.build_interval):
-            message = ("Timed out waiting for thing %s "
-                       "to become %s") % (thing_id, log_status)
-            raise exceptions.TimeoutException(message)
 
     def get_remote_client(self, server_or_ip, username, private_key=None):
         if isinstance(server_or_ip, six.string_types):
@@ -226,7 +161,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             return (proc.returncode == 0) == should_succeed
 
         return call_until_true(
-            ping, self.conf.build_timeout, 1)
+            self.conf.build_timeout, 1, ping)
 
     def _wait_for_resource_status(self, stack_identifier, resource_name,
                                   status, failure_pattern='^.*_FAILED$',
