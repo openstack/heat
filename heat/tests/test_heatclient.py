@@ -1307,12 +1307,8 @@ class KeystoneClientTest(common.HeatTestCase):
 
         self._stub_domain_admin_client()
         self.mock_admin_client.projects = self.m.CreateMockAnything()
-        dummy = self.m.CreateMockAnything()
-        dummy.id = 'aproject123'
-        dummy.domain_id = 'adomain123'
-        dummy.delete().AndRaise(kc_exception.NotFound)
-        self.mock_admin_client.projects.get(project='aprojectid').AndReturn(
-            dummy)
+        self.mock_admin_client.projects.get(project='aprojectid').AndRaise(
+            kc_exception.NotFound)
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -1592,11 +1588,6 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         self._stub_domain_admin_client_domain_get()
         p = super(KeystoneClientTestDomainName, self)
         p.test_delete_stack_domain_project()
-
-    def test_delete_stack_domain_project_notfound(self):
-        self._stub_domain_admin_client_domain_get()
-        p = super(KeystoneClientTestDomainName, self)
-        p.test_delete_stack_domain_project_notfound()
 
     def test_delete_stack_domain_project_wrongdomain(self):
         self._stub_domain_admin_client_domain_get()
