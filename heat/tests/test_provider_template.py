@@ -444,6 +444,76 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         self.assertIsNone(temp_res.validate())
 
+    def test_resource_info_general(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'Foo': {'Type': 'Boolean'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider),
+                 'foo.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.BOOLEAN)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template',
+                   'resources': {'foo': 'foo.template'}}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(
+                                 {'HeatTemplateFormatVersion': '2012-12-12'},
+                                 files=files), env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('test_t_res',
+                                                  "DummyResource",
+                                                  {"Foo": "False"})
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      definition, stack)
+        self.assertEqual('test_resource.template',
+                         temp_res.template_name)
+
+    def test_resource_info_special(self):
+        provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Parameters': {
+                'Foo': {'Type': 'Boolean'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider),
+                 'foo.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            support_status = support.SupportStatus()
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.BOOLEAN)}
+            attributes_schema = {}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template',
+                   'resources': {'foo': {'DummyResource': 'foo.template'}}}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template(
+                                 {'HeatTemplateFormatVersion': '2012-12-12'},
+                                 files=files), env=env,
+                             stack_id=str(uuid.uuid4()))
+
+        definition = rsrc_defn.ResourceDefinition('foo',
+                                                  'DummyResource',
+                                                  {"Foo": "False"})
+        temp_res = template_resource.TemplateResource('foo',
+                                                      definition, stack)
+        self.assertEqual('foo.template',
+                         temp_res.template_name)
+
     def test_get_error_for_invalid_template_name(self):
         # assertion: if the name matches {.yaml|.template} and is valid
         # we get the TemplateResource class, otherwise error will be raised.
