@@ -122,7 +122,18 @@ class ClientPlugin(object):
         '''Returns True if the exception is an over-limit.'''
         return False
 
+    def is_conflict(self, ex):
+        """Returns True if the exception is a conflict."""
+        return False
+
     def ignore_not_found(self, ex):
         '''Raises the exception unless it is a not-found.'''
         if not self.is_not_found(ex):
+            raise ex
+
+    def ignore_conflict_and_not_found(self, ex):
+        """Raises the exception unless it is a conflict or not-found."""
+        if self.is_conflict(ex) or self.is_not_found(ex):
+            return
+        else:
             raise ex

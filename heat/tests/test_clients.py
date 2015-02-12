@@ -643,6 +643,22 @@ class TestIsNotFound(common.HeatTestCase):
                                   client_plugin.ignore_not_found,
                                   e)
 
+    def test_ignore_conflict_and_not_found(self):
+        con = mock.Mock()
+        c = clients.Clients(con)
+        client_plugin = c.client_plugin(self.plugin)
+        try:
+            exp = self.exception()
+            exp_class = exp.__class__
+            raise exp
+        except Exception as e:
+            if self.is_conflict or self.is_not_found:
+                client_plugin.ignore_conflict_and_not_found(e)
+            else:
+                self.assertRaises(exp_class,
+                                  client_plugin.ignore_conflict_and_not_found,
+                                  e)
+
     def test_is_over_limit(self):
         con = mock.Mock()
         c = clients.Clients(con)
