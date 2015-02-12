@@ -23,6 +23,7 @@ from heat.engine import resource
 from heat.engine.resources import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
 from heat.tests import utils
@@ -286,3 +287,30 @@ class LoadbalancerReloadTest(common.HeatTestCase):
             "Unsupported resource 'ElasticLoadBalancer' in "
             "LoadBalancerNames",
             six.text_type(error))
+
+    def test_lb_reload_static_resolve(self):
+        t = template_format.parse(inline_templates.as_template)
+        properties = t['Resources']['ElasticLoadBalancer']['Properties']
+        properties['AvailabilityZones'] = {'Fn::GetAZs': ''}
+
+        self.patchobject(parser.Stack, 'get_availability_zones',
+                         return_value=['abc', 'xyz'])
+
+        mock_members = self.patchobject(grouputils, 'get_member_refids')
+        mock_members.return_value = ['aaaabbbbcccc']
+
+        # Check that the Fn::GetAZs is correctly resolved
+        expected = {u'Properties': {'Instances': ['aaaabbbbcccc'],
+                                    u'Listeners': [{u'InstancePort': u'80',
+                                                    u'LoadBalancerPort': u'80',
+                                                    u'Protocol': u'HTTP'}],
+                                    u'AvailabilityZones': ['abc', 'xyz']}}
+
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        lb = stack['ElasticLoadBalancer']
+        lb.handle_update = mock.Mock(return_value=None)
+        group = stack['WebServerGroup']
+        group._lb_reload()
+        lb.handle_update.assert_called_once_with(
+            mock.ANY, expected,
+            {'Instances': ['aaaabbbbcccc']})

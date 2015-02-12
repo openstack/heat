@@ -20,10 +20,8 @@ from oslo.utils import timeutils
 
 from heat.common import exception
 from heat.common import grouputils
-from heat.common import short_id
 from heat.common import template_format
 from heat.engine.notification import autoscaling as notification
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws import autoscaling_group as asg
 from heat.engine.resources.aws import instance
@@ -184,53 +182,6 @@ class AutoScalingTest(common.HeatTestCase):
         # update for the policy and autoscaling group, so pass nmeta=2
         for x in range(nmeta):
             resource.Resource.metadata_set(expected).AndReturn(None)
-
-    def test_lb_reload_static_resolve(self):
-        t = template_format.parse(as_template)
-        properties = t['Resources']['ElasticLoadBalancer']['Properties']
-        properties['AvailabilityZones'] = {'Fn::GetAZs': ''}
-
-        self.m.StubOutWithMock(parser.Stack, 'get_availability_zones')
-        parser.Stack.get_availability_zones().MultipleTimes().AndReturn(
-            ['abc', 'xyz'])
-
-        # Check that the Fn::GetAZs is correctly resolved
-        expected = {u'Type': u'AWS::ElasticLoadBalancing::LoadBalancer',
-                    u'Properties': {'Instances': ['aaaabbbbcccc'],
-                                    u'Listeners': [{u'InstancePort': u'80',
-                                                    u'LoadBalancerPort': u'80',
-                                                    u'Protocol': u'HTTP'}],
-                                    u'AvailabilityZones': ['abc', 'xyz']}}
-
-        self.m.StubOutWithMock(short_id, 'generate_id')
-        short_id.generate_id().MultipleTimes().AndReturn('aaaabbbbcccc')
-
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ExactCapacity : 1')
-        self._stub_create(1)
-        self.m.ReplayAll()
-        stack = utils.parse_stack(t, params=self.params)
-
-        lb = stack['ElasticLoadBalancer']
-        self.m.StubOutWithMock(lb, 'handle_update')
-        lb.handle_update(expected,
-                         mox.IgnoreArg(),
-                         mox.IgnoreArg()).AndReturn(None)
-        self.m.ReplayAll()
-
-        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
-                         rsrc.FnGetRefId())
-        self.assertEqual(1, len(grouputils.get_member_names(rsrc)))
-        props = copy.copy(rsrc.properties.data)
-        props['Cooldown'] = '61'
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
-                                                      rsrc.type(),
-                                                      props)
-        scheduler.TaskRunner(rsrc.update, update_snippet)()
-
-        rsrc.delete()
-        self.m.VerifyAll()
 
     def test_scaling_up_meta_update(self):
         t = template_format.parse(as_template)
