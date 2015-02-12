@@ -23,6 +23,31 @@ LOG = logging.getLogger(__name__)
 
 class TemplateResourceTest(test.HeatIntegrationTest):
     """Prove that we can use the registry in a nested provider."""
+
+    template = '''
+heat_template_version: 2013-05-23
+resources:
+  secret1:
+    type: OS::Heat::RandomString
+outputs:
+  secret-out:
+    value: { get_attr: [secret1, value] }
+'''
+    nested_templ = '''
+heat_template_version: 2013-05-23
+resources:
+  secret2:
+    type: OS::Heat::RandomString
+outputs:
+  value:
+    value: { get_attr: [secret2, value] }
+'''
+
+    env_templ = '''
+resource_registry:
+  "OS::Heat::RandomString": nested.yaml
+'''
+
     def setUp(self):
         super(TemplateResourceTest, self).setUp()
         self.client = self.orchestration_client
@@ -65,37 +90,35 @@ resource_registry:
 
         And use that resource within the template resource.
         """
-
-        main_templ = '''
-heat_template_version: 2013-05-23
-resources:
-  secret1:
-    type: OS::Heat::RandomString
-outputs:
-  secret-out:
-    value: { get_attr: [secret1, value] }
-'''
-
-        nested_templ = '''
-heat_template_version: 2013-05-23
-resources:
-  secret2:
-    type: OS::Heat::RandomString
-outputs:
-  value:
-    value: { get_attr: [secret2, value] }
-'''
-
-        env_templ = '''
-resource_registry:
-  "OS::Heat::RandomString": nested.yaml
-'''
-
         stack_identifier = self.stack_create(
-            template=main_templ,
-            files={'nested.yaml': nested_templ},
-            environment=env_templ)
+            template=self.template,
+            files={'nested.yaml': self.nested_templ},
+            environment=self.env_templ)
         self.assert_resource_is_a_stack(stack_identifier, 'secret1')
+
+    def test_nested_stack_delete_then_delete_parent_stack(self):
+        """Check the robustness of stack deletion.
+
+        This tests that if you manually delete a nested
+        stack, the parent stack is still deletable.
+        """
+        name = self._stack_rand_name()
+        # do this manually so we can call _stack_delete() directly.
+        self.client.stacks.create(
+            stack_name=name,
+            template=self.template,
+            files={'nested.yaml': self.nested_templ},
+            environment=self.env_templ,
+            disable_rollback=True)
+        stack = self.client.stacks.get(name)
+        stack_identifier = '%s/%s' % (name, stack.id)
+        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'secret1')
+
+        self._stack_delete(nested_ident)
+        self._stack_delete(stack_identifier)
 
 
 class NestedAttributesTest(test.HeatIntegrationTest):
