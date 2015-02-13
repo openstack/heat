@@ -180,6 +180,8 @@ class CinderVolume(aws_vol.Volume):
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
 
+    default_client_name = 'cinder'
+
     def _name(self):
         name = self.properties[self.NAME]
         if name:
@@ -208,12 +210,13 @@ class CinderVolume(aws_vol.Volume):
         return arguments
 
     def _resolve_attribute(self, name):
-        vol = self.cinder().volumes.get(self.resource_id)
+        cinder = self.client()
+        vol = cinder.volumes.get(self.resource_id)
         if name == self.METADATA_ATTR:
             return six.text_type(json.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
-        if self.cinder().volume_api_version >= 2:
+        if cinder.volume_api_version >= 2:
             if name == self.DISPLAY_NAME_ATTR:
                 return vol.name
             elif name == self.DISPLAY_DESCRIPTION_ATTR:
@@ -223,7 +226,7 @@ class CinderVolume(aws_vol.Volume):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
         checkers = []
-        cinder = self.cinder()
+        cinder = self.client()
         # update the name and description for cinder volume
         if self.NAME in prop_diff or self.DESCRIPTION in prop_diff:
             vol = cinder.volumes.get(self.resource_id)
@@ -242,7 +245,7 @@ class CinderVolume(aws_vol.Volume):
             cinder.volumes.update_all_metadata(vol, metadata)
         # retype
         if self.VOLUME_TYPE in prop_diff:
-            if self.cinder().volume_api_version == 1:
+            if cinder.volume_api_version == 1:
                 LOG.info(_LI('Volume type update not supported '
                              'by Cinder API V1.'))
                 raise exception.NotSupported(
@@ -301,14 +304,15 @@ class CinderVolume(aws_vol.Volume):
         return True
 
     def handle_snapshot(self):
-        return self.cinder().backups.create(self.resource_id)
+        backup = self.client().backups.create(self.resource_id)
+        return backup.id
 
-    def check_snapshot_complete(self, backup):
+    def check_snapshot_complete(self, backup_id):
+        backup = self.client().backups.get(backup_id)
         if backup.status == 'creating':
-            backup.get()
             return False
         if backup.status == 'available':
-            self.data_set('backup_id', backup.id)
+            self.data_set('backup_id', backup_id)
             return True
         raise exception.Error(backup.status)
 
@@ -316,13 +320,12 @@ class CinderVolume(aws_vol.Volume):
         backup_id = snapshot['resource_data']['backup_id']
 
         def delete():
-            client = self.cinder()
+            cinder = self.client()
             try:
-                backup = client.backups.get(backup_id)
-                backup.delete()
+                cinder.backups.delete(backup_id)
                 while True:
                     yield
-                    backup.get()
+                    cinder.backups.get(backup_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 
@@ -341,7 +344,7 @@ class CinderVolume(aws_vol.Volume):
 
         # Scheduler hints are only supported from Cinder API v2
         if (self.properties.get(self.CINDER_SCHEDULER_HINTS)
-                and self.cinder().volume_api_version == 1):
+                and self.client().volume_api_version == 1):
             raise exception.StackValidationFailed(
                 message=_('Scheduler hints are not supported by the current '
                           'volume API.'))

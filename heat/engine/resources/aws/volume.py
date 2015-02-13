@@ -110,14 +110,14 @@ class Volume(resource.Resource):
 
     def handle_create(self):
         backup_id = self.properties.get(self.BACKUP_ID)
-        cinder = self.cinder()
+        cinder = self.client()
         if backup_id is not None:
             vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)
             kwargs = self._fetch_name_and_description(
                 cinder.volume_api_version)
-            vol.update(**kwargs)
+            cinder.volumes.update(vol_id, **kwargs)
         else:
             kwargs = self._create_arguments()
             kwargs.update(self._fetch_name_and_description(
@@ -125,10 +125,10 @@ class Volume(resource.Resource):
             vol = cinder.volumes.create(**kwargs)
         self.resource_id_set(vol.id)
 
-        return vol
+        return vol.id
 
-    def check_create_complete(self, vol):
-        vol.get()
+    def check_create_complete(self, vol_id):
+        vol = self.client().volumes.get(vol_id)
 
         if vol.status == 'available':
             return True
@@ -143,7 +143,7 @@ class Volume(resource.Resource):
                 result=_('Volume create failed'))
 
     def handle_check(self):
-        vol = self.cinder().volumes.get(self.resource_id)
+        vol = self.client().volumes.get(self.resource_id)
         statuses = ['available', 'in-use']
         checks = [
             {'attr': 'status', 'expected': statuses, 'current': vol.status},
@@ -151,10 +151,11 @@ class Volume(resource.Resource):
         self._verify_check_conditions(checks)
 
     def _backup(self):
-        backup = self.cinder().backups.create(self.resource_id)
+        cinder = self.client()
+        backup = cinder.backups.create(self.resource_id)
         while backup.status == 'creating':
             yield
-            backup.get()
+            backup = cinder.backups.get(backup.id)
         if backup.status != 'available':
             raise resource.ResourceUnknownStatus(
                 resource_status=backup.status,
@@ -163,22 +164,23 @@ class Volume(resource.Resource):
     @scheduler.wrappertask
     def _delete(self, backup=False):
         if self.resource_id is not None:
+            cinder = self.client()
             try:
-                vol = self.cinder().volumes.get(self.resource_id)
+                vol = cinder.volumes.get(self.resource_id)
 
                 if backup:
                     yield self._backup()
-                    vol.get()
+                    vol = cinder.volumes.get(self.resource_id)
 
                 if vol.status == 'in-use':
                     raise exception.Error(_('Volume in use'))
                 # if the volume is already in deleting status,
                 # just wait for the deletion to complete
                 if vol.status != 'deleting':
-                    vol.delete()
+                    cinder.volumes.delete(self.resource_id)
                 while True:
                     yield
-                    vol.get()
+                    vol = cinder.volumes.get(self.resource_id)
             except Exception as ex:
                 self.client_plugin().ignore_not_found(ex)
 

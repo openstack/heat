@@ -15,7 +15,6 @@ from cinderclient import exceptions as cinder_exp
 from cinderclient.v2 import client as cinderclient
 import six
 
-from heat.common import exception
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import nova
 from heat.engine.resources.aws import volume as aws_vol
@@ -45,23 +44,25 @@ class BaseVolumeTest(common.HeatTestCase):
         self.use_cinder = False
 
     def _mock_delete_volume(self, fv):
-        self.m.StubOutWithMock(fv, 'delete')
-        fv.delete().AndReturn(True)
-        self.m.StubOutWithMock(fv, 'get')
-        fv.get().AndReturn(None)
-        fv.get().AndRaise(cinder_exp.NotFound('Not found'))
-        self.m.ReplayAll()
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            FakeVolume('available'))
+        self.cinder_fc.volumes.delete(fv.id).AndReturn(True)
+        self.cinder_fc.volumes.get(fv.id).AndRaise(
+            cinder_exp.NotFound('Not found'))
 
     def _mock_create_server_volume_script(self, fva,
                                           server=u'WikiDatabase',
                                           volume='vol-123',
                                           device=u'/dev/vdc',
+                                          final_status='in-use',
                                           update=False):
         if not update:
             nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create_server_volume(
             device=device, server_id=server, volume_id=volume).AndReturn(fva)
-        self.cinder_fc.volumes.get(volume).AndReturn(fva)
+        fv_ready = FakeVolume(final_status, id=fva.id)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(fv_ready)
+        return fv_ready
 
     def create_volume(self, t, stack, resource_name):
         if self.use_cinder:
@@ -94,67 +95,20 @@ class BaseVolumeTest(common.HeatTestCase):
 
 
 class FakeVolume(object):
-    status = 'attaching'
-    id = 'vol-123'
+    _ID = 'vol-123'
 
-    def __init__(self, initial_status, final_status, **attrs):
-        self.status = initial_status
-        self.final_status = final_status
+    def __init__(self, status, **attrs):
+        self.status = status
         for key, value in six.iteritems(attrs):
             setattr(self, key, value)
-
-    def get(self):
-        self.status = self.final_status
-
-    def update(self, **kw):
-        pass
-
-    def delete(self):
-        pass
-
-
-class FakeLatencyVolume(object):
-    status = 'attaching'
-    id = 'vol-123'
-
-    def __init__(self, life_cycle=('creating', 'available'), **attrs):
-        if not isinstance(life_cycle, tuple):
-            raise exception.Error('life_cycle need to be a tuple.')
-        if not len(life_cycle):
-            raise exception.Error('life_cycle should not be an empty tuple.')
-        self.life_cycle = iter(life_cycle)
-        self.status = next(self.life_cycle)
-        for key, value in six.iteritems(attrs):
-            setattr(self, key, value)
-
-    def get(self):
-        self.status = next(self.life_cycle)
-
-    def update(self, **kw):
-        pass
+        if 'id' not in attrs:
+            self.id = self._ID
 
 
 class FakeBackup(FakeVolume):
-    status = 'creating'
-    id = 'backup-123'
+    _ID = 'backup-123'
 
 
 class FakeBackupRestore(object):
-    volume_id = 'vol-123'
-
-    def __init__(self, volume_id):
+    def __init__(self, volume_id='vol-123'):
         self.volume_id = volume_id
-
-
-class FakeVolumeWithStateTransition(FakeVolume):
-    status = 'restoring-backup'
-    get_call_count = 0
-
-    def get(self):
-        # Allow get to be called once without changing the status
-        # This is to allow the check_create_complete method to
-        # check the initial status.
-        if self.get_call_count < 1:
-            self.get_call_count += 1
-        else:
-            self.status = self.final_status

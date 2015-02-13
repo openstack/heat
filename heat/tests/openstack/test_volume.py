@@ -82,7 +82,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.t = template_format.parse(cinder_volume_template)
         self.use_cinder = True
 
-    def _mock_create_volume(self, fv, stack_name, size=1):
+    def _mock_create_volume(self, fv, stack_name, size=1,
+                            final_status='available'):
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
@@ -90,6 +91,10 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             description='test_description',
             name='test_name',
             metadata={'key': 'value'}).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume(final_status, id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+        return fv_ready
 
     def test_cinder_volume_size_constraint(self):
         self.t['resources']['volume']['properties']['size'] = 0
@@ -102,7 +107,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             "range (min: 1, max: None)", six.text_type(error))
 
     def test_cinder_create(self):
-        fv = vt_base.FakeVolume('creating', 'available')
+        fv = vt_base.FakeVolume('creating')
         stack_name = 'test_cvolume_stack'
 
         self.stub_SnapshotConstraint_validate()
@@ -119,6 +124,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             metadata={'key': 'value'},
             source_volid='vol-012',
             volume_type='lvm').AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
         self.m.ReplayAll()
 
@@ -133,12 +141,11 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         })
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         self.m.VerifyAll()
 
     def test_cinder_create_from_image(self):
-        fv = vt_base.FakeVolumeWithStateTransition('downloading', 'available')
+        fv = vt_base.FakeVolume('downloading')
         stack_name = 'test_cvolume_create_from_img_stack'
         image_id = '46988116-6703-4623-9dbc-2bc6d284021b'
         cinder.CinderClientPlugin._create().AndReturn(
@@ -152,6 +159,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             description='ImageVolumeDescription',
             name='ImageVolume',
             imageRef=image_id).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
         self.m.ReplayAll()
 
@@ -164,12 +174,11 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         }
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         self.m.VerifyAll()
 
     def test_cinder_default(self):
-        fv = vt_base.FakeVolume('creating', 'available')
+        fv = vt_base.FakeVolume('creating')
         stack_name = 'test_cvolume_default_stack'
 
         cinder.CinderClientPlugin._create().AndReturn(
@@ -179,6 +188,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description=None,
             name=vol_name).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
         self.m.ReplayAll()
 
@@ -188,22 +200,20 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         }
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         self.m.VerifyAll()
 
     def test_cinder_fn_getatt(self):
+        stack_name = 'test_cvolume_fngetatt_stack'
+
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
         fv = vt_base.FakeVolume(
-            'creating', 'available', availability_zone='zone1',
+            'available', availability_zone='zone1',
             size=1, snapshot_id='snap-123', name='name',
             description='desc', volume_type='lvm',
             metadata={'key': 'value'}, source_volid=None,
-            status='available', bootable=False,
-            created_at='2013-02-25T02:40:21.000000',
+            bootable=False, created_at='2013-02-25T02:40:21.000000',
             encrypted=False, attachments=[])
-        stack_name = 'test_cvolume_fngetatt_stack'
-
-        self._mock_create_volume(fv, stack_name)
         self.cinder_fc.volumes.get('vol-123').MultipleTimes().AndReturn(fv)
 
         self.m.ReplayAll()
@@ -237,21 +247,21 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_attachment(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fva = vt_base.FakeVolume('attaching', 'in-use')
         stack_name = 'test_cvolume_attach_stack'
 
-        self._mock_create_volume(fv, stack_name)
-        self._mock_create_server_volume_script(fva)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'))
         self.stub_VolumeConstraint_validate()
 
         # delete script
-        fva = vt_base.FakeVolume('in-use', 'available')
+        fva = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(
+            vt_base.FakeVolume('available'))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
@@ -262,19 +272,19 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
         rsrc = self.create_attachment(self.t, stack, 'attachment')
         scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
     def test_cinder_volume_shrink_fails(self):
-        fv = vt_base.FakeVolume('creating', 'available', size=2)
         stack_name = 'test_cvolume_shrink_fail_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name, size=2)
+        self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                 stack_name, size=2)
         # update script
+        fv = vt_base.FakeVolume('available', size=2)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
 
         self.m.ReplayAll()
@@ -283,7 +293,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         rsrc = self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
         props['size'] = 1
@@ -298,26 +307,28 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_extend_detached(self):
-        fv = vt_base.FakeVolume('creating', 'available',
-                                size=1, attachments=[])
         stack_name = 'test_cvolume_extend_det_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
         # update script
+        fv = vt_base.FakeVolume('available',
+                                size=1, attachments=[])
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
-        fv2 = vt_base.FakeLatencyVolume(life_cycle=('extending', 'extending',
-                                                    'available'))
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv2)
-
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('available'))
 
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         rsrc = self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
         props['size'] = 2
@@ -330,26 +341,22 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_extend_fails_to_start(self):
-        fv = vt_base.FakeVolume('creating', 'available',
-                                size=1, attachments=[])
         stack_name = 'test_cvolume_extend_fail_start_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
         # update script
+        fv = vt_base.FakeVolume('available',
+                                size=1, attachments=[])
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
-        fv2 = vt_base.FakeVolume('extending', 'extending')
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv2)
-
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2).AndRaise(
             cinder_exp.OverLimit(413))
-
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         rsrc = self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
         props['size'] = 2
@@ -363,26 +370,27 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_extend_fails_to_complete(self):
-        fv = vt_base.FakeVolume('creating', 'available',
-                                size=1, attachments=[])
         stack_name = 'test_cvolume_extend_fail_compl_stack'
 
         # create script
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
         # update script
+        fv = vt_base.FakeVolume('available',
+                                size=1, attachments=[])
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
-        fv2 = vt_base.FakeLatencyVolume(life_cycle=('extending', 'extending',
-                                                    'error_extending'))
-        self.cinder_fc.volumes.get(fv.id).AndReturn(fv2)
-
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.extend(fv.id, 2)
-
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fv.id).AndReturn(
+            vt_base.FakeVolume('error_extending'))
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         rsrc = self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         props = copy.deepcopy(rsrc.properties.data)
         props['size'] = 2
@@ -397,51 +405,52 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_extend_attached(self):
-        # create script
-        fv = vt_base.FakeVolume('creating', 'available')
         stack_name = 'test_cvolume_extend_att_stack'
+        # create script
         self.stub_VolumeConstraint_validate()
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
 
-        fva = vt_base.FakeVolume('attaching', 'in-use')
-        self._mock_create_server_volume_script(fva)
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'))
 
         # update script
         attachments = [{'id': 'vol-123',
                         'device': '/dev/vdc',
                         'server_id': u'WikiDatabase'}]
-        fv2 = vt_base.FakeVolume('available', 'available',
+        fv2 = vt_base.FakeVolume('in-use',
                                  attachments=attachments, size=1)
         self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
 
         # detach script
-        fvd = vt_base.FakeVolume('in-use', 'available')
+        fvd = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fvd)
         self.cinder_fc.volumes.get(fvd.id).AndReturn(fvd)
         self.fc.volumes.delete_server_volume('WikiDatabase', 'vol-123')
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(
+            vt_base.FakeVolume('available'))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fvd)
         self.fc.volumes.get_server_volume(
             u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # resize script
-        fvr = vt_base.FakeLatencyVolume(life_cycle=('extending', 'extending',
-                                                    'available'))
-        self.cinder_fc.volumes.get(fvr.id).AndReturn(fvr)
-
-        self.cinder_fc.volumes.extend(fvr.id, 2)
+        self.cinder_fc.volumes.extend(fvd.id, 2)
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(
+            vt_base.FakeVolume('extending'))
+        self.cinder_fc.volumes.get(fvd.id).AndReturn(
+            vt_base.FakeVolume('available'))
 
         # attach script
-        fva2 = vt_base.FakeVolume('attaching', 'in-use')
-        self._mock_create_server_volume_script(fva2, update=True)
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
+                                               update=True)
 
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         rsrc = self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
         self.create_attachment(self.t, stack, 'attachment')
 
         props = copy.deepcopy(rsrc.properties.data)
@@ -456,22 +465,23 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_volume_extend_created_from_backup_with_same_size(self):
         stack_name = 'test_cvolume_extend_snapsht_stack'
-        fv = vt_base.FakeVolumeWithStateTransition('restoring-backup',
-                                                   'available',
-                                                   size=2)
-        fvbr = vt_base.FakeBackupRestore('vol-123')
 
         # create script
+        fvbr = vt_base.FakeBackupRestore('vol-123')
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        self.m.StubOutWithMock(fv, 'update')
+        self.cinder_fc.volumes.get('vol-123').AndReturn(
+            vt_base.FakeVolume('restoring-backup'))
         vol_name = utils.PhysName(stack_name, 'volume')
-        fv.update(description=None, name=vol_name)
+        self.cinder_fc.volumes.update('vol-123', description=None,
+                                      name=vol_name).AndReturn(None)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(
+            vt_base.FakeVolume('available'))
 
         # update script
+        fv = vt_base.FakeVolume('available', size=2)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.m.ReplayAll()
 
@@ -496,7 +506,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_retype(self):
-        fv = vt_base.FakeVolume('creating', 'available',
+        fv = vt_base.FakeVolume('available',
                                 size=1, name='my_vol',
                                 description='test')
         stack_name = 'test_cvolume_retype'
@@ -504,6 +514,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.patchobject(cinder.CinderClientPlugin, '_create',
                          return_value=self.cinder_fc)
         self.patchobject(self.cinder_fc.volumes, 'create', return_value=fv)
+        self.patchobject(self.cinder_fc.volumes, 'get', return_value=fv)
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         rsrc = self.create_volume(self.t, stack, 'volume2')
 
@@ -534,7 +545,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_volume_update_name_and_metadata(self):
         # update the name, description and metadata
-        fv = vt_base.FakeVolume('creating', 'available',
+        fv = vt_base.FakeVolume('creating',
                                 size=1, name='my_vol',
                                 description='test')
         stack_name = 'test_cvolume_updname_stack'
@@ -546,7 +557,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             'description': update_description
         }
 
-        self._mock_create_volume(fv, stack_name)
+        fv = self._mock_create_volume(fv, stack_name)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         self.cinder_fc.volumes.update(fv, **kwargs).AndReturn(None)
         self.cinder_fc.volumes.update_all_metadata(fv, meta).AndReturn(None)
@@ -566,8 +577,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
     def test_cinder_snapshot(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fb = vt_base.FakeBackup('creating', 'available')
         stack_name = 'test_cvolume_snpsht_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
@@ -576,10 +585,16 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name'
-        ).AndReturn(fv)
+        ).AndReturn(vt_base.FakeVolume('creating'))
+        fv = vt_base.FakeVolume('available')
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
 
+        fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
+        self.cinder_fc.backups.get(fb.id).AndReturn(
+            vt_base.FakeBackup('available'))
 
         self.m.ReplayAll()
 
@@ -599,18 +614,24 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_snapshot_error(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fb = vt_base.FakeBackup('creating', 'error')
         stack_name = 'test_cvolume_snpsht_err_stack'
 
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            size=1, availability_zone=None, name='test_name',
-            description='test_description').AndReturn(fv)
+            size=1, availability_zone=None,
+            description='test_description',
+            name='test_name'
+        ).AndReturn(vt_base.FakeVolume('creating'))
+        fv = vt_base.FakeVolume('available')
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
 
+        fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
+        self.cinder_fc.backups.get(fb.id).AndReturn(
+            vt_base.FakeBackup('error'))
 
         self.m.ReplayAll()
 
@@ -631,29 +652,30 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_attachment_update_device(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fva = vt_base.FakeVolume('attaching', 'in-use')
-        fva2 = vt_base.FakeVolume('attaching', 'in-use')
         stack_name = 'test_cvolume_attach_udev_stack'
 
-        self._mock_create_volume(fv, stack_name)
-        self._mock_create_server_volume_script(fva)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
+        self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'))
         self.stub_VolumeConstraint_validate()
 
         # delete script
-        fva = vt_base.FakeVolume('in-use', 'available')
+        fva = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(
+            vt_base.FakeVolume('available'))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
             u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
-        self._mock_create_server_volume_script(fva2, device=u'/dev/vdd',
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
+                                               device=u'/dev/vdd',
                                                update=True)
 
         self.m.ReplayAll()
@@ -661,8 +683,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
-
         rsrc = self.create_attachment(self.t, stack, 'attachment')
 
         props = copy.deepcopy(rsrc.properties.data)
@@ -675,38 +695,39 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_attachment_update_volume(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fva = vt_base.FakeVolume('attaching', 'in-use')
-        fv2 = vt_base.FakeVolume('creating', 'available')
-        fv2.id = 'vol-456'
-        fv2a = vt_base.FakeVolume('attaching', 'in-use')
-        fv2a.id = 'vol-456'
         stack_name = 'test_cvolume_attach_uvol_stack'
 
         self.stub_VolumeConstraint_validate()
-        self._mock_create_volume(fv, stack_name)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
 
+        fv2 = vt_base.FakeVolume('creating', id='vol-456')
         vol2_name = utils.PhysName(stack_name, 'volume2')
         self.cinder_fc.volumes.create(
             size=2, availability_zone='nova',
             description=None,
             name=vol2_name).AndReturn(fv2)
+        self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
+        fv2 = vt_base.FakeVolume('available', id=fv2.id)
+        self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
 
-        self._mock_create_server_volume_script(fva)
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'))
 
         # delete script
-        fva = vt_base.FakeVolume('in-use', 'available')
+        fva = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(
+            vt_base.FakeVolume('available'))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
             u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
+        fv2a = vt_base.FakeVolume('attaching', id='vol-456')
         self._mock_create_server_volume_script(fv2a, volume='vol-456',
                                                update=True)
 
@@ -715,9 +736,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
         self.create_volume(self.t, stack, 'volume2')
-        self.assertEqual('available', fv2.status)
 
         rsrc = self.create_attachment(self.t, stack, 'attachment')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -732,29 +751,30 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_volume_attachment_update_server(self):
-        fv = vt_base.FakeVolume('creating', 'available')
-        fva = vt_base.FakeVolume('attaching', 'in-use')
-        fva2 = vt_base.FakeVolume('attaching', 'in-use')
         stack_name = 'test_cvolume_attach_usrv_stack'
 
-        self._mock_create_volume(fv, stack_name)
-        self._mock_create_server_volume_script(fva)
+        self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name)
+        self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'))
         self.stub_VolumeConstraint_validate()
 
         # delete script
-        fva = vt_base.FakeVolume('in-use', 'available')
+        fva = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').MultipleTimes().AndReturn(None)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(
+            vt_base.FakeVolume('available'))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
             u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
 
         # attach script
-        self._mock_create_server_volume_script(fva2, server=u'AnotherServer',
+        self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
+                                               server=u'AnotherServer',
                                                update=True)
 
         self.m.ReplayAll()
@@ -762,7 +782,6 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
 
         self.create_volume(self.t, stack, 'volume')
-        self.assertEqual('available', fv.status)
 
         rsrc = self.create_attachment(self.t, stack, 'attachment')
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -777,20 +796,22 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.VerifyAll()
 
     def test_cinder_create_with_scheduler_hints(self):
-        fv = vt_base.FakeVolume('creating', 'available')
+        fv = vt_base.FakeVolume('creating')
 
         cinder.CinderClientPlugin._create().AndReturn(self.cinder_fc)
         self.cinder_fc.volumes.create(
             size=1, name='test_name', description=None,
             availability_zone='nova',
             scheduler_hints={'hint1': 'good_advice'}).AndReturn(fv)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
 
         self.m.ReplayAll()
 
         stack_name = 'test_cvolume_scheduler_hints_stack'
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         self.create_volume(self.t, stack, 'volume3')
-        self.assertEqual('available', fv.status)
 
         self.m.VerifyAll()
 
@@ -810,27 +831,40 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_volume_restore(self):
         stack_name = 'test_cvolume_restore_stack'
-        t = template_format.parse(single_cinder_volume_template)
-        stack = utils.parse_stack(t, stack_name=stack_name)
 
-        fv = vt_base.FakeVolume('creating', 'available')
-        fb = vt_base.FakeBackup('creating', 'available')
-        fvbr = vt_base.FakeBackupRestore('vol-123')
-
+        # create script
         cinder.CinderClientPlugin._create().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            size=1, availability_zone=None, description='test_description',
+            size=1, availability_zone=None,
+            description='test_description',
             name='test_name'
-        ).AndReturn(fv)
+        ).AndReturn(vt_base.FakeVolume('creating'))
+        fv = vt_base.FakeVolume('available')
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
+
+        # snapshot script
+        fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create('vol-123').AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
+        self.cinder_fc.backups.get(fb.id).AndReturn(
+            vt_base.FakeBackup('available'))
+
+        # restore script
+        fvbr = vt_base.FakeBackupRestore('vol-123')
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.cinder_fc.volumes.update('vol-123',
+                                      description='test_description',
+                                      name='test_name')
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
 
         self.m.ReplayAll()
 
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=stack_name)
         scheduler.TaskRunner(stack.create)()
 
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
