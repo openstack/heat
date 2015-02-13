@@ -508,7 +508,8 @@ class EngineService(service.Service):
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, args, owner_id=None,
                                            nested_depth=0, user_creds_id=None,
-                                           stack_user_project_id=None):
+                                           stack_user_project_id=None,
+                                           convergence=False):
         # If it is stack-adopt, use parameters from adopt_stack_data
         common_params = api.extract_args(args)
         if (rpc_api.PARAM_ADOPT_STACK_DATA in common_params and
@@ -531,6 +532,7 @@ class EngineService(service.Service):
                              nested_depth=nested_depth,
                              user_creds_id=user_creds_id,
                              stack_user_project_id=stack_user_project_id,
+                             convergence=convergence,
                              **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
@@ -554,12 +556,18 @@ class EngineService(service.Service):
         """
 
         LOG.info(_LI('previewing stack %s'), stack_name)
+
+        conv_eng = cfg.CONF.convergence_engine
+        if conv_eng:
+            raise exception.NotSupported(feature=_('Convergence engine'))
+
         stack = self._parse_template_and_validate_stack(cnxt,
                                                         stack_name,
                                                         template,
                                                         params,
                                                         files,
-                                                        args)
+                                                        args,
+                                                        convergence=conv_eng)
 
         return api.format_stack_preview(stack)
 
@@ -612,16 +620,13 @@ class EngineService(service.Service):
             else:
                 LOG.info(_LI("Stack create failed, status %s"), stack.status)
 
-        stack = self._parse_template_and_validate_stack(cnxt,
-                                                        stack_name,
-                                                        template,
-                                                        params,
-                                                        files,
-                                                        args,
-                                                        owner_id,
-                                                        nested_depth,
-                                                        user_creds_id,
-                                                        stack_user_project_id)
+        convergence = cfg.CONF.convergence_engine
+        if convergence:
+            raise exception.NotSupported(feature=_('Convergence engine'))
+
+        stack = self._parse_template_and_validate_stack(
+            cnxt, stack_name, template, params, files, args, owner_id,
+            nested_depth, user_creds_id, stack_user_project_id, convergence)
 
         stack.store()
 
@@ -667,6 +672,7 @@ class EngineService(service.Service):
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name
+        convergence = current_stack.convergence
         common_params = api.extract_args(args)
         common_params.setdefault(rpc_api.PARAM_TIMEOUT,
                                  current_stack.timeout_mins)
@@ -678,7 +684,8 @@ class EngineService(service.Service):
                 current_stack.env,
                 args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     env, **common_params)
+                                     env, convergence=convergence,
+                                     **common_params)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)

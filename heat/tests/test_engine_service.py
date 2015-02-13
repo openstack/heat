@@ -453,7 +453,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env, owner_id=None,
                      nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None).AndReturn(stack)
+                     stack_user_project_id=None,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -507,7 +508,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      owner_id=None,
                      nested_depth=0,
                      user_creds_id=None,
-                     stack_user_project_id=None).AndReturn(stack)
+                     stack_user_project_id=None,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -620,6 +622,15 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                           self.man.create_stack,
                           self.ctx, stack_name, stack.t.t, {}, None, {})
 
+    def test_stack_create_enabled_convergence_engine(self):
+        cfg.CONF.set_override('convergence_engine', True)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack, self.ctx, 'test',
+                               wp_template, {}, None, {})
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
+        self.assertEqual('Convergence engine is not supported.',
+                         six.text_type(ex.exc_info[1]))
+
     def test_stack_create_invalid_resource_name(self):
         stack_name = 'service_create_test_stack_invalid_res'
         stack = get_wordpress_stack(stack_name, self.ctx)
@@ -664,14 +675,16 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(ctx_no_pwd, stack.name,
                      stack.t, stack.env, owner_id=None,
                      nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None).AndReturn(stack)
+                     stack_user_project_id=None,
+                     convergence=False).AndReturn(stack)
 
         templatem.Template(template, files=None).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_user, stack.name,
                      stack.t, stack.env, owner_id=None,
                      nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None).AndReturn(stack)
+                     stack_user_project_id=None,
+                     convergence=False).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -720,7 +733,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      owner_id=None,
                      nested_depth=0,
                      user_creds_id=None,
-                     stack_user_project_id=None).AndReturn(stack)
+                     stack_user_project_id=None,
+                     convergence=False).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -991,7 +1005,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env,
-                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
+                     timeout_mins=60, disable_rollback=True,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1039,7 +1054,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(no_params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, old_stack.env,
-                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
+                     timeout_mins=60, disable_rollback=True,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1082,7 +1098,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env,
-                     timeout_mins=1, disable_rollback=False).AndReturn(stack)
+                     timeout_mins=1, disable_rollback=False,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1159,7 +1176,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env,
-                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
+                     timeout_mins=60, disable_rollback=True,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1279,7 +1297,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t, stack.env,
-                     timeout_mins=60, disable_rollback=True).AndReturn(stack)
+                     timeout_mins=60, disable_rollback=True,
+                     convergence=False).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -1335,8 +1354,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
                      old_stack.t, old_stack.env,
-                     timeout_mins=60, disable_rollback=True
-                     ).AndReturn(old_stack)
+                     timeout_mins=60, disable_rollback=True,
+                     convergence=False).AndReturn(old_stack)
 
         self.m.ReplayAll()
 
