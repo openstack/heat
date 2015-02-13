@@ -437,7 +437,7 @@ Outputs:
         stack_identifier = '%s/%s' % (stack_name, stack.id)
         self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
 
-        info = self.client.stacks.abandon(stack_id=stack_identifier)
+        info = self.stack_abandon(stack_id=stack_identifier)
         self.assertEqual(self._yaml_to_json(self.main_template),
                          info['template'])
         self.assertEqual(self._yaml_to_json(self.nested_templ),

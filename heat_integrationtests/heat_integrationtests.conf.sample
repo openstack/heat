@@ -69,3 +69,9 @@
 
 # Default size in GB for volumes created by volumes tests (integer value)
 #volume_size = 1
+
+# Skip Stack Adopt Integration tests (boolean value)
+#skip_stack_adopt_tests = false
+
+# Skip Stack Abandon Integration tests (boolean value)
+#skip_stack_abandon_tests = false

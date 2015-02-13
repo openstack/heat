@@ -308,6 +308,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def stack_adopt(self, stack_name=None, files=None,
                     parameters=None, environment=None, adopt_data=None,
                     wait_for_status='ADOPT_COMPLETE'):
+        if self.conf.skip_stack_adopt_tests:
+            self.skipTest('Testing Stack adopt disabled in conf, skipping')
         name = stack_name or self._stack_rand_name()
         templ_files = files or {}
         params = parameters or {}
@@ -326,3 +328,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         stack_identifier = '%s/%s' % (name, stack.id)
         self._wait_for_stack_status(stack_identifier, wait_for_status)
         return stack_identifier
+
+    def stack_abandon(self, stack_id):
+        if self.conf.skip_stack_abandon_tests:
+            self.addCleanup(self.client.stacks.delete, stack_id)
+            self.skipTest('Testing Stack abandon disabled in conf, skipping')
+        info = self.client.stacks.abandon(stack_id=stack_id)
+        return info
