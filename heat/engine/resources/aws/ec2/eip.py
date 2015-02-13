@@ -24,7 +24,8 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import vpc
+from heat.engine.resources.aws.ec2 import internet_gateway
+from heat.engine.resources.aws.ec2 import vpc
 
 LOG = logging.getLogger(__name__)
 
@@ -95,8 +96,6 @@ class ElasticIp(resource.Resource):
         """Allocate a floating IP for the current tenant."""
         ips = None
         if self.properties[self.DOMAIN]:
-            from heat.engine.resources import internet_gateway
-
             ext_net = internet_gateway.InternetGateway.get_external_network_id(
                 self.neutron())
             props = {'floating_network_id': ext_net}

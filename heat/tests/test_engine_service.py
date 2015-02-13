@@ -40,7 +40,7 @@ from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import properties
 from heat.engine import resource as res
-from heat.engine.resources.aws import instance as instances
+from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
 from heat.engine import service_software_config
 from heat.engine import service_stack_watch

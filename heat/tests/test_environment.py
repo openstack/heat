@@ -22,7 +22,7 @@ import six
 from heat.common import environment_format
 from heat.engine import environment
 from heat.engine import resources
-from heat.engine.resources.aws import instance
+from heat.engine.resources.aws.ec2 import instance
 from heat.tests import common
 from heat.tests import generic_resource
 

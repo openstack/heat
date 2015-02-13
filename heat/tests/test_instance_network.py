@@ -20,8 +20,8 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resources.aws import instance as instances
-from heat.engine.resources import network_interface as network_interfaces
+from heat.engine.resources.aws.ec2 import instance as instances
+from heat.engine.resources.aws.ec2 import network_interface as net_interfaces
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -264,9 +264,9 @@ class instancesTest(common.HeatTestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
 
         resource_defns = stack.t.resource_definitions(stack)
-        nic = network_interfaces.NetworkInterface('%s_nic' % name,
-                                                  resource_defns['nic1'],
-                                                  stack)
+        nic = net_interfaces.NetworkInterface('%s_nic' % name,
+                                              resource_defns['nic1'],
+                                              stack)
 
         instance = instances.Instance('%s_name' % name,
                                       resource_defns['WebServer'], stack)
