@@ -52,10 +52,8 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         self.assertEqual(self.volume_description,
                          self._stack_output(stack, 'display_description'))
 
-    def _create_stack(self, template_name, add_parameters={}):
-        # TODO(shardy): refactor this into a generic base-class helper
+    def launch_stack(self, template_name, add_parameters={}):
         net = self._get_default_network()
-        stack_name = self._stack_rand_name()
         template = self._load_template(__file__, template_name, 'templates')
         parameters = {'key_name': self.keypair_name,
                       'instance_type': self.conf.instance_type,
@@ -64,18 +62,8 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
                       'timeout': self.conf.build_timeout,
                       'network': net['id']}
         parameters.update(add_parameters)
-        ret_stack = self.client.stacks.create(
-            stack_name=stack_name,
-            template=template,
-            parameters=parameters)
-        stack_id = ret_stack['stack']['id']
-        stack = self.client.stacks.get(stack_id)
-        self.assertIsNotNone(stack)
-        stack_identifier = '%s/%s' % (stack_name, stack.id)
-
-        self.addCleanup(self._stack_delete, stack_identifier)
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
-        return stack, stack_identifier
+        return self.stack_create(template=template,
+                                 parameters=parameters)
 
     @testcase.skip('Skipped until failure rate '
                    'can be reduced ref bug #1382300')
@@ -90,9 +78,11 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
            4. Create a new stack, where the volume is created from the backup
            5. Verify the test data written in (1) is present in the new volume
         """
-        stack, stack_identifier = self._create_stack(
+        stack_identifier = self.launch_stack(
             template_name='test_volumes_delete_snapshot.yaml',
             add_parameters={'volume_size': self.volume_size})
+
+        stack = self.client.stacks.get(stack_identifier)
 
         # Verify with cinder that the volume exists, with matching details
         volume_id = self._stack_output(stack, 'volume_id')
@@ -119,9 +109,10 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         # Now, we create another stack where the volume is created from the
         # backup created by the previous stack
         try:
-            stack2, stack_identifier2 = self._create_stack(
+            stack_identifier2 = self.launch_stack(
                 template_name='test_volumes_create_from_backup.yaml',
                 add_parameters={'backup_id': backup.id})
+            stack2 = self.client.stacks.get(stack_identifier2)
         except exceptions.StackBuildErrorException as e:
             LOG.error("Halting test due to bug: #1382300")
             LOG.exception(e)
