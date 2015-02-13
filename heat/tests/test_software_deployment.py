@@ -96,20 +96,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         }
     }
 
-    template_no_config = {
-        'HeatTemplateFormatVersion': '2012-12-12',
-        'Resources': {
-            'deployment_mysql': {
-                'Type': 'OS::Heat::SoftwareDeployment',
-                'Properties': {
-                    'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-                    'input_values': {'foo': 'bar', 'bink': 'bonk'},
-                    'signal_transport': 'NO_SIGNAL',
-                }
-            }
-        }
-    }
-
     def setUp(self):
         super(SoftwareDeploymentTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -298,60 +284,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'options': {},
             'outputs': []
-        }, self.rpc_client.create_software_config.call_args[1])
-
-        self.assertEqual(
-            {'action': 'CREATE',
-             'config_id': derived_sc['id'],
-             'server_id': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
-             'stack_user_project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
-             'status': 'COMPLETE',
-             'status_reason': 'Not waiting for outputs signal'},
-            self.rpc_client.create_software_deployment.call_args[1])
-
-    def test_handle_create_without_config(self):
-        self._create_stack(self.template_no_config)
-        sd = self.mock_deployment()
-        derived_sc = self.mock_derived_software_config()
-        self.deployment.handle_create()
-
-        self.assertEqual(sd['id'], self.deployment.resource_id)
-        self.assertEqual({
-            'config': '',
-            'group': 'Heat::Ungrouped',
-            'name': self.deployment.physical_resource_name(),
-            'inputs': [{
-                'name': 'foo',
-                'type': 'String',
-                'value': 'bar'
-            }, {
-                'name': 'bink',
-                'type': 'String',
-                'value': 'bonk'
-            }, {
-                'description': 'ID of the server being deployed to',
-                'name': 'deploy_server_id',
-                'type': 'String',
-                'value': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0'
-            }, {
-                'description': 'Name of the current action being deployed',
-                'name': 'deploy_action',
-                'type': 'String',
-                'value': 'CREATE'
-            }, {
-                'description': 'ID of the stack this deployment belongs to',
-                'name': 'deploy_stack_id',
-                'type': 'String',
-                'value': ('software_deployment_test_stack'
-                          '/42f6f66b-631a-44e7-8d01-e22fb54574a9')
-            }, {
-                'description': 'Name of this deployment resource in the stack',
-                'name': 'deploy_resource_name',
-                'type': 'String',
-                'value': 'deployment_mysql'
-            }],
-            'options': None,
-            'outputs': None
         }, self.rpc_client.create_software_config.call_args[1])
 
         self.assertEqual(
