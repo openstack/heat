@@ -39,7 +39,7 @@ To achieve this:
 
 The following examples illustrate how you can use a custom template to define
 new types of resources. These examples use a custom template stored in a
-:file:`my_nova.yml` file:
+:file:`my_nova.yaml` file:
 
 .. code-block:: yaml
 
