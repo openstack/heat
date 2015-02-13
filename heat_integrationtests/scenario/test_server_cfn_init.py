@@ -27,6 +27,7 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
             raise self.skipException("No image configured to test")
         self.client = self.orchestration_client
         self.template_name = 'test_server_cfn_init.yaml'
+        self.sub_dir = 'templates'
 
     def assign_keypair(self):
         self.stack_name = self._stack_rand_name()
@@ -48,7 +49,8 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
         }
 
         # create the stack
-        self.template = self._load_template(__file__, self.template_name)
+        self.template = self._load_template(__file__, self.template_name,
+                                            self.sub_dir)
         self.client.stacks.create(
             stack_name=self.stack_name,
             template=self.template,

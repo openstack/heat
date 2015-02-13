@@ -56,7 +56,7 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         # TODO(shardy): refactor this into a generic base-class helper
         net = self._get_default_network()
         stack_name = self._stack_rand_name()
-        template = self._load_template(__file__, template_name)
+        template = self._load_template(__file__, template_name, 'templates')
         parameters = {'key_name': self.keypair_name,
                       'instance_type': self.conf.instance_type,
                       'image_id': self.conf.minimal_image_ref,

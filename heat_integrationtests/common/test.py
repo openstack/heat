@@ -114,9 +114,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             LOG.debug('Console output for %s', server.id)
             LOG.debug(server.get_console_output())
 
-    def _load_template(self, base_file, file_name):
+    def _load_template(self, base_file, file_name, sub_dir=None):
+        sub_dir = sub_dir or ''
         filepath = os.path.join(os.path.dirname(os.path.realpath(base_file)),
-                                file_name)
+                                sub_dir, file_name)
         with open(filepath) as f:
             return f.read()
 
