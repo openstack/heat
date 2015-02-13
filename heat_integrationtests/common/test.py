@@ -135,6 +135,14 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.addCleanup(delete_keypair)
         return keypair
 
+    def assign_keypair(self):
+        if self.conf.keypair_name:
+            self.keypair = None
+            self.keypair_name = self.conf.keypair_name
+        else:
+            self.keypair = self.create_keypair()
+            self.keypair_name = self.keypair.id
+
     @classmethod
     def _stack_rand_name(cls):
         return rand_name(cls.__name__)

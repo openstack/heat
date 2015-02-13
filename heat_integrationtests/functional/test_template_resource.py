@@ -361,11 +361,7 @@ Resources:
     def setUp(self):
         super(TemplateResourceUpdateFailedTest, self).setUp()
         self.client = self.orchestration_client
-        if self.conf.keypair_name:
-            self.keypair_name = self.conf.keypair_name
-        else:
-            self.keypair = self.create_keypair()
-            self.keypair_name = self.keypair.id
+        self.assign_keypair()
 
     def test_update_on_failed_create(self):
         # create a stack with "server" dependent on "keypair", but
