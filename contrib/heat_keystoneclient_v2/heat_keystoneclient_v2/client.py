@@ -16,12 +16,12 @@
 from keystoneclient.v2_0 import client as kc
 from oslo.config import cfg
 from oslo.utils import importutils
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger('heat.common.keystoneclient')
 LOG.info(_LI("Keystone V2 loaded"))

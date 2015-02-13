@@ -10,6 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -19,7 +21,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import signal_responder
-from heat.openstack.common import log as logging
 from heat.scaling import cooldown
 
 LOG = logging.getLogger(__name__)

@@ -15,6 +15,7 @@ import copy
 import uuid
 
 from oslo.utils import timeutils
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -26,7 +27,6 @@ from heat.engine.resources import resource_group
 from heat.engine.resources.software_config import software_config as sc
 from heat.engine import signal_responder
 from heat.engine import support
-from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)

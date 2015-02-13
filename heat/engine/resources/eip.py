@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo.utils import excutils
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -24,7 +25,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import vpc
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

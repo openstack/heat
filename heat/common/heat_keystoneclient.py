@@ -22,13 +22,13 @@ from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
 from oslo.config import cfg
 from oslo.utils import importutils
+from oslo_log import log as logging
 
 from heat.common import context
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger('heat.common.keystoneclient')
 

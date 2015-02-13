@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 import six
 
 from heat.common.i18n import _
@@ -20,7 +21,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import signal_responder
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

@@ -13,13 +13,13 @@
 
 from oslo.config import cfg
 from oslo import messaging
+from oslo_log import log as logging
 import osprofiler.profiler
 import osprofiler.web
 
 from heat.common import context
 from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
-from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('profiler_enabled', 'heat.common.config', group='profiler')
 

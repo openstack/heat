@@ -156,8 +156,6 @@ api_cw_group = cfg.OptGroup('heat_api_cloudwatch')
 cfg.CONF.register_group(api_cw_group)
 cfg.CONF.register_opts(api_cw_opts,
                        group=api_cw_group)
-cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
-cfg.CONF.import_opt('verbose', 'heat.openstack.common.log')
 
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,

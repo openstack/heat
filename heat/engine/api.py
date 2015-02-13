@@ -14,13 +14,13 @@
 import collections
 
 from oslo.utils import timeutils
+from oslo_log import log as logging
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common import param_utils
 from heat.common import template_format
 from heat.engine import constraints as constr
-from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)

@@ -31,9 +31,6 @@ from heat.common import serializers
 from heat.common import wsgi
 
 
-cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
-
-
 class Fault(object):
 
     def __init__(self, error):

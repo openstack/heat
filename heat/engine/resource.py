@@ -19,6 +19,7 @@ import warnings
 from oslo.config import cfg
 from oslo.utils import encodeutils
 from oslo.utils import excutils
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -39,7 +40,6 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
-from heat.openstack.common import log as logging
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')

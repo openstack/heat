@@ -18,6 +18,7 @@ import os.path
 import warnings
 
 from oslo.config import cfg
+from oslo_log import log
 import six
 
 from heat.common import environment_format as env_fmt
@@ -27,8 +28,6 @@ from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.engine import support
-from heat.openstack.common import log
-
 
 LOG = log.getLogger(__name__)
 

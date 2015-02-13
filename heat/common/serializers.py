@@ -24,9 +24,8 @@ import datetime
 import json
 
 from lxml import etree
+from oslo_log import log as logging
 import six
-
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

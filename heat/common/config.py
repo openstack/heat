@@ -19,10 +19,10 @@ import os
 
 from eventlet.green import socket
 from oslo.config import cfg
+from oslo_log import log as logging
 
 from heat.common.i18n import _
 from heat.common import wsgi
-from heat.openstack.common import log as logging
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [

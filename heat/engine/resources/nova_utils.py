@@ -23,6 +23,7 @@ import warnings
 
 from novaclient import exceptions as nova_exceptions
 from oslo.config import cfg
+from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -30,7 +31,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import scheduler
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

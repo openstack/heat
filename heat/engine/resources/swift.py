@@ -10,6 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -20,7 +22,6 @@ from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

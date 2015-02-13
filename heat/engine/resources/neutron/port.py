@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
@@ -20,7 +22,6 @@ from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

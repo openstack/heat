@@ -16,6 +16,7 @@ import re
 
 from oslo.config import cfg
 from oslo.messaging._drivers import common as rpc_common
+from oslo_log import log
 import six
 import webob
 
@@ -34,6 +35,9 @@ class ErrorWithNewline(webob.exc.HTTPBadRequest):
 
 
 class FaultMiddlewareTest(common.HeatTestCase):
+    def setUp(self):
+        super(FaultMiddlewareTest, self).setUp()
+        log.register_options(cfg.CONF)
 
     def test_disguised_http_exception_with_newline(self):
         wrapper = fault.FaultWrapper(None)

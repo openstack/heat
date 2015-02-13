@@ -20,13 +20,13 @@
 import sys
 
 from oslo.config import cfg
+from oslo_log import log
 
 from heat.common import context
 from heat.common.i18n import _
 from heat.common import service_utils
 from heat.db import api
 from heat.db import utils
-from heat.openstack.common import log
 from heat import version
 
 
@@ -113,13 +113,14 @@ command_opt = cfg.SubCommandOpt('command',
 
 
 def main():
+    log.register_options(CONF)
+    log.setup(CONF, "heat-manage")
     CONF.register_cli_opt(command_opt)
     try:
         default_config_files = cfg.find_config_files('heat', 'heat-engine')
         CONF(sys.argv[1:], project='heat', prog='heat-manage',
              version=version.version_info.version_string(),
              default_config_files=default_config_files)
-        log.setup("heat")
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
 

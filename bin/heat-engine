@@ -34,12 +34,12 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 
 from oslo.config import cfg
 from oslo import i18n
+from oslo_log import log as logging
 
 from heat.common.i18n import _LC
 from heat.common import messaging
 from heat.common import profiler
 from heat.engine import template
-from heat.openstack.common import log as logging
 from heat.openstack.common import service
 from heat.rpc import api as rpc_api
 
@@ -48,9 +48,10 @@ i18n.enable_lazy()
 LOG = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
-
+    logging.register_options(cfg.CONF)
     cfg.CONF(project='heat', prog='heat-engine')
-    logging.setup('heat')
+    logging.setup(cfg.CONF, 'heat-engine')
+    logging.set_defaults()
     messaging.setup()
 
     mgr = None

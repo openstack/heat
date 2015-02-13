@@ -16,11 +16,11 @@ import itertools
 import sys
 
 from oslo.config import cfg
+from oslo_log import log
 import six
 
 from heat.common.i18n import _LE
 from heat.common import plugin_loader
-from heat.openstack.common import log
 
 LOG = log.getLogger(__name__)
 

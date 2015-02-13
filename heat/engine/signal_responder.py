@@ -13,12 +13,11 @@
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo.config import cfg
+from oslo_log import log as logging
 from six.moves.urllib import parse as urlparse
 
 from heat.common.i18n import _LW
 from heat.engine import stack_user
-from heat.openstack.common import log as logging
-
 
 LOG = logging.getLogger(__name__)
 
