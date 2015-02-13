@@ -29,11 +29,7 @@ class StackValidationTest(test.HeatIntegrationTest):
         if not self.conf.instance_type:
             raise self.skipException("No instance_type configured to test")
 
-        if self.conf.keypair_name:
-            self.keypair_name = self.conf.keypair_name
-        else:
-            self.keypair = self.create_keypair()
-            self.keypair_name = self.keypair.id
+        self.assign_keypair()
 
     def test_stack_validate_provider_references_parent_resource(self):
         template = '''

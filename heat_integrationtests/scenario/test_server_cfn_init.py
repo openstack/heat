@@ -25,17 +25,10 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
         super(CfnInitIntegrationTest, self).setUp()
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")
+        self.assign_keypair()
         self.client = self.orchestration_client
         self.template_name = 'test_server_cfn_init.yaml'
         self.sub_dir = 'templates'
-
-    def assign_keypair(self):
-        if self.conf.keypair_name:
-            self.keypair = None
-            self.keypair_name = self.conf.keypair_name
-        else:
-            self.keypair = self.create_keypair()
-            self.keypair_name = self.keypair.id
 
     def launch_stack(self):
         net = self._get_default_network()
@@ -114,6 +107,5 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
                 raise e
 
     def test_server_cfn_init(self):
-        self.assign_keypair()
         sid = self.launch_stack()
         self.check_stack(sid)

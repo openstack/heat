@@ -27,11 +27,7 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
     def setUp(self):
         super(VolumeBackupRestoreIntegrationTest, self).setUp()
         self.client = self.orchestration_client
-        if self.conf.keypair_name:
-            self.keypair_name = self.conf.keypair_name
-        else:
-            self.keypair = self.create_keypair()
-            self.keypair_name = self.keypair.id
+        self.assign_keypair()
         self.volume_description = 'A test volume description 123'
         self.volume_size = self.conf.volume_size
 
