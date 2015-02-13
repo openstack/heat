@@ -30,7 +30,6 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
         self.sub_dir = 'templates'
 
     def assign_keypair(self):
-        self.stack_name = self._stack_rand_name()
         if self.conf.keypair_name:
             self.keypair = None
             self.keypair_name = self.conf.keypair_name
@@ -40,7 +39,7 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
 
     def launch_stack(self):
         net = self._get_default_network()
-        self.parameters = {
+        parameters = {
             'key_name': self.keypair_name,
             'flavor': self.conf.instance_type,
             'image': self.conf.image_ref,
@@ -49,19 +48,12 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
         }
 
         # create the stack
-        self.template = self._load_template(__file__, self.template_name,
-                                            self.sub_dir)
-        self.client.stacks.create(
-            stack_name=self.stack_name,
-            template=self.template,
-            parameters=self.parameters)
+        template = self._load_template(__file__, self.template_name,
+                                       self.sub_dir)
+        return self.stack_create(template=template,
+                                 parameters=parameters)
 
-        self.stack = self.client.stacks.get(self.stack_name)
-        self.stack_identifier = '%s/%s' % (self.stack_name, self.stack.id)
-        self.addCleanup(self._stack_delete, self.stack_identifier)
-
-    def check_stack(self):
-        sid = self.stack_identifier
+    def check_stack(self, sid):
         self._wait_for_resource_status(
             sid, 'WaitHandle', 'CREATE_COMPLETE')
         self._wait_for_resource_status(
@@ -123,5 +115,5 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
 
     def test_server_cfn_init(self):
         self.assign_keypair()
-        self.launch_stack()
-        self.check_stack()
+        sid = self.launch_stack()
+        self.check_stack(sid)
