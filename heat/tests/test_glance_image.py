@@ -19,7 +19,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import glance_image as gi
+from heat.engine.resources.openstack.glance import glance_image as gi
 from heat.tests import common
 from heat.tests import utils
 
