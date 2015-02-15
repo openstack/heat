@@ -24,7 +24,7 @@ from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import os_database
+from heat.engine.resources.openstack.trove import os_database
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
