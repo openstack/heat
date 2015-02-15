@@ -26,7 +26,7 @@ from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
-from heat.engine.resources.aws import wait_condition_handle as aws_wch
+from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common

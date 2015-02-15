@@ -24,7 +24,7 @@ from heat.common import urlfetch
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import stack as stack_res
+from heat.engine.resources.aws.cfn import stack as stack_res
 from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc

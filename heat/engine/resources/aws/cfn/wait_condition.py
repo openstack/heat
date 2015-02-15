@@ -16,7 +16,7 @@ from heat.common import identifier
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.aws import wait_condition_handle as aws_wch
+from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources.openstack import wait_condition as heat_wc
 from heat.engine import support
 
