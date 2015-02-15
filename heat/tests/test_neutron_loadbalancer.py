@@ -24,7 +24,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources.neutron import loadbalancer
+from heat.engine.resources.openstack.neutron import loadbalancer
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils

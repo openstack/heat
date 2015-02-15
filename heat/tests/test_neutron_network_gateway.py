@@ -22,7 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.neutron import network_gateway
+from heat.engine.resources.openstack.neutron import network_gateway
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common

@@ -27,7 +27,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.neutron import subnet
+from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import scheduler
 from heat.engine import stack_user
 from heat.engine import support

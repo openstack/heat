@@ -19,7 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources.neutron import firewall
+from heat.engine.resources.openstack.neutron import firewall
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
