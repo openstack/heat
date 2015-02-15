@@ -17,7 +17,7 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.db import api as db_api
-from heat.engine.resources.aws import user
+from heat.engine.resources.aws.iam import user
 from heat.engine.resources.openstack import access_policy as ap
 from heat.engine import scheduler
 from heat.tests import common

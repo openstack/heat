@@ -89,5 +89,5 @@ def _load_global_resources(env):
 
 
 def list_opts():
-    from heat.engine.resources import loadbalancer
+    from heat.engine.resources.aws.lb import loadbalancer
     yield None, loadbalancer.loadbalancer_opts
