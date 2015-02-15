@@ -26,7 +26,7 @@ from heat.engine.clients.os import ceilometer
 from heat.engine import parser
 from heat.engine import properties as props
 from heat.engine import resource
-from heat.engine.resources.ceilometer import alarm
+from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common

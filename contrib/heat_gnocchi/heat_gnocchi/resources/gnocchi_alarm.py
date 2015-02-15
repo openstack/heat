@@ -15,7 +15,7 @@
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.ceilometer import alarm
+from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import support
 
 
