@@ -19,7 +19,7 @@ import six
 from heat.common import exception as heat_ex
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources import nova_floatingip
+from heat.engine.resources.openstack.nova import nova_floatingip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
