@@ -18,9 +18,9 @@ from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import function
 from heat.engine import properties
+from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.engine import stack_resource
 from heat.scaling import lbutils
 from heat.scaling import template
 

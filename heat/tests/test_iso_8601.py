@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine.resources import iso_8601
+from heat.engine import iso_8601
 from heat.tests import common
 
 

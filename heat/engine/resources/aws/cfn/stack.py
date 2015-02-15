@@ -19,7 +19,7 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
 from heat.engine import properties
-from heat.engine import stack_resource
+from heat.engine.resources import stack_resource
 
 
 class NestedStack(stack_resource.StackResource):

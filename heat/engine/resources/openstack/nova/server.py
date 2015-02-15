@@ -28,8 +28,8 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
+from heat.engine.resources import stack_user
 from heat.engine import scheduler
-from heat.engine import stack_user
 from heat.engine import support
 from heat.rpc import api as rpc_api
 

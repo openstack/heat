@@ -21,7 +21,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine import stack_user
+from heat.engine.resources import stack_user
 
 LOG = logging.getLogger(__name__)
 

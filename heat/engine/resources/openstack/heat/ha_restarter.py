@@ -19,7 +19,7 @@ from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import signal_responder
+from heat.engine.resources import signal_responder
 from heat.engine import support
 
 LOG = logging.getLogger(__name__)
