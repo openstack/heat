@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine.resources.aws import autoscaling_group as asc
+from heat.engine.resources.aws.autoscaling import autoscaling_group as asc
 from heat.tests import common
 
 
