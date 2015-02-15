@@ -15,7 +15,7 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import cloud_watch
+from heat.engine.resources.openstack.heat import cloud_watch
 from heat.engine import scheduler
 from heat.engine import watchrule
 from heat.tests import common

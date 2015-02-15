@@ -16,7 +16,7 @@ import six
 
 from heat.common import exception as exc
 from heat.common import template_format
-from heat.engine.resources.software_config import software_component as sc
+from heat.engine.resources.openstack.heat import software_component as sc
 from heat.engine import stack
 from heat.engine import template
 from heat.tests import common

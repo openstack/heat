@@ -19,7 +19,7 @@ import os
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.software_config import software_config
+from heat.engine.resources.openstack.heat import software_config
 from heat.engine import support
 from heat.rpc import api as rpc_api
 

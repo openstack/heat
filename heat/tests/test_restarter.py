@@ -16,7 +16,7 @@ import mock
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine.resources.aws.ec2 import instance
-from heat.engine.resources.openstack import ha_restarter
+from heat.engine.resources.openstack.heat import ha_restarter
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils

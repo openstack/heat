@@ -20,8 +20,8 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.software_config import software_config as sc
-from heat.engine.resources.software_config import software_deployment as sd
+from heat.engine.resources.openstack.heat import software_config as sc
+from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine import support
 
 

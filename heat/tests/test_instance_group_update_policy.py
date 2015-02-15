@@ -18,7 +18,7 @@ import mock
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import function
-from heat.engine.resources import instance_group as instgrp
+from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils

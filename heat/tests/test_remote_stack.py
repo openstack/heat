@@ -25,7 +25,7 @@ from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine.resources import remote_stack
+from heat.engine.resources.openstack.heat import remote_stack
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common as tests_common

@@ -16,7 +16,7 @@ import copy
 
 from heat.common import template_format
 from heat.engine import resource
-from heat.engine.resources import cloud_watch
+from heat.engine.resources.openstack.heat import cloud_watch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import watchrule

@@ -28,7 +28,7 @@ from heat.engine import function
 from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import instance_group as instgrp
+from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.scaling import cooldown

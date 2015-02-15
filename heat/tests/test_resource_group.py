@@ -19,7 +19,7 @@ import six
 from heat.common import exception
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources import resource_group
+from heat.engine.resources.openstack.heat import resource_group
 from heat.engine import stack as stackm
 from heat.tests import common
 from heat.tests import generic_resource
