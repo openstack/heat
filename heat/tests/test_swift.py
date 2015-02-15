@@ -19,7 +19,7 @@ import swiftclient.client as sc
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import swift
+from heat.engine.resources.openstack.swift import swift
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
