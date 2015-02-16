@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from heat.common import exception
 
 from oslo.utils import excutils
 import six
@@ -134,7 +135,10 @@ class NovaFloatingIpAssociation(resource.Resource):
         fl_ip = self.nova().floating_ips.get(self.properties[self.FLOATING_IP])
 
         self.nova().servers.add_floating_ip(server, fl_ip.ip)
-        self.resource_id_set('%s-%s' % (fl_ip.id, fl_ip.ip))
+        if self.id is not None:
+            self.resource_id_set(self.id)
+        else:
+            raise exception.ResourceNotAvailable(resource_name=self.name)
 
     def handle_delete(self):
         if self.resource_id is None:
@@ -167,7 +171,10 @@ class NovaFloatingIpAssociation(resource.Resource):
             fl_ip = self.nova().floating_ips.get(fl_ip_id)
 
             self.nova().servers.add_floating_ip(server, fl_ip.ip)
-            self.resource_id_set('%s-%s' % (fl_ip.id, fl_ip.ip))
+            if self.id is not None:
+                self.resource_id_set(self.id)
+            else:
+                raise exception.ResourceNotAvailable(resource_name=self.name)
 
 
 def resource_mapping():
