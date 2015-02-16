@@ -25,10 +25,10 @@ class Router(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
-        L3_AGENT_ID, DISTRIBUTED,
+        L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
-        'l3_agent_id', 'distributed',
+        'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha'
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -88,7 +88,22 @@ class Router(neutron.NeutronResource):
             _('ID of the L3 agent. NOTE: The default policy setting in '
               'Neutron restricts usage of this property to administrative '
               'users only.'),
-            update_allowed=True
+            update_allowed=True,
+            support_status=support.SupportStatus(
+                support.DEPRECATED,
+                _('Deprecated in Kilo. Use property %s.') % L3_AGENT_IDS),
+        ),
+        L3_AGENT_IDS: properties.Schema(
+            properties.Schema.LIST,
+            _('ID list of the L3 agent. User can specify multi-agents '
+              'for highly available router. NOTE: The default policy '
+              'setting in Neutron restricts usage of this property to '
+              'administrative users only.'),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+            ),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='2015.1')
         ),
         DISTRIBUTED: properties.Schema(
             properties.Schema.BOOLEAN,
@@ -96,6 +111,14 @@ class Router(neutron.NeutronResource):
               'NOTE: The default policy setting in Neutron restricts usage '
               'of this property to administrative users only. This property '
               'can not be used in conjunction with the L3 agent ID.'),
+            support_status=support.SupportStatus(version='2015.1')
+        ),
+        HA: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Indicates whether or not to create a highly available router. '
+              'NOTE: The default policy setting in Neutron restricts usage '
+              'of this property to administrative users only. And now neutron '
+              'do not support distributed and ha at the same time.'),
             support_status=support.SupportStatus(version='2015.1')
         ),
     }
@@ -125,10 +148,22 @@ class Router(neutron.NeutronResource):
         super(Router, self).validate()
         is_distributed = self.properties.get(self.DISTRIBUTED)
         l3_agent_id = self.properties.get(self.L3_AGENT_ID)
-        # do not specific l3_agent_id when creating a distributed router
-        if is_distributed and l3_agent_id:
+        l3_agent_ids = self.properties.get(self.L3_AGENT_IDS)
+        is_ha = self.properties.get(self.HA)
+        if l3_agent_id and l3_agent_ids:
+            raise exception.ResourcePropertyConflict(self.L3_AGENT_ID,
+                                                     self.L3_AGENT_IDS)
+        # do not specific l3 agent when creating a distributed router
+        if is_distributed and (l3_agent_id or l3_agent_ids):
+            raise exception.ResourcePropertyConflict(
+                self.DISTRIBUTED,
+                "/".join([self.L3_AGENT_ID, self.L3_AGENT_IDS]))
+        if is_ha and is_distributed:
             raise exception.ResourcePropertyConflict(self.DISTRIBUTED,
-                                                     self.L3_AGENT_ID)
+                                                     self.HA)
+        if not is_ha and l3_agent_ids and len(l3_agent_ids) > 1:
+            msg = _('Non HA routers can only have one L3 agent.')
+            raise exception.StackValidationFailed(message=msg)
 
     def add_dependencies(self, deps):
         super(Router, self).add_dependencies(deps)
@@ -153,18 +188,26 @@ class Router(neutron.NeutronResource):
                 del gateway[self.EXTERNAL_GATEWAY_ENABLE_SNAT]
         return props
 
+    def _get_l3_agent_list(self, props):
+        l3_agent_id = props.pop(self.L3_AGENT_ID, None)
+        l3_agent_ids = props.pop(self.L3_AGENT_IDS, None)
+        if not l3_agent_ids and l3_agent_id:
+            l3_agent_ids = [l3_agent_id]
+
+        return l3_agent_ids
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
 
-        l3_agent_id = props.pop(self.L3_AGENT_ID, None)
+        l3_agent_ids = self._get_l3_agent_list(props)
 
         router = self.neutron().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
-        if l3_agent_id:
-            self._replace_agent(l3_agent_id)
+        if l3_agent_ids:
+            self._replace_agent(l3_agent_ids)
 
     def _show_resource(self):
         return self.neutron().show_router(
@@ -185,26 +228,29 @@ class Router(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
+        l3_agent_ids = self._get_l3_agent_list(props)
+        if l3_agent_ids:
+            self._replace_agent(l3_agent_ids)
 
-        l3_agent_id = props.pop(self.L3_AGENT_ID, None)
-
+        if self.L3_AGENT_IDS in prop_diff:
+            del prop_diff[self.L3_AGENT_IDS]
         if self.L3_AGENT_ID in prop_diff:
-            self._replace_agent(l3_agent_id)
             del prop_diff[self.L3_AGENT_ID]
 
         if len(prop_diff) > 0:
             self.neutron().update_router(
                 self.resource_id, {'router': props})
 
-    def _replace_agent(self, l3_agent_id=None):
+    def _replace_agent(self, l3_agent_ids=None):
         ret = self.neutron().list_l3_agent_hosting_routers(
             self.resource_id)
         for agent in ret['agents']:
             self.neutron().remove_router_from_l3_agent(
                 agent['id'], self.resource_id)
-        if l3_agent_id:
-            self.neutron().add_router_to_l3_agent(
-                l3_agent_id, {'router_id': self.resource_id})
+        if l3_agent_ids:
+            for l3_agent_id in l3_agent_ids:
+                self.neutron().add_router_to_l3_agent(
+                    l3_agent_id, {'router_id': self.resource_id})
 
 
 class RouterInterface(neutron.NeutronResource):
