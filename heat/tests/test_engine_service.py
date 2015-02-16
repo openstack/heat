@@ -3167,6 +3167,13 @@ class StackServiceTest(common.HeatTestCase):
             'mock_id',
             dict())
 
+    def test_stop_rpc_server(self):
+        with mock.patch.object(self.eng,
+                               '_rpc_server') as mock_rpc_server:
+            self.eng._stop_rpc_server()
+            mock_rpc_server.stop.assert_called_once_with()
+            mock_rpc_server.wait.assert_called_once_with()
+
 
 class SoftwareConfigServiceTest(common.HeatTestCase):
 
