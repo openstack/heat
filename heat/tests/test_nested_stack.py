@@ -14,6 +14,7 @@
 
 import mock
 from requests import exceptions
+import six
 import yaml
 
 from heat.common import exception
@@ -65,11 +66,11 @@ Outputs:
         super(NestedStackTest, self).setUp()
         self.m.StubOutWithMock(urlfetch, 'get')
 
-    def create_stack(self, template):
+    def validate_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+        res = stack.validate()
+        self.assertIsNone(res)
         return stack
 
     def parse_stack(self, t, data=None):
@@ -116,10 +117,8 @@ Resources:
         urlfetch.get(
             'https://server.test/depth3.template').AndReturn(
                 self.nested_template)
-        self.m.StubOutWithMock(parser.Stack, 'validate')
-        parser.Stack.validate().MultipleTimes().AndReturn(None)
         self.m.ReplayAll()
-        self.create_stack(root_template)
+        self.validate_stack(root_template)
         self.m.VerifyAll()
 
     def test_nested_stack_four_deep(self):
@@ -172,9 +171,9 @@ Resources:
         self.m.ReplayAll()
         t = template_format.parse(root_template)
         stack = self.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
-        self.assertIn('Recursion depth exceeds', stack.status_reason)
+        res = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+        self.assertIn('Recursion depth exceeds', six.text_type(res))
         self.m.VerifyAll()
 
     def test_nested_stack_four_wide(self):
@@ -219,7 +218,7 @@ Resources:
             'https://server.test/depth4.template').InAnyOrder().AndReturn(
                 self.nested_template)
         self.m.ReplayAll()
-        self.create_stack(root_template)
+        self.validate_stack(root_template)
         self.m.VerifyAll()
 
     def test_nested_stack_infinite_recursion(self):
@@ -237,10 +236,9 @@ Resources:
         self.m.ReplayAll()
         t = template_format.parse(template)
         stack = self.parse_stack(t)
-        stack.create()
-        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
-        self.assertIn('Recursion depth exceeds', stack.status_reason)
-        self.m.VerifyAll()
+        res = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+        self.assertIn('Recursion depth exceeds', six.text_type(res))
 
     def test_child_params(self):
         t = template_format.parse(self.test_template)
@@ -303,6 +301,13 @@ Outputs:
     def setUp(self):
         super(ResDataNestedStackTest, self).setUp()
         resource._register_class("res.data.resource", ResDataResource)
+
+    def create_stack(self, template):
+        t = template_format.parse(template)
+        stack = self.parse_stack(t)
+        stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+        return stack
 
     def test_res_data_delete(self):
         urlfetch.get('https://server.test/the.template').AndReturn(
