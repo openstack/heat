@@ -289,6 +289,7 @@ class EngineService(service.Service):
         self.target = None
         self.service_id = None
         self.manage_thread_grp = None
+        self._rpc_server = None
 
         if cfg.CONF.instance_user:
             warnings.warn('The "instance_user" option in heat.conf is '
@@ -329,8 +330,8 @@ class EngineService(service.Service):
             version=self.RPC_API_VERSION, server=self.host,
             topic=self.topic)
         self.target = target
-        server = rpc_messaging.get_rpc_server(target, self)
-        server.start()
+        self._rpc_server = rpc_messaging.get_rpc_server(target, self)
+        self._rpc_server.start()
         self._client = rpc_messaging.get_rpc_client(
             version=self.RPC_API_VERSION)
 
@@ -340,13 +341,18 @@ class EngineService(service.Service):
 
         super(EngineService, self).start()
 
-    def stop(self):
+    def _stop_rpc_server(self):
         # Stop rpc connection at first for preventing new requests
-        LOG.info(_LI("Attempting to stop engine service..."))
+        LOG.debug("Attempting to stop engine service...")
         try:
-            self.conn.close()
-        except Exception:
-            pass
+            self._rpc_server.stop()
+            self._rpc_server.wait()
+            LOG.info(_LI("Engine service is stopped successfully"))
+        except Exception as e:
+            LOG.error(_LE("Failed to stop engine service, %s"), e)
+
+    def stop(self):
+        self._stop_rpc_server()
 
         # Wait for all active threads to be finished
         for stack_id in self.thread_group_mgr.groups.keys():
