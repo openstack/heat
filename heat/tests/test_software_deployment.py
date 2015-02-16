@@ -641,155 +641,91 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_signal_ok_zero(self):
         self._create_stack(self.template)
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        sc = {
-            'outputs': [
-                {'name': 'foo'},
-                {'name': 'foo2'},
-                {'name': 'failed', 'error_output': True}
-            ]
-        }
-        sd = {
-            'output_values': {},
-            'status': self.deployment.IN_PROGRESS
-        }
-        self.rpc_client.show_software_deployment.return_value = sd
-        self.rpc_client.show_software_config.return_value = sc
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment succeeded'
         details = {
             'foo': 'bar',
             'deploy_status_code': 0
         }
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
-        self.assertEqual({
-            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
-            'output_values': {
-                'foo': 'bar',
-                'deploy_status_code': 0,
-                'deploy_stderr': None,
-                'deploy_stdout': None
-            },
-            'status': 'COMPLETE',
-            'status_reason': 'Outputs received'},
-            self.rpc_client.update_software_deployment.call_args[1])
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c', ca[1])
+        self.assertEqual({'foo': 'bar', 'deploy_status_code': 0}, ca[2])
+        self.assertIsNotNone(ca[3])
 
     def test_handle_signal_ok_str_zero(self):
         self._create_stack(self.template)
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        sc = {
-            'outputs': [
-                {'name': 'foo'},
-                {'name': 'foo2'},
-                {'name': 'failed', 'error_output': True}
-            ]
-        }
-        sd = {
-            'output_values': {},
-            'status': self.deployment.IN_PROGRESS
-        }
-        self.rpc_client.show_software_deployment.return_value = sd
-        self.rpc_client.show_software_config.return_value = sc
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment succeeded'
         details = {
             'foo': 'bar',
             'deploy_status_code': '0'
         }
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment succeeded', ret)
-        self.assertEqual({
-            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
-            'output_values': {
-                'foo': 'bar',
-                'deploy_status_code': '0',
-                'deploy_stderr': None,
-                'deploy_stdout': None
-            },
-            'status': 'COMPLETE',
-            'status_reason': 'Outputs received'},
-            self.rpc_client.update_software_deployment.call_args[1])
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c', ca[1])
+        self.assertEqual({'foo': 'bar', 'deploy_status_code': '0'}, ca[2])
+        self.assertIsNotNone(ca[3])
 
     def test_handle_signal_failed(self):
         self._create_stack(self.template)
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        sc = {
-            'outputs': [
-                {'name': 'foo'},
-                {'name': 'foo2'},
-                {'name': 'failed', 'error_output': True}
-            ]
-        }
-        sd = {
-            'output_values': {},
-            'status': self.deployment.IN_PROGRESS
-        }
-        self.rpc_client.show_software_deployment.return_value = sd
-        self.rpc_client.show_software_config.return_value = sc
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment failed'
+
         details = {'failed': 'no enough memory found.'}
         ret = self.deployment.handle_signal(details)
         self.assertEqual('deployment failed', ret)
-        self.assertEqual({
-            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
-            'output_values': {
-                'deploy_status_code': None,
-                'deploy_stderr': None,
-                'deploy_stdout': None,
-                'failed': 'no enough memory found.'
-            },
-            'status': 'FAILED',
-            'status_reason': 'failed : no enough memory found.'},
-            self.rpc_client.update_software_deployment.call_args[1])
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c', ca[1])
+        self.assertEqual(details, ca[2])
+        self.assertIsNotNone(ca[3])
 
         # Test bug 1332355, where details contains a translateable message
         details = {'failed': _('need more memory.')}
-        self.deployment.handle_signal(details)
-        self.assertEqual({
-            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
-            'output_values': {
-                'deploy_status_code': None,
-                'deploy_stderr': None,
-                'deploy_stdout': None,
-                'failed': 'need more memory.'
-            },
-            'status': 'FAILED',
-            'status_reason': 'failed : need more memory.'},
-            self.rpc_client.update_software_deployment.call_args[1])
+        ret = self.deployment.handle_signal(details)
+        self.assertEqual('deployment failed', ret)
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c', ca[1])
+        self.assertEqual(details, ca[2])
+        self.assertIsNotNone(ca[3])
 
     def test_handle_status_code_failed(self):
         self._create_stack(self.template)
         self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
-        sd = {
-            'outputs': [],
-            'output_values': {},
-            'status': self.deployment.IN_PROGRESS
-        }
-        self.rpc_client.show_software_deployment.return_value = sd
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = 'deployment failed'
+
         details = {
             'deploy_stdout': 'A thing happened',
             'deploy_stderr': 'Then it broke',
             'deploy_status_code': -1
         }
         self.deployment.handle_signal(details)
-        self.assertEqual(
-            'c8a19429-7fde-47ea-a42f-40045488226c',
-            self.rpc_client.show_software_deployment.call_args[0][1])
-        self.assertEqual({
-            'deployment_id': 'c8a19429-7fde-47ea-a42f-40045488226c',
-            'output_values': {
-                'deploy_stdout': 'A thing happened',
-                'deploy_stderr': 'Then it broke',
-                'deploy_status_code': -1
-            },
-            'status': 'FAILED',
-            'status_reason': ('deploy_status_code : Deployment exited '
-                              'with non-zero status code: -1')},
-            self.rpc_client.update_software_deployment.call_args[1])
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertEqual('c8a19429-7fde-47ea-a42f-40045488226c', ca[1])
+        self.assertEqual(details, ca[2])
+        self.assertIsNotNone(ca[3])
 
     def test_handle_signal_not_waiting(self):
         self._create_stack(self.template)
-        sd = {
-            'status': self.deployment.COMPLETE
-        }
-        self.rpc_client.show_software_deployment.return_value = sd
+        rpcc = self.rpc_client
+        rpcc.signal_software_deployment.return_value = None
         details = None
         self.assertIsNone(self.deployment.handle_signal(details))
+        ca = rpcc.signal_software_deployment.call_args[0]
+        self.assertEqual(self.ctx, ca[0])
+        self.assertIsNone(ca[1])
+        self.assertIsNone(ca[2])
+        self.assertIsNotNone(ca[3])
 
     def test_fn_get_att(self):
         self._create_stack(self.template)
