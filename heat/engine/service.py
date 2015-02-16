@@ -22,6 +22,7 @@ import eventlet
 from oslo.config import cfg
 from oslo import messaging
 from oslo.serialization import jsonutils
+from oslo.utils import timeutils
 from oslo.utils import uuidutils
 from osprofiler import profiler
 import requests
@@ -269,7 +270,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.4'
+    RPC_API_VERSION = '1.5'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1473,7 +1474,7 @@ class EngineService(service.Service):
     @request_context
     def update_software_deployment(self, cnxt, deployment_id, config_id,
                                    input_values, output_values, action,
-                                   status, status_reason):
+                                   status, status_reason, updated_at):
         update_data = {}
         if config_id:
             update_data['config_id'] = config_id
@@ -1487,6 +1488,11 @@ class EngineService(service.Service):
             update_data['status'] = status
         if status_reason:
             update_data['status_reason'] = status_reason
+        if updated_at:
+            update_data['updated_at'] = timeutils.parse_isotime(updated_at)
+        else:
+            update_data['updated_at'] = timeutils.utcnow()
+
         sd = db_api.software_deployment_update(cnxt,
                                                deployment_id, update_data)
 
