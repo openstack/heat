@@ -287,7 +287,7 @@ class SaharaClusterTemplate(resource.Resource):
         ),
         MANAGEMENT_NETWORK: properties.Schema(
             properties.Schema.STRING,
-            _('Name or UUID of Neutron network.'),
+            _('Name or UUID of network.'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -350,8 +350,12 @@ class SaharaClusterTemplate(resource.Resource):
         image_id = self.properties.get(self.IMAGE_ID)
         net_id = self.properties.get(self.MANAGEMENT_NETWORK)
         if net_id:
-            net_id = self.client_plugin('neutron').find_neutron_resource(
-                self.properties, self.MANAGEMENT_NETWORK, 'network')
+            if self.is_using_neutron():
+                net_id = self.client_plugin('neutron').find_neutron_resource(
+                    self.properties, self.MANAGEMENT_NETWORK, 'network')
+            else:
+                net_id = self.client_plugin('nova').get_nova_network_id(
+                    net_id)
         anti_affinity = self.properties.get(self.ANTI_AFFINITY)
         cluster_configs = self.properties.get(self.CLUSTER_CONFIGS)
         node_groups = self.properties.get(self.NODE_GROUPS)
@@ -386,9 +390,6 @@ class SaharaClusterTemplate(resource.Resource):
         if res:
             return res
         # check if running on neutron and MANAGEMENT_NETWORK missing
-        # NOTE(pshchelo): on nova-network with MANAGEMENT_NETWORK present
-        # overall stack validation will fail due to neutron.network constraint,
-        # although the message will be not really relevant.
         if (self.is_using_neutron() and
                 not self.properties.get(self.MANAGEMENT_NETWORK)):
             msg = _("%s must be provided"

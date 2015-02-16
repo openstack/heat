@@ -182,6 +182,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                 'port_id': u'32acc49c-899e-44ea-8177-6f4157e12eb4'
             }
         })
+        self.stub_NetworkConstraint_validate()
         if resolve_neutron:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -206,12 +207,9 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                 mox.IsA(neutronclient.Client),
                 'network',
                 '6af055d3-26f6-48dd-a597-7611d7e58d35'
-            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'network',
-                '6af055d3-26f6-48dd-a597-7611d7e58d35'
-            ).AndReturn('6af055d3-26f6-48dd-a597-7611d7e58d35')
+            ).MultipleTimes().AndReturn(
+                '6af055d3-26f6-48dd-a597-7611d7e58d35')
+
         neutronclient.Client.disconnect_network_gateway(
             'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
                 'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
@@ -275,6 +273,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         # network, then can delete the network_gateway successful
         # without residue network_gateway
         rsrc = self.mock_create_fail_network_not_found_delete_success()
+        self.stub_NetworkConstraint_validate()
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -508,6 +507,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             }
         }
         ).AndRaise(qe.NeutronClientException)
+        self.stub_NetworkConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -536,6 +536,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
             resource_defns['NetworkGateway'], stack)
+        self.stub_NetworkConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -557,6 +558,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         rsrc = network_gateway.NetworkGateway(
             'test_network_gateway',
             resource_defns['NetworkGateway'], stack)
+        self.stub_NetworkConstraint_validate()
 
         self.m.ReplayAll()
 

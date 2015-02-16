@@ -97,7 +97,10 @@ class NetworkGateway(neutron.NeutronResource):
                         support_status=support.SupportStatus(
                             support.DEPRECATED,
                             _('Use property %s.') % NETWORK),
-                        required=False
+                        required=False,
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ],
                     ),
                     NETWORK: properties.Schema(
                         properties.Schema.STRING,
@@ -105,7 +108,10 @@ class NetworkGateway(neutron.NeutronResource):
                             'The internal network to connect on '
                             'the network gateway.'),
                         required=False,
-                        support_status=support.SupportStatus(version='2014.2')
+                        support_status=support.SupportStatus(version='2014.2'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ],
                     ),
                     SEGMENTATION_TYPE: properties.Schema(
                         properties.Schema.STRING,

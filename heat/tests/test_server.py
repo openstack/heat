@@ -16,7 +16,6 @@ import copy
 
 import mock
 import mox
-from novaclient import exceptions as nova_exceptions
 from oslo.utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -26,6 +25,7 @@ from heat.common.i18n import _
 from heat.common import template_format
 from heat.db import api as db_api
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine import environment
@@ -1028,7 +1028,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
-
+        self.stub_NetworkConstraint_validate()
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.StackValidationFailed,
@@ -1828,31 +1828,42 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'test_server_create')
+        self.patchobject(server, 'is_using_neutron', return_value=True)
+
         self.assertIsNone(server._build_nics([]))
         self.assertIsNone(server._build_nics(None))
         self.assertEqual([{'port-id': 'aaaabbbb'},
                           {'v4-fixed-ip': '192.0.2.0'}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '192.0.2.0'}]))
-
+        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+                         return_value='1234abcd')
         self.assertEqual([{'net-id': '1234abcd'}],
                          server._build_nics([{'uuid': '1234abcd'}]))
 
+        self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
+                         return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics(
                              [{'network':
                                'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]))
 
+        self.patchobject(server, 'is_using_neutron', return_value=False)
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics([{'network': 'public'}]))
 
-        self.assertRaises(nova_exceptions.NoUniqueMatch,
-                          server._build_nics,
-                          ([{'network': 'foo'}]))
+        expected = ('Multiple physical resources were found with name (foo)')
+        exc = self.assertRaises(
+            exception.PhysicalResourceNameAmbiguity,
+            server._build_nics, ([{'network': 'foo'}]))
+        self.assertIn(expected, six.text_type(exc))
+        expected = 'The Nova network (bar) could not be found'
+        exc = self.assertRaises(
+            exception.NovaNetworkNotFound,
+            server._build_nics, ([{'network': 'bar'}]))
+        self.assertIn(expected, six.text_type(exc))
 
-        self.assertRaises(nova_exceptions.NotFound,
-                          server._build_nics,
-                          ([{'network': 'bar'}]))
+        self.m.VerifyAll()
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
@@ -2487,6 +2498,7 @@ class ServersTest(common.HeatTestCase):
         return_server.interface_attach(None, new_networks[0]['network'],
                                        new_networks[0]['fixed_ip']).AndReturn(
                                            None)
+        self.stub_NetworkConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()
@@ -2522,6 +2534,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach(
             new_networks[0]['port'], None, None).AndReturn(None)
+        self.stub_NetworkConstraint_validate()
 
         self.m.ReplayAll()
 
@@ -2584,6 +2597,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(return_server, 'interface_attach')
         return_server.interface_attach(
             new_networks[1]['port'], None, None).AndReturn(None)
+        self.stub_NetworkConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()
