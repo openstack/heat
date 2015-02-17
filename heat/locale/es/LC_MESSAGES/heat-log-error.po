@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-01-29 06:17+0000\n"
-"PO-Revision-Date: 2015-01-28 07:02+0000\n"
+"POT-Creation-Date: 2015-02-17 06:02+0000\n"
+"PO-Revision-Date: 2015-02-16 22:06+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -63,8 +63,8 @@ msgstr ""
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:323
-#: heat/common/heat_keystoneclient.py:397
+#: heat/common/heat_keystoneclient.py:310
+#: heat/common/heat_keystoneclient.py:384
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -94,30 +94,30 @@ msgstr "%(opname) %(ci)s fallo por %(a)s en %(sid)s"
 msgid "Failed to import module %s"
 msgstr "No se ha podido importar el modulo %s"
 
-#: heat/common/wsgi.py:266
+#: heat/common/wsgi.py:267
 msgid "SIGTERM received"
 msgstr "Se ha recibido SIGTERM"
 
-#: heat/common/wsgi.py:275
+#: heat/common/wsgi.py:276
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:303
+#: heat/common/wsgi.py:304
 #, python-format
 msgid "Removing dead child %s"
 msgstr "Eliminando hijo muerto %s"
 
-#: heat/common/wsgi.py:661
+#: heat/common/wsgi.py:662
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "Excepción al manejar recurso: %s"
 
-#: heat/common/wsgi.py:683
+#: heat/common/wsgi.py:684
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "Devolviendo %(code)s al usuario: %(explanation)s"
 
-#: heat/common/wsgi.py:757
+#: heat/common/wsgi.py:758
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr "Error inesperado ha ocurrido sirviendo API: %s"
@@ -169,7 +169,12 @@ msgstr "Error de base de datos %s"
 msgid "signal %(name)s : %(msg)s"
 msgstr "señal %(name)s : %(msg)s"
 
-#: heat/engine/service.py:1326
+#: heat/engine/service.py:352
+#, python-format
+msgid "Failed to stop engine service, %s"
+msgstr ""
+
+#: heat/engine/service.py:1364
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -178,22 +183,22 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "No ha sido posible obtener la pila %s para tareas periódicas"
 
-#: heat/engine/stack.py:730
+#: heat/engine/stack.py:737
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:960
+#: heat/engine/stack.py:967
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1144
+#: heat/engine/stack.py:1151
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1153
+#: heat/engine/stack.py:1160
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -213,7 +218,7 @@ msgstr ""
 msgid "Port not specified."
 msgstr ""
 
-#: heat/engine/resources/nova_floatingip.py:77
+#: heat/engine/resources/nova_floatingip.py:78
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
@@ -229,7 +234,7 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling_group.py:305
+#: heat/engine/resources/aws/autoscaling_group.py:341
 msgid "Failed sending error notification"
 msgstr ""
 
