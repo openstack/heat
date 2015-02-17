@@ -12,13 +12,12 @@
 #    under the License.
 
 import keystoneclient.exceptions as kc_exception
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import resource
-from heat.openstack.common import log as logging
-
 
 LOG = logging.getLogger(__name__)
 

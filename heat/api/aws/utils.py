@@ -16,9 +16,10 @@
 import itertools
 import re
 
+from oslo_log import log as logging
+
 from heat.api.aws import exception
 from heat.common.i18n import _LE
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

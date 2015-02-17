@@ -14,6 +14,7 @@
 """Endpoint for heat AWS-compatible CloudWatch API."""
 
 from oslo import messaging
+from oslo_log import log as logging
 import six
 
 from heat.api.aws import exception
@@ -24,7 +25,6 @@ from heat.common.i18n import _LE
 from heat.common.i18n import _LW
 from heat.common import policy
 from heat.common import wsgi
-from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 

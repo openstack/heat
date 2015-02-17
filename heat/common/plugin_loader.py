@@ -23,10 +23,10 @@ import pkgutil
 import sys
 import types
 
+from oslo_log import log as logging
 import six
 
 from heat.common.i18n import _LE
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

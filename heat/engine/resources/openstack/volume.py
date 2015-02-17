@@ -13,6 +13,7 @@
 
 import json
 
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -25,7 +26,6 @@ from heat.engine.resources.aws import volume as aws_vol
 from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import volume_tasks as vol_task
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

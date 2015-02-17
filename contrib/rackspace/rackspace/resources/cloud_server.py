@@ -13,6 +13,8 @@
 
 import copy
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
@@ -20,7 +22,6 @@ from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources import server
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 try:
     import pyrax  # noqa

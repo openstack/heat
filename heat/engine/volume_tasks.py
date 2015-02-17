@@ -11,11 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.engine import resource
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

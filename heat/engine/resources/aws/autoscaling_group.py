@@ -14,6 +14,7 @@
 import math
 
 from oslo.utils import excutils
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -30,7 +31,6 @@ from heat.engine import resource
 from heat.engine.resources import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import support
-from heat.openstack.common import log as logging
 from heat.scaling import cooldown
 
 LOG = logging.getLogger(__name__)

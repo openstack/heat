@@ -24,6 +24,7 @@ from oslo import messaging
 from oslo.serialization import jsonutils
 from oslo.utils import timeutils
 from oslo.utils import uuidutils
+from oslo_log import log as logging
 from osprofiler import profiler
 import requests
 import six
@@ -52,7 +53,6 @@ from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
-from heat.openstack.common import log as logging
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api

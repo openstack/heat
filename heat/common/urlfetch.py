@@ -14,6 +14,7 @@
 """Utility for fetching a resource (e.g. a template) from a URL."""
 
 from oslo.config import cfg
+from oslo_log import log as logging
 import requests
 from requests import exceptions
 from six.moves import urllib
@@ -21,7 +22,6 @@ from six.moves import urllib
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-from heat.openstack.common import log as logging
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 

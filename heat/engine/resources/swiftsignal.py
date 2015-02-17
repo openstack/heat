@@ -14,6 +14,7 @@
 import json
 import urlparse
 
+from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 
@@ -26,7 +27,6 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

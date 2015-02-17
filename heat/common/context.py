@@ -19,6 +19,7 @@ from oslo.config import cfg
 from oslo.middleware import request_id as oslo_request_id
 from oslo.utils import importutils
 from oslo_context import context
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _LE
@@ -27,7 +28,6 @@ from heat.common import wsgi
 from heat.db import api as db_api
 from heat.engine import clients
 from heat.openstack.common import local
-from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

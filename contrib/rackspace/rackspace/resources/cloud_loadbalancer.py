@@ -15,6 +15,7 @@ import copy
 import functools
 import itertools
 
+from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -26,7 +27,6 @@ from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common import log as logging
 
 try:
     from pyrax.exceptions import NotFound  # noqa

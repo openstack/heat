@@ -20,6 +20,7 @@ import urlparse
 
 from glanceclient import client as gc
 from oslo.config import cfg
+from oslo_log import log as logging
 from swiftclient import utils as swiftclient_utils
 from troveclient import client as tc
 
@@ -32,7 +33,6 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import trove
-from heat.openstack.common import log as logging
 
 
 LOG = logging.getLogger(__name__)

@@ -19,11 +19,10 @@ return
 
 import re
 
+from oslo_log import log as logging
 import webob
 
 from heat.common import wsgi
-from heat.openstack.common import log as logging
-
 
 LOG = logging.getLogger(__name__)
 

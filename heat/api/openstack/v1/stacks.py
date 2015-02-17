@@ -15,6 +15,7 @@
 Stack endpoint for Heat v1 ReST API.
 """
 
+from oslo_log import log as logging
 import six
 from six.moves.urllib import parse
 from webob import exc
@@ -30,7 +31,6 @@ from heat.common import serializers
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.common import wsgi
-from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 

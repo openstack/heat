@@ -17,6 +17,7 @@ import mock
 from oslo.config import cfg
 from oslo.messaging._drivers import common as rpc_common
 from oslo.messaging import exceptions
+from oslo_log import log
 import six
 import webob.exc
 
@@ -241,6 +242,7 @@ class ControllerTest(object):
         self.api_version = '1.0'
         self.tenant = 't'
         self.mock_enforce = None
+        log.register_options(cfg.CONF)
 
     def _environ(self, path):
         return {

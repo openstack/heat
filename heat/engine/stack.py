@@ -19,6 +19,7 @@ import warnings
 
 from oslo.config import cfg
 from oslo.utils import encodeutils
+from oslo_log import log as logging
 from osprofiler import profiler
 import six
 
@@ -41,7 +42,6 @@ from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine import template as tmpl
 from heat.engine import update
-from heat.openstack.common import log as logging
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
