@@ -182,12 +182,14 @@ class FakeNode(object):
 
 class FakeVirtualIP(object):
     def __init__(self, address=None, port=None, condition=None,
-                 ipVersion=None, type=None):
+                 ipVersion=None, type=None, id=None):
         self.address = address
         self.port = port
         self.condition = condition
         self.ipVersion = ipVersion
         self.type = type
+        self.id = id
+        self.ip_version = ipVersion
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -728,6 +730,27 @@ class LoadBalancerTest(common.HeatTestCase):
         resdef = mock.Mock(spec=rsrc_defn.ResourceDefinition)
         lbres = lb.CloudLoadBalancer("test", resdef, stack)
         self.assertIsNone(lbres._resolve_attribute("PublicIp"))
+
+    def test_resolve_attr_virtualips(self):
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        fake_loadbalancer.virtual_ips = [FakeVirtualIP(address='1.2.3.4',
+                                                       type='PUBLIC',
+                                                       ipVersion="IPv6",
+                                                       id='test-id')]
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+        expected = [{
+            'ip_version': 'IPv6',
+            'type': 'PUBLIC',
+            'id': 'test-id',
+            'address': '1.2.3.4'}]
+        self.m.ReplayAll()
+        self.assertEqual(expected, rsrc._resolve_attribute("virtualIps"))
+        self.m.VerifyAll()
 
     def test_update_nodes_immutable(self):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
