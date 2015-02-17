@@ -197,7 +197,7 @@ class CeilometerAlarm(resource.Resource):
                           'the former for Nova meters, '
                           'the latter for all others. '
                           'To see the attributes of your Samples, '
-                          'use `ceilometer --debug sample-list`. ')
+                          'use `ceilometer --debug sample-list`.')
                     ),
                     QF_OP: properties.Schema(
                         properties.Schema.STRING,
