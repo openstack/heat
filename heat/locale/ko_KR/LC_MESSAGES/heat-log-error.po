@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-01-29 06:17+0000\n"
-"PO-Revision-Date: 2015-01-28 07:02+0000\n"
+"POT-Creation-Date: 2015-02-17 06:02+0000\n"
+"PO-Revision-Date: 2015-02-16 22:06+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -61,8 +61,8 @@ msgstr "신뢰할 수 있는 token 재설정 실패!"
 msgid "Trust impersonation failed"
 msgstr "트러스트의 위장이 실패했습니다."
 
-#: heat/common/heat_keystoneclient.py:323
-#: heat/common/heat_keystoneclient.py:397
+#: heat/common/heat_keystoneclient.py:310
+#: heat/common/heat_keystoneclient.py:384
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -92,30 +92,30 @@ msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
 msgid "Failed to import module %s"
 msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
 
-#: heat/common/wsgi.py:266
+#: heat/common/wsgi.py:267
 msgid "SIGTERM received"
 msgstr "SIGTERM 수신"
 
-#: heat/common/wsgi.py:275
+#: heat/common/wsgi.py:276
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:303
+#: heat/common/wsgi.py:304
 #, python-format
 msgid "Removing dead child %s"
 msgstr ""
 
-#: heat/common/wsgi.py:661
+#: heat/common/wsgi.py:662
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "자원 처리 예외: %s"
 
-#: heat/common/wsgi.py:683
+#: heat/common/wsgi.py:684
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
 
-#: heat/common/wsgi.py:757
+#: heat/common/wsgi.py:758
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -167,7 +167,12 @@ msgstr "DB %s에 오류가 있습니다. "
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:1326
+#: heat/engine/service.py:352
+#, python-format
+msgid "Failed to stop engine service, %s"
+msgstr ""
+
+#: heat/engine/service.py:1364
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
@@ -176,22 +181,22 @@ msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않�
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/stack.py:730
+#: heat/engine/stack.py:737
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:960
+#: heat/engine/stack.py:967
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1144
+#: heat/engine/stack.py:1151
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
-#: heat/engine/stack.py:1153
+#: heat/engine/stack.py:1160
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -213,7 +218,7 @@ msgstr ""
 msgid "Port not specified."
 msgstr "Port가 정의되지 않았습니다."
 
-#: heat/engine/resources/nova_floatingip.py:77
+#: heat/engine/resources/nova_floatingip.py:78
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
@@ -230,7 +235,7 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
 
-#: heat/engine/resources/aws/autoscaling_group.py:305
+#: heat/engine/resources/aws/autoscaling_group.py:341
 msgid "Failed sending error notification"
 msgstr ""
 
