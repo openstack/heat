@@ -67,7 +67,7 @@ lb_template_default = r'''
             "packages": {
               "yum": {
                 "haproxy"        : [],
-                "socat"          : [],
+                "socat"          : []
               }
             },
             "services": {
