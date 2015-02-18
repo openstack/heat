@@ -140,7 +140,8 @@ class InstanceGroup(stack_resource.StackResource):
             if self.update_policy[policy_name]:
                 pause_time = self.update_policy[policy_name][self.PAUSE_TIME]
                 if iso8601utils.parse_isoduration(pause_time) > 3600:
-                    raise ValueError('Maximum PauseTime is 1 hour.')
+                    msg = _('Maximum %s is 1 hour.') % self.PAUSE_TIME
+                    raise ValueError(msg)
 
     def validate_launchconfig(self):
         # It seems to be a common error to not have a dependency on the
@@ -189,7 +190,7 @@ class InstanceGroup(stack_resource.StackResource):
         """
         if tmpl_diff:
             # parse update policy
-            if 'UpdatePolicy' in tmpl_diff:
+            if rsrc_defn.UPDATE_POLICY in tmpl_diff:
                 up = json_snippet.update_policy(self.update_policy_schema,
                                                 self.context)
                 self.update_policy = up
@@ -302,8 +303,9 @@ class InstanceGroup(stack_resource.StackResource):
         efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
         batch_cnt = (efft_capacity + efft_bat_sz - 1) // efft_bat_sz
         if pause_sec * (batch_cnt - 1) >= self.stack.timeout_secs():
-            raise ValueError('The current UpdatePolicy will result '
-                             'in stack update timeout.')
+            msg = _('The current %s will result in stack update '
+                    'timeout.') % rsrc_defn.UPDATE_POLICY
+            raise ValueError(msg)
 
         try:
             remainder = capacity
