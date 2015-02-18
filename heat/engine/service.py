@@ -1478,66 +1478,6 @@ class EngineService(service.Service):
         return api.format_software_deployment(sd)
 
     @request_context
-    def signal_software_deployment(self, cnxt, deployment_id, details,
-                                   updated_at):
-
-        if not deployment_id:
-            raise ValueError(_('deployment_id must be specified'))
-
-        sd = db_api.software_deployment_get(cnxt, deployment_id)
-        status = sd.status
-
-        if not status == rpc_api.SOFTWARE_DEPLOYMENT_IN_PROGRESS:
-            # output values are only expected when in an IN_PROGRESS state
-            return
-
-        details = details or {}
-
-        output_status_code = rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_STATUS_CODE
-        ov = sd.output_values or {}
-        status = None
-        status_reasons = {}
-        status_code = details.get(output_status_code)
-        if status_code and str(status_code) != '0':
-            status = rpc_api.SOFTWARE_DEPLOYMENT_FAILED
-            status_reasons[output_status_code] = _(
-                'Deployment exited with non-zero status code: %s'
-            ) % details.get(output_status_code)
-            event_reason = 'deployment failed (%s)' % status_code
-        else:
-            event_reason = 'deployment succeeded'
-
-        for output in sd.config.config['outputs'] or []:
-            out_key = output['name']
-            if out_key in details:
-                ov[out_key] = details[out_key]
-                if output.get('error_output', False):
-                    status = rpc_api.SOFTWARE_DEPLOYMENT_FAILED
-                    status_reasons[out_key] = details[out_key]
-                    event_reason = 'deployment failed'
-
-        for out_key in rpc_api.SOFTWARE_DEPLOYMENT_OUTPUTS:
-            ov[out_key] = details.get(out_key)
-
-        if status == rpc_api.SOFTWARE_DEPLOYMENT_FAILED:
-            # build a status reason out of all of the values of outputs
-            # flagged as error_output
-            status_reasons = [' : '.join((k, six.text_type(status_reasons[k])))
-                              for k in status_reasons]
-            status_reason = ', '.join(status_reasons)
-        else:
-            status = rpc_api.SOFTWARE_DEPLOYMENT_COMPLETE
-            status_reason = _('Outputs received')
-
-        self.update_software_deployment(
-            cnxt, deployment_id=deployment_id,
-            output_values=ov, status=status, status_reason=status_reason,
-            config_id=None, input_values=None, action=None,
-            updated_at=updated_at)
-        # Return a string describing the outcome of handling the signal data
-        return event_reason
-
-    @request_context
     def update_software_deployment(self, cnxt, deployment_id, config_id,
                                    input_values, output_values, action,
                                    status, status_reason, updated_at):

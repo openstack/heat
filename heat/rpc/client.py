@@ -546,15 +546,6 @@ class EngineClient(object):
         return self.call(cnxt, self.make_msg('delete_software_deployment',
                                              deployment_id=deployment_id))
 
-    def signal_software_deployment(self, cnxt, deployment_id, details,
-                                   updated_at=None):
-        return self.call(
-            cnxt, self.make_msg('signal_software_deployment',
-                                deployment_id=deployment_id,
-                                details=details,
-                                updated_at=updated_at),
-            version='1.5')
-
     def stack_snapshot(self, ctxt, stack_identity, name):
         return self.call(ctxt, self.make_msg('stack_snapshot',
                                              stack_identity=stack_identity,
