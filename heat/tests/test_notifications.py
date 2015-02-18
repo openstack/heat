@@ -12,7 +12,7 @@
 #    under the License.
 
 import mock
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 
 from heat.engine import notification
 from heat.tests import common

@@ -19,7 +19,7 @@ import time
 
 import fixtures
 from heatclient import exc as heat_exceptions
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 import six
 import testscenarios
 import testtools

@@ -14,7 +14,7 @@
 import datetime
 
 from keystoneclient import exceptions as kc_exceptions
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format

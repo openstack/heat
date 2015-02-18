@@ -13,8 +13,8 @@
 
 """Endpoint for heat AWS-compatible CloudWatch API."""
 
-from oslo import messaging
 from oslo_log import log as logging
+import oslo_messaging as messaging
 import six
 
 from heat.api.aws import exception

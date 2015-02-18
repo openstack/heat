@@ -16,7 +16,7 @@ import copy
 
 import mock
 import mox
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
 

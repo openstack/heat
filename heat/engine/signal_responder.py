@@ -12,7 +12,7 @@
 #    under the License.
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_log import log as logging
 from six.moves.urllib import parse as urlparse
 

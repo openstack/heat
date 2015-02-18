@@ -13,7 +13,7 @@
 import time
 
 from migrate.versioning import util as migrate_util
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 

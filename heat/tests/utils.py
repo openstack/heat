@@ -15,8 +15,8 @@ import random
 import string
 import uuid
 
-from oslo.config import cfg
-from oslo.db import options
+from oslo_config import cfg
+from oslo_db import options
 import sqlalchemy
 
 from heat.common import context

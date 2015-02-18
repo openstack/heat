@@ -19,12 +19,12 @@ import socket
 import warnings
 
 import eventlet
-from oslo.config import cfg
-from oslo import messaging
-from oslo.serialization import jsonutils
-from oslo.utils import timeutils
-from oslo.utils import uuidutils
+from oslo_config import cfg
 from oslo_log import log as logging
+import oslo_messaging as messaging
+from oslo_serialization import jsonutils
+from oslo_utils import timeutils
+from oslo_utils import uuidutils
 from osprofiler import profiler
 import requests
 import six

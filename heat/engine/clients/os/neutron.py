@@ -14,7 +14,7 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 
 from heat.common import exception
 from heat.engine.clients import client_plugin

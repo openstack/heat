@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo.messaging import exceptions
+from oslo_messaging import exceptions
 from webob import exc
 
 from heat.api.openstack.v1 import util

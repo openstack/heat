@@ -20,9 +20,9 @@ import eventlet
 from eventlet import event as grevent
 import mock
 import mox
-from oslo.config import cfg
-from oslo.messaging.rpc import dispatcher
-from oslo.serialization import jsonutils
+from oslo_config import cfg
+from oslo_messaging.rpc import dispatcher
+from oslo_serialization import jsonutils
 import six
 
 from heat.common import context

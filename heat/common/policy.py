@@ -17,7 +17,7 @@
 # Based on glance/api/policy.py
 """Policy Engine For Heat"""
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.openstack.common import policy

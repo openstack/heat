@@ -17,7 +17,7 @@ import uuid
 
 import mock
 import mox
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 import six
 
 from heat.common import context

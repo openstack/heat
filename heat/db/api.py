@@ -24,8 +24,8 @@ The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
 '''
 
-from oslo.config import cfg
-from oslo.db import api
+from oslo_config import cfg
+from oslo_db import api
 
 CONF = cfg.CONF
 

@@ -13,7 +13,7 @@
 
 import os
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches

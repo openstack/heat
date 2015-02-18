@@ -22,7 +22,7 @@ from keystoneclient import session as ks_session
 from keystoneclient.v3 import client as kc_v3
 from keystoneclient.v3 import domains as kc_v3_domains
 import mox
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from heat.common import context

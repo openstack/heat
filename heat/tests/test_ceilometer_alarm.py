@@ -17,7 +17,7 @@ import json
 from ceilometerclient import exc as ceilometerclient_exc
 import mock
 import mox
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from heat.common import exception

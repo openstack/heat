@@ -12,7 +12,7 @@
 #    under the License.
 
 import mock
-from oslo import messaging
+import oslo_messaging as messaging
 
 from heat.common import exception
 from heat.db import api as db_api

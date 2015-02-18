@@ -17,9 +17,9 @@ import datetime
 import re
 import warnings
 
-from oslo.config import cfg
-from oslo.utils import encodeutils
+from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 from osprofiler import profiler
 import six
 

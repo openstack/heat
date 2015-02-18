@@ -18,7 +18,7 @@ import sys
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client
-from oslo.config import cfg
+from oslo_config import cfg
 
 logger = logging.getLogger(__name__)
 

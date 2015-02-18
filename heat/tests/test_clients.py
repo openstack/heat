@@ -20,7 +20,7 @@ from heatclient import exc as heat_exc
 from keystoneclient import exceptions as keystone_exc
 import mock
 from neutronclient.common import exceptions as neutron_exc
-from oslo.config import cfg
+from oslo_config import cfg
 from saharaclient.api import base as sahara_base
 import six
 from swiftclient import exceptions as swift_exc

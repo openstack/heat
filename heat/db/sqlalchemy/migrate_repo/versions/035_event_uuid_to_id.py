@@ -15,7 +15,7 @@ import itertools
 import uuid
 
 import migrate.changeset.constraint as constraint
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 import sqlalchemy
 
 

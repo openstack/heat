@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.utils import timeutils
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from heat.common import context
 from heat.common.i18n import _LE

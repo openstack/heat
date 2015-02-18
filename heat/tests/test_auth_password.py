@@ -18,7 +18,7 @@ from keystoneclient.auth.identity import v3 as ks_v3_auth
 from keystoneclient import exceptions as keystone_exc
 from keystoneclient import session as ks_session
 import mox
-from oslo.config import cfg
+from oslo_config import cfg
 import webob
 
 from heat.common import auth_password

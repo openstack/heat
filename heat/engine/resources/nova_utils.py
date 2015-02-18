@@ -22,7 +22,7 @@ import string
 import warnings
 
 from novaclient import exceptions as nova_exceptions
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse

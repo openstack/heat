@@ -14,7 +14,7 @@
 import base64
 
 from Crypto.Cipher import AES
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.openstack.common.crypto import utils
 

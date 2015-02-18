@@ -16,7 +16,7 @@ import copy
 from cinderclient import exceptions as cinder_exp
 import mock
 import mox
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from heat.common import exception

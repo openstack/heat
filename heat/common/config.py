@@ -18,7 +18,7 @@ import logging as sys_logging
 import os
 
 from eventlet.green import socket
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_log import log as logging
 
 from heat.common.i18n import _

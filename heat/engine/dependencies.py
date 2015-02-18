@@ -14,7 +14,7 @@
 import collections
 import itertools
 
-from oslo.utils import encodeutils
+from oslo_utils import encodeutils
 import six
 
 from heat.common import exception

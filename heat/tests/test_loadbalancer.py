@@ -14,7 +14,7 @@
 import copy
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format

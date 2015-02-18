@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.utils import importutils
+from oslo_utils import importutils
 
 from heat.engine.clients import client_plugin
 

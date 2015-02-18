@@ -14,9 +14,9 @@
 """Client Library for Keystone Resources."""
 
 from keystoneclient.v2_0 import client as kc
-from oslo.config import cfg
-from oslo.utils import importutils
+from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import importutils
 
 from heat.common import exception
 from heat.common.i18n import _LE

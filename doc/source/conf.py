@@ -30,7 +30,7 @@ import re
 import sys
 import tempfile
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
