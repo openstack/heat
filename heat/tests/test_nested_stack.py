@@ -242,25 +242,6 @@ Resources:
         self.assertIn('Recursion depth exceeds', stack.status_reason)
         self.m.VerifyAll()
 
-    def test_nested_stack_delete_then_delete_parent_stack(self):
-        urlfetch.get('https://server.test/the.template'
-                     ).MultipleTimes().AndReturn(self.nested_template)
-        self.m.ReplayAll()
-
-        stack = self.create_stack(self.test_template)
-        rsrc = stack['the_nested']
-
-        nested_stack = parser.Stack.load(utils.dummy_context(
-            'test_username', 'aaaa', 'password'), rsrc.resource_id)
-        nested_stack.delete()
-
-        stack = parser.Stack.load(utils.dummy_context(
-            'test_username', 'aaaa', 'password'), stack.id)
-        stack.delete()
-        self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
-
-        self.m.VerifyAll()
-
     def test_child_params(self):
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
