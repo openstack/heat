@@ -283,15 +283,14 @@ class ResDataResource(generic_rsrc.GenericResource):
         self.data_set("test", 'A secret value', True)
 
 
-class ResDataNestedStackTest(NestedStackTest):
-
-    nested_template = '''
+class ResDataStackTest(common.HeatTestCase):
+    template = '''
 HeatTemplateFormatVersion: "2012-12-12"
 Parameters:
   KeyName:
     Type: String
 Resources:
-  nested_res:
+  res:
     Type: "res.data.resource"
 Outputs:
   Foo:
@@ -299,22 +298,19 @@ Outputs:
 '''
 
     def setUp(self):
-        super(ResDataNestedStackTest, self).setUp()
+        super(ResDataStackTest, self).setUp()
         resource._register_class("res.data.resource", ResDataResource)
 
     def create_stack(self, template):
         t = template_format.parse(template)
-        stack = self.parse_stack(t)
+        stack = utils.parse_stack(t)
         stack.create()
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
 
     def test_res_data_delete(self):
-        urlfetch.get('https://server.test/the.template').AndReturn(
-            self.nested_template)
-        self.m.ReplayAll()
-        stack = self.create_stack(self.test_template)
-        res = stack['the_nested'].nested()['nested_res']
+        stack = self.create_stack(self.template)
+        res = stack['res']
         stack.delete()
         self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
         self.assertRaises(exception.NotFound, db_api.resource_data_get, res,
