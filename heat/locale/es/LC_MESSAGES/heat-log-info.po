@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-17 06:02+0000\n"
-"PO-Revision-Date: 2015-02-16 22:06+0000\n"
+"POT-Creation-Date: 2015-02-18 06:02+0000\n"
+"PO-Revision-Date: 2015-02-17 15:44+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -49,11 +49,11 @@ msgstr "Autenticación AWS correcta."
 msgid "AWS authentication failure."
 msgstr "Autenticación AWS incorrecta."
 
-#: heat/api/cfn/v1/stacks.py:439 heat/engine/service.py:761
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:761
 msgid "validate_template"
 msgstr "validate_template"
 
-#: heat/common/lifecycle_plugin_utils.py:116
+#: heat/common/lifecycle_plugin_utils.py:118
 #, python-format
 msgid "done with class=%(c)s, stackid=%(sid)s, action=%(a)s"
 msgstr ""
@@ -63,35 +63,35 @@ msgstr ""
 msgid "Fetching data from %s"
 msgstr "Obteniendo datos desde %s"
 
-#: heat/common/wsgi.py:293 heat/openstack/common/service.py:331
+#: heat/common/wsgi.py:291 heat/openstack/common/service.py:330
 #, python-format
 msgid "Starting %d workers"
 msgstr "Iniciando %d trabajadores"
 
-#: heat/common/wsgi.py:311
+#: heat/common/wsgi.py:309
 msgid "Caught keyboard interrupt. Exiting."
 msgstr "Se ha generado interrupción de teclado. Saliendo."
 
-#: heat/common/wsgi.py:334
+#: heat/common/wsgi.py:332
 #, python-format
 msgid "Child %d exiting normally"
 msgstr "El hijo %d está saliendo de forma normal"
 
-#: heat/common/wsgi.py:337
+#: heat/common/wsgi.py:335
 #, python-format
 msgid "Started child %s"
 msgstr "Se ha iniciado el hijo %s"
 
-#: heat/common/wsgi.py:360
+#: heat/common/wsgi.py:358
 msgid "Starting single process server"
 msgstr "Iniciando servidor de proceso individual"
 
-#: heat/engine/environment.py:224
+#: heat/engine/environment.py:223
 #, python-format
 msgid "Registering %(path)s -> %(value)s"
 msgstr "Registrando %(path)s -> %(value)s"
 
-#: heat/engine/environment.py:477
+#: heat/engine/environment.py:476
 #, python-format
 msgid "Loading %s"
 msgstr "Cargando %s"
@@ -297,37 +297,37 @@ msgstr ""
 msgid "Resource %(res_name)s for stack %(stack_name)s updated"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:64
+#: heat/engine/volume_tasks.py:65
 #, python-format
 msgid "Resize failed: Volume %(vol)s is in %(status)s state."
 msgstr ""
 
-#: heat/engine/volume_tasks.py:70 heat/engine/volume_tasks.py:129
+#: heat/engine/volume_tasks.py:71 heat/engine/volume_tasks.py:130
 #, python-format
 msgid "%s - complete"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:121
+#: heat/engine/volume_tasks.py:122
 #, python-format
 msgid "Attachment failed - volume %(vol)s is in %(status)s status"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:193
+#: heat/engine/volume_tasks.py:194
 #, python-format
 msgid "%(name)s - status: %(status)s"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:196
+#: heat/engine/volume_tasks.py:197
 #, python-format
 msgid "Detachment failed - volume %(vol)s is in %(status)s status"
 msgstr ""
 
-#: heat/engine/volume_tasks.py:220
+#: heat/engine/volume_tasks.py:221
 #, python-format
 msgid "Server %(srv)s still has attachment %(att)s."
 msgstr ""
 
-#: heat/engine/volume_tasks.py:224
+#: heat/engine/volume_tasks.py:225
 #, python-format
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
@@ -378,44 +378,44 @@ msgstr ""
 msgid "Using custom loadbalancer template %s"
 msgstr ""
 
-#: heat/engine/resources/os_database.py:366
+#: heat/engine/resources/os_database.py:367
 #, python-format
 msgid ""
 "Database instance %(database)s created (flavor:%(flavor)s,volume:%(volume)s, "
 "datastore:%(datastore_type)s, datastore_version:%(datastore_version)s)"
 msgstr ""
 
-#: heat/engine/resources/sahara_cluster.py:164
+#: heat/engine/resources/sahara_cluster.py:165
 #, python-format
 msgid "Cluster \"%s\" is being started."
 msgstr ""
 
-#: heat/engine/resources/sahara_cluster.py:176
+#: heat/engine/resources/sahara_cluster.py:177
 #, python-format
 msgid "Cluster '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/sahara_cluster.py:199
+#: heat/engine/resources/sahara_cluster.py:200
 #, python-format
 msgid "Cluster '%s' has been deleted"
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:195
+#: heat/engine/resources/sahara_templates.py:196
 #, python-format
 msgid "Node Group Template '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:208
+#: heat/engine/resources/sahara_templates.py:209
 #, python-format
 msgid "Node Group Template '%s' has been deleted."
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:372
+#: heat/engine/resources/sahara_templates.py:373
 #, python-format
 msgid "Cluster Template '%s' has been created"
 msgstr ""
 
-#: heat/engine/resources/sahara_templates.py:385
+#: heat/engine/resources/sahara_templates.py:386
 #, python-format
 msgid "Cluster Template '%s' has been deleted."
 msgstr ""
@@ -450,20 +450,20 @@ msgstr ""
 msgid "%(name)s._resolve_attribute(%(attname)s) == %(res)s"
 msgstr ""
 
-#: heat/engine/resources/aws/scaling_policy.py:118
+#: heat/engine/resources/aws/scaling_policy.py:119
 #: heat/engine/resources/openstack/ha_restarter.py:83
 #, python-format
 msgid "%(name)s Alarm, new state %(state)s"
 msgstr ""
 
-#: heat/engine/resources/aws/scaling_policy.py:124
-#: heat/engine/resources/openstack/scaling_policy.py:133
+#: heat/engine/resources/aws/scaling_policy.py:125
+#: heat/engine/resources/openstack/scaling_policy.py:134
 #, python-format
 msgid "%(name)s NOT performing scaling action, cooldown %(cooldown)s"
 msgstr ""
 
-#: heat/engine/resources/aws/scaling_policy.py:138
-#: heat/engine/resources/openstack/scaling_policy.py:147
+#: heat/engine/resources/aws/scaling_policy.py:139
+#: heat/engine/resources/openstack/scaling_policy.py:148
 #, python-format
 msgid ""
 "%(name)s Alarm, adjusting Group %(group)s with id %(asgn_id)s by %(filter)s"
@@ -484,7 +484,7 @@ msgstr ""
 msgid "%(name)s Alarm, restarting resource: %(victim)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/scaling_policy.py:127
+#: heat/engine/resources/openstack/scaling_policy.py:128
 #, python-format
 msgid "Alarm %(name)s, new state %(state)s"
 msgstr ""
@@ -498,7 +498,7 @@ msgstr ""
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/openstack/common/eventlet_backdoor.py:147
+#: heat/openstack/common/eventlet_backdoor.py:146
 #, python-format
 msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
 msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
@@ -508,49 +508,49 @@ msgstr "Eventlet oculto escuchando en %(port)s para el proceso %(pid)d"
 msgid "Can not find policy directory: %s"
 msgstr ""
 
-#: heat/openstack/common/service.py:174
+#: heat/openstack/common/service.py:173
 #, python-format
 msgid "Caught %s, exiting"
 msgstr "Se ha captado %s, saliendo"
 
-#: heat/openstack/common/service.py:232
+#: heat/openstack/common/service.py:231
 msgid "Parent process has died unexpectedly, exiting"
 msgstr "El proceso padre se ha detenido inesperadamente, saliendo"
 
-#: heat/openstack/common/service.py:263
+#: heat/openstack/common/service.py:262
 #, python-format
 msgid "Child caught %s, exiting"
 msgstr "Hijo captado %s, saliendo"
 
-#: heat/openstack/common/service.py:302
+#: heat/openstack/common/service.py:301
 msgid "Forking too fast, sleeping"
 msgstr "Bifurcación demasiado rápida, en reposo"
 
-#: heat/openstack/common/service.py:321
+#: heat/openstack/common/service.py:320
 #, python-format
 msgid "Started child %d"
 msgstr "Se ha iniciado el hijo %d"
 
-#: heat/openstack/common/service.py:348
+#: heat/openstack/common/service.py:347
 #, python-format
 msgid "Child %(pid)d killed by signal %(sig)d"
 msgstr "Hijo %(pid)d matado por señal %(sig)d"
 
-#: heat/openstack/common/service.py:352
+#: heat/openstack/common/service.py:351
 #, python-format
 msgid "Child %(pid)s exited with status %(code)d"
 msgstr "El hijo %(pid)s ha salido con el estado %(code)d"
 
-#: heat/openstack/common/service.py:391
+#: heat/openstack/common/service.py:390
 #, python-format
 msgid "Caught %s, stopping children"
 msgstr "Se ha captado %s, deteniendo hijos"
 
-#: heat/openstack/common/service.py:400
-msgid "Wait called after thread killed.  Cleaning up."
-msgstr "Espéra llamada después que el hilo ha sido matado. Limpiando."
+#: heat/openstack/common/service.py:399
+msgid "Wait called after thread killed. Cleaning up."
+msgstr ""
 
-#: heat/openstack/common/service.py:416
+#: heat/openstack/common/service.py:415
 #, python-format
 msgid "Waiting on %d children to exit"
 msgstr "En espera de %d hijos para salir"
