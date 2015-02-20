@@ -154,6 +154,18 @@ def resource_get_all(context):
     return results
 
 
+def resource_update(context, resource_id, values, atomic_key,
+                    expected_engine_id=None):
+    session = _session(context)
+    with session.begin():
+        values['atomic_key'] = atomic_key + 1
+        rows_updated = session.query(models.Resource).filter_by(
+            id=resource_id, engine_id=expected_engine_id,
+            atomic_key=atomic_key).update(values)
+
+        return bool(rows_updated)
+
+
 def resource_data_get_all(resource, data=None):
     """
     Looks up resource_data by resource.id.  If data is encrypted,

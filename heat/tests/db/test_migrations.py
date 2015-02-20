@@ -505,6 +505,10 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                     self.assertTrue(rd_matches_old_data(rd.key, rd.value,
                                                         r.uuid))
 
+    def _check_058(self, engine, data):
+        self.assertColumnExists(engine, 'resource', 'engine_id')
+        self.assertColumnExists(engine, 'resource', 'atomic_key')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
