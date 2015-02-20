@@ -196,6 +196,9 @@ lb_template_default = r'''
           "# install cfn-hup crontab\n",
           "crontab /tmp/cfn-hup-crontab.txt\n",
 
+          "# restart haproxy service to catch initial changes\n",
+          "systemctl reload-or-restart haproxy.service\n",
+
           "# LB setup completed, signal success\n",
           "/opt/aws/bin/cfn-signal -e 0 -r \"LB server setup complete\" '",
           { "Ref" : "WaitHandle" }, "'\n"
