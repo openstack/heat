@@ -18,7 +18,7 @@ import logging
 
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient import session
-from oslo.config import cfg
+from oslo_config import cfg
 from webob import exc
 
 from heat.common import context

@@ -25,10 +25,10 @@ import os
 import uuid
 
 from migrate.versioning import repository
-from oslo.db.sqlalchemy import test_base
-from oslo.db.sqlalchemy import test_migrations
-from oslo.db.sqlalchemy import utils
-from oslo.serialization import jsonutils
+from oslo_db.sqlalchemy import test_base
+from oslo_db.sqlalchemy import test_migrations
+from oslo_db.sqlalchemy import utils
+from oslo_serialization import jsonutils
 import pkg_resources as pkg
 
 from heat.db.sqlalchemy import migrate_repo

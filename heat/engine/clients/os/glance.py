@@ -13,8 +13,8 @@
 
 from glanceclient import client as gc
 from glanceclient import exc
-from oslo.utils import uuidutils
 from oslo_log import log as logging
+from oslo_utils import uuidutils
 
 from heat.common import exception
 from heat.common.i18n import _

@@ -16,10 +16,10 @@ import contextlib
 import datetime as dt
 import warnings
 
-from oslo.config import cfg
-from oslo.utils import encodeutils
-from oslo.utils import excutils
+from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_utils import encodeutils
+from oslo_utils import excutils
 import six
 
 from heat.common import exception

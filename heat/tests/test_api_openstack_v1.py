@@ -14,10 +14,10 @@
 import json
 
 import mock
-from oslo.config import cfg
-from oslo.messaging._drivers import common as rpc_common
-from oslo.messaging import exceptions
+from oslo_config import cfg
 from oslo_log import log
+from oslo_messaging._drivers import common as rpc_common
+from oslo_messaging import exceptions
 import six
 import webob.exc
 

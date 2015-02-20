@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.utils import excutils
 from oslo_log import log as logging
+from oslo_utils import excutils
 import six
 
 from heat.common import exception

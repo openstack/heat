@@ -19,7 +19,7 @@ import time
 import urlparse
 
 from glanceclient import client as gc
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_log import log as logging
 from swiftclient import utils as swiftclient_utils
 from troveclient import client as tc

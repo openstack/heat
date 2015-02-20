@@ -13,8 +13,8 @@
 
 import collections
 
-from oslo.utils import timeutils
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE

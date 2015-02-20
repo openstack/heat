@@ -24,8 +24,8 @@ import string
 from novaclient import client as nc
 from novaclient import exceptions
 from novaclient import shell as novashell
-from oslo.config import cfg
-from oslo.utils import uuidutils
+from oslo_config import cfg
+from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
 

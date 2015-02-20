@@ -12,8 +12,8 @@
 #    under the License.
 from heat.common import exception
 
-from oslo.utils import excutils
 from oslo_log import log as logging
+from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _

@@ -19,7 +19,7 @@ import time
 
 import fixtures
 import mox
-from oslo.config import cfg
+from oslo_config import cfg
 from oslotest import mockpatch
 import testscenarios
 import testtools

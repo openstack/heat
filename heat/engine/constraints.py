@@ -15,7 +15,7 @@ import collections
 import numbers
 import re
 
-from oslo.utils import strutils
+from oslo_utils import strutils
 import six
 
 from heat.common import exception

@@ -16,7 +16,7 @@ import copy
 from heatclient import exc
 from heatclient.v1 import stacks
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from heat.common import exception

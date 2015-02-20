@@ -11,7 +11,7 @@
 #    under the License.
 
 from migrate.versioning import util as migrate_util
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 import six
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker

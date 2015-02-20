@@ -17,7 +17,7 @@ import uuid
 
 import mock
 from novaclient import exceptions as nova_exceptions
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from heat.common import exception

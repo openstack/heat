@@ -23,7 +23,7 @@ import six
 
 import traceback
 
-from oslo.config import cfg
+from oslo_config import cfg
 import webob
 
 from heat.common import exception

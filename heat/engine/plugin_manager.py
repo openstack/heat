@@ -15,7 +15,7 @@ import collections
 import itertools
 import sys
 
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_log import log
 import six
 

@@ -13,7 +13,7 @@
 import copy
 import itertools
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from heat.common import short_id
 from heat.common import template_format

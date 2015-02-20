@@ -16,7 +16,7 @@
 # It's based on oslo.i18n usage in OpenStack Keystone project and
 # recommendations from http://docs.openstack.org/developer/oslo.i18n/usage.html
 
-from oslo import i18n
+import oslo_i18n as i18n
 
 
 _translators = i18n.TranslatorFactory(domain='heat')

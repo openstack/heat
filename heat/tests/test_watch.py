@@ -15,7 +15,7 @@
 import datetime
 
 import mox
-from oslo.utils import timeutils
+from oslo_utils import timeutils
 
 from heat.common import exception
 from heat.db import api as db_api

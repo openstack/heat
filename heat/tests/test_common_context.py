@@ -14,7 +14,7 @@
 import os
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 from oslo_middleware import request_id
 import webob
 

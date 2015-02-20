@@ -15,11 +15,11 @@ from keystoneclient import access
 from keystoneclient.auth.identity import base
 from keystoneclient.auth.identity import v3
 from keystoneclient.auth import token_endpoint
-from oslo.config import cfg
-from oslo.middleware import request_id as oslo_request_id
-from oslo.utils import importutils
+from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
+from oslo_middleware import request_id as oslo_request_id
+from oslo_utils import importutils
 
 from heat.common import exception
 from heat.common.i18n import _LE

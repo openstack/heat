@@ -18,9 +18,9 @@ import time
 import types
 
 import eventlet
-from oslo.utils import encodeutils
-from oslo.utils import excutils
 from oslo_log import log as logging
+from oslo_utils import encodeutils
+from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _

@@ -14,8 +14,8 @@
 import datetime
 
 import mock
-from oslo.config import cfg
-from oslo.utils import timeutils
+from oslo_config import cfg
+from oslo_utils import timeutils
 import six
 
 from heat.common import exception

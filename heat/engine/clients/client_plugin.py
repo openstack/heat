@@ -15,7 +15,7 @@ import abc
 
 from keystoneclient import exceptions
 from keystoneclient import session
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 
