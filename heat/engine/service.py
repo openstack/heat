@@ -52,15 +52,18 @@ from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
+from heat.engine import worker
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
+from heat.rpc import worker_api as rpc_worker_api
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_adopt', 'heat.common.config')
+cfg.CONF.import_opt('convergence_engine', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -271,6 +274,7 @@ class EngineService(service.Service):
         # happens after the fork when spawning multiple worker processes
         self.stack_watch = None
         self.listener = None
+        self.worker_service = None
         self.engine_id = None
         self.thread_group_mgr = None
         self.target = None
@@ -313,9 +317,22 @@ class EngineService(service.Service):
                                        self.thread_group_mgr)
         LOG.debug("Starting listener for engine %s" % self.engine_id)
         self.listener.start()
+
+        if cfg.CONF.convergence_engine:
+            self.worker_service = worker.WorkerService(
+                host=self.host,
+                topic=rpc_worker_api.TOPIC,
+                engine_id=self.engine_id,
+                thread_group_mgr=self.thread_group_mgr
+            )
+            self.worker_service.start()
+            LOG.debug("WorkerService is started in engine %s" %
+                      self.engine_id)
+
         target = messaging.Target(
             version=self.RPC_API_VERSION, server=self.host,
             topic=self.topic)
+
         self.target = target
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
@@ -340,6 +357,12 @@ class EngineService(service.Service):
 
     def stop(self):
         self._stop_rpc_server()
+
+        if cfg.CONF.convergence_engine:
+            # Stop the WorkerService
+            self.worker_service.stop()
+            LOG.info(_LI("WorkerService is stopped in engine %s"),
+                     self.engine_id)
 
         # Wait for all active threads to be finished
         for stack_id in self.thread_group_mgr.groups.keys():
