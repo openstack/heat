@@ -113,6 +113,10 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     """Represents a stack created by the heat engine."""
 
     __tablename__ = 'stack'
+    __table_args__ = (
+        sqlalchemy.Index('ix_stack_name', 'name', mysql_length=255),
+        sqlalchemy.Index('ix_stack_tenant', 'tenant', mysql_length=255),
+    )
 
     id = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
