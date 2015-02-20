@@ -407,6 +407,9 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             else:
                 self.assertColumnIsNullable(engine, 'service', column[0])
 
+    def _check_052(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'convergence')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
