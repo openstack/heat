@@ -484,7 +484,7 @@ class Stack(collections.Mapping):
                 LOG.info(ex)
                 raise ex
             except Exception as ex:
-                LOG.exception(ex)
+                LOG.exception(_LE("Exception: %s"), ex)
                 raise exception.StackValidationFailed(
                     message=encodeutils.safe_decode(six.text_type(ex)))
             if result:
