@@ -37,7 +37,7 @@ class CfnInitIntegrationTest(test.HeatIntegrationTest):
             'flavor': self.conf.instance_type,
             'image': self.conf.image_ref,
             'timeout': self.conf.build_timeout,
-            'network': net['id'],
+            'subnet': net['subnets'][0],
         }
 
         # create the stack

@@ -9,7 +9,7 @@ Parameters:
     Type: String
   image:
     Type: String
-  network:
+  subnet:
     Type: String
   timeout:
     Type: Number
@@ -28,7 +28,7 @@ Resources:
     Properties:
       UserName: {Ref: CfnUser}
   SmokeServer:
-    Type: OS::Nova::Server
+    Type: AWS::EC2::Instance
     Metadata:
       AWS::CloudFormation::Init:
         config:
@@ -48,14 +48,13 @@ Resources:
               owner: root
               group: root
     Properties:
-      image: {Ref: image}
-      flavor: {Ref: flavor}
-      key_name: {Ref: key_name}
-      security_groups:
+      ImageId: {Ref: image}
+      InstanceType: {Ref: flavor}
+      KeyName: {Ref: key_name}
+      SubnetId: {Ref: subnet}
+      SecurityGroups:
       - {Ref: SmokeSecurityGroup}
-      networks:
-      - uuid: {Ref: network}
-      user_data:
+      UserData:
         Fn::Replace:
         - WaitHandle: {Ref: WaitHandle}
         - |
@@ -79,4 +78,4 @@ Outputs:
   SmokeServerIp:
     Description: IP address of server
     Value:
-      Fn::GetAtt: [SmokeServer, first_address]
+      Fn::GetAtt: [SmokeServer, PublicIp]
