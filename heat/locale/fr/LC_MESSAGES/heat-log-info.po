@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-18 06:02+0000\n"
-"PO-Revision-Date: 2015-02-17 15:44+0000\n"
+"POT-Creation-Date: 2015-02-24 06:02+0000\n"
+"PO-Revision-Date: 2015-02-23 21:31+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -49,7 +49,7 @@ msgstr "Succès de l'authentification AWS"
 msgid "AWS authentication failure."
 msgstr "Echec de l'authentification AWS"
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:761
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:771
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -141,91 +141,96 @@ msgstr "Suppression %s"
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:350
+#: heat/engine/service.py:354
 msgid "Engine service is stopped successfully"
 msgstr ""
 
-#: heat/engine/service.py:362
+#: heat/engine/service.py:364
+#, python-format
+msgid "WorkerService is stopped in engine %s"
+msgstr ""
+
+#: heat/engine/service.py:372
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:366
+#: heat/engine/service.py:376
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:371
+#: heat/engine/service.py:381
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:374
+#: heat/engine/service.py:384
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:565
+#: heat/engine/service.py:575
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:605
+#: heat/engine/service.py:615
 #, python-format
 msgid "Creating stack %s"
 msgstr "Création de la stack %s"
 
-#: heat/engine/service.py:628
+#: heat/engine/service.py:638
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr "Echec de création de la stack, status %s"
 
-#: heat/engine/service.py:663
+#: heat/engine/service.py:673
 #, python-format
 msgid "Updating stack %s"
 msgstr "Mise à jour de la stack %s"
 
-#: heat/engine/service.py:727
+#: heat/engine/service.py:737
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:856
+#: heat/engine/service.py:866
 #, python-format
 msgid "Deleting stack %s"
 msgstr "Suppresion de la stack %s"
 
-#: heat/engine/service.py:909
+#: heat/engine/service.py:919
 #, python-format
 msgid "abandoning stack %s"
 msgstr "Abandon de la stack %s"
 
-#: heat/engine/service.py:1194
+#: heat/engine/service.py:1204
 #, python-format
 msgid ""
 "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1237
+#: heat/engine/service.py:1247
 #, python-format
 msgid "Checking stack %s"
 msgstr "Vérification de la stack %s"
 
-#: heat/engine/service.py:1591
+#: heat/engine/service.py:1541
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1602
+#: heat/engine/service.py:1552
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1611
+#: heat/engine/service.py:1561
 #, python-format
 msgid "Service %s is restarted"
 msgstr ""
 
-#: heat/engine/service.py:1624
+#: heat/engine/service.py:1574
 #, python-format
 msgid "Service %s is started"
 msgstr ""
@@ -343,6 +348,14 @@ msgstr ""
 msgid "no action for new state %s"
 msgstr ""
 
+#: heat/engine/worker.py:60
+msgid "Starting WorkerService ..."
+msgstr ""
+
+#: heat/engine/worker.py:71
+msgid "Stopping WorkerService ..."
+msgstr ""
+
 #: heat/engine/clients/os/cinder.py:62
 #, python-format
 msgid "Creating Cinder client with volume API version %d."
@@ -373,7 +386,7 @@ msgstr ""
 msgid "ElasticIp create %s"
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:504
+#: heat/engine/resources/loadbalancer.py:507
 #, python-format
 msgid "Using custom loadbalancer template %s"
 msgstr ""

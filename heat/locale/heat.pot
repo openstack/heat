@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev117\n"
+"Project-Id-Version: heat 2015.1.dev147\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-18 06:02+0000\n"
+"POT-Creation-Date: 2015-02-24 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1278,71 +1278,71 @@ msgstr ""
 msgid "Stack Name"
 msgstr ""
 
-#: heat/engine/properties.py:84
+#: heat/engine/properties.py:87
 #, python-format
 msgid "Unknown key(s) %s"
 msgstr ""
 
-#: heat/engine/properties.py:106
+#: heat/engine/properties.py:109
 #, python-format
 msgid "No %s specified"
 msgstr ""
 
-#: heat/engine/properties.py:116
+#: heat/engine/properties.py:119
 #, python-format
 msgid "%(schema)s supplied for %(type)s %(data)s"
 msgstr ""
 
-#: heat/engine/properties.py:234
+#: heat/engine/properties.py:245
 #, python-format
 msgid "Value '%s' is not an integer"
 msgstr ""
 
-#: heat/engine/properties.py:250
+#: heat/engine/properties.py:261
 msgid "Value must be a string"
 msgstr ""
 
-#: heat/engine/properties.py:272
+#: heat/engine/properties.py:291
 #, python-format
 msgid "\"%s\" is not a map"
 msgstr ""
 
-#: heat/engine/properties.py:282
+#: heat/engine/properties.py:301
 #, python-format
 msgid "\"%s\" is not a list"
 msgstr ""
 
-#: heat/engine/properties.py:295
+#: heat/engine/properties.py:314
 #, python-format
 msgid "\"%s\" is not a valid boolean"
 msgstr ""
 
-#: heat/engine/properties.py:357
+#: heat/engine/properties.py:376
 #, python-format
 msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
 msgstr ""
 
-#: heat/engine/properties.py:368
+#: heat/engine/properties.py:387
 #, python-format
 msgid "Property error : %s"
 msgstr ""
 
-#: heat/engine/properties.py:373
+#: heat/engine/properties.py:392
 #, python-format
 msgid "Property %s not implemented yet"
 msgstr ""
 
-#: heat/engine/properties.py:378
+#: heat/engine/properties.py:397
 #, python-format
 msgid "Unknown Property %s"
 msgstr ""
 
-#: heat/engine/properties.py:383
+#: heat/engine/properties.py:402
 #, python-format
 msgid "%(prefix)sInvalid Property %(key)s"
 msgstr ""
 
-#: heat/engine/properties.py:406
+#: heat/engine/properties.py:425
 #, python-format
 msgid "%(prefix)sProperty %(key)s not assigned"
 msgstr ""
@@ -1438,49 +1438,36 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:506
+#: heat/engine/service.py:516
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:569 heat/engine/service.py:632
+#: heat/engine/service.py:579 heat/engine/service.py:642
 msgid "Convergence engine"
 msgstr ""
 
-#: heat/engine/service.py:668
+#: heat/engine/service.py:678
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:672
+#: heat/engine/service.py:682
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:724
+#: heat/engine/service.py:734
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:763
+#: heat/engine/service.py:773
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1432
+#: heat/engine/service.py:1442
 msgid "server_id must be specified"
-msgstr ""
-
-#: heat/engine/service.py:1485
-msgid "deployment_id must be specified"
-msgstr ""
-
-#: heat/engine/service.py:1503
-#, python-format
-msgid "Deployment exited with non-zero status code: %s"
-msgstr ""
-
-#: heat/engine/service.py:1530
-msgid "Outputs received"
 msgstr ""
 
 #: heat/engine/stack.py:91
@@ -2062,12 +2049,12 @@ msgid ""
 msgstr ""
 
 #: heat/engine/resources/instance_group.py:64
-#: heat/engine/resources/loadbalancer.py:369
-#: heat/engine/resources/loadbalancer.py:374
-#: heat/engine/resources/loadbalancer.py:383
-#: heat/engine/resources/loadbalancer.py:388
-#: heat/engine/resources/loadbalancer.py:393
-#: heat/engine/resources/loadbalancer.py:398
+#: heat/engine/resources/loadbalancer.py:372
+#: heat/engine/resources/loadbalancer.py:377
+#: heat/engine/resources/loadbalancer.py:386
+#: heat/engine/resources/loadbalancer.py:391
+#: heat/engine/resources/loadbalancer.py:396
+#: heat/engine/resources/loadbalancer.py:401
 #: heat/engine/resources/aws/autoscaling_group.py:119
 #: heat/engine/resources/aws/autoscaling_group.py:161
 #: heat/engine/resources/aws/autoscaling_group.py:166
@@ -2110,16 +2097,26 @@ msgstr ""
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
 
-#: heat/engine/resources/instance_group.py:155
+#: heat/engine/resources/instance_group.py:143
+#, python-format
+msgid "Maximum %s is 1 hour."
+msgstr ""
+
+#: heat/engine/resources/instance_group.py:156
 #, python-format
 msgid "%(lc)s (%(ref)s) reference can not be found."
 msgstr ""
 
-#: heat/engine/resources/instance_group.py:160
+#: heat/engine/resources/instance_group.py:161
 #, python-format
 msgid ""
 "%(lc)s (%(ref)s) requires a reference to the configuration not just the "
 "name of the resource."
+msgstr ""
+
+#: heat/engine/resources/instance_group.py:306
+#, python-format
+msgid "The current %s will result in stack update timeout."
 msgstr ""
 
 #: heat/engine/resources/internet_gateway.py:70
@@ -2139,83 +2136,83 @@ msgstr ""
 msgid "ID of the VPNGateway to attach to the VPC."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:298
+#: heat/engine/resources/loadbalancer.py:301
 msgid "The Availability Zones in which to create the load balancer."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:303
+#: heat/engine/resources/loadbalancer.py:306
 msgid "An application health check for the instances."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:307
+#: heat/engine/resources/loadbalancer.py:310
 msgid ""
 "The number of consecutive health probe successes required before moving "
 "the instance to the healthy state."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:314
+#: heat/engine/resources/loadbalancer.py:317
 msgid ""
 "The approximate interval, in seconds, between health checks of an "
 "individual instance."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:320
+#: heat/engine/resources/loadbalancer.py:323
 msgid "The port being checked."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:325
+#: heat/engine/resources/loadbalancer.py:328
 msgid "Health probe timeout, in seconds."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:330
+#: heat/engine/resources/loadbalancer.py:333
 msgid ""
 "The number of consecutive health probe failures required before moving "
 "the instance to the unhealthy state"
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:339
+#: heat/engine/resources/loadbalancer.py:342
 msgid "The list of instance IDs load balanced."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:344
+#: heat/engine/resources/loadbalancer.py:347
 msgid "One or more listeners for this load balancer."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:350
+#: heat/engine/resources/loadbalancer.py:353
 msgid "TCP port on which the instance server is listening."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:356
+#: heat/engine/resources/loadbalancer.py:359
 msgid "The external load balancer port number."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:361
+#: heat/engine/resources/loadbalancer.py:364
 msgid "The load balancer transport protocol to use."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:405
+#: heat/engine/resources/loadbalancer.py:408
 msgid "The name of the hosted zone that is associated with the LoadBalancer."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:409
+#: heat/engine/resources/loadbalancer.py:412
 msgid "The ID of the hosted zone name that is associated with the LoadBalancer."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:413
+#: heat/engine/resources/loadbalancer.py:416
 msgid "The DNS name for the LoadBalancer."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:416
+#: heat/engine/resources/loadbalancer.py:419
 msgid ""
 "The security group that you can use as part of your inbound rules for "
 "your LoadBalancer's back-end instances."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:420
+#: heat/engine/resources/loadbalancer.py:423
 msgid "Owner of the source security group."
 msgstr ""
 
-#: heat/engine/resources/loadbalancer.py:582
+#: heat/engine/resources/loadbalancer.py:585
 msgid "Custom LoadBalancer template can not be found"
 msgstr ""
 
@@ -5704,30 +5701,39 @@ msgstr ""
 msgid "ID of project for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:489
+#: heat/engine/resources/software_config/software_deployment.py:469
+#, python-format
+msgid "Deployment exited with non-zero status code: %s"
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:496
+msgid "Outputs received"
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:538
 #, python-format
 msgid ""
 "Resource %s's property user_data_format should be set to SOFTWARE_CONFIG "
 "since there are software deployments on it."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:527
+#: heat/engine/resources/software_config/software_deployment.py:576
 msgid "A map of Nova names and IDs to apply configuration to."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:539
+#: heat/engine/resources/software_config/software_deployment.py:588
 msgid ""
 "A map of Nova names and captured stdouts from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:543
+#: heat/engine/resources/software_config/software_deployment.py:592
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:547
+#: heat/engine/resources/software_config/software_deployment.py:596
 msgid ""
 "A map of Nova names and returned status code from the configuration "
 "execution"
@@ -5862,7 +5868,7 @@ msgid ""
 "deprecated. Use only \"network\" property."
 msgstr ""
 
-#: heat/tests/test_software_deployment.py:691
+#: heat/tests/test_software_deployment.py:741
 msgid "need more memory."
 msgstr ""
 

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-17 06:02+0000\n"
-"PO-Revision-Date: 2015-02-16 22:06+0000\n"
+"POT-Creation-Date: 2015-02-24 06:03+0000\n"
+"PO-Revision-Date: 2015-02-23 21:31+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -24,7 +24,7 @@ msgstr ""
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
-#: heat/api/aws/utils.py:98
+#: heat/api/aws/utils.py:99
 #, python-format
 msgid "Request does not contain %s parameter!"
 msgstr "%s 매개변수가 요청에 포함되지 않음 !"
@@ -33,11 +33,11 @@ msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 msgid "Request does not contain required MetricData"
 msgstr "요청에 필요한 MetricData 가 없음. "
 
-#: heat/common/context.py:200
+#: heat/common/context.py:203
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
-#: heat/common/exception.py:116
+#: heat/common/exception.py:115
 msgid "Exception in string format operation"
 msgstr "문자열 형식화 오퍼레이션의 예외"
 
@@ -69,20 +69,20 @@ msgstr ""
 "규정 %(role)s에 사용자 %(user)s 를 추가하는데 실패했습니다. 규정을 확인하세"
 "요.!"
 
-#: heat/common/lifecycle_plugin_utils.py:44
+#: heat/common/lifecycle_plugin_utils.py:46
 msgid "failed to get lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
 
-#: heat/common/lifecycle_plugin_utils.py:51
+#: heat/common/lifecycle_plugin_utils.py:53
 #, python-format
 msgid "failed to instantiate stack lifecycle class %s"
 msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
 
-#: heat/common/lifecycle_plugin_utils.py:56
+#: heat/common/lifecycle_plugin_utils.py:58
 msgid "failed to sort lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
 
-#: heat/common/lifecycle_plugin_utils.py:109
+#: heat/common/lifecycle_plugin_utils.py:111
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
@@ -92,30 +92,30 @@ msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
 msgid "Failed to import module %s"
 msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
 
-#: heat/common/wsgi.py:267
+#: heat/common/wsgi.py:265
 msgid "SIGTERM received"
 msgstr "SIGTERM 수신"
 
-#: heat/common/wsgi.py:276
+#: heat/common/wsgi.py:274
 msgid "SIGHUP received"
 msgstr ""
 
-#: heat/common/wsgi.py:304
+#: heat/common/wsgi.py:302
 #, python-format
 msgid "Removing dead child %s"
 msgstr ""
 
-#: heat/common/wsgi.py:662
+#: heat/common/wsgi.py:660
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "자원 처리 예외: %s"
 
-#: heat/common/wsgi.py:684
+#: heat/common/wsgi.py:682
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
 
-#: heat/common/wsgi.py:758
+#: heat/common/wsgi.py:756
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -128,17 +128,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
-#: heat/engine/environment.py:470
+#: heat/engine/environment.py:469
 #, python-format
 msgid "Failed to read %s"
 msgstr "%s를 읽지 못했습니다."
 
-#: heat/engine/environment.py:482
+#: heat/engine/environment.py:481
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "%(file_path)s를 구문 분석하는 데 실패했습니다."
 
-#: heat/engine/environment.py:486
+#: heat/engine/environment.py:485
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "%(file_path)s를 읽는데 실패했습니다. "
@@ -167,12 +167,12 @@ msgstr "DB %s에 오류가 있습니다. "
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:352
+#: heat/engine/service.py:356
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1364
+#: heat/engine/service.py:1374
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
@@ -180,6 +180,11 @@ msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않�
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
+
+#: heat/engine/stack.py:487
+#, python-format
+msgid "Exception: %s"
+msgstr ""
 
 #: heat/engine/stack.py:737
 #, python-format
@@ -199,6 +204,11 @@ msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 #: heat/engine/stack.py:1160
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
+msgstr ""
+
+#: heat/engine/worker.py:76
+#, python-format
+msgid "WorkerService is failed to stop, %s"
 msgstr ""
 
 #: heat/engine/clients/__init__.py:143
@@ -230,7 +240,7 @@ msgstr ""
 msgid "exception: %s"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:71
+#: heat/engine/resources/wait_condition.py:72
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
@@ -257,6 +267,6 @@ msgstr "%s 규칙을 이해하는데 실패했습니다"
 msgid "No handler for matches of kind %s"
 msgstr "%s 유형의 일치에 대한 핸들러가 없음"
 
-#: heat/openstack/common/service.py:269
+#: heat/openstack/common/service.py:268
 msgid "Unhandled exception"
 msgstr "처리되지 않은 예외"
