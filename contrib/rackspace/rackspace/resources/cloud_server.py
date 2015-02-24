@@ -11,17 +11,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
-from heat.engine import attributes
-from heat.engine import properties
 from heat.engine.resources import server
-from heat.engine import support
 
 try:
     import pyrax  # noqa
@@ -35,11 +30,6 @@ LOG = logging.getLogger(__name__)
 class CloudServer(server.Server):
     """Resource for Rackspace Cloud Servers."""
 
-    support_status = support.SupportStatus(
-        support.DEPRECATED,
-        _('Use OS::Nova::Server instead.'),
-    )
-
     # Managed Cloud automation statuses
     MC_STATUS_IN_PROGRESS = 'In Progress'
     MC_STATUS_COMPLETE = 'Complete'
@@ -51,77 +41,10 @@ class CloudServer(server.Server):
     RC_STATUS_FAILED = 'FAILED'
     RC_STATUS_UNPROCESSABLE = 'UNPROCESSABLE'
 
-    # Admin Pass Properties
-    SAVE_ADMIN_PASS = 'save_admin_pass'
-
-    properties_schema = copy.deepcopy(server.Server.properties_schema)
-    properties_schema.update(
-        {
-            SAVE_ADMIN_PASS: properties.Schema(
-                properties.Schema.BOOLEAN,
-                _('True if the system should remember the admin password; '
-                  'False otherwise.'),
-                default=False
-            ),
-        }
-    )
-
-    NEW_ATTRIBUTES = (
-        DISTRO, PRIVATE_IP_V4, ADMIN_PASS_ATTR,
-    ) = (
-        'distro', 'privateIPv4', 'admin_pass',
-    )
-
-    ATTRIBUTES = copy.deepcopy(server.Server.ATTRIBUTES)
-    ATTRIBUTES += NEW_ATTRIBUTES
-
-    attributes_schema = copy.deepcopy(server.Server.attributes_schema)
-    attributes_schema.update(
-        {
-            DISTRO: attributes.Schema(
-                _('The Linux distribution on the server.')
-            ),
-            PRIVATE_IP_V4: attributes.Schema(
-                _('The private IPv4 address of the server.')
-            ),
-            ADMIN_PASS_ATTR: attributes.Schema(
-                _('The administrator password for the server.'),
-                cache_mode=attributes.Schema.CACHE_NONE
-            ),
-        }
-    )
-
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
-        self._server = None
-        self._distro = None
-        self._image = None
         self._managed_cloud_started_event_sent = False
         self._rack_connect_started_event_sent = False
-
-    @property
-    def server(self):
-        """Return the Cloud Server object."""
-        if self._server is None:
-            self._server = self.nova().servers.get(self.resource_id)
-        return self._server
-
-    @property
-    def distro(self):
-        """Return the Linux distribution for this server."""
-        image = self.properties.get(self.IMAGE)
-        if self._distro is None and image:
-            image_data = self.nova().images.get(self.image)
-            self._distro = image_data.metadata['os_distro']
-        return self._distro
-
-    @property
-    def image(self):
-        """Return the server's image ID."""
-        image = self.properties.get(self.IMAGE)
-        if image and self._image is None:
-            self._image = self.client_plugin('glance').get_image_id(image)
-        return self._image
 
     def _config_drive(self):
         user_data = self.properties.get(self.USER_DATA)
@@ -219,51 +142,9 @@ class CloudServer(server.Server):
 
         return True
 
-    def _resolve_attribute(self, name):
-        if name == self.DISTRO:
-            return self.distro
-        if name == self.PRIVATE_IP_V4:
-            return self.client_plugin().get_ip(self.server, 'private', 4)
-        if name == self.ADMIN_PASS_ATTR:
-            return self.data().get(self.ADMIN_PASS_ATTR, '')
-        return super(CloudServer, self)._resolve_attribute(name)
-
-    def handle_create(self):
-        server = super(CloudServer, self).handle_create()
-
-        #  Server will not have an adminPass attribute if Nova's
-        #  "enable_instance_password" config option is turned off
-        if (self.properties.get(self.SAVE_ADMIN_PASS) and
-                hasattr(server, 'adminPass') and server.adminPass):
-            self.data_set(self.ADMIN_PASS,
-                          server.adminPass,
-                          redact=True)
-
-        return server
-
-    def handle_check(self):
-        server = self._check_server_status()
-        checks = []
-
-        if 'rack_connect' in self.context.roles:
-            rc_status = self._check_rack_connect_complete(server)
-            checks.append(
-                {'attr': 'rackconnect complete', 'expected': True,
-                 'current': rc_status}
-            )
-
-        if 'rax_managed' in self.context.roles:
-            mc_status = self._check_managed_cloud_complete(server)
-            checks.append(
-                {'attr': 'managed_cloud complete', 'expected': True,
-                 'current': mc_status}
-            )
-
-        self._verify_check_conditions(checks)
-
 
 def resource_mapping():
-    return {'Rackspace::Cloud::Server': CloudServer}
+    return {'OS::Nova::Server': CloudServer}
 
 
 def available_resource_mapping():
