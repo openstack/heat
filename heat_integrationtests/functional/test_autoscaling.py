@@ -70,7 +70,7 @@ parameters:
   InstanceType: {type: string}
   SecurityGroups: {type: comma_delimited_list}
   UserData: {type: string}
-  Tags: {type: comma_delimited_list}
+  Tags: {type: comma_delimited_list, default: "x,y"}
 
 resources:
   random1:
@@ -93,7 +93,7 @@ parameters:
   InstanceType: {type: string}
   SecurityGroups: {type: comma_delimited_list}
   UserData: {type: string}
-  Tags: {type: comma_delimited_list}
+  Tags: {type: comma_delimited_list, default: "x,y"}
 
 resources:
   random1:
@@ -612,7 +612,7 @@ parameters:
   InstanceType: {type: string}
   SecurityGroups: {type: comma_delimited_list}
   UserData: {type: string}
-  Tags: {type: comma_delimited_list}
+  Tags: {type: comma_delimited_list, default: "x,y"}
 
 resources:
 outputs:

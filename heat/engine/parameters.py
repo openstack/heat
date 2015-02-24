@@ -340,7 +340,10 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
 
     def __init__(self, name, schema, value=None):
         super(CommaDelimitedListParam, self).__init__(name, schema, value)
-        self.parsed = self.parse(self.user_value or self.default())
+        if self.has_value():
+            self.parsed = self.parse(self.user_value or self.default())
+        else:
+            self.parsed = []
 
     def parse(self, value):
         # only parse when value is not already a list
@@ -357,7 +360,10 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         return value
 
     def value(self):
-        return self.parsed
+        if self.has_value():
+            return self.parsed
+
+        raise exception.UserParameterMissing(key=self.name)
 
     def __len__(self):
         '''Return the length of the list.'''
@@ -382,7 +388,10 @@ class JsonParam(Parameter):
 
     def __init__(self, name, schema, value=None):
         super(JsonParam, self).__init__(name, schema, value)
-        self.parsed = self.parse(self.user_value or self.default())
+        if self.has_value():
+            self.parsed = self.parse(self.user_value or self.default())
+        else:
+            self.parsed = {}
 
     def parse(self, value):
         try:
@@ -397,7 +406,10 @@ class JsonParam(Parameter):
         return value
 
     def value(self):
-        return self.parsed
+        if self.has_value():
+            return self.parsed
+
+        raise exception.UserParameterMissing(key=self.name)
 
     def __getitem__(self, key):
         return self.parsed[key]

@@ -363,11 +363,23 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'bo', schema, 'foo')
         self.assertIn("Unrecognized value 'foo'", six.text_type(err))
 
-    def test_missing_param(self):
+    def test_missing_param_str(self):
         '''Test missing user parameter.'''
         self.assertRaises(exception.UserParameterMissing,
                           self.new_parameter, 'p',
                           {'Type': 'String'})
+
+    def test_missing_param_list(self):
+        '''Test missing user parameter.'''
+        self.assertRaises(exception.UserParameterMissing,
+                          self.new_parameter, 'p',
+                          {'Type': 'CommaDelimitedList'})
+
+    def test_missing_param_map(self):
+        '''Test missing user parameter.'''
+        self.assertRaises(exception.UserParameterMissing,
+                          self.new_parameter, 'p',
+                          {'Type': 'Json'})
 
     def test_param_name_in_error_message(self):
         schema = {'Type': 'String',
