@@ -1046,7 +1046,7 @@ class StackTest(common.HeatTestCase):
                              status_reason='blarg')
         self.assertEqual(1, stack.total_resources())
 
-    def test_total_resources_nested(self):
+    def test_total_resources_nested_ok(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':
                {'A': {'Type': 'GenericResourceType'}}}
@@ -1056,6 +1056,16 @@ class StackTest(common.HeatTestCase):
         stack['A'].nested = mock.Mock()
         stack['A'].nested.return_value.total_resources.return_value = 3
         self.assertEqual(4, stack.total_resources())
+
+    def test_total_resources_nested_not_found(self):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
+
+        stack['A'].nested = mock.Mock(side_effect=exception.NotFound('gone'))
+        self.assertEqual(1, stack.total_resources())
 
     def test_iter_resources(self):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',

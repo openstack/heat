@@ -228,7 +228,12 @@ class Stack(collections.Mapping):
         def total_nested(res):
             get_nested = getattr(res, 'nested', None)
             if callable(get_nested):
-                nested_stack = get_nested()
+                try:
+                    nested_stack = get_nested()
+                except exception.NotFound:
+                    # when an delete is underway, a nested stack can
+                    # disapear at any moment.
+                    return 0
                 if nested_stack is not None:
                     return nested_stack.total_resources()
             return 0
