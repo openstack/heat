@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-17 06:02+0000\n"
-"PO-Revision-Date: 2015-02-16 22:06+0000\n"
+"POT-Creation-Date: 2015-02-24 06:03+0000\n"
+"PO-Revision-Date: 2015-02-23 21:31+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -26,7 +26,7 @@ msgstr ""
 "Échec de l’autorisation Ec2Token, pas auth_uri spécifié dans le fichier de "
 "configuration"
 
-#: heat/api/aws/utils.py:98
+#: heat/api/aws/utils.py:99
 #, python-format
 msgid "Request does not contain %s parameter!"
 msgstr "La requete ne doit pas contenir le paramètre %s!"
@@ -35,13 +35,13 @@ msgstr "La requete ne doit pas contenir le paramètre %s!"
 msgid "Request does not contain required MetricData"
 msgstr "La requête ne doit pas contenir comme pré-requis MetricData"
 
-#: heat/common/context.py:200
+#: heat/common/context.py:203
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 "Échec de la connexion Keystone v3 API, pas de mot de passe de confiance ou "
 "auth_token!"
 
-#: heat/common/exception.py:116
+#: heat/common/exception.py:115
 msgid "Exception in string format operation"
 msgstr "Exception dans le formatage de la chaîne"
 
@@ -73,20 +73,20 @@ msgstr ""
 "Échec d'ajout de l'utilisateur %(user)s pour le rôle %(role)s, vérifier si "
 "le role existe!"
 
-#: heat/common/lifecycle_plugin_utils.py:44
+#: heat/common/lifecycle_plugin_utils.py:46
 msgid "failed to get lifecycle plug point classes"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:51
+#: heat/common/lifecycle_plugin_utils.py:53
 #, python-format
 msgid "failed to instantiate stack lifecycle class %s"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:56
+#: heat/common/lifecycle_plugin_utils.py:58
 msgid "failed to sort lifecycle plug point classes"
 msgstr ""
 
-#: heat/common/lifecycle_plugin_utils.py:109
+#: heat/common/lifecycle_plugin_utils.py:111
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(opname) %(ci)s échec pour  %(a)s sur %(sid)s"
@@ -96,30 +96,30 @@ msgstr "%(opname) %(ci)s échec pour  %(a)s sur %(sid)s"
 msgid "Failed to import module %s"
 msgstr "Echec lors de l'import du module %s"
 
-#: heat/common/wsgi.py:267
+#: heat/common/wsgi.py:265
 msgid "SIGTERM received"
 msgstr "SIGTERM reçu"
 
-#: heat/common/wsgi.py:276
+#: heat/common/wsgi.py:274
 msgid "SIGHUP received"
 msgstr "SIGHUP reçu"
 
-#: heat/common/wsgi.py:304
+#: heat/common/wsgi.py:302
 #, python-format
 msgid "Removing dead child %s"
 msgstr "Retrait de l'enfant arrêté %s"
 
-#: heat/common/wsgi.py:662
+#: heat/common/wsgi.py:660
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "Exception lors du traitement de la ressource : %s"
 
-#: heat/common/wsgi.py:684
+#: heat/common/wsgi.py:682
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "Renvoie %(code)s à l'utilisateur : %(explanation)s"
 
-#: heat/common/wsgi.py:758
+#: heat/common/wsgi.py:756
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -132,17 +132,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:470
+#: heat/engine/environment.py:469
 #, python-format
 msgid "Failed to read %s"
 msgstr "Echec de lecture %s"
 
-#: heat/engine/environment.py:482
+#: heat/engine/environment.py:481
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "Echec d'analyse  %(file_path)s"
 
-#: heat/engine/environment.py:486
+#: heat/engine/environment.py:485
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "Echec de lecture %(file_path)s"
@@ -171,12 +171,12 @@ msgstr "Erreur base de donné %s"
 msgid "signal %(name)s : %(msg)s"
 msgstr "signal %(name)s : %(msg)s"
 
-#: heat/engine/service.py:352
+#: heat/engine/service.py:356
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1364
+#: heat/engine/service.py:1374
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -184,6 +184,11 @@ msgstr ""
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "Impossible de récupérer la stack %s pour la tache périodique"
+
+#: heat/engine/stack.py:487
+#, python-format
+msgid "Exception: %s"
+msgstr ""
 
 #: heat/engine/stack.py:737
 #, python-format
@@ -203,6 +208,11 @@ msgstr "Ressource %(name)s échec de suppression: %(ex)s"
 #: heat/engine/stack.py:1160
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
+msgstr ""
+
+#: heat/engine/worker.py:76
+#, python-format
+msgid "WorkerService is failed to stop, %s"
 msgstr ""
 
 #: heat/engine/clients/__init__.py:143
@@ -231,7 +241,7 @@ msgstr ""
 msgid "exception: %s"
 msgstr ""
 
-#: heat/engine/resources/wait_condition.py:71
+#: heat/engine/resources/wait_condition.py:72
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "Echec de validation de metadata pour %s"
@@ -258,6 +268,6 @@ msgstr "Règle %s incompréhensible"
 msgid "No handler for matches of kind %s"
 msgstr "Aucun gestionnaire pour les correspondances de type %s"
 
-#: heat/openstack/common/service.py:269
+#: heat/openstack/common/service.py:268
 msgid "Unhandled exception"
 msgstr "Exception non gérée"
