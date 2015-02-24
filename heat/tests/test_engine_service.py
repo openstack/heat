@@ -45,8 +45,10 @@ from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
+from heat.engine import worker
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
+from heat.rpc import worker_api
 from heat.tests import common
 from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc
@@ -1653,6 +1655,14 @@ class StackServiceTest(common.HeatTestCase):
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
 
+    def test_make_sure_rpc_version(self):
+        self.assertEqual(
+            '1.5',
+            service.EngineService.RPC_API_VERSION,
+            ('RPC version is changed, please update this test to new version '
+             'and make sure additional test cases are added for RPC APIs '
+             'added in new version'))
+
     @mock.patch.object(service_stack_watch.StackWatch, 'start_watch_task')
     @mock.patch.object(service.db_api, 'stack_get_all')
     @mock.patch.object(service.service.Service, 'start')
@@ -3192,6 +3202,243 @@ class StackServiceTest(common.HeatTestCase):
             self.eng._stop_rpc_server()
             mock_rpc_server.stop.assert_called_once_with()
             mock_rpc_server.wait.assert_called_once_with()
+
+    def _test_engine_service_start(
+            self,
+            thread_group_class,
+            worker_service_class,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class,
+            rpc_server_method):
+        self.eng.start()
+
+        # engine id
+        sample_uuid_method.assert_called_once_with()
+        sampe_uuid = sample_uuid_method.return_value
+        self.assertEqual(sampe_uuid,
+                         self.eng.engine_id,
+                         'Failed to generated engine_id')
+
+        # Thread group manager
+        thread_group_manager_class.assert_called_once_with()
+        thread_group_manager = thread_group_manager_class.return_value
+        self.assertEqual(thread_group_manager,
+                         self.eng.thread_group_mgr,
+                         'Failed to create Thread Group Manager')
+
+        # Engine Listener
+        engine_listener_class.assert_called_once_with(
+            self.eng.host,
+            self.eng.engine_id,
+            self.eng.thread_group_mgr
+        )
+        engine_lister = engine_listener_class.return_value
+        engine_lister.start.assert_called_once_with()
+
+        # Worker Service
+        if cfg.CONF.convergence_engine:
+            worker_service_class.assert_called_once_with(
+                host=self.eng.host,
+                topic=worker_api.TOPIC,
+                engine_id=self.eng.engine_id,
+                thread_group_mgr=self.eng.thread_group_mgr
+            )
+            worker_service = worker_service_class.return_value
+            worker_service.start.assert_called_once_with()
+
+        # RPC Target
+        target_class.assert_called_once_with(
+            version=service.EngineService.RPC_API_VERSION,
+            server=self.eng.host,
+            topic=self.eng.topic)
+
+        # RPC server
+        target = target_class.return_value
+        rpc_server_method.assert_called_once_with(target,
+                                                  self.eng)
+        rpc_server = rpc_server_method.return_value
+        self.assertEqual(rpc_server,
+                         self.eng._rpc_server,
+                         "Failed to create RPC server")
+
+        rpc_server.start.assert_called_once_with()
+
+        # RPC client
+        rpc_client = rpc_client_class.return_value
+        rpc_client_class.assert_called_once_with(
+            version=service.EngineService.RPC_API_VERSION)
+        self.assertEqual(rpc_client,
+                         self.eng._client,
+                         "Failed to create RPC client")
+
+        # Manage Thread group
+        thread_group_class.assert_called_once_with()
+        manage_thread_group = thread_group_class.return_value
+        manage_thread_group.add_timer.assert_called_once_with(
+            cfg.CONF.periodic_interval,
+            self.eng.service_manage_report
+        )
+
+    @mock.patch('heat.common.messaging.get_rpc_server',
+                return_value=mock.Mock())
+    @mock.patch('oslo_messaging.Target',
+                return_value=mock.Mock())
+    @mock.patch('heat.common.messaging.get_rpc_client',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+                return_value='sample-uuid')
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.service.EngineListener',
+                return_value=mock.Mock())
+    @mock.patch('heat.openstack.common.threadgroup.ThreadGroup',
+                return_value=mock.Mock())
+    def test_engine_service_start_in_non_convergence_mode(
+            self,
+            thread_group_class,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class,
+            rpc_server_method):
+        cfg.CONF.set_default('convergence_engine', False)
+        self._test_engine_service_start(
+            thread_group_class,
+            None,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class,
+            rpc_server_method
+        )
+
+    @mock.patch('heat.common.messaging.get_rpc_server',
+                return_value=mock.Mock())
+    @mock.patch('oslo_messaging.Target',
+                return_value=mock.Mock())
+    @mock.patch('heat.common.messaging.get_rpc_client',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.stack_lock.StackLock.generate_engine_id',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.service.EngineListener',
+                return_value=mock.Mock())
+    @mock.patch('heat.engine.worker.WorkerService',
+                return_value=mock.Mock())
+    @mock.patch('heat.openstack.common.threadgroup.ThreadGroup',
+                return_value=mock.Mock())
+    def test_engine_service_start_in_convergence_mode(
+            self,
+            thread_group_class,
+            worker_service_class,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class,
+            rpc_server_method):
+        cfg.CONF.set_default('convergence_engine', True)
+        self._test_engine_service_start(
+            thread_group_class,
+            worker_service_class,
+            engine_listener_class,
+            thread_group_manager_class,
+            sample_uuid_method,
+            rpc_client_class,
+            target_class,
+            rpc_server_method
+        )
+
+    def _test_engine_service_stop(
+            self,
+            service_delete_method,
+            admin_context_method):
+        cfg.CONF.set_default('periodic_interval', 60)
+
+        self.eng.start()
+        # Add dummy thread group to test thread_group_mgr.stop() is executed?
+        self.eng.thread_group_mgr.groups['sample-uuid'] = DummyThreadGroup()
+        self.eng.service_id = 'sample-service-uuid'
+
+        self.eng.stop()
+
+        # RPC server
+        self.eng._stop_rpc_server.assert_called_once_with()
+
+        if cfg.CONF.convergence_engine:
+            # WorkerService
+            self.eng.worker_service.stop.assert_called_once_with()
+
+        # Wait for all active threads to be finished
+        self.eng.thread_group_mgr.stop.assert_called_with(
+            'sample-uuid',
+            True)
+
+        # # Manage Thread group
+        self.eng.manage_thread_grp.stop.assert_called_with(False)
+
+        # Service delete
+        admin_context_method.assert_called_once_with()
+        ctxt = admin_context_method.return_value
+        service_delete_method.assert_called_once_with(
+            ctxt,
+            self.eng.service_id
+        )
+
+    @mock.patch.object(service.EngineService,
+                       '_stop_rpc_server')
+    @mock.patch.object(worker.WorkerService,
+                       'stop')
+    @mock.patch.object(threadgroup.ThreadGroup,
+                       'stop')
+    @mock.patch.object(service.ThreadGroupManager,
+                       'stop')
+    @mock.patch('heat.common.context.get_admin_context',
+                return_value=mock.Mock())
+    @mock.patch('heat.db.api.service_delete',
+                return_value=mock.Mock())
+    def test_engine_service_stop_in_convergence_mode(
+            self,
+            service_delete_method,
+            admin_context_method,
+            thread_group_mgr_stop,
+            thread_group_stop,
+            worker_service_stop,
+            rpc_server_stop):
+        cfg.CONF.set_default('convergence_engine', True)
+        self._test_engine_service_stop(
+            service_delete_method,
+            admin_context_method
+        )
+
+    @mock.patch.object(service.EngineService,
+                       '_stop_rpc_server')
+    @mock.patch.object(threadgroup.ThreadGroup,
+                       'stop')
+    @mock.patch.object(service.ThreadGroupManager,
+                       'stop')
+    @mock.patch('heat.common.context.get_admin_context',
+                return_value=mock.Mock())
+    @mock.patch('heat.db.api.service_delete',
+                return_value=mock.Mock())
+    def test_engine_service_stop_in_non_convergence_mode(
+            self,
+            service_delete_method,
+            admin_context_method,
+            thread_group_mgr_stop,
+            thread_group_stop,
+            rpc_server_stop):
+        cfg.CONF.set_default('convergence_engine', False)
+        self._test_engine_service_stop(
+            service_delete_method,
+            admin_context_method
+        )
 
 
 class SoftwareConfigServiceTest(common.HeatTestCase):
