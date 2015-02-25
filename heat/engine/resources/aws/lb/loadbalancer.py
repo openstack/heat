@@ -34,6 +34,10 @@ lb_template_default = r'''
   "Parameters" : {
     "KeyName" : {
       "Type" : "String"
+    },
+    "LbFlavor" : {
+      "Type" : "String",
+      "Default" : "m1.small"
     }
   },
   "Resources": {
@@ -158,7 +162,7 @@ lb_template_default = r'''
       },
       "Properties": {
         "ImageId": "Fedora-Cloud-Base-20141203-21.x86_64",
-        "InstanceType": "m1.small",
+        "InstanceType": { "Ref": "LbFlavor" },
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
           "#!/bin/bash -v\n",
@@ -518,6 +522,9 @@ backend servers
         # template, otherwise use no key
         if 'KeyName' in self.stack.parameters:
             params['KeyName'] = self.stack.parameters['KeyName']
+
+        if 'LbFlavor' in self.stack.parameters:
+            params['LbFlavor'] = self.stack.parameters['LbFlavor']
 
         return params
 
