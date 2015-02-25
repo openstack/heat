@@ -111,7 +111,9 @@ class Subnet(neutron.NeutronResource):
         ),
         GATEWAY_IP: properties.Schema(
             properties.Schema.STRING,
-            _('The gateway IP address.'),
+            _('The gateway IP address. Set to any of [ null | ~ | "" ] to '
+              'create the subnet without a gateway. If omitted, the first IP '
+              'address within the subnet is assigned to the gateway.'),
             update_allowed=True
         ),
         ENABLE_DHCP: properties.Schema(
