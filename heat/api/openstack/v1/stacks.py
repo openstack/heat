@@ -238,7 +238,11 @@ class StackController(object):
         """
         Lists summary information for all stacks
         """
-        global_tenant = bool(req.params.get('global_tenant', False))
+        global_tenant = False
+        if rpc_api.PARAM_GLOBAL_TENANT in req.params:
+            global_tenant = param_utils.extract_bool(
+                req.params.get(rpc_api.PARAM_GLOBAL_TENANT))
+
         if global_tenant:
             return self.global_index(req, req.context.tenant_id)
 
