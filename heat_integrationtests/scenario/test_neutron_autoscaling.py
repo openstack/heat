@@ -10,59 +10,62 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.scenario import scenario_base
 
 
-class NeutronAutoscalingTest(test.HeatIntegrationTest):
+class NeutronAutoscalingTest(scenario_base.ScenarioTestsBase):
     """
     The class is responsible for testing of neutron resources autoscaling.
     """
 
     def setUp(self):
         super(NeutronAutoscalingTest, self).setUp()
-        self.client = self.orchestration_client
         if not self.conf.minimal_image_ref:
             raise self.skipException("No minimal image configured to test")
-        if not self.conf.instance_type:
-            raise self.skipException("No flavor configured to test")
         if not self.conf.fixed_subnet_name:
             raise self.skipException("No sub-network configured to test")
+        self.template_name = 'test_neutron_autoscaling.yaml'
 
     def test_neutron_autoscaling(self):
         """
-        Check autoscaling of load balancer members  in heat.
+        Check autoscaling of load balancer members in Heat.
 
         The alternative scenario is the following:
-            1. Initialize environment variables.
-            2. Create a stack with a load balancer.
-            3. Check that the load balancer created
+            1. Launch a stack with a load balancer.
+            2. Check that the load balancer created
             one load balancer member for stack.
-            4. Update stack definition: increase desired capacity of stack.
-            5. Check that number of members in load balancer was increased.
+            3. Update stack definition: increase desired capacity of stack.
+            4. Check that number of members in load balancer was increased.
         """
 
-        # Init env variables
-        env = {'parameters': {"image_id": self.conf.minimal_image_ref,
-                              "capacity": "1",
-                              "instance_type": self.conf.instance_type,
-                              "fixed_subnet_name": self.conf.fixed_subnet_name,
-                              }}
+        parameters = {
+            "image_id": self.conf.minimal_image_ref,
+            "capacity": "1",
+            "instance_type": self.conf.instance_type,
+            "fixed_subnet_name": self.conf.fixed_subnet_name,
+        }
 
-        template = self._load_template(__file__,
-                                       'test_neutron_autoscaling.yaml',
-                                       'templates')
-        # Create stack
-        stack_id = self.stack_create(template=template,
-                                     environment=env)
+        # Launch stack
+        stack_id = self.launch_stack(
+            template_name=self.template_name,
+            parameters=parameters
+        )
 
+        # Check number of members
         members = self.network_client.list_members()
         self.assertEqual(1, len(members["members"]))
 
         # Increase desired capacity and update the stack
-        env["parameters"]["capacity"] = "2"
-        self.update_stack(stack_id,
-                          template=template,
-                          environment=env)
+        template = self._load_template(
+            __file__, self.template_name, self.sub_dir
+        )
+        parameters["capacity"] = "2"
+        self.update_stack(
+            stack_id,
+            template=template,
+            parameters=parameters
+        )
 
+        # Check number of members
         upd_members = self.network_client.list_members()
         self.assertEqual(2, len(upd_members["members"]))

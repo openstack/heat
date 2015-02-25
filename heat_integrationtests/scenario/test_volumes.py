@@ -17,17 +17,18 @@ import six
 from testtools import testcase
 
 from heat_integrationtests.common import exceptions
-from heat_integrationtests.common import test
+from heat_integrationtests.scenario import scenario_base
 
 LOG = logging.getLogger(__name__)
 
 
-class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
+class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
+    """
+    Class is responsible for testing of volume backup.
+    """
 
     def setUp(self):
         super(VolumeBackupRestoreIntegrationTest, self).setUp()
-        self.client = self.orchestration_client
-        self.assign_keypair()
         self.volume_description = 'A test volume description 123'
         self.volume_size = self.conf.volume_size
 
@@ -48,37 +49,8 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         self.assertEqual(self.volume_description,
                          self._stack_output(stack, 'display_description'))
 
-    def launch_stack(self, template_name, add_parameters={}):
-        net = self._get_default_network()
-        template = self._load_template(__file__, template_name, 'templates')
-        parameters = {'key_name': self.keypair_name,
-                      'instance_type': self.conf.instance_type,
-                      'image_id': self.conf.minimal_image_ref,
-                      'volume_description': self.volume_description,
-                      'timeout': self.conf.build_timeout,
-                      'network': net['id']}
-        parameters.update(add_parameters)
-        return self.stack_create(template=template,
-                                 parameters=parameters)
-
-    @testcase.skip('Skipped until failure rate '
-                   'can be reduced ref bug #1382300')
-    def test_cinder_volume_create_backup_restore(self):
-        """Ensure the 'Snapshot' deletion policy works.
-
-           This requires a more complex test, but it tests several aspects
-           of the heat cinder resources:
-           1. Create a volume, attach it to an instance, write some data to it
-           2. Delete the stack, with 'Snapshot' specified, creates a backup
-           3. Check the snapshot has created a volume backup
-           4. Create a new stack, where the volume is created from the backup
-           5. Verify the test data written in (1) is present in the new volume
-        """
-        stack_identifier = self.launch_stack(
-            template_name='test_volumes_delete_snapshot.yaml',
-            add_parameters={'volume_size': self.volume_size})
-
-        stack = self.client.stacks.get(stack_identifier)
+    def check_stack(self, stack_id):
+        stack = self.client.stacks.get(stack_id)
 
         # Verify with cinder that the volume exists, with matching details
         volume_id = self._stack_output(stack, 'volume_id')
@@ -89,8 +61,8 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
 
         # Delete the stack and ensure a backup is created for volume_id
         # but the volume itself is gone
-        self.client.stacks.delete(stack_identifier)
-        self._wait_for_stack_status(stack_identifier, 'DELETE_COMPLETE')
+        self.client.stacks.delete(stack_id)
+        self._wait_for_stack_status(stack_id, 'DELETE_COMPLETE')
         self.assertRaises(cinder_exceptions.NotFound,
                           self.volume_client.volumes.get,
                           volume_id)
@@ -130,3 +102,36 @@ class VolumeBackupRestoreIntegrationTest(test.HeatIntegrationTest):
         self.assertRaises(cinder_exceptions.NotFound,
                           self.volume_client.volumes.get,
                           volume_id2)
+
+    @testcase.skip('Skipped until failure rate '
+                   'can be reduced ref bug #1382300')
+    def test_cinder_volume_create_backup_restore(self):
+        """
+        Ensure the 'Snapshot' deletion policy works.
+
+        This requires a more complex test, but it tests several aspects
+        of the heat cinder resources:
+           1. Create a volume, attach it to an instance, write some data to it
+           2. Delete the stack, with 'Snapshot' specified, creates a backup
+           3. Check the snapshot has created a volume backup
+           4. Create a new stack, where the volume is created from the backup
+           5. Verify the test data written in (1) is present in the new volume
+        """
+        parameters = {
+            'key_name': self.keypair_name,
+            'instance_type': self.conf.instance_type,
+            'image_id': self.conf.minimal_image_ref,
+            'volume_description': self.volume_description,
+            'timeout': self.conf.build_timeout,
+            'network': self.net['id']
+        }
+
+        # Launch stack
+        stack_id = self.launch_stack(
+            template_name='test_volumes_delete_snapshot.yaml',
+            parameters=parameters,
+            add_parameters={'volume_size': self.volume_size}
+        )
+
+        # Check stack
+        self.check_stack(stack_id)
