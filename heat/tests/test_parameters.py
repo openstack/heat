@@ -39,30 +39,35 @@ class ParameterTestCommon(common.HeatTestCase):
                              value='test',
                              expected='test',
                              allowed_value=['foo'],
+                             zero='',
                              default='default')),
         ('type_number', dict(p_type='Number',
                              inst=parameters.NumberParam,
                              value=10,
                              expected='10',
                              allowed_value=[42],
+                             zero=0,
                              default=13)),
         ('type_list', dict(p_type='CommaDelimitedList',
                            inst=parameters.CommaDelimitedListParam,
                            value=['a', 'b', 'c'],
                            expected='a,b,c',
                            allowed_value=['foo'],
+                           zero=[],
                            default=['d', 'e', 'f'])),
         ('type_json', dict(p_type='Json',
                            inst=parameters.JsonParam,
                            value={'a': 1, 'b': '2'},
                            expected='{"a": 1, "b": "2"}',
                            allowed_value=[{'foo': 'bar'}],
+                           zero={},
                            default={'d': 1, 'e': 'f'})),
         ('type_boolean', dict(p_type='Boolean',
                               inst=parameters.BooleanParam,
                               value=True,
                               expected='True',
                               allowed_value=[False],
+                              zero=False,
                               default=True))
     ]
 
@@ -135,6 +140,21 @@ class ParameterTestCommon(common.HeatTestCase):
                           self.value)
         self.assertFalse(p.hidden())
         self.assertEqual(self.expected, str(p))
+
+    def test_default_empty(self):
+        p = new_parameter('defaulted', {'Type': self.p_type,
+                                        'Default': self.zero})
+        self.assertTrue(p.has_default())
+        self.assertEqual(self.zero, p.default())
+        self.assertEqual(self.zero, p.value())
+
+    def test_default_no_empty_user_value_empty(self):
+        p = new_parameter('defaulted', {'Type': self.p_type,
+                                        'Default': self.default},
+                          self.zero)
+        self.assertTrue(p.has_default())
+        self.assertEqual(self.default, p.default())
+        self.assertEqual(self.zero, p.value())
 
 
 class ParameterTestSpecific(testtools.TestCase):

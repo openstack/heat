@@ -282,7 +282,8 @@ class ResourceGroup(stack_resource.StackResource):
             res_def[self.RESOURCE_DEF_PROPERTIES] = {}
         if not include_all:
             resource_def_props = res_def[self.RESOURCE_DEF_PROPERTIES]
-            clean = dict((k, v) for k, v in resource_def_props.items() if v)
+            clean = dict((k, v) for k, v in resource_def_props.items()
+                         if v is not None)
             res_def[self.RESOURCE_DEF_PROPERTIES] = clean
         return res_def
 
