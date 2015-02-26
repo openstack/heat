@@ -16,7 +16,6 @@
 
 """Heat exception subclasses"""
 
-import functools
 import sys
 
 from oslo_log import log as logging
@@ -79,7 +78,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                     temp_type = event_type
                     if not temp_type:
                         # If f has multiple decorators, they must use
-                        # functools.wraps to ensure the name is
+                        # six.wraps to ensure the name is
                         # propagated.
                         temp_type = f.__name__
 
@@ -89,7 +88,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                 # re-raise original exception since it may have been clobbered
                 raise exc_info[0], exc_info[1], exc_info[2]
 
-        return functools.wraps(f)(wrapped)
+        return six.wraps(f)(wrapped)
     return inner
 
 

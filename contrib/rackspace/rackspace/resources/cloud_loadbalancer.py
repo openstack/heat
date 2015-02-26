@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import functools
 import itertools
 
 from oslo_log import log as logging
@@ -48,7 +47,7 @@ def lb_immutable(exc):
 
 
 def retry_if_immutable(task):
-    @functools.wraps(task)
+    @six.wraps(task)
     def wrapper(*args, **kwargs):
         while True:
             yield

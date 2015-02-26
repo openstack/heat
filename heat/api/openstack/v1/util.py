@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
-
 import six
 from webob import exc
 
@@ -28,7 +26,7 @@ def policy_enforce(handler):
 
     This is a handler method decorator.
     """
-    @functools.wraps(handler)
+    @six.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
         if req.context.tenant_id != tenant_id:
             raise exc.HTTPForbidden()
@@ -48,7 +46,7 @@ def identified_stack(handler):
     This is a handler method decorator.
     """
     @policy_enforce
-    @functools.wraps(handler)
+    @six.wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
         stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
                                                    stack_name,

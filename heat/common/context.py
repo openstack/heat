@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
-
 from keystoneclient import access
 from keystoneclient.auth.identity import base
 from keystoneclient.auth.identity import v3
@@ -23,6 +21,7 @@ from oslo_log import log as logging
 import oslo_messaging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
+import six
 
 from heat.common import exception
 from heat.common.i18n import _LE
@@ -295,7 +294,7 @@ def ContextMiddleware_filter_factory(global_conf, **local_conf):
 
 
 def request_context(func):
-    @functools.wraps(func)
+    @six.wraps(func)
     def wrapped(self, ctx, *args, **kwargs):
         if ctx is not None and not isinstance(ctx, context.RequestContext):
             ctx = context.RequestContext.from_dict(ctx.to_dict())

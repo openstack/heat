@@ -281,7 +281,7 @@ def wrappertask(task):
             self.cleanup()
     """
 
-    @functools.wraps(task)
+    @six.wraps(task)
     def wrapper(*args, **kwargs):
         parent = task(*args, **kwargs)
 
