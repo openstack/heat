@@ -29,7 +29,6 @@ from oslo_db.sqlalchemy import test_base
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
-import pkg_resources as pkg
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
@@ -66,13 +65,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         return self.engine
 
     def test_walk_versions(self):
-        # TODO(viktors): Refactor this method, when we will be totally sure,
-        #                that Heat use oslo.db>=0.4.0
-        try:
-            pkg.require('oslo.db>=0.4.0')
-            self._walk_versions(self.snake_walk, self.downgrade)
-        except pkg.VersionConflict:
-            self._walk_versions(self.engine, self.snake_walk, self.downgrade)
+        self.walk_versions(self.snake_walk, self.downgrade)
 
     def assertColumnExists(self, engine, table, column):
         t = utils.get_table(engine, table)
