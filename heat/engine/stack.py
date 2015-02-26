@@ -107,7 +107,8 @@ class Stack(collections.Mapping):
         self.status_reason = status_reason
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
-        self.parent_resource = parent_resource
+        self.parent_resource_name = parent_resource
+        self._parent_resource = None
         self._resources = None
         self._dependencies = None
         self._access_allowed_handlers = {}
@@ -144,6 +145,26 @@ class Stack(collections.Mapping):
             self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
+
+    @property
+    def parent_resource(self):
+        """Dynamically load up the parent_resource.
+
+        Note: this should only be used by "Fn::ResourceFacade"
+        """
+        if self._parent_resource is not None:
+            return self._parent_resource
+
+        # we need both parent name and owner id.
+        if self.parent_resource_name is None or self.owner_id is None:
+            return None
+
+        try:
+            owner = self.load(self.context, stack_id=self.owner_id)
+        except exception.NotFound:
+            return None
+        self._parent_resource = owner[self.parent_resource_name]
+        return self._parent_resource
 
     def stored_context(self):
         if self.user_creds_id:

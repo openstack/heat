@@ -180,8 +180,8 @@ def format_stack_resource(resource, detail=True, with_props=False,
             resource.nested() is not None):
         res[rpc_api.RES_NESTED_STACK_ID] = dict(resource.nested().identifier())
 
-    if resource.stack.parent_resource:
-        res[rpc_api.RES_PARENT_RESOURCE] = resource.stack.parent_resource.name
+    if resource.stack.parent_resource_name:
+        res[rpc_api.RES_PARENT_RESOURCE] = resource.stack.parent_resource_name
 
     if detail:
         res[rpc_api.RES_DESCRIPTION] = resource.t.description

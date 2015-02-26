@@ -753,7 +753,8 @@ class HOTemplateTest(common.HeatTestCase):
                                              parser.Template(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
-                             parent_resource=parent_resource)
+                             parent_resource='parent')
+        stack._parent_resource = parent_resource
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stack.t, stack))
         self.assertEqual('Retain',
@@ -778,7 +779,8 @@ class HOTemplateTest(common.HeatTestCase):
 
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
-                             parent_resource=parent_resource)
+                             parent_resource='parent')
+        stack._parent_resource = parent_resource
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stack.t, stack))
 
@@ -803,7 +805,8 @@ class HOTemplateTest(common.HeatTestCase):
                                              parser.Template(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template(hot_tpl_empty),
-                             parent_resource=parent_resource)
+                             parent_resource='parent')
+        stack._parent_resource = parent_resource
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
 
     def test_removed_function(self):

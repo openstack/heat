@@ -228,8 +228,7 @@ class FormatTest(common.HeatTestCase):
 
     def test_format_stack_resource_with_parent_stack(self):
         res = self.stack['generic1']
-        res.stack.parent_resource = mock.Mock()
-        res.stack.parent_resource.name = 'foobar'
+        res.stack.parent_resource_name = 'foobar'
 
         formatted = api.format_stack_resource(res, False)
         self.assertEqual('foobar', formatted[rpc_api.RES_PARENT_RESOURCE])
