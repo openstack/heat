@@ -143,41 +143,6 @@ class ResourceGroupTest(common.HeatTestCase):
                                  AttributeResource)
         self.m.StubOutWithMock(stackm.Stack, 'validate')
 
-    def test_build_resource_definition(self):
-        stack = utils.parse_stack(template)
-        snip = stack.t.resource_definitions(stack)['group1']
-        resg = resource_group.ResourceGroup('test', snip, stack)
-        expect = {
-            "type": "dummy.resource",
-            "properties": {
-                "Foo": "Bar"
-            },
-        }
-        self.assertEqual(
-            expect, resg._build_resource_definition())
-        self.assertEqual(
-            expect, resg._build_resource_definition(include_all=True))
-
-    def test_build_resource_definition_include(self):
-        templ = copy.deepcopy(template)
-        res_def = templ["resources"]["group1"]["properties"]['resource_def']
-        res_def['properties']['Foo'] = None
-        stack = utils.parse_stack(templ)
-        snip = stack.t.resource_definitions(stack)['group1']
-        resg = resource_group.ResourceGroup('test', snip, stack)
-        expect = {
-            "type": "dummy.resource",
-            "properties": {}
-        }
-        self.assertEqual(
-            expect, resg._build_resource_definition())
-        expect = {
-            "type": "dummy.resource",
-            "properties": {"Foo": None}
-        }
-        self.assertEqual(
-            expect, resg._build_resource_definition(include_all=True))
-
     def test_assemble_nested(self):
         """
         Tests that the nested stack that implements the group is created
@@ -465,6 +430,46 @@ class ResourceGroupBlackList(common.HeatTestCase):
         if self.saved:
             resg.data_set.assert_called_once_with('name_blacklist',
                                                   ','.join(self.expected))
+
+
+class ResourceGroupEmptyParams(common.HeatTestCase):
+    """This class tests ResourceGroup._build_resource_definition()."""
+
+    scenarios = [
+        ('non_empty', dict(value='Bar', expected={'Foo': 'Bar'},
+                           expected_include={'Foo': 'Bar'})),
+        ('empty_None', dict(value=None, expected={},
+                            expected_include={'Foo': None})),
+        ('empty_boolean', dict(value=False, expected={'Foo': False},
+                               expected_include={'Foo': False})),
+        ('empty_string', dict(value='', expected={'Foo': ''},
+                              expected_include={'Foo': ''})),
+        ('empty_number', dict(value=0, expected={'Foo': 0},
+                              expected_include={'Foo': 0})),
+        ('empty_json', dict(value={}, expected={'Foo': {}},
+                            expected_include={'Foo': {}})),
+        ('empty_list', dict(value=[], expected={'Foo': []},
+                            expected_include={'Foo': []}))
+    ]
+
+    def test_definition(self):
+        templ = copy.deepcopy(template)
+        res_def = templ["resources"]["group1"]["properties"]['resource_def']
+        res_def['properties']['Foo'] = self.value
+        stack = utils.parse_stack(templ)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        exp1 = {
+            "type": "dummy.resource",
+            "properties": self.expected,
+        }
+        exp2 = {
+            "type": "dummy.resource",
+            "properties": self.expected_include,
+        }
+        self.assertEqual(exp1, resg._build_resource_definition())
+        self.assertEqual(
+            exp2, resg._build_resource_definition(include_all=True))
 
 
 class ResourceGroupNameListTest(common.HeatTestCase):

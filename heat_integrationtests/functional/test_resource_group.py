@@ -287,6 +287,81 @@ outputs:
         self.assertNotEqual(initial_rand, updated_rand)
 
 
+class ResourceGroupTestNullParams(test.HeatIntegrationTest):
+    template = '''
+heat_template_version: 2013-05-23
+parameters:
+  param:
+    type: empty
+resources:
+  random_group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: 1
+      resource_def:
+        type: My::RandomString
+        properties:
+          param: {get_param: param}
+outputs:
+  val:
+    value: {get_attr: [random_group, val]}
+'''
+
+    nested_template_file = '''
+heat_template_version: 2013-05-23
+parameters:
+  param:
+    type: empty
+outputs:
+  val:
+    value: {get_param: param}
+'''
+
+    scenarios = [
+        ('string_empty', dict(
+            param='',
+            p_type='string',
+        )),
+        ('boolean_false', dict(
+            param=False,
+            p_type='boolean',
+        )),
+        ('number_zero', dict(
+            param=0,
+            p_type='number',
+        )),
+        ('comma_delimited_list', dict(
+            param=[],
+            p_type='comma_delimited_list',
+        )),
+        ('json_empty', dict(
+            param={},
+            p_type='json',
+        )),
+    ]
+
+    def setUp(self):
+        super(ResourceGroupTestNullParams, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_create_pass_zero_parameter(self):
+        templ = self.template.replace('type: empty',
+                                      'type: %s' % self.p_type)
+        n_t_f = self.nested_template_file.replace('type: empty',
+                                                  'type: %s' % self.p_type)
+        files = {'provider.yaml': n_t_f}
+        env = {'resource_registry':
+               {'My::RandomString': 'provider.yaml'}}
+        stack_identifier = self.stack_create(
+            template=templ,
+            files=files,
+            environment=env,
+            parameters={'param': self.param}
+        )
+        stack = self.client.stacks.get(stack_identifier)
+        self.assertEqual(self.param, self._stack_output(stack, 'val')[0])
+
+
 class ResourceGroupAdoptTest(test.HeatIntegrationTest):
     """Prove that we can do resource group adopt."""
 

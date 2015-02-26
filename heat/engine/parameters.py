@@ -250,7 +250,7 @@ class Parameter(object):
 
     def has_value(self):
         '''Parameter has a user or default value.'''
-        return self.user_value or self.has_default()
+        return self.user_value is not None or self.has_default()
 
     def hidden(self):
         '''
@@ -274,7 +274,9 @@ class Parameter(object):
 
     def default(self):
         '''Return the default value of the parameter.'''
-        return self.user_default or self.schema.default
+        if self.user_default is not None:
+            return self.user_default
+        return self.schema.default
 
     def set_default(self, value):
         self.user_default = value
@@ -341,7 +343,10 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
     def __init__(self, name, schema, value=None):
         super(CommaDelimitedListParam, self).__init__(name, schema, value)
         if self.has_value():
-            self.parsed = self.parse(self.user_value or self.default())
+            if self.user_value is not None:
+                self.parsed = self.parse(self.user_value)
+            else:
+                self.parsed = self.parse(self.default())
         else:
             self.parsed = []
 
@@ -389,7 +394,10 @@ class JsonParam(Parameter):
     def __init__(self, name, schema, value=None):
         super(JsonParam, self).__init__(name, schema, value)
         if self.has_value():
-            self.parsed = self.parse(self.user_value or self.default())
+            if self.user_value is not None:
+                self.parsed = self.parse(self.user_value)
+            else:
+                self.parsed = self.parse(self.default())
         else:
             self.parsed = {}
 
