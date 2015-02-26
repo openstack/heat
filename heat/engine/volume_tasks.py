@@ -174,6 +174,9 @@ class VolumeDetachTask(object):
             else:
                 raise
 
+        if vol.status == 'deleting':
+            return
+
         # detach the volume using volume_attachment
         try:
             server_api.delete_server_volume(self.server_id, self.attachment_id)
@@ -193,7 +196,7 @@ class VolumeDetachTask(object):
 
             LOG.info(_LI('%(name)s - status: %(status)s'),
                      {'name': str(self), 'status': vol.status})
-            if vol.status != 'available':
+            if vol.status not in ['available', 'deleting']:
                 LOG.info(_LI("Detachment failed - volume %(vol)s "
                              "is in %(status)s status"),
                          {"vol": vol.id,
