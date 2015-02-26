@@ -30,7 +30,7 @@ from heat.tests.v1_1 import fakes as fakes_v1_1
 class NovaClientPluginTestCase(common.HeatTestCase):
     def setUp(self):
         super(NovaClientPluginTestCase, self).setUp()
-        self.nova_client = self.m.CreateMockAnything()
+        self.nova_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients
         self.nova_plugin = c.client_plugin('nova')
@@ -44,7 +44,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
     """
 
     def test_get_ip(self):
-        my_image = self.m.CreateMockAnything()
+        my_image = mock.MagicMock()
         my_image.addresses = {
             'public': [{'version': 4,
                         'addr': '4.5.6.7'},
@@ -69,61 +69,53 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         """Tests the get_flavor_id function."""
         flav_id = str(uuid.uuid4())
         flav_name = 'X-Large'
-        my_flavor = self.m.CreateMockAnything()
+        my_flavor = mock.MagicMock()
         my_flavor.name = flav_name
         my_flavor.id = flav_id
-        self.nova_client.flavors = self.m.CreateMockAnything()
-        self.nova_client.flavors.list().MultipleTimes().AndReturn([my_flavor])
-        self.m.ReplayAll()
+        self.nova_client.flavors.list.return_value = [my_flavor]
         self.assertEqual(flav_id, self.nova_plugin.get_flavor_id(flav_name))
         self.assertEqual(flav_id, self.nova_plugin.get_flavor_id(flav_id))
         self.assertRaises(exception.FlavorMissing,
                           self.nova_plugin.get_flavor_id, 'noflavor')
-        self.m.VerifyAll()
+        self.assertEqual(3, self.nova_client.flavors.list.call_count)
+        self.assertEqual([(), (), ()],
+                         self.nova_client.flavors.list.call_args_list)
 
     def test_get_keypair(self):
         """Tests the get_keypair function."""
         my_pub_key = 'a cool public key string'
         my_key_name = 'mykey'
-        my_key = self.m.CreateMockAnything()
+        my_key = mock.MagicMock()
         my_key.public_key = my_pub_key
         my_key.name = my_key_name
-        self.nova_client.keypairs = self.m.CreateMockAnything()
-        self.nova_client.keypairs.get(
-            my_key_name).AndReturn(my_key)
-        self.nova_client.keypairs.get(
-            'notakey').AndRaise(nova_exceptions.NotFound(404))
-        self.m.ReplayAll()
+        self.nova_client.keypairs.get.side_effect = [
+            my_key, nova_exceptions.NotFound(404)]
         self.assertEqual(my_key, self.nova_plugin.get_keypair(my_key_name))
         self.assertRaises(exception.UserKeyPairMissing,
                           self.nova_plugin.get_keypair, 'notakey')
-        self.m.VerifyAll()
+        calls = [mock.call(my_key_name),
+                 mock.call('notakey')]
+        self.nova_client.keypairs.get.assert_has_calls(calls)
 
     def test_get_server(self):
         """Tests the get_server function."""
-        my_server = self.m.CreateMockAnything()
-        self.nova_client.servers = self.m.CreateMockAnything()
-        self.nova_client.servers.get('my_server').AndReturn(my_server)
-        self.nova_client.servers.get('idontexist').AndRaise(
-            nova_exceptions.NotFound(404))
-        self.m.ReplayAll()
+        my_server = mock.MagicMock()
+        self.nova_client.servers.get.side_effect = [
+            my_server, nova_exceptions.NotFound(404)]
         self.assertEqual(my_server, self.nova_plugin.get_server('my_server'))
         self.assertRaises(exception.ServerNotFound,
                           self.nova_plugin.get_server, 'idontexist')
-        self.m.VerifyAll()
+        calls = [mock.call('my_server'),
+                 mock.call('idontexist')]
+        self.nova_client.servers.get.assert_has_calls(calls)
 
     def test_get_network_id_by_label(self):
         """Tests the get_net_id_by_label function."""
-        net = self.m.CreateMockAnything()
+        net = mock.MagicMock()
         net.id = str(uuid.uuid4())
-        self.nova_client.networks = self.m.CreateMockAnything()
-        self.nova_client.networks.find(label='net_label').AndReturn(
-            net)
-        self.nova_client.networks.find(label='idontexist').AndRaise(
-            nova_exceptions.NotFound(404))
-        self.nova_client.networks.find(label='notUnique').AndRaise(
-            nova_exceptions.NoUniqueMatch())
-        self.m.ReplayAll()
+        self.nova_client.networks.find.side_effect = [
+            net, nova_exceptions.NotFound(404),
+            nova_exceptions.NoUniqueMatch()]
         self.assertEqual(net.id,
                          self.nova_plugin.get_net_id_by_label('net_label'))
 
@@ -138,21 +130,21 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         expected = ('Multiple physical resources were found '
                     'with name (notUnique)')
         self.assertIn(expected, six.text_type(exc))
-        self.m.VerifyAll()
+        calls = [mock.call(label='net_label'),
+                 mock.call(label='idontexist'),
+                 mock.call(label='notUnique')]
+        self.nova_client.networks.find.assert_has_calls(calls)
 
     def test_get_nova_network_id(self):
         """Tests the get_nova_network_id function."""
-        net = self.m.CreateMockAnything()
+        net = mock.MagicMock()
         net.id = str(uuid.uuid4())
         not_existent_net_id = str(uuid.uuid4())
-        self.nova_client.networks = self.m.CreateMockAnything()
-        self.nova_client.networks.get(net.id).AndReturn(net)
-        self.nova_client.networks.get(not_existent_net_id).AndRaise(
-            nova_exceptions.NotFound(404))
-        self.nova_client.networks.find(label=not_existent_net_id).AndRaise(
-            nova_exceptions.NotFound(404))
+        self.nova_client.networks.get.side_effect = [
+            net, nova_exceptions.NotFound(404)]
+        self.nova_client.networks.find.side_effect = [
+            nova_exceptions.NotFound(404)]
 
-        self.m.ReplayAll()
         self.assertEqual(net.id,
                          self.nova_plugin.get_nova_network_id(net.id))
         exc = self.assertRaises(
@@ -162,7 +154,11 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
                     not_existent_net_id)
         self.assertIn(expected, six.text_type(exc))
 
-        self.m.VerifyAll()
+        calls = [mock.call(net.id),
+                 mock.call(not_existent_net_id)]
+        self.nova_client.networks.get.assert_has_calls(calls)
+        self.nova_client.networks.find.assert_called_once_with(
+            label=not_existent_net_id)
 
     def test_get_status(self):
         server = self.m.CreateMockAnything()
@@ -177,54 +173,36 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
 
 
 class NovaUtilsRefreshServerTests(NovaClientPluginTestCase):
+    msg = ("ClientException: The server has either erred or is "
+           "incapable of performing the requested operation.")
 
-    def test_successful_refresh(self):
-        server = self.m.CreateMockAnything()
-        server.get().AndReturn(None)
-        self.m.ReplayAll()
+    scenarios = [
+        ('successful_refresh', dict(
+            value=None,
+            e_raise=False)),
+        ('overlimit_error', dict(
+            value=nova_exceptions.OverLimit(413, "limit reached"),
+            e_raise=False)),
+        ('500_error', dict(
+            value=nova_exceptions.ClientException(500, msg),
+            e_raise=False)),
+        ('503_error', dict(
+            value=nova_exceptions.ClientException(503, msg),
+            e_raise=False)),
+        ('unhandled_exception', dict(
+            value=nova_exceptions.ClientException(501, msg),
+            e_raise=True)),
+    ]
 
-        self.assertIsNone(self.nova_plugin.refresh_server(server))
-        self.m.VerifyAll()
-
-    def test_overlimit_error(self):
-        server = mock.Mock()
-        server.get.side_effect = nova_exceptions.OverLimit(
-            413, "limit reached")
-        self.assertIsNone(self.nova_plugin.refresh_server(server))
-
-    def test_500_error(self):
-        server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            nova_exceptions.ClientException(500, msg))
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.nova_plugin.refresh_server(server))
-        self.m.VerifyAll()
-
-    def test_503_error(self):
-        server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            nova_exceptions.ClientException(503, msg))
-        self.m.ReplayAll()
-
-        self.assertIsNone(self.nova_plugin.refresh_server(server))
-        self.m.VerifyAll()
-
-    def test_unhandled_exception(self):
-        server = self.m.CreateMockAnything()
-        msg = ("ClientException: The server has either erred or is "
-               "incapable of performing the requested operation.")
-        server.get().AndRaise(
-            nova_exceptions.ClientException(501, msg))
-        self.m.ReplayAll()
-
-        self.assertRaises(nova_exceptions.ClientException,
-                          self.nova_plugin.refresh_server, server)
-        self.m.VerifyAll()
+    def test_refresh(self):
+        server = mock.MagicMock()
+        server.get.side_effect = [self.value]
+        if self.e_raise:
+            self.assertRaises(nova_exceptions.ClientException,
+                              self.nova_plugin.refresh_server, server)
+        else:
+            self.assertIsNone(self.nova_plugin.refresh_server(server))
+        server.get.assert_called_once_with()
 
 
 class NovaUtilsUserdataTests(NovaClientPluginTestCase):
@@ -351,46 +329,46 @@ class FlavorConstraintTest(common.HeatTestCase):
     def test_validate(self):
         client = fakes_v1_1.FakeClient()
         self.stub_keystoneclient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(client)
-        client.flavors = self.m.CreateMockAnything()
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
+        client.flavors = mock.MagicMock()
 
         flavor = collections.namedtuple("Flavor", ["id", "name"])
         flavor.id = "1234"
         flavor.name = "foo"
-        client.flavors.list().MultipleTimes().AndReturn([flavor])
-        self.m.ReplayAll()
+        client.flavors.list.return_value = [flavor]
 
         constraint = nova.FlavorConstraint()
         ctx = utils.dummy_context()
         self.assertFalse(constraint.validate("bar", ctx))
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertTrue(constraint.validate("1234", ctx))
-
-        self.m.VerifyAll()
+        nova.NovaClientPlugin._create.assert_called_once_with()
+        self.assertEqual(3, client.flavors.list.call_count)
+        self.assertEqual([(), (), ()],
+                         client.flavors.list.call_args_list)
 
 
 class KeypairConstraintTest(common.HeatTestCase):
 
     def test_validation(self):
         client = fakes_v1_1.FakeClient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(client)
-        client.keypairs = self.m.CreateMockAnything()
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
+        client.keypairs = mock.MagicMock()
 
         key = collections.namedtuple("Key", ["name"])
         key.name = "foo"
-        client.keypairs.get('bar').AndRaise(fakes_v1_1.fake_exception())
-        client.keypairs.get(key.name).AndReturn(key)
-        self.m.ReplayAll()
+        client.keypairs.get.side_effect = [
+            fakes_v1_1.fake_exception(), key]
 
         constraint = nova.KeypairConstraint()
         ctx = utils.dummy_context()
         self.assertFalse(constraint.validate("bar", ctx))
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertTrue(constraint.validate("", ctx))
-
-        self.m.VerifyAll()
+        nova.NovaClientPlugin._create.assert_called_once_with()
+        calls = [mock.call('bar'),
+                 mock.call(key.name)]
+        client.keypairs.get.assert_has_calls(calls)
 
 
 class ConsoleUrlsTest(common.HeatTestCase):
