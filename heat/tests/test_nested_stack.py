@@ -121,41 +121,26 @@ Resources:
         self.validate_stack(root_template)
         self.m.VerifyAll()
 
-    def test_nested_stack_four_deep(self):
-        root_template = '''
+    def test_nested_stack_six_deep(self):
+        template = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: 'https://server.test/depth1.template'
+            TemplateURL: 'https://server.test/depth%i.template'
 '''
-        depth1_template = '''
-HeatTemplateFormatVersion: 2012-12-12
-Resources:
-    Nested:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: 'https://server.test/depth2.template'
-'''
-        depth2_template = '''
-HeatTemplateFormatVersion: 2012-12-12
-Resources:
-    Nested:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: 'https://server.test/depth3.template'
-'''
-        depth3_template = '''
-HeatTemplateFormatVersion: 2012-12-12
-Resources:
-    Nested:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: 'https://server.test/depth4.template'
+        root_template = template % 1
+        depth1_template = template % 2
+        depth2_template = template % 3
+        depth3_template = template % 4
+        depth4_template = template % 5
+        depth5_template = template % 6
+        depth5_template += '''
             Parameters:
                 KeyName: foo
 '''
+
         urlfetch.get(
             'https://server.test/depth1.template').AndReturn(
                 depth1_template)
@@ -167,6 +152,12 @@ Resources:
                 depth3_template)
         urlfetch.get(
             'https://server.test/depth4.template').AndReturn(
+                depth4_template)
+        urlfetch.get(
+            'https://server.test/depth5.template').AndReturn(
+                depth5_template)
+        urlfetch.get(
+            'https://server.test/depth6.template').AndReturn(
                 self.nested_template)
         self.m.ReplayAll()
         t = template_format.parse(root_template)

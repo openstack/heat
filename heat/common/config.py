@@ -77,7 +77,7 @@ service_opts = [
                default=524288,
                help=_('Maximum raw byte size of any template.')),
     cfg.IntOpt('max_nested_stack_depth',
-               default=3,
+               default=5,
                help=_('Maximum depth allowed when using nested stacks.')),
     cfg.IntOpt('num_engine_workers',
                default=1,
