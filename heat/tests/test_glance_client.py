@@ -31,99 +31,85 @@ class GlanceUtilsTests(common.HeatTestCase):
 
     def setUp(self):
         super(GlanceUtilsTests, self).setUp()
-        self.glance_client = self.m.CreateMockAnything()
+        self.glance_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients
         self.glance_plugin = c.client_plugin('glance')
         self.glance_plugin._client = self.glance_client
+        self.my_image = mock.MagicMock()
 
     def test_get_image_id(self):
         """Tests the get_image_id function."""
-        my_image = self.m.CreateMockAnything()
         img_id = str(uuid.uuid4())
         img_name = 'myfakeimage'
-        my_image.id = img_id
-        my_image.name = img_name
-        self.glance_client.images = self.m.CreateMockAnything()
-        self.glance_client.images.get(img_id).AndReturn(my_image)
-        filters = {'name': img_name}
-        self.glance_client.images.list(filters=filters).AndReturn([my_image])
-        filters = {'name': 'noimage'}
-        self.glance_client.images.list(filters=filters).AndReturn([])
-        self.m.ReplayAll()
+        self.my_image.id = img_id
+        self.my_image.name = img_name
+        self.glance_client.images.get.return_value = self.my_image
+        self.glance_client.images.list.side_effect = ([self.my_image], [])
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_id))
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
         self.assertRaises(exception.ImageNotFound,
                           self.glance_plugin.get_image_id, 'noimage')
-        self.m.VerifyAll()
+
+        calls = [mock.call(filters={'name': img_name}),
+                 mock.call(filters={'name': 'noimage'})]
+        self.glance_client.images.get.assert_called_once_with(img_id)
+        self.glance_client.images.list.assert_has_calls(calls)
 
     def test_get_image_id_by_name_in_uuid(self):
         """Tests the get_image_id function by name in uuid."""
-        my_image = self.m.CreateMockAnything()
         img_id = str(uuid.uuid4())
         img_name = str(uuid.uuid4())
-        my_image.id = img_id
-        my_image.name = img_name
-        self.glance_client.images = self.m.CreateMockAnything()
-        self.glance_client.images.get(img_name).AndRaise(
-            glance_exceptions.HTTPNotFound())
-        filters = {'name': img_name}
-        self.glance_client.images.list(
-            filters=filters).MultipleTimes().AndReturn([my_image])
-        self.m.ReplayAll()
+        self.my_image.id = img_id
+        self.my_image.name = img_name
+        self.glance_client.images.get.side_effect = [
+            glance_exceptions.HTTPNotFound()]
+        self.glance_client.images.list.return_value = [self.my_image]
 
         self.assertEqual(img_id, self.glance_plugin.get_image_id(img_name))
-        self.m.VerifyAll()
+        self.glance_client.images.get.assert_called_once_with(img_name)
+        self.glance_client.images.list.assert_called_once_with(
+            filters={'name': img_name})
 
     def test_get_image_id_glance_exception(self):
         """Test get_image_id when glance raises an exception."""
         # Simulate HTTP exception
-        self.glance_client.images = self.m.CreateMockAnything()
         img_name = str(uuid.uuid4())
-        filters = {'name': img_name}
-        self.glance_client.images.list(filters=filters).AndRaise(
-            glance_exceptions.ClientException("Error"))
-        self.m.ReplayAll()
+        self.glance_client.images.list.side_effect = [
+            glance_exceptions.ClientException("Error")]
 
         expected_error = "Error retrieving image list from glance: Error"
         e = self.assertRaises(exception.Error,
                               self.glance_plugin.get_image_id_by_name,
                               img_name)
         self.assertEqual(expected_error, six.text_type(e))
-        self.m.VerifyAll()
+        self.glance_client.images.list.assert_called_once_with(
+            filters={'name': img_name})
 
     def test_get_image_id_not_found(self):
         """Tests the get_image_id function while image is not found."""
-        my_image = self.m.CreateMockAnything()
         img_name = str(uuid.uuid4())
-        my_image.name = img_name
-        self.glance_client.images = self.m.CreateMockAnything()
-        self.glance_client.images.get(img_name).AndRaise(
-            glance_exceptions.HTTPNotFound())
-        filters = {'name': img_name}
-        self.glance_client.images.list(
-            filters=filters).MultipleTimes().AndReturn([])
-        self.m.ReplayAll()
+        self.glance_client.images.get.side_effect = [
+            glance_exceptions.HTTPNotFound()]
+        self.glance_client.images.list.return_value = []
 
         self.assertRaises(exception.ImageNotFound,
                           self.glance_plugin.get_image_id, img_name)
-        self.m.VerifyAll()
+        self.glance_client.images.get.assert_called_once_with(img_name)
+        self.glance_client.images.list.assert_called_once_with(
+            filters={'name': img_name})
 
     def test_get_image_id_name_ambiguity(self):
         """Tests the get_image_id function while name ambiguity ."""
-        my_image = self.m.CreateMockAnything()
         img_name = 'ambiguity_name'
-        my_image.name = img_name
-        image_list = [my_image, my_image]
+        self.my_image.name = img_name
 
-        self.glance_client.images = self.m.CreateMockAnything()
-        filters = {'name': img_name}
-        self.glance_client.images.list(
-            filters=filters).MultipleTimes().AndReturn(image_list)
-        self.m.ReplayAll()
+        self.glance_client.images.list.return_value = [self.my_image,
+                                                       self.my_image]
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
                           self.glance_plugin.get_image_id, img_name)
-        self.m.VerifyAll()
+        self.glance_client.images.list.assert_called_once_with(
+            filters={'name': img_name})
 
 
 class ImageConstraintTest(common.HeatTestCase):

@@ -29,7 +29,7 @@ class CinderClientPluginTests(common.HeatTestCase):
     """
     def setUp(self):
         super(CinderClientPluginTests, self).setUp()
-        self.cinder_client = self.m.CreateMockAnything()
+        self.cinder_client = mock.MagicMock()
         con = utils.dummy_context()
         c = con.clients
         self.cinder_plugin = c.client_plugin('cinder')
@@ -38,29 +38,22 @@ class CinderClientPluginTests(common.HeatTestCase):
     def test_get_volume(self):
         """Tests the get_volume function."""
         volume_id = str(uuid.uuid4())
-        my_volume = self.m.CreateMockAnything()
-        self.cinder_client.volumes = self.m.CreateMockAnything()
-        self.cinder_client.volumes.get(
-            volume_id).MultipleTimes().AndReturn(my_volume)
-        self.m.ReplayAll()
+        my_volume = mock.MagicMock()
+        self.cinder_client.volumes.get.return_value = my_volume
 
         self.assertEqual(my_volume, self.cinder_plugin.get_volume(volume_id))
-
-        self.m.VerifyAll()
+        self.cinder_client.volumes.get.assert_called_once_with(volume_id)
 
     def test_get_snapshot(self):
         """Tests the get_volume_snapshot function."""
         snapshot_id = str(uuid.uuid4())
-        my_snapshot = self.m.CreateMockAnything()
-        self.cinder_client.volume_snapshots = self.m.CreateMockAnything()
-        self.cinder_client.volume_snapshots.get(
-            snapshot_id).MultipleTimes().AndReturn(my_snapshot)
-        self.m.ReplayAll()
+        my_snapshot = mock.MagicMock()
+        self.cinder_client.volume_snapshots.get.return_value = my_snapshot
 
         self.assertEqual(my_snapshot,
                          self.cinder_plugin.get_volume_snapshot(snapshot_id))
-
-        self.m.VerifyAll()
+        self.cinder_client.volume_snapshots.get.assert_called_once_with(
+            snapshot_id)
 
 
 class VolumeConstraintTest(common.HeatTestCase):
