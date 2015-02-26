@@ -91,19 +91,21 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         DEPLOY_SIGNAL_ID, DEPLOY_STACK_ID,
         DEPLOY_RESOURCE_NAME, DEPLOY_AUTH_URL,
         DEPLOY_USERNAME, DEPLOY_PASSWORD,
-        DEPLOY_PROJECT_ID, DEPLOY_USER_ID
+        DEPLOY_PROJECT_ID, DEPLOY_USER_ID,
+        DEPLOY_SIGNAL_VERB, DEPLOY_SIGNAL_TRANSPORT
     ) = (
         'deploy_server_id', 'deploy_action',
         'deploy_signal_id', 'deploy_stack_id',
         'deploy_resource_name', 'deploy_auth_url',
         'deploy_username', 'deploy_password',
-        'deploy_project_id', 'deploy_user_id'
+        'deploy_project_id', 'deploy_user_id',
+        'deploy_signal_verb', 'deploy_signal_transport'
     )
 
     SIGNAL_TRANSPORTS = (
-        CFN_SIGNAL, HEAT_SIGNAL, NO_SIGNAL
+        CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL, NO_SIGNAL
     ) = (
-        'CFN_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL'
+        'CFN_SIGNAL', 'TEMP_URL_SIGNAL', 'HEAT_SIGNAL', 'NO_SIGNAL'
     )
 
     properties_schema = {
@@ -144,10 +146,12 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             properties.Schema.STRING,
             _('How the server should signal to heat with the deployment '
               'output values. CFN_SIGNAL will allow an HTTP POST to a CFN '
-              'keypair signed URL. HEAT_SIGNAL will allow calls to '
-              'the Heat API resource-signal using the provided keystone '
-              'credentials. NO_SIGNAL will result in the resource going to '
-              'the COMPLETE state without waiting for any signal.'),
+              'keypair signed URL. TEMP_URL_SIGNAL will create a '
+              'Swift TempURL to be signaled via HTTP PUT. HEAT_SIGNAL '
+              'will allow calls to the Heat API resource-signal using the '
+              'provided keystone credentials. NO_SIGNAL will result in the '
+              'resource going to the COMPLETE state without waiting for '
+              'any signal.'),
             default=CFN_SIGNAL,
             constraints=[
                 constraints.AllowedValues(SIGNAL_TRANSPORTS),
@@ -180,6 +184,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _signal_transport_none(self):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.NO_SIGNAL
+
+    def _signal_transport_temp_url(self):
+        return self.properties.get(
+            self.SIGNAL_TRANSPORT) == self.TEMP_URL_SIGNAL
 
     def _build_properties(self, properties, config_id, action):
         props = {
@@ -283,6 +291,41 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _build_derived_options(self, action, source):
         return source.get(sc.SoftwareConfig.OPTIONS)
 
+    def _get_temp_url(self):
+        put_url = self.data().get('signal_temp_url')
+        if put_url:
+            return put_url
+
+        container = self.physical_resource_name()
+        object_name = str(uuid.uuid4())
+
+        self.client('swift').put_container(container)
+
+        put_url = self.client_plugin('swift').get_temp_url(
+            container, object_name)
+        self.data_set('signal_temp_url', put_url)
+        self.data_set('signal_object_name', object_name)
+
+        self.client('swift').put_object(
+            container, object_name, '')
+        return put_url
+
+    def _delete_temp_url(self):
+        object_name = self.data().get('signal_object_name')
+        if not object_name:
+            return
+        try:
+            container = self.physical_resource_name()
+            swift = self.client('swift')
+            swift.delete_object(container, object_name)
+            headers = swift.head_container(container)
+            if int(headers['x-container-object-count']) == 0:
+                swift.delete_container(container)
+        except Exception as ex:
+            self.client_plugin('swift').ignore_not_found(ex)
+        self.data_delete('signal_object_name')
+        self.data_delete('signal_temp_url')
+
     def _build_derived_inputs(self, action, source):
         scl = sc.SoftwareConfig
         inputs = copy.deepcopy(source.get(scl.INPUTS)) or []
@@ -323,14 +366,42 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                                'stack'),
             scl.TYPE: 'String',
             'value': self.name
+        }, {
+            scl.NAME: self.DEPLOY_SIGNAL_TRANSPORT,
+            scl.DESCRIPTION: _('How the server should signal to heat with '
+                               'the deployment output values.'),
+            scl.TYPE: 'String',
+            'value': self.properties.get(self.SIGNAL_TRANSPORT)
         }])
         if self._signal_transport_cfn():
             inputs.append({
                 scl.NAME: self.DEPLOY_SIGNAL_ID,
-                scl.DESCRIPTION: _('ID of signal to use for signalling '
+                scl.DESCRIPTION: _('ID of signal to use for signaling '
                                    'output values'),
                 scl.TYPE: 'String',
                 'value': self._get_signed_url()
+            })
+            inputs.append({
+                scl.NAME: self.DEPLOY_SIGNAL_VERB,
+                scl.DESCRIPTION: _('HTTP verb to use for signaling '
+                                   'output values'),
+                scl.TYPE: 'String',
+                'value': 'POST'
+            })
+        elif self._signal_transport_temp_url():
+            inputs.append({
+                scl.NAME: self.DEPLOY_SIGNAL_ID,
+                scl.DESCRIPTION: _('ID of signal to use for signaling '
+                                   'output values'),
+                scl.TYPE: 'String',
+                'value': self._get_temp_url()
+            })
+            inputs.append({
+                scl.NAME: self.DEPLOY_SIGNAL_VERB,
+                scl.DESCRIPTION: _('HTTP verb to use for signaling '
+                                   'output values'),
+                scl.TYPE: 'String',
+                'value': 'PUT'
             })
         elif self._signal_transport_heat():
             inputs.extend([{
@@ -416,6 +487,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self._delete_user()
         elif self._signal_transport_heat():
             self._delete_user()
+        elif self._signal_transport_temp_url():
+            self._delete_temp_url()
 
         derived_config_id = None
         if self.resource_id is not None:

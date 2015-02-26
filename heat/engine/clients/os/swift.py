@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+import email.utils
 import hashlib
 import random
 import time
@@ -117,3 +119,19 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         self.client().put_object(container_name, obj_name, IN_PROGRESS)
 
         return self.get_temp_url(container_name, obj_name, timeout)
+
+    def parse_last_modified(self, lm):
+        '''
+        Parses the last-modified value, such as from a swift object header,
+        and returns the datetime.datetime of that value.
+
+        :param lm: The last-modified value (or None)
+        :type lm: string
+        :returns: An offset-naive UTC datetime of the value (or None)
+        '''
+        if not lm:
+            return None
+        pd = email.utils.parsedate(lm)[:6]
+        # according to RFC 2616, all HTTP time headers must be
+        # in GMT time, so create an offset-naive UTC datetime
+        return datetime.datetime(*pd)

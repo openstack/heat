@@ -27,6 +27,7 @@ from oslo_utils import uuidutils
 from osprofiler import profiler
 import requests
 import six
+from six.moves.urllib import parse as urlparse
 import webob
 
 from heat.common import context
@@ -1465,9 +1466,61 @@ class EngineService(service.Service):
             json_md = jsonutils.dumps(md)
             requests.put(metadata_put_url, json_md)
 
+    def _refresh_software_deployment(self, cnxt, sd, deploy_signal_id):
+        container, object_name = urlparse.urlparse(
+            deploy_signal_id).path.split('/')[-2:]
+        swift_plugin = cnxt.clients.client_plugin('swift')
+        swift = swift_plugin.client()
+
+        try:
+            headers = swift.head_object(container, object_name)
+        except Exception as ex:
+            # ignore not-found, in case swift is not consistent yet
+            if swift_plugin.is_not_found(ex):
+                LOG.info(_LI('Signal object not found: %(c)s %(o)s') % {
+                    'c': container, 'o': object_name})
+                return sd
+            raise ex
+
+        lm = headers.get('last-modified')
+
+        last_modified = swift_plugin.parse_last_modified(lm)
+        prev_last_modified = sd.updated_at
+
+        if prev_last_modified:
+            # assume stored as utc, convert to offset-naive datetime
+            prev_last_modified = prev_last_modified.replace(tzinfo=None)
+
+        if prev_last_modified and (last_modified <= prev_last_modified):
+            return sd
+
+        try:
+            (headers, obj) = swift.get_object(container, object_name)
+        except Exception as ex:
+            # ignore not-found, in case swift is not consistent yet
+            if swift_plugin.is_not_found(ex):
+                LOG.info(_LI(
+                    'Signal object not found: %(c)s %(o)s') % {
+                        'c': container, 'o': object_name})
+                return sd
+            raise ex
+        if obj:
+            self.signal_software_deployment(
+                cnxt, sd.id, json.loads(obj),
+                timeutils.strtime(last_modified))
+
+        return db_api.software_deployment_get(cnxt, sd.id)
+
     @context.request_context
     def show_software_deployment(self, cnxt, deployment_id):
         sd = db_api.software_deployment_get(cnxt, deployment_id)
+        if sd.status == rpc_api.SOFTWARE_DEPLOYMENT_IN_PROGRESS:
+            c = sd.config.config
+            input_values = dict((i['name'], i['value']) for i in c['inputs'])
+            transport = input_values.get('deploy_signal_transport')
+            if transport == 'TEMP_URL_SIGNAL':
+                sd = self._refresh_software_deployment(
+                    cnxt, sd, input_values.get('deploy_signal_id'))
         return api.format_software_deployment(sd)
 
     @context.request_context
