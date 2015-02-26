@@ -12,7 +12,6 @@
 #    under the License.
 
 import datetime
-import functools
 import json
 import sys
 import uuid
@@ -278,7 +277,7 @@ def stack_context(stack_name, create_res=True):
     of test success/failure
     """
     def stack_delete(test_fn):
-        @functools.wraps(test_fn)
+        @six.wraps(test_fn)
         def wrapped_test(test_case, *args, **kwargs):
             def create_stack():
                 ctx = getattr(test_case, 'ctx', None)
