@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-24 06:02+0000\n"
-"PO-Revision-Date: 2015-02-23 21:31+0000\n"
+"POT-Creation-Date: 2015-02-26 06:01+0000\n"
+"PO-Revision-Date: 2015-02-26 04:24+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/heat/language/"
 "es/)\n"
@@ -49,7 +49,7 @@ msgstr "Autenticación AWS correcta."
 msgid "AWS authentication failure."
 msgstr "Autenticación AWS incorrecta."
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:771
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:772
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -141,128 +141,133 @@ msgstr "borrando %s"
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:354
+#: heat/engine/service.py:355
 msgid "Engine service is stopped successfully"
 msgstr ""
 
-#: heat/engine/service.py:364
+#: heat/engine/service.py:365
 #, python-format
 msgid "WorkerService is stopped in engine %s"
 msgstr ""
 
-#: heat/engine/service.py:372
+#: heat/engine/service.py:373
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:376
+#: heat/engine/service.py:377
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr "Pila %s procesando ha finalizado"
 
-#: heat/engine/service.py:381
+#: heat/engine/service.py:382
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:384
+#: heat/engine/service.py:385
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:575
+#: heat/engine/service.py:576
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:615
+#: heat/engine/service.py:616
 #, python-format
 msgid "Creating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:638
+#: heat/engine/service.py:639
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr ""
 
-#: heat/engine/service.py:673
+#: heat/engine/service.py:674
 #, python-format
 msgid "Updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:737
+#: heat/engine/service.py:738
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:866
+#: heat/engine/service.py:867
 #, python-format
 msgid "Deleting stack %s"
 msgstr ""
 
-#: heat/engine/service.py:919
+#: heat/engine/service.py:920
 #, python-format
 msgid "abandoning stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1204
+#: heat/engine/service.py:1205
 #, python-format
 msgid ""
 "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1247
+#: heat/engine/service.py:1248
 #, python-format
 msgid "Checking stack %s"
 msgstr ""
 
-#: heat/engine/service.py:1541
+#: heat/engine/service.py:1480 heat/engine/service.py:1502
+#, python-format
+msgid "Signal object not found: %(c)s %(o)s"
+msgstr ""
+
+#: heat/engine/service.py:1655
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1552
+#: heat/engine/service.py:1666
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1561
+#: heat/engine/service.py:1675
 #, python-format
 msgid "Service %s is restarted"
 msgstr ""
 
-#: heat/engine/service.py:1574
+#: heat/engine/service.py:1688
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/stack.py:539
+#: heat/engine/stack.py:544
 #, python-format
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:929
+#: heat/engine/stack.py:934
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s user_creds_id="
 "%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:937
+#: heat/engine/stack.py:942
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1022 heat/engine/stack.py:1034
+#: heat/engine/stack.py:1027 heat/engine/stack.py:1039
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1050
+#: heat/engine/stack.py:1055
 #, python-format
 msgid "%s is already suspended"
 msgstr ""
 
-#: heat/engine/stack.py:1071
+#: heat/engine/stack.py:1076
 #, python-format
 msgid "%s is already resumed"
 msgstr ""

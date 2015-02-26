@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev147\n"
+"Project-Id-Version: heat 2015.1.dev167\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-24 06:02+0000\n"
+"POT-Creation-Date: 2015-02-26 06:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1260,21 +1260,21 @@ msgstr ""
 msgid "Parameter '%(name)s' is invalid: %(exp)s"
 msgstr ""
 
-#: heat/engine/parameters.py:355
+#: heat/engine/parameters.py:358
 #, python-format
 msgid "Value must be a comma-delimited list string: %s"
 msgstr ""
 
-#: heat/engine/parameters.py:395
+#: heat/engine/parameters.py:404
 #, python-format
 msgid "Value must be valid JSON: %s"
 msgstr ""
 
-#: heat/engine/parameters.py:534 heat/engine/hot/parameters.py:136
+#: heat/engine/parameters.py:546 heat/engine/hot/parameters.py:136
 msgid "Stack ID"
 msgstr ""
 
-#: heat/engine/parameters.py:538 heat/engine/hot/parameters.py:145
+#: heat/engine/parameters.py:550 heat/engine/hot/parameters.py:145
 msgid "Stack Name"
 msgstr ""
 
@@ -1423,12 +1423,12 @@ msgstr ""
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:991 heat/engine/stack.py:522
+#: heat/engine/resource.py:991 heat/engine/stack.py:527
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:994 heat/engine/stack.py:525
+#: heat/engine/resource.py:994 heat/engine/stack.py:530
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
@@ -1438,36 +1438,49 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:516
+#: heat/engine/service.py:517
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:579 heat/engine/service.py:642
+#: heat/engine/service.py:580 heat/engine/service.py:643
 msgid "Convergence engine"
 msgstr ""
 
-#: heat/engine/service.py:678
+#: heat/engine/service.py:679
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:682
+#: heat/engine/service.py:683
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:734
+#: heat/engine/service.py:735
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:773
+#: heat/engine/service.py:774
 msgid "No Template provided."
 msgstr ""
 
-#: heat/engine/service.py:1442
+#: heat/engine/service.py:1443
 msgid "server_id must be specified"
+msgstr ""
+
+#: heat/engine/service.py:1548
+msgid "deployment_id must be specified"
+msgstr ""
+
+#: heat/engine/service.py:1566
+#, python-format
+msgid "Deployment exited with non-zero status code: %s"
+msgstr ""
+
+#: heat/engine/service.py:1593
+msgid "Outputs received"
 msgstr ""
 
 #: heat/engine/stack.py:91
@@ -1481,26 +1494,26 @@ msgstr ""
 msgid "Attempt to use stored_context with no user_creds"
 msgstr ""
 
-#: heat/engine/stack.py:264
+#: heat/engine/stack.py:269
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:478
+#: heat/engine/stack.py:483
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:496
+#: heat/engine/stack.py:501
 msgid "Each Output must contain a Value key."
 msgstr ""
 
-#: heat/engine/stack.py:501
+#: heat/engine/stack.py:506
 #, python-format
 msgid "Output validation error: Outputs must contain Output. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/stack.py:506
+#: heat/engine/stack.py:511
 #, python-format
 msgid "Output validation error: %s"
 msgstr ""
@@ -5602,138 +5615,140 @@ msgstr ""
 msgid "The config value of the software config."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:112
+#: heat/engine/resources/software_config/software_deployment.py:114
 msgid ""
 "ID of software configuration resource to execute when applying to the "
 "server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:118
+#: heat/engine/resources/software_config/software_deployment.py:120
 msgid "ID of Nova server to apply configuration to."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:125
+#: heat/engine/resources/software_config/software_deployment.py:127
 msgid "Input values to apply to the software configuration on this server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:131
+#: heat/engine/resources/software_config/software_deployment.py:133
 msgid "Which stack actions will result in this deployment being triggered."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:139
+#: heat/engine/resources/software_config/software_deployment.py:141
 msgid ""
 "Name of the derived config associated with this deployment. This is used "
 "to apply a sort order to the list of configurations currently deployed to"
 " a server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:145
+#: heat/engine/resources/software_config/software_deployment.py:147
 msgid ""
 "How the server should signal to heat with the deployment output values. "
 "CFN_SIGNAL will allow an HTTP POST to a CFN keypair signed URL. "
+"TEMP_URL_SIGNAL will create a Swift TempURL to be signaled via HTTP PUT. "
 "HEAT_SIGNAL will allow calls to the Heat API resource-signal using the "
 "provided keystone credentials. NO_SIGNAL will result in the resource "
 "going to the COMPLETE state without waiting for any signal."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:160
+#: heat/engine/resources/software_config/software_deployment.py:164
 msgid "Captured stdout from the configuration execution."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:163
+#: heat/engine/resources/software_config/software_deployment.py:167
 msgid "Captured stderr from the configuration execution."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:166
+#: heat/engine/resources/software_config/software_deployment.py:170
 msgid "Returned status code from the configuration execution"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:192
+#: heat/engine/resources/software_config/software_deployment.py:200
 msgid "Not waiting for outputs signal"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:195
+#: heat/engine/resources/software_config/software_deployment.py:203
 msgid "Deploy data available"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:257
+#: heat/engine/resources/software_config/software_deployment.py:265
 #, python-format
 msgid "Deployment to server failed: %s"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:307
+#: heat/engine/resources/software_config/software_deployment.py:350
 msgid "ID of the server being deployed to"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:312
+#: heat/engine/resources/software_config/software_deployment.py:355
 msgid "Name of the current action being deployed"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:317
+#: heat/engine/resources/software_config/software_deployment.py:360
 msgid "ID of the stack this deployment belongs to"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:322
+#: heat/engine/resources/software_config/software_deployment.py:365
 msgid "Name of this deployment resource in the stack"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:330
-msgid "ID of signal to use for signalling output values"
+#: heat/engine/resources/software_config/software_deployment.py:371
+msgid "How the server should signal to heat with the deployment output values."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:338
+#: heat/engine/resources/software_config/software_deployment.py:379
+#: heat/engine/resources/software_config/software_deployment.py:394
+msgid "ID of signal to use for signaling output values"
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:386
+#: heat/engine/resources/software_config/software_deployment.py:401
+msgid "HTTP verb to use for signaling output values"
+msgstr ""
+
+#: heat/engine/resources/software_config/software_deployment.py:409
 msgid "URL for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:343
+#: heat/engine/resources/software_config/software_deployment.py:414
 msgid "Username for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:348
+#: heat/engine/resources/software_config/software_deployment.py:419
 msgid "User ID for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:353
+#: heat/engine/resources/software_config/software_deployment.py:424
 msgid "Password for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:358
+#: heat/engine/resources/software_config/software_deployment.py:429
 msgid "ID of project for API authentication"
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:469
-#, python-format
-msgid "Deployment exited with non-zero status code: %s"
-msgstr ""
-
-#: heat/engine/resources/software_config/software_deployment.py:496
-msgid "Outputs received"
-msgstr ""
-
-#: heat/engine/resources/software_config/software_deployment.py:538
+#: heat/engine/resources/software_config/software_deployment.py:562
 #, python-format
 msgid ""
 "Resource %s's property user_data_format should be set to SOFTWARE_CONFIG "
 "since there are software deployments on it."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:576
+#: heat/engine/resources/software_config/software_deployment.py:600
 msgid "A map of Nova names and IDs to apply configuration to."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:588
+#: heat/engine/resources/software_config/software_deployment.py:612
 msgid ""
 "A map of Nova names and captured stdouts from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:592
+#: heat/engine/resources/software_config/software_deployment.py:616
 msgid ""
 "A map of Nova names and captured stderrs from the configuration execution"
 " to each server."
 msgstr ""
 
-#: heat/engine/resources/software_config/software_deployment.py:596
+#: heat/engine/resources/software_config/software_deployment.py:620
 msgid ""
 "A map of Nova names and returned status code from the configuration "
 "execution"
@@ -5868,7 +5883,7 @@ msgid ""
 "deprecated. Use only \"network\" property."
 msgstr ""
 
-#: heat/tests/test_software_deployment.py:741
+#: heat/tests/test_software_deployment.py:722
 msgid "need more memory."
 msgstr ""
 
