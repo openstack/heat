@@ -322,6 +322,30 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         self.m.VerifyAll()
 
+    def test_volume_detach_deleting_volume(self):
+        fv = vt_base.FakeVolume('creating')
+        fva = vt_base.FakeVolume('deleting')
+        stack_name = 'test_volume_detach_deleting_volume_stack'
+
+        self._mock_create_volume(fv, stack_name)
+        self._mock_create_server_volume_script(fva)
+        self.stub_VolumeConstraint_validate()
+        # delete script
+        self.fc.volumes.get_server_volume(u'WikiDatabase',
+                                          'vol-123').AndReturn(fva)
+        self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        self.create_volume(self.t, stack, 'DataVolume')
+        rsrc = self.create_attachment(self.t, stack, 'MountPoint')
+
+        scheduler.TaskRunner(rsrc.delete)()
+
+        self.m.VerifyAll()
+
     def test_volume_detach_with_latency(self):
         stack_name = 'test_volume_detach_latency_stack'
 
