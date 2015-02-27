@@ -109,6 +109,22 @@ class RawTemplate(BASE, HeatBase):
     files = sqlalchemy.Column(types.Json)
 
 
+class StackTag(BASE, HeatBase):
+    """Key/value store of arbitrary stack tags."""
+
+    __tablename__ = 'stack_tag'
+
+    id = sqlalchemy.Column('id',
+                           sqlalchemy.Integer,
+                           primary_key=True,
+                           nullable=False)
+    tag = sqlalchemy.Column('tag', sqlalchemy.Unicode(80))
+    stack_id = sqlalchemy.Column('stack_id',
+                                 sqlalchemy.String(36),
+                                 sqlalchemy.ForeignKey('stack.id'),
+                                 nullable=False)
+
+
 class Stack(BASE, HeatBase, SoftDelete, StateAware):
     """Represents a stack created by the heat engine."""
 
@@ -139,8 +155,9 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
                                               nullable=True)
     backup = sqlalchemy.Column('backup', sqlalchemy.Boolean)
     nested_depth = sqlalchemy.Column('nested_depth', sqlalchemy.Integer)
-    tags = sqlalchemy.Column('tags', types.Json)
     convergence = sqlalchemy.Column('convergence', sqlalchemy.Boolean)
+    tags = relationship(StackTag, cascade="all,delete",
+                        backref=backref('stack'))
 
     # Override timestamp column to store the correct value: it should be the
     # time the create/update call was issued, not the time the DB entry is
