@@ -91,7 +91,7 @@ class SaharaCluster(resource.Resource):
             properties.Schema.STRING,
             _('Default name or UUID of the image used to boot Hadoop nodes.'),
             constraints=[
-                constraints.CustomConstraint('glance.image')
+                constraints.CustomConstraint('sahara.image'),
             ],
         ),
         MANAGEMENT_NETWORK: properties.Schema(

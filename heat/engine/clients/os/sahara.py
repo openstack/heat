@@ -13,10 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
+from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 from saharaclient import client as sahara_client
+import six
 
+from heat.common import exception
+from heat.common.i18n import _
+from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
+
+LOG = logging.getLogger(__name__)
 
 
 class SaharaClientPlugin(client_plugin.ClientPlugin):
@@ -49,3 +59,65 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return (isinstance(ex, sahara_base.APIException) and
                 ex.error_code == 409)
+
+    def is_not_registered(self, ex):
+        return (isinstance(ex, sahara_base.APIException) and
+                ex.error_code == 400 and
+                ex.error_name == 'IMAGE_NOT_REGISTERED')
+
+    def get_image_id(self, image_identifier):
+        '''
+        Return an id for the specified image name or identifier.
+
+        :param image_identifier: image name or a UUID-like identifier
+        :returns: the id of the requested :image_identifier:
+        :raises: exception.ImageNotFound,
+                 exception.PhysicalResourceNameAmbiguity
+        '''
+        if uuidutils.is_uuid_like(image_identifier):
+            try:
+                image_id = self.client().images.get(image_identifier).id
+            except sahara_base.APIException as ex:
+                if self.is_not_registered(ex):
+                    image_id = self.get_image_id_by_name(image_identifier)
+        else:
+            image_id = self.get_image_id_by_name(image_identifier)
+        return image_id
+
+    def get_image_id_by_name(self, image_identifier):
+        '''
+        Return an id for the specified image name.
+
+        :param image_identifier: image name
+        :returns: the id of the requested :image_identifier:
+        :raises: exception.ImageNotFound,
+                 exception.PhysicalResourceNameAmbiguity
+        '''
+        try:
+            filters = {'name': image_identifier}
+            image_list = self.client().images.find(**filters)
+        except sahara_base.APIException as ex:
+            raise exception.Error(
+                _("Error retrieving image list from sahara: "
+                  "%s") % six.text_type(ex))
+        num_matches = len(image_list)
+        if num_matches == 0:
+            LOG.info(_LI("Image %s was not found in sahara images"),
+                     image_identifier)
+            raise exception.ImageNotFound(image_name=image_identifier)
+        elif num_matches > 1:
+            LOG.info(_LI("Multiple images %s were found in sahara with name"),
+                     image_identifier)
+            raise exception.PhysicalResourceNameAmbiguity(
+                name=image_identifier)
+        else:
+            return image_list[0].id
+
+
+class ImageConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.ImageNotFound,
+                           exception.PhysicalResourceNameAmbiguity,)
+
+    def validate_with_client(self, client, value):
+        client.client_plugin('sahara').get_image_id(value)
