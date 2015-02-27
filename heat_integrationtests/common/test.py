@@ -256,9 +256,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             success_on_not_found=True)
 
     def update_stack(self, stack_identifier, template, environment=None,
-                     files=None):
+                     files=None, parameters=None):
         env = environment or {}
         env_files = files or {}
+        parameters = parameters or {}
         stack_name = stack_identifier.split('/')[0]
         self.client.stacks.update(
             stack_id=stack_identifier,
@@ -266,7 +267,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             template=template,
             files=env_files,
             disable_rollback=True,
-            parameters={},
+            parameters=parameters,
             environment=env
         )
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
