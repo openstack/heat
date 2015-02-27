@@ -197,3 +197,8 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.m.StubOutWithMock(neutron.NetworkConstraint, 'validate')
         neutron.NetworkConstraint.validate(
             mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+
+    def stub_PortConstraint_validate(self):
+        self.m.StubOutWithMock(neutron.PortConstraint, 'validate')
+        neutron.PortConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)

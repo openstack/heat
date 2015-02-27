@@ -71,7 +71,10 @@ class FloatingIP(neutron.NeutronResource):
             properties.Schema.STRING,
             _('ID of an existing port with at least one IP address to '
               'associate with this floating IP.'),
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.port')
+            ]
         ),
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,
@@ -223,7 +226,10 @@ class FloatingIPAssociation(neutron.NeutronResource):
             _('ID of an existing port with at least one IP address to '
               'associate with this floating IP.'),
             required=True,
-            update_allowed=True
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.port')
+            ]
         ),
         FIXED_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING,

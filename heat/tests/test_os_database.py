@@ -150,9 +150,11 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.fc.instances.get(fake_dbinstance.id).AndReturn(fake_dbinstance)
 
     def _stubout_validate(self, instance, neutron=None,
-                          mock_net_constraint=False):
+                          mock_net_constraint=False,
+                          with_port=True):
         if mock_net_constraint:
             self.stub_NetworkConstraint_validate()
+
         trove.TroveClientPlugin._create().AndReturn(self.fc)
         self.m.StubOutWithMock(self.fc, 'datastore_versions')
         self.m.StubOutWithMock(self.fc.datastore_versions, 'list')
@@ -162,6 +164,8 @@ class OSDBInstanceTest(common.HeatTestCase):
         if neutron is not None:
             self.m.StubOutWithMock(instance, 'is_using_neutron')
             instance.is_using_neutron().AndReturn(bool(neutron))
+            if with_port:
+                self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
     def test_osdatabase_create(self):
@@ -570,7 +574,7 @@ class OSDBInstanceTest(common.HeatTestCase):
                 "fixed_ip": "1.2.3.4"
             }]
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
-        self._stubout_validate(instance, neutron=True)
+        self._stubout_validate(instance, neutron=True, with_port=False)
 
         ex = self.assertRaises(
             exception.StackValidationFailed, instance.validate)
@@ -614,6 +618,7 @@ class OSDBInstanceTest(common.HeatTestCase):
                                         'v4-fixed-ip': '1.2.3.4'}]
                                  ).AndReturn(fake_dbinstance)
         self._stubout_check_create_complete(fake_dbinstance)
+        self.stub_PortConstraint_validate()
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
