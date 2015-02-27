@@ -40,13 +40,14 @@ class SaharaNodeGroupTemplate(resource.Resource):
         VOLUMES_PER_NODE, VOLUMES_SIZE, VOLUME_TYPE,
         SECURITY_GROUPS, AUTO_SECURITY_GROUP,
         AVAILABILITY_ZONE, VOLUMES_AVAILABILITY_ZONE,
-        NODE_PROCESSES, FLOATING_IP_POOL, NODE_CONFIGS,
+        NODE_PROCESSES, FLOATING_IP_POOL, NODE_CONFIGS, IMAGE_ID,
+
     ) = (
         'name', 'plugin_name', 'hadoop_version', 'flavor', 'description',
         'volumes_per_node', 'volumes_size', 'volume_type',
         'security_groups', 'auto_security_group',
         'availability_zone', 'volumes_availability_zone',
-        'node_processes', 'floating_ip_pool', 'node_configs',
+        'node_processes', 'floating_ip_pool', 'node_configs', 'image_id',
     )
 
     properties_schema = {
@@ -145,6 +146,13 @@ class SaharaNodeGroupTemplate(resource.Resource):
             properties.Schema.MAP,
             _("Dictionary of node configurations."),
         ),
+        IMAGE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _("ID of the image to use for the template."),
+            constraints=[
+                constraints.CustomConstraint('sahara.image'),
+            ],
+        ),
     }
 
     default_client_name = 'sahara'
@@ -172,6 +180,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
         auto_security_group = self.properties[self.AUTO_SECURITY_GROUP]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
         vol_availability_zone = self.properties[self.VOLUMES_AVAILABILITY_ZONE]
+        image_id = self.properties[self.IMAGE_ID]
         if floating_ip_pool and self.is_using_neutron():
             floating_ip_pool = self.client_plugin(
                 'neutron').find_neutron_resource(
@@ -191,7 +200,8 @@ class SaharaNodeGroupTemplate(resource.Resource):
             security_groups=security_groups,
             auto_security_group=auto_security_group,
             availability_zone=availability_zone,
-            volumes_availability_zone=vol_availability_zone
+            volumes_availability_zone=vol_availability_zone,
+            image_id=image_id
         )
         LOG.info(_LI("Node Group Template '%s' has been created"),
                  node_group_template.name)
