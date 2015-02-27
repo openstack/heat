@@ -38,7 +38,9 @@ class StackLock(object):
 
     @staticmethod
     def engine_alive(context, engine_id):
-        client = rpc_messaging.get_rpc_client(version='1.0', topic=engine_id)
+        client = rpc_messaging.get_rpc_client(
+            version='1.0', topic="heat-engine-listener",
+            server=engine_id)
         client_context = client.prepare(
             timeout=cfg.CONF.engine_life_check_timeout)
         try:
