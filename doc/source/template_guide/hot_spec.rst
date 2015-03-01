@@ -140,6 +140,23 @@ For example, Heat currently supports the following values for the
   str_replace
   Fn::Select
 
+2015-04-30
+    The key with value *2015-04-30* indicates that the YAML document is a HOT
+    template and it may contain features added and/or removed up until the Kilo
+    release. This version adds the *repeat* function. So the complete list of
+    supported functions is:
+
+::
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  repeat
+  resource_facade
+  str_replace
+  Fn::Select
+
 
 .. _hot_spec_parameter_groups:
 
@@ -799,6 +816,97 @@ A sample use of this function with a simple list is shown below.
   list_join: [', ', ['one', 'two', 'and three']]
 
 This would resolve to "one, two, and three".
+
+
+repeat
+------
+The *repeat* function allows for dynamically transforming lists by iterating
+over the contents of one or more source lists and replacing the list elements
+into a template. The result of this function is a new list, where the elements
+are set to the template, rendered for each list item.
+
+The syntax of the repeat function is as follows:
+
+::
+
+  repeat:
+    template:
+      <template>
+    for_each:
+      <var>: <list>
+
+template
+    The *template* argument defines the content generated for each iteration,
+    with placeholders for the elements that need to be replaced at runtime.
+    This argument can be of any supported type.
+for_each
+    The *for_each* argument is a dictionary that defines how to generate the
+    repetitions of the template and perform substitutions. In this dictionary
+    the keys are the placeholder names that will be replaced in the template,
+    and the values are the lists to iterate on. On each iteration, the function
+    will render the template by performing substitution with elements of the
+    given lists. If a single key/value pair is given in this argument, the
+    template will be rendered once for each element in the list. When more
+    than one key/value pairs are given, the iterations will be performed on all
+    the permutations of values between the given lists. The values in this
+    dictionary can be given as functions such as get_attr or get_param.
+
+The example below shows how a security group resource can be defined to
+include a list of ports given as a parameter.
+
+::
+
+    parameters:
+      ports:
+        type: comma_delimited_list
+        label: ports
+        default: "80,443,8080"
+
+    resources:
+      security_group:
+        type: OS::Neutron::SecurityGroup
+        properties:
+          name: web_server_security_group
+          rules:
+            repeat:
+              for_each:
+                %port%: { get_param: ports }
+              template:
+                protocol: tcp
+                port_range_min: %port%
+                port_range_max: %port%
+
+The next example demonstrates how the use of multiple lists enables the
+security group to also include parameterized protocols.
+
+::
+
+    parameters:
+      ports:
+        type: comma_delimited_list
+        label: ports
+        default: "80,443,8080"
+      protocols:
+        type: comma_delimited_list
+        label: protocols
+        default: "tcp,udp"
+
+    resources:
+      security_group:
+        type: OS::Neutron::SecurityGroup
+        properties:
+          name: web_server_security_group
+          rules:
+            repeat:
+              for_each:
+                %port%: { get_param: ports }
+                %protocol%: { get_param: protocols }
+              template:
+                protocol: %protocol%
+                port_range_min: %port%
+
+Note how multiple entries in the ``for_each`` argument are equivalent to
+nested for-loops in most programming languages.
 
 
 resource_facade

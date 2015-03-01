@@ -43,6 +43,10 @@ hot_juno_tpl_empty = template_format.parse('''
 heat_template_version: 2014-10-16
 ''')
 
+hot_kilo_tpl_empty = template_format.parse('''
+heat_template_version: 2015-04-30
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -584,6 +588,86 @@ class HOTemplateTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'param_id_test', tmpl)
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
+
+    def test_repeat(self):
+        """Test repeat function."""
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        snippet_resolved = ['this is a', 'this is b', 'this is c']
+
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_repeat_dict_template(self):
+        """Test repeat function with a dictionary as a template."""
+        snippet = {'repeat': {'template': {'key-%var%': 'this is %var%'},
+                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        snippet_resolved = [{'key-a': 'this is a'},
+                            {'key-b': 'this is b'},
+                            {'key-c': 'this is c'}]
+
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_repeat_list_template(self):
+        """Test repeat function with a list as a template."""
+        snippet = {'repeat': {'template': ['this is %var%', 'static'],
+                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        snippet_resolved = [['this is a', 'static'],
+                            ['this is b', 'static'],
+                            ['this is c', 'static']]
+
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_repeat_multi_list(self):
+        """Test repeat function with multiple input lists."""
+        snippet = {'repeat': {'template': 'this is %var1%-%var2%',
+                              'for_each': {'%var1%': ['a', 'b', 'c'],
+                                           '%var2%': ['1', '2']}}}
+        snippet_resolved = ['this is a-1', 'this is b-1', 'this is c-1',
+                            'this is a-2', 'this is b-2', 'this is c-2']
+
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        result = self.resolve(snippet, tmpl)
+        self.assertEqual(len(result), len(snippet_resolved))
+        for item in result:
+            self.assertIn(item, snippet_resolved)
+
+    def test_repeat_bad_args(self):
+        """
+        Test that the repeat function reports a proper error when missing
+        or invalid arguments.
+        """
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        # missing for_each
+        snippet = {'repeat': {'template': 'this is %var%'}}
+        self.assertRaises(KeyError, self.resolve, snippet, tmpl)
+
+        # mispelled for_each
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'foreach': {'%var%': ['a', 'b', 'c']}}}
+        self.assertRaises(KeyError, self.resolve, snippet, tmpl)
+
+        # for_each is not a map
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'for_each': '%var%'}}
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+
+        # value given to for_each entry is not a list
+        snippet = {'repeat': {'template': 'this is %var%',
+                              'for_each': {'%var%': 'a'}}}
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+
+        # mispelled template
+        snippet = {'repeat': {'templte': 'this is %var%',
+                              'for_each': {'%var%': ['a', 'b', 'c']}}}
+        self.assertRaises(KeyError, self.resolve, snippet, tmpl)
 
     def test_prevent_parameters_access(self):
         """
