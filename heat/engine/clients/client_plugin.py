@@ -13,10 +13,16 @@
 
 import abc
 
+from keystoneclient import auth
+from keystoneclient.auth.identity import v2
+from keystoneclient.auth.identity import v3
 from keystoneclient import exceptions
 from keystoneclient import session
 from oslo_config import cfg
 import six
+
+from heat.common import context
+from heat.common.i18n import _
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -66,6 +72,10 @@ class ClientPlugin(object):
         return self.context.auth_plugin.get_token(self._keystone_session)
 
     def url_for(self, **kwargs):
+        def get_endpoint():
+            auth_plugin = self.context.auth_plugin
+            return auth_plugin.get_endpoint(self._keystone_session, **kwargs)
+
         # NOTE(jamielennox): use the session defined by the keystoneclient
         # options as traditionally the token was always retrieved from
         # keystoneclient.
@@ -77,8 +87,37 @@ class ClientPlugin(object):
         reg = self.context.region_name or cfg.CONF.region_name_for_services
         kwargs.setdefault('region_name', reg)
 
-        url = self.context.auth_plugin.get_endpoint(self._keystone_session,
-                                                    **kwargs)
+        try:
+            url = get_endpoint()
+        except exceptions.EmptyCatalog:
+            kc = self.clients.client('keystone').client
+
+            auth_plugin = self.context.auth_plugin
+            endpoint = auth_plugin.get_endpoint(None,
+                                                interface=auth.AUTH_INTERFACE)
+            token = auth_plugin.get_token(None)
+            project_id = auth_plugin.get_project_id(None)
+
+            if kc.version == 'v3':
+                token_obj = v3.Token(endpoint, token, project_id=project_id)
+                catalog_key = 'catalog'
+                access_key = 'token'
+            elif kc.version == 'v2.0':
+                endpoint = endpoint.replace('v3', 'v2.0')
+                token_obj = v2.Token(endpoint, token, tenant_id=project_id)
+                catalog_key = 'serviceCatalog'
+                access_key = 'access'
+            else:
+                raise exceptions.Error(_("Unknown Keystone version"))
+
+            auth_ref = token_obj.get_auth_ref(self._keystone_session)
+
+            if catalog_key in auth_ref:
+                cxt = self.context.to_dict()
+                access_info = cxt['auth_token_info'][access_key]
+                access_info[catalog_key] = auth_ref[catalog_key]
+                self.context = context.RequestContext.from_dict(cxt)
+                url = get_endpoint()
 
         # NOTE(jamielennox): raising exception maintains compatibility with
         # older keystoneclient service catalog searching.
