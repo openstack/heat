@@ -31,7 +31,7 @@ class KeystoneClientV2(object):
 
     """Wrap keystone client so we can encapsulate logic used in resources.
 
-    Note this is intended to be initialized from a resource on a per-session
+    Note: This is intended to be initialized from a resource on a per-session
     basis, so the session context is passed in on initialization
     Also note that a copy of this is created every resource as self.keystone()
     via the code in engine/client.py, so there should not be any need to
