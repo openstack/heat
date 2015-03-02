@@ -31,9 +31,11 @@ from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
-from heat.tests import test_parser
 from heat.tests import utils
 
+empty_template = template_format.parse('''{
+  "HeatTemplateFormatVersion" : "2012-12-12",
+}''')
 
 hot_tpl_empty = template_format.parse('''
 heat_template_version: 2013-05-23
@@ -844,8 +846,22 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual(hot_tpl['resources'], empty.t['resources'])
 
 
-class StackTest(test_parser.StackTest):
+class HotStackTest(common.HeatTestCase):
     """Test stack function when stack was created from HOT template."""
+    def setUp(self):
+        super(HotStackTest, self).setUp()
+
+        self.tmpl = template.Template(copy.deepcopy(empty_template))
+        self.ctx = utils.dummy_context()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithPropsType',
+                                 generic_rsrc.ResourceWithProps)
+        resource._register_class('ResourceWithComplexAttributesType',
+                                 generic_rsrc.ResourceWithComplexAttributes)
+        resource._register_class('ResWithComplexPropsAndAttrs',
+                                 generic_rsrc.ResWithComplexPropsAndAttrs)
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))
