@@ -212,12 +212,10 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         grp = stack['WebServerGroup']
         self.assertFalse(grp.update_policy['AutoScalingRollingUpdate'])
-        self.m.VerifyAll()
 
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_updt_policy)
@@ -225,7 +223,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         tmpl_grp = tmpl['Resources']['WebServerGroup']
@@ -240,7 +237,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertEqual(1, int(policy['MinInstancesInService']))
         self.assertEqual(tmpl_batch_sz, int(policy['MaxBatchSize']))
         self.assertEqual('PT1S', policy['PauseTime'])
-        self.m.VerifyAll()
 
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
@@ -248,7 +244,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         grp = stack['WebServerGroup']
@@ -260,13 +255,11 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.assertEqual(0, int(policy['MinInstancesInService']))
         self.assertEqual(1, int(policy['MaxBatchSize']))
         self.assertEqual('PT0S', policy['PauseTime'])
-        self.m.VerifyAll()
 
     def test_parse_with_bad_update_policy(self):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy)
         stack = utils.parse_stack(tmpl)
         error = self.assertRaises(
@@ -277,7 +270,6 @@ class AutoScalingGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
         group = tmpl['Resources']['WebServerGroup']
         policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
