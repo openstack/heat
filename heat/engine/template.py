@@ -158,6 +158,34 @@ class Template(collections.Mapping):
         '''Return a parameters.Parameters object for the stack.'''
         pass
 
+    @classmethod
+    def validate_resource_key_type(cls, key, valid_types, typename,
+                                   allowed_keys, rsrc_name, rsrc_data):
+        """Validation type of the specific resource key.
+
+        Used in validate_resource_definition and check correctness of
+        key's type.
+        """
+        if key not in allowed_keys:
+            raise ValueError(_('"%s" is not a valid '
+                               'keyword inside a resource '
+                               'definition') % key)
+        if key in rsrc_data:
+            if not isinstance(rsrc_data.get(key), valid_types):
+                args = {'name': rsrc_name, 'key': key,
+                        'typename': typename}
+                message = _('Resource %(name)s %(key)s type '
+                            'must be %(typename)s') % args
+                raise TypeError(message)
+            return True
+        else:
+            return False
+
+    @abc.abstractmethod
+    def validate_resource_definitions(self, stack):
+        """Check section's type of ResourceDefinitions."""
+        pass
+
     @abc.abstractmethod
     def resource_definitions(self, stack):
         '''Return a dictionary of ResourceDefinition objects.'''

@@ -1468,3 +1468,28 @@ class validateTest(common.HeatTestCase):
         error_message = ('Arguments to "get_attr" must be of the form '
                          '[resource_name, attribute, (path), ...]')
         self.assertEqual(error_message, six.text_type(err))
+
+    def test_validate_resource_attr_invalid_type(self):
+        t = template_format.parse("""
+        heat_template_version: 2013-05-23
+        resources:
+          resource:
+              type: 123
+        """)
+        template = parser.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
+        self.assertEqual('Resource resource type type must be string',
+                         six.text_type(ex))
+
+    def test_validate_resource_attr_invalid_type_cfn(self):
+        t = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Resources:
+          Resource:
+            Type: [Wrong, Type]
+        """)
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
+        ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
+        self.assertEqual('Resource Resource Type type must be string',
+                         six.text_type(ex))
