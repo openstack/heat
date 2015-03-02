@@ -228,7 +228,8 @@ class EngineListener(service.Service):
     def start(self):
         super(EngineListener, self).start()
         self.target = messaging.Target(
-            server=self.host, topic=self.engine_id)
+            server=self.engine_id,
+            topic="heat-engine-listener")
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
