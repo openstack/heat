@@ -1579,7 +1579,9 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertEqual('Output validation error: The Referenced Attribute '
+        self.assertEqual('Output validation error : '
+                         'Outputs.Resource_attr.Value: '
+                         'The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 
@@ -1739,7 +1741,9 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertEqual('Output validation error: The Referenced Attribute '
+        self.assertEqual('Output validation error : '
+                         'outputs.resource_attr.value: '
+                         'The Referenced Attribute '
                          '(AResource Bar) is incorrect.',
                          six.text_type(ex))
 
