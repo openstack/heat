@@ -167,12 +167,10 @@ class InstanceGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertFalse(grp.update_policy['RollingUpdate'])
-        self.m.VerifyAll()
 
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_updt_policy)
@@ -180,7 +178,6 @@ class InstanceGroupTest(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         grp = stack['JobServerGroup']
@@ -193,15 +190,12 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual(2, int(policy['MaxBatchSize']))
         self.assertEqual('PT1S', policy['PauseTime'])
 
-        self.m.VerifyAll()
-
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_default_updt_policy)
         stack = utils.parse_stack(tmpl)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         stack.validate()
         grp = stack['JobServerGroup']
@@ -213,8 +207,6 @@ class InstanceGroupTest(common.HeatTestCase):
         self.assertEqual(0, int(policy['MinInstancesInService']))
         self.assertEqual(1, int(policy['MaxBatchSize']))
         self.assertEqual('PT0S', policy['PauseTime'])
-
-        self.m.VerifyAll()
 
     def test_parse_with_bad_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_bad_updt_policy)

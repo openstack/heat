@@ -169,7 +169,6 @@ class TestLaunchConfig(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
-        self.m.ReplayAll()
 
         t = template_format.parse(lc_template)
         stack = utils.parse_stack(t)
@@ -191,7 +190,6 @@ class TestLaunchConfig(common.HeatTestCase):
         # Changing metadata in the second update triggers UpdateReplace
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         self.assertRaises(resource.UpdateReplace, updater)
-        self.m.VerifyAll()
 
 
 class LoadbalancerReloadTest(common.HeatTestCase):

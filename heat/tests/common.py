@@ -153,52 +153,41 @@ class HeatTestCase(testscenarios.WithScenarios,
         return fkc
 
     def stub_KeypairConstraint_validate(self):
-        self.m.StubOutWithMock(nova.KeypairConstraint, 'validate')
-        nova.KeypairConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(nova.KeypairConstraint, 'validate')
+        validate.return_value = True
 
     def stub_ImageConstraint_validate(self, num=None):
-        self.m.StubOutWithMock(glance.ImageConstraint, 'validate')
+        validate = self.patchobject(glance.ImageConstraint, 'validate')
         if num is None:
-            glance.ImageConstraint.validate(
-                mox.IgnoreArg(), mox.IgnoreArg()
-            ).MultipleTimes().AndReturn(True)
+            validate.return_value = True
         else:
-            for x in range(num):
-                glance.ImageConstraint.validate(
-                    mox.IgnoreArg(), mox.IgnoreArg()).AndReturn(True)
+            validate.side_effect = [True for x in range(num)]
 
     def stub_FlavorConstraint_validate(self):
-        self.m.StubOutWithMock(nova.FlavorConstraint, 'validate')
-        nova.FlavorConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(nova.FlavorConstraint, 'validate')
+        validate.return_value = True
 
     def stub_VolumeConstraint_validate(self):
-        self.m.StubOutWithMock(cinder.VolumeConstraint, 'validate')
-        cinder.VolumeConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(cinder.VolumeConstraint, 'validate')
+        validate.return_value = True
 
     def stub_SnapshotConstraint_validate(self):
-        self.m.StubOutWithMock(cinder.VolumeSnapshotConstraint, 'validate')
-        cinder.VolumeSnapshotConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(
+            cinder.VolumeSnapshotConstraint, 'validate')
+        validate.return_value = True
 
     def stub_VolumeTypeConstraint_validate(self):
-        self.m.StubOutWithMock(cinder.VolumeTypeConstraint, 'validate')
-        cinder.VolumeTypeConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(cinder.VolumeTypeConstraint, 'validate')
+        validate.return_value = True
 
     def stub_ServerConstraint_validate(self):
-        self.m.StubOutWithMock(nova.ServerConstraint, 'validate')
-        nova.ServerConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(nova.ServerConstraint, 'validate')
+        validate.return_value = True
 
     def stub_NetworkConstraint_validate(self):
-        self.m.StubOutWithMock(neutron.NetworkConstraint, 'validate')
-        neutron.NetworkConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(neutron.NetworkConstraint, 'validate')
+        validate.return_value = True
 
     def stub_PortConstraint_validate(self):
-        self.m.StubOutWithMock(neutron.PortConstraint, 'validate')
-        neutron.PortConstraint.validate(
-            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        validate = self.patchobject(neutron.PortConstraint, 'validate')
+        validate.return_value = True
