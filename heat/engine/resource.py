@@ -32,7 +32,6 @@ from heat.common import short_id
 from heat.common import timeutils
 from heat.db import api as db_api
 from heat.engine import attributes
-from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
 from heat.engine import properties
@@ -125,33 +124,11 @@ class Resource(object):
             ResourceClass = cls
         else:
             from heat.engine.resources import template_resource
-            # Select the correct subclass to instantiate.
-
-            # Note: If the current stack is an implementation of
-            # a resource type (a TemplateResource mapped in the environment)
-            # then don't infinitely recurse by creating a child stack
-            # of the same type. Instead get the next match which will get
-            # us closer to a concrete class.
-            def get_ancestor_template_resources():
-                """Return an ancestry list (TemplateResources only)."""
-                parent = stack.parent_resource
-                while parent is not None:
-                    if isinstance(parent, template_resource.TemplateResource):
-                        yield parent.template_name
-                    parent = parent.stack.parent_resource
-
-            ancestor_list = set(get_ancestor_template_resources())
-
-            def accept_class(res_info):
-                if not isinstance(res_info, environment.TemplateResourceInfo):
-                    return True
-                return res_info.template_name not in ancestor_list
 
             registry = stack.env.registry
             try:
                 ResourceClass = registry.get_class(definition.resource_type,
-                                                   resource_name=name,
-                                                   accept_fn=accept_class)
+                                                   resource_name=name)
             except exception.NotFound:
                 ResourceClass = template_resource.TemplateResource
             assert issubclass(ResourceClass, Resource)

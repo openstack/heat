@@ -457,3 +457,94 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         call_list.sort()
 
         self.assertEqual(expected, call_list)
+
+
+class ChildEnvTest(common.HeatTestCase):
+
+    def test_params_flat(self):
+        new_params = {'foo': 'bar', 'tester': 'Yes'}
+        penv = environment.Environment()
+        expected = {'parameters': new_params,
+                    'parameter_defaults': {},
+                    'resource_registry': {'resources': {}}}
+        cenv = environment.get_child_environment(penv, new_params)
+        self.assertEqual(expected, cenv.user_env_as_dict())
+
+    def test_params_normal(self):
+        new_params = {'parameters': {'foo': 'bar', 'tester': 'Yes'}}
+        penv = environment.Environment()
+        expected = {'parameter_defaults': {},
+                    'resource_registry': {'resources': {}}}
+        expected.update(new_params)
+        cenv = environment.get_child_environment(penv, new_params)
+        self.assertEqual(expected, cenv.user_env_as_dict())
+
+    def test_params_parent_overwritten(self):
+        new_params = {'parameters': {'foo': 'bar', 'tester': 'Yes'}}
+        parent_params = {'parameters': {'gone': 'hopefully'}}
+        penv = environment.Environment(env=parent_params)
+        expected = {'parameter_defaults': {},
+                    'resource_registry': {'resources': {}}}
+        expected.update(new_params)
+        cenv = environment.get_child_environment(penv, new_params)
+        self.assertEqual(expected, cenv.user_env_as_dict())
+
+    def test_registry_merge_simple(self):
+        env1 = {u'resource_registry': {u'OS::Food': u'fruity.yaml'}}
+        env2 = {u'resource_registry': {u'OS::Fruit': u'apples.yaml'}}
+        penv = environment.Environment(env=env1)
+        cenv = environment.get_child_environment(penv, env2)
+        rr = cenv.user_env_as_dict()['resource_registry']
+        self.assertIn('OS::Food', rr)
+        self.assertIn('OS::Fruit', rr)
+
+    def test_registry_merge_favor_child(self):
+        env1 = {u'resource_registry': {u'OS::Food': u'carrots.yaml'}}
+        env2 = {u'resource_registry': {u'OS::Food': u'apples.yaml'}}
+        penv = environment.Environment(env=env1)
+        cenv = environment.get_child_environment(penv, env2)
+        res = cenv.get_resource_info('OS::Food')
+        self.assertEqual('apples.yaml', res.value)
+
+    def test_item_to_remove_simple(self):
+        env = {u'resource_registry': {u'OS::Food': u'fruity.yaml'}}
+        penv = environment.Environment(env)
+        victim = penv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertIsNotNone(victim)
+        cenv = environment.get_child_environment(penv, None,
+                                                 item_to_remove=victim)
+        res = cenv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertIsNone(res)
+        self.assertNotIn('OS::Food',
+                         cenv.user_env_as_dict()['resource_registry'])
+        # make sure the parent env is uneffected
+        innocent = penv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertIsNotNone(innocent)
+
+    def test_item_to_remove_complex(self):
+        env = {u'resource_registry': {u'OS::Food': u'fruity.yaml',
+                                      u'resources': {u'abc': {
+                                          u'OS::Food': u'nutty.yaml'}}}}
+        penv = environment.Environment(env)
+        # the victim we want is the most specific one.
+        victim = penv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertEqual(['resources', 'abc', 'OS::Food'], victim.path)
+        cenv = environment.get_child_environment(penv, None,
+                                                 item_to_remove=victim)
+        res = cenv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertEqual(['OS::Food'], res.path)
+        rr = cenv.user_env_as_dict()['resource_registry']
+        self.assertIn('OS::Food', rr)
+        self.assertNotIn('OS::Food', rr['resources']['abc'])
+        # make sure the parent env is uneffected
+        innocent2 = penv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertEqual(['resources', 'abc', 'OS::Food'], innocent2.path)
+
+    def test_item_to_remove_none(self):
+        env = {u'resource_registry': {u'OS::Food': u'fruity.yaml'}}
+        penv = environment.Environment(env)
+        victim = penv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertIsNotNone(victim)
+        cenv = environment.get_child_environment(penv, None)
+        res = cenv.get_resource_info('OS::Food', resource_name='abc')
+        self.assertIsNotNone(res)
