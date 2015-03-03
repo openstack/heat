@@ -70,6 +70,7 @@ class TemplateResource(stack_resource.StackResource):
         self.properties_schema = {}
         self.attributes_schema = {}
         super(TemplateResource, self).__init__(name, json_snippet, stack)
+        self.resource_info = tri
         if self.validation_exception is None:
             self._generate_schema(self.t)
 

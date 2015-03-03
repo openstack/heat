@@ -239,7 +239,7 @@ class StackResourceTest(common.HeatTestCase):
 
         result = parent_resource.preview()
         mock_env_class.assert_called_once_with(self.parent_stack.env,
-                                               params)
+                                               params, item_to_remove=None)
         self.assertEqual('preview_nested_stack', result)
         mock_stack_class.assert_called_once_with(
             mock.ANY,
@@ -279,7 +279,7 @@ class StackResourceTest(common.HeatTestCase):
 
         result = parent_resource.preview()
         mock_env_class.assert_called_once_with(self.parent_stack.env,
-                                               params)
+                                               params, item_to_remove=None)
         self.assertEqual('preview_nested_stack', result)
         mock_stack_class.assert_called_once_with(
             mock.ANY,

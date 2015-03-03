@@ -106,8 +106,7 @@ class ClassResourceInfo(ResourceInfo):
 
 
 class TemplateResourceInfo(ResourceInfo):
-    """Store the info needed to start a TemplateResource.
-    """
+    """Store the info needed to start a TemplateResource."""
     description = 'Template'
 
     def __init__(self, registry, path, value):
@@ -128,6 +127,7 @@ class TemplateResourceInfo(ResourceInfo):
 
 class MapResourceInfo(ResourceInfo):
     """Store the mapping of one resource type to another.
+
     like: OS::Networking::FloatingIp -> OS::Neutron::FloatingIp
     """
     description = 'Mapping'
@@ -141,6 +141,7 @@ class MapResourceInfo(ResourceInfo):
 
 class GlobResourceInfo(MapResourceInfo):
     """Store the mapping (with wild cards) of one resource type to another.
+
     like: OS::Networking::* -> OS::Neutron::*
     """
     description = 'Wildcard Mapping'
@@ -231,6 +232,16 @@ class ResourceRegistry(object):
         info.user_resource = (self.global_registry is not None)
         registry[name] = info
 
+    def remove_item(self, info):
+        if not isinstance(info, TemplateResourceInfo):
+            return
+
+        registry = self._registry
+        for key in info.path[:-1]:
+            registry = registry[key]
+        if info.path[-1] in registry:
+            registry.pop(info.path[-1])
+
     def iterable_by(self, resource_type, resource_name=None):
         is_templ_type = resource_type.endswith(('.yaml', '.template'))
         if self.global_registry is not None and is_templ_type:
@@ -263,7 +274,7 @@ class ResourceRegistry(object):
                 yield self._registry[pattern]
 
     def get_resource_info(self, resource_type, resource_name=None,
-                          registry_type=None, accept_fn=None):
+                          registry_type=None):
         """Find possible matches to the resource type and name.
         chain the results from the global and user registry to find
         a match.
@@ -294,11 +305,10 @@ class ResourceRegistry(object):
         for info in sorted(matches):
             match = info.get_resource_info(resource_type,
                                            resource_name)
-            if ((registry_type is None or isinstance(match, registry_type)) and
-                    (accept_fn is None or accept_fn(info))):
+            if ((registry_type is None or isinstance(match, registry_type))):
                 return match
 
-    def get_class(self, resource_type, resource_name=None, accept_fn=None):
+    def get_class(self, resource_type, resource_name=None):
         if resource_type == "":
             msg = _('Resource "%s" has no type') % resource_name
             raise exception.StackValidationFailed(message=msg)
@@ -311,8 +321,7 @@ class ResourceRegistry(object):
             raise exception.StackValidationFailed(message=msg)
 
         info = self.get_resource_info(resource_type,
-                                      resource_name=resource_name,
-                                      accept_fn=accept_fn)
+                                      resource_name=resource_name)
         if info is None:
             msg = _("Unknown resource Type : %s") % resource_type
             raise exception.StackValidationFailed(message=msg)
@@ -436,25 +445,39 @@ class Environment(object):
         return self.stack_lifecycle_plugins
 
 
-def get_child_environment(parent_env, child_params):
+def get_child_environment(parent_env, child_params, item_to_remove=None):
     """Build a child environment using the parent environment and params.
+
     This is built from the child_params and the parent env so some
     resources can use user-provided parameters as if they come from an
     environment.
+
+    1. resource_registry must be merged (child env should be loaded after the
+       parent env to take presdence).
+    2. child parameters must overwrite the parent's as they won't be relevant
+       in the child template.
     """
+    def is_flat_params(env_or_param):
+        if env_or_param is None:
+            return False
+        for sect in env_fmt.SECTIONS:
+            if sect in env_or_param:
+                return False
+        return True
+
+    child_env = parent_env.user_env_as_dict()
+    child_env[env_fmt.PARAMETERS] = {}
+    flat_params = is_flat_params(child_params)
     new_env = Environment()
-    new_env.registry = copy.copy(parent_env.registry)
-    new_env.environment = new_env
-    child_env = {
-        env_fmt.PARAMETERS: {},
-        env_fmt.PARAMETER_DEFAULTS: parent_env.param_defaults}
-    if child_params is not None:
-        if env_fmt.PARAMETERS not in child_params:
-            child_env[env_fmt.PARAMETERS] = child_params
-        else:
-            child_env.update(child_params)
+    if flat_params and child_params is not None:
+        child_env[env_fmt.PARAMETERS] = child_params
 
     new_env.load(child_env)
+    if not flat_params and child_params is not None:
+        new_env.load(child_params)
+
+    if item_to_remove is not None:
+        new_env.registry.remove_item(item_to_remove)
     return new_env
 
 

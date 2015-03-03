@@ -49,6 +49,7 @@ class StackResource(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
+        self.resource_info = None
 
     def validate(self):
         super(StackResource, self).validate()
@@ -177,8 +178,10 @@ class StackResource(resource.Resource):
 
         if child_params is None:
             child_params = self.child_params()
+
         child_env = environment.get_child_environment(
-            self.stack.env, child_params)
+            self.stack.env, child_params,
+            item_to_remove=self.resource_info)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
