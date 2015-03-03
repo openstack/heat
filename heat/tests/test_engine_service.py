@@ -42,6 +42,7 @@ from heat.engine import properties
 from heat.engine import resource as res
 from heat.engine.resources.aws import instance as instances
 from heat.engine import service
+from heat.engine import service_software_config
 from heat.engine import service_stack_watch
 from heat.engine import stack as parser
 from heat.engine import stack_lock
@@ -3636,7 +3637,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             deployment,
             self.engine.show_software_deployment(self.ctx, deployment_id))
 
-    @mock.patch.object(service.EngineService,
+    @mock.patch.object(service_software_config.SoftwareConfigService,
                        '_push_metadata_software_deployments')
     def test_signal_software_deployment(self, pmsd):
         self.assertRaises(ValueError,
@@ -3780,7 +3781,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertEqual(deployment_id, deployment['id'])
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
 
-    @mock.patch.object(service.EngineService, '_refresh_software_deployment')
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       '_refresh_software_deployment')
     def test_show_software_deployment_refresh(
             self, _refresh_software_deployment):
         temp_url = ('http://192.0.2.1/v1/AUTH_a/b/c'
@@ -3814,13 +3816,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         server_id = str(uuid.uuid4())
         self.m.StubOutWithMock(
-            self.engine, '_push_metadata_software_deployments')
+            self.engine.software_config,
+            '_push_metadata_software_deployments')
 
         # push on create
-        self.engine._push_metadata_software_deployments(
+        self.engine.software_config._push_metadata_software_deployments(
             self.ctx, server_id).AndReturn(None)
         # push on update with new config_id
-        self.engine._push_metadata_software_deployments(
+        self.engine.software_config._push_metadata_software_deployments(
             self.ctx, server_id).AndReturn(None)
 
         self.m.ReplayAll()
@@ -3846,9 +3849,10 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         server_id = str(uuid.uuid4())
         self.m.StubOutWithMock(
-            self.engine, '_push_metadata_software_deployments')
+            self.engine.software_config,
+            '_push_metadata_software_deployments')
         # push on create
-        self.engine._push_metadata_software_deployments(
+        self.engine.software_config._push_metadata_software_deployments(
             self.ctx, server_id).AndReturn(None)
         # _push_metadata_software_deployments should not be called
         # on update because config_id isn't being updated
@@ -3916,7 +3920,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployment_ids = [x['id'] for x in deployments]
         self.assertNotIn(deployment_id, deployment_ids)
 
-    @mock.patch.object(service.EngineService, 'metadata_software_deployments')
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'metadata_software_deployments')
     @mock.patch.object(service.db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service.requests, 'put')
     def test_push_metadata_software_deployments(self, put, res_get, md_sd):
@@ -3933,12 +3938,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'deployments': {'deploy': 'this'}
         }
 
-        self.engine._push_metadata_software_deployments(self.ctx, '1234')
+        self.engine.software_config._push_metadata_software_deployments(
+            self.ctx, '1234')
         rs.update_and_save.assert_called_once_with(
             {'rsrc_metadata': result_metadata})
         put.side_effect = Exception('Unexpected requests.put')
 
-    @mock.patch.object(service.EngineService, 'metadata_software_deployments')
+    @mock.patch.object(service_software_config.SoftwareConfigService,
+                       'metadata_software_deployments')
     @mock.patch.object(service.db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service.requests, 'put')
     def test_push_metadata_software_deployments_temp_url(
@@ -3959,14 +3966,15 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             'deployments': {'deploy': 'this'}
         }
 
-        self.engine._push_metadata_software_deployments(self.ctx, '1234')
+        self.engine.software_config._push_metadata_software_deployments(
+            self.ctx, '1234')
         rs.update_and_save.assert_called_once_with(
             {'rsrc_metadata': result_metadata})
 
         put.assert_called_once_with(
             'http://192.168.2.2/foo/bar', jsonutils.dumps(result_metadata))
 
-    @mock.patch.object(service.EngineService,
+    @mock.patch.object(service_software_config.SoftwareConfigService,
                        'signal_software_deployment')
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     def test_refresh_software_deployment(self, scc, ssd):
@@ -4017,7 +4025,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         self.assertEqual(
             sd,
-            self.engine._refresh_software_deployment(self.ctx, sd, temp_url))
+            self.engine.software_config._refresh_software_deployment(
+                self.ctx, sd, temp_url))
         sc.head_object.assert_called_once_with(container, object_name)
         # no call to get_object or signal_last_modified
         self.assertEqual([], sc.get_object.mock_calls)
@@ -4026,16 +4035,20 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         # poll with other error
         sc.head_object.side_effect = swift_exc.ClientException(
             'Ouch', http_status=409)
-        self.assertRaises(swift_exc.ClientException,
-                          self.engine._refresh_software_deployment,
-                          self.ctx, sd, temp_url)
+        self.assertRaises(
+            swift_exc.ClientException,
+            self.engine.software_config._refresh_software_deployment,
+            self.ctx,
+            sd,
+            temp_url)
         # no call to get_object or signal_last_modified
         self.assertEqual([], sc.get_object.mock_calls)
         self.assertEqual([], ssd.mock_calls)
         sc.head_object.side_effect = None
 
         # first poll populates data signal_last_modified
-        self.engine._refresh_software_deployment(self.ctx, sd, temp_url)
+        self.engine.software_config._refresh_software_deployment(
+            self.ctx, sd, temp_url)
         sc.head_object.assert_called_with(container, object_name)
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment called with signal
@@ -4047,7 +4060,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, deployment_id, {'updated_at': then})
         sd = db_api.software_deployment_get(self.ctx, deployment_id)
         self.assertEqual(then, sd.updated_at)
-        self.engine._refresh_software_deployment(self.ctx, sd, temp_url)
+        self.engine.software_config._refresh_software_deployment(
+            self.ctx, sd, temp_url)
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment has not been called again
         ssd.assert_called_once_with(self.ctx, deployment_id, {"foo": "bar"},
@@ -4057,7 +4071,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         headers['last-modified'] = last_modified_2
         sc.head_object.return_value = headers
         sc.get_object.return_value = (headers, '{"bar": "baz"}')
-        self.engine._refresh_software_deployment(self.ctx, sd, temp_url)
+        self.engine.software_config._refresh_software_deployment(
+            self.ctx, sd, temp_url)
 
         # two calls to signal_software_deployment, for then and now
         self.assertEqual(2, len(ssd.mock_calls))
@@ -4068,7 +4083,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         db_api.software_deployment_update(
             self.ctx, deployment_id, {'updated_at': now})
         sd = db_api.software_deployment_get(self.ctx, deployment_id)
-        self.engine._refresh_software_deployment(self.ctx, sd, temp_url)
+        self.engine.software_config._refresh_software_deployment(
+            self.ctx, sd, temp_url)
         self.assertEqual(2, len(ssd.mock_calls))
 
 
