@@ -1081,5 +1081,5 @@ class SoftwareDeploymentsTest(common.HeatTestCase):
     def test_validate(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeployments('test', snip, stack)
+        resg = sd.SoftwareDeployments('deploy_mysql', snip, stack)
         self.assertIsNone(resg.validate())

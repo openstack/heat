@@ -559,7 +559,8 @@ Mappings:
                                              parser.Template(empty_template))
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template),
-                             parent_resource=parent_resource)
+                             parent_resource='parent', owner_id=45)
+        stack._parent_resource = parent_resource
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stack.t, stack))
         self.assertEqual('Retain',
@@ -582,7 +583,8 @@ Mappings:
 
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template),
-                             parent_resource=parent_resource)
+                             parent_resource='parent')
+        stack._parent_resource = parent_resource
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stack.t, stack))
 
@@ -607,7 +609,8 @@ Mappings:
                                              parser.Template(empty_template))
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template),
-                             parent_resource=parent_resource)
+                             parent_resource='parent', owner_id=78)
+        stack._parent_resource = parent_resource
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
 
     def test_prevent_parameters_access(self):
@@ -1107,8 +1110,8 @@ class StackTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
                              status_reason='blarg')
 
-        stack.parent_resource = mock.Mock()
-        stack.parent_resource.stack = None
+        stack._parent_resource = mock.Mock()
+        stack._parent_resource.stack = None
         self.assertEqual(stack, stack.root_stack)
 
     def test_root_stack_with_parent(self):
@@ -1118,8 +1121,8 @@ class StackTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
                              status_reason='blarg')
 
-        stack.parent_resource = mock.Mock()
-        stack.parent_resource.stack.root_stack = 'test value'
+        stack._parent_resource = mock.Mock()
+        stack._parent_resource.stack.root_stack = 'test value'
         self.assertEqual('test value', stack.root_stack)
 
     def test_load_parent_resource(self):

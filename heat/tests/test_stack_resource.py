@@ -248,7 +248,7 @@ class StackResourceTest(common.HeatTestCase):
             env='environment',
             timeout_mins=None,
             disable_rollback=True,
-            parent_resource=parent_resource,
+            parent_resource=parent_resource.name,
             owner_id=self.parent_stack.id,
             user_creds_id=self.parent_stack.user_creds_id,
             stack_user_project_id=self.parent_stack.stack_user_project_id,
@@ -288,7 +288,7 @@ class StackResourceTest(common.HeatTestCase):
             env='environment',
             timeout_mins=None,
             disable_rollback=True,
-            parent_resource=parent_resource,
+            parent_resource=parent_resource.name,
             owner_id=self.parent_stack.id,
             user_creds_id=self.parent_stack.user_creds_id,
             stack_user_project_id=self.parent_stack.stack_user_project_id,
@@ -436,10 +436,7 @@ class StackResourceTest(common.HeatTestCase):
 
     def test_update_with_template_validates(self):
         """Updating a stack with a template validates the created stack."""
-        create_result = self.parent_resource.create_with_template(
-            self.simple_template, {})
-        while not create_result.step():
-            pass
+        self.parent_resource._nested = mock.MagicMock()
 
         template = self.simple_template.copy()
         template['Parameters']['WebServer'] = {'Type': 'String'}
@@ -454,10 +451,11 @@ class StackResourceTest(common.HeatTestCase):
         self.stack = self.parent_resource.nested()
 
         self.parent_resource._nested = None
+        self.parent_resource.resource_id = 319
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource,
+                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=False).AndReturn('s')
         self.m.ReplayAll()
@@ -475,7 +473,7 @@ class StackResourceTest(common.HeatTestCase):
         stack = parser.Stack.load(
             self.parent_resource.context,
             self.parent_resource.resource_id,
-            parent_resource=self.parent_resource,
+            parent_resource=self.parent_resource.name,
             show_deleted=False)
         stack.state_set(parser.Stack.CREATE, parser.Stack.FAILED, "foo")
         self.assertEqual(expected_state, self.parent_resource.nested().state)
@@ -506,7 +504,7 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource,
+                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=False)
         self.m.ReplayAll()
@@ -514,14 +512,18 @@ class StackResourceTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, self.parent_resource.nested)
         self.m.VerifyAll()
 
-    def test_delete_nested_ok(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.delete()
+    def test_load_nested_force_reload_none(self):
+        self.parent_resource._nested = mock.MagicMock()
+        self.parent_resource.resource_id = '90-8'
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.parent_resource.context,
+                          self.parent_resource.resource_id,
+                          parent_resource=self.parent_resource.name,
+                          show_deleted=False,
+                          force_reload=True).AndReturn(None)
         self.m.ReplayAll()
-
-        self.parent_resource.delete_nested()
+        self.assertRaises(exception.NotFound, self.parent_resource.nested,
+                          force_reload=True)
         self.m.VerifyAll()
 
     def test_delete_nested_not_found_nested_stack(self):
@@ -534,7 +536,7 @@ class StackResourceTest(common.HeatTestCase):
         parser.Stack.load(
             self.parent_resource.context,
             self.parent_resource.resource_id,
-            parent_resource=self.parent_resource,
+            parent_resource=self.parent_resource.name,
             show_deleted=False, force_reload=False
         ).AndRaise(exception.NotFound(''))
         self.m.ReplayAll()
@@ -706,8 +708,9 @@ class StackResourceAttrTest(common.HeatTestCase):
         nested.validate().AndReturn(True)
         self.m.StubOutWithMock(stack_resource.StackResource,
                                '_parse_nested_stack')
+        name = '%s-%s' % (self.parent_stack.name, self.parent_resource.name)
         stack_resource.StackResource._parse_nested_stack(
-            self.parent_stack.name, 'foo', {}).AndReturn(nested)
+            name, 'foo', {}).AndReturn(nested)
 
         self.m.ReplayAll()
         self.parent_resource.validate_nested_stack()

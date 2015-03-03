@@ -57,8 +57,9 @@ class StackResource(resource.Resource):
 
     def validate_nested_stack(self):
         try:
+            name = "%s-%s" % (self.stack.name, self.name)
             nested_stack = self._parse_nested_stack(
-                self.stack.name,
+                name,
                 self.child_template(),
                 self.child_params())
             nested_stack.strict_validate = False
@@ -95,7 +96,7 @@ class StackResource(resource.Resource):
         if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
                                              self.resource_id,
-                                             parent_resource=self,
+                                             parent_resource=self.name,
                                              show_deleted=show_deleted,
                                              force_reload=force_reload)
 
@@ -191,7 +192,7 @@ class StackResource(resource.Resource):
                               env=child_env,
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
-                              parent_resource=self,
+                              parent_resource=self.name,
                               owner_id=self.stack.id,
                               user_creds_id=self.stack.user_creds_id,
                               stack_user_project_id=stack_user_project_id,
