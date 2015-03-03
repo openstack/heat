@@ -18,6 +18,7 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.common.i18n import _
 from heat.common import identifier
+from heat.common import param_utils
 from heat.common import serializers
 from heat.common import wsgi
 from heat.rpc import api as rpc_api
@@ -116,6 +117,11 @@ class EventController(object):
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
         if not filter_params:
             filter_params = None
+
+        key = rpc_api.PARAM_LIMIT
+        if key in params:
+            limit = param_utils.extract_int(key, params[key], allow_zero=True)
+            params[key] = limit
 
         if resource_name is None:
             events = self._event_list(req, identity,
