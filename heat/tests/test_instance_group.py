@@ -26,6 +26,7 @@ from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
+from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -312,3 +313,63 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         lb.handle_update.assert_called_once_with(
             mock.ANY, expected,
             {'Instances': ['aaaabbbbcccc']})
+
+
+class ReplaceTest(common.HeatTestCase):
+    scenarios = [
+        ('1', dict(min_in_service=0, batch_size=1, updates=2)),
+        ('2', dict(min_in_service=0, batch_size=2, updates=1)),
+        ('3', dict(min_in_service=3, batch_size=1, updates=3)),
+        ('4', dict(min_in_service=3, batch_size=2, updates=2))]
+
+    def setUp(self):
+        super(ReplaceTest, self).setUp()
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_resource.ResourceWithPropsAndAttrs)
+        t = template_format.parse(inline_templates.as_template)
+        stack = utils.parse_stack(t, params=inline_templates.as_params)
+        lc = self.create_launch_config(t, stack)
+        lcid = lc.FnGetRefId()
+        self.defn = rsrc_defn.ResourceDefinition(
+            'asg', 'OS::Heat::InstanceGroup',
+            {'Size': 2, 'AvailabilityZones': ['zoneb'],
+             'LaunchConfigurationName': lcid})
+        self.group = instgrp.InstanceGroup('asg', self.defn, stack)
+
+        self.group._lb_reload = mock.Mock()
+        self.group.update_with_template = mock.Mock()
+        self.group.check_update_complete = mock.Mock()
+        self.group._nested = self.get_fake_nested_stack()
+
+    def create_launch_config(self, t, stack):
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        rsrc = stack['LaunchConfig']
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        return rsrc
+
+    def get_fake_nested_stack(self):
+        nested_t = '''
+        heat_template_version: 2013-05-23
+        description: AutoScaling Test
+        resources:
+          one:
+            type: ResourceWithPropsAndAttrs
+            properties:
+              Foo: hello
+          two:
+            type: ResourceWithPropsAndAttrs
+            properties:
+              Foo: fee
+        '''
+        return utils.parse_stack(template_format.parse(nested_t))
+
+    def test_rolling_updates(self):
+        self.group._replace(self.min_in_service, self.batch_size, 0)
+        self.assertEqual(self.updates,
+                         len(self.group.update_with_template.call_args_list))
+        self.assertEqual(self.updates + 1,
+                         len(self.group._lb_reload.call_args_list))

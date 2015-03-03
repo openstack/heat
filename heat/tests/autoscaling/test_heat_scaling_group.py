@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 import mock
 from oslo_config import cfg
 import six
@@ -17,6 +19,7 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
+from heat.engine import function
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.tests.autoscaling import inline_templates
@@ -346,3 +349,161 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         self.assertEqual(output[1], self.group.FnGetAtt('resource.1.Bar'))
         self.assertRaises(exception.InvalidTemplateAttribute,
                           self.group.FnGetAtt, 'resource.2')
+
+
+def asg_tmpl_with_bad_updt_policy():
+    t = template_format.parse(inline_templates.as_heat_template)
+    agp = t['resources']['my-group']['properties']
+    agp['rolling_updates'] = {"foo": {}}
+    return json.dumps(t)
+
+
+def asg_tmpl_with_default_updt_policy():
+    t = template_format.parse(inline_templates.as_heat_template)
+    agp = t['resources']['my-group']['properties']
+    agp['rolling_updates'] = {}
+    return json.dumps(t)
+
+
+def asg_tmpl_with_updt_policy(props=None):
+    t = template_format.parse(inline_templates.as_heat_template)
+    agp = t['resources']['my-group']['properties']
+    agp['rolling_updates'] = {
+        "min_in_service": 1,
+        "max_batch_size": 2,
+        "pause_time": 1
+    }
+    if props is not None:
+        agp.update(props)
+    return json.dumps(t)
+
+
+class RollingUpdatePolicyTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyTest, self).setUp()
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_resource.ResourceWithPropsAndAttrs)
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def test_parse_without_update_policy(self):
+        tmpl = template_format.parse(inline_templates.as_heat_template)
+        stack = utils.parse_stack(tmpl)
+        stack.validate()
+        grp = stack['my-group']
+        self.assertFalse(grp.properties['rolling_updates'])
+
+    def test_parse_with_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_updt_policy())
+        stack = utils.parse_stack(tmpl)
+        stack.validate()
+        tmpl_grp = tmpl['resources']['my-group']
+        tmpl_policy = tmpl_grp['properties']['rolling_updates']
+        tmpl_batch_sz = int(tmpl_policy['max_batch_size'])
+        policy = stack['my-group'].properties['rolling_updates']
+        self.assertTrue(policy)
+        self.assertTrue(len(policy) == 3)
+        self.assertEqual(1, int(policy['min_in_service']))
+        self.assertEqual(tmpl_batch_sz, int(policy['max_batch_size']))
+        self.assertEqual(1, policy['pause_time'])
+
+    def test_parse_with_default_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
+        stack = utils.parse_stack(tmpl)
+        stack.validate()
+        policy = stack['my-group'].properties['rolling_updates']
+        self.assertTrue(policy)
+        self.assertEqual(3, len(policy))
+        self.assertEqual(0, int(policy['min_in_service']))
+        self.assertEqual(1, int(policy['max_batch_size']))
+        self.assertEqual(0, policy['pause_time'])
+
+    def test_parse_with_bad_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy())
+        stack = utils.parse_stack(tmpl)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("foo", six.text_type(error))
+
+    def test_parse_with_bad_pausetime_in_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
+        group = tmpl['resources']['my-group']
+        policy = group['properties']['rolling_updates']
+        policy['pause_time'] = 'a-string'
+        stack = utils.parse_stack(tmpl)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("could not convert string to float",
+                      six.text_type(error))
+
+
+class RollingUpdatePolicyDiffTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyDiffTest, self).setUp()
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_resource.ResourceWithPropsAndAttrs)
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def validate_update_policy_diff(self, current, updated):
+        # load current stack
+        current_tmpl = template_format.parse(current)
+        current_stack = utils.parse_stack(current_tmpl)
+
+        # get the json snippet for the current InstanceGroup resource
+        current_grp = current_stack['my-group']
+        current_snippets = dict((n, r.parsed_template())
+                                for n, r in current_stack.items())
+        current_grp_json = current_snippets[current_grp.name]
+
+        # load the updated stack
+        updated_tmpl = template_format.parse(updated)
+        updated_stack = utils.parse_stack(updated_tmpl)
+
+        # get the updated json snippet for the InstanceGroup resource in the
+        # context of the current stack
+        updated_grp = updated_stack['my-group']
+        updated_grp_json = function.resolve(updated_grp.t)
+
+        # identify the template difference
+        tmpl_diff = updated_grp.update_template_diff(
+            updated_grp_json, current_grp_json)
+        updated_policy = (updated_grp.properties['rolling_updates']
+                          if 'rolling_updates' in updated_grp.properties.data
+                          else None)
+        self.assertEqual(updated_policy,
+                         tmpl_diff['Properties'].get('rolling_updates'))
+
+        # test application of the new update policy in handle_update
+        update_snippet = rsrc_defn.ResourceDefinition(
+            current_grp.name,
+            current_grp.type(),
+            properties=updated_grp.t['Properties'])
+        current_grp._try_rolling_update = mock.MagicMock()
+        current_grp.adjust = mock.MagicMock()
+        current_grp.handle_update(update_snippet, tmpl_diff, None)
+        if updated_policy is None:
+            self.assertIsNone(
+                current_grp.properties.data.get('rolling_updates'))
+        else:
+            self.assertEqual(updated_policy,
+                             current_grp.properties.data['rolling_updates'])
+
+    def test_update_policy_added(self):
+        self.validate_update_policy_diff(inline_templates.as_heat_template,
+                                         asg_tmpl_with_updt_policy())
+
+    def test_update_policy_updated(self):
+        extra_props = {'rolling_updates': {
+            'min_in_service': 2,
+            'max_batch_size': 4,
+            'pause_time': 30}}
+        self.validate_update_policy_diff(
+            asg_tmpl_with_updt_policy(),
+            asg_tmpl_with_updt_policy(props=extra_props))
+
+    def test_update_policy_removed(self):
+        self.validate_update_policy_diff(asg_tmpl_with_updt_policy(),
+                                         inline_templates.as_heat_template)

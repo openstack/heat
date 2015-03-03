@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 import mock
 from oslo_config import cfg
 import six
@@ -19,12 +21,13 @@ from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources.aws import instance
+from heat.engine import function
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
 from heat.tests import utils
+from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 as_template = inline_templates.as_template
@@ -375,9 +378,6 @@ class TestGroupCrud(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
         self.stub_keystoneclient()
-        self.stub_ImageConstraint_validate()
-        self.stub_FlavorConstraint_validate()
-        self.stub_SnapshotConstraint_validate()
 
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -392,31 +392,6 @@ class TestGroupCrud(common.HeatTestCase):
 
         self.group.child_template.assert_called_once_with()
         self.group.create_with_template.assert_called_once_with('{}')
-
-    def test_scaling_group_create_error(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=inline_templates.as_params)
-
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        instance.Instance.handle_create().AndRaise(Exception)
-
-        self.m.ReplayAll()
-
-        conf = stack['LaunchConfig']
-        self.assertIsNone(conf.validate())
-        scheduler.TaskRunner(conf.create)()
-        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
-
-        rsrc = stack['WebServerGroup']
-        self.assertIsNone(rsrc.validate())
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(rsrc.create))
-        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-
-        self.assertEqual([], grouputils.get_members(rsrc))
-
-        self.m.VerifyAll()
 
     def test_handle_update_desired_cap(self):
         self.group._try_rolling_update = mock.Mock(return_value=None)
@@ -453,6 +428,10 @@ class TestGroupCrud(common.HeatTestCase):
         self.group._try_rolling_update.assert_called_once_with(props)
 
     def test_conf_properties_vpc_zone(self):
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['VPCZoneIdentifier'] = ['xxxx']
@@ -485,3 +464,169 @@ class TestGroupCrud(common.HeatTestCase):
         self.group.handle_update(new_defn, None, None)
         self.group.adjust.assert_called_once_with(
             2, adjustment_type='ExactCapacity')
+
+
+def asg_tmpl_with_bad_updt_policy():
+    t = template_format.parse(inline_templates.as_template)
+    ag = t['Resources']['WebServerGroup']
+    ag["UpdatePolicy"] = {"foo": {}}
+    return json.dumps(t)
+
+
+def asg_tmpl_with_default_updt_policy():
+    t = template_format.parse(inline_templates.as_template)
+    ag = t['Resources']['WebServerGroup']
+    ag["UpdatePolicy"] = {"AutoScalingRollingUpdate": {}}
+    return json.dumps(t)
+
+
+def asg_tmpl_with_updt_policy():
+    t = template_format.parse(inline_templates.as_template)
+    ag = t['Resources']['WebServerGroup']
+    ag["UpdatePolicy"] = {"AutoScalingRollingUpdate": {
+        "MinInstancesInService": "1",
+        "MaxBatchSize": "2",
+        "PauseTime": "PT1S"
+    }}
+    return json.dumps(t)
+
+
+class RollingUpdatePolicyTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyTest, self).setUp()
+        self.fc = fakes_v1_1.FakeClient()
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
+        self.stub_ImageConstraint_validate()
+        self.stub_FlavorConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def test_parse_without_update_policy(self):
+        tmpl = template_format.parse(inline_templates.as_template)
+        stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
+
+        stack.validate()
+        grp = stack['WebServerGroup']
+        self.assertFalse(grp.update_policy['AutoScalingRollingUpdate'])
+
+    def test_parse_with_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_updt_policy())
+        stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
+
+        stack.validate()
+        tmpl_grp = tmpl['Resources']['WebServerGroup']
+        tmpl_policy = tmpl_grp['UpdatePolicy']['AutoScalingRollingUpdate']
+        tmpl_batch_sz = int(tmpl_policy['MaxBatchSize'])
+        grp = stack['WebServerGroup']
+        self.assertTrue(grp.update_policy)
+        self.assertEqual(1, len(grp.update_policy))
+        self.assertIn('AutoScalingRollingUpdate', grp.update_policy)
+        policy = grp.update_policy['AutoScalingRollingUpdate']
+        self.assertTrue(policy and len(policy) > 0)
+        self.assertEqual(1, int(policy['MinInstancesInService']))
+        self.assertEqual(tmpl_batch_sz, int(policy['MaxBatchSize']))
+        self.assertEqual('PT1S', policy['PauseTime'])
+
+    def test_parse_with_default_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
+        stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
+
+        stack.validate()
+        grp = stack['WebServerGroup']
+        self.assertTrue(grp.update_policy)
+        self.assertEqual(1, len(grp.update_policy))
+        self.assertIn('AutoScalingRollingUpdate', grp.update_policy)
+        policy = grp.update_policy['AutoScalingRollingUpdate']
+        self.assertTrue(policy and len(policy) > 0)
+        self.assertEqual(0, int(policy['MinInstancesInService']))
+        self.assertEqual(1, int(policy['MaxBatchSize']))
+        self.assertEqual('PT0S', policy['PauseTime'])
+
+    def test_parse_with_bad_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy())
+        stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("foo", six.text_type(error))
+
+    def test_parse_with_bad_pausetime_in_update_policy(self):
+        tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
+        group = tmpl['Resources']['WebServerGroup']
+        policy = group['UpdatePolicy']['AutoScalingRollingUpdate']
+        policy['PauseTime'] = 'P1YT1H'
+        stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
+        error = self.assertRaises(
+            exception.StackValidationFailed, stack.validate)
+        self.assertIn("Only ISO 8601 duration format", six.text_type(error))
+
+
+class RollingUpdatePolicyDiffTest(common.HeatTestCase):
+    def setUp(self):
+        super(RollingUpdatePolicyDiffTest, self).setUp()
+        self.fc = fakes_v1_1.FakeClient()
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def validate_update_policy_diff(self, current, updated):
+        # load current stack
+        current_tmpl = template_format.parse(current)
+        current_stack = utils.parse_stack(current_tmpl,
+                                          params=inline_templates.as_params)
+
+        # get the json snippet for the current InstanceGroup resource
+        current_grp = current_stack['WebServerGroup']
+        current_snippets = dict((n, r.parsed_template())
+                                for n, r in current_stack.items())
+        current_grp_json = current_snippets[current_grp.name]
+
+        # load the updated stack
+        updated_tmpl = template_format.parse(updated)
+        updated_stack = utils.parse_stack(updated_tmpl,
+                                          params=inline_templates.as_params)
+
+        # get the updated json snippet for the InstanceGroup resource in the
+        # context of the current stack
+        updated_grp = updated_stack['WebServerGroup']
+        updated_grp_json = function.resolve(updated_grp.t)
+
+        # identify the template difference
+        tmpl_diff = updated_grp.update_template_diff(
+            updated_grp_json, current_grp_json)
+        updated_policy = (updated_grp.t['UpdatePolicy']
+                          if 'UpdatePolicy' in updated_grp.t else None)
+        expected = {u'UpdatePolicy': updated_policy}
+        self.assertEqual(expected, tmpl_diff)
+
+        # test application of the new update policy in handle_update
+        update_snippet = rsrc_defn.ResourceDefinition(
+            current_grp.name,
+            current_grp.type(),
+            properties=updated_grp.t['Properties'],
+            update_policy=updated_policy)
+        current_grp._try_rolling_update = mock.MagicMock()
+        current_grp.adjust = mock.MagicMock()
+        current_grp.handle_update(update_snippet, tmpl_diff, None)
+        if updated_policy is None:
+            self.assertEqual({}, current_grp.update_policy.data)
+        else:
+            self.assertEqual(updated_policy, current_grp.update_policy.data)
+
+    def test_update_policy_added(self):
+        self.validate_update_policy_diff(inline_templates.as_template,
+                                         asg_tmpl_with_updt_policy())
+
+    def test_update_policy_updated(self):
+        updt_template = json.loads(asg_tmpl_with_updt_policy())
+        grp = updt_template['Resources']['WebServerGroup']
+        policy = grp['UpdatePolicy']['AutoScalingRollingUpdate']
+        policy['MinInstancesInService'] = '2'
+        policy['MaxBatchSize'] = '4'
+        policy['PauseTime'] = 'PT1M30S'
+        self.validate_update_policy_diff(asg_tmpl_with_updt_policy(),
+                                         json.dumps(updt_template))
+
+    def test_update_policy_removed(self):
+        self.validate_update_policy_diff(asg_tmpl_with_updt_policy(),
+                                         inline_templates.as_template)
