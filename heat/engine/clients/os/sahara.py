@@ -36,10 +36,10 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
         con = self.context
         endpoint_type = self._get_client_option('sahara', 'endpoint_type')
-        endpoint = self.url_for(service_type='data_processing',
+        endpoint = self.url_for(service_type='data-processing',
                                 endpoint_type=endpoint_type)
         args = {
-            'service_type': 'data_processing',
+            'service_type': 'data-processing',
             'input_auth_token': self.auth_token,
             'auth_url': con.auth_url,
             'project_name': con.tenant,
