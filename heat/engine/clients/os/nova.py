@@ -15,7 +15,6 @@ import collections
 import email
 from email.mime import multipart
 from email.mime import text
-import json
 import logging
 import os
 import pkgutil
@@ -25,6 +24,7 @@ from novaclient import client as nc
 from novaclient import exceptions
 from novaclient import shell as novashell
 from oslo_config import cfg
+from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -259,7 +259,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                                'loguserdata.py', 'x-shellscript'))
 
         if metadata:
-            attachments.append((json.dumps(metadata),
+            attachments.append((jsonutils.dumps(metadata),
                                 'cfn-init-data', 'x-cfninitdata'))
 
         attachments.append((cfg.CONF.heat_watch_server_url,
@@ -386,7 +386,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         return dict((key, (value if isinstance(value,
                                                six.string_types)
-                           else json.dumps(value))
+                           else jsonutils.dumps(value))
                      ) for (key, value) in metadata.items())
 
     def meta_update(self, server, metadata):

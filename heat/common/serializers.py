@@ -21,10 +21,10 @@ Utility methods for serializing responses
 """
 
 import datetime
-import json
 
 from lxml import etree
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import six
 
 LOG = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class JSONResponseSerializer(object):
                 return obj.isoformat()
             return obj
 
-        response = json.dumps(data, default=sanitizer)
+        response = jsonutils.dumps(data, default=sanitizer)
         LOG.debug("JSON response : %s" % response)
         return response
 
@@ -67,7 +67,7 @@ class XMLResponseSerializer(object):
                         # Need to use json.dumps for the JSON inside XML
                         # otherwise quotes get mangled and json.loads breaks
                         try:
-                            subelement.text = json.dumps(value)
+                            subelement.text = jsonutils.dumps(value)
                         except TypeError:
                             subelement.text = str(value)
                 else:

@@ -22,7 +22,6 @@ Utility methods for working with WSGI servers
 
 import abc
 import errno
-import json
 import logging
 import os
 import signal
@@ -36,6 +35,7 @@ import eventlet.greenio
 import eventlet.wsgi
 from oslo_config import cfg
 import oslo_i18n as i18n
+from oslo_serialization import jsonutils
 from oslo_utils import importutils
 from paste import deploy
 import routes
@@ -590,7 +590,7 @@ class JSONRequestDeserializer(object):
                         ) % {'len': len(datastring),
                              'limit': cfg.CONF.max_json_body_size}
                 raise exception.RequestLimitExceeded(message=msg)
-            return json.loads(datastring)
+            return jsonutils.loads(datastring)
         except ValueError as ex:
             raise webob.exc.HTTPBadRequest(six.text_type(ex))
 

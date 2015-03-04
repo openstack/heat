@@ -13,8 +13,8 @@
 
 import collections
 import itertools
-import json
 
+from oslo_serialization import jsonutils
 import six
 
 from heat.api.aws import utils as aws_utils
@@ -238,7 +238,7 @@ class Select(function.Function):
         if isinstance(strings, six.string_types):
             # might be serialized json.
             try:
-                strings = json.loads(strings)
+                strings = jsonutils.loads(strings)
             except ValueError as json_ex:
                 fmt_data = {'fn_name': self.fn_name,
                             'err': json_ex}

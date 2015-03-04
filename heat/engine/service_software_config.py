@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
@@ -127,7 +125,7 @@ class SoftwareConfigService(service.Service):
             raise ex
         if obj:
             self.signal_software_deployment(
-                cnxt, sd.id, json.loads(obj),
+                cnxt, sd.id, jsonutils.loads(obj),
                 timeutils.strtime(last_modified))
 
         return db_api.software_deployment_get(cnxt, sd.id)

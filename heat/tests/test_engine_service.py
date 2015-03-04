@@ -12,7 +12,6 @@
 #    under the License.
 
 import datetime
-import json
 import sys
 import uuid
 
@@ -22,7 +21,7 @@ import mock
 import mox
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
-from oslo_serialization import jsonutils
+from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 import six
 
@@ -3974,7 +3973,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             {'rsrc_metadata': result_metadata})
 
         put.assert_called_once_with(
-            'http://192.168.2.2/foo/bar', jsonutils.dumps(result_metadata))
+            'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'signal_software_deployment')

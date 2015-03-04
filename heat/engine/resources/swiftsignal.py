@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import urlparse
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import six
 
@@ -262,7 +262,7 @@ class SwiftSignal(resource.Resource):
                 obj_bodies.append({})
                 continue
             try:
-                obj_bodies.append(json.loads(body))
+                obj_bodies.append(jsonutils.loads(body))
             except ValueError:
                 raise exception.Error(_("Failed to parse JSON data: %s") %
                                       body)
@@ -330,7 +330,7 @@ class SwiftSignal(resource.Resource):
 
     def _resolve_attribute(self, key):
         if key == self.DATA:
-            return six.text_type(json.dumps(self.get_data()))
+            return six.text_type(jsonutils.dumps(self.get_data()))
 
 
 def resource_mapping():

@@ -15,10 +15,10 @@
 Stack endpoint for Heat CloudFormation v1 API.
 """
 
-import json
 import socket
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
@@ -510,8 +510,8 @@ class StackController(object):
             action = e[rpc_api.EVENT_RES_ACTION]
             status = e[rpc_api.EVENT_RES_STATUS]
             result['ResourceStatus'] = '_'.join((action, status))
-            result['ResourceProperties'] = json.dumps(result[
-                                                      'ResourceProperties'])
+            result['ResourceProperties'] = jsonutils.dumps(result[
+                'ResourceProperties'])
 
             return self._id_format(result)
 

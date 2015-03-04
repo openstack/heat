@@ -11,9 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import six
 
@@ -142,7 +141,7 @@ class HeatWaitCondition(resource.Resource):
                          'key': key,
                          'res': res})
 
-            return six.text_type(json.dumps(res))
+            return six.text_type(jsonutils.dumps(res))
 
 
 def resource_mapping():

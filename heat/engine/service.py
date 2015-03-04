@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import json
 import os
 import socket
 import warnings
@@ -21,6 +20,7 @@ import eventlet
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging as messaging
+from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
 import six
@@ -1039,7 +1039,7 @@ class EngineService(service.Service):
 
         # fall back to looking for EC2 credentials in the context
         try:
-            ec2_creds = json.loads(cnxt.aws_creds).get('ec2Credentials')
+            ec2_creds = jsonutils.loads(cnxt.aws_creds).get('ec2Credentials')
         except (TypeError, AttributeError):
             ec2_creds = None
 
