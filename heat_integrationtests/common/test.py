@@ -204,7 +204,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         message = ('Resource %s failed to reach %s status within '
                    'the required time (%s s).' %
-                   (res.resource_name, status, build_timeout))
+                   (resource_name, status, build_timeout))
         raise exceptions.TimeoutException(message)
 
     def _wait_for_stack_status(self, stack_identifier, status,
@@ -243,7 +243,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         message = ('Stack %s failed to reach %s status within '
                    'the required time (%s s).' %
-                   (stack.stack_name, status, build_timeout))
+                   (stack_identifier, status, build_timeout))
         raise exceptions.TimeoutException(message)
 
     def _stack_delete(self, stack_identifier):
