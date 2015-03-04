@@ -1153,7 +1153,8 @@ class StackTest(common.HeatTestCase):
                               tenant_id='test_tenant_id',
                               use_stored_context=False,
                               username=mox.IgnoreArg(),
-                              convergence=False)
+                              convergence=False,
+                              current_traversal=None)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,

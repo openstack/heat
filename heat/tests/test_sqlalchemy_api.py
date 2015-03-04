@@ -1366,6 +1366,7 @@ class DBAPIStackTest(common.HeatTestCase):
             'status': 'failed',
             'status_reason': "update_failed",
             'timeout': '90',
+            'current_traversal': 'dummy-uuid',
         }
         db_api.stack_update(self.ctx, stack.id, values)
         stack = db_api.stack_get(self.ctx, stack.id)
@@ -1373,7 +1374,8 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertEqual('update', stack.action)
         self.assertEqual('failed', stack.status)
         self.assertEqual('update_failed', stack.status_reason)
-        self.assertEqual('90', stack.timeout)
+        self.assertEqual(90, stack.timeout)
+        self.assertEqual('dummy-uuid', stack.current_traversal)
 
         self.assertRaises(exception.NotFound, db_api.stack_update, self.ctx,
                           UUID2, values)

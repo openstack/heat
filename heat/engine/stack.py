@@ -79,7 +79,8 @@ class Stack(collections.Mapping):
                  created_time=None, updated_time=None,
                  user_creds_id=None, tenant_id=None,
                  use_stored_context=False, username=None,
-                 nested_depth=0, strict_validate=True, convergence=False):
+                 nested_depth=0, strict_validate=True, convergence=False,
+                 current_traversal=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -121,6 +122,7 @@ class Stack(collections.Mapping):
         self.nested_depth = nested_depth
         self.strict_validate = strict_validate
         self.convergence = convergence
+        self.current_traversal = current_traversal
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -322,13 +324,14 @@ class Stack(collections.Mapping):
                    updated_time=stack.updated_at,
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
                    use_stored_context=use_stored_context,
-                   username=stack.username, convergence=stack.convergence)
+                   username=stack.username, convergence=stack.convergence,
+                   current_traversal=stack.current_traversal)
 
     @profiler.trace('Stack.store', hide_args=False)
     def store(self, backup=False):
         '''
         Store the stack in the database and return its ID
-        If self.id is set, we update the existing stack
+        If self.id is set, we update the existing stack.
         '''
         s = {
             'name': self._backup_name() if backup else self.name,
@@ -347,7 +350,8 @@ class Stack(collections.Mapping):
             'user_creds_id': self.user_creds_id,
             'backup': backup,
             'nested_depth': self.nested_depth,
-            'convergence': self.convergence
+            'convergence': self.convergence,
+            'current_traversal': self.current_traversal,
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)
