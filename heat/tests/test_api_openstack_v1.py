@@ -2835,7 +2835,7 @@ class EventControllerTest(ControllerTest, common.HeatTestCase):
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'limit': 'fake limit',
+            'limit': 10,
             'sort_keys': 'fake sort keys',
             'marker': 'fake marker',
             'sort_dir': 'fake sort dir',
@@ -2857,7 +2857,7 @@ class EventControllerTest(ControllerTest, common.HeatTestCase):
         engine_args = rpc_call_args[1][1]
         self.assertEqual(6, len(engine_args))
         self.assertIn('limit', engine_args)
-        self.assertEqual('fake limit', engine_args['limit'])
+        self.assertEqual(10, engine_args['limit'])
         self.assertIn('sort_keys', engine_args)
         self.assertEqual(['fake sort keys'], engine_args['sort_keys'])
         self.assertIn('marker', engine_args)

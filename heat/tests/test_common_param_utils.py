@@ -23,3 +23,68 @@ class TestExtractBool(common.HeatTestCase):
             self.assertFalse(param_utils.extract_bool(value))
         for value in ('foo', 't', 'f', 'yes', 'no', 'y', 'n', '1', '0', None):
             self.assertRaises(ValueError, param_utils.extract_bool, value)
+
+
+class TestExtractInt(common.HeatTestCase):
+    def test_extract_int(self):
+        # None case
+        self.assertIsNone(param_utils.extract_int('num', None))
+
+        # 0 case
+        self.assertEqual(0, param_utils.extract_int('num', 0))
+        self.assertEqual(0, param_utils.extract_int('num', 0, allow_zero=True))
+        self.assertEqual(0, param_utils.extract_int('num', '0'))
+        self.assertEqual(0, param_utils.extract_int('num', '0',
+                                                    allow_zero=True))
+        self.assertRaises(ValueError,
+                          param_utils.extract_int,
+                          'num', 0, allow_zero=False)
+        self.assertRaises(ValueError,
+                          param_utils.extract_int,
+                          'num', '0', allow_zero=False)
+
+        # positive values
+        self.assertEqual(1, param_utils.extract_int('num', 1))
+        self.assertEqual(1, param_utils.extract_int('num', '1'))
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', '1.1')
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', 1.1)
+
+        # negative values
+        self.assertEqual(-1, param_utils.extract_int('num', -1,
+                                                     allow_negative=True))
+        self.assertEqual(-1, param_utils.extract_int('num', '-1',
+                                                     allow_negative=True))
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', '-1.1',
+                          allow_negative=True)
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', -1.1,
+                          allow_negative=True)
+
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', -1)
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', '-1')
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', '-1.1')
+        self.assertRaises(ValueError, param_utils.extract_int, 'num', -1.1)
+
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', -1,
+                          allow_negative=False)
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', '-1',
+                          allow_negative=False)
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', '-1.1',
+                          allow_negative=False)
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', -1.1,
+                          allow_negative=False)
+
+        # Non-int value
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', 'abc')
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', '')
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', 'true')
+        self.assertRaises(ValueError,
+                          param_utils.extract_int, 'num', True)
