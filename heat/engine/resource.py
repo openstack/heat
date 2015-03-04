@@ -419,6 +419,9 @@ class Resource(object):
             text = '%s "%s"' % (self.__class__.__name__, self.name)
         return encodeutils.safe_decode(text)
 
+    def dep_attrs(self, resource_name):
+        return self.t.dep_attrs(resource_name)
+
     def add_dependencies(self, deps):
         for dep in self.t.dependencies(self.stack):
             deps += (self, dep)

@@ -141,6 +141,16 @@ class ResourceDefinitionCore(object):
             deletion_policy=reparse_snippet(self._deletion_policy),
             update_policy=reparse_snippet(self._update_policy))
 
+    def dep_attrs(self, resource_name):
+        """
+        Return an iterator over dependent attributes for specified
+        resource_name in resources' properties and metadata fields.
+        """
+        return itertools.chain(function.dep_attrs(self._properties,
+                                                  resource_name),
+                               function.dep_attrs(self._metadata,
+                                                  resource_name))
+
     def dependencies(self, stack):
         """
         Return the Resource objects in the given stack on which this depends.
