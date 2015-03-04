@@ -15,6 +15,7 @@ import itertools
 
 from heat.api.openstack.v1 import util
 from heat.common import identifier
+from heat.common import param_utils
 from heat.common import serializers
 from heat.common import wsgi
 from heat.rpc import api as rpc_api
@@ -81,9 +82,11 @@ class ResourceController(object):
         Lists summary information for all resources
         """
 
-        # Though nested_depth is defaulted in the RPC API, this prevents empty
-        # strings from being passed, thus breaking the code in the engine.
-        nested_depth = int(req.params.get('nested_depth') or 0)
+        nested_depth = 0
+        key = rpc_api.PARAM_NESTED_DEPTH
+        if key in req.params:
+            nested_depth = param_utils.extract_int(key, req.params[key])
+
         res_list = self.rpc_client.list_stack_resources(req.context,
                                                         identity,
                                                         nested_depth)

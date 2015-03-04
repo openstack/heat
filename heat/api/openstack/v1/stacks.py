@@ -199,6 +199,11 @@ class StackController(object):
             params[rpc_api.PARAM_SHOW_NESTED] = param_utils.extract_bool(
                 params[rpc_api.PARAM_SHOW_NESTED])
             show_nested = params[rpc_api.PARAM_SHOW_NESTED]
+
+        key = rpc_api.PARAM_LIMIT
+        if key in params:
+            params[key] = param_utils.extract_int(key, params[key])
+
         # get the with_count value, if invalid, raise ValueError
         with_count = False
         if req.params.get('with_count'):
@@ -282,12 +287,17 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
+        args = data.args()
+        key = rpc_api.PARAM_TIMEOUT
+        if key in args:
+            args[key] = param_utils.extract_int(key, args[key])
+
         result = self.rpc_client.create_stack(req.context,
                                               data.stack_name(),
                                               data.template(),
                                               data.environment(),
                                               data.files(),
-                                              data.args())
+                                              args)
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -354,12 +364,17 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
+        args = data.args()
+        key = rpc_api.PARAM_TIMEOUT
+        if key in args:
+            args[key] = param_utils.extract_int(key, args[key])
+
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
                                      data.environment(),
                                      data.files(),
-                                     data.args())
+                                     args)
 
         raise exc.HTTPAccepted()
 
@@ -370,12 +385,18 @@ class StackController(object):
         Add the flag patch to the args so the engine code can distinguish
         """
         data = InstantiationData(body, patch=True)
+
+        args = data.args()
+        key = rpc_api.PARAM_TIMEOUT
+        if key in args:
+            args[key] = param_utils.extract_int(key, args[key])
+
         self.rpc_client.update_stack(req.context,
                                      identity,
                                      data.template(),
                                      data.environment(),
                                      data.files(),
-                                     data.args())
+                                     args)
 
         raise exc.HTTPAccepted()
 
