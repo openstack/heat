@@ -278,6 +278,8 @@ class Join(function.Function):
 
     def result(self):
         strings = function.resolve(self._strings)
+        if strings is None:
+            strings = []
         if (isinstance(strings, basestring) or
                 not isinstance(strings, collections.Sequence)):
             raise TypeError(_('"%s" must operate on a list') % self.fn_name)

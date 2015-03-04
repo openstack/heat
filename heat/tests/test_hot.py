@@ -301,6 +301,27 @@ class HOTemplateTest(HeatTestCase):
         err = self.assertRaises(KeyError, tmpl.__getitem__, tmpl.OUTPUTS)
         self.assertIn('Value', str(err))
 
+    def test_resource_group_list_join(self):
+        """Test list_join on a ResourceGroup's inner attributes
+
+        This should not fail during validation (i.e. before the ResourceGroup
+        can return the list of the runtime values.
+        """
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          rg:
+            type: OS::Heat::ResourceGroup
+            properties:
+              count: 3
+              resource_def:
+                type: OS::Nova::Server
+        ''')
+        tmpl = parser.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        snippet = {'Fn::Join': ["\n", {'get_attr': ['rg', 'name']}]}
+        self.assertEqual(self.resolve(snippet, tmpl, stack), '')
+
     def test_str_replace(self):
         """Test str_replace function."""
 
