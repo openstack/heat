@@ -15,7 +15,6 @@
 import email
 from email.mime import multipart
 from email.mime import text
-import json
 import os
 import pkgutil
 import string
@@ -24,6 +23,7 @@ import warnings
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -213,7 +213,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
     metadata = resource.metadata_get()
     if metadata:
-        attachments.append((json.dumps(metadata),
+        attachments.append((jsonutils.dumps(metadata),
                             'cfn-init-data', 'x-cfninitdata'))
 
     attachments.append((cfg.CONF.heat_watch_server_url,
@@ -354,7 +354,7 @@ def meta_serialize(metadata):
                   'Use self.client_plugin("nova").meta_serialize')
     return dict((key, (value if isinstance(value,
                                            six.string_types)
-                       else json.dumps(value))
+                       else jsonutils.dumps(value))
                  ) for (key, value) in metadata.items())
 
 

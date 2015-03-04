@@ -14,7 +14,6 @@
 """Keystone Client functionality for use by resources."""
 
 import collections
-import json
 import uuid
 
 import keystoneclient.exceptions as kc_exception
@@ -22,6 +21,7 @@ from keystoneclient import session
 from keystoneclient.v3 import client as kc_v3
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
 from heat.common import context
@@ -484,7 +484,7 @@ class KeystoneClientV3(object):
         # extensible-crud-manager-operations bp lands
         credentials = self.client.credentials.list()
         for cr in credentials:
-            ec2_creds = json.loads(cr.blob)
+            ec2_creds = jsonutils.loads(cr.blob)
             if ec2_creds.get('access') == access:
                 return AccessKey(id=cr.id,
                                  access=ec2_creds['access'],
@@ -514,7 +514,7 @@ class KeystoneClientV3(object):
         # then we'll have to do a brute-force lookup locally
         if credential_id:
             cred = self.client.credentials.get(credential_id)
-            ec2_creds = json.loads(cred.blob)
+            ec2_creds = jsonutils.loads(cred.blob)
             return AccessKey(id=cred.id,
                              access=ec2_creds['access'],
                              secret=ec2_creds['secret'])
@@ -529,7 +529,7 @@ class KeystoneClientV3(object):
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
         ec2_creds = self.client.credentials.create(
-            user=user_id, type='ec2', data=json.dumps(data_blob),
+            user=user_id, type='ec2', data=jsonutils.dumps(data_blob),
             project=project_id)
 
         # Return a AccessKey namedtuple for easier access to the blob contents
@@ -550,7 +550,7 @@ class KeystoneClientV3(object):
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
         creds = self.domain_admin_client.credentials.create(
-            user=user_id, type='ec2', data=json.dumps(data_blob),
+            user=user_id, type='ec2', data=jsonutils.dumps(data_blob),
             project=project_id)
         return AccessKey(id=creds.id,
                          access=data_blob['access'],

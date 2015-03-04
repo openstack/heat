@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
+from oslo_serialization import jsonutils
 from requests import exceptions
 import six
 
@@ -175,7 +174,7 @@ class TemplateResource(stack_resource.StackResource):
 
         if t_data is None:
             if self.nested() is not None:
-                t_data = json.dumps(self.nested().t.t)
+                t_data = jsonutils.dumps(self.nested().t.t)
 
         if t_data is not None:
             self.stack.t.files[self.template_name] = t_data

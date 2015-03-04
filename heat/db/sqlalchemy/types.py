@@ -11,15 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
+from oslo_serialization import jsonutils
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import mutable
 from sqlalchemy import types
 
 
-dumps = json.dumps
-loads = json.loads
+dumps = jsonutils.dumps
+loads = jsonutils.loads
 
 
 class LongText(types.TypeDecorator):

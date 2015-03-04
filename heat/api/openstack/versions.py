@@ -16,8 +16,8 @@ Controller that returns information on the heat API versions
 """
 
 import httplib
-import json
 
+from oslo_serialization import jsonutils
 import webob.dec
 
 
@@ -44,7 +44,7 @@ class Controller(object):
                     }]
             }]
 
-        body = json.dumps(dict(versions=version_objs))
+        body = jsonutils.dumps(dict(versions=version_objs))
 
         response = webob.Response(request=req,
                                   status=httplib.MULTIPLE_CHOICES,

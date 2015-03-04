@@ -13,8 +13,8 @@
 
 import collections
 import itertools
-import json
 
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import strutils
 import six
@@ -405,9 +405,10 @@ class JsonParam(Parameter):
         try:
             val = value
             if not isinstance(val, six.string_types):
-                val = json.dumps(val)
+                # turn off oslo_serialization's clever to_primitive()
+                val = jsonutils.dumps(val, default=None)
             if val:
-                return json.loads(val)
+                return jsonutils.loads(val)
         except (ValueError, TypeError) as err:
             message = _('Value must be valid JSON: %s') % err
             raise ValueError(message)
@@ -431,7 +432,7 @@ class JsonParam(Parameter):
     def __str__(self):
         if self.hidden():
             return super(JsonParam, self).__str__()
-        return encodeutils.safe_decode(json.dumps(self.value()))
+        return encodeutils.safe_decode(jsonutils.dumps(self.value()))
 
     def _validate(self, val, context):
         val = self.parse(val)

@@ -12,10 +12,10 @@
 #    under the License.
 
 import itertools
-import json
 import re
 
 from oslo_config import cfg
+from oslo_serialization import jsonutils
 import six
 import yaml
 
@@ -50,7 +50,7 @@ yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
 
 def simple_parse(tmpl_str):
     try:
-        tpl = json.loads(tmpl_str)
+        tpl = jsonutils.loads(tmpl_str)
     except ValueError:
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)

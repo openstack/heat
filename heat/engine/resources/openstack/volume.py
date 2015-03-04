@@ -11,9 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import six
 
 from heat.common import exception
@@ -213,7 +212,7 @@ class CinderVolume(aws_vol.Volume):
         cinder = self.client()
         vol = cinder.volumes.get(self.resource_id)
         if name == self.METADATA_ATTR:
-            return six.text_type(json.dumps(vol.metadata))
+            return six.text_type(jsonutils.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
         if cinder.volume_api_version >= 2:
