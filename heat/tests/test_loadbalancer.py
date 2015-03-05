@@ -19,7 +19,7 @@ from oslo_config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources import loadbalancer as lb
+from heat.engine.resources.aws.lb import loadbalancer as lb
 from heat.engine import rsrc_defn
 from heat.tests import common
 from heat.tests import utils
