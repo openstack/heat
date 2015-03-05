@@ -569,6 +569,10 @@ backend servers
 
             self.nested()['LB_instance'].metadata_set(md)
 
+    def check_update_complete(self, updater):
+        """Because we are not calling update_with_template, return True."""
+        return True
+
     def handle_delete(self):
         return self.delete_nested()
 

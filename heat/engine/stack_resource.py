@@ -285,11 +285,9 @@ class StackResource(resource.Resource):
         return updater
 
     def check_update_complete(self, updater):
-        if updater is None:
-            return True
-
-        if not updater.step():
-            return False
+        if updater is not None:
+            if not updater.step():
+                return False
 
         nested_stack = self.nested()
         if nested_stack.state != (nested_stack.UPDATE,
