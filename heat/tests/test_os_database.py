@@ -80,9 +80,6 @@ class FakeDBInstance(object):
         self.resource_id = 12345
         self.status = 'ACTIVE'
 
-    def get(self):
-        pass
-
     def delete(self):
         pass
 
