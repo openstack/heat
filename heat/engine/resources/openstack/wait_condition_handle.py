@@ -16,7 +16,7 @@ import uuid
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import resource
-from heat.engine.resources.aws import wait_condition_handle as aws_wch
+from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import support
 
