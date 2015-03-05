@@ -319,7 +319,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
 
         # setup stack from the initial template
         files = {'provider.yaml': self.instance_template}
-        size = 10
+        size = 5
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': size,
                               'image': self.conf.image_ref,
@@ -396,7 +396,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         config['Properties']['ImageId'] = self.conf.minimal_image_ref
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=10,
+                                   num_updates_expected_on_updt=5,
                                    num_creates_expected_on_updt=0,
                                    num_deletes_expected_on_updt=0,
                                    update_replace=True)
@@ -409,15 +409,15 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         updt_template = self.ig_tmpl_with_updt_policy()
         grp = updt_template['Resources']['JobServerGroup']
         policy = grp['UpdatePolicy']['RollingUpdate']
-        policy['MinInstancesInService'] = '8'
+        policy['MinInstancesInService'] = '4'
         policy['MaxBatchSize'] = '4'
         config = updt_template['Resources']['JobServerConfig']
         config['Properties']['ImageId'] = self.conf.minimal_image_ref
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=8,
-                                   num_creates_expected_on_updt=2,
-                                   num_deletes_expected_on_updt=2,
+                                   num_updates_expected_on_updt=2,
+                                   num_creates_expected_on_updt=3,
+                                   num_deletes_expected_on_updt=3,
                                    update_replace=True)
 
     def test_instance_group_update_replace_huge_batch_size(self):
@@ -433,7 +433,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         config['Properties']['ImageId'] = self.conf.minimal_image_ref
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=10,
+                                   num_updates_expected_on_updt=5,
                                    num_creates_expected_on_updt=0,
                                    num_deletes_expected_on_updt=0,
                                    update_replace=True)
@@ -446,15 +446,15 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         group = updt_template['Resources']['JobServerGroup']
         policy = group['UpdatePolicy']['RollingUpdate']
         policy['MinInstancesInService'] = '20'
-        policy['MaxBatchSize'] = '1'
+        policy['MaxBatchSize'] = '2'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
         config['Properties']['ImageId'] = self.conf.minimal_image_ref
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=9,
-                                   num_creates_expected_on_updt=1,
-                                   num_deletes_expected_on_updt=1,
+                                   num_updates_expected_on_updt=3,
+                                   num_creates_expected_on_updt=2,
+                                   num_deletes_expected_on_updt=2,
                                    update_replace=True)
 
     def test_instance_group_update_no_replace(self):
@@ -473,7 +473,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         config['Properties']['InstanceType'] = 'm1.tiny'
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=10,
+                                   num_updates_expected_on_updt=5,
                                    num_creates_expected_on_updt=0,
                                    num_deletes_expected_on_updt=0,
                                    update_replace=False)
@@ -487,14 +487,14 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         updt_template = self.ig_tmpl_with_updt_policy()
         group = updt_template['Resources']['JobServerGroup']
         policy = group['UpdatePolicy']['RollingUpdate']
-        policy['MinInstancesInService'] = '8'
+        policy['MinInstancesInService'] = '4'
         policy['MaxBatchSize'] = '4'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
         config['Properties']['InstanceType'] = 'm1.tiny'
 
         self.update_instance_group(updt_template,
-                                   num_updates_expected_on_updt=8,
-                                   num_creates_expected_on_updt=2,
-                                   num_deletes_expected_on_updt=2,
+                                   num_updates_expected_on_updt=2,
+                                   num_creates_expected_on_updt=3,
+                                   num_deletes_expected_on_updt=3,
                                    update_replace=False)
