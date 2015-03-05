@@ -22,7 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
 from heat.engine import parser
-from heat.engine.resources import eip
+from heat.engine.resources.aws.ec2 import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common

@@ -21,7 +21,7 @@ from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.aws import volume as aws_vol
+from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import volume_tasks as vol_task

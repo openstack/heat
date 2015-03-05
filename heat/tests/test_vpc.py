@@ -16,7 +16,7 @@ import uuid
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
-from heat.engine.resources import subnet as sn
+from heat.engine.resources.aws.ec2 import subnet as sn
 from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common

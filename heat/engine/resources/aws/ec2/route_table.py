@@ -14,8 +14,8 @@
 from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources.aws.ec2 import vpc
 from heat.engine.resources.neutron import neutron
-from heat.engine.resources import vpc
 from heat.engine import support
 
 
