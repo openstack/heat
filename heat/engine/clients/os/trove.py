@@ -15,6 +15,7 @@ from troveclient import client as tc
 from troveclient.openstack.common.apiclient import exceptions
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 
 
@@ -44,6 +45,38 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         client.client.management_url = management_url
 
         return client
+
+    def validate_datastore(self, datastore_type, datastore_version,
+                           ds_type_key, ds_version_key):
+        if datastore_type:
+            # get current active versions
+            allowed_versions = self.client().datastore_versions.list(
+                datastore_type)
+            allowed_version_names = [v.name for v in allowed_versions]
+            if datastore_version:
+                if datastore_version not in allowed_version_names:
+                    msg = _("Datastore version %(dsversion)s "
+                            "for datastore type %(dstype)s is not valid. "
+                            "Allowed versions are %(allowed)s.") % {
+                                'dstype': datastore_type,
+                                'dsversion': datastore_version,
+                                'allowed': ', '.join(allowed_version_names)}
+                    raise exception.StackValidationFailed(message=msg)
+            else:
+                if len(allowed_versions) > 1:
+                    msg = _("Multiple active datastore versions exist for "
+                            "datastore type %(dstype)s. "
+                            "Explicit datastore version must be provided. "
+                            "Allowed versions are %(allowed)s.") % {
+                                'dstype': datastore_type,
+                                'allowed': ', '.join(allowed_version_names)}
+                    raise exception.StackValidationFailed(message=msg)
+        else:
+            if datastore_version:
+                msg = _("Not allowed - %(dsver)s without %(dstype)s.") % {
+                    'dsver': ds_version_key,
+                    'dstype': ds_type_key}
+                raise exception.StackValidationFailed(message=msg)
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)
