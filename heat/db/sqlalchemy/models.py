@@ -141,7 +141,14 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('raw_template.id'),
         nullable=False)
-    raw_template = relationship(RawTemplate, backref=backref('stack'))
+    raw_template = relationship(RawTemplate, backref=backref('stack'),
+                                foreign_keys=[raw_template_id])
+    prev_raw_template_id = sqlalchemy.Column(
+        'prev_raw_template_id',
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey('raw_template.id'))
+    prev_raw_template = relationship(RawTemplate,
+                                     foreign_keys=[prev_raw_template_id])
     username = sqlalchemy.Column(sqlalchemy.String(256))
     tenant = sqlalchemy.Column(sqlalchemy.String(256))
     parameters = sqlalchemy.Column('parameters', types.Json)
@@ -158,6 +165,9 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     convergence = sqlalchemy.Column('convergence', sqlalchemy.Boolean)
     tags = relationship(StackTag, cascade="all,delete",
                         backref=backref('stack'))
+    current_traversal = sqlalchemy.Column('current_traversal',
+                                          sqlalchemy.String(36))
+    current_deps = sqlalchemy.Column('current_deps', types.Json)
 
     # Override timestamp column to store the correct value: it should be the
     # time the create/update call was issued, not the time the DB entry is

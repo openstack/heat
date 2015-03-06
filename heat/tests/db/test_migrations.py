@@ -403,6 +403,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
     def _check_052(self, engine, data):
         self.assertColumnExists(engine, 'stack', 'convergence')
 
+    def _check_055(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'prev_raw_template_id')
+        self.assertColumnExists(engine, 'stack', 'current_traversal')
+        self.assertColumnExists(engine, 'stack', 'current_deps')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

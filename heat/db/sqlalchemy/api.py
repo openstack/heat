@@ -416,14 +416,21 @@ def stack_create(context, values):
 def stack_update(context, stack_id, values):
     stack = stack_get(context, stack_id)
 
-    if not stack:
+    if stack is None:
         raise exception.NotFound(_('Attempt to update a stack with id: '
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
 
-    stack.update(values)
-    stack.save(_session(context))
+    session = _session(context)
+    rows_updated = (session.query(models.Stack)
+                    .filter(models.Stack.id == stack.id)
+                    .filter(models.Stack.current_traversal
+                            == stack.current_traversal)
+                    .update(values, synchronize_session=False))
+    session.expire_all()
+
+    return (rows_updated is not None and rows_updated > 0)
 
 
 def stack_delete(context, stack_id):
