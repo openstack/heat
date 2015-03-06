@@ -18,7 +18,7 @@ import six
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import nova
 from heat.engine.resources.aws.ec2 import volume as aws_vol
-from heat.engine.resources.openstack import volume as os_vol
+from heat.engine.resources.openstack.cinder import volume as os_vol
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests.v1_1 import fakes as fakes_v1_1
