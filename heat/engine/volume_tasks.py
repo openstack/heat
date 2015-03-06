@@ -49,7 +49,7 @@ class VolumeExtendTask(object):
             if self.clients.client_plugin('cinder').is_client_exception(ex):
                 raise exception.Error(_(
                     "Failed to extend volume %(vol)s - %(err)s") % {
-                        'vol': vol.id, 'err': str(ex)})
+                        'vol': vol.id, 'err': ex})
             else:
                 raise
 

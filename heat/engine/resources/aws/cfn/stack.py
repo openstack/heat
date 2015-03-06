@@ -61,7 +61,7 @@ class NestedStack(stack_resource.StackResource):
             raise ValueError(_("Could not fetch remote template '%(url)s': "
                              "%(exc)s") %
                              {'url': self.properties[self.TEMPLATE_URL],
-                              'exc': str(r_exc)})
+                              'exc': r_exc})
 
         return template_format.parse(template_data)
 
@@ -105,7 +105,7 @@ class NestedStack(stack_resource.StackResource):
             raise ValueError(_("Could not fetch remote template '%(url)s': "
                              "%(exc)s") %
                              {'url': self.properties[self.TEMPLATE_URL],
-                              'exc': str(r_exc)})
+                              'exc': r_exc})
 
         template = template_format.parse(template_data)
 
