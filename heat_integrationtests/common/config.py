@@ -103,6 +103,10 @@ IntegrationTestGroup = [
     cfg.BoolOpt('skip_stack_abandon_tests',
                 default=False,
                 help="Skip Stack Abandon Integration tests"),
+    cfg.IntOpt('connectivity_timeout',
+               default=120,
+               help="Timeout in seconds to wait for connectivity to "
+                    "server."),
 ]
 
 
