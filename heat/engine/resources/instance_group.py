@@ -306,7 +306,8 @@ class InstanceGroup(stack_resource.StackResource):
             msg = _('The current %s will result in stack update '
                     'timeout.') % rsrc_defn.UPDATE_POLICY
             raise ValueError(msg)
-
+        update_timeout = (self.stack.timeout_secs() - (
+            pause_sec * (batch_cnt - 1)) / batch_cnt)
         try:
             remainder = capacity
             while remainder > 0 or efft_capacity > capacity:
@@ -315,8 +316,9 @@ class InstanceGroup(stack_resource.StackResource):
                 template = self._create_template(efft_capacity, efft_bat_sz)
                 self._lb_reload(exclude=changing_instances(template))
                 updater = self.update_with_template(template)
-                updater.run_to_completion()
-                self.check_update_complete(updater)
+                checker = scheduler.TaskRunner(self._check_for_completion,
+                                               updater)
+                checker(timeout=update_timeout)
                 remainder -= efft_bat_sz
                 if ((remainder > 0 or efft_capacity > capacity) and
                         pause_sec > 0):
@@ -326,17 +328,20 @@ class InstanceGroup(stack_resource.StackResource):
         finally:
             self._lb_reload()
 
+    def _check_for_completion(self, updater):
+        while not self.check_update_complete(updater):
+            yield
+
     def resize(self, new_capacity):
-        """
-        Resize the instance group to the new capacity.
+        """Resize the instance group to the new capacity.
 
         When shrinking, the oldest instances will be removed.
         """
         new_template = self._create_template(new_capacity)
         try:
             updater = self.update_with_template(new_template)
-            updater.run_to_completion()
-            self.check_update_complete(updater)
+            checker = scheduler.TaskRunner(self._check_for_completion, updater)
+            checker(timeout=self.stack.timeout_secs())
         finally:
             # Reload the LB in any case, so it's only pointing at healthy
             # nodes.
