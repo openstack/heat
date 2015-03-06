@@ -16,7 +16,8 @@ from oslo_log import log as logging
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
-from heat.engine.resources import server
+from heat.engine.resources.openstack.nova import server
+
 
 try:
     import pyrax  # noqa

@@ -21,7 +21,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources.aws.ec2 import instance
-from heat.engine.resources import server
+from heat.engine.resources.openstack.nova import server
 from heat.engine import scheduler
 from heat.engine import service
 from heat.tests import common

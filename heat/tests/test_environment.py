@@ -23,6 +23,7 @@ from heat.common import environment_format
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine.resources.aws.ec2 import instance
+from heat.engine.resources.openstack.nova import server
 from heat.tests import common
 from heat.tests import generic_resource
 
@@ -408,7 +409,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         self.assertIsNone(g_env.get_resource_info('AWS::EC2::Instance'))
 
         # 4. make sure we haven't removed something we shouldn't have
-        self.assertEqual(resources.server.Server,
+        self.assertEqual(server.Server,
                          g_env.get_resource_info('OS::Nova::Server').value)
 
     def test_env_user_cant_disable_sys_resource(self):

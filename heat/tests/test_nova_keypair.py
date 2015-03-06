@@ -18,7 +18,7 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
-from heat.engine.resources import nova_keypair
+from heat.engine.resources.openstack.nova import nova_keypair
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
