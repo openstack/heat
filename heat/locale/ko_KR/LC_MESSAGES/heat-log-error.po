@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-24 06:03+0000\n"
-"PO-Revision-Date: 2015-02-23 21:31+0000\n"
+"POT-Creation-Date: 2015-03-07 06:04+0000\n"
+"PO-Revision-Date: 2015-02-25 19:06+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -33,11 +33,11 @@ msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 msgid "Request does not contain required MetricData"
 msgstr "요청에 필요한 MetricData 가 없음. "
 
-#: heat/common/context.py:203
+#: heat/common/context.py:202
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
-#: heat/common/exception.py:115
+#: heat/common/exception.py:114
 msgid "Exception in string format operation"
 msgstr "문자열 형식화 오퍼레이션의 예외"
 
@@ -128,17 +128,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
-#: heat/engine/environment.py:469
+#: heat/engine/environment.py:492
 #, python-format
 msgid "Failed to read %s"
 msgstr "%s를 읽지 못했습니다."
 
-#: heat/engine/environment.py:481
+#: heat/engine/environment.py:504
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "%(file_path)s를 구문 분석하는 데 실패했습니다."
 
-#: heat/engine/environment.py:485
+#: heat/engine/environment.py:508
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "%(file_path)s를 읽는데 실패했습니다. "
@@ -153,16 +153,16 @@ msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#: heat/engine/resource.py:482
+#: heat/engine/resource.py:459
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:935 heat/engine/resource.py:962
+#: heat/engine/resource.py:912 heat/engine/resource.py:939
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
 
-#: heat/engine/resource.py:1086
+#: heat/engine/resource.py:1063
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
@@ -181,27 +181,27 @@ msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않�
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/stack.py:487
+#: heat/engine/stack.py:520
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:737
+#: heat/engine/stack.py:770
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:967
+#: heat/engine/stack.py:1000
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1151
+#: heat/engine/stack.py:1184
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
-#: heat/engine/stack.py:1160
+#: heat/engine/stack.py:1193
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -216,7 +216,16 @@ msgstr ""
 msgid "Invalid cloud_backend setting in heat.conf detected  - %s"
 msgstr ""
 
-#: heat/engine/resources/eip.py:114
+#: heat/engine/resources/wait_condition.py:72
+#, python-format
+msgid "Metadata failed validation for %s"
+msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
+
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:341
+msgid "Failed sending error notification"
+msgstr ""
+
+#: heat/engine/resources/aws/ec2/eip.py:113
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in nova."
 "conf."
@@ -224,30 +233,22 @@ msgstr ""
 "기본 유동 IP pool을 구성하지 않습니다. nova.conf에서 "
 "'default_floating_pool'을 설정합니다."
 
-#: heat/engine/resources/eip.py:328 heat/engine/resources/eip.py:351
+#: heat/engine/resources/aws/ec2/eip.py:327
+#: heat/engine/resources/aws/ec2/eip.py:350
 msgid "Port not specified."
 msgstr "Port가 정의되지 않았습니다."
 
-#: heat/engine/resources/nova_floatingip.py:78
+#: heat/engine/resources/openstack/heat/remote_stack.py:148
+#, python-format
+msgid "exception: %s"
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:78
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
 msgstr ""
 "유동 IP 할당 할 수 없습니다. 아마 IP Pool이 기본으로 구성되지 않습니다."
-
-#: heat/engine/resources/remote_stack.py:148
-#, python-format
-msgid "exception: %s"
-msgstr ""
-
-#: heat/engine/resources/wait_condition.py:72
-#, python-format
-msgid "Metadata failed validation for %s"
-msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
-
-#: heat/engine/resources/aws/autoscaling_group.py:341
-msgid "Failed sending error notification"
-msgstr ""
 
 #: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"

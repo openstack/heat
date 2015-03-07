@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-02-24 06:03+0000\n"
-"PO-Revision-Date: 2015-02-23 21:31+0000\n"
+"POT-Creation-Date: 2015-03-07 06:04+0000\n"
+"PO-Revision-Date: 2015-02-25 19:06+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -35,13 +35,13 @@ msgstr "La requete ne doit pas contenir le paramètre %s!"
 msgid "Request does not contain required MetricData"
 msgstr "La requête ne doit pas contenir comme pré-requis MetricData"
 
-#: heat/common/context.py:203
+#: heat/common/context.py:202
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 "Échec de la connexion Keystone v3 API, pas de mot de passe de confiance ou "
 "auth_token!"
 
-#: heat/common/exception.py:115
+#: heat/common/exception.py:114
 msgid "Exception in string format operation"
 msgstr "Exception dans le formatage de la chaîne"
 
@@ -132,17 +132,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:469
+#: heat/engine/environment.py:492
 #, python-format
 msgid "Failed to read %s"
 msgstr "Echec de lecture %s"
 
-#: heat/engine/environment.py:481
+#: heat/engine/environment.py:504
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "Echec d'analyse  %(file_path)s"
 
-#: heat/engine/environment.py:485
+#: heat/engine/environment.py:508
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "Echec de lecture %(file_path)s"
@@ -157,16 +157,16 @@ msgstr "Echec de chargement %(mapping_name)s depuis %(module)s"
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "Type invalide pour  %(mapping_name)s depuis %(module)s"
 
-#: heat/engine/resource.py:482
+#: heat/engine/resource.py:459
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:935 heat/engine/resource.py:962
+#: heat/engine/resource.py:912 heat/engine/resource.py:939
 #, python-format
 msgid "DB error %s"
 msgstr "Erreur base de donné %s"
 
-#: heat/engine/resource.py:1086
+#: heat/engine/resource.py:1063
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr "signal %(name)s : %(msg)s"
@@ -185,27 +185,27 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "Impossible de récupérer la stack %s pour la tache périodique"
 
-#: heat/engine/stack.py:487
+#: heat/engine/stack.py:520
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:737
+#: heat/engine/stack.py:770
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "Action inattendu %s à mettre à jour!"
 
-#: heat/engine/stack.py:967
+#: heat/engine/stack.py:1000
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "Action inattendu %s à supprimer!"
 
-#: heat/engine/stack.py:1151
+#: heat/engine/stack.py:1184
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "Ressource %(name)s échec de suppression: %(ex)s"
 
-#: heat/engine/stack.py:1160
+#: heat/engine/stack.py:1193
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -220,34 +220,35 @@ msgstr ""
 msgid "Invalid cloud_backend setting in heat.conf detected  - %s"
 msgstr ""
 
-#: heat/engine/resources/eip.py:114
-msgid ""
-"No default floating IP pool configured. Set 'default_floating_pool' in nova."
-"conf."
-msgstr ""
-
-#: heat/engine/resources/eip.py:328 heat/engine/resources/eip.py:351
-msgid "Port not specified."
-msgstr "Port non spécifié"
-
-#: heat/engine/resources/nova_floatingip.py:78
-msgid ""
-"Could not allocate floating IP. Probably there is no default floating IP "
-"pool is configured."
-msgstr ""
-
-#: heat/engine/resources/remote_stack.py:148
-#, python-format
-msgid "exception: %s"
-msgstr ""
-
 #: heat/engine/resources/wait_condition.py:72
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "Echec de validation de metadata pour %s"
 
-#: heat/engine/resources/aws/autoscaling_group.py:341
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:341
 msgid "Failed sending error notification"
+msgstr ""
+
+#: heat/engine/resources/aws/ec2/eip.py:113
+msgid ""
+"No default floating IP pool configured. Set 'default_floating_pool' in nova."
+"conf."
+msgstr ""
+
+#: heat/engine/resources/aws/ec2/eip.py:327
+#: heat/engine/resources/aws/ec2/eip.py:350
+msgid "Port not specified."
+msgstr "Port non spécifié"
+
+#: heat/engine/resources/openstack/heat/remote_stack.py:148
+#, python-format
+msgid "exception: %s"
+msgstr ""
+
+#: heat/engine/resources/openstack/nova/nova_floatingip.py:78
+msgid ""
+"Could not allocate floating IP. Probably there is no default floating IP "
+"pool is configured."
 msgstr ""
 
 #: heat/openstack/common/loopingcall.py:95
