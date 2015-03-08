@@ -46,7 +46,8 @@ resources:
 '''
 
 
-def get_stack(stack_name, ctx, template=None, with_params=True):
+def get_stack(stack_name, ctx, template=None, with_params=True,
+              convergence=False):
     if template is None:
         t = template_format.parse(wp_template)
         if with_params:
@@ -57,7 +58,7 @@ def get_stack(stack_name, ctx, template=None, with_params=True):
     else:
         t = template_format.parse(template)
         tmpl = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, tmpl)
+    stack = parser.Stack(ctx, stack_name, tmpl, convergence=convergence)
     return stack
 
 

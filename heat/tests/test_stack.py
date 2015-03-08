@@ -293,7 +293,9 @@ class StackTest(common.HeatTestCase):
                              username=mox.IgnoreArg(),
                              convergence=False,
                              current_traversal=None,
-                             tags=mox.IgnoreArg())
+                             tags=mox.IgnoreArg(),
+                             prev_raw_template_id=None,
+                             current_deps=None)
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)

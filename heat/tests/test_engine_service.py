@@ -50,6 +50,7 @@ from heat.objects import service as service_objects
 from heat.objects import software_deployment as software_deployment_object
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock as stack_lock_object
+from heat.objects import sync_point as sync_point_object
 from heat.objects import watch_data as watch_data_object
 from heat.objects import watch_rule as watch_rule_object
 from heat.openstack.common import threadgroup
@@ -64,6 +65,89 @@ from heat.tests import utils
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 
+
+string_template_five = '''
+heat_template_version: 2013-05-23
+description: Random String templates
+
+parameters:
+    salt:
+        type: string
+        default: "quickbrownfox"
+
+resources:
+    A:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    B:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    C:
+        type: OS::Heat::RandomString
+        depends_on: [A, B]
+        properties:
+            salt: {get_param: salt}
+
+    D:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_param: salt}
+
+    E:
+        type: OS::Heat::RandomString
+        depends_on: C
+        properties:
+            salt: {get_param: salt}
+'''
+
+string_template_five_update = '''
+heat_template_version: 2013-05-23
+description: Random String templates
+
+parameters:
+    salt:
+        type: string
+        default: "quickbrownfox123"
+
+resources:
+    A:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    B:
+        type: OS::Heat::RandomString
+        properties:
+            salt: {get_param: salt}
+
+    F:
+        type: OS::Heat::RandomString
+        depends_on: [A, B]
+        properties:
+            salt: {get_param: salt}
+
+    G:
+        type: OS::Heat::RandomString
+        depends_on: F
+        properties:
+            salt: {get_param: salt}
+
+    H:
+        type: OS::Heat::RandomString
+        depends_on: F
+        properties:
+            salt: {get_param: salt}
+'''
+
+empty_template = '''
+heat_template_version: 2013-05-23
+description: Empty Template
+'''
 
 wp_template_no_default = '''
 {
@@ -150,6 +234,234 @@ resources:
   WebServer:
     type: OS::Nova::Server
 '''
+
+
+class StackConvergenceCreateUpdateTest(common.HeatTestCase):
+    def setUp(self):
+        super(StackConvergenceCreateUpdateTest, self).setUp()
+        cfg.CONF.set_override('convergence_engine', True)
+
+    def test_conv_wordpress_single_instance_stack_create(self):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                convergence=True)
+        stack.converge_stack(template=stack.t, action=stack.CREATE)
+        self.assertIsNone(stack.ext_rsrcs_db)
+        self.assertEqual('Dependencies([((1, True), None)])',
+                         repr(stack.convergence_dependencies))
+
+        stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
+        self.assertIsNotNone(stack_db.current_traversal)
+        self.assertIsNotNone(stack_db.raw_template_id)
+
+        self.assertIsNone(stack_db.prev_raw_template_id)
+
+        self.assertEqual(stack_db.convergence, True)
+        self.assertEqual({'edges': [[[1, True], None]]}, stack_db.current_deps)
+
+    def test_conv_string_five_instance_stack_create(self):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=string_template_five,
+                                convergence=True)
+        stack.converge_stack(template=stack.t, action=stack.CREATE)
+        self.assertIsNone(stack.ext_rsrcs_db)
+        self.assertEqual('Dependencies(['
+                         '((3, True), (5, True)), '
+                         '((3, True), (4, True)), '
+                         '((1, True), (3, True)), '
+                         '((2, True), (3, True))])',
+                         repr(stack.convergence_dependencies))
+
+        stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
+        self.assertIsNotNone(stack_db.current_traversal)
+        self.assertIsNotNone(stack_db.raw_template_id)
+        self.assertIsNone(stack_db.prev_raw_template_id)
+        self.assertEqual(stack_db.convergence, True)
+        self.assertEqual(sorted([[[3, True], [5, True]],    # C, A
+                                 [[3, True], [4, True]],    # C, B
+                                 [[1, True], [3, True]],    # E, C
+                                 [[2, True], [3, True]]]),  # D, C
+                         sorted(stack_db.current_deps['edges']))
+
+        # check if needed_by is stored properly
+        expected_needed_by = {'A': [3], 'B': [3],
+                              'C': [1, 2],
+                              'D': [], 'E': []}
+        rsrcs_db = resource_objects.Resource.get_all_by_stack(
+            stack_db._context, stack_db.id
+        )
+        self.assertEqual(5, len(rsrcs_db))
+        for rsrc_name, rsrc_obj in rsrcs_db.items():
+            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
+                             sorted(rsrc_obj.needed_by))
+            self.assertEqual(stack_db.raw_template_id,
+                             rsrc_obj.current_template_id)
+
+        # check if sync_points were stored
+        for entity_id in [5, 4, 3, 2, 1, stack_db.id]:
+            sync_point = sync_point_object.SyncPoint.get_by_key(
+                stack_db._context, entity_id, stack_db.current_traversal, True
+            )
+            self.assertIsNotNone(sync_point)
+            self.assertEqual(stack_db.id, sync_point.stack_id)
+
+    def test_conv_string_five_instance_stack_update(self):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=string_template_five,
+                                convergence=True)
+        # create stack
+        stack.converge_stack(template=stack.t, action=stack.CREATE)
+
+        curr_stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
+        curr_stack = parser.Stack.load(curr_stack_db._context,
+                                       stack=curr_stack_db)
+        # update stack with new template
+        t2 = template_format.parse(string_template_five_update)
+        template2 = templatem.Template(
+            t2, env=environment.Environment({'KeyName2': 'test2'}))
+        curr_stack.converge_stack(template=template2, action=stack.UPDATE)
+
+        self.assertIsNotNone(curr_stack.ext_rsrcs_db)
+        self.assertEqual('Dependencies(['
+                         '((7, True), (8, True)), '
+                         '((8, True), (5, True)), '
+                         '((8, True), (4, True)), '
+                         '((6, True), (8, True)), '
+                         '((3, False), (2, False)), '
+                         '((3, False), (1, False)), '
+                         '((5, False), (3, False)), '
+                         '((5, False), (5, True)), '
+                         '((4, False), (3, False)), '
+                         '((4, False), (4, True))])',
+                         repr(curr_stack.convergence_dependencies))
+
+        stack_db = stack_object.Stack.get_by_id(curr_stack.context,
+                                                curr_stack.id)
+        self.assertIsNotNone(stack_db.raw_template_id)
+        self.assertIsNotNone(stack_db.current_traversal)
+        self.assertIsNotNone(stack_db.prev_raw_template_id)
+        self.assertEqual(True, stack_db.convergence)
+        self.assertEqual(sorted([[[7, True], [8, True]],
+                                 [[8, True], [5, True]],
+                                 [[8, True], [4, True]],
+                                 [[6, True], [8, True]],
+                                 [[3, False], [2, False]],
+                                 [[3, False], [1, False]],
+                                 [[5, False], [3, False]],
+                                 [[5, False], [5, True]],
+                                 [[4, False], [3, False]],
+                                 [[4, False], [4, True]]]),
+                         sorted(stack_db.current_deps['edges']))
+        '''
+        To visualize:
+
+        G(7, True)       H(6, True)
+            \                 /
+              \             /           B(4, False)   A(5, False)
+                \         /               /       \  /    /
+                  \     /            /           /
+               F(8, True)       /             /     \  /
+                    /  \    /             /     C(3, False)
+                  /      \            /            /    \
+                /     /    \      /
+              /    /         \ /                /          \
+        B(4, True)      A(5, True)       D(2, False)    E(1, False)
+
+        Leaves are at the bottom
+        '''
+
+        # check if needed_by are stored properly
+        # For A & B:
+        # needed_by=C, F
+        # TODO(later): when worker is implemented test for current_template_id
+        # Also test for requires
+
+        expected_needed_by = {'A': [3, 8], 'B': [3, 8],
+                              'C': [1, 2],
+                              'D': [], 'E': [],
+                              'F': [6, 7],
+                              'G': [], 'H': []}
+        rsrcs_db = resource_objects.Resource.get_all_by_stack(
+            stack_db._context, stack_db.id
+        )
+        self.assertEqual(8, len(rsrcs_db))
+        for rsrc_name, rsrc_obj in rsrcs_db.items():
+            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
+                             sorted(rsrc_obj.needed_by))
+
+        # check if sync_points are created for forward traversal
+        # [F, H, G, A, B, Stack]
+        for entity_id in [8, 7, 6, 5, 4, stack_db.id]:
+            sync_point = sync_point_object.SyncPoint.get_by_key(
+                stack_db._context, entity_id, stack_db.current_traversal, True
+            )
+            self.assertIsNotNone(sync_point)
+            self.assertEqual(stack_db.id, sync_point.stack_id)
+
+        # check if sync_points are created for cleanup traversal
+        # [A, B, C, D, E]
+        for entity_id in [5, 4, 3, 2, 1]:
+            sync_point = sync_point_object.SyncPoint.get_by_key(
+                stack_db._context, entity_id, stack_db.current_traversal, False
+            )
+            self.assertIsNotNone(sync_point)
+            self.assertEqual(stack_db.id, sync_point.stack_id)
+
+    def test_conv_empty_template_stack_update_delete(self):
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=string_template_five,
+                                convergence=True)
+        # create stack
+        stack.converge_stack(template=stack.t, action=stack.CREATE)
+
+        # update stack with new template
+        t2 = template_format.parse(empty_template)
+        template2 = templatem.Template(
+            t2, env=environment.Environment({'KeyName2': 'test2'}))
+
+        curr_stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
+        curr_stack = parser.Stack.load(curr_stack_db._context,
+                                       stack=curr_stack_db)
+        curr_stack.converge_stack(template=template2, action=stack.DELETE)
+
+        self.assertIsNotNone(curr_stack.ext_rsrcs_db)
+        self.assertEqual('Dependencies(['
+                         '((3, False), (2, False)), '
+                         '((3, False), (1, False)), '
+                         '((5, False), (3, False)), '
+                         '((4, False), (3, False))])',
+                         repr(curr_stack.convergence_dependencies))
+
+        stack_db = stack_object.Stack.get_by_id(curr_stack.context,
+                                                curr_stack.id)
+        self.assertIsNotNone(stack_db.current_traversal)
+        self.assertIsNotNone(stack_db.prev_raw_template_id)
+        self.assertEqual(sorted([[[3, False], [2, False]],
+                                 [[3, False], [1, False]],
+                                 [[5, False], [3, False]],
+                                 [[4, False], [3, False]]]),
+                         sorted(stack_db.current_deps['edges']))
+
+        # TODO(later): when worker is implemented test for current_template_id
+        # Also test for requires
+        expected_needed_by = {'A': [3], 'B': [3],
+                              'C': [1, 2],
+                              'D': [], 'E': []}
+        rsrcs_db = resource_objects.Resource.get_all_by_stack(
+            stack_db._context, stack_db.id
+        )
+        self.assertEqual(5, len(rsrcs_db))
+        for rsrc_name, rsrc_obj in rsrcs_db.items():
+            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
+                             sorted(rsrc_obj.needed_by))
+
+        # check if sync_points are created for cleanup traversal
+        # [A, B, C, D, E, Stack]
+        for entity_id in [5, 4, 3, 2, 1, stack_db.id]:
+            sync_point = sync_point_object.SyncPoint.get_by_key(
+                stack_db._context, entity_id, stack_db.current_traversal, False
+            )
+            self.assertIsNotNone(sync_point)
+            self.assertEqual(stack_db.id, sync_point.stack_id)
 
 
 class StackCreateTest(common.HeatTestCase):
@@ -443,15 +755,6 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertRaises(dispatcher.ExpectedException,
                           self.man.create_stack,
                           self.ctx, stack_name, stack.t.t, {}, None, {})
-
-    def test_stack_create_enabled_convergence_engine(self):
-        cfg.CONF.set_override('convergence_engine', True)
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self.man.create_stack, self.ctx, 'test',
-                               tools.wp_template, {}, None, {})
-        self.assertEqual(exception.NotSupported, ex.exc_info[0])
-        self.assertEqual('Convergence engine is not supported.',
-                         six.text_type(ex.exc_info[1]))
 
     def test_stack_create_invalid_resource_name(self):
         stack_name = 'service_create_test_stack_invalid_res'
@@ -836,6 +1139,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      stack.t,
                      convergence=False,
                      current_traversal=None,
+                     prev_raw_template_id=None,
+                     current_deps=None,
                      disable_rollback=True,
                      nested_depth=0,
                      owner_id=None,
@@ -895,6 +1200,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      convergence=False, current_traversal=None,
+                     prev_raw_template_id=None, current_deps=None,
                      disable_rollback=True, nested_depth=0,
                      owner_id=None, parent_resource=None,
                      stack_user_project_id='1234',
@@ -947,6 +1253,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      convergence=False, current_traversal=None,
+                     prev_raw_template_id=None, current_deps=None,
                      disable_rollback=False, nested_depth=0,
                      owner_id=None, parent_resource=None,
                      stack_user_project_id='1234',
@@ -1056,6 +1363,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      convergence=False, current_traversal=None,
+                     prev_raw_template_id=None, current_deps=None,
                      disable_rollback=True, nested_depth=0,
                      owner_id=None, parent_resource=None,
                      stack_user_project_id='1234', strict_validate=True,
@@ -1185,6 +1493,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         parser.Stack(self.ctx, stack.name,
                      stack.t,
                      convergence=False, current_traversal=None,
+                     prev_raw_template_id=None, current_deps=None,
                      disable_rollback=True, nested_depth=0,
                      owner_id=None, parent_resource=None,
                      stack_user_project_id='1234', strict_validate=True,
@@ -1251,6 +1560,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      old_stack.t,
                      convergence=False,
                      current_traversal=None,
+                     prev_raw_template_id=None,
+                     current_deps=None,
                      disable_rollback=True,
                      nested_depth=0,
                      owner_id=None,
@@ -1315,6 +1626,116 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                                ctx, stack)
         self.assertEqual('Missing required credential: X-Auth-Key',
                          six.text_type(ex))
+
+
+class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(StackConvergenceServiceCreateUpdateTest, self).setUp()
+        cfg.CONF.set_override('convergence_engine', True)
+        self.ctx = utils.dummy_context()
+        self.patch('heat.engine.service.warnings')
+        self.man = service.EngineService('a-host', 'a-topic')
+        self.man.create_periodic_tasks()
+
+    def _stub_update_mocks(self, stack_to_load, stack_to_return):
+        self.m.StubOutWithMock(parser, 'Stack')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=stack_to_load
+                          ).AndReturn(stack_to_return)
+
+        self.m.StubOutWithMock(templatem, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+
+    def _test_stack_create_convergence(self, stack_name):
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        stack = tools.get_stack(stack_name, self.ctx,
+                                template=string_template_five,
+                                convergence=True)
+
+        self.m.StubOutWithMock(templatem, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+        self.m.StubOutWithMock(parser, 'Stack')
+
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t, owner_id=None,
+                     parent_resource=None,
+                     nested_depth=0, user_creds_id=None,
+                     stack_user_project_id=None,
+                     convergence=True).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+
+        self.m.ReplayAll()
+
+        # TODO(later): Remove exception once convergence is supported.
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.man.create_stack, self.ctx, stack_name,
+                               template, params, None, {})
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])
+        self.assertEqual('Convergence engine is not supported.',
+                         six.text_type(ex.exc_info[1]))
+        self.m.VerifyAll()
+
+    def test_stack_create_enabled_convergence_engine(self):
+        stack_name = 'service_create_test_stack'
+        self._test_stack_create_convergence(stack_name)
+
+    def test_stack_update_enabled_convergence_engine(self):
+        stack_name = 'service_update_test_stack'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    template=string_template_five,
+                                    convergence=True)
+        sid = old_stack.store()
+        s = stack_object.Stack.get_by_id(self.ctx, sid)
+
+        stack = tools.get_stack(stack_name, self.ctx,
+                                template=string_template_five_update,
+                                convergence=True)
+
+        self._stub_update_mocks(s, old_stack)
+
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t,
+                     owner_id=old_stack.owner_id,
+                     nested_depth=old_stack.nested_depth,
+                     user_creds_id=old_stack.user_creds_id,
+                     stack_user_project_id=old_stack.stack_user_project_id,
+                     timeout_mins=60,
+                     disable_rollback=True,
+                     parent_resource=None,
+                     strict_validate=True,
+                     tenant_id=old_stack.tenant_id,
+                     username=old_stack.username,
+                     convergence=old_stack.convergence,
+                     current_traversal=old_stack.current_traversal,
+                     prev_raw_template_id=old_stack.prev_raw_template_id,
+                     current_deps=old_stack.current_deps).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+
+        self.m.ReplayAll()
+
+        api_args = {'timeout_mins': 60}
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       template, params, None, api_args)
+        self.assertEqual(old_stack.convergence, True)
+        self.assertEqual(old_stack.identifier(), result)
+        self.assertIsInstance(result, dict)
+        self.assertTrue(result['stack_id'])
+        self.m.VerifyAll()
 
 
 class StackServiceAuthorizeTest(common.HeatTestCase):

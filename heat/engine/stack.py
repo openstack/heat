@@ -21,6 +21,7 @@ import warnings
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
+from oslo_utils import uuidutils
 from osprofiler import profiler
 import six
 
@@ -40,6 +41,7 @@ from heat.engine import parameter_groups as param_groups
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.engine import sync_point
 from heat.engine import template as tmpl
 from heat.engine import update
 from heat.objects import resource as resource_objects
@@ -85,7 +87,8 @@ class Stack(collections.Mapping):
                  user_creds_id=None, tenant_id=None,
                  use_stored_context=False, username=None,
                  nested_depth=0, strict_validate=True, convergence=False,
-                 current_traversal=None, tags=None):
+                 current_traversal=None, tags=None, prev_raw_template_id=None,
+                 current_deps=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -129,6 +132,8 @@ class Stack(collections.Mapping):
         self.convergence = convergence
         self.current_traversal = current_traversal
         self.tags = tags
+        self.prev_raw_template_id = prev_raw_template_id
+        self.current_deps = current_deps
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -399,7 +404,9 @@ class Stack(collections.Mapping):
                    user_creds_id=stack.user_creds_id, tenant_id=stack.tenant,
                    use_stored_context=use_stored_context,
                    username=stack.username, convergence=stack.convergence,
-                   current_traversal=stack.current_traversal, tags=tags)
+                   current_traversal=stack.current_traversal, tags=tags,
+                   prev_raw_template_id=stack.prev_raw_template_id,
+                   current_deps=stack.current_deps)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.
@@ -425,6 +432,8 @@ class Stack(collections.Mapping):
             'nested_depth': self.nested_depth,
             'convergence': self.convergence,
             'current_traversal': self.current_traversal,
+            'prev_raw_template_id': self.prev_raw_template_id,
+            'current_deps': self.current_deps
         }
         if keep_status:
             stack.update({
@@ -897,6 +906,155 @@ class Stack(collections.Mapping):
         updater = scheduler.TaskRunner(self.update_task, newstack,
                                        event=event)
         updater()
+
+    @profiler.trace('Stack.converge_stack', hide_args=False)
+    def converge_stack(self, template, action=UPDATE):
+        """
+        Updates the stack and triggers convergence for resources
+        """
+        self.prev_raw_template_id = getattr(self.t, 'id', None)
+        self.t = template
+        previous_traversal = self.current_traversal
+        self.current_traversal = uuidutils.generate_uuid()
+        self.store()
+
+        # TODO(later): lifecycle_plugin_utils.do_pre_ops
+        self.state_set(action, self.IN_PROGRESS,
+                       'Stack %s started' % action)
+
+        # delete the prev traversal sync_points
+        sync_point.delete_all(self.context, self.id, previous_traversal)
+        self._converge_create_or_update()
+
+    def _converge_create_or_update(self):
+        self._update_or_store_resources()
+        self.convergence_dependencies = self._convergence_dependencies(
+            self.ext_rsrcs_db, self.dependencies)
+        LOG.info(_LI('convergence_dependencies: %s'),
+                 self.convergence_dependencies)
+
+        # create sync_points for resources in DB
+        for rsrc_id, is_update in self.convergence_dependencies:
+            sync_point.create(self.context, rsrc_id,
+                              self.current_traversal, is_update,
+                              self.id)
+        # create sync_point entry for stack
+        sync_point.create(
+            self.context, self.id, self.current_traversal,
+            False if self.action in (self.DELETE, self.SUSPEND) else True,
+            self.id)
+
+        # Store list of edges
+        self.current_deps = {
+            'edges': [[rqr, rqd] for rqr, rqd in
+                      self.convergence_dependencies.graph().edges()]}
+        self.store()
+
+        leaves = (self.convergence_dependencies.graph(reverse=True).leaves()
+                  if self.action in (self.DELETE, self.SUSPEND)
+                  else self.convergence_dependencies.graph().leaves())
+
+        for rsrc_id, is_update in leaves:
+            LOG.info(_LI("Triggering resource %(rsrc_id)s "
+                         "for update=%(is_update)s"),
+                     {'rsrc_id': rsrc_id, 'is_update': is_update})
+        self.temp_update_requires(self.convergence_dependencies)
+
+    def _update_or_store_resources(self):
+        try:
+            ext_rsrcs_db = resource_objects.Resource.get_all_by_stack(
+                self.context, self.id)
+        except exception.NotFound:
+            self.ext_rsrcs_db = None
+        else:
+            self.ext_rsrcs_db = {res.id: res
+                                 for res_name, res in ext_rsrcs_db.items()}
+
+        def get_existing_rsrc_db(rsrc_name):
+            candidate = None
+            if self.ext_rsrcs_db:
+                for id, ext_rsrc in self.ext_rsrcs_db.items():
+                    if ext_rsrc.name != rsrc_name:
+                        continue
+                    if ext_rsrc.current_template_id == self.t.id:
+                        # Rollback where the previous resource still exists
+                        candidate = ext_rsrc
+                        break
+                    elif (ext_rsrc.current_template_id ==
+                            self.prev_raw_template_id):
+                        # Current resource is otherwise a good candidate
+                        candidate = ext_rsrc
+                        break
+            return candidate
+
+        curr_name_translated_dep = self.dependencies.translate(lambda res:
+                                                               res.name)
+        rsrcs = {}
+
+        def update_needed_by(res):
+            new_requirers = set(
+                rsrcs[rsrc_name].id for rsrc_name in
+                curr_name_translated_dep.required_by(res.name)
+            )
+            old_requirers = set(res.needed_by) if res.needed_by else set()
+            needed_by = old_requirers | new_requirers
+            res.needed_by = list(needed_by)
+
+        for rsrc in reversed(self.dependencies):
+            existing_rsrc_db = get_existing_rsrc_db(rsrc.name)
+            if existing_rsrc_db is None:
+                update_needed_by(rsrc)
+                rsrc.current_template_id = self.t.id
+                rsrc._store()
+                rsrcs[rsrc.name] = rsrc
+            else:
+                update_needed_by(existing_rsrc_db)
+                resource.Resource.set_needed_by(
+                    existing_rsrc_db, existing_rsrc_db.needed_by
+                )
+                rsrcs[existing_rsrc_db.name] = existing_rsrc_db
+
+    def _convergence_dependencies(self, existing_resources,
+                                  curr_template_dep):
+        dep = curr_template_dep.translate(lambda res: (res.id, True))
+        if existing_resources:
+            for rsrc_id, rsrc in existing_resources.items():
+                dep += (rsrc_id, False), None
+
+                for requirement in rsrc.requires:
+                    if requirement in existing_resources:
+                        dep += (requirement, False), (rsrc_id, False)
+                if rsrc.replaces in existing_resources:
+                    dep += (rsrc.replaces, False), (rsrc_id, False)
+
+                if (rsrc.id, True) in dep:
+                    dep += (rsrc_id, False), (rsrc_id, True)
+        return dep
+
+    def temp_update_requires(self, conv_deps):
+        '''updates requires column of resources'''
+        # This functions should be removed once the dependent patches
+        # are implemented.
+        if self.action in (self.CREATE, self.UPDATE):
+            requires = dict()
+            for rsrc_id, is_update in conv_deps:
+                reqs = conv_deps.requires((rsrc_id, is_update))
+                requires[rsrc_id] = list({id for id, is_update in reqs})
+
+            try:
+                rsrcs_db = resource_objects.Resource.get_all_by_stack(
+                    self.context, self.id)
+            except exception.NotFound:
+                rsrcs_db = None
+            else:
+                rsrcs_db = {res.id: res for res_name, res in rsrcs_db.items()}
+
+            if rsrcs_db:
+                for id, db_rsrc in rsrcs_db.items():
+                    if id in requires:
+                        resource.Resource.set_requires(
+                            db_rsrc, requires[id]
+                        )
 
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, event=None):

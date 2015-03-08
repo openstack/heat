@@ -53,9 +53,14 @@ class Node(object):
             self.satisfy.add(source)
         return iter(self.satisfy)
 
-    def requires(self, target):
-        '''Add a key that this node requires.'''
-        self.require.add(target)
+    def requires(self, target=None):
+        '''
+        Add a key that this node requires, and optionally add a
+        new one.
+        '''
+        if target is not None:
+            self.require.add(target)
+        return iter(self.require)
 
     def __isub__(self, target):
         '''Remove a key that this node requires.'''
@@ -153,6 +158,13 @@ class Graph(collections.defaultdict):
         text = '{%s}' % ', '.join(pairs)
         return encodeutils.safe_decode(text)
 
+    def leaves(self):
+        '''
+        Return an iterator over all of the leaf nodes in the graph.
+        '''
+        return (requirer for requirer, required in self.items()
+                if not required)
+
     @staticmethod
     def toposort(graph):
         '''
@@ -207,6 +219,15 @@ class Dependencies(object):
 
         return self._graph[last].required_by()
 
+    def requires(self, target):
+        '''
+        List the keys that require the specified node.
+        '''
+        if target not in self._graph:
+            raise KeyError
+
+        return self._graph[target].requires()
+
     def __getitem__(self, last):
         '''
         Return a partial dependency graph consisting of the specified node and
@@ -234,6 +255,18 @@ class Dependencies(object):
             edges = get_edges(last)
 
         return Dependencies(edges)
+
+    def translate(self, transform):
+        '''
+        Translate all of the nodes using a transform function.
+
+        Returns a new Dependencies object.
+        '''
+        def transform_key(key):
+            return transform(key) if key is not None else None
+
+        edges = self._graph.edges()
+        return type(self)(tuple(map(transform_key, e)) for e in edges)
 
     def __str__(self):
         '''

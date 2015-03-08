@@ -174,11 +174,11 @@ class Resource(object):
         self.created_time = None
         self.updated_time = None
         self._rpc_client = None
-        self.needed_by = None
-        self.requires = None
+        self.needed_by = []
+        self.requires = []
         self.replaces = None
         self.replaced_by = None
-        self.current_template_id = stack.t.id
+        self.current_template_id = None
 
         resource = stack.db_resource_get(name)
         if resource:
@@ -267,6 +267,20 @@ class Resource(object):
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
+
+    @classmethod
+    def set_needed_by(cls, db_rsrc, needed_by):
+        if db_rsrc:
+            db_rsrc.update_and_save(
+                {'needed_by': needed_by}
+            )
+
+    @classmethod
+    def set_requires(cls, db_rsrc, requires):
+        if db_rsrc:
+            db_rsrc.update_and_save(
+                {'requires': requires}
+            )
 
     def _break_if_required(self, action, hook):
         '''Block the resource until the hook is cleared if there is one.'''
