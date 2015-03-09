@@ -13,7 +13,7 @@
 import six
 
 from heat_integrationtests.common import exceptions
-from heat_integrationtests.common import test
+from heat_integrationtests.scenario import scenario_base
 
 CFG1_SH = '''#!/bin/sh
 echo "Writing to /tmp/$bar"
@@ -39,46 +39,17 @@ $::deploy_server_id during $::deploy_action",
 }'''
 
 
-class SoftwareConfigIntegrationTest(test.HeatIntegrationTest):
+class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(SoftwareConfigIntegrationTest, self).setUp()
         if self.conf.skip_software_config_tests:
             self.skipTest('Testing software config disabled in conf, '
                           'skipping')
-        self.client = self.orchestration_client
-        self.template_name = 'test_server_software_config.yaml'
-        self.sub_dir = 'templates'
         self.stack_name = self._stack_rand_name()
-        self.maxDiff = None
 
-    def launch_stack(self):
-        net = self._get_default_network()
-        self.parameters = {
-            'key_name': self.keypair_name,
-            'flavor': self.conf.instance_type,
-            'image': self.conf.image_ref,
-            'network': net['id']
-        }
-
-        # create the stack
-        self.template = self._load_template(__file__, self.template_name,
-                                            self.sub_dir)
-        self.stack_create(
-            stack_name=self.stack_name,
-            template=self.template,
-            parameters=self.parameters,
-            files={
-                'cfg1.sh': CFG1_SH,
-                'cfg3.pp': CFG3_PP
-            },
-            expected_status=None)
-
-        self.stack = self.client.stacks.get(self.stack_name)
-        self.stack_identifier = '%s/%s' % (self.stack_name, self.stack.id)
-
-    def check_stack(self):
-        sid = self.stack_identifier
+    def check_stack(self, sid):
+        # Check that all stack resources were created
         for res in ('cfg2a', 'cfg2b', 'cfg1', 'cfg3', 'server'):
             self._wait_for_resource_status(
                 sid, res, 'CREATE_COMPLETE')
@@ -87,14 +58,15 @@ class SoftwareConfigIntegrationTest(test.HeatIntegrationTest):
         server_id = server_resource.physical_resource_id
         server = self.compute_client.servers.get(server_id)
 
+        # Waiting for each deployment to contribute their
+        # config to resource
         try:
-            # wait for each deployment to contribute their
-            # config to resource
             for res in ('dep2b', 'dep1', 'dep3'):
                 self._wait_for_resource_status(
                     sid, res, 'CREATE_IN_PROGRESS')
 
-            server_metadata = self.client.resources.metadata(sid, 'server')
+            server_metadata = self.client.resources.metadata(
+                sid, 'server')
             deployments = dict((d['name'], d) for d in
                                server_metadata['deployments'])
 
@@ -106,11 +78,13 @@ class SoftwareConfigIntegrationTest(test.HeatIntegrationTest):
             self._log_console_output(servers=[server])
             raise e
 
+        # Check that stack was fully created
         self._wait_for_stack_status(sid, 'CREATE_COMPLETE')
 
         complete_server_metadata = self.client.resources.metadata(
             sid, 'server')
-        # ensure any previously available deployments haven't changed so
+
+        # Ensure any previously available deployments haven't changed so
         # config isn't re-triggered
         complete_deployments = dict((d['name'], d) for d in
                                     complete_server_metadata['deployments'])
@@ -153,6 +127,39 @@ class SoftwareConfigIntegrationTest(test.HeatIntegrationTest):
         self.assertNotEqual(dep1_dep.updated_time, dep1_dep.creation_time)
 
     def test_server_software_config(self):
-        self.assign_keypair()
-        self.launch_stack()
-        self.check_stack()
+        """
+        Check that passed files with scripts are executed on created server.
+
+        The alternative scenario is the following:
+            1. Create a stack and pass files with scripts.
+            2. Check that all stack resources are created successfully.
+            3. Wait for all deployments.
+            4. Check that stack was created.
+            5. Check stack outputs.
+        """
+
+        parameters = {
+            'key_name': self.keypair_name,
+            'flavor': self.conf.instance_type,
+            'image': self.conf.image_ref,
+            'network': self.net['id']
+        }
+
+        files = {
+            'cfg1.sh': CFG1_SH,
+            'cfg3.pp': CFG3_PP
+        }
+
+        # Launch stack
+        stack_id = self.launch_stack(
+            stack_name=self.stack_name,
+            template_name='test_server_software_config.yaml',
+            parameters=parameters,
+            files=files,
+            expected_status=None
+        )
+
+        self.stack_identifier = '%s/%s' % (self.stack_name, stack_id)
+
+        # Check stack
+        self.check_stack(self.stack_identifier)
