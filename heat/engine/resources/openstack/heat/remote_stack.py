@@ -192,7 +192,9 @@ class RemoteStack(resource.Resource):
         return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if self.resource_id and prop_diff:
+        # Always issue an update to the remote stack and let the individual
+        # resources in it decide if they need updating.
+        if self.resource_id:
             snippet = json_snippet.get('Properties', {})
             self.properties = properties.Properties(self.properties_schema,
                                                     snippet,

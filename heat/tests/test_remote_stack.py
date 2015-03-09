@@ -575,6 +575,24 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.assertEqual(2, len(self.heat.stacks.get.call_args_list))
 
+    def test_update_no_change(self):
+        stacks = [get_stack(stack_status='UPDATE_IN_PROGRESS'),
+                  get_stack(stack_status='UPDATE_COMPLETE')]
+
+        def side_effect(*args, **kwargs):
+            return stacks.pop(0)
+
+        rsrc = self.create_remote_stack()
+
+        props = copy.deepcopy(rsrc.parsed_template()['Properties'])
+        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                                      rsrc.type(),
+                                                      props)
+
+        self.heat.stacks.get = mock.MagicMock(side_effect=side_effect)
+        scheduler.TaskRunner(rsrc.update, update_snippet)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
     def test_stack_status_error(self):
         returns = [get_stack(stack_status='DELETE_IN_PROGRESS'),
                    get_stack(stack_status='UPDATE_COMPLETE')]
