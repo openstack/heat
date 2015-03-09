@@ -325,8 +325,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
 
     def _pre_upgrade_047(self, engine):
         raw_template = utils.get_table(engine, 'raw_template')
-        templ = [dict(id=6, template='{}', files='{}')]
-        engine.execute(raw_template.insert(), templ)
+        templ = []
+        for i in range(100, 105, 1):
+            t = dict(id=i, template='{}', files='{}')
+            engine.execute(raw_template.insert(), [t])
+            templ.append(t)
 
         user_creds = utils.get_table(engine, 'user_creds')
         user = [dict(id=7, username='steve', password='notthis',
@@ -337,18 +340,19 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         engine.execute(user_creds.insert(), user)
 
         stack = utils.get_table(engine, 'stack')
-        stack_ids = [('s9', '167aaefb-152e-505d-b13a-35d4c816390c'),
-                     ('n1', '1e9deba9-a303-5f29-84d3-c8165647c47e'),
-                     ('n2', '1e9deba9-a304-5f29-84d3-c8165647c47e'),
-                     ('n3', '1e9deba9-a305-5f29-84d3-c8165647c47e'),
-                     ('s9*', '1a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9')]
+        stack_ids = [
+            ('s9', '167aaefb-152e-505d-b13a-35d4c816390c', 0),
+            ('n1', '1e9deba9-a303-5f29-84d3-c8165647c47e', 1),
+            ('n2', '1e9deba9-a304-5f29-84d3-c8165647c47e', 2),
+            ('n3', '1e9deba9-a305-5f29-84d3-c8165647c47e', 3),
+            ('s9*', '1a4bd1ec-8b21-56cd-964a-f66cb1cfa2f9', 4)]
         data = [dict(id=ll_id, name=name,
-                     raw_template_id=templ[0]['id'],
+                     raw_template_id=templ[tmpl_id]['id'],
                      user_creds_id=user[0]['id'],
                      owner_id=None,
                      backup=False,
                      username='steve', disable_rollback=True)
-                for name, ll_id in stack_ids]
+                for name, ll_id, tmpl_id in stack_ids]
         # Make a nested tree s1->s2->s3->s4 with a s1 backup
         data[1]['owner_id'] = '167aaefb-152e-505d-b13a-35d4c816390c'
         data[2]['owner_id'] = '1e9deba9-a303-5f29-84d3-c8165647c47e'
