@@ -2314,8 +2314,8 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         self.m.VerifyAll()
 
-    def create_old_net(self, port=None, net=None, ip=None):
-        return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': None}
+    def create_old_net(self, port=None, net=None, ip=None, uuid=None):
+        return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid}
 
     def create_fake_iface(self, port, net, ip):
         class fake_interface(object):
@@ -2387,22 +2387,18 @@ class ServersTest(common.HeatTestCase):
 
         # old order 0 1 2 3 4 5
         nets = [
-            {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-             'network': None, 'fixed_ip': None},
-            {'port': None, 'network': 'gggggggg-1111-1111-1111-gggggggggggg',
-             'fixed_ip': '1.2.3.4', },
-            {'port': None, 'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
-             'fixed_ip': None},
-            {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-             'network': None, 'fixed_ip': None},
-            {'port': None, 'network': 'gggggggg-1111-1111-1111-gggggggggggg',
-             'fixed_ip': '5.6.7.8'},
-            {'port': None, 'network': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
-             'fixed_ip': None}]
+            self.create_old_net(port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+            self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
+                                ip='1.2.3.4'),
+            self.create_old_net(net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032'),
+            self.create_old_net(port='dddddddd-dddd-dddd-dddd-dddddddddddd'),
+            self.create_old_net(uuid='gggggggg-1111-1111-1111-gggggggggggg',
+                                ip='5.6.7.8'),
+            self.create_old_net(uuid='0da8adbf-a7e2-4c59-a511-96b03d2da0d7')]
         # new order 5 2 3 0 1 4
         interfaces = [
             self.create_fake_iface('ffffffff-ffff-ffff-ffff-ffffffffffff',
-                                   nets[5]['network'], '10.0.0.10'),
+                                   nets[5]['uuid'], '10.0.0.10'),
             self.create_fake_iface('cccccccc-cccc-cccc-cccc-cccccccccccc',
                                    nets[2]['network'], '10.0.0.11'),
             self.create_fake_iface(nets[3]['port'],
@@ -2414,25 +2410,33 @@ class ServersTest(common.HeatTestCase):
             self.create_fake_iface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
                                    nets[1]['network'], nets[1]['fixed_ip']),
             self.create_fake_iface('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-                                   nets[4]['network'], nets[4]['fixed_ip'])]
+                                   nets[4]['uuid'], nets[4]['fixed_ip'])]
         # all networks should get port id
         expected = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-             'network': None, 'fixed_ip': None},
+             'network': None,
+             'fixed_ip': None,
+             'uuid': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
-             'fixed_ip': '1.2.3.4'},
+             'fixed_ip': '1.2.3.4',
+             'uuid': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
-             'fixed_ip': None},
+             'fixed_ip': None,
+             'uuid': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-             'network': None, 'fixed_ip': None},
+             'network': None,
+             'fixed_ip': None,
+             'uuid': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
-             'fixed_ip': '5.6.7.8'},
+             'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'fixed_ip': '5.6.7.8',
+             'network': None},
             {'port': 'ffffffff-ffff-ffff-ffff-ffffffffffff',
-             'network': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
-             'fixed_ip': None}]
+             'network': None,
+             'fixed_ip': None,
+             'uuid': '0da8adbf-a7e2-4c59-a511-96b03d2da0d7'}]
 
         server.update_networks_matching_iface_port(nets, interfaces)
         self.assertEqual(expected, nets)

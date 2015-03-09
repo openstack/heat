@@ -765,12 +765,15 @@ class Server(stack_user.StackUser):
             for net in nets:
                 if (net.get('port') == port or
                         (net.get('fixed_ip') == ip and
-                            net.get('network') == net_id)):
+                         (net.get('network') == net_id or
+                          net.get('uuid') == net_id))):
                     return net
 
         def find_poor_net(net_id, nets):
             for net in nets:
-                if net == {'port': None, 'network': net_id, 'fixed_ip': None}:
+                if (not net.get('port') and not net.get('fixed_ip') and
+                        (net.get('network') == net_id or
+                         net.get('uuid') == net_id)):
                     return net
 
         for iface in interfaces:
