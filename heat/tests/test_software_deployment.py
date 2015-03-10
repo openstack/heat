@@ -866,7 +866,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.deployment.data = mock.Mock(
             return_value=dep_data)
 
-        self.deployment.id = str(uuid.uuid4())
+        self.deployment.id = 23
+        self.deployment.uuid = str(uuid.uuid4())
         container = self.deployment.physical_resource_name()
 
         temp_url = self.deployment._get_temp_url()
@@ -906,7 +907,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'heat.engine.clients.os.swift.SwiftClientPlugin._create')
         scc.return_value = sc
 
-        self.deployment.id = str(uuid.uuid4())
+        self.deployment.id = 23
+        self.deployment.uuid = str(uuid.uuid4())
         container = self.deployment.physical_resource_name()
         self.deployment._delete_temp_url()
         sc.delete_object.assert_called_once_with(container, object_name)

@@ -170,7 +170,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsNotNone(res.id)
         expected = '%s-%s-%s' % (self.stack.name,
                                  res.name,
-                                 short_id.get_id(res.id))
+                                 short_id.get_id(res.uuid))
         self.assertEqual(expected, res.physical_resource_name_or_FnGetRefId())
 
         # otherwise use parent method

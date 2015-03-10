@@ -163,6 +163,7 @@ class Resource(object):
         self.status = self.COMPLETE
         self.status_reason = ''
         self.id = None
+        self.uuid = None
         self._data = {}
         self._rsrc_metadata = None
         self._stored_properties_data = None
@@ -187,6 +188,7 @@ class Resource(object):
         self.status = resource.status
         self.status_reason = resource.status_reason
         self.id = resource.id
+        self.uuid = resource.uuid
         try:
             self._data = db_api.resource_data_get_all(self, resource.data)
         except exception.NotFound:
@@ -781,7 +783,7 @@ class Resource(object):
 
         name = '%s-%s-%s' % (self.stack.name,
                              self.name,
-                             short_id.get_id(self.id))
+                             short_id.get_id(self.uuid))
 
         if self.physical_resource_name_limit:
             name = self.reduce_physical_resource_name(
@@ -906,6 +908,7 @@ class Resource(object):
 
             new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
+            self.uuid = new_rs.uuid
             self.created_time = new_rs.created_at
             self._rsrc_metadata = metadata
         except Exception as ex:

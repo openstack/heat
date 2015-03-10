@@ -54,7 +54,8 @@ class CloudConfigTest(common.HeatTestCase):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         value = {'id': config_id}
         self.rpc_client.create_software_config.return_value = value
-        self.config.id = uuid.uuid4().hex
+        self.config.id = 5
+        self.config.uuid = uuid.uuid4().hex
         self.config.handle_create()
         self.assertEqual(config_id, self.config.resource_id)
         kwargs = self.rpc_client.create_software_config.call_args[1]

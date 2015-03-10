@@ -255,7 +255,7 @@ class ResourceData(BASE, HeatBase):
     redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
     decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     resource_id = sqlalchemy.Column('resource_id',
-                                    sqlalchemy.String(36),
+                                    sqlalchemy.Integer,
                                     sqlalchemy.ForeignKey('resource.id'),
                                     nullable=False)
 
@@ -265,9 +265,10 @@ class Resource(BASE, HeatBase, StateAware):
 
     __tablename__ = 'resource'
 
-    id = sqlalchemy.Column(sqlalchemy.String(36),
-                           primary_key=True,
-                           default=lambda: str(uuid.uuid4()))
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    uuid = sqlalchemy.Column(sqlalchemy.String(36),
+                             default=lambda: str(uuid.uuid4()),
+                             unique=True)
     name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
     nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String(255))
     # odd name as "metadata" is reserved

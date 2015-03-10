@@ -127,7 +127,7 @@ class UserTest(common.HeatTestCase):
         rsrc._store()
 
         self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(rsrc.id).MultipleTimes().AndReturn('aabbcc')
+        short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
 
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'create_stack_domain_user')

@@ -44,9 +44,6 @@ class StackUserTest(common.HeatTestCase):
                                  generic_resource.StackUserResource)
         self.fc = fakes.FakeKeystoneClient()
 
-    def tearDown(self):
-        super(StackUserTest, self).tearDown()
-
     def _user_create(self, stack_name, project_id, user_id,
                      resource_name='user', create_project=True,
                      password=None):
@@ -67,7 +64,7 @@ class StackUserTest(common.HeatTestCase):
 
         rsrc._store()
         self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(rsrc.id).AndReturn('aabbcc')
+        short_id.get_id(rsrc.uuid).AndReturn('aabbcc')
 
         self.m.StubOutWithMock(fakes.FakeKeystoneClient,
                                'create_stack_domain_user')

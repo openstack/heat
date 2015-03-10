@@ -418,6 +418,93 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertColumnExists(engine, 'stack', 'current_traversal')
         self.assertColumnExists(engine, 'stack', 'current_deps')
 
+    def _pre_upgrade_057(self, engine):
+        # template
+        raw_template = utils.get_table(engine, 'raw_template')
+        templ = [dict(id=11, template='{}', files='{}')]
+        engine.execute(raw_template.insert(), templ)
+
+        # credentials
+        user_creds = utils.get_table(engine, 'user_creds')
+        user = [dict(id=11, username='steve', password='notthis',
+                     tenant='mine', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='')]
+        engine.execute(user_creds.insert(), user)
+
+        # stack
+        stack = utils.get_table(engine, 'stack')
+        stack_data = [dict(id='867aaefb-152e-505d-b13a-35d4c816390c',
+                           name='s1',
+                           raw_template_id=templ[0]['id'],
+                           user_creds_id=user[0]['id'],
+                           username='steve', disable_rollback=True)]
+        engine.execute(stack.insert(), stack_data)
+
+        # resource
+        resource = utils.get_table(engine, 'resource')
+        res_data = [dict(id='167aaefb-152e-505d-b13a-35d4c816390c',
+                         name='res-4',
+                         stack_id=stack_data[0]['id'],
+                         user_creds_id=user[0]['id']),
+                    dict(id='177aaefb-152e-505d-b13a-35d4c816390c',
+                         name='res-5',
+                         stack_id=stack_data[0]['id'],
+                         user_creds_id=user[0]['id'])]
+        engine.execute(resource.insert(), res_data)
+
+        # resource_data
+        resource_data = utils.get_table(engine, 'resource_data')
+        rd_data = [dict(key='fruit',
+                        value='blueberries',
+                        reduct=False,
+                        resource_id=res_data[0]['id']),
+                   dict(key='fruit',
+                        value='apples',
+                        reduct=False,
+                        resource_id=res_data[1]['id'])]
+        engine.execute(resource_data.insert(), rd_data)
+
+        return {'resource': res_data, 'resource_data': rd_data}
+
+    def _check_057(self, engine, data):
+        def uuid_in_res_data(res_uuid):
+            for rd in data['resource']:
+                if rd['id'] == res_uuid:
+                    return True
+            return False
+
+        def rd_matches_old_data(key, value, res_uuid):
+            for rd in data['resource_data']:
+                if (rd['resource_id'] == res_uuid and rd['key'] == key
+                        and rd['value'] == value):
+                    return True
+            return False
+
+        self.assertColumnIsNotNullable(engine, 'resource', 'id')
+        res_table = utils.get_table(engine, 'resource')
+        res_in_db = list(res_table.select().execute())
+        # confirm the resource.id is an int and the uuid field has been
+        # copied from the old id.
+        for r in res_in_db:
+            # now sqlalchemy returns `long` for mysql
+            # need more convenient way for type check
+            if engine.name == 'mysql':
+                self.assertEqual(long, type(r.id))
+            else:
+                self.assertEqual(int, type(r.id))
+            self.assertTrue(uuid_in_res_data(r.uuid))
+
+        # confirm that the new resource_id points to the correct resource.
+        rd_table = utils.get_table(engine, 'resource_data')
+        rd_in_db = list(rd_table.select().execute())
+        for rd in rd_in_db:
+            for r in res_in_db:
+                if rd.resource_id == r.id:
+                    self.assertTrue(rd_matches_old_data(rd.key, rd.value,
+                                                        r.uuid))
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
