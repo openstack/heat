@@ -48,7 +48,8 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
                           'skipping')
         self.stack_name = self._stack_rand_name()
 
-    def check_stack(self, sid):
+    def check_stack(self):
+        sid = self.stack_identifier
         # Check that all stack resources were created
         for res in ('cfg2a', 'cfg2b', 'cfg1', 'cfg3', 'server'):
             self._wait_for_resource_status(
@@ -123,8 +124,14 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
         dep1_resource = self.client.resources.get(sid, 'dep1')
         dep1_id = dep1_resource.physical_resource_id
         dep1_dep = self.client.software_deployments.get(dep1_id)
-        self.assertIsNotNone(dep1_dep.updated_time)
-        self.assertNotEqual(dep1_dep.updated_time, dep1_dep.creation_time)
+        if hasattr(dep1_dep, 'updated_time'):
+            # Only check updated_time if the attribute exists.
+            # This allows latest heat agent code to be tested with
+            # Juno heat (which doesn't expose updated_time)
+            self.assertIsNotNone(dep1_dep.updated_time)
+            self.assertNotEqual(
+                dep1_dep.updated_time,
+                dep1_dep.creation_time)
 
     def test_server_software_config(self):
         """
@@ -151,7 +158,7 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
         }
 
         # Launch stack
-        stack_id = self.launch_stack(
+        self.stack_identifier = self.launch_stack(
             stack_name=self.stack_name,
             template_name='test_server_software_config.yaml',
             parameters=parameters,
@@ -159,7 +166,5 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             expected_status=None
         )
 
-        self.stack_identifier = '%s/%s' % (self.stack_name, stack_id)
-
         # Check stack
-        self.check_stack(self.stack_identifier)
+        self.check_stack()
