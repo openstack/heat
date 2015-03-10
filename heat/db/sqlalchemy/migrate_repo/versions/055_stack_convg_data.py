@@ -114,17 +114,13 @@ def _downgrade_sqlite(migrate_engine):
                                           ignorecols=ignorecols,
                                           ignorecons=ignorecons)
 
-    migrate_data = """
-        INSERT INTO %s
-            SELECT id, created_at, updated_at, name, raw_template_id,
-                   user_creds_id, username, owner_id, status, status_reason,
-                   parameters, timeout, tenant, disable_rollback, action,
-                   deleted_at, stack_user_project_id, backup, nested_depth,
-                   convergence
-            FROM stack;""" % new_stack.name
-    migrate_engine.execute(migrate_data)
-    stack.drop()
-    new_stack.rename(table_name)
+    migrate_utils.migrate_data(migrate_engine,
+                               stack,
+                               new_stack,
+                               ['prev_raw_template_id',
+                                'current_traversal',
+                                'current_deps'])
+
     # add the indexes back to new table
     _add_indexes(migrate_engine, new_stack)
 

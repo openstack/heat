@@ -13,6 +13,8 @@
 
 import sqlalchemy
 
+from heat.db.sqlalchemy import utils as migrate_utils
+
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
@@ -59,16 +61,7 @@ def _downgrade_045_sqlite(migrate_engine, metadata, table):
                                  *(columns + constraints))
     new_table.create()
 
-    migrate_data = """
-        INSERT INTO stack__tmp__
-            SELECT id, created_at, updated_at, name, raw_template_id,
-                   user_creds_id, username, owner_id, status, status_reason,
-                   parameters, timeout, tenant, disable_rollback, action,
-                   deleted_at, stack_user_project_id
-            FROM stack;"""
-
-    migrate_engine.execute(migrate_data)
-
-    table.drop()
-
-    new_table.rename(table_name)
+    migrate_utils.migrate_data(migrate_engine,
+                               table,
+                               new_table,
+                               ['backup'])

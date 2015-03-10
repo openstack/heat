@@ -57,3 +57,31 @@ def clone_table(name, parent, meta, newcols=[], ignorecols=[], swapcols={},
 
     new_table.create()
     return new_table
+
+
+def migrate_data(migrate_engine,
+                 table,
+                 new_table,
+                 skip_columns=None):
+
+    table_name = table.name
+
+    list_of_rows = list(table.select().order_by(
+        sqlalchemy.sql.expression.asc(table.c.created_at))
+        .execute())
+
+    colnames = [c.name for c in table.columns]
+
+    for row in list_of_rows:
+        values = dict(zip(colnames,
+                          map(lambda colname: getattr(row, colname),
+                              colnames)))
+        if skip_columns is not None:
+            for column in skip_columns:
+                del values[column]
+
+        migrate_engine.execute(new_table.insert(values))
+
+    table.drop()
+
+    new_table.rename(table_name)
