@@ -393,7 +393,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
-            'limit': 'fake limit',
+            'limit': 10,
             'sort_keys': 'fake sort keys',
             'marker': 'fake marker',
             'sort_dir': 'fake sort dir',
@@ -414,6 +414,19 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertIn('filters', engine_args)
         self.assertIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_limit_not_int(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'limit': 'not-an-int'}
+        req = self._get('/stacks', params=params)
+
+        ex = self.assertRaises(ValueError,
+                               self.controller.index, req,
+                               tenant_id=self.tenant)
+        self.assertEqual("Only integer is acceptable by 'limit'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
@@ -802,6 +815,27 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(expected, response)
         self.m.VerifyAll()
 
+    def test_adopt_timeout_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+
+        body = {'template': None,
+                'stack_name': identity.stack_name,
+                'parameters': {},
+                'timeout_mins': 'not-an-int',
+                'adopt_stack_data': 'does not matter'}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(ValueError,
+                               self.controller.create, req,
+                               tenant_id=self.tenant, body=body)
+
+        self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_adopt_error(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
@@ -992,6 +1026,27 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(409, resp.json['code'])
         self.assertEqual('StackExists', resp.json['error']['type'])
         self.m.VerifyAll()
+
+    def test_create_timeout_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'stack_name': stack_name,
+                'parameters': parameters,
+                'timeout_mins': 'not-an-int'}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(ValueError,
+                               self.controller.create, req,
+                               tenant_id=self.tenant, body=body)
+
+        self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_create_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
@@ -1485,6 +1540,30 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
+    def test_update_timeout_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': 'not-int'}
+
+        req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(ValueError,
+                               self.controller.update, req,
+                               tenant_id=identity.tenant,
+                               stack_name=identity.stack_name,
+                               stack_id=identity.stack_id,
+                               body=body)
+        self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
+
     def test_update_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
@@ -1578,6 +1657,30 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                           stack_id=identity.stack_id,
                           body=body)
         self.m.VerifyAll()
+
+    def test_update_with_patch_timeout_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update_patch', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': 'not-int'}
+
+        req = self._patch('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                          json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(ValueError,
+                               self.controller.update_patch, req,
+                               tenant_id=identity.tenant,
+                               stack_name=identity.stack_name,
+                               stack_id=identity.stack_id,
+                               body=body)
+        self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_update_with_existing_and_default_parameters(
             self, mock_enforce):
@@ -2121,6 +2224,25 @@ class ResourceControllerTest(ControllerTest, common.HeatTestCase):
 
         self.assertEqual([], result['resources'])
         self.m.VerifyAll()
+
+    def test_index_nested_depth_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+
+        req = self._get(stack_identity._tenant_path() + '/resources',
+                        {'nested_depth': 'non-int'})
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(ValueError,
+                               self.controller.index, req,
+                               tenant_id=self.tenant,
+                               stack_name=stack_identity.stack_name,
+                               stack_id=stack_identity.stack_id)
+
+        self.assertEqual("Only integer is acceptable by 'nested_depth'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_index_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -2867,6 +2989,23 @@ class EventControllerTest(ControllerTest, common.HeatTestCase):
         self.assertIn('filters', engine_args)
         self.assertIsNone(engine_args['filters'])
         self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_limit_not_int(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        sid = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
+
+        req = self._get(sid._tenant_path() + '/events',
+                        params={'limit': 'not-an-int'})
+
+        ex = self.assertRaises(ValueError,
+                               self.controller.index, req,
+                               tenant_id=self.tenant,
+                               stack_name=sid.stack_name,
+                               stack_id=sid.stack_id)
+        self.assertEqual("Only integer is acceptable by 'limit'.",
+                         six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelist_filter_params(self, mock_call, mock_enforce):

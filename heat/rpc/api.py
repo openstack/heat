@@ -17,10 +17,12 @@ PARAM_KEYS = (
     PARAM_TIMEOUT, PARAM_DISABLE_ROLLBACK, PARAM_ADOPT_STACK_DATA,
     PARAM_SHOW_DELETED, PARAM_SHOW_NESTED, PARAM_EXISTING,
     PARAM_CLEAR_PARAMETERS, PARAM_GLOBAL_TENANT, PARAM_LIMIT,
+    PARAM_NESTED_DEPTH,
 ) = (
     'timeout_mins', 'disable_rollback', 'adopt_stack_data',
     'show_deleted', 'show_nested', 'existing',
     'clear_parameters', 'global_tenant', 'limit',
+    'nested_depth',
 )
 
 STACK_KEYS = (
