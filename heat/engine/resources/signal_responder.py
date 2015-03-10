@@ -17,7 +17,7 @@ from oslo_log import log as logging
 from six.moves.urllib import parse as urlparse
 
 from heat.common.i18n import _LW
-from heat.engine import stack_user
+from heat.engine.resources import stack_user
 
 LOG = logging.getLogger(__name__)
 

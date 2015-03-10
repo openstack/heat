@@ -20,9 +20,9 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
+from heat.engine.resources import stack_resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
-from heat.engine import stack_resource
 from heat.engine import template as templatem
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc

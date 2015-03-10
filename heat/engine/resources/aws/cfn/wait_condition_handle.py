@@ -13,8 +13,8 @@
 
 import six
 
+from heat.engine.resources import signal_responder
 from heat.engine.resources import wait_condition as wc_base
-from heat.engine import signal_responder
 from heat.engine import support
 
 

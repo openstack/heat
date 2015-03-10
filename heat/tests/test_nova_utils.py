@@ -20,7 +20,7 @@ from novaclient import exceptions as nova_exceptions
 import six
 
 from heat.common import exception
-from heat.engine.resources import nova_utils
+from heat.engine import nova_utils
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -29,14 +29,14 @@ from heat.tests.v1_1 import fakes as fakes_v1_1
 class NovaUtilsTests(common.HeatTestCase):
     """
     Basic tests for the helper methods in
-    :module:'heat.engine.resources.nova_utils'.
+    :module:'heat.engine.nova_utils'.
     """
 
     def setUp(self):
         super(NovaUtilsTests, self).setUp()
         self.nova_client = self.m.CreateMockAnything()
         self.mock_warnings = mock.patch(
-            'heat.engine.resources.nova_utils.warnings')
+            'heat.engine.nova_utils.warnings')
         self.mock_warnings.start()
         self.addCleanup(self.mock_warnings.stop)
 
@@ -133,7 +133,7 @@ class NovaUtilsRefreshServerTests(common.HeatTestCase):
     def setUp(self):
         super(NovaUtilsRefreshServerTests, self).setUp()
         self.mock_warnings = mock.patch(
-            'heat.engine.resources.nova_utils.warnings')
+            'heat.engine.nova_utils.warnings')
         self.mock_warnings.start()
         self.addCleanup(self.mock_warnings.stop)
 
@@ -182,7 +182,7 @@ class NovaUtilsUserdataTests(common.HeatTestCase):
         super(NovaUtilsUserdataTests, self).setUp()
         self.nova_client = self.m.CreateMockAnything()
         self.mock_warnings = mock.patch(
-            'heat.engine.resources.nova_utils.warnings')
+            'heat.engine.nova_utils.warnings')
         self.mock_warnings.start()
         self.addCleanup(self.mock_warnings.stop)
 
@@ -246,7 +246,7 @@ class NovaUtilsMetadataTests(common.HeatTestCase):
     def setUp(self):
         super(NovaUtilsMetadataTests, self).setUp()
         self.mock_warnings = mock.patch(
-            'heat.engine.resources.nova_utils.warnings')
+            'heat.engine.nova_utils.warnings')
         self.mock_warnings.start()
         self.addCleanup(self.mock_warnings.stop)
 

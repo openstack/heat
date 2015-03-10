@@ -40,7 +40,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
 class NovaClientPluginTests(NovaClientPluginTestCase):
     """
     Basic tests for the helper methods in
-    :module:'heat.engine.resources.nova_utils'.
+    :module:'heat.engine.nova_utils'.
     """
 
     def test_get_ip(self):

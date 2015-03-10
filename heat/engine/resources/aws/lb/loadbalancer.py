@@ -23,7 +23,7 @@ from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import stack_resource
+from heat.engine.resources import stack_resource
 
 LOG = logging.getLogger(__name__)
 

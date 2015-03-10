@@ -17,7 +17,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
-from heat.engine import signal_responder
+from heat.engine.resources import signal_responder
 
 LOG = logging.getLogger(__name__)
 
