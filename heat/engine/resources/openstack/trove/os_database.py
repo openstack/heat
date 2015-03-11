@@ -92,7 +92,10 @@ class OSDBInstance(resource.Resource):
         FLAVOR: properties.Schema(
             properties.Schema.STRING,
             _('Reference to a flavor for creating DB instance.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('trove.flavor')
+            ]
         ),
         DATASTORE_TYPE: properties.Schema(
             properties.Schema.STRING,

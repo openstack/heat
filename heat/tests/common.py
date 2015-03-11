@@ -31,6 +31,7 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
+from heat.engine.clients.os import trove
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
@@ -190,4 +191,8 @@ class HeatTestCase(testscenarios.WithScenarios,
 
     def stub_PortConstraint_validate(self):
         validate = self.patchobject(neutron.PortConstraint, 'validate')
+        validate.return_value = True
+
+    def stub_TroveFlavorConstraint_validate(self):
+        validate = self.patchobject(trove.FlavorConstraint, 'validate')
         validate.return_value = True

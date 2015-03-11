@@ -17,6 +17,7 @@ from troveclient.openstack.common.apiclient import exceptions
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 
 class TroveClientPlugin(client_plugin.ClientPlugin):
@@ -108,3 +109,11 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         if flavor_id is None:
             raise exception.FlavorMissing(flavor_id=flavor)
         return flavor_id
+
+
+class FlavorConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exception.FlavorMissing,)
+
+    def validate_with_client(self, client, flavor):
+        client.client_plugin('trove').get_flavor_id(flavor)
