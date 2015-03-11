@@ -33,6 +33,7 @@ from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
 from heat.objects import stack as stack_object
+from heat.objects import user_creds as ucreds_object
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
@@ -1092,7 +1093,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='my_user',
                                        password='my_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_init', self.tmpl,
                                  user_creds_id=creds.id)
         self.stack.store()
@@ -1114,7 +1115,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(user_creds_id)
 
         # should've stored the username/password in the context
-        user_creds = db_api.user_creds_get(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
         self.assertEqual(self.ctx.username, user_creds.get('username'))
         self.assertEqual(self.ctx.password, user_creds.get('password'))
         self.assertIsNone(user_creds.get('trust_id'))
@@ -1152,7 +1153,7 @@ class StackTest(common.HeatTestCase):
         # should've stored the trust_id and trustor_user_id returned from
         # FakeKeystoneClient.create_trust_context, username/password should
         # not have been stored
-        user_creds = db_api.user_creds_get(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
         self.assertIsNone(user_creds.get('username'))
         self.assertIsNone(user_creds.get('password'))
         self.assertEqual('atrust', user_creds.get('trust_id'))
@@ -1173,7 +1174,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='my_user',
                                        password='my_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_init', self.tmpl,
                                  user_creds_id=creds.id)
         self.stack.store()
@@ -1218,7 +1219,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='mystored_user',
                                        password='mystored_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_store1', self.tmpl,
                                  user_creds_id=creds.id,
                                  use_stored_context=False)
@@ -1231,7 +1232,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='mystored_user',
                                        password='mystored_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_store2', self.tmpl,
                                  user_creds_id=creds.id,
                                  use_stored_context=True)
@@ -1245,7 +1246,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='mystored_user',
                                        password='mystored_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_store3', self.tmpl,
                                  user_creds_id=creds.id)
         self.stack.store()
@@ -1258,7 +1259,7 @@ class StackTest(common.HeatTestCase):
         ctx_init = utils.dummy_context(user='mystored_user',
                                        password='mystored_pass')
         ctx_init.request_id = self.ctx.request_id
-        creds = db_api.user_creds_create(ctx_init)
+        creds = ucreds_object.UserCreds.create(ctx_init)
         self.stack = stack.Stack(self.ctx, 'creds_store4', self.tmpl,
                                  user_creds_id=creds.id)
         self.stack.store()
