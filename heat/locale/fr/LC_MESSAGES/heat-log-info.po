@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-10 06:02+0000\n"
-"PO-Revision-Date: 2015-03-08 17:01+0000\n"
+"POT-Creation-Date: 2015-03-11 06:06+0000\n"
+"PO-Revision-Date: 2015-03-10 14:17+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -299,10 +299,6 @@ msgid ""
 "first"
 msgstr ""
 
-#: heat/engine/stack_resource.py:306
-msgid "Stack not found to delete"
-msgstr ""
-
 #: heat/engine/update.py:136
 #, python-format
 msgid "Resource %(res_name)s for stack %(stack_name)s updated"
@@ -395,6 +391,10 @@ msgstr ""
 #: heat/engine/clients/os/sahara.py:109
 #, python-format
 msgid "Multiple images %s were found in sahara with name"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:306
+msgid "Stack not found to delete"
 msgstr ""
 
 #: heat/engine/resources/aws/autoscaling/autoscaling_group.py:301

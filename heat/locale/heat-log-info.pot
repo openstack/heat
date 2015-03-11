@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev271\n"
+"Project-Id-Version: heat 2015.1.dev298\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-07 06:04+0000\n"
+"POT-Creation-Date: 2015-03-11 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -295,10 +295,6 @@ msgid ""
 " first"
 msgstr ""
 
-#: heat/engine/stack_resource.py:306
-msgid "Stack not found to delete"
-msgstr ""
-
 #: heat/engine/update.py:136
 #, python-format
 msgid "Resource %(res_name)s for stack %(stack_name)s updated"
@@ -392,6 +388,10 @@ msgstr ""
 msgid "Multiple images %s were found in sahara with name"
 msgstr ""
 
+#: heat/engine/resources/stack_resource.py:306
+msgid "Stack not found to delete"
+msgstr ""
+
 #: heat/engine/resources/aws/autoscaling/autoscaling_group.py:301
 #, python-format
 msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
@@ -475,7 +475,7 @@ msgstr ""
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1014
+#: heat/engine/resources/openstack/nova/server.py:1017
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network"

@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev271\n"
+"Project-Id-Version: heat 2015.1.dev298\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-07 06:04+0000\n"
+"POT-Creation-Date: 2015-03-11 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1243,6 +1243,21 @@ msgstr ""
 msgid "No event exists with id \"%s\""
 msgstr ""
 
+#: heat/engine/nova_utils.py:281 heat/engine/clients/os/nova.py:325
+#, python-format
+msgid "Server %(name)s delete failed: (%(code)s) %(message)s"
+msgstr ""
+
+#: heat/engine/nova_utils.py:319 heat/engine/clients/os/nova.py:354
+#, python-format
+msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
+msgstr ""
+
+#: heat/engine/nova_utils.py:345 heat/engine/clients/os/nova.py:376
+#, python-format
+msgid "Rebuilding server failed, status '%s'"
+msgstr ""
+
 #: heat/engine/parameter_groups.py:53 heat/tests/test_validate.py:1392
 msgid "Parameters must be provided for each Parameter Group."
 msgstr ""
@@ -1546,53 +1561,6 @@ msgstr ""
 msgid "Output validation error: %s"
 msgstr ""
 
-#: heat/engine/stack_resource.py:68
-#, python-format
-msgid "Failed to validate: %s"
-msgstr ""
-
-#: heat/engine/stack_resource.py:104
-msgid "Nested stack not found in DB"
-msgstr ""
-
-#: heat/engine/stack_resource.py:161
-#, python-format
-msgid "Recursion depth exceeds %d."
-msgstr ""
-
-#: heat/engine/stack_resource.py:295
-#, python-format
-msgid "Nested stack UPDATE failed: %s"
-msgstr ""
-
-#: heat/engine/stack_resource.py:329
-#, python-format
-msgid "Cannot suspend %s, stack not created"
-msgstr ""
-
-#: heat/engine/stack_resource.py:351
-#, python-format
-msgid "Cannot resume %s, stack not created"
-msgstr ""
-
-#: heat/engine/stack_resource.py:373
-#, python-format
-msgid "Cannot check %s, stack not created"
-msgstr ""
-
-#: heat/engine/stack_user.py:55
-msgid "Can't get user token, user not yet created"
-msgstr ""
-
-#: heat/engine/stack_user.py:61
-msgid "Can't get user token without password"
-msgstr ""
-
-#: heat/engine/stack_user.py:132
-#, python-format
-msgid "Error creating ec2 keypair for user %s"
-msgstr ""
-
 #: heat/engine/support.py:30
 #, python-format
 msgid "Specified status is invalid, defaulting to %s"
@@ -1823,21 +1791,6 @@ msgstr ""
 msgid "Error retrieving image list from glance: %s"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:325 heat/engine/resources/nova_utils.py:281
-#, python-format
-msgid "Server %(name)s delete failed: (%(code)s) %(message)s"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:354 heat/engine/resources/nova_utils.py:319
-#, python-format
-msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:376 heat/engine/resources/nova_utils.py:345
-#, python-format
-msgid "Rebuilding server failed, status '%s'"
-msgstr ""
-
 #: heat/engine/clients/os/nova.py:384
 msgid "nova server metadata needs to be a Map."
 msgstr ""
@@ -1974,6 +1927,53 @@ msgstr ""
 msgid ""
 "\"%(section)s\" must contain a map of %(obj_name)s maps. Found a "
 "[%(_type)s] instead"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:68
+#, python-format
+msgid "Failed to validate: %s"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:104
+msgid "Nested stack not found in DB"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:161
+#, python-format
+msgid "Recursion depth exceeds %d."
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:295
+#, python-format
+msgid "Nested stack UPDATE failed: %s"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:329
+#, python-format
+msgid "Cannot suspend %s, stack not created"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:351
+#, python-format
+msgid "Cannot resume %s, stack not created"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:373
+#, python-format
+msgid "Cannot check %s, stack not created"
+msgstr ""
+
+#: heat/engine/resources/stack_user.py:55
+msgid "Can't get user token, user not yet created"
+msgstr ""
+
+#: heat/engine/resources/stack_user.py:61
+msgid "Can't get user token without password"
+msgstr ""
+
+#: heat/engine/resources/stack_user.py:132
+#, python-format
+msgid "Error creating ec2 keypair for user %s"
 msgstr ""
 
 #: heat/engine/resources/template_resource.py:58
@@ -2473,7 +2473,7 @@ msgid "Instance is not ACTIVE (was: %s)"
 msgstr ""
 
 #: heat/engine/resources/aws/ec2/instance.py:818
-#: heat/engine/resources/openstack/nova/server.py:1108
+#: heat/engine/resources/openstack/nova/server.py:1111
 #, python-format
 msgid "Cannot suspend %s, resource_id not set"
 msgstr ""
@@ -2490,7 +2490,7 @@ msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
 msgstr ""
 
 #: heat/engine/resources/aws/ec2/instance.py:875
-#: heat/engine/resources/openstack/nova/server.py:1157
+#: heat/engine/resources/openstack/nova/server.py:1160
 #, python-format
 msgid "Cannot resume %s, resource_id not set"
 msgstr ""
@@ -3381,7 +3381,7 @@ msgstr ""
 msgid "Cannot suspend %s, resource not found"
 msgstr ""
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:234
+#: heat/engine/resources/openstack/heat/remote_stack.py:236
 #, python-format
 msgid "Resource action mismatch detected: expected=%(expected)s actual=%(actual)s"
 msgstr ""
@@ -5434,17 +5434,17 @@ msgstr ""
 msgid "Server is not active"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:984
+#: heat/engine/resources/openstack/nova/server.py:987
 #, python-format
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:991
+#: heat/engine/resources/openstack/nova/server.py:994
 #, python-format
 msgid "Neither image nor bootable volume is specified for instance %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1004
+#: heat/engine/resources/openstack/nova/server.py:1007
 #, python-format
 msgid ""
 "Properties \"%(uuid)s\" and \"%(id)s\" are both set to the network "
@@ -5452,32 +5452,32 @@ msgid ""
 "is deprecated. Use only \"%(id)s\" property."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1040
+#: heat/engine/resources/openstack/nova/server.py:1043
 #, python-format
 msgid ""
 "Instance metadata must not contain greater than %s entries.  This is the "
 "maximum number allowed by your service provider"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1049
+#: heat/engine/resources/openstack/nova/server.py:1052
 #, python-format
 msgid "The personality property may not contain greater than %s entries."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1055
+#: heat/engine/resources/openstack/nova/server.py:1058
 #, python-format
 msgid ""
 "The contents of personality file \"%(path)s\" is larger than the maximum "
 "allowed personality file size (%(max_size)s bytes)."
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1115
-#: heat/engine/resources/openstack/nova/server.py:1164
+#: heat/engine/resources/openstack/nova/server.py:1118
+#: heat/engine/resources/openstack/nova/server.py:1167
 #, python-format
 msgid "Failed to find server %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1144
+#: heat/engine/resources/openstack/nova/server.py:1147
 #, python-format
 msgid "Suspend of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
