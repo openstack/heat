@@ -1,0 +1,5 @@
+# Defines a Heat::InstallConfigAgent config resource which performs no config.
+# This environment can be used when the image already has the required agents
+# installed and configured.
+resource_registry:
+  "Heat::InstallConfigAgent": "OS::Heat::SoftwareConfig"
