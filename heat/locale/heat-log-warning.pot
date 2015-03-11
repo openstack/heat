@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev271\n"
+"Project-Id-Version: heat 2015.1.dev298\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-07 06:04+0000\n"
+"POT-Creation-Date: 2015-03-11 06:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Invalid filter key %s, ignoring"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:227
+#: heat/api/openstack/v1/stacks.py:232
 #, python-format
 msgid "Old Engine Version: %s"
 msgstr ""
@@ -104,6 +104,25 @@ msgstr ""
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
 
+#: heat/engine/nova_utils.py:59 heat/engine/clients/os/nova.py:111
+#, python-format
+msgid ""
+"Server %(name)s (%(id)s) received an OverLimit response during "
+"server.get(): %(exception)s"
+msgstr ""
+
+#: heat/engine/nova_utils.py:68 heat/engine/clients/os/nova.py:119
+#, python-format
+msgid ""
+"Server \"%(name)s\" (%(id)s) received the following exception during "
+"server.get(): %(exception)s"
+msgstr ""
+
+#: heat/engine/nova_utils.py:383 heat/engine/clients/os/nova.py:410
+#, python-format
+msgid "Instance (%(server)s) not found: %(ex)s"
+msgstr ""
+
 #: heat/engine/resource.py:891
 #, python-format
 msgid "db error %s"
@@ -134,10 +153,6 @@ msgstr ""
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/signal_responder.py:67
-msgid "Cannot generate signed url, no stored access/secret key"
-msgstr ""
-
 #: heat/engine/stack.py:272
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
@@ -145,15 +160,6 @@ msgstr ""
 #: heat/engine/stack_lock.py:121
 #, python-format
 msgid "Lock was already released on stack %s!"
-msgstr ""
-
-#: heat/engine/stack_resource.py:141
-#, python-format
-msgid "Preview of '%s' not yet implemented"
-msgstr ""
-
-#: heat/engine/stack_user.py:98
-msgid "Reverting to legacy user delete path"
 msgstr ""
 
 #: heat/engine/watchrule.py:81
@@ -176,28 +182,22 @@ msgstr ""
 msgid "Requested client \"%s\" not found"
 msgstr ""
 
-#: heat/engine/clients/os/nova.py:111 heat/engine/resources/nova_utils.py:59
-#, python-format
-msgid ""
-"Server %(name)s (%(id)s) received an OverLimit response during "
-"server.get(): %(exception)s"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:119 heat/engine/resources/nova_utils.py:68
-#, python-format
-msgid ""
-"Server \"%(name)s\" (%(id)s) received the following exception during "
-"server.get(): %(exception)s"
-msgstr ""
-
-#: heat/engine/clients/os/nova.py:410 heat/engine/resources/nova_utils.py:383
-#, python-format
-msgid "Instance (%(server)s) not found: %(ex)s"
-msgstr ""
-
 #: heat/engine/clients/os/nova.py:421
 #, python-format
 msgid "Server (%(server)s) not found: %(ex)s"
+msgstr ""
+
+#: heat/engine/resources/signal_responder.py:67
+msgid "Cannot generate signed url, no stored access/secret key"
+msgstr ""
+
+#: heat/engine/resources/stack_resource.py:141
+#, python-format
+msgid "Preview of '%s' not yet implemented"
+msgstr ""
+
+#: heat/engine/resources/stack_user.py:98
+msgid "Reverting to legacy user delete path"
 msgstr ""
 
 #: heat/engine/resources/wait_condition.py:59
