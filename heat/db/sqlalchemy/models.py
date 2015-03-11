@@ -128,6 +128,26 @@ class StackTag(BASE, HeatBase):
                                  nullable=False)
 
 
+class SyncPoint(BASE, HeatBase):
+    """Represents an syncpoint for an stack that is being worked on."""
+    __tablename__ = 'sync_point'
+    __table_args__ = (
+        sqlalchemy.PrimaryKeyConstraint('entity_id',
+                                        'traversal_id',
+                                        'is_update'),
+        sqlalchemy.ForeignKeyConstraint(['stack_id'], ['stack.id'])
+    )
+
+    entity_id = sqlalchemy.Column(sqlalchemy.String(36))
+    traversal_id = sqlalchemy.Column(sqlalchemy.String(36))
+    is_update = sqlalchemy.Column(sqlalchemy.Boolean)
+    # integer field for atomic update operations
+    atomic_key = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                 nullable=False)
+    input_data = sqlalchemy.Column(types.Json)
+
+
 class Stack(BASE, HeatBase, SoftDelete, StateAware):
     """Represents a stack created by the heat engine."""
 
