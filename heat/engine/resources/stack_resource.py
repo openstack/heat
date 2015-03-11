@@ -147,12 +147,12 @@ class StackResource(resource.Resource):
 
         return self.nested().preview_resources()
 
-    def _parse_child_template(self, child_template):
+    def _parse_child_template(self, child_template, child_env):
         parsed_child_template = child_template
         if isinstance(parsed_child_template, template.Template):
             parsed_child_template = parsed_child_template.t
         return template.Template(parsed_child_template,
-                                 files=self.stack.t.files)
+                                 files=self.stack.t.files, env=child_env)
 
     def _parse_nested_stack(self, stack_name, child_template,
                             child_params=None, timeout_mins=None,
@@ -162,7 +162,14 @@ class StackResource(resource.Resource):
                     ) % cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
 
-        parsed_template = self._parse_child_template(child_template)
+        if child_params is None:
+            child_params = self.child_params()
+
+        child_env = environment.get_child_environment(
+            self.stack.env, child_params,
+            item_to_remove=self.resource_info)
+
+        parsed_template = self._parse_child_template(child_template, child_env)
         self._validate_nested_resources(parsed_template)
 
         # Don't overwrite the attributes_schema for subclasses that
@@ -177,19 +184,11 @@ class StackResource(resource.Resource):
         stack_user_project_id = self.stack.stack_user_project_id
         new_nested_depth = self.stack.nested_depth + 1
 
-        if child_params is None:
-            child_params = self.child_params()
-
-        child_env = environment.get_child_environment(
-            self.stack.env, child_params,
-            item_to_remove=self.resource_info)
-
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
         nested = parser.Stack(self.context,
                               stack_name,
                               parsed_template,
-                              env=child_env,
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
                               parent_resource=self.name,

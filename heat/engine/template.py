@@ -23,6 +23,7 @@ from stevedore import extension
 from heat.common import exception
 from heat.common.i18n import _
 from heat.db import api as db_api
+from heat.engine import environment
 
 LOG = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class Template(collections.Mapping):
 
         return super(Template, cls).__new__(TemplateClass)
 
-    def __init__(self, template, template_id=None, files=None):
+    def __init__(self, template, template_id=None, files=None, env=None):
         '''
         Initialise the template with a JSON object and a set of Parameters
         '''
@@ -114,6 +115,7 @@ class Template(collections.Mapping):
         self.t = template
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
+        self.env = env or environment.Environment({})
         self.version = get_version(self.t, _template_classes.keys())
 
     def __deepcopy__(self, memo):
@@ -124,13 +126,15 @@ class Template(collections.Mapping):
         '''Retrieve a Template with the given ID from the database.'''
         if t is None:
             t = db_api.raw_template_get(context, template_id)
-        return cls(t.template, template_id=template_id, files=t.files)
+        env = environment.Environment(t.environment)
+        return cls(t.template, template_id=template_id, files=t.files, env=env)
 
     def store(self, context=None):
         '''Store the Template in the database and return its ID.'''
         rt = {
             'template': self.t,
-            'files': self.files
+            'files': self.files,
+            'environment': self.env.user_env_as_dict()
         }
         if self.id is None:
             new_rt = db_api.raw_template_create(context, rt)

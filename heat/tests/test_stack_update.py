@@ -1332,7 +1332,7 @@ class StackUpdateTest(common.HeatTestCase):
         env2 = environment.Environment({'smelly-param': 'smelly'})
 
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
-                                 template.Template(tmpl), env1,
+                                 template.Template(tmpl, env=env1),
                                  disable_rollback=True)
 
         self.stack.store()
@@ -1360,7 +1360,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
-                                    template.Template(tmpl2), env2,
+                                    template.Template(tmpl2, env=env2),
                                     disable_rollback=True)
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
@@ -1369,7 +1369,7 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.stack = stack.Stack.load(self.ctx, self.stack.id)
         updated_stack2 = stack.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl2), env2,
+                                     template.Template(tmpl2, env=env2),
                                      disable_rollback=True)
 
         self.stack.update(updated_stack2)

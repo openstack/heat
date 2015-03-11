@@ -174,17 +174,16 @@ resources:
 
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
-    template = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, template,
-                         environment.Environment({'KeyName': 'test'}))
+    template = templatem.Template(
+        t, env=environment.Environment({'KeyName': 'test'}))
+    stack = parser.Stack(ctx, stack_name, template)
     return stack
 
 
 def get_wordpress_stack_no_params(stack_name, ctx):
     t = template_format.parse(wp_template)
     template = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, template,
-                         environment.Environment({}))
+    stack = parser.Stack(ctx, stack_name, template)
     return stack
 
 
@@ -452,10 +451,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env, owner_id=None,
+                     stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
                      convergence=False).AndReturn(stack)
@@ -504,11 +504,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     stack.env,
                      owner_id=None,
                      nested_depth=0,
                      user_creds_id=None,
@@ -565,7 +565,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = db_api.stack_get(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
         self.assertEqual(environment['parameters'],
-                         stack.parameters['parameters'])
+                         stack.raw_template.environment['parameters'])
 
     def test_stack_adopt_saves_input_params(self):
         cfg.CONF.set_override('enable_stack_adopt', True)
@@ -584,7 +584,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = db_api.stack_get(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
         self.assertEqual(input_params['parameters'],
-                         stack.parameters['parameters'])
+                         stack.raw_template.environment['parameters'])
 
     def test_stack_adopt_stack_state(self):
         cfg.CONF.set_override('enable_stack_adopt', True)
@@ -674,18 +674,20 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         ctx_no_pwd = utils.dummy_context(password=None)
         ctx_no_user = utils.dummy_context(user=None)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_pwd, stack.name,
-                     stack.t, stack.env, owner_id=None,
+                     stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
                      convergence=False).AndReturn(stack)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(ctx_no_user, stack.name,
-                     stack.t, stack.env, owner_id=None,
+                     stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
                      convergence=False).AndReturn(stack)
@@ -729,11 +731,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     stack.env,
                      owner_id=None,
                      nested_depth=0,
                      user_creds_id=None,
@@ -1005,10 +1007,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env,
+                     stack.t,
                      timeout_mins=60, disable_rollback=True,
                      convergence=False).AndReturn(stack)
 
@@ -1054,10 +1057,10 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self._stub_update_mocks(s, old_stack)
 
         templatem.Template(wp_template_no_default,
-                           files=None).AndReturn(stack.t)
+                           files=None, env=old_stack.env).AndReturn(stack.t)
         environment.Environment(no_params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, old_stack.env,
+                     stack.t,
                      timeout_mins=60, disable_rollback=True,
                      convergence=False).AndReturn(stack)
 
@@ -1098,10 +1101,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env,
+                     stack.t,
                      timeout_mins=1, disable_rollback=False,
                      convergence=False).AndReturn(stack)
 
@@ -1176,10 +1180,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env,
+                     stack.t,
                      timeout_mins=60, disable_rollback=True,
                      convergence=False).AndReturn(stack)
 
@@ -1297,10 +1302,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None).AndReturn(stack.t)
+        templatem.Template(template, files=None,
+                           env=stack.env).AndReturn(stack.t)
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.env,
+                     stack.t,
                      timeout_mins=60, disable_rollback=True,
                      convergence=False).AndReturn(stack)
 
@@ -1354,10 +1360,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self._stub_update_mocks(s, old_stack)
 
-        templatem.Template(template, files=None).AndReturn(old_stack.t)
+        templatem.Template(template, files=None,
+                           env=old_stack.env).AndReturn(old_stack.t)
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
-                     old_stack.t, old_stack.env,
+                     old_stack.t,
                      timeout_mins=60, disable_rollback=True,
                      convergence=False).AndReturn(old_stack)
 

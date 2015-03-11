@@ -214,7 +214,7 @@ class StackResourceTest(common.HeatTestCase):
         are passed on to the child stack.
         """
         self.parent_stack.t.files["foo"] = "bar"
-        parsed_t = self.parent_resource._parse_child_template(self.templ)
+        parsed_t = self.parent_resource._parse_child_template(self.templ, None)
         self.assertEqual({"foo": "bar"}, parsed_t.files)
 
     @mock.patch('heat.engine.environment.get_child_environment')
@@ -245,7 +245,6 @@ class StackResourceTest(common.HeatTestCase):
             mock.ANY,
             'test_stack-test',
             mock.ANY,
-            env='environment',
             timeout_mins=None,
             disable_rollback=True,
             parent_resource=parent_resource.name,
@@ -285,7 +284,6 @@ class StackResourceTest(common.HeatTestCase):
             mock.ANY,
             'test_stack-test',
             mock.ANY,
-            env='environment',
             timeout_mins=None,
             disable_rollback=True,
             parent_resource=parent_resource.name,
@@ -312,9 +310,10 @@ class StackResourceTest(common.HeatTestCase):
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
+        stk_resource.child_params = mock.Mock(return_value={})
         stk_resource.child_template = mock.Mock(
-            return_value=templatem.Template(self.simple_template))
-        stk_resource.child_params = mock.Mock()
+            return_value=templatem.Template(self.simple_template,
+                                            stk_resource.child_params))
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
         stk_resource._validate_nested_resources = validation_mock
@@ -329,9 +328,9 @@ class StackResourceTest(common.HeatTestCase):
             'test',
             resource_defns[self.ws_resname],
             self.parent_stack)
+        stk_resource.child_params = mock.Mock(return_value={})
         stk_resource.child_template = mock.Mock(
             return_value=self.simple_template)
-        stk_resource.child_params = mock.Mock()
         exc = exception.RequestLimitExceeded(message='Validation Failed')
         validation_mock = mock.Mock(side_effect=exc)
         stk_resource._validate_nested_resources = validation_mock

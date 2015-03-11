@@ -273,12 +273,8 @@ class StackTest(common.HeatTestCase):
             self.ctx, stk.raw_template_id, stk.raw_template
         ).AndReturn(t)
 
-        env = environment.Environment(stk.parameters)
-        self.m.StubOutWithMock(environment, 'Environment')
-        environment.Environment(stk.parameters).AndReturn(env)
-
         self.m.StubOutWithMock(stack.Stack, '__init__')
-        stack.Stack.__init__(self.ctx, stk.name, t, env, stk.id,
+        stack.Stack.__init__(self.ctx, stk.name, t, t.env, stk.id,
                              stk.action, stk.status, stk.status_reason,
                              stk.timeout, True, stk.disable_rollback,
                              'parent', owner_id=None,

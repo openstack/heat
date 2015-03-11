@@ -533,9 +533,6 @@ class EngineService(service.Service):
                 not cfg.CONF.enable_stack_adopt):
             raise exception.NotSupported(feature='Stack Adopt')
 
-        tmpl = templatem.Template(template, files=files)
-        self._validate_new_stack(cnxt, stack_name, tmpl)
-
         if rpc_api.PARAM_ADOPT_STACK_DATA in common_params:
             # Override the params with values given with -P option
             new_params = common_params[rpc_api.PARAM_ADOPT_STACK_DATA][
@@ -544,7 +541,11 @@ class EngineService(service.Service):
             params[rpc_api.STACK_PARAMETERS] = new_params
 
         env = environment.Environment(params)
-        stack = parser.Stack(cnxt, stack_name, tmpl, env,
+
+        tmpl = templatem.Template(template, files=files, env=env)
+        self._validate_new_stack(cnxt, stack_name, tmpl)
+
+        stack = parser.Stack(cnxt, stack_name, tmpl,
                              owner_id=owner_id,
                              nested_depth=nested_depth,
                              user_creds_id=user_creds_id,
@@ -684,7 +685,12 @@ class EngineService(service.Service):
 
         # Now parse the template and any parameters for the updated
         # stack definition.
-        tmpl = templatem.Template(template, files=files)
+        env = environment.Environment(params)
+        if args.get(rpc_api.PARAM_EXISTING, None):
+            env.patch_previous_parameters(
+                current_stack.env,
+                args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
+        tmpl = templatem.Template(template, files=files, env=env)
         if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
@@ -695,13 +701,8 @@ class EngineService(service.Service):
                                  current_stack.timeout_mins)
         common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
                                  current_stack.disable_rollback)
-        env = environment.Environment(params)
-        if args.get(rpc_api.PARAM_EXISTING, None):
-            env.patch_previous_parameters(
-                current_stack.env,
-                args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     env, convergence=convergence,
+                                     convergence=convergence,
                                      **common_params)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 

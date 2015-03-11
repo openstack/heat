@@ -91,11 +91,12 @@ def parse_stack(t, params=None, files=None, stack_name=None,
     params = params or {}
     files = files or {}
     ctx = dummy_context()
-    templ = template.Template(t, files=files)
+    templ = template.Template(t, files=files,
+                              env=environment.Environment(params))
+    templ.store()
     if stack_name is None:
         stack_name = random_name()
-    stk = stack.Stack(ctx, stack_name, templ,
-                      environment.Environment(params), stack_id,
+    stk = stack.Stack(ctx, stack_name, templ, stack_id,
                       timeout_mins=timeout_mins)
     stk.store()
     return stk

@@ -33,7 +33,6 @@ from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
 from heat.db import api as db_api
 from heat.engine import dependencies
-from heat.engine import environment
 from heat.engine import function
 from heat.engine.notification import stack as notification
 from heat.engine import parameter_groups as param_groups
@@ -136,7 +135,7 @@ class Stack(collections.Mapping):
 
         resources.initialise()
 
-        self.env = env or environment.Environment({})
+        self.env = env or self.t.env
         self.parameters = self.t.parameters(
             self.identifier(),
             user_params=self.env.params,
@@ -314,8 +313,7 @@ class Stack(collections.Mapping):
                  use_stored_context=False):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
-        env = environment.Environment(stack.parameters)
-        return cls(context, stack.name, template, env,
+        return cls(context, stack.name, template, template.env,
                    stack.id, stack.action, stack.status, stack.status_reason,
                    stack.timeout, resolve_data, stack.disable_rollback,
                    parent_resource, owner_id=stack.owner_id,
@@ -336,7 +334,6 @@ class Stack(collections.Mapping):
         s = {
             'name': self._backup_name() if backup else self.name,
             'raw_template_id': self.t.store(self.context),
-            'parameters': self.env.user_env_as_dict(),
             'owner_id': self.owner_id,
             'username': self.username,
             'tenant': self.tenant_id,
@@ -806,6 +803,7 @@ class Stack(collections.Mapping):
             self.env = newstack.env
             self.parameters = newstack.parameters
             self.t.files = newstack.t.files
+            self.t.env = newstack.t.env
             self.disable_rollback = newstack.disable_rollback
             self.timeout_mins = newstack.timeout_mins
             self._set_param_stackid()

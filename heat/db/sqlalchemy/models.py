@@ -107,6 +107,9 @@ class RawTemplate(BASE, HeatBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     template = sqlalchemy.Column(types.Json)
     files = sqlalchemy.Column(types.Json)
+    environment = sqlalchemy.Column('environment', types.Json)
+    predecessor = sqlalchemy.Column('predecessor', sqlalchemy.Integer,
+                                    sqlalchemy.ForeignKey('raw_template.id'))
 
 
 class StackTag(BASE, HeatBase):
@@ -151,7 +154,6 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
                                      foreign_keys=[prev_raw_template_id])
     username = sqlalchemy.Column(sqlalchemy.String(256))
     tenant = sqlalchemy.Column(sqlalchemy.String(256))
-    parameters = sqlalchemy.Column('parameters', types.Json)
     user_creds_id = sqlalchemy.Column(
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('user_creds.id'))
