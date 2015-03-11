@@ -171,6 +171,11 @@ class Resource(object):
         self.created_time = None
         self.updated_time = None
         self._rpc_client = None
+        self.needed_by = None
+        self.requires = None
+        self.replaces = None
+        self.replaced_by = None
+        self.current_template_id = stack.t.id
 
         resource = stack.db_resource_get(name)
         if resource:
@@ -199,6 +204,11 @@ class Resource(object):
         self._stored_properties_data = resource.properties_data
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
+        self.needed_by = resource.needed_by
+        self.requires = resource.requires
+        self.replaces = resource.replaces
+        self.replaced_by = resource.replaced_by
+        self.current_template_id = resource.current_template_id
 
     def reparse(self):
         self.properties = self.t.properties(self.properties_schema,
@@ -906,6 +916,11 @@ class Resource(object):
                   'name': self.name,
                   'rsrc_metadata': metadata,
                   'properties_data': self._stored_properties_data,
+                  'needed_by': self.needed_by,
+                  'requires': self.requires,
+                  'replaces': self.replaces,
+                  'replaced_by': self.replaced_by,
+                  'current_template_id': self.current_template_id,
                   'stack_name': self.stack.name}
 
             new_rs = resource_objects.Resource.create(self.context, rs)
@@ -939,6 +954,11 @@ class Resource(object):
                     'stack_id': self.stack.id,
                     'updated_at': self.updated_time,
                     'properties_data': self._stored_properties_data,
+                    'needed_by': self.needed_by,
+                    'requires': self.requires,
+                    'replaces': self.replaces,
+                    'replaced_by': self.replaced_by,
+                    'current_template_id': self.current_template_id,
                     'nova_instance': self.resource_id})
             except Exception as ex:
                 LOG.error(_LE('DB error %s'), ex)

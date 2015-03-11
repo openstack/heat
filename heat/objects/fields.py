@@ -34,3 +34,7 @@ class Json(fields.FieldType):
 
 class JsonField(fields.AutoTypedField):
     pass
+
+
+class ListField(fields.AutoTypedField):
+    pass

@@ -310,6 +310,17 @@ class Resource(BASE, HeatBase, StateAware):
     engine_id = sqlalchemy.Column(sqlalchemy.String(36))
     atomic_key = sqlalchemy.Column(sqlalchemy.Integer)
 
+    needed_by = sqlalchemy.Column('needed_by', types.List)
+    requires = sqlalchemy.Column('requires', types.List)
+    replaces = sqlalchemy.Column('replaces', sqlalchemy.Integer,
+                                 default=None)
+    replaced_by = sqlalchemy.Column('replaced_by', sqlalchemy.Integer,
+                                    default=None)
+    current_template_id = sqlalchemy.Column(
+        'current_template_id',
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey('raw_template.id'))
+
 
 class WatchRule(BASE, HeatBase):
     """Represents a watch_rule created by the heat engine."""

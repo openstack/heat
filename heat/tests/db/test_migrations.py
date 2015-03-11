@@ -584,6 +584,12 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             else:
                 self.assertColumnIsNullable(engine, 'sync_point', column[0])
 
+    def _check_060(self, engine, data):
+        column_list = ['needed_by', 'requires', 'replaces', 'replaced_by',
+                       'current_template_id']
+        for column in column_list:
+            self.assertColumnExists(engine, 'resource', column)
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

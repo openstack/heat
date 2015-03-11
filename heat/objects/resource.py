@@ -52,6 +52,11 @@ class Resource(
         'stack': fields.ObjectField(stack.Stack, nullable=False),
         'engine_id': fields.StringField(nullable=True),
         'atomic_key': fields.IntegerField(nullable=True),
+        'current_template_id': fields.IntegerField(),
+        'needed_by': heat_fields.ListField(nullable=True, default=None),
+        'requires': heat_fields.ListField(nullable=True, default=None),
+        'replaces': fields.IntegerField(nullable=True),
+        'replaced_by': fields.IntegerField(nullable=True),
     }
 
     @staticmethod

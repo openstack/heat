@@ -42,5 +42,60 @@ class Json(LongText):
         return loads(value)
 
 
+class MutableList(mutable.Mutable, list):
+    @classmethod
+    def coerce(cls, key, value):
+        if not isinstance(value, cls):
+            if isinstance(value, list):
+                return cls(value)
+            return mutable.Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __delitem__(self, key):
+        list.__delitem__(self, key)
+        self.changed()
+
+    def __setitem__(self, key, value):
+        list.__setitem__(self, key, value)
+        self.changed()
+
+    def __getstate__(self):
+        return list(self)
+
+    def __setstate__(self, state):
+        len = list.__len__(self)
+        list.__delslice__(self, 0, len)
+        list.__add__(self, state)
+        self.changed()
+
+    def append(self, value):
+        list.append(self, value)
+        self.changed()
+
+    def remove(self, value):
+        list.remove(self, value)
+        self.changed()
+
+
+class List(types.TypeDecorator):
+    impl = types.Text
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'mysql':
+            return dialect.type_descriptor(mysql.LONGTEXT())
+        else:
+            return self.impl
+
+    def process_bind_param(self, value, dialect):
+        return dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return loads(value)
+
+
+MutableList.associate_with(List)
 mutable.MutableDict.associate_with(LongText)
 mutable.MutableDict.associate_with(Json)
