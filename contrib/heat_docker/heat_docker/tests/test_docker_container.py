@@ -219,3 +219,79 @@ class DockerContainerTest(common.HeatTestCase):
                          container.state)
         running = self.get_container_state(container)['Running']
         self.assertIs(True, running)
+
+    def test_start_with_restart_policy_no(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['restart_policy'] = {
+            'Name': 'no', 'MaximumRetryCount': 0}
+        resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
+        client = resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual({'Name': 'no', 'MaximumRetryCount': 0},
+                         client.container_start[0]['restart_policy'])
+
+    def test_start_with_restart_policy_on_failure(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['restart_policy'] = {
+            'Name': 'on-failure', 'MaximumRetryCount': 10}
+        resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
+        client = resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual({'Name': 'on-failure', 'MaximumRetryCount': 10},
+                         client.container_start[0]['restart_policy'])
+
+    def test_start_with_restart_policy_always(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['restart_policy'] = {
+            'Name': 'always', 'MaximumRetryCount': 0}
+        resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
+        client = resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual({'Name': 'always', 'MaximumRetryCount': 0},
+                         client.container_start[0]['restart_policy'])
+
+    def test_start_with_caps(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['cap_add'] = ['NET_ADMIN']
+        definition['Properties']['cap_drop'] = ['MKNOD']
+        resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
+        client = resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual(['NET_ADMIN'], client.container_start[0]['cap_add'])
+        self.assertEqual(['MKNOD'], client.container_start[0]['cap_drop'])
