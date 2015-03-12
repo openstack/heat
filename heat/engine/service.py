@@ -51,6 +51,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
+from heat.objects import stack as stack_object
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
@@ -306,7 +307,9 @@ class EngineService(service.Service):
 
         # Create a periodic_watcher_task per-stack
         admin_context = context.get_admin_context()
-        stacks = db_api.stack_get_all(admin_context, tenant_safe=False)
+        stacks = stack_object.Stack.get_all(
+            admin_context,
+            tenant_safe=False)
         for s in stacks:
             self.stack_watch.start_watch_task(s.id, admin_context)
 
@@ -394,13 +397,16 @@ class EngineService(service.Service):
         :param stack_name: Name or UUID of the stack to look up.
         """
         if uuidutils.is_uuid_like(stack_name):
-            s = db_api.stack_get(cnxt, stack_name, show_deleted=True)
+            s = stack_object.Stack.get_by_id(
+                cnxt,
+                stack_name,
+                show_deleted=True)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
             if not s:
-                s = db_api.stack_get_by_name(cnxt, stack_name)
+                s = stack_object.Stack.get_by_name(cnxt, stack_name)
         else:
-            s = db_api.stack_get_by_name(cnxt, stack_name)
+            s = stack_object.Stack.get_by_name(cnxt, stack_name)
         if s:
             stack = parser.Stack.load(cnxt, stack=s)
             return dict(stack.identifier())
@@ -410,9 +416,11 @@ class EngineService(service.Service):
     def _get_stack(self, cnxt, stack_identity, show_deleted=False):
         identity = identifier.HeatIdentifier(**stack_identity)
 
-        s = db_api.stack_get(cnxt, identity.stack_id,
-                             show_deleted=show_deleted,
-                             eager_load=True)
+        s = stack_object.Stack.get_by_id(
+            cnxt,
+            identity.stack_id,
+            show_deleted=show_deleted,
+            eager_load=True)
 
         if s is None:
             raise exception.StackNotFound(stack_name=identity.stack_name)
@@ -485,10 +493,12 @@ class EngineService(service.Service):
         :param show_nested: if true, count will include nested stacks
         :returns: a integer representing the number of matched stacks
         """
-        return db_api.stack_count_all(cnxt, filters=filters,
-                                      tenant_safe=tenant_safe,
-                                      show_deleted=show_deleted,
-                                      show_nested=show_nested)
+        return stack_object.Stack.count_all(
+            cnxt,
+            filters=filters,
+            tenant_safe=tenant_safe,
+            show_deleted=show_deleted,
+            show_nested=show_nested)
 
     def _validate_deferred_auth_context(self, cnxt, stack):
         if cfg.CONF.deferred_auth_method != 'password':
@@ -508,11 +518,11 @@ class EngineService(service.Service):
         except Exception as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
 
-        if db_api.stack_get_by_name(cnxt, stack_name):
+        if stack_object.Stack.get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
         tenant_limit = cfg.CONF.max_stacks_per_tenant
-        if db_api.stack_count_all(cnxt) >= tenant_limit:
+        if stack_object.Stack.count_all(cnxt) >= tenant_limit:
             message = _("You have reached the maximum stacks per tenant, %d."
                         " Please delete some stacks.") % tenant_limit
             raise exception.RequestLimitExceeded(message=message)

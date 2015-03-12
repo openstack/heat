@@ -32,6 +32,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
+from heat.objects import stack as stack_object
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
@@ -265,7 +266,7 @@ class StackTest(common.HeatTestCase):
     def test_load_parent_resource(self):
         self.stack = stack.Stack(self.ctx, 'load_parent_resource', self.tmpl)
         self.stack.store()
-        stk = db_api.stack_get(self.ctx, self.stack.id)
+        stk = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
 
         t = template.Template.load(self.ctx, stk.raw_template_id)
         self.m.StubOutWithMock(template.Template, 'load')

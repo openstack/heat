@@ -24,6 +24,7 @@ from heat.common.i18n import _LW
 from heat.db import api as db_api
 from heat.engine import stack
 from heat.engine import timestamp
+from heat.objects import stack as stack_object
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -257,8 +258,10 @@ class WatchRule(object):
         if self.ACTION_MAP[new_state] not in self.rule:
             LOG.info(_LI('no action for new state %s'), new_state)
         else:
-            s = db_api.stack_get(self.context, self.stack_id,
-                                 eager_load=True)
+            s = stack_object.Stack.get_by_id(
+                self.context,
+                self.stack_id,
+                eager_load=True)
             stk = stack.Stack.load(self.context, stack=s)
             if (stk.action != stk.DELETE
                     and stk.status == stk.COMPLETE):

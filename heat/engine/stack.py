@@ -41,6 +41,7 @@ from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine import template as tmpl
 from heat.engine import update
+from heat.objects import stack as stack_object
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
@@ -284,9 +285,11 @@ class Stack(collections.Mapping):
              show_deleted=True, use_stored_context=False, force_reload=False):
         '''Retrieve a Stack from the database.'''
         if stack is None:
-            stack = db_api.stack_get(context, stack_id,
-                                     show_deleted=show_deleted,
-                                     eager_load=True)
+            stack = stack_object.Stack.get_by_id(
+                context,
+                stack_id,
+                show_deleted=show_deleted,
+                eager_load=True)
         if stack is None:
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
@@ -302,9 +305,16 @@ class Stack(collections.Mapping):
                  sort_dir=None, filters=None, tenant_safe=True,
                  show_deleted=False, resolve_data=True,
                  show_nested=False):
-        stacks = db_api.stack_get_all(context, limit, sort_keys, marker,
-                                      sort_dir, filters, tenant_safe,
-                                      show_deleted, show_nested) or []
+        stacks = stack_object.Stack.get_all(
+            context,
+            limit,
+            sort_keys,
+            marker,
+            sort_dir,
+            filters,
+            tenant_safe,
+            show_deleted,
+            show_nested) or []
         for stack in stacks:
             yield cls._from_db(context, stack, resolve_data=resolve_data)
 
@@ -351,7 +361,7 @@ class Stack(collections.Mapping):
             'current_traversal': self.current_traversal,
         }
         if self.id:
-            db_api.stack_update(self.context, self.id, s)
+            stack_object.Stack.update_by_id(self.context, self.id, s)
         else:
             if not self.user_creds_id:
                 # Create a context containing a trust_id and trustor_user_id
@@ -365,7 +375,7 @@ class Stack(collections.Mapping):
                 s['user_creds_id'] = new_creds.id
                 self.user_creds_id = new_creds.id
 
-            new_s = db_api.stack_create(self.context, s)
+            new_s = stack_object.Stack.create(self.context, s)
             self.id = new_s.id
             self.created_time = new_s.created_at
 
@@ -561,7 +571,7 @@ class Stack(collections.Mapping):
         if self.id is None:
             return
 
-        stack = db_api.stack_get(self.context, self.id)
+        stack = stack_object.Stack.get_by_id(self.context, self.id)
         if stack is not None:
             stack.update_and_save({'action': action,
                                    'status': status,
@@ -706,9 +716,10 @@ class Stack(collections.Mapping):
         Get a Stack containing any in-progress resources from the previous
         stack state prior to an update.
         '''
-        s = db_api.stack_get_by_name_and_owner_id(self.context,
-                                                  self._backup_name(),
-                                                  owner_id=self.id)
+        s = stack_object.Stack.get_by_name_and_owner_id(
+            self.context,
+            self._backup_name(),
+            owner_id=self.id)
         if s is not None:
             LOG.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
@@ -1060,7 +1071,7 @@ class Stack(collections.Mapping):
         if stack_status != self.FAILED:
             # delete the stack
             try:
-                db_api.stack_delete(self.context, self.id)
+                stack_object.Stack.delete(self.context, self.id)
             except exception.NotFound:
                 LOG.info(_LI("Tried to delete stack that does not exist "
                              "%s "), self.id)

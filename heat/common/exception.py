@@ -430,3 +430,27 @@ class EventSendFailed(HeatException):
 
 class ServiceNotFound(HeatException):
     msg_fmt = _("Service %(service_id)s does not found")
+
+
+class UnsupportedObjectError(HeatException):
+    msg_fmt = _('Unsupported object type %(objtype)s')
+
+
+class OrphanedObjectError(HeatException):
+    msg_fmt = _('Cannot call %(method)s on orphaned %(objtype)s object')
+
+
+class IncompatibleObjectVersion(HeatException):
+    msg_fmt = _('Version %(objver)s of %(objname)s is not supported')
+
+
+class ObjectActionError(HeatException):
+    msg_fmt = _('Object action %(action)s failed because: %(reason)s')
+
+
+class ReadOnlyFieldError(HeatException):
+    msg_fmt = _('Cannot modify readonly field %(field)s')
+
+
+class ObjectFieldInvalid(HeatException):
+    msg_fmt = _('Field %(field)s of %(objname)s is not an instance of Field')

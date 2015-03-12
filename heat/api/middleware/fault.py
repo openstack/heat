@@ -84,6 +84,12 @@ class FaultWrapper(wsgi.Middleware):
         'Invalid': webob.exc.HTTPBadRequest,
         'ResourcePropertyConflict': webob.exc.HTTPBadRequest,
         'PropertyUnspecifiedError': webob.exc.HTTPBadRequest,
+        'ObjectFieldInvalid': webob.exc.HTTPBadRequest,
+        'ReadOnlyFieldError': webob.exc.HTTPBadRequest,
+        'ObjectActionError': webob.exc.HTTPBadRequest,
+        'IncompatibleObjectVersion': webob.exc.HTTPBadRequest,
+        'OrphanedObjectError': webob.exc.HTTPBadRequest,
+        'UnsupportedObjectError': webob.exc.HTTPBadRequest,
     }
 
     def _map_exception_to_error(self, class_exception):
