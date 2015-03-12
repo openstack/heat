@@ -27,6 +27,12 @@ Resources:
     Type: AWS::IAM::AccessKey
     Properties:
       UserName: {Ref: CfnUser}
+
+  IPAddress:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: {Ref: SmokeServer}
+
   SmokeServer:
     Type: AWS::EC2::Instance
     Metadata:
@@ -78,4 +84,4 @@ Outputs:
   SmokeServerIp:
     Description: IP address of server
     Value:
-      Fn::GetAtt: [SmokeServer, PublicIp]
+      Ref: IPAddress

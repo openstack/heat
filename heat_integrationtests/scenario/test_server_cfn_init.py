@@ -30,20 +30,13 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
     def check_stack(self, sid):
         # Check status of all resources
         for res in ('WaitHandle', 'SmokeSecurityGroup', 'SmokeKeys',
-                    'CfnUser', 'SmokeServer'):
+                    'CfnUser', 'SmokeServer', 'IPAddress'):
             self._wait_for_resource_status(
                 sid, res, 'CREATE_COMPLETE')
 
         server_resource = self.client.resources.get(sid, 'SmokeServer')
         server_id = server_resource.physical_resource_id
         server = self.compute_client.servers.get(server_id)
-        server_ip = server.networks[self.conf.network_for_ssh][0]
-
-        # Check that created server is reachable
-        if not self._ping_ip_address(server_ip):
-            self._log_console_output(servers=[server])
-            self.fail(
-                "Timed out waiting for %s to become reachable" % server_ip)
 
         try:
             self._wait_for_resource_status(
@@ -71,6 +64,14 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
         wait_status = json.loads(
             self._stack_output(stack, 'WaitConditionStatus'))
         self.assertEqual('smoke test complete', wait_status['smoke_status'])
+
+        server_ip = self._stack_output(stack, 'SmokeServerIp')
+
+        # Check that created server is reachable
+        if not self._ping_ip_address(server_ip):
+            self._log_console_output(servers=[server])
+            self.fail(
+                "Timed out waiting for %s to become reachable" % server_ip)
 
         # Check that the user can authenticate with the generated keypair
         if self.keypair:
@@ -106,7 +107,8 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
         # Launch stack
         stack_id = self.launch_stack(
             template_name="test_server_cfn_init.yaml",
-            parameters=parameters
+            parameters=parameters,
+            expected_status=None
         )
 
         # Check stack
