@@ -102,6 +102,7 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.fc = self.m.CreateMockAnything()
         self.nova = self.m.CreateMockAnything()
         self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')
+        self.stub_TroveFlavorConstraint_validate()
 
     def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
