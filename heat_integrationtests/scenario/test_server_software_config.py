@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heatclient.common import template_utils
 import six
 
 from heat_integrationtests.common import exceptions
@@ -157,13 +158,17 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             'cfg3.pp': CFG3_PP
         }
 
+        env_files, env = template_utils.process_environment_and_files(
+            self.conf.boot_config_env)
+
         # Launch stack
         self.stack_identifier = self.launch_stack(
             stack_name=self.stack_name,
             template_name='test_server_software_config.yaml',
             parameters=parameters,
-            files=files,
-            expected_status=None
+            files=dict(list(files.items()) + list(env_files.items())),
+            expected_status=None,
+            environment=env
         )
 
         # Check stack

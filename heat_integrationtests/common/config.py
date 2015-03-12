@@ -68,6 +68,12 @@ IntegrationTestGroup = [
     cfg.StrOpt('fixed_network_name',
                default='private',
                help="Visible fixed network name "),
+    cfg.StrOpt('boot_config_env',
+               default='heat_integrationtests/scenario/templates'
+                       '/boot_config_none_env.yaml',
+               help="Path to environment file which defines the "
+                    "resource type Heat::InstallConfigAgent. Needs to "
+                    "be appropriate for the image_ref."),
     cfg.StrOpt('fixed_subnet_name',
                default='private-subnet',
                help="Visible fixed sub-network name "),

@@ -136,11 +136,7 @@ resources:
       signal_transport: {get_param: signal_transport}
 
   cfg_user_data:
-    type: OS::Heat::SoftwareConfig
-    properties:
-      config: |
-        #!/bin/sh
-        echo "user data script"
+    type: Heat::InstallConfigAgent
 
   server:
     type: OS::Nova::Server
@@ -154,7 +150,7 @@ resources:
       - network: {get_param: network}
       user_data_format: SOFTWARE_CONFIG
       software_config_transport: {get_param: software_config_transport}
-      user_data: {get_resource: cfg_user_data}
+      user_data: {get_attr: [cfg_user_data, config]}
 
 outputs:
   res1:
