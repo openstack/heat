@@ -20,10 +20,6 @@ import neutronclient.v2_0.client
 import novaclient.client
 import swiftclient
 
-import logging
-
-LOG = logging.getLogger(__name__)
-
 
 class ClientManager(object):
     """

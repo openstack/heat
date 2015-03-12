@@ -12,14 +12,10 @@
 
 import copy
 import json
-import logging
 
 from testtools import matchers
 
 from heat_integrationtests.common import test
-
-
-LOG = logging.getLogger(__name__)
 
 
 class InstanceGroupTest(test.HeatIntegrationTest):

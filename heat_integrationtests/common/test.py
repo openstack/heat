@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import os
 import random
 import re
@@ -19,6 +18,7 @@ import time
 
 import fixtures
 from heatclient import exc as heat_exceptions
+from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 import testscenarios
@@ -111,8 +111,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         if not servers:
             servers = self.compute_client.servers.list()
         for server in servers:
-            LOG.debug('Console output for %s', server.id)
-            LOG.debug(server.get_console_output())
+            LOG.info('Console output for %s', server.id)
+            LOG.info(server.get_console_output())
 
     def _load_template(self, base_file, file_name, sub_dir=None):
         sub_dir = sub_dir or ''

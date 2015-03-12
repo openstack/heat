@@ -11,14 +11,10 @@
 #    under the License.
 
 import json
-import logging
 
 import yaml
 
 from heat_integrationtests.common import test
-
-
-LOG = logging.getLogger(__name__)
 
 
 class TemplateResourceTest(test.HeatIntegrationTest):

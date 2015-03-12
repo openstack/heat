@@ -10,9 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 
 from cinderclient import exceptions as cinder_exceptions
+from oslo_log import log as logging
 import six
 from testtools import testcase
 

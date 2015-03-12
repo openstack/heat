@@ -11,12 +11,12 @@
 #    under the License.
 
 import cStringIO
-import logging
 import re
 import select
 import socket
 import time
 
+from oslo_log import log as logging
 import paramiko
 import six
 

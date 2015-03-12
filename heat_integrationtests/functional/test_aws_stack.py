@@ -12,10 +12,10 @@
 
 import hashlib
 import json
-import logging
 import random
 import urlparse
 
+from oslo_log import log as logging
 from swiftclient import utils as swiftclient_utils
 import yaml
 
