@@ -38,10 +38,11 @@ def upgrade_resource_data_pre(migrate_engine):
 
     # remove foreignkey on resource_id
     inspector = sqlalchemy.inspect(migrate_engine)
-    fkc_name = inspector.get_foreign_keys('resource_data')[0]['name']
-    fkc = ForeignKeyConstraint([rd_table.c.resource_id], [res_table.c.id],
-                               fkc_name)
-    migrate_engine.execute(DropConstraint(fkc))
+    fkc_query = inspector.get_foreign_keys('resource_data')
+    if fkc_query:
+        fkc = ForeignKeyConstraint([rd_table.c.resource_id], [res_table.c.id],
+                                   fkc_query[0]['name'])
+        migrate_engine.execute(DropConstraint(fkc))
     # migrate.ForeignKeyConstraint(columns=[rd_table.c.resource_id],
     #                              refcolumns=[res_table.c.id]).drop()
     # rename resource_id -> tmp_res_uuid
@@ -284,10 +285,11 @@ def downgrade_resource_data_pre(migrate_engine):
 
     # remove foreignkey on resource_id
     inspector = sqlalchemy.inspect(migrate_engine)
-    fkc_name = inspector.get_foreign_keys('resource_data')[0]['name']
-    fkc = ForeignKeyConstraint([rd_table.c.resource_id], [res_table.c.id],
-                               fkc_name)
-    migrate_engine.execute(DropConstraint(fkc))
+    fkc_query = inspector.get_foreign_keys('resource_data')
+    if fkc_query:
+        fkc = ForeignKeyConstraint([rd_table.c.resource_id], [res_table.c.id],
+                                   fkc_query[0]['name'])
+        migrate_engine.execute(DropConstraint(fkc))
 
     # rename resource_id -> tmp_res_id
     rd_table.c.resource_id.alter(name='tmp_res_id')
