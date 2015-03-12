@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from heat.engine import attributes
 from heat.engine import properties
@@ -206,6 +207,32 @@ class FloatingIPAssociation(neutron.NeutronResource):
             update_allowed=True
         ),
     }
+
+    def add_dependencies(self, deps):
+        super(FloatingIPAssociation, self).add_dependencies(deps)
+
+        for resource in six.itervalues(self.stack):
+            if resource.has_interface('OS::Neutron::RouterInterface'):
+
+                def port_on_subnet(resource, subnet):
+                    if not resource.has_interface('OS::Neutron::Port'):
+                        return False
+                    for fixed_ip in resource.properties.get(
+                            port.Port.FIXED_IPS):
+
+                        port_subnet = (
+                            fixed_ip.get(port.Port.FIXED_IP_SUBNET)
+                            or fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))
+                        return subnet == port_subnet
+                    return False
+
+                interface_subnet = (
+                    resource.properties.get(router.RouterInterface.SUBNET) or
+                    resource.properties.get(router.RouterInterface.SUBNET_ID))
+                for d in deps.graph()[self]:
+                    if port_on_subnet(d, interface_subnet):
+                        deps += (self, resource)
+                        break
 
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
