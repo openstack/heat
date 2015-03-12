@@ -725,6 +725,12 @@ def watch_data_get_all(context):
     return results
 
 
+def watch_data_get_all_by_watch_rule_id(context, watch_rule_id):
+    results = model_query(context, models.WatchData).filter_by(
+        watch_rule_id=watch_rule_id).all()
+    return results
+
+
 def software_config_create(context, values):
     obj_ref = models.SoftwareConfig()
     obj_ref.update(values)

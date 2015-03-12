@@ -18,10 +18,10 @@ import mox
 from oslo_utils import timeutils
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import template
 from heat.engine import watchrule
+from heat.objects import watch_rule
 from heat.tests import common
 from heat.tests import utils
 
@@ -321,7 +321,7 @@ class WatchRuleTest(common.HeatTestCase):
                                       stack_id=self.stack_id, rule=rule)
         self.wr.store()
 
-        dbwr = db_api.watch_rule_get_by_name(self.ctx, 'storetest')
+        dbwr = watch_rule.WatchRule.get_by_name(self.ctx, 'storetest')
         self.assertIsNotNone(dbwr)
         self.assertEqual('storetest', dbwr.name)
         self.assertEqual(watchrule.WatchRule.NODATA, dbwr.state)
@@ -624,8 +624,9 @@ class WatchRuleTest(common.HeatTestCase):
                                       "Dimensions": []}}
         self.wr.create_watch_data(data)
 
-        dbwr = db_api.watch_rule_get_by_name(self.ctx, 'create_data_test')
-        self.assertEqual(data, dbwr.watch_data[0].data)
+        obj_wr = watch_rule.WatchRule.get_by_name(self.ctx, 'create_data_test')
+        obj_wds = [wd for wd in obj_wr.watch_data]
+        self.assertEqual(data, obj_wds[0].data)
 
         # Note, would be good to write another datapoint and check it
         # but sqlite seems to not interpret the backreference correctly
@@ -654,8 +655,9 @@ class WatchRuleTest(common.HeatTestCase):
                                       "Dimensions": []}}
         self.wr.create_watch_data(data)
 
-        dbwr = db_api.watch_rule_get_by_name(self.ctx, 'create_data_test')
-        self.assertEqual([], dbwr.watch_data)
+        obj_wr = watch_rule.WatchRule.get_by_name(self.ctx, 'create_data_test')
+        obj_wds = [wd for wd in obj_wr.watch_data]
+        self.assertEqual([], obj_wds)
 
     def test_create_watch_data_match(self):
         rule = {u'EvaluationPeriods': u'1',
