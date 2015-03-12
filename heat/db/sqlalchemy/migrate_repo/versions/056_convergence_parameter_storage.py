@@ -70,15 +70,20 @@ def upgrade_sqlite(migrate_engine):
     templates = list(tmpl_table.select().order_by(
         sqlalchemy.sql.expression.asc(tmpl_table.c.created_at))
         .execute())
+    stacks = list(stack_table.select().order_by(
+        sqlalchemy.sql.expression.asc(stack_table.c.created_at))
+        .execute())
+
+    stack_parameters = {}
+    for s in stacks:
+        stack_parameters[s.raw_template_id] = s.parameters
+
     colnames = [c.name for c in tmpl_table.columns]
     for template in templates:
         values = dict(zip(colnames,
                           map(lambda colname: getattr(template, colname),
                               colnames)))
-        params = (stack_table.select(stack_table.c.parameters).
-                  where(stack_table.c.raw_template_id == values['id']).
-                  execute().fetchone())
-        values['environment'] = params
+        values['environment'] = stack_parameters.get(values['id'])
         migrate_engine.execute(new_template.insert(values))
 
     # migrate stacks to new table

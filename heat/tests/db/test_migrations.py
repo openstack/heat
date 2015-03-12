@@ -418,6 +418,64 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertColumnExists(engine, 'stack', 'current_traversal')
         self.assertColumnExists(engine, 'stack', 'current_deps')
 
+    def _pre_upgrade_056(self, engine):
+        raw_template = utils.get_table(engine, 'raw_template')
+        templ = []
+        for i in range(900, 903, 1):
+            t = dict(id=i, template='{}', files='{}')
+            engine.execute(raw_template.insert(), [t])
+            templ.append(t)
+
+        user_creds = utils.get_table(engine, 'user_creds')
+        user = [dict(id=900, username='test_user', password='password',
+                     tenant='test_project', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='')]
+        engine.execute(user_creds.insert(), user)
+
+        stack = utils.get_table(engine, 'stack')
+        stack_ids = [('967aaefa-152e-405d-b13a-35d4c816390c', 0),
+                     ('9e9debab-a303-4f29-84d3-c8165647c47e', 1),
+                     ('9a4bd1e9-8b21-46cd-964a-f66cb1cfa2f9', 2)]
+        data = [dict(id=ll_id, name=ll_id,
+                     raw_template_id=templ[templ_id]['id'],
+                     user_creds_id=user[0]['id'],
+                     username='test_user',
+                     disable_rollback=True,
+                     parameters='test_params')
+                for ll_id, templ_id in stack_ids]
+
+        engine.execute(stack.insert(), data)
+        return data
+
+    def _check_056(self, engine, data):
+        self.assertColumnNotExists(engine, 'stack', 'parameters')
+
+        self.assertColumnExists(engine, 'raw_template', 'environment')
+        self.assertColumnExists(engine, 'raw_template', 'predecessor')
+
+        # Get the parameters in stack table
+        stack_parameters = {}
+        for stack in data:
+            stack_parameters[stack['raw_template_id']] = stack['parameters']
+
+        # validate whether its moved to raw_template
+        raw_template_table = utils.get_table(engine, 'raw_template')
+        raw_templates = raw_template_table.select().execute()
+
+        for raw_template in raw_templates:
+            if stack_parameters.get(raw_template.id) is not None:
+                stack_param = stack_parameters[raw_template.id]
+                tmpl_env = raw_template.environment
+                if engine.name == 'sqlite':
+                    stack_param = '"%s"' % stack_param
+
+                self.assertEqual(stack_param,
+                                 tmpl_env,
+                                 'parameters migration from stack to '
+                                 'raw_template failed')
+
     def _pre_upgrade_057(self, engine):
         # template
         raw_template = utils.get_table(engine, 'raw_template')
