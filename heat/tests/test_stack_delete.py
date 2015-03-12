@@ -156,13 +156,13 @@ class StackTest(common.HeatTestCase):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
-        self.m.StubOutWithMock(hkc, 'KeystoneClient')
-        hkc.KeystoneClient(trustor_ctx).AndReturn(
-            fakes.FakeKeystoneClient(user_id='thetrustor'))
-        self.m.ReplayAll()
+        mock_kc = self.patchobject(hkc, 'KeystoneClient')
+        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='thetrustor')
 
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
+
+        mock_kc.assert_called_once_with(trustor_ctx)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
@@ -188,17 +188,15 @@ class StackTest(common.HeatTestCase):
         other_ctx = utils.dummy_context(user_id='nottrustor')
         stored_ctx = utils.dummy_context(trust_id='thetrust')
 
-        self.m.StubOutWithMock(hkc, 'KeystoneClient')
-        hkc.KeystoneClient(trustor_ctx).AndReturn(
-            fakes.FakeKeystoneClient(user_id='thetrustor'))
-        self.m.StubOutWithMock(stack.Stack, 'stored_context')
-        stack.Stack.stored_context().AndReturn(stored_ctx)
-        hkc.KeystoneClient(stored_ctx).AndReturn(
-            fakes.FakeKeystoneClient(user_id='nottrustor'))
-        self.m.ReplayAll()
+        mock_kc = self.patchobject(hkc, 'KeystoneClient')
+        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='thetrustor')
+
+        mock_sc = self.patchobject(stack.Stack, 'stored_context')
+        mock_sc.return_value = stored_ctx
 
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
+        mock_kc.assert_called_once_with(trustor_ctx)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
@@ -208,8 +206,13 @@ class StackTest(common.HeatTestCase):
         user_creds = db_api.user_creds_get(user_creds_id)
         self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
 
+        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='nottrustor')
+
         loaded_stack = stack.Stack.load(other_ctx, self.stack.id)
         loaded_stack.delete()
+        mock_sc.assert_called_with()
+        mock_kc.assert_has_calls([mock.call(trustor_ctx),
+                                  mock.call(stored_ctx)])
 
         db_s = db_api.stack_get(other_ctx, stack_id)
         self.assertIsNone(db_s)
@@ -223,10 +226,8 @@ class StackTest(common.HeatTestCase):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClientFail())
-        self.m.ReplayAll()
+        mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
+                                    return_value=FakeKeystoneClientFail())
 
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
@@ -240,6 +241,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_s)
         self.assertEqual(self.stack.state,
                          (stack.Stack.DELETE, stack.Stack.COMPLETE))
+        mock_kcp.assert_called_once_with()
 
     def test_delete_trust_nested(self):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
@@ -277,10 +279,8 @@ class StackTest(common.HeatTestCase):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClientFail())
-        self.m.ReplayAll()
+        mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
+                                    return_value=FakeKeystoneClientFail())
 
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
@@ -289,6 +289,9 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
+
+        mock_kcp.assert_called_with()
+        self.assertEqual(2, mock_kcp.call_count)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
@@ -300,9 +303,8 @@ class StackTest(common.HeatTestCase):
         fkc = fakes.FakeKeystoneClient()
         fkc.delete_stack_domain_project = mock.Mock()
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(fkc)
-        self.m.ReplayAll()
+        mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
+                                    return_value=fkc)
 
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
@@ -313,6 +315,8 @@ class StackTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
+
+        mock_kcp.assert_called_once_with()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNone(db_s)
@@ -357,35 +361,37 @@ class StackTest(common.HeatTestCase):
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
-        self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
-        self.m.StubOutWithMock(scheduler, 'wallclock')
-
         def dummy_task():
             while True:
                 yield
 
         start_time = time.time()
-        scheduler.wallclock().AndReturn(start_time)
-        scheduler.wallclock().AndReturn(start_time + 1)
-        scheduler.DependencyTaskGroup.__call__().AndReturn(dummy_task())
-        scheduler.wallclock().AndReturn(
-            start_time + self.stack.timeout_secs() + 1)
-        self.m.ReplayAll()
+        mock_tg = self.patchobject(scheduler.DependencyTaskGroup, '__call__',
+                                   return_value=dummy_task())
+        mock_wallclock = self.patchobject(scheduler, 'wallclock')
+        mock_wallclock.side_effect = [
+            start_time,
+            start_time + 1,
+            start_time + self.stack.timeout_secs() + 1
+        ]
+
         self.stack.delete()
 
         self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
                          self.stack.state)
         self.assertEqual('Delete timed out', self.stack.status_reason)
 
-        self.m.VerifyAll()
+        mock_tg.assert_called_once_with()
+        mock_wallclock.assert_called_with()
+        self.assertEqual(3, mock_wallclock.call_count)
 
     def test_stack_delete_resourcefailure(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
-        exc = Exception('foo')
-        generic_rsrc.GenericResource.handle_delete().AndRaise(exc)
-        self.m.ReplayAll()
+
+        mock_rd = self.patchobject(generic_rsrc.GenericResource,
+                                   'handle_delete',
+                                   side_effect=Exception('foo'))
 
         self.stack = stack.Stack(self.ctx, 'delete_test_fail',
                                  template.Template(tmpl))
@@ -397,11 +403,11 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
+        mock_rd.assert_called_once()
         self.assertEqual((self.stack.DELETE, self.stack.FAILED),
                          self.stack.state)
         self.assertEqual('Resource DELETE failed: Exception: foo',
                          self.stack.status_reason)
-        self.m.VerifyAll()
 
     def test_stack_user_project_id_delete_fail(self):
 
@@ -409,10 +415,8 @@ class StackTest(common.HeatTestCase):
             def delete_stack_domain_project(self, project_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            FakeKeystoneClientFail())
-        self.m.ReplayAll()
+        mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
+                                    return_value=FakeKeystoneClientFail())
 
         self.stack = stack.Stack(self.ctx, 'user_project_init',
                                  self.tmpl,
@@ -423,7 +427,8 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('aproject1234', db_stack.stack_user_project_id)
 
         self.stack.delete()
+
+        mock_kcp.assert_called_once_with()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
                          self.stack.state)
         self.assertIn('Error deleting project', self.stack.status_reason)
-        self.m.VerifyAll()
