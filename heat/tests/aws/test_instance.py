@@ -449,7 +449,8 @@ class InstancesTest(common.HeatTestCase):
         instance = instances.Instance('instance_create_image',
                                       res_definitions['WebServer'], stack)
         instance.nova = mock.Mock()
-        instance._check_active = mock.Mock(return_value=True)
+        self.patchobject(nova.NovaClientPlugin, '_check_active',
+                         return_value=True)
 
         self.assertIsNone(instance.handle_check())
 
@@ -461,7 +462,8 @@ class InstancesTest(common.HeatTestCase):
                                       res_definitions['WebServer'], stack)
         instance.nova = mock.Mock()
         instance.nova.return_value.servers.get.return_value.status = 'foo'
-        instance._check_active = mock.Mock(return_value=False)
+        self.patchobject(nova.NovaClientPlugin, '_check_active',
+                         return_value=False)
 
         exc = self.assertRaises(exception.Error, instance.handle_check)
         self.assertIn('foo', six.text_type(exc))

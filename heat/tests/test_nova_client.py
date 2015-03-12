@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
+from heat.engine import resource
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -172,7 +173,7 @@ class NovaClientPluginTests(NovaClientPluginTestCase):
         self.assertEqual('ACTIVE', observed)
 
 
-class NovaUtilsRefreshServerTests(NovaClientPluginTestCase):
+class NovaClientPluginRefreshServerTests(NovaClientPluginTestCase):
     msg = ("ClientException: The server has either erred or is "
            "incapable of performing the requested operation.")
 
@@ -205,7 +206,106 @@ class NovaUtilsRefreshServerTests(NovaClientPluginTestCase):
         server.get.assert_called_once_with()
 
 
-class NovaUtilsUserdataTests(NovaClientPluginTestCase):
+class NovaClientPluginFetchServerTests(NovaClientPluginTestCase):
+
+    server = mock.Mock()
+    # set explicitly as id and name has internal meaning in mock.Mock
+    server.id = '1234'
+    server.name = 'test_fetch_server'
+    msg = ("ClientException: The server has either erred or is "
+           "incapable of performing the requested operation.")
+    scenarios = [
+        ('successful_refresh', dict(
+            value=server,
+            e_raise=False)),
+        ('overlimit_error', dict(
+            value=nova_exceptions.OverLimit(413, "limit reached"),
+            e_raise=False)),
+        ('500_error', dict(
+            value=nova_exceptions.ClientException(500, msg),
+            e_raise=False)),
+        ('503_error', dict(
+            value=nova_exceptions.ClientException(503, msg),
+            e_raise=False)),
+        ('unhandled_exception', dict(
+            value=nova_exceptions.ClientException(501, msg),
+            e_raise=True)),
+    ]
+
+    def test_fetch_server(self):
+        self.nova_client.servers.get.side_effect = [self.value]
+        if self.e_raise:
+            self.assertRaises(nova_exceptions.ClientException,
+                              self.nova_plugin.fetch_server, self.server.id)
+        elif isinstance(self.value, mock.Mock):
+            self.assertEqual(self.value,
+                             self.nova_plugin.fetch_server(self.server.id))
+        else:
+            self.assertIsNone(self.nova_plugin.fetch_server(self.server.id))
+
+        self.nova_client.servers.get.assert_called_once_with(self.server.id)
+
+
+class NovaClientPluginCheckActiveTests(NovaClientPluginTestCase):
+
+    scenarios = [
+        ('active', dict(
+            status='ACTIVE',
+            e_raise=False)),
+        ('deferred', dict(
+            status='BUILD',
+            e_raise=False)),
+        ('error', dict(
+            status='ERROR',
+            e_raise=resource.ResourceInError)),
+        ('unknown', dict(
+            status='VIKINGS!',
+            e_raise=resource.ResourceUnknownStatus))
+    ]
+
+    def setUp(self):
+        super(NovaClientPluginCheckActiveTests, self).setUp()
+        self.server = mock.Mock()
+        self.server.id = '1234'
+        self.server.status = self.status
+        self.r_mock = self.patchobject(self.nova_plugin, 'refresh_server',
+                                       return_value=None)
+        self.f_mock = self.patchobject(self.nova_plugin, 'fetch_server',
+                                       return_value=self.server)
+
+    def test_check_active_with_object(self):
+        if self.e_raise:
+            self.assertRaises(self.e_raise,
+                              self.nova_plugin._check_active, self.server)
+            self.r_mock.assert_called_once_with(self.server)
+        elif self.status in self.nova_plugin.deferred_server_statuses:
+            self.assertFalse(self.nova_plugin._check_active(self.server))
+            self.r_mock.assert_called_once_with(self.server)
+        else:
+            self.assertTrue(self.nova_plugin._check_active(self.server))
+            self.assertEqual(0, self.r_mock.call_count)
+        self.assertEqual(0, self.f_mock.call_count)
+
+    def test_check_active_with_string(self):
+        if self.e_raise:
+            self.assertRaises(self.e_raise,
+                              self.nova_plugin._check_active, self.server.id)
+        elif self.status in self.nova_plugin.deferred_server_statuses:
+            self.assertFalse(self.nova_plugin._check_active(self.server.id))
+        else:
+            self.assertTrue(self.nova_plugin._check_active(self.server.id))
+
+        self.f_mock.assert_called_once_with(self.server.id)
+        self.assertEqual(0, self.r_mock.call_count)
+
+    def test_check_active_with_string_unavailable(self):
+        self.f_mock.return_value = None
+        self.assertFalse(self.nova_plugin._check_active(self.server.id))
+        self.f_mock.assert_called_once_with(self.server.id)
+        self.assertEqual(0, self.r_mock.call_count)
+
+
+class NovaClientPluginUserdataTests(NovaClientPluginTestCase):
 
     def test_build_userdata(self):
         """Tests the build_userdata function."""
@@ -253,7 +353,7 @@ class NovaUtilsUserdataTests(NovaClientPluginTestCase):
         self.assertIn("custominstanceuser", data)
 
 
-class NovaUtilsMetadataTests(NovaClientPluginTestCase):
+class NovaClientPluginMetadataTests(NovaClientPluginTestCase):
 
     def test_serialize_string(self):
         original = {'test_key': 'simple string value'}

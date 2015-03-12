@@ -588,7 +588,7 @@ class Instance(resource.Resource):
 
     def check_create_complete(self, cookie):
         server, volume_attach_task = cookie
-        return (self._check_active(server) and
+        return (self.client_plugin()._check_active(server, 'Instance') and
                 self._check_volume_attached(server, volume_attach_task))
 
     def _check_volume_attached(self, server, volume_attach_task):
@@ -598,32 +598,6 @@ class Instance(resource.Resource):
             return volume_attach_task.done()
         else:
             return volume_attach_task.step()
-
-    def _check_active(self, server):
-        cp = self.client_plugin()
-        status = cp.get_status(server)
-        if status != 'ACTIVE':
-            cp.refresh_server(server)
-            status = cp.get_status(server)
-
-        if status == 'ACTIVE':
-            return True
-
-        if status in cp.deferred_server_statuses:
-            return False
-
-        if status == 'ERROR':
-            fault = getattr(server, 'fault', {})
-            raise resource.ResourceInError(
-                resource_status=status,
-                status_reason=_("Message: %(message)s, Code: %(code)s") % {
-                    'message': fault.get('message', _('Unknown')),
-                    'code': fault.get('code', _('Unknown'))
-                })
-
-        raise resource.ResourceUnknownStatus(
-            resource_status=server.status,
-            result=_('Instance is not active'))
 
     def volumes(self):
         """
@@ -645,7 +619,7 @@ class Instance(resource.Resource):
 
     def handle_check(self):
         server = self.nova().servers.get(self.resource_id)
-        if not self._check_active(server):
+        if not self.client_plugin()._check_active(server, 'Instance'):
             raise exception.Error(_("Instance is not ACTIVE (was: %s)") %
                                   server.status.strip())
 
@@ -869,7 +843,7 @@ class Instance(resource.Resource):
             return server
 
     def check_resume_complete(self, server):
-        return self._check_active(server)
+        return self.client_plugin()._check_active(server, 'Instance')
 
 
 def resource_mapping():
