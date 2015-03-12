@@ -84,6 +84,12 @@ def resource_get_all(context):
     return IMPL.resource_get_all(context)
 
 
+def resource_update(context, resource_id, values, atomic_key,
+                    expected_engine_id=None):
+    return IMPL.resource_update(context, resource_id, values, atomic_key,
+                                expected_engine_id)
+
+
 def resource_create(context, values):
     return IMPL.resource_create(context, values)
 

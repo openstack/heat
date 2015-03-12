@@ -287,6 +287,8 @@ class Resource(BASE, HeatBase, StateAware):
     # created/modified. (bug #1193269)
     updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
     properties_data = sqlalchemy.Column('properties_data', types.Json)
+    engine_id = sqlalchemy.Column(sqlalchemy.String(36))
+    atomic_key = sqlalchemy.Column(sqlalchemy.Integer)
 
 
 class WatchRule(BASE, HeatBase):
