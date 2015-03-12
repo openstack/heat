@@ -21,7 +21,10 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
         self.client = self.orchestration_client
         self.sub_dir = 'templates'
         self.assign_keypair()
-        self.net = self._get_default_network()
+
+        if not self.conf.fixed_network_name:
+            raise self.skipException("No default network configured to test")
+        self.net = self._get_network()
 
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")

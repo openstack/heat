@@ -147,10 +147,12 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def _stack_rand_name(cls):
         return rand_name(cls.__name__)
 
-    def _get_default_network(self):
+    def _get_network(self, net_name=None):
+        if net_name is None:
+            net_name = self.conf.fixed_network_name
         networks = self.network_client.list_networks()
         for net in networks['networks']:
-            if net['name'] == self.conf.fixed_network_name:
+            if net['name'] == net_name:
                 return net
 
     @staticmethod
