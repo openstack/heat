@@ -671,6 +671,46 @@ class HOTemplateTest(common.HeatTestCase):
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
 
+    def test_digest(self):
+        snippet = {'digest': ['md5', 'foobar']}
+        snippet_resolved = '3858f62230ac3c915f300c664312c63f'
+
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_digest_invalid_types(self):
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        invalid_snippets = [
+            {'digest': 'invalid'},
+            {'digest': {'foo': 'invalid'}},
+            {'digest': [123]},
+        ]
+        for snippet in invalid_snippets:
+            exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+            self.assertIn('must be a list of strings', six.text_type(exc))
+
+    def test_digest_incorrect_number_arguments(self):
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        invalid_snippets = [
+            {'digest': []},
+            {'digest': ['foo']},
+            {'digest': ['md5']},
+            {'digest': ['md5', 'foo', 'bar']},
+        ]
+        for snippet in invalid_snippets:
+            exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+            self.assertIn('usage: ["<algorithm>", "<value>"]',
+                          six.text_type(exc))
+
+    def test_digest_invalid_algorithm(self):
+        tmpl = parser.Template(hot_kilo_tpl_empty)
+
+        snippet = {'digest': ['invalid_algorithm', 'foobar']}
+        exc = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertIn('Algorithm must be one of', six.text_type(exc))
+
     def test_prevent_parameters_access(self):
         """
         Test that the parameters section can't be accessed using the template
