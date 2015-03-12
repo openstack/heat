@@ -49,6 +49,7 @@ from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import resource as resource_objects
+from heat.objects import service as service_objects
 from heat.objects import software_deployment as software_deployment_object
 from heat.objects import stack as stack_object
 from heat.openstack.common import threadgroup
@@ -3136,17 +3137,17 @@ class StackServiceTest(common.HeatTestCase):
                           self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', parsed_template)
 
-    @mock.patch.object(service.db_api, 'service_get_all')
+    @mock.patch.object(service_objects.Service, 'get_all')
     @mock.patch.object(service_utils, 'format_service')
     def test_service_get_all(self, mock_format_service, mock_get_all):
         mock_get_all.return_value = [mock.Mock()]
         mock_format_service.return_value = mock.Mock()
         self.assertEqual(1, len(self.eng.list_services(self.ctx)))
-        self.assertTrue(service.db_api.service_get_all.called)
+        self.assertTrue(mock_get_all.called)
         mock_format_service.assert_called_once_with(mock.ANY)
 
-    @mock.patch.object(service.db_api, 'service_get_all_by_args')
-    @mock.patch.object(service.db_api, 'service_create')
+    @mock.patch.object(service_objects.Service, 'get_all_by_args')
+    @mock.patch.object(service_objects.Service, 'create')
     @mock.patch.object(context, 'get_admin_context')
     def test_service_manage_report_start(self,
                                          mock_admin_context,
@@ -3174,8 +3175,8 @@ class StackServiceTest(common.HeatTestCase):
 
         self.assertEqual(self.eng.service_id, srv['id'])
 
-    @mock.patch.object(service.db_api, 'service_get_all_by_args')
-    @mock.patch.object(service.db_api, 'service_update')
+    @mock.patch.object(service_objects.Service, 'get_all_by_args')
+    @mock.patch.object(service_objects.Service, 'update_by_id')
     @mock.patch.object(context, 'get_admin_context')
     def test_service_manage_report_restart(
             self,
@@ -3202,7 +3203,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.assertEqual(self.eng.service_id, srv['id'])
 
-    @mock.patch.object(service.db_api, 'service_update')
+    @mock.patch.object(service_objects.Service, 'update_by_id')
     @mock.patch.object(context, 'get_admin_context')
     def test_service_manage_report_update(
             self,
@@ -3422,7 +3423,7 @@ class StackServiceTest(common.HeatTestCase):
                        'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
-    @mock.patch('heat.db.api.service_delete',
+    @mock.patch('heat.objects.service.Service.delete',
                 return_value=mock.Mock())
     def test_engine_service_stop_in_convergence_mode(
             self,
@@ -3446,7 +3447,7 @@ class StackServiceTest(common.HeatTestCase):
                        'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
-    @mock.patch('heat.db.api.service_delete',
+    @mock.patch('heat.objects.service.Service.delete',
                 return_value=mock.Mock())
     def test_engine_service_stop_in_non_convergence_mode(
             self,
