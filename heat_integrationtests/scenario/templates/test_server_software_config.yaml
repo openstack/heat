@@ -11,6 +11,9 @@ parameters:
   signal_transport:
     type: string
     default: CFN_SIGNAL
+  software_config_transport:
+    type: string
+    default: POLL_SERVER_CFN
   dep1_foo:
     default: fooooo
     type: string
@@ -150,7 +153,7 @@ resources:
       networks:
       - network: {get_param: network}
       user_data_format: SOFTWARE_CONFIG
-      software_config_transport: POLL_TEMP_URL
+      software_config_transport: {get_param: software_config_transport}
       user_data: {get_resource: cfg_user_data}
 
 outputs:
