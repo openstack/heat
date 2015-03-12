@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import hashlib
 import itertools
 
 import six
@@ -334,3 +335,44 @@ class Repeat(function.Function):
         template = function.resolve(self._template)
         return [self._do_replacement(keys, items, template)
                 for items in itertools.product(*lists)]
+
+
+class Digest(function.Function):
+    '''
+    A function for performing digest operations.
+
+    Takes the form::
+
+        digest:
+          - <algorithm>
+          - <value>
+
+    Valid algorithms are the ones provided by natively by hashlib (md5, sha1,
+    sha224, sha256, sha384, and sha512) or any one provided by OpenSSL.
+    '''
+
+    def validate_usage(self, args):
+        if not (isinstance(args, list) and
+                all([isinstance(a, six.string_types) for a in args])):
+            msg = _('Argument to function "%s" must be a list of strings')
+            raise TypeError(msg % self.fn_name)
+
+        if len(args) != 2:
+            msg = _('Function "%s" usage: ["<algorithm>", "<value>"]')
+            raise ValueError(msg % self.fn_name)
+
+        if args[0].lower() not in hashlib.algorithms:
+            msg = _('Algorithm must be one of %s')
+            raise ValueError(msg % six.text_type(hashlib.algorithms))
+
+    def digest(self, algorithm, value):
+        _hash = hashlib.new(algorithm)
+        _hash.update(value)
+
+        return _hash.hexdigest()
+
+    def result(self):
+        args = function.resolve(self.args)
+        self.validate_usage(args)
+
+        return self.digest(*args)

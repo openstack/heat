@@ -295,6 +295,7 @@ class HOTemplate20141016(HOTemplate20130523):
 
 class HOTemplate20150430(HOTemplate20141016):
     functions = {
+        'digest': hot_funcs.Digest,
         'get_attr': hot_funcs.GetAtt,
         'get_file': hot_funcs.GetFile,
         'get_param': hot_funcs.GetParam,
