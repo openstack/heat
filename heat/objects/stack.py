@@ -66,7 +66,7 @@ class Stack(
                     objects.raw_template.RawTemplate.get_by_id(
                         context, db_stack['raw_template_id']))
             else:
-                stack[field] = db_stack[field]
+                stack[field] = db_stack.__dict__.get(field)
         stack._context = context
         stack.obj_reset_changes()
         return stack
@@ -81,20 +81,45 @@ class Stack(
 
     @classmethod
     def get_by_name_and_owner_id(cls, context, stack_name, owner_id):
-        return db_api.stack_get_by_name_and_owner_id(context, stack_name,
-                                                     owner_id)
+        db_stack = db_api.stack_get_by_name_and_owner_id(
+            context,
+            stack_name,
+            owner_id
+        )
+        if not db_stack:
+            return db_stack
+        stack = cls._from_db_object(context, cls(context), db_stack)
+        return stack
 
     @classmethod
     def get_by_name(cls, context, stack_name):
-        return db_api.stack_get_by_name(context, stack_name)
+        db_stack = db_api.stack_get_by_name(context, stack_name)
+        if not db_stack:
+            return db_stack
+        stack = cls._from_db_object(context, cls(context), db_stack)
+        return stack
 
     @classmethod
     def get_all(cls, context, *args, **kwargs):
-        return db_api.stack_get_all(context, *args, **kwargs)
+        db_stacks = db_api.stack_get_all(context, *args, **kwargs)
+        stacks = map(
+            lambda db_stack: cls._from_db_object(
+                context,
+                cls(context),
+                db_stack),
+            db_stacks)
+        return stacks
 
     @classmethod
     def get_all_by_owner_id(cls, context, owner_id):
-        return db_api.stack_get_all_by_owner_id(context, owner_id)
+        db_stacks = db_api.stack_get_all_by_owner_id(context, owner_id)
+        stacks = map(
+            lambda db_stack: cls._from_db_object(
+                context,
+                cls(context),
+                db_stack),
+            db_stacks)
+        return stacks
 
     @classmethod
     def count_all(cls, context, **kwargs):
