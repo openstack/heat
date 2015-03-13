@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import vpc
@@ -120,7 +121,10 @@ class SubnetRouteTableAssociation(resource.Resource):
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
             _('Subnet ID.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
     }
 

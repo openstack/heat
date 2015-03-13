@@ -216,7 +216,7 @@ class instancesTest(common.HeatTestCase):
         nova.NovaClientPlugin._create().AndReturn(self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
-
+        self.stub_SubnetConstraint_validate()
         self.m.StubOutWithMock(instance, 'neutron')
         instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
@@ -273,6 +273,7 @@ class instancesTest(common.HeatTestCase):
         metadata = instance.metadata_get()
 
         self._mock_get_image_id_success(image_id, 1)
+        self.stub_SubnetConstraint_validate()
         self.m.StubOutWithMock(nic, 'neutron')
         nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
 

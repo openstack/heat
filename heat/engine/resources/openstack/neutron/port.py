@@ -110,13 +110,19 @@ class Port(neutron.NeutronResource):
                         properties.Schema.STRING,
                         support_status=support.SupportStatus(
                             support.DEPRECATED,
-                            _('Use property %s.') % FIXED_IP_SUBNET)
+                            _('Use property %s.') % FIXED_IP_SUBNET),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.subnet')
+                        ]
                     ),
                     FIXED_IP_SUBNET: properties.Schema(
                         properties.Schema.STRING,
                         _('Subnet in which to allocate the IP address for '
                           'this port.'),
-                        support_status=support.SupportStatus(version='2014.2')
+                        support_status=support.SupportStatus(version='2014.2'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.subnet')
+                        ]
                     ),
                     FIXED_IP_IP_ADDRESS: properties.Schema(
                         properties.Schema.STRING,

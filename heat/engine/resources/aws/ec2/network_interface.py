@@ -13,6 +13,7 @@
 
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 
@@ -60,7 +61,10 @@ class NetworkInterface(resource.Resource):
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
             _('Subnet ID to associate with this interface.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
+            ]
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
