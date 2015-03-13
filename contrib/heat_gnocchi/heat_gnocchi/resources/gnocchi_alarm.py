@@ -128,5 +128,5 @@ def resource_mapping():
     return {
         'OS::Ceilometer::GnocchiResourcesAlarm':
             CeilometerGnocchiResourcesAlarm,
-        'OS::Ceilometer::GnocchiMetricslarm': CeilometerGnocchiMetricsAlarm,
+        'OS::Ceilometer::GnocchiMetricsAlarm': CeilometerGnocchiMetricsAlarm,
     }
