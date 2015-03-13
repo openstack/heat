@@ -25,7 +25,7 @@ class StackLockTest(common.HeatTestCase):
     def setUp(self):
         super(StackLockTest, self).setUp()
         self.context = utils.dummy_context()
-        self.stack = self.m.CreateMockAnything()
+        self.stack = mock.MagicMock()
         self.stack.id = "aae01f2d-52ae-47ac-8a0d-3fde3d220fea"
         self.stack.name = "test_stack"
         self.stack.action = "CREATE"
@@ -35,115 +35,90 @@ class StackLockTest(common.HeatTestCase):
             pass
 
     def test_successful_acquire_new_lock(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn(None)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value=None)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         slock.acquire()
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_failed_acquire_existing_lock_current_engine(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn(self.engine_id)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value=self.engine_id)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+
         self.assertRaises(exception.ActionInProgress, slock.acquire)
-        self.m.VerifyAll()
+        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_successful_acquire_existing_lock_engine_dead(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
-                                self.engine_id).AndReturn(None)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value='fake-engine-id')
+        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+                                      return_value=None)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
+        mock_steal.assert_called_once_with(self.stack.id, 'fake-engine-id',
+                                           self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_alive(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value='fake-engine-id')
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=True)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_dead(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(
-            self.stack.id, "fake-engine-id",
-            self.engine_id).AndReturn("fake-engine-id2")
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value='fake-engine-id')
+        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+                                      return_value='fake-engine-id2')
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
+        mock_steal.assert_called_once_with(self.stack.id, 'fake-engine-id',
+                                           self.engine_id)
 
     def test_successful_acquire_with_retry(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(
-            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
-
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        db_api.stack_lock_steal(
-            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(None)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value='fake-engine-id')
+        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+                                      side_effect=[True, None])
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
-        self.m.VerifyAll()
+
+        mock_create.assert_has_calls(
+            [mock.call(self.stack.id, self.engine_id)] * 2)
+        mock_steal.assert_has_calls(
+            [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_failed_acquire_one_retry_only(self):
-        self.m.StubOutWithMock(db_api, "stack_lock_create")
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        self.m.StubOutWithMock(db_api, "stack_lock_steal")
-        db_api.stack_lock_steal(
-            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
-
-        db_api.stack_lock_create(
-            self.stack.id, self.engine_id).AndReturn("fake-engine-id")
-
-        db_api.stack_lock_steal(
-            self.stack.id, "fake-engine-id", self.engine_id).AndReturn(True)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(db_api, 'stack_lock_create',
+                                       return_value='fake-engine-id')
+        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+                                      return_value=True)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
-        self.m.VerifyAll()
+
+        mock_create.assert_has_calls(
+            [mock.call(self.stack.id, self.engine_id)] * 2)
+        mock_steal.assert_has_calls(
+            [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_thread_lock_context_mgr_exception_acquire_success(self):
         db_api.stack_lock_create = mock.Mock(return_value=None)
