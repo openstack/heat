@@ -939,6 +939,38 @@ def purge_deleted(age, granularity='days'):
         engine.execute(stmt)
 
 
+def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
+                                                 traversal_id):
+    rows_deleted = model_query(context, models.SyncPoint).filter_by(
+        stack_id=stack_id, traversal_id=traversal_id).delete()
+    return rows_deleted
+
+
+def sync_point_create(context, values):
+    sync_point_ref = models.SyncPoint()
+    sync_point_ref.update(values)
+    sync_point_ref.save(_session(context))
+    return sync_point_ref
+
+
+def sync_point_get(context, entity_id, traversal_id, is_update):
+    return model_query(context, models.SyncPoint).get(
+        (entity_id, traversal_id, is_update)
+    )
+
+
+def sync_point_update_input_data(context, entity_id,
+                                 traversal_id, is_update, atomic_key,
+                                 input_data):
+    rows_updated = model_query(context, models.SyncPoint).filter_by(
+        entity_id=entity_id,
+        traversal_id=traversal_id,
+        is_update=is_update,
+        atomic_key=atomic_key
+    ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
+    return rows_updated
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return migration.db_sync(engine, version=version)

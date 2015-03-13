@@ -332,6 +332,29 @@ def service_get_all_by_args(context, host, binary, hostname):
     return IMPL.service_get_all_by_args(context, host, binary, hostname)
 
 
+def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
+                                                 traversal_id):
+    return IMPL.sync_point_delete_all_by_stack_and_traversal(context,
+                                                             stack_id,
+                                                             traversal_id)
+
+
+def sync_point_create(context, values):
+    return IMPL.sync_point_create(context, values)
+
+
+def sync_point_get(context, entity_id, traversal_id, is_update):
+    return IMPL.sync_point_get(context, entity_id, traversal_id, is_update)
+
+
+def sync_point_update_input_data(context, entity_id,
+                                 traversal_id, is_update, atomic_key,
+                                 input_data):
+    return IMPL.sync_point_update_input_data(context, entity_id,
+                                             traversal_id, is_update,
+                                             atomic_key, input_data)
+
+
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(engine, version=version)
