@@ -18,12 +18,12 @@ from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
 from heat.engine import template
+from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests import generic_resource
@@ -86,7 +86,7 @@ class SignalTest(common.HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        rs_data = db_api.resource_data_get_all(rsrc)
+        rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIn('Failed', rsrc.status_reason)
         self.assertEqual('1234', rs_data.get('user_id'))
@@ -108,7 +108,7 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Ensure the resource data has been stored correctly
-        rs_data = db_api.resource_data_get_all(rsrc)
+        rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual('mycredential', rs_data.get('credential_id'))
         self.assertEqual('anaccesskey', rs_data.get('access_key'))
         self.assertEqual('verysecret', rs_data.get('secret_key'))
@@ -129,16 +129,17 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Ensure the resource data has been stored correctly
-        rs_data = db_api.resource_data_get_all(rsrc)
+        rs_data = resource_data_object.ResourceData.get_all(rsrc)
         self.assertEqual('1234', rs_data.get('user_id'))
         self.assertEqual('1234', rsrc.resource_id)
         self.assertEqual('1234', rsrc._get_user_id())
 
         # Check user id can still be fetched from resource_id
         # if the resource data is not there.
-        db_api.resource_data_delete(rsrc, 'user_id')
+        resource_data_object.ResourceData.delete(rsrc, 'user_id')
         self.assertRaises(
-            exception.NotFound, db_api.resource_data_get, rsrc, 'user_id')
+            exception.NotFound, resource_data_object.ResourceData.get_val,
+            rsrc, 'user_id')
         self.assertEqual('1234', rsrc._get_user_id())
         self.m.VerifyAll()
 

@@ -39,6 +39,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
+from heat.objects import resource_data as resource_data_objects
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
@@ -190,7 +191,8 @@ class Resource(object):
         self.id = resource.id
         self.uuid = resource.uuid
         try:
-            self._data = db_api.resource_data_get_all(self, resource.data)
+            self._data = resource_data_objects.ResourceData.get_all(
+                self, resource.data)
         except exception.NotFound:
             self._data = {}
         self._rsrc_metadata = resource.rsrc_metadata
@@ -1116,7 +1118,7 @@ class Resource(object):
         '''
         if self._data is None and self.id:
             try:
-                self._data = db_api.resource_data_get_all(self)
+                self._data = resource_data_objects.ResourceData.get_all(self)
             except exception.NotFound:
                 pass
 
@@ -1124,7 +1126,7 @@ class Resource(object):
 
     def data_set(self, key, value, redact=False):
         '''Save resource's key/value pair to database.'''
-        db_api.resource_data_set(self, key, value, redact)
+        resource_data_objects.ResourceData.set(self, key, value, redact)
         # force fetch all resource data from the database again
         self._data = None
 
@@ -1135,7 +1137,7 @@ class Resource(object):
         :returns: True if the key existed to delete
         '''
         try:
-            db_api.resource_data_delete(self, key)
+            resource_data_objects.ResourceData.delete(self, key)
         except exception.NotFound:
             return False
         else:

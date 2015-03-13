@@ -34,6 +34,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
+from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -1179,8 +1180,9 @@ class ResourceAdoptTest(common.HeatTestCase):
         }
         adopt = scheduler.TaskRunner(res.adopt, res_data)
         adopt()
-        self.assertEqual("test-value",
-                         db_api.resource_data_get(res, "test-key"))
+        self.assertEqual(
+            "test-value",
+            resource_data_object.ResourceData.get_val(res, "test-key"))
         self.assertEqual({"os_distro": "test-distro"}, res.metadata_get())
         self.assertEqual({"os_distro": "test-distro"}, res.metadata)
         self.assertEqual((res.ADOPT, res.COMPLETE), res.state)

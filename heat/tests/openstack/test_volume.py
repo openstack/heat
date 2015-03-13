@@ -20,11 +20,11 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.objects import resource_data as resource_data_object
 from heat.tests import test_volume_utils as vt_base
 from heat.tests import utils
 from heat.tests.v1_1 import fakes as fakes_v1_1
@@ -609,7 +609,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.SNAPSHOT, rsrc.COMPLETE), rsrc.state)
 
         self.assertEqual({'backup_id': 'backup-123'},
-                         db_api.resource_data_get_all(rsrc))
+                         resource_data_object.ResourceData.get_all(rsrc))
 
         self.m.VerifyAll()
 
@@ -647,7 +647,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.SNAPSHOT, rsrc.FAILED), rsrc.state)
         self.assertEqual("Error: error", rsrc.status_reason)
 
-        self.assertEqual({}, db_api.resource_data_get_all(rsrc))
+        self.assertEqual({}, resource_data_object.ResourceData.get_all(rsrc))
 
         self.m.VerifyAll()
 

@@ -21,11 +21,11 @@ import yaml
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
-from heat.db import api as db_api
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws.cfn import stack as stack_res
 from heat.engine import rsrc_defn
+from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -288,8 +288,9 @@ Outputs:
         res = stack['res']
         stack.delete()
         self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
-        self.assertRaises(exception.NotFound, db_api.resource_data_get, res,
-                          'test')
+        self.assertRaises(
+            exception.NotFound,
+            resource_data_object.ResourceData.get_val, res, 'test')
 
 
 class NestedStackCrudTest(common.HeatTestCase):
