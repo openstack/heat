@@ -66,8 +66,9 @@ class Port(neutron.NeutronResource):
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % NETWORK),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % NETWORK,
+                version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -112,8 +113,9 @@ class Port(neutron.NeutronResource):
                     FIXED_IP_SUBNET_ID: properties.Schema(
                         properties.Schema.STRING,
                         support_status=support.SupportStatus(
-                            support.DEPRECATED,
-                            _('Use property %s.') % FIXED_IP_SUBNET),
+                            status=support.DEPRECATED,
+                            message=_('Use property %s.') % FIXED_IP_SUBNET,
+                            version='2014.2 '),
                         constraints=[
                             constraints.CustomConstraint('neutron.subnet')
                         ]

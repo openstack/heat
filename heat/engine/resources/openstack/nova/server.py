@@ -291,11 +291,12 @@ class Server(stack_user.StackUser):
         ADMIN_USER: properties.Schema(
             properties.Schema.STRING,
             _('Name of the administrative user to use on the server. '
-              'This property will be removed from Juno in favor of the '
-              'default cloud-init user set up for each image (e.g. "ubuntu" '
-              'for Ubuntu 12.04+, "fedora" for Fedora 19+ and "cloud-user" '
-              'for CentOS/RHEL 6.5).'),
-            support_status=support.SupportStatus(status=support.DEPRECATED)
+              'The default cloud-init user set up for each image '
+              '(e.g. "ubuntu" for Ubuntu 12.04+, "fedora" for Fedora 19+ '
+              'and "cloud-user" for CentOS/RHEL 6.5).'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='2014.1')
         ),
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
@@ -319,8 +320,9 @@ class Server(stack_user.StackUser):
                         properties.Schema.STRING,
                         _('ID of network to create a port on.'),
                         support_status=support.SupportStatus(
-                            support.DEPRECATED,
-                            _('Use property %s.') % NETWORK_ID),
+                            status=support.DEPRECATED,
+                            message=_('Use property %s.') % NETWORK_ID,
+                            version='2014.1'),
                         constraints=[
                             constraints.CustomConstraint('neutron.network')
                         ]
@@ -448,6 +450,7 @@ class Server(stack_user.StackUser):
               'addresses from more than one network.'),
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
+                version='2014.2',
                 message=_('Use the networks attribute instead of '
                           'first_address. For example: "{get_attr: '
                           '[<server name>, networks, <network name>, 0]}"')

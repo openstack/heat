@@ -21,6 +21,14 @@ SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, PROTOTYPE, DEPRECATED,
 class SupportStatus(object):
 
     def __init__(self, status=SUPPORTED, message=None, version=None):
+        """Use SupportStatus for current status of object.
+
+        :param status: current status of object.
+        :param version: version of OpenStack, from which current status is
+                    valid. It may be None, but need to be defined for correct
+                    doc generating.
+        :param message: specific status message for object.
+        """
         if status in SUPPORT_STATUSES:
             self.status = status
             self.message = message

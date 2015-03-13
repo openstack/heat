@@ -64,8 +64,9 @@ class Subnet(neutron.NeutronResource):
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % NETWORK),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % NETWORK,
+                version='2014.2'),
             required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
@@ -78,6 +79,7 @@ class Subnet(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
+            support_status=support.SupportStatus(version='2014.2')
         ),
         CIDR: properties.Schema(
             properties.Schema.STRING,

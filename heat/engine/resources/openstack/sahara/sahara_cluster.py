@@ -80,9 +80,9 @@ class SaharaCluster(resource.Resource):
             properties.Schema.STRING,
             _('Name or UUID of the image used to boot Hadoop nodes.'),
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Property was deprecated in Kilo release. '
-                  'Use property %s.') % IMAGE_ID),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % IMAGE_ID,
+                version='2015.1'),
             constraints=[
                 constraints.CustomConstraint('glance.image')
             ],
@@ -93,6 +93,7 @@ class SaharaCluster(resource.Resource):
             constraints=[
                 constraints.CustomConstraint('sahara.image'),
             ],
+            support_status=support.SupportStatus(version='2015.1')
         ),
         MANAGEMENT_NETWORK: properties.Schema(
             properties.Schema.STRING,

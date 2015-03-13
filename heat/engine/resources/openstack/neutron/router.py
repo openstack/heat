@@ -90,8 +90,9 @@ class Router(neutron.NeutronResource):
               'users only.'),
             update_allowed=True,
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Deprecated in Kilo. Use property %s.') % L3_AGENT_IDS),
+                status=support.DEPRECATED,
+                version='2015.1',
+                message=_('Use property %s.') % L3_AGENT_IDS),
         ),
         L3_AGENT_IDS: properties.Schema(
             properties.Schema.LIST,
@@ -272,8 +273,9 @@ class RouterInterface(neutron.NeutronResource):
             properties.Schema.STRING,
             _('ID of the router.'),
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % ROUTER),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % ROUTER,
+                version='2015.1'),
             constraints=[
                 constraints.CustomConstraint('neutron.router')
             ],
@@ -281,8 +283,9 @@ class RouterInterface(neutron.NeutronResource):
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % SUBNET),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % SUBNET,
+                version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -299,9 +302,9 @@ class RouterInterface(neutron.NeutronResource):
             properties.Schema.STRING,
             _('The port id, either subnet or port_id should be specified.'),
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Deprecated in Kilo. '
-                  'Use property %s.') % PORT),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % PORT,
+                version='2015.1'),
             constraints=[
                 constraints.CustomConstraint('neutron.port')
             ]
@@ -383,10 +386,10 @@ class RouterInterface(neutron.NeutronResource):
 class RouterGateway(neutron.NeutronResource):
 
     support_status = support.SupportStatus(
-        support.DEPRECATED,
-        _('RouterGateway resource is deprecated and should not be used. '
-          'Instead use the `external_gateway_info` property in the router '
-          'resource to set up the gateway.')
+        status=support.DEPRECATED,
+        message=_('Use the `external_gateway_info` property in '
+                  'the router resource to set up the gateway.'),
+        version='2014.1'
     )
 
     PROPERTIES = (
@@ -407,8 +410,9 @@ class RouterGateway(neutron.NeutronResource):
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % NETWORK),
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % NETWORK,
+                version='2014.2'),
             required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
