@@ -65,6 +65,7 @@ class KeystoneClientV2(object):
     def _v2_client_init(self):
         kwargs = {
             'auth_url': self.context.auth_url,
+            'endpoint': self.context.auth_url,
             'region_name': cfg.CONF.region_name_for_services
         }
 
