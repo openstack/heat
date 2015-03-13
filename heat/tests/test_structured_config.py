@@ -187,6 +187,19 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
             'CREATE', source, inputs, {})
         self.assertEqual({"foo": "baz"}, result)
 
+    def test_build_derived_config_params_with_empty_config(self):
+        source = {}
+        result = self.deployment._build_derived_config_params(
+            'CREATE', source)
+        self.assertEqual('Heat::Ungrouped', result['group'])
+        self.assertEqual({}, result['config'])
+        self.assertEqual(self.deployment.physical_resource_name(),
+                         result['name'])
+        self.assertIn({'name': 'bar', 'type': 'String', 'value': 'baz'},
+                      result['inputs'])
+        self.assertIsNone(result['options'])
+        self.assertIsNone(result['outputs'])
+
 
 class StructuredDeploymentWithStrictInputTest(common.HeatTestCase):
 
