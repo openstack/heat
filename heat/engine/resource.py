@@ -30,7 +30,6 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
-from heat.db import api as db_api
 from heat.engine import attributes
 from heat.engine import event
 from heat.engine import function
@@ -39,6 +38,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import support
+from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.rpc import client as rpc_client
 
@@ -243,7 +243,7 @@ class Resource(object):
             return self.t.metadata()
         if self._rsrc_metadata is not None:
             return self._rsrc_metadata
-        rs = db_api.resource_get(self.stack.context, self.id)
+        rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.refresh(attrs=['rsrc_metadata'])
         self._rsrc_metadata = rs.rsrc_metadata
         return rs.rsrc_metadata
@@ -251,7 +251,7 @@ class Resource(object):
     def metadata_set(self, metadata):
         if self.id is None:
             raise exception.ResourceNotAvailable(resource_name=self.name)
-        rs = db_api.resource_get(self.stack.context, self.id)
+        rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
 
@@ -877,7 +877,7 @@ class Resource(object):
             return
 
         try:
-            db_api.resource_get(self.context, self.id).delete()
+            resource_objects.Resource.delete(self.context, self.id)
         except exception.NotFound:
             # Don't fail on delete if the db entry has
             # not been created yet.
@@ -889,7 +889,7 @@ class Resource(object):
         self.resource_id = inst
         if self.id is not None:
             try:
-                rs = db_api.resource_get(self.context, self.id)
+                rs = resource_objects.Resource.get_obj(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
                 LOG.warn(_LW('db error %s'), ex)
@@ -908,7 +908,7 @@ class Resource(object):
                   'properties_data': self._stored_properties_data,
                   'stack_name': self.stack.name}
 
-            new_rs = db_api.resource_create(self.context, rs)
+            new_rs = resource_objects.Resource.create(self.context, rs)
             self.id = new_rs.id
             self.uuid = new_rs.uuid
             self.created_time = new_rs.created_at
@@ -931,7 +931,7 @@ class Resource(object):
 
         if self.id is not None:
             try:
-                rs = db_api.resource_get(self.context, self.id)
+                rs = resource_objects.Resource.get_obj(self.context, self.id)
                 rs.update_and_save({
                     'action': self.action,
                     'status': self.status,

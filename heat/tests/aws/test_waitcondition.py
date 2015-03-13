@@ -23,12 +23,12 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.objects import resource as resource_objects
 from heat.tests import common
 from heat.tests import utils
 
@@ -128,8 +128,8 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE),
                          rsrc.state)
 
-        r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -148,8 +148,8 @@ class WaitConditionTest(common.HeatTestCase):
         reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
-        r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -171,8 +171,8 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE),
                          rsrc.state)
 
-        r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 
@@ -192,8 +192,8 @@ class WaitConditionTest(common.HeatTestCase):
         reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
-        r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
-                                                  self.stack.id)
+        r = resource_objects.Resource.get_by_name_and_stack(
+            None, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
         self.m.VerifyAll()
 

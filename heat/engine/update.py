@@ -15,10 +15,10 @@ from oslo_log import log as logging
 import six
 
 from heat.common.i18n import _LI
-from heat.db import api as db_api
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.objects import resource as resource_objects
 
 LOG = logging.getLogger(__name__)
 
@@ -84,8 +84,8 @@ class StackUpdate(object):
 
     @staticmethod
     def _exchange_stacks(existing_res, prev_res):
-        db_api.resource_exchange_stacks(existing_res.stack.context,
-                                        existing_res.id, prev_res.id)
+        resource_objects.Resource.exchange_stacks(existing_res.stack.context,
+                                                  existing_res.id, prev_res.id)
         prev_stack, existing_stack = prev_res.stack, existing_res.stack
         prev_stack.add_resource(existing_res)
         existing_stack.add_resource(prev_res)

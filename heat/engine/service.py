@@ -51,6 +51,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
+from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
@@ -1136,8 +1137,9 @@ class EngineService(service.Service):
         :param cnxt: RPC context.
         :param physical_resource_id: The physical resource ID to look up.
         """
-        rs = db_api.resource_get_by_physical_resource_id(cnxt,
-                                                         physical_resource_id)
+        rs = resource_objects.Resource.get_by_physical_resource_id(
+            cnxt,
+            physical_resource_id)
         if not rs:
             raise exception.PhysicalResourceNotFound(
                 resource_id=physical_resource_id)

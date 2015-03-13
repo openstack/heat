@@ -34,6 +34,7 @@ from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import template
+from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
@@ -329,7 +330,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.IN_PROGRESS, res.status)
         self.assertEqual('test_store', res.status_reason)
 
-        db_res = db_api.resource_get(res.context, res.id)
+        db_res = resource_objects.Resource.get_obj(res.context, res.id)
         self.assertEqual(res.CREATE, db_res.action)
         self.assertEqual(res.IN_PROGRESS, db_res.status)
         self.assertEqual('test_store', db_res.status_reason)
@@ -338,6 +339,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.CREATE, res.action)
         self.assertEqual(res.COMPLETE, res.status)
         self.assertEqual('test_update', res.status_reason)
+        db_res.refresh()
         self.assertEqual(res.CREATE, db_res.action)
         self.assertEqual(res.COMPLETE, db_res.status)
         self.assertEqual('test_update', db_res.status_reason)
