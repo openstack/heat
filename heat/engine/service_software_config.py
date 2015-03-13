@@ -22,6 +22,7 @@ from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.db import api as db_api
 from heat.engine import api
+from heat.objects import software_config as software_config_object
 from heat.openstack.common import service
 from heat.rpc import api as rpc_api
 
@@ -31,13 +32,13 @@ LOG = logging.getLogger(__name__)
 class SoftwareConfigService(service.Service):
 
     def show_software_config(self, cnxt, config_id):
-        sc = db_api.software_config_get(cnxt, config_id)
+        sc = software_config_object.SoftwareConfig.get_by_id(cnxt, config_id)
         return api.format_software_config(sc)
 
     def create_software_config(self, cnxt, group, name, config,
                                inputs, outputs, options):
 
-        sc = db_api.software_config_create(cnxt, {
+        sc = software_config_object.SoftwareConfig.create(cnxt, {
             'group': group,
             'name': name,
             'config': {
@@ -50,7 +51,7 @@ class SoftwareConfigService(service.Service):
         return api.format_software_config(sc)
 
     def delete_software_config(self, cnxt, config_id):
-        db_api.software_config_delete(cnxt, config_id)
+        software_config_object.SoftwareConfig.delete(cnxt, config_id)
 
     def list_software_deployments(self, cnxt, server_id):
         all_sd = db_api.software_deployment_get_all(cnxt, server_id)
