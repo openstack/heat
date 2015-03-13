@@ -74,6 +74,7 @@ class NeutronExtraRouteTest(common.HeatTestCase):
         return rsrc
 
     def test_extraroute(self):
+        self.stub_RouterConstraint_validate()
         # add first route
         neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'

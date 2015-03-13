@@ -175,6 +175,7 @@ class VPNServiceTest(common.HeatTestCase):
 
     def create_vpnservice(self, resolve_neutron=True, resolve_router=True):
         self.stub_SubnetConstraint_validate()
+        self.stub_RouterConstraint_validate()
         if resolve_neutron:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -224,6 +225,7 @@ class VPNServiceTest(common.HeatTestCase):
             'subnet',
             'sub123'
         ).MultipleTimes().AndReturn('sub123')
+        self.stub_RouterConstraint_validate()
 
         neutronclient.Client.create_vpnservice(self.VPN_SERVICE_CONF).AndRaise(
             exceptions.NeutronClientException())

@@ -1784,6 +1784,7 @@ class NeutronRouterTest(common.HeatTestCase):
         subnet_key = 'subnet_id'
         router_key = 'router_id'
         self.stub_SubnetConstraint_validate()
+        self.stub_RouterConstraint_validate()
         if resolve_router:
             neutronV20.find_resourceid_by_name_or_id(
                 mox.IsA(neutronclient.Client),
@@ -1812,6 +1813,7 @@ class NeutronRouterTest(common.HeatTestCase):
 
     def test_router_interface_with_old_data(self):
         self.stub_SubnetConstraint_validate()
+        self.stub_RouterConstraint_validate()
         neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -1876,6 +1878,7 @@ class NeutronRouterTest(common.HeatTestCase):
             {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         ).AndRaise(qe.NeutronClientException(status_code=404))
         self.stub_PortConstraint_validate()
+        self.stub_RouterConstraint_validate()
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
@@ -1951,6 +1954,8 @@ class NeutronRouterTest(common.HeatTestCase):
         neutronclient.Client.remove_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.stub_RouterConstraint_validate()
+
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)

@@ -263,14 +263,20 @@ class RouterInterface(neutron.NeutronResource):
     properties_schema = {
         ROUTER: properties.Schema(
             properties.Schema.STRING,
-            _('The router.')
+            _('The router.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.router')
+            ],
         ),
         ROUTER_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of the router.'),
             support_status=support.SupportStatus(
                 support.DEPRECATED,
-                _('Use property %s.') % ROUTER)
+                _('Use property %s.') % ROUTER),
+            constraints=[
+                constraints.CustomConstraint('neutron.router')
+            ],
         ),
         SUBNET_ID: properties.Schema(
             properties.Schema.STRING,
@@ -393,7 +399,10 @@ class RouterGateway(neutron.NeutronResource):
         ROUTER_ID: properties.Schema(
             properties.Schema.STRING,
             _('ID of the router.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.router')
+            ]
         ),
         NETWORK_ID: properties.Schema(
             properties.Schema.STRING,
