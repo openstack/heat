@@ -14,7 +14,6 @@
 import copy
 
 import mock
-import mox
 
 from heat.common import template_format
 from heat.engine import environment
@@ -181,8 +180,6 @@ class StackUpdateTest(common.HeatTestCase):
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
 
-        self.m.ReplayAll()
-
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -191,8 +188,6 @@ class StackUpdateTest(common.HeatTestCase):
         loaded_stack = stack.Stack.load(self.ctx, self.stack.id)
         stored_props = loaded_stack['AResource']._stored_properties_data
         self.assertEqual({'Foo': 'xyz'}, stored_props)
-
-        self.m.VerifyAll()
 
     def test_update_modify_ok_replace_int(self):
         # create
@@ -215,16 +210,8 @@ class StackUpdateTest(common.HeatTestCase):
         value2 = 1
         prop_diff2 = {'an_int': value2}
 
-        self.m.StubOutWithMock(generic_rsrc.ResWithComplexPropsAndAttrs,
-                               'handle_update')
-        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(mox.IgnoreArg(),
-                                                               mox.IgnoreArg(),
-                                                               prop_diff1)
-        generic_rsrc.ResWithComplexPropsAndAttrs.handle_update(mox.IgnoreArg(),
-                                                               mox.IgnoreArg(),
-                                                               prop_diff2)
-
-        self.m.ReplayAll()
+        mock_upd = self.patchobject(generic_rsrc.ResWithComplexPropsAndAttrs,
+                                    'handle_update')
 
         # update 1
         # ==========
@@ -240,6 +227,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
+        mock_upd.assert_called_once_with(mock.ANY, mock.ANY, prop_diff1)
 
         # update 2
         # ==========
@@ -257,7 +245,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
 
-        self.m.VerifyAll()
+        mock_upd.assert_called_with(mock.ANY, mock.ANY, prop_diff2)
 
     def test_update_modify_param_ok_replace(self):
         tmpl = {
@@ -273,9 +261,6 @@ class StackUpdateTest(common.HeatTestCase):
             }
         }
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
-                               'update_template_diff')
-
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
                                  template.Template(tmpl),
                                  environment.Environment({'foo': 'abc'}))
@@ -288,22 +273,23 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl),
                                     environment.Environment({'foo': 'xyz'}))
 
-        def check_props(*args):
+        def check_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            raise resource.UpdateReplace
 
-        generic_rsrc.ResourceWithProps.update_template_diff(
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'xyz'}},
-            {'Type': 'ResourceWithPropsType',
-             'Properties': {'Foo': 'abc'}}
-        ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
-        self.m.ReplayAll()
+        mock_upd = self.patchobject(generic_rsrc.ResourceWithProps,
+                                    'update_template_diff',
+                                    side_effect=check_and_raise)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
-        self.m.VerifyAll()
+        mock_upd.assert_called_once_with(
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'xyz'}},
+            {'Type': 'ResourceWithPropsType',
+             'Properties': {'Foo': 'abc'}})
 
     def test_update_modify_update_failed(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -328,19 +314,17 @@ class StackUpdateTest(common.HeatTestCase):
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
 
-        # patch in a dummy handle_update
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
-        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
-        prop_diff = {'Foo': 'xyz'}
-        generic_rsrc.ResourceWithProps.handle_update(
-            tmpl2['Resources']['AResource'], tmpl_diff,
-            prop_diff).AndRaise(Exception("Foo"))
-        self.m.ReplayAll()
+        mock_upd = self.patchobject(generic_rsrc.ResourceWithProps,
+                                    'handle_update',
+                                    side_effect=Exception("Foo"))
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.m.VerifyAll()
+        mock_upd.assert_called_once_with(
+            tmpl2['Resources']['AResource'],
+            {'Properties': {'Foo': 'xyz'}},
+            {'Foo': 'xyz'})
 
     def test_update_modify_replace_failed_delete(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -363,14 +347,14 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # make the update fail deleting the existing resource
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
-        self.m.ReplayAll()
+        mock_del = self.patchobject(generic_rsrc.ResourceWithProps,
+                                    'handle_delete',
+                                    side_effect=Exception)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.m.VerifyAll()
+        mock_del.assert_called_once_with()
         # Unset here so destroy() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
@@ -395,14 +379,14 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create',
+                                       side_effect=Exception)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.m.VerifyAll()
+        mock_create.assert_called_once_with()
 
     def test_update_modify_replace_failed_create_and_delete_1(self):
         resource._register_class('ResourceWithResourceIDType',
@@ -437,23 +421,11 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'handle_create')
-        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
-
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'mox_resource_id')
-        # First, attempts to delete backup_stack. The create (xyz) has been
-        # failed, so it has no resource_id.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            None).AndReturn(None)
-        # There are dependency AResource and BResource, so we must delete
-        # BResource, then delete AResource.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'b_res').AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'a_res').AndReturn(None)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                       'handle_create', side_effect=Exception)
+        mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                   'mox_resource_id',
+                                   return_value=None)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
@@ -461,7 +433,15 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
+
+        # Three calls in list: first is an attempt to delete backup_stack
+        # where create(xyz) has failed, so no resource_id passed; the 2nd
+        # and the 3rd calls are invoked by resource BResource deletion
+        # followed by AResource deletion.
+        mock_id.assert_has_calls(
+            [mock.call(None), mock.call('b_res'), mock.call('a_res')])
 
     def test_update_modify_replace_failed_create_and_delete_2(self):
         resource._register_class('ResourceWithResourceIDType',
@@ -496,37 +476,29 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'handle_create')
-        generic_rsrc.ResourceWithResourceID.handle_create()
-        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
-
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'mox_resource_id')
-        # First, attempts to delete backup_stack. The create (xyz) has been
-        # failed, so it has no resource_id.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            None).AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'c_res').AndReturn(None)
-        # There are dependency AResource and BResource, so we must delete
-        # BResource, then delete AResource.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'b_res').AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'a_res').AndReturn(None)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                       'handle_create',
+                                       side_effect=[None, Exception])
+        mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                   'mox_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
         # set resource_id for AResource because handle_create() is overwritten
-        # by the mox.
+        # by the mock.
         self.stack.resources['AResource'].resource_id_set('c_res')
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+
+        self.assertEqual(2, mock_create.call_count)
+        # Four calls in chain: 1st is an attempt to delete backup_stack where
+        # the create(xyz) failed with no resource_id, the other three are
+        # derived from resource dependencies.
+        mock_id.assert_has_calls(
+            [mock.call(None), mock.call('c_res'), mock.call('b_res'),
+             mock.call('a_res')])
 
     def test_update_modify_replace_create_in_progress_and_delete_1(self):
         resource._register_class('ResourceWithResourceIDType',
@@ -561,23 +533,10 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'handle_create')
-        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
-
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'mox_resource_id')
-        # First, attempts to delete backup_stack. The create (xyz) has been
-        # failed, so it has no resource_id.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            None).AndReturn(None)
-        # There are dependency AResource and BResource, so we must delete
-        # BResource, then delete AResource.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'b_res').AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'a_res').AndReturn(None)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                       'handle_create', side_effect=Exception)
+        mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                   'mox_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
         # Override stack status and resources status for emulating
@@ -589,7 +548,13 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
+        # Three calls in chain: 1st is an attempt to delete backup_stack where
+        # the create(xyz) failed with no resource_id, the other two ordered by
+        # resource dependencies.
+        mock_id.assert_has_calls(
+            [mock.call(None), mock.call('b_res'), mock.call('a_res')])
 
     def test_update_modify_replace_create_in_progress_and_delete_2(self):
         resource._register_class('ResourceWithResourceIDType',
@@ -624,30 +589,14 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'handle_create')
-        generic_rsrc.ResourceWithResourceID.handle_create()
-        generic_rsrc.ResourceWithResourceID.handle_create().AndRaise(Exception)
-
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithResourceID,
-                               'mox_resource_id')
-        # First, attempts to delete backup_stack. The create (xyz) has been
-        # failed, so it has no resource_id.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            None).AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'c_res').AndReturn(None)
-        # There are dependency AResource and BResource, so we must delete
-        # BResource, then delete AResource.
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'b_res').AndReturn(None)
-        generic_rsrc.ResourceWithResourceID.mox_resource_id(
-            'a_res').AndReturn(None)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                       'handle_create',
+                                       side_effect=[None, Exception])
+        mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
+                                   'mox_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
-        # set resource_id for AResource because handle_create() is overwritten
-        # by the mox.
+        # set resource_id for AResource because handle_create() is mocked
         self.stack.resources['AResource'].resource_id_set('c_res')
         # Override stack status and resources status for emulating
         # IN_PROGRESS situation
@@ -658,7 +607,14 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+
+        self.assertEqual(2, mock_create.call_count)
+        # Four calls in chain: 1st is an attempt to delete backup_stack where
+        # the create(xyz) failed with no resource_id, the other three are
+        # derived from resource dependencies.
+        mock_id.assert_has_calls(
+            [mock.call(None), mock.call('c_res'), mock.call('b_res'),
+             mock.call('a_res')])
 
     def test_update_add_signal(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -714,9 +670,8 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2))
 
         # patch in a dummy handle_create making BResource fail creating
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
-        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.GenericResource,
+                                       'handle_create', side_effect=Exception)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
@@ -727,7 +682,7 @@ class StackUpdateTest(common.HeatTestCase):
         # resource (to ensure it will be deleted on stack delete)
         re_stack = stack.Stack.load(utils.dummy_context(), self.stack.id)
         self.assertIn('BResource', re_stack)
-        self.m.VerifyAll()
+        mock_create.assert_called_once_with()
 
     def test_update_add_failed_create_rollback_failed(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -748,12 +703,11 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl2),
                                     disable_rollback=False)
 
-        # patch in a dummy handle_create making BResource fail creating
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
-        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
-        generic_rsrc.GenericResource.handle_delete().AndRaise(Exception)
-        self.m.ReplayAll()
+        # patch handle_create/delete making BResource fail creation/deletion
+        mock_create = self.patchobject(generic_rsrc.GenericResource,
+                                       'handle_create', side_effect=Exception)
+        mock_delete = self.patchobject(generic_rsrc.GenericResource,
+                                       'handle_delete', side_effect=Exception)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.FAILED),
@@ -764,7 +718,9 @@ class StackUpdateTest(common.HeatTestCase):
         # resource (to ensure it will be deleted on stack delete)
         re_stack = stack.Stack.load(utils.dummy_context(), self.stack.id)
         self.assertIn('BResource', re_stack)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
+        mock_delete.assert_called_once_with()
 
     def test_update_rollback(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -789,9 +745,8 @@ class StackUpdateTest(common.HeatTestCase):
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create', side_effect=Exception)
 
         with mock.patch.object(self.stack, 'state_set',
                                side_effect=self.stack.state_set) as mock_state:
@@ -804,7 +759,8 @@ class StackUpdateTest(common.HeatTestCase):
                              mock_state.call_args_list[0][0][:2])
             self.assertEqual(('ROLLBACK', 'IN_PROGRESS'),
                              mock_state.call_args_list[1][0][:2])
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
 
     def test_update_rollback_on_cancel_event(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -831,13 +787,12 @@ class StackUpdateTest(common.HeatTestCase):
         evt_mock.ready.return_value = True
         evt_mock.wait.return_value = 'cancel'
 
-        self.m.ReplayAll()
-
         self.stack.update(updated_stack, event=evt_mock)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.m.VerifyAll()
+        evt_mock.ready.assert_called_once_with()
+        evt_mock.wait.assert_called_once_with()
 
     def test_update_rollback_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -868,16 +823,17 @@ class StackUpdateTest(common.HeatTestCase):
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create', side_effect=Exception)
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_delete', side_effect=Exception)
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.FAILED),
                          self.stack.state)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
+        mock_delete.assert_called_once_with()
 
     def test_update_rollback_add(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -902,15 +858,14 @@ class StackUpdateTest(common.HeatTestCase):
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and succeed on the second call (rollback)
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
-        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
-        self.m.ReplayAll()
-
+        mock_create = self.patchobject(generic_rsrc.GenericResource,
+                                       'handle_create', side_effect=Exception)
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertNotIn('BResource', self.stack)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
 
     def test_update_rollback_remove(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -934,20 +889,21 @@ class StackUpdateTest(common.HeatTestCase):
                                     disable_rollback=False)
 
         # patch in a dummy delete making the destroy fail
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
-        # replace the failed resource on rollback
-        generic_rsrc.ResourceWithProps.handle_create()
-        generic_rsrc.ResourceWithProps.handle_delete()
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create')
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_delete',
+                                       side_effect=[Exception, None])
 
         self.stack.update(updated_stack)
 
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertIn('BResource', self.stack)
-        self.m.VerifyAll()
+
+        mock_create.assert_called_once_with()
+        self.assertEqual(2, mock_delete.call_count)
+
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
@@ -974,16 +930,15 @@ class StackUpdateTest(common.HeatTestCase):
                                     disable_rollback=False)
 
         # patch in a dummy delete making the destroy fail
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
-        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
-        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
-        self.m.ReplayAll()
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_delete',
+                                       side_effect=[Exception, None, None])
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        self.assertEqual(3, mock_delete.call_count)
+
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
@@ -1019,12 +974,17 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'FnGetRefId')
-        generic_rsrc.ResourceWithProps.FnGetRefId().AndReturn(
-            'AResource')
-        generic_rsrc.ResourceWithProps.FnGetRefId().MultipleTimes().AndReturn(
-            'inst-007')
-        self.m.ReplayAll()
+        self.ref_id_called = False
+
+        def get_ref_id(*args):
+            ref_id = 'inst-007' if self.ref_id_called else 'AResource'
+            if self.ref_id_called is False:
+                self.ref_id_called = True
+            return ref_id
+
+        mock_id = self.patchobject(generic_rsrc.ResourceWithProps,
+                                   'FnGetRefId',
+                                   side_effect=get_ref_id)
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
@@ -1033,7 +993,9 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
         self.assertEqual('inst-007', self.stack['BResource'].properties['Foo'])
-        self.m.VerifyAll()
+
+        # Note: mock_id is called 14 times!!!
+        mock_id.assert_called_with()
 
     def test_update_with_new_resources_with_reference(self):
         '''
@@ -1065,12 +1027,8 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('abc', self.stack['CResource'].properties['Foo'])
         self.assertEqual(1, len(self.stack.resources))
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-
-        generic_rsrc.ResourceWithProps.handle_create().MultipleTimes(
-        ).AndReturn(None)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create', return_value=None)
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
@@ -1082,7 +1040,8 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack['BResource'].properties['Foo'])
 
         self.assertEqual(3, len(self.stack.resources))
-        self.m.VerifyAll()
+
+        mock_create.assert_called_with()
 
     def test_update_by_reference_and_rollback_1(self):
         '''
@@ -1117,16 +1076,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'FnGetRefId')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-
-        generic_rsrc.ResourceWithProps.FnGetRefId().MultipleTimes().AndReturn(
-            'AResource')
+        mock_id = self.patchobject(generic_rsrc.ResourceWithProps,
+                                   'FnGetRefId', return_value='AResource')
 
         # mock to make the replace fail when creating the replacement resource
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create', side_effect=Exception)
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
@@ -1136,7 +1091,8 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
 
-        self.m.VerifyAll()
+        mock_id.assert_called_with()
+        mock_create.assert_called_once_with()
 
     def test_update_by_reference_and_rollback_2(self):
         '''
@@ -1181,13 +1137,10 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource1',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-
         # mock to make the replace fail when creating the second
         # replacement resource
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create', side_effect=Exception)
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
@@ -1198,8 +1151,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
         self.assertEqual('AResource1',
                          self.stack['BResource'].properties['Foo'])
-
-        self.m.VerifyAll()
+        mock_create.assert_called_once_with()
 
     def test_update_failure_recovery(self):
         '''
@@ -1248,25 +1200,22 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource1',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        self.m.StubOutWithMock(ResourceTypeA, 'handle_delete')
-
         # mock to make the replace fail when creating the second
         # replacement resource
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        # delete the old resource on the second update
-        generic_rsrc.ResourceWithProps.handle_delete()
-        ResourceTypeA.handle_delete()
-        generic_rsrc.ResourceWithProps.handle_create()
-        generic_rsrc.ResourceWithProps.handle_delete()
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create',
+                                       side_effect=[Exception, None])
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_delete')
+        mock_delete_A = self.patchobject(ResourceTypeA, 'handle_delete')
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
                                     disable_rollback=True)
         self.stack.update(updated_stack)
+
+        mock_create.assert_called_once_with()
+
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
         self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
@@ -1277,13 +1226,16 @@ class StackUpdateTest(common.HeatTestCase):
                                      disable_rollback=True)
 
         self.stack.update(updated_stack2)
+
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
         self.assertEqual('AResource2',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.VerifyAll()
+        self.assertEqual(2, mock_create.call_count)
+        self.assertEqual(2, mock_delete.call_count)
+        mock_delete_A.assert_called_once_with()
 
     def test_update_failure_recovery_new_param(self):
         '''
@@ -1344,25 +1296,20 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource1',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
-        self.m.StubOutWithMock(ResourceTypeA, 'handle_delete')
-
-        # mock to make the replace fail when creating the second
-        # replacement resource
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        # delete the old resource on the second update
-        generic_rsrc.ResourceWithProps.handle_delete()
-        ResourceTypeA.handle_delete()
-        generic_rsrc.ResourceWithProps.handle_create()
-        generic_rsrc.ResourceWithProps.handle_delete()
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_create',
+                                       side_effect=[Exception, None])
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'handle_delete')
+        mock_delete_A = self.patchobject(ResourceTypeA, 'handle_delete')
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2, env=env2),
                                     disable_rollback=True)
         self.stack.update(updated_stack)
+
+        # creation was a failure
+        mock_create.assert_called_once_with()
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
         self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
@@ -1381,7 +1328,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('AResource2',
                          self.stack['BResource'].properties['Foo'])
 
-        self.m.VerifyAll()
+        self.assertEqual(2, mock_delete.call_count)
+        mock_delete_A.assert_called_once_with()
+        self.assertEqual(2, mock_create.call_count)
 
     def test_update_replace_parameters(self):
         '''
@@ -1516,10 +1465,7 @@ class StackUpdateTest(common.HeatTestCase):
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
 
-        self.m.ReplayAll()
-
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('foo', self.stack['AResource'].properties['Foo'])
-        self.m.VerifyAll()
