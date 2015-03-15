@@ -17,6 +17,7 @@ from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
 from heatclient import client as heatclient
 from heatclient import exc as heat_exc
+from keystoneclient.auth.identity import v3
 from keystoneclient import exceptions as keystone_exc
 import mock
 from neutronclient.common import exceptions as neutron_exc
@@ -27,6 +28,7 @@ from swiftclient import exceptions as swift_exc
 from testtools import testcase
 from troveclient import client as troveclient
 
+from heat.common import context
 from heat.common import exception
 from heat.engine import clients
 from heat.engine.clients import client_plugin
@@ -194,6 +196,31 @@ class ClientPluginTest(common.HeatTestCase):
         self.assertEqual('http://192.0.2.1/foo',
                          plugin.url_for(service_type='foo'))
         con.auth_plugin.get_endpoint.assert_called()
+
+    @mock.patch.object(context, "RequestContext")
+    @mock.patch.object(v3, "Token", name="v3_token")
+    def test_get_missing_service_catalog(self, mock_v3, mkreqctx):
+        con = mock.Mock(auth_token="1234", trust_id=None)
+        c = clients.Clients(con)
+        con.clients = c
+
+        con.auth_plugin = mock.Mock(name="auth_plugin")
+        get_endpoint_side_effects = [
+            keystone_exc.EmptyCatalog(), None, 'http://192.0.2.1/bar']
+        con.auth_plugin.get_endpoint = mock.Mock(
+            name="get_endpoint", side_effect=get_endpoint_side_effects)
+
+        mock_token_obj = mock.Mock()
+        mock_token_obj.get_auth_ref.return_value = {'catalog': 'foo'}
+        mock_v3.return_value = mock_token_obj
+        plugin = FooClientsPlugin(con)
+        mock_cxt_dict = {'auth_token_info': {'token': {'catalog': 'baz'}}}
+        plugin.context.to_dict.return_value = mock_cxt_dict
+
+        mkreqctx.from_dict.return_value.auth_plugin = con.auth_plugin
+
+        self.assertEqual('http://192.0.2.1/bar',
+                         plugin.url_for(service_type='bar'))
 
     def test_abstract_create(self):
         con = mock.Mock()
