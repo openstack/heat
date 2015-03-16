@@ -43,6 +43,7 @@ from heat.engine import template as tmpl
 from heat.engine import update
 from heat.objects import resource as resource_objects
 from heat.objects import stack as stack_object
+from heat.objects import user_creds as ucreds_object
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
@@ -171,10 +172,11 @@ class Stack(collections.Mapping):
 
     def stored_context(self):
         if self.user_creds_id:
-            creds = db_api.user_creds_get(self.user_creds_id)
+            creds_obj = ucreds_object.UserCreds.get_by_id(self.user_creds_id)
             # Maintain request_id from self.context so we retain traceability
             # in situations where servicing a request requires switching from
             # the request context to the stored context
+            creds = creds_obj.obj_to_primitive()["versioned_object.data"]
             creds['request_id'] = self.context.request_id
             # We don't store roles in the user_creds table, so disable the
             # policy check for admin by setting is_admin=False.
@@ -371,9 +373,9 @@ class Stack(collections.Mapping):
                 if cfg.CONF.deferred_auth_method == 'trusts':
                     keystone = self.clients.client('keystone')
                     trust_ctx = keystone.create_trust_context()
-                    new_creds = db_api.user_creds_create(trust_ctx)
+                    new_creds = ucreds_object.UserCreds.create(trust_ctx)
                 else:
-                    new_creds = db_api.user_creds_create(self.context)
+                    new_creds = ucreds_object.UserCreds.create(self.context)
                 s['user_creds_id'] = new_creds.id
                 self.user_creds_id = new_creds.id
 
@@ -927,7 +929,7 @@ class Stack(collections.Mapping):
         # Ignore this error instead of blocking stack deletion.
         user_creds = None
         try:
-            user_creds = db_api.user_creds_get(self.user_creds_id)
+            user_creds = ucreds_object.UserCreds.get_by_id(self.user_creds_id)
         except exception.Error as err:
             LOG.exception(err)
             pass
@@ -968,7 +970,8 @@ class Stack(collections.Mapping):
 
             # Delete the stored credentials
             try:
-                db_api.user_creds_delete(self.context, self.user_creds_id)
+                ucreds_object.UserCreds.delete(self.context,
+                                               self.user_creds_id)
             except exception.NotFound:
                 LOG.info(_LI("Tried to delete user_creds that do not exist "
                              "(stack=%(stack)s user_creds_id=%(uc)s)"),
