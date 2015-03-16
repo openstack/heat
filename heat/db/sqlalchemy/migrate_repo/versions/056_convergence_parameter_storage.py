@@ -41,8 +41,8 @@ def upgrade(migrate_engine):
     stack_table = sqlalchemy.Table('stack', meta, autoload=True)
     update_query = tmpl_table.update().values(
         environment=sqlalchemy.select([stack_table.c.parameters]).
-        where(tmpl_table.c.id == stack_table.c.raw_template_id).
-        as_scalar())
+        where(sqlalchemy.and_(stack_table.c.raw_template_id == tmpl_table.c.id,
+                              stack_table.c.deleted_at.is_(None))).as_scalar())
     migrate_engine.execute(update_query)
 
     stack_table.c.parameters.drop()
@@ -76,14 +76,16 @@ def upgrade_sqlite(migrate_engine):
 
     stack_parameters = {}
     for s in stacks:
-        stack_parameters[s.raw_template_id] = s.parameters
+        stack_parameters[s.raw_template_id] = (s.parameters, s.deleted_at)
 
     colnames = [c.name for c in tmpl_table.columns]
     for template in templates:
         values = dict(zip(colnames,
                           map(lambda colname: getattr(template, colname),
                               colnames)))
-        values['environment'] = stack_parameters.get(values['id'])
+        params, del_at = stack_parameters.get(values['id'], (None, None))
+        if params is not None and del_at is None:
+            values['environment'] = params
         migrate_engine.execute(new_template.insert(values))
 
     # migrate stacks to new table
