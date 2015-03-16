@@ -197,12 +197,14 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
                     parts[3] and
                     parts[4].strip('/'))
 
-    def get_temp_url(self, container_name, obj_name, timeout=None):
+    def get_temp_url(self, container_name, obj_name, timeout=None,
+                     method='PUT'):
         '''
         Return a Swift TempURL.
         '''
         def tenant_uuid():
-            for role in self.context.auth_token_info['user']['roles']:
+            access = self.context.auth_token_info['access']
+            for role in access['user']['roles']:
                 if role['name'] == 'object-store:default':
                     return role['tenantId']
 
@@ -213,7 +215,6 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
             key = hashlib.sha224(str(random.getrandbits(256))).hexdigest()[:32]
             self.client().post_account({key_header: key})
 
-        method = 'PUT'
         path = '/v1/%s/%s/%s' % (tenant_uuid(), container_name, obj_name)
         if timeout is None:
             timeout = swift.MAX_EPOCH - 60 - time.time()
