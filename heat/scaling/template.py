@@ -40,7 +40,8 @@ def resource_templates(old_resources, resource_definition,
 
 
 def make_template(resource_definitions,
-                  version=('heat_template_version', '2013-05-23')):
+                  version=('heat_template_version', '2013-05-23'),
+                  child_env=None):
     """
     Return a Template object containing the given resource definitions.
 
@@ -48,7 +49,7 @@ def make_template(resource_definitions,
     can be specified by passing a (version_type, version_string) tuple matching
     any of the available template format plugins.
     """
-    tmpl = template.Template(dict([version]))
+    tmpl = template.Template(dict([version]), env=child_env)
     for name, defn in resource_definitions:
         tmpl.add_resource(defn, name)
 

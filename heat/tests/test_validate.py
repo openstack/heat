@@ -1245,10 +1245,9 @@ class validateTest(common.HeatTestCase):
 
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
-        template = parser.Template(t)
         params = {'KeyName': 'not_registered'}
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment(params))
+        template = parser.Template(t, env=environment.Environment(params))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_success('image_name', 'image_id')
         self.m.ReplayAll()
@@ -1259,10 +1258,11 @@ class validateTest(common.HeatTestCase):
 
     def test_unregistered_image(self):
         t = template_format.parse(test_template_image)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment(
+                                       {'KeyName': 'test'}))
 
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'KeyName': 'test'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_fail('image_name',
                                      exception.ImageNotFound(
@@ -1276,10 +1276,11 @@ class validateTest(common.HeatTestCase):
 
     def test_duplicated_image(self):
         t = template_format.parse(test_template_image)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment(
+                                       {'KeyName': 'test'}))
 
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'KeyName': 'test'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_fail('image_name',
                                      exception.PhysicalResourceNameAmbiguity(
@@ -1295,9 +1296,10 @@ class validateTest(common.HeatTestCase):
 
     def test_invalid_security_groups_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroups)
-        template = parser.Template(t)
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'KeyName': 'test'}))
+        template = parser.Template(t,
+                                   env=environment.Environment(
+                                       {'KeyName': 'test'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
@@ -1312,9 +1314,9 @@ class validateTest(common.HeatTestCase):
 
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
-        template = parser.Template(t)
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'KeyName': 'test'}))
+        template = parser.Template(
+            t, env=environment.Environment({'KeyName': 'test'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_success('image_name', 'image_id')
 
@@ -1344,22 +1346,22 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_unique_logical_name(self):
         t = template_format.parse(test_template_unique_logical_name)
-        template = parser.Template(t)
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'AName': 'test',
-                                                      'KeyName': 'test'}))
+        template = parser.Template(
+            t, env=environment.Environment(
+                {'AName': 'test', 'KeyName': 'test'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)
 
     def test_validate_duplicate_parameters_in_group(self):
         t = template_format.parse(test_template_duplicate_parameters)
-        template = tmpl.HOTemplate20130523(t)
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({
-                                 'KeyName': 'test',
-                                 'ImageId': 'sometestid',
-                                 'db_password': 'Pass123'
-                             }))
+        template = tmpl.HOTemplate20130523(
+            t, env=environment.Environment({
+                'KeyName': 'test',
+                'ImageId': 'sometestid',
+                'db_password': 'Pass123'
+            }))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
 
@@ -1368,12 +1370,12 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
-        template = tmpl.HOTemplate20130523(t)
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({
-                                 'KeyName': 'test',
-                                 'ImageId': 'sometestid',
-                                 'db_password': 'Pass123'}))
+        template = tmpl.HOTemplate20130523(t,
+                                           env=environment.Environment({
+                                               'KeyName': 'test',
+                                               'ImageId': 'sometestid',
+                                               'db_password': 'Pass123'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
@@ -1394,47 +1396,46 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment({'size': '4'}))
 
         # test with size parameter provided as string
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': '4'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         self.assertIsNone(stack.validate())
 
         # test with size parameter provided as number
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': 4}))
+        template.env = environment.Environment({'size': 4})
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         self.assertIsNone(stack.validate())
 
     def test_validate_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment({'size': '4'}))
 
         # test with size parameter provided as string
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': '4'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         self.assertIsNone(stack.validate())
-
         # test with size parameter provided as number
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': 4}))
+        template.env = environment.Environment({'size': 4})
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         self.assertIsNone(stack.validate())
 
     def test_validate_not_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment({'size': '3'}))
 
         # test with size parameter provided as string
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': '3'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
         # test with size parameter provided as number
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': 3}))
+        template.env = environment.Environment({'size': 3})
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
@@ -1442,19 +1443,19 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_not_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment({'size': '3'}))
 
         # test with size parameter provided as string
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': '3'}))
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
         # test with size parameter provided as number
-        stack = parser.Stack(self.ctx, 'test_stack', template,
-                             environment.Environment({'size': 3}))
+        template.env = environment.Environment({'size': 3})
+        stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',

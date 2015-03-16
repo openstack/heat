@@ -101,11 +101,11 @@ class RackspaceDnsTest(common.HeatTestCase):
     def _setup_test_cloud_dns_instance(self, name, parsed_t):
         stack_name = '%s_stack' % name
         t = parsed_t
-        templ = template.Template(t)
+        templ = template.Template(
+            t, env=environment.Environment({'name': 'test'}))
         stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              templ,
-                             environment.Environment({'name': 'test'}),
                              stack_id=str(uuid.uuid4()))
 
         instance = cloud_dns.CloudDns(

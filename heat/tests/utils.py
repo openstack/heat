@@ -96,7 +96,7 @@ def parse_stack(t, params=None, files=None, stack_name=None,
     templ.store()
     if stack_name is None:
         stack_name = random_name()
-    stk = stack.Stack(ctx, stack_name, templ, stack_id,
+    stk = stack.Stack(ctx, stack_name, templ, stack_id=stack_id,
                       timeout_mins=timeout_mins)
     stk.store()
     return stk

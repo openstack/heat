@@ -26,7 +26,6 @@ from testtools import matchers
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import swift
-from heat.engine import environment
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -88,7 +87,6 @@ def create_stack(template, stack_id=None):
     template = templatem.Template(tmpl)
     ctx = utils.dummy_context(tenant_id='test_tenant')
     st = stack.Stack(ctx, 'test_st', template,
-                     environment.Environment(),
                      disable_rollback=True)
 
     # Stub out the stack ID so we have a known value

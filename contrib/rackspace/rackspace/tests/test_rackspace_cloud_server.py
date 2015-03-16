@@ -90,9 +90,10 @@ class CloudServersTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
-        templ = template.Template(t)
+        templ = template.Template(
+            t, env=environment.Environment({'key_name': 'test'}))
+
         stack = parser.Stack(self.ctx, stack_name, templ,
-                             environment.Environment({'key_name': 'test'}),
                              stack_id=uuidutils.generate_uuid())
         return (templ, stack)
 

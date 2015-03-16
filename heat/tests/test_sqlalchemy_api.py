@@ -100,10 +100,10 @@ class SqlAlchemyTest(common.HeatTestCase):
     def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None,
                           stack_user_project_id=None, backup=False):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
+        template = parser.Template(
+            t, env=environment.Environment({'KeyName': 'test'}))
         stack_id = stack_id or str(uuid.uuid4())
         stack = parser.Stack(self.ctx, stack_name, template,
-                             environment.Environment({'KeyName': 'test'}),
                              owner_id=owner_id,
                              stack_user_project_id=stack_user_project_id)
         with utils.UUIDStub(stack_id):

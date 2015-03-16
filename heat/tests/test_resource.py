@@ -62,8 +62,9 @@ class ResourceTest(common.HeatTestCase):
                        u'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template(empty_template),
-                                  env=self.env, stack_id=str(uuid.uuid4()))
+                                  parser.Template(empty_template,
+                                                  env=self.env),
+                                  stack_id=str(uuid.uuid4()))
         self.patch('heat.engine.resource.warnings')
 
     def test_get_class_ok(self):
@@ -1083,7 +1084,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertFalse(res.is_using_neutron())
 
     def _test_skip_validation_if_custom_constraint(self, tmpl):
-        stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env=self.env)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         stack.store()
         path = ('heat.engine.clients.os.neutron.NetworkConstraint.'
                 'validate_with_client')
@@ -1104,7 +1105,7 @@ class ResourceTest(common.HeatTestCase):
                     }
                 }
             }
-        })
+        }, env=self.env)
         self._test_skip_validation_if_custom_constraint(tmpl)
 
     def test_hot_ref_skip_validation_if_custom_constraint(self):
@@ -1119,7 +1120,7 @@ class ResourceTest(common.HeatTestCase):
                     }
                 }
             }
-        })
+        }, env=self.env)
         self._test_skip_validation_if_custom_constraint(tmpl)
 
 

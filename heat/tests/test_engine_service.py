@@ -733,8 +733,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                    'C': {'Type': 'GenericResourceType'}}}
 
         template = templatem.Template(tpl)
-        stack = parser.Stack(self.ctx, stack_name, template,
-                             environment.Environment({}))
+        stack = parser.Stack(self.ctx, stack_name, template)
 
         self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
@@ -1058,10 +1057,10 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         t = template_format.parse(wp_template_no_default)
-        template = templatem.Template(t)
         env = environment.Environment({'parameters': with_params,
                                        'resource_registry': {'rsc': 'test'}})
-        stack = parser.Stack(self.ctx, stack_name, template, env)
+        template = templatem.Template(t, env=env)
+        stack = parser.Stack(self.ctx, stack_name, template)
 
         self._stub_update_mocks(s, old_stack)
 
@@ -3002,8 +3001,7 @@ class StackServiceTest(common.HeatTestCase):
             }
         }
         templ = templatem.Template(lazy_load_template)
-        stack = parser.Stack(self.ctx, stack_name, templ,
-                             environment.Environment({}))
+        stack = parser.Stack(self.ctx, stack_name, templ)
 
         self.assertIsNone(stack._resources)
         self.assertIsNone(stack._dependencies)
