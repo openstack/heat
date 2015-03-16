@@ -20,14 +20,6 @@ from heat.engine import resource
 from heat.engine import support
 
 
-def resource_mapping():
-    if not clients.has_client('zaqar'):
-        return {}
-    return {
-        'OS::Zaqar::Queue': ZaqarQueue,
-    }
-
-
 class ZaqarQueue(resource.Resource):
 
     default_client_name = "zaqar"
@@ -131,3 +123,15 @@ class ZaqarQueue(resource.Resource):
             return self.resource_id
         elif name == self.HREF:
             return self.href()
+
+
+def resource_mapping():
+    return {
+        'OS::Zaqar::Queue': ZaqarQueue,
+    }
+
+
+def available_resource_mapping():
+    if not clients.has_client('zaqar'):
+        return {}
+    return resource_mapping()
