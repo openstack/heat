@@ -120,9 +120,6 @@ class KeystoneProject(resource.Resource):
         if enabled is not None:
             values['enabled'] = enabled
 
-        if len(values) == 0:
-            return
-
         values['project'] = project_id
         domain = (self.client_plugin('keystone').
                   get_domain_id(domain))
