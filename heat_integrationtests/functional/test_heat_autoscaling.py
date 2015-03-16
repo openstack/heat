@@ -97,3 +97,39 @@ outputs:
         expected_resources = {'random_group': 'OS::Heat::AutoScalingGroup'}
         self.assertEqual(expected_resources, self.list_resources(stack_id))
         self._assert_output_values(stack_id)
+
+
+class AutoScalingGroupUpdateWithNoChanges(test.HeatIntegrationTest):
+
+    template = '''
+heat_template_version: 2013-05-23
+
+resources:
+  test_group:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      desired_capacity: 0
+      max_size: 0
+      min_size: 0
+      resource:
+        type: OS::Heat::RandomString
+  test_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: test_group }
+      scaling_adjustment: 1
+'''
+
+    def setUp(self):
+        super(AutoScalingGroupUpdateWithNoChanges, self).setUp()
+        self.client = self.orchestration_client
+
+    def test_as_group_update_without_resource_changes(self):
+        stack_identifier = self.stack_create(template=self.template)
+        new_template = self.template.replace(
+            'scaling_adjustment: 1',
+            'scaling_adjustment: 2')
+
+        self.update_stack(stack_identifier, template=new_template)
+        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')

@@ -137,6 +137,36 @@ class TestGroupAdjust(common.HeatTestCase):
             self.group.adjust(1)
         self.assertEqual([], dont_call.call_args_list)
 
+    def test_scaling_same_capacity(self):
+        """Alway resize even if the capacity is the same."""
+        self.patchobject(grouputils, 'get_size', return_value=3)
+        resize = self.patchobject(self.group, 'resize')
+        cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+        self.group.adjust(3, adjustment_type='ExactCapacity')
+
+        expected_notifies = [
+            mock.call(
+                capacity=3, suffix='start',
+                adjustment_type='ExactCapacity',
+                groupname=u'my-group',
+                message=u'Start resizing the group my-group',
+                adjustment=3,
+                stack=self.group.stack),
+            mock.call(
+                capacity=3, suffix='end',
+                adjustment_type='ExactCapacity',
+                groupname=u'my-group',
+                message=u'End resizing the group my-group',
+                adjustment=3,
+                stack=self.group.stack)]
+
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        resize.assert_called_once_with(3)
+        cd_stamp.assert_called_once_with('ExactCapacity : 3')
+
     def test_scaling_policy_cooldown_ok(self):
         self.patchobject(grouputils, 'get_members', return_value=[])
         resize = self.patchobject(self.group, 'resize')
