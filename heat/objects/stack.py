@@ -22,8 +22,9 @@ from oslo_versionedobjects import fields
 
 
 from heat.db import api as db_api
-from heat import objects
 from heat.objects import fields as heat_fields
+from heat.objects import raw_template
+from heat.objects import stack_tag
 
 
 class Stack(
@@ -56,6 +57,7 @@ class Stack(
         'current_deps': heat_fields.JsonField(),
         'prev_raw_template_id': fields.IntegerField(),
         'prev_raw_template': fields.ObjectField('RawTemplate'),
+        'tag': fields.ObjectField('StackTag'),
     }
 
     @staticmethod
@@ -63,8 +65,15 @@ class Stack(
         for field in stack.fields:
             if field == 'raw_template':
                 stack['raw_template'] = (
-                    objects.raw_template.RawTemplate.get_by_id(
+                    raw_template.RawTemplate.get_by_id(
                         context, db_stack['raw_template_id']))
+            elif field == 'tag':
+                if db_stack.get(field) is not None:
+                    stack['tag'] = stack_tag.StackTag.get_obj(
+                        db_stack.get(field)
+                    )
+                else:
+                    stack['tag'] = None
             else:
                 stack[field] = db_stack[field]
         stack._context = context
