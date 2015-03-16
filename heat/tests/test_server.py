@@ -667,6 +667,8 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual('4567', server.access_key)
         self.assertEqual('8901', server.secret_key)
         self.assertEqual('1234', server._get_user_id())
+        self.assertEqual('POLL_SERVER_CFN',
+                         server.properties.get('software_config_transport'))
 
         self.assertTrue(stack.access_allowed('4567', 'WebServer'))
         self.assertFalse(stack.access_allowed('45678', 'WebServer'))

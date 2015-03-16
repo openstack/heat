@@ -14,6 +14,7 @@
 import copy
 import uuid
 
+from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
@@ -28,6 +29,9 @@ from heat.engine.resources.openstack.heat import software_config as sc
 from heat.engine.resources import signal_responder
 from heat.engine import support
 from heat.rpc import api as rpc_api
+
+cfg.CONF.import_opt('default_deployment_signal_transport',
+                    'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -152,7 +156,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
               'provided keystone credentials. NO_SIGNAL will result in the '
               'resource going to the COMPLETE state without waiting for '
               'any signal.'),
-            default=CFN_SIGNAL,
+            default=cfg.CONF.default_deployment_signal_transport,
             constraints=[
                 constraints.AllowedValues(SIGNAL_TRANSPORTS),
             ]
