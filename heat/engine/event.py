@@ -16,7 +16,7 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import identifier
-from heat.db import api as db_api
+from heat.objects import event as event_object
 
 
 class Event(object):
@@ -52,7 +52,7 @@ class Event(object):
         from heat.engine import stack as parser
 
         ev = (event if event is not None else
-              db_api.event_get(context, event_id))
+              event_object.Event.get_by_id(context, event_id))
         if ev is None:
             message = _('No event exists with id "%s"') % str(event_id)
             raise exception.NotFound(message)
@@ -84,7 +84,7 @@ class Event(object):
         if self.timestamp is not None:
             ev['created_at'] = self.timestamp
 
-        new_ev = db_api.event_create(self.context, ev)
+        new_ev = event_object.Event.create(self.context, ev)
         self.id = new_ev.id
         return self.id
 

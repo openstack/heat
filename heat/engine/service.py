@@ -51,6 +51,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
+from heat.objects import event as event_object
 from heat.objects import resource as resource_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
@@ -1016,17 +1017,21 @@ class EngineService(service.Service):
         if stack_identity is not None:
             st = self._get_stack(cnxt, stack_identity, show_deleted=True)
 
-            events = db_api.event_get_all_by_stack(cnxt, st.id, limit=limit,
-                                                   marker=marker,
-                                                   sort_keys=sort_keys,
-                                                   sort_dir=sort_dir,
-                                                   filters=filters)
+            events = event_object.Event.get_all_by_stack(
+                cnxt,
+                st.id,
+                limit=limit,
+                marker=marker,
+                sort_keys=sort_keys,
+                sort_dir=sort_dir,
+                filters=filters)
         else:
-            events = db_api.event_get_all_by_tenant(cnxt, limit=limit,
-                                                    marker=marker,
-                                                    sort_keys=sort_keys,
-                                                    sort_dir=sort_dir,
-                                                    filters=filters)
+            events = event_object.Event.get_all_by_tenant(
+                cnxt, limit=limit,
+                marker=marker,
+                sort_keys=sort_keys,
+                sort_dir=sort_dir,
+                filters=filters)
 
         stacks = {}
 
