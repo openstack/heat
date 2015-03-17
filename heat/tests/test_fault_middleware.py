@@ -53,6 +53,21 @@ class FaultMiddlewareTest(common.HeatTestCase):
                     'title': 'Bad Request'}
         self.assertEqual(expected, msg)
 
+    def test_http_exception_with_traceback(self):
+        wrapper = fault.FaultWrapper(None)
+        newline_error = ErrorWithNewline(
+            'Error with \n newline\nTraceback (most recent call last):\nFoo')
+        msg = wrapper._error(heat_exc.HTTPExceptionDisguise(newline_error))
+        expected = {'code': 400,
+                    'error': {'message': 'Error with \n newline',
+                              'traceback': None,
+                              'type': 'ErrorWithNewline'},
+                    'explanation': ('The server could not comply with the '
+                                    'request since it is either malformed '
+                                    'or otherwise incorrect.'),
+                    'title': 'Bad Request'}
+        self.assertEqual(expected, msg)
+
     def test_openstack_exception_with_kwargs(self):
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(heat_exc.StackNotFound(stack_name='a'))
