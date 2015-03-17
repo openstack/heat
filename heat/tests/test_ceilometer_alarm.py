@@ -111,21 +111,6 @@ class FakeCeilometerAlarm(object):
     alarm_id = 'foo'
 
 
-class FakeCeilometerAlarms(object):
-    def create(self, **kwargs):
-        pass
-
-    def update(self, **kwargs):
-        pass
-
-    def delete(self, alarm_id):
-        pass
-
-
-class FakeCeilometerClient(object):
-    alarms = FakeCeilometerAlarms()
-
-
 class CeilometerAlarmTest(common.HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
@@ -137,7 +122,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
 
         self.stub_keystoneclient()
-        self.fa = FakeCeilometerClient()
+        self.fa = mock.Mock()
 
     def create_stack(self, template=None):
         if template is None:
@@ -493,7 +478,7 @@ class CombinationAlarmTest(common.HeatTestCase):
 
     def setUp(self):
         super(CombinationAlarmTest, self).setUp()
-        self.fc = FakeCeilometerClient()
+        self.fc = mock.Mock()
         self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
 
     def create_alarm(self):
