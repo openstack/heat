@@ -34,6 +34,7 @@ from heat.engine import support
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
+cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -285,7 +286,7 @@ class Server(stack_user.StackUser):
               'the Heat API resource-show using the provided keystone '
               'credentials. POLL_TEMP_URL will create and populate a '
               'Swift TempURL with metadata for polling.'),
-            default=POLL_SERVER_CFN,
+            default=cfg.CONF.default_software_config_transport,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
             ]

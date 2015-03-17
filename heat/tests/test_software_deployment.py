@@ -148,6 +148,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         self._create_stack(self.template_with_server)
         sd = self.deployment
+        self.assertEqual('CFN_SIGNAL', sd.properties.get('signal_transport'))
         sd.validate()
         server = self.stack['server']
         self.assertTrue(server.user_data_software_config())

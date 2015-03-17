@@ -156,6 +156,38 @@ engine_opts = [
                 help=_('Enables engine with convergence architecture. All '
                        'stacks with this option will be created using '
                        'convergence engine .')),
+    cfg.StrOpt('default_software_config_transport',
+               choices=['POLL_SERVER_CFN',
+                        'POLL_SERVER_HEAT',
+                        'POLL_TEMP_URL'],
+               default='POLL_SERVER_CFN',
+               help=_('Template default for how the server should receive the '
+                      'metadata required for software configuration. '
+                      'POLL_SERVER_CFN will allow calls to the cfn API action '
+                      'DescribeStackResource authenticated with the provided '
+                      'keypair (requires enabled heat-api-cfn). '
+                      'POLL_SERVER_HEAT will allow calls to the '
+                      'Heat API resource-show using the provided keystone '
+                      'credentials (requires keystone v3 API, and configured '
+                      'stack_user_* config options). '
+                      'POLL_TEMP_URL will create and populate a '
+                      'Swift TempURL with metadata for polling (requires '
+                      'object-store endpoint which supports TempURL).')),
+    cfg.StrOpt('default_deployment_signal_transport',
+               choices=['CFN_SIGNAL',
+                        'TEMP_URL_SIGNAL',
+                        'HEAT_SIGNAL'],
+               default='CFN_SIGNAL',
+               help=_('Template default for how the server should signal to '
+                      'heat with the deployment output values. CFN_SIGNAL '
+                      'will allow an HTTP POST to a CFN keypair signed URL '
+                      '(requires enabled heat-api-cfn). '
+                      'TEMP_URL_SIGNAL will create a Swift TempURL to be '
+                      'signaled via HTTP PUT (requires object-store endpoint '
+                      'which supports TempURL). '
+                      'HEAT_SIGNAL will allow calls to the Heat API '
+                      'resource-signal using the provided keystone '
+                      'credentials')),
     cfg.StrOpt('onready',
                help=_('Deprecated.'))]
 
