@@ -20,6 +20,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
@@ -823,6 +824,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
     def setUp(self):
         super(TemplateResourceCrudTest, self).setUp()
         files = {'test_resource.template': json.dumps(self.provider)}
+        self.ctx = utils.dummy_context()
 
         class DummyResource(object):
             support_status = support.SupportStatus()
@@ -835,7 +837,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         resource._register_class('DummyResource', DummyResource)
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
-        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+        stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template(empty_template, files=files,
                                              env=env),
                              stack_id=str(uuid.uuid4()))
@@ -872,7 +874,13 @@ class TemplateResourceCrudTest(common.HeatTestCase):
             self.provider, {'Foo': 'bar'})
 
     def test_handle_delete(self):
-        self.res.nested = mock.MagicMock()
-        self.res.nested.return_value.delete.return_value = None
+        self.res.rpc_client = mock.MagicMock()
+        self.res.id = 55
+        self.res.uuid = six.text_type(uuid.uuid4())
+        self.res.resource_id = six.text_type(uuid.uuid4())
+        ident = identifier.HeatIdentifier(self.ctx.tenant_id,
+                                          self.res.physical_resource_name(),
+                                          self.res.resource_id)
         self.res.handle_delete()
-        self.res.nested.return_value.delete.assert_called_once_with()
+        rpcc = self.res.rpc_client.return_value
+        rpcc.delete_stack.assert_called_once_with(self.ctx, ident)
