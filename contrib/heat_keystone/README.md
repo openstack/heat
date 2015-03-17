@@ -14,6 +14,8 @@ And it provides Custom Constrains for following keystone entities
 - Keystone project
 - Keystone group
 
+NOTE: It supports only Keystone v3 version
+
 ### 1. Install the Keystone plugin in Heat
 
 NOTE: These instructions assume the value of heat.conf plugin_dirs includes
