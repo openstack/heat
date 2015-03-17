@@ -12,8 +12,8 @@
 
 import copy
 import json
-import logging
 
+from oslo_log import log as logging
 from testtools import matchers
 
 from heat_integrationtests.common import test

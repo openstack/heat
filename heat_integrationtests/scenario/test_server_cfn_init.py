@@ -11,12 +11,9 @@
 #    under the License.
 
 import json
-import logging
 
 from heat_integrationtests.common import exceptions
 from heat_integrationtests.scenario import scenario_base
-
-LOG = logging.getLogger(__name__)
 
 
 class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
