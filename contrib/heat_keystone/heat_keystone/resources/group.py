@@ -57,6 +57,7 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
           roles:
             - role: {get_param: group_role}
               domain: {get_param: group_role_domain}
+            - role: {get_param: group_role}
               project: {get_param: group_role_project}
     '''
 
@@ -120,9 +121,6 @@ class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
             values['name'] = new_name
         if new_description is not None:
             values['description'] = new_description
-
-        if len(values) == 0:
-            return
 
         values['group'] = group_id
         domain = (self.client_plugin('keystone').
