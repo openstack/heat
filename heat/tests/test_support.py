@@ -17,19 +17,20 @@ from heat.tests import common
 
 class SupportStatusTest(common.HeatTestCase):
     def test_valid_status(self):
-        status = support.SupportStatus(
-            status=support.DEPRECATED,
-            message='test_message',
-            version='test_version'
-        )
-        self.assertEqual('DEPRECATED', status.status)
-        self.assertEqual('test_message', status.message)
-        self.assertEqual('test_version', status.version)
-        self.assertEqual({
-            'status': 'DEPRECATED',
-            'message': 'test_message',
-            'version': 'test_version'
-        }, status.to_dict())
+        for sstatus in support.SUPPORT_STATUSES:
+            status = support.SupportStatus(
+                status=sstatus,
+                message='test_message',
+                version='test_version'
+            )
+            self.assertEqual(sstatus, status.status)
+            self.assertEqual('test_message', status.message)
+            self.assertEqual('test_version', status.version)
+            self.assertEqual({
+                'status': sstatus,
+                'message': 'test_message',
+                'version': 'test_version'
+            }, status.to_dict())
 
     def test_invalid_status(self):
         status = support.SupportStatus(
