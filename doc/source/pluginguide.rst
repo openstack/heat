@@ -78,6 +78,13 @@ status would be ``CREATE FAILED``. The base class handles the
 reporting and persisting of resource state, so a plug-in's handler
 methods only need to return data or raise exceptions as appropriate.
 
+Resource Support Status
+***********************
+
+New resource should be marked from which OpenStack release it will be available
+with *support_status* option. For more details, see
+:ref:`supportstatus`.
+
 
 Properties and Attributes
 +++++++++++++++++++++++++
