@@ -3946,8 +3946,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
-    @mock.patch.object(service_software_config.db_api,
-                       'resource_get_by_physical_resource_id')
+    @mock.patch.object(service_software_config.resource_object.Resource,
+                       'get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
     def test_push_metadata_software_deployments(self, put, res_get, md_sd):
         rs = mock.Mock()
@@ -3971,8 +3971,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
-    @mock.patch.object(service_software_config.db_api,
-                       'resource_get_by_physical_resource_id')
+    @mock.patch.object(service_software_config.resource_object.Resource,
+                       'get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
     def test_push_metadata_software_deployments_temp_url(
             self, put, res_get, md_sd):
