@@ -52,6 +52,7 @@ class KeystoneClientTest(common.HeatTestCase):
         if method == 'token':
             heat_keystoneclient.kc.Client(
                 auth_url=mox.IgnoreArg(),
+                endpoint=mox.IgnoreArg(),
                 tenant_name='test_tenant',
                 token='abcd1234',
                 cacert=None,
@@ -63,6 +64,7 @@ class KeystoneClientTest(common.HeatTestCase):
         elif method == 'password':
             heat_keystoneclient.kc.Client(
                 auth_url=mox.IgnoreArg(),
+                endpoint=mox.IgnoreArg(),
                 tenant_name='test_tenant',
                 tenant_id='test_tenant_id',
                 username='test_username',
@@ -76,6 +78,7 @@ class KeystoneClientTest(common.HeatTestCase):
         if method == 'trust':
             heat_keystoneclient.kc.Client(
                 auth_url='http://server.test:5000/v2.0',
+                endpoint='http://server.test:5000/v2.0',
                 password='verybadpass',
                 tenant_name='service',
                 username='heat',
