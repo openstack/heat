@@ -310,11 +310,6 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
 
         new_capacity = _calculate_new_capacity(capacity, adjustment,
                                                adjustment_type, lower, upper)
-        total = grouputils.get_size(self, include_failed=True)
-        # if there are failed resources in nested_stack, has to change
-        if new_capacity == total:
-            LOG.debug('no change in capacity %d' % capacity)
-            return
 
         # send a notification before, on-error and on-success.
         notif = {
