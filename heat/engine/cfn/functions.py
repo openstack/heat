@@ -252,7 +252,7 @@ class Select(function.Function):
 
         if (isinstance(strings, collections.Sequence) and
                 not isinstance(strings, six.string_types)):
-            if not isinstance(index, (int, long)):
+            if not isinstance(index, six.integer_types):
                 raise TypeError(_('Index to "%s" must be an integer') %
                                 self.fn_name)
 
@@ -434,7 +434,8 @@ class Replace(function.Function):
                 value = ''
 
             if not isinstance(value,
-                              (six.string_types, int, long, float, bool)):
+                              (six.string_types, six.integer_types,
+                               float, bool)):
                 raise TypeError(_('"%s" params must be strings or numbers') %
                                 self.fn_name)
 
