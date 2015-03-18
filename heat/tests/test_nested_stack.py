@@ -19,6 +19,7 @@ import six
 import yaml
 
 from heat.common import exception
+from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import parser
@@ -307,9 +308,9 @@ Outputs:
     def setUp(self):
         super(NestedStackCrudTest, self).setUp()
 
-        ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+        self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
-        stack = parser.Stack(ctx, 'test', parser.Template(empty_template))
+        stack = parser.Stack(self.ctx, 'test', parser.Template(empty_template))
         stack.store()
 
         self.patchobject(urlfetch, 'get', return_value=self.nested_template)
@@ -323,6 +324,7 @@ Outputs:
         self.res = stack_res.NestedStack('test_t_res',
                                          self.defn, stack)
         self.assertIsNone(self.res.validate())
+        self.res._store()
 
     def test_handle_create(self):
         self.res.create_with_template = mock.Mock(return_value=None)
@@ -350,7 +352,12 @@ Outputs:
             self.nested_parsed, self.nested_params, None)
 
     def test_handle_delete(self):
-        self.res.nested = mock.MagicMock()
-        self.res.nested.return_value.delete.return_value = None
+        self.res.rpc_client = mock.MagicMock()
+        stack_identity = identifier.HeatIdentifier(
+            self.ctx.tenant_id,
+            self.res.physical_resource_name(),
+            self.res.resource_id)
+
         self.res.handle_delete()
-        self.res.nested.return_value.delete.assert_called_once_with()
+        self.res.rpc_client.return_value.delete_stack.assert_called_once_with(
+            self.ctx, stack_identity)

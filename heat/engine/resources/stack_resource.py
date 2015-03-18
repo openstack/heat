@@ -11,7 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import hashlib
+import json
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -20,8 +22,8 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.common.i18n import _LW
+from heat.common import identifier
 from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import environment
@@ -29,8 +31,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template
-
-cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
+from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
 
@@ -155,34 +156,20 @@ class StackResource(resource.Resource):
                                  files=self.stack.t.files, env=child_env)
 
     def _parse_nested_stack(self, stack_name, child_template,
-                            child_params=None, timeout_mins=None,
+                            child_params, timeout_mins=None,
                             adopt_data=None):
-        if self.stack.nested_depth >= cfg.CONF.max_nested_stack_depth:
-            msg = _("Recursion depth exceeds %d."
-                    ) % cfg.CONF.max_nested_stack_depth
-            raise exception.RequestLimitExceeded(message=msg)
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
 
-        if child_params is None:
-            child_params = self.child_params()
+        stack_user_project_id = self.stack.stack_user_project_id
+        new_nested_depth = self._child_nested_depth()
 
         child_env = environment.get_child_environment(
             self.stack.env, child_params,
             item_to_remove=self.resource_info)
 
-        parsed_template = self._parse_child_template(child_template, child_env)
-        self._validate_nested_resources(parsed_template)
-
-        # Don't overwrite the attributes_schema for subclasses that
-        # define their own attributes_schema.
-        if not hasattr(type(self), 'attributes_schema'):
-            self.attributes = None
-            self._outputs_to_attribs(parsed_template)
-
-        if timeout_mins is None:
-            timeout_mins = self.stack.timeout_mins
-
-        stack_user_project_id = self.stack.stack_user_project_id
-        new_nested_depth = self.stack.nested_depth + 1
+        parsed_template = self._child_parsed_template(child_template,
+                                                      child_env)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
@@ -198,6 +185,24 @@ class StackResource(resource.Resource):
                               adopt_stack_data=adopt_data,
                               nested_depth=new_nested_depth)
         return nested
+
+    def _child_nested_depth(self):
+        if self.stack.nested_depth >= cfg.CONF.max_nested_stack_depth:
+            msg = _("Recursion depth exceeds %d."
+                    ) % cfg.CONF.max_nested_stack_depth
+            raise exception.RequestLimitExceeded(message=msg)
+        return self.stack.nested_depth + 1
+
+    def _child_parsed_template(self, child_template, child_env):
+        parsed_template = self._parse_child_template(child_template, child_env)
+        self._validate_nested_resources(parsed_template)
+
+        # Don't overwrite the attributes_schema for subclasses that
+        # define their own attributes_schema.
+        if not hasattr(type(self), 'attributes_schema'):
+            self.attributes = None
+            self._outputs_to_attribs(parsed_template)
+        return parsed_template
 
     def _validate_nested_resources(self, templ):
         total_resources = (len(templ[templ.RESOURCES]) +
@@ -215,156 +220,226 @@ class StackResource(resource.Resource):
                              timeout_mins=None, adopt_data=None):
         """Create the nested stack with the given template."""
         name = self.physical_resource_name()
-        self._nested = self._parse_nested_stack(name, child_template,
-                                                user_params, timeout_mins,
-                                                adopt_data)
-        self._nested.validate()
-        nested_id = self._nested.store()
-        self.resource_id_set(nested_id)
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
+        stack_user_project_id = self.stack.stack_user_project_id
 
-        action = self._nested.CREATE
-        error_wait_time = cfg.CONF.error_wait_time
-        if adopt_data:
-            action = self._nested.ADOPT
-            error_wait_time = None
+        if user_params is None:
+            user_params = self.child_params()
+        child_env = environment.get_child_environment(
+            self.stack.env,
+            user_params,
+            item_to_remove=self.resource_info)
 
-        stack_creator = scheduler.TaskRunner(self._nested.stack_task,
-                                             action=action,
-                                             error_wait_time=error_wait_time)
-        stack_creator.start(timeout=self._nested.timeout_secs())
-        return stack_creator
+        new_nested_depth = self._child_nested_depth()
+        parsed_template = self._child_parsed_template(child_template,
+                                                      child_env)
 
-    def check_create_complete(self, stack_creator):
-        if stack_creator is None:
+        adopt_data_str = None
+        if adopt_data is not None:
+            if 'environment' not in adopt_data:
+                adopt_data['environment'] = child_env.user_env_as_dict()
+            if 'template' not in adopt_data:
+                adopt_data['template'] = child_template
+            adopt_data_str = json.dumps(adopt_data)
+
+        args = {rpc_api.PARAM_TIMEOUT: timeout_mins,
+                rpc_api.PARAM_DISABLE_ROLLBACK: True,
+                rpc_api.PARAM_ADOPT_STACK_DATA: adopt_data_str}
+        try:
+            result = self.rpc_client()._create_stack(
+                self.context,
+                name,
+                parsed_template.t,
+                child_env.user_env_as_dict(),
+                parsed_template.files,
+                args,
+                owner_id=self.stack.id,
+                user_creds_id=self.stack.user_creds_id,
+                stack_user_project_id=stack_user_project_id,
+                nested_depth=new_nested_depth)
+        except Exception as ex:
+            self.raise_local_exception(ex)
+
+        self.resource_id_set(result['stack_id'])
+
+    def raise_local_exception(self, ex):
+        ex_type = ex.__class__.__name__
+
+        is_remote = ex_type.endswith('_Remote')
+        if is_remote:
+            ex_type = ex_type[:-len('_Remote')]
+
+        full_message = six.text_type(ex)
+        if full_message.find('\n') > -1 and is_remote:
+            message, msg_trace = full_message.split('\n', 1)
+        else:
+            message = full_message
+
+        if isinstance(ex, exception.HeatException):
+            message = ex.message
+        local_ex = copy.copy(getattr(exception, ex_type))
+        local_ex.msg_fmt = "%(message)s"
+        raise local_ex(message=message)
+
+    def check_create_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.CREATE)
+
+    def _check_status_complete(self, action, show_deleted=False,
+                               cookie=None):
+        try:
+            nested = self.nested(force_reload=True, show_deleted=show_deleted)
+        except exception.NotFound:
+            if action == resource.Resource.DELETE:
+                return True
+            # It's possible the engine handling the create hasn't persisted
+            # the stack to the DB when we first start polling for state
+            return False
+
+        if nested is None:
             return True
-        done = stack_creator.step()
-        if done:
-            if self._nested.state != (self._nested.CREATE,
-                                      self._nested.COMPLETE):
-                raise exception.Error(self._nested.status_reason)
 
-        return done
+        # Has the action really started?
+        #
+        # The rpc call to update does not guarantee that the stack will be
+        # placed into IN_PROGRESS by the time it returns (it runs stack.update
+        # in a thread) so you could also have a situation where we get into
+        # this method and the update hasn't even started.
+        #
+        # So we are using a mixture of state (action+status) and updated_at
+        # to see if the action has actually progressed.
+        # - very fast updates (like something with one RandomString) we will
+        #   probably miss the state change, but we should catch the updated_at.
+        # - very slow updates we won't see the updated_at for quite a while,
+        #   but should see the state change.
+        if cookie is not None:
+            prev_state = cookie['previous']['state']
+            prev_updated_at = cookie['previous']['updated_at']
+            if (prev_updated_at == nested.updated_time and
+                    prev_state == nested.state):
+                return False
 
-    def check_adopt_complete(self, stack_creator):
-        if stack_creator is None:
+        if nested.status == resource.Resource.IN_PROGRESS:
+            return False
+        elif nested.status == resource.Resource.COMPLETE:
             return True
-        done = stack_creator.step()
-        if done:
-            if self._nested.state != (self._nested.ADOPT,
-                                      self._nested.COMPLETE):
-                raise exception.Error(self._nested.status_reason)
+        elif nested.status == resource.Resource.FAILED:
+            raise resource.ResourceUnknownStatus(
+                resource_status=nested.status,
+                status_reason=nested.status_reason)
+        else:
+            raise resource.ResourceUnknownStatus(
+                resource_status=nested.status,
+                result=_('Stack unknown status'))
 
-        return done
+    def check_adopt_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.ADOPT)
 
     def update_with_template(self, child_template, user_params=None,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
         if self.id is None:
             self._store()
-        name = self.physical_resource_name()
 
         nested_stack = self.nested()
         if nested_stack is None:
             # if the create failed for some reason and the nested
             # stack was not created, we need to create an empty stack
             # here so that the update will work.
+            def _check_for_completion(creator_fn):
+                while not self.check_create_complete(creator_fn):
+                    yield
+
             empty_temp = template_format.parse(
                 "heat_template_version: '2013-05-23'")
             stack_creator = self.create_with_template(empty_temp, {})
-            stack_creator.run_to_completion()
+            checker = scheduler.TaskRunner(_check_for_completion,
+                                           stack_creator)
+            checker(timeout=self.stack.timeout_secs())
+
+            if stack_creator is not None:
+                stack_creator.run_to_completion()
             nested_stack = self.nested()
 
-        stack = self._parse_nested_stack(name, child_template, user_params,
-                                         timeout_mins)
-        stack.validate()
-        stack.parameters.set_stack_id(nested_stack.identifier())
-        nested_stack.updated_time = self.updated_time
-        updater = scheduler.TaskRunner(nested_stack.update_task, stack)
-        updater.start()
-        return updater
+        if timeout_mins is None:
+            timeout_mins = self.stack.timeout_mins
 
-    def check_update_complete(self, updater):
-        if updater is not None:
-            if not updater.step():
-                return False
+        if user_params is None:
+            user_params = self.child_params()
 
-        nested_stack = self.nested()
-        if nested_stack.state != (nested_stack.UPDATE,
-                                  nested_stack.COMPLETE):
-            raise exception.Error(_("Nested stack UPDATE failed: %s") %
-                                  nested_stack.status_reason)
-        return True
+        child_env = environment.get_child_environment(
+            self.stack.env,
+            user_params, item_to_remove=self.resource_info)
+        parsed_template = self._child_parsed_template(child_template,
+                                                      child_env)
+
+        cookie = {'previous': {
+            'updated_at': nested_stack.updated_time,
+            'state': nested_stack.state}}
+
+        args = {rpc_api.PARAM_TIMEOUT: timeout_mins}
+        try:
+            self.rpc_client().update_stack(
+                self.context,
+                nested_stack.identifier(),
+                parsed_template.t,
+                child_env.user_env_as_dict(),
+                parsed_template.files,
+                args)
+        except Exception as ex:
+            LOG.exception('update_stack')
+            self.raise_local_exception(ex)
+        return cookie
+
+    def check_update_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.UPDATE,
+                                           cookie=cookie)
 
     def delete_nested(self):
         '''
         Delete the nested stack.
         '''
+        stack_identity = identifier.HeatIdentifier(
+            self.context.tenant_id,
+            self.physical_resource_name(),
+            self.resource_id)
+
         try:
-            stack = self.nested()
-        except exception.NotFound:
-            LOG.info(_LI("Stack not found to delete"))
-        else:
-            if stack is not None:
-                delete_task = scheduler.TaskRunner(stack.delete)
-                delete_task.start()
-                return delete_task
+            self.rpc_client().delete_stack(self.context, stack_identity)
+        except Exception as ex:
+            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
-    def check_delete_complete(self, delete_task):
-        if delete_task is None:
-            return True
-
-        done = delete_task.step()
-        if done:
-            nested_stack = self.nested()
-            if nested_stack.state != (nested_stack.DELETE,
-                                      nested_stack.COMPLETE):
-                raise exception.Error(nested_stack.status_reason)
-
-        return done
+    def check_delete_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.DELETE,
+                                           show_deleted=True)
 
     def handle_suspend(self):
         stack = self.nested()
         if stack is None:
             raise exception.Error(_('Cannot suspend %s, stack not created')
                                   % self.name)
+        stack_identity = identifier.HeatIdentifier(
+            self.context.tenant_id,
+            self.physical_resource_name(),
+            self.resource_id)
+        self.rpc_client().stack_suspend(self.context, stack_identity)
 
-        suspend_task = scheduler.TaskRunner(self._nested.stack_task,
-                                            action=self._nested.SUSPEND,
-                                            reverse=True)
-
-        suspend_task.start(timeout=self._nested.timeout_secs())
-        return suspend_task
-
-    def check_suspend_complete(self, suspend_task):
-        done = suspend_task.step()
-        if done:
-            if self._nested.state != (self._nested.SUSPEND,
-                                      self._nested.COMPLETE):
-                raise exception.Error(self._nested.status_reason)
-
-        return done
+    def check_suspend_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.SUSPEND)
 
     def handle_resume(self):
         stack = self.nested()
         if stack is None:
             raise exception.Error(_('Cannot resume %s, stack not created')
                                   % self.name)
+        stack_identity = identifier.HeatIdentifier(
+            self.context.tenant_id,
+            self.physical_resource_name(),
+            self.resource_id)
+        self.rpc_client().stack_resume(self.context, stack_identity)
 
-        resume_task = scheduler.TaskRunner(self._nested.stack_task,
-                                           action=self._nested.RESUME,
-                                           reverse=False)
-
-        resume_task.start(timeout=self._nested.timeout_secs())
-        return resume_task
-
-    def check_resume_complete(self, resume_task):
-        done = resume_task.step()
-        if done:
-            if self._nested.state != (self._nested.RESUME,
-                                      self._nested.COMPLETE):
-                raise exception.Error(self._nested.status_reason)
-
-        return done
+    def check_resume_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.RESUME)
 
     def handle_check(self):
         stack = self.nested()
@@ -372,15 +447,14 @@ class StackResource(resource.Resource):
             raise exception.Error(_('Cannot check %s, stack not created')
                                   % self.name)
 
-        check_task = scheduler.TaskRunner(self._nested.stack_task,
-                                          action=self._nested.CHECK,
-                                          aggregate_exceptions=True)
+        stack_identity = identifier.HeatIdentifier(
+            self.context.tenant_id,
+            self.physical_resource_name(),
+            self.resource_id)
+        self.rpc_client().stack_check(self.context, stack_identity)
 
-        check_task.start(timeout=self._nested.timeout_secs())
-        return check_task
-
-    def check_check_complete(self, check_task):
-        return check_task.step()
+    def check_check_complete(self, cookie=None):
+        return self._check_status_complete(resource.Resource.CHECK)
 
     def prepare_abandon(self):
         return self.nested().prepare_abandon()
