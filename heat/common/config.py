@@ -99,7 +99,7 @@ engine_opts = [
                help=_('The directory to search for environment files.')),
     cfg.StrOpt('deferred_auth_method',
                choices=['password', 'trusts'],
-               default='password',
+               default='trusts',
                help=_('Select deferred auth method, '
                       'stored password or trusts.')),
     cfg.ListOpt('trusts_delegated_roles',

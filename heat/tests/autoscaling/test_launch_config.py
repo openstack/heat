@@ -30,7 +30,6 @@ class LaunchConfigurationTest(common.HeatTestCase):
         super(LaunchConfigurationTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def validate_launch_config(self, t, stack, resource_name):
         # create the launch configuration resource

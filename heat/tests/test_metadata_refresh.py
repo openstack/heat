@@ -149,7 +149,6 @@ class MetadataRefreshTest(common.HeatTestCase):
     '''
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
-        self.stub_keystoneclient()
 
     def create_stack(self, stack_name='test_stack', params=None):
         params = params or {}
@@ -211,7 +210,6 @@ class MetadataRefreshTest(common.HeatTestCase):
 class WaitCondMetadataUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
-        self.stub_keystoneclient()
         self.patch('heat.engine.service.warnings')
 
         self.man = service.EngineService('a-host', 'a-topic')
@@ -309,7 +307,6 @@ class MetadataRefreshTestServer(common.HeatTestCase):
     '''
     def setUp(self):
         super(MetadataRefreshTestServer, self).setUp()
-        self.stub_keystoneclient()
 
     def create_stack(self, stack_name='test_stack_native', params=None):
         params = params or {}

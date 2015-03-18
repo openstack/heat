@@ -94,12 +94,12 @@ class SignalTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_resource_data(self):
-        self.stack = self.create_stack(stack_name='resource_data_test',
-                                       stub=False)
         self.stub_keystoneclient(
             access='anaccesskey',
             secret='verysecret',
             credential_id='mycredential')
+        self.stack = self.create_stack(stack_name='resource_data_test',
+                                       stub=False)
         self.m.ReplayAll()
 
         self.stack.create()

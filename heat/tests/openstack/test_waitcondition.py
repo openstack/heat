@@ -72,7 +72,6 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
     def setUp(self):
         super(HeatWaitConditionTest, self).setUp()
-        self.stub_keystoneclient()
         self.tenant_id = 'test_tenant'
 
     def create_stack(self, stack_id=None,

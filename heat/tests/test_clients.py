@@ -95,6 +95,7 @@ class ClientsTest(common.HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = None
         con.auth_plugin = fakes.FakeAuth(auth_token='anewtoken')
+        self.stub_keystoneclient(context=con)
         c = clients.Clients(con)
         con.clients = c
 
@@ -200,6 +201,13 @@ class ClientPluginTest(common.HeatTestCase):
     @mock.patch.object(context, "RequestContext")
     @mock.patch.object(v3, "Token", name="v3_token")
     def test_get_missing_service_catalog(self, mock_v3, mkreqctx):
+        class FakeKeystone(fakes.FakeKeystoneClient):
+            def __init__(self):
+                super(FakeKeystone, self).__init__()
+                self.client = self
+                self.version = 'v3'
+
+        self.stub_keystoneclient(fake_client=FakeKeystone())
         con = mock.Mock(auth_token="1234", trust_id=None)
         c = clients.Clients(con)
         con.clients = c
@@ -213,6 +221,7 @@ class ClientPluginTest(common.HeatTestCase):
         mock_token_obj = mock.Mock()
         mock_token_obj.get_auth_ref.return_value = {'catalog': 'foo'}
         mock_v3.return_value = mock_token_obj
+
         plugin = FooClientsPlugin(con)
         mock_cxt_dict = {'auth_token_info': {'token': {'catalog': 'baz'}}}
         plugin.context.to_dict.return_value = mock_cxt_dict

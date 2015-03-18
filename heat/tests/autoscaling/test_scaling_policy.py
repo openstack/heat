@@ -35,7 +35,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         super(TestAutoScalingPolicy, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
@@ -102,7 +101,6 @@ class TestCooldownMixin(common.HeatTestCase):
         super(TestCooldownMixin, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
@@ -178,7 +176,6 @@ class TestCooldownMixin(common.HeatTestCase):
 class ScalingPolicyAttrTest(common.HeatTestCase):
     def setUp(self):
         super(ScalingPolicyAttrTest, self).setUp()
-        self.stub_keystoneclient()
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         self.policy = stack['WebServerScaleUpPolicy']

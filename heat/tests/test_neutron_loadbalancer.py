@@ -229,7 +229,6 @@ class HealthMonitorTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
         self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
-        self.stub_keystoneclient()
 
     def create_health_monitor(self):
         neutronclient.Client.create_health_monitor({
@@ -362,7 +361,6 @@ class PoolTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
-        self.stub_keystoneclient()
 
     def create_pool(self, resolve_neutron=True, with_vip_subnet=False):
         neutronclient.Client.create_pool({
@@ -854,7 +852,6 @@ class PoolMemberTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(neutronclient.Client, 'update_member')
         self.m.StubOutWithMock(neutronclient.Client, 'show_member')
-        self.stub_keystoneclient()
 
     def create_member(self):
         neutronclient.Client.create_member({
@@ -954,7 +951,6 @@ class LoadBalancerTest(common.HeatTestCase):
         self.fc = fakes_v1_1.FakeClient()
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
-        self.stub_keystoneclient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
 
     def create_load_balancer(self):
@@ -1052,7 +1048,6 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
         self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
-        self.stub_keystoneclient()
 
     def _create_pool_with_health_monitors(self):
         neutronclient.Client.create_health_monitor({

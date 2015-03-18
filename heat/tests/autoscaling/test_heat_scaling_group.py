@@ -35,7 +35,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                                  generic_resource.ResourceWithPropsAndAttrs)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
         self.parsed = template_format.parse(inline_templates.as_heat_template)
 
     def test_invalid_min_size(self):
@@ -96,7 +95,6 @@ class TestInitialGroupSize(common.HeatTestCase):
         super(TestInitialGroupSize, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def test_initial_size(self):
         t = template_format.parse(inline_templates.as_heat_template)
@@ -118,7 +116,6 @@ class TestGroupAdjust(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        self.stub_keystoneclient()
 
         t = template_format.parse(inline_templates.as_heat_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -230,7 +227,6 @@ class TestGroupCrud(common.HeatTestCase):
                                  generic_resource.ResourceWithPropsAndAttrs)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
         self.stub_SnapshotConstraint_validate()
@@ -312,7 +308,6 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
                              'http://server.test:8000/v1/waitcondition')
         resource._register_class('ResourceWithPropsAndAttrs',
                                  generic_resource.ResourceWithPropsAndAttrs)
-        self.stub_keystoneclient()
 
         t = template_format.parse(inline_templates.as_heat_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)

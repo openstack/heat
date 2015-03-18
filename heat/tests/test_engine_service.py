@@ -211,7 +211,8 @@ def setup_mock_for_image_constraint(mocks, imageId_input,
         imageId_input).MultipleTimes().AndReturn(imageId_output)
 
 
-def setup_mocks(mocks, stack, mock_image_constraint=True):
+def setup_mocks(mocks, stack, mock_image_constraint=True,
+                mock_keystone=True):
     fc = fakes_v1_1.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
@@ -223,7 +224,8 @@ def setup_mocks(mocks, stack, mock_image_constraint=True):
         setup_mock_for_image_constraint(mocks,
                                         instance.t['Properties']['ImageId'])
 
-    setup_keystone_mocks(mocks, stack)
+    if mock_keystone:
+        setup_keystone_mocks(mocks, stack)
 
     user_data = instance.properties['UserData']
     server_userdata = instance.client_plugin().build_userdata(
@@ -415,7 +417,7 @@ class StackCreateTest(common.HeatTestCase):
     def test_wordpress_single_instance_stack_delete(self):
         ctx = utils.dummy_context()
         stack = get_wordpress_stack('test_stack', ctx)
-        fc = setup_mocks(self.m, stack)
+        fc = setup_mocks(self.m, stack, mock_keystone=False)
         self.m.ReplayAll()
         stack_id = stack.store()
         stack.create()
@@ -669,6 +671,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                           stack.t.t, {}, None, {})
 
     def test_stack_create_no_credentials(self):
+        cfg.CONF.set_default('deferred_auth_method', 'password')
         stack_name = 'test_stack_create_no_credentials'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
@@ -1351,6 +1354,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_update_no_credentials(self):
+        cfg.CONF.set_default('deferred_auth_method', 'password')
         stack_name = 'test_stack_update_no_credentials'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'

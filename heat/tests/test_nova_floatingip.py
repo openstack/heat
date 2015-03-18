@@ -69,7 +69,6 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.novaclient.servers, 'get')
         self.m.StubOutWithMock(self.novaclient.servers, 'add_floating_ip')
         self.m.StubOutWithMock(self.novaclient.servers, 'remove_floating_ip')
-        self.stub_keystoneclient()
         nova.NovaClientPlugin.get_server = mock.Mock(
             return_value=mock.MagicMock())
 

@@ -72,7 +72,7 @@ class HeatTestCase(testscenarios.WithScenarios,
 
     TIME_STEP = 0.1
 
-    def setUp(self):
+    def setUp(self, mock_keystone=True):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
@@ -112,7 +112,8 @@ class HeatTestCase(testscenarios.WithScenarios,
         # use CWLiteAlarm for testing.
         resources.global_env().registry.load(
             {"AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"})
-
+        if mock_keystone:
+            self.stub_keystoneclient()
         utils.setup_dummy_db()
         self.addCleanup(utils.reset_dummy_db)
 

@@ -70,7 +70,6 @@ class s3Test(common.HeatTestCase):
         self.m.StubOutWithMock(sc.Connection, 'get_container')
         self.m.StubOutWithMock(sc.Connection, 'delete_container')
         self.m.StubOutWithMock(sc.Connection, 'get_auth')
-        self.stub_keystoneclient()
 
     def create_resource(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)

@@ -38,7 +38,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         super(TestAutoScalingGroupValidation, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def validate_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
@@ -277,7 +276,6 @@ class TestInitialGroupSize(common.HeatTestCase):
         super(TestInitialGroupSize, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def test_initial_size(self):
         t = template_format.parse(as_template)
@@ -297,7 +295,6 @@ class TestGroupAdjust(common.HeatTestCase):
         super(TestGroupAdjust, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)
@@ -407,7 +404,6 @@ class TestGroupCrud(common.HeatTestCase):
         super(TestGroupCrud, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=inline_templates.as_params)

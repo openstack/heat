@@ -64,7 +64,6 @@ class MeteringLabelTest(common.HeatTestCase):
                                'delete_metering_label_rule')
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
-        self.stub_keystoneclient()
 
     def create_metering_label(self):
         neutronclient.Client.create_metering_label({
@@ -177,7 +176,6 @@ class MeteringRuleTest(common.HeatTestCase):
                                'delete_metering_label_rule')
         self.m.StubOutWithMock(neutronclient.Client,
                                'show_metering_label_rule')
-        self.stub_keystoneclient()
 
     def create_metering_label_rule(self):
         neutronclient.Client.create_metering_label_rule({

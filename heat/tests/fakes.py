@@ -96,9 +96,10 @@ class FakeAuth(auth.BaseAuthPlugin):
 
 
 class FakeKeystoneClient(object):
-    def __init__(self, username='test_user', password='apassword',
+    def __init__(self, username='test_username', password='password',
                  user_id='1234', access='4567', secret='8901',
-                 credential_id='abcdxyz'):
+                 credential_id='abcdxyz', auth_token='abcd1234',
+                 context=None):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -106,6 +107,8 @@ class FakeKeystoneClient(object):
         self.secret = secret
         self.session = session.Session()
         self.credential_id = credential_id
+        self.token = auth_token
+        self.context = context
 
         class FakeCred(object):
             id = self.credential_id
@@ -183,3 +186,10 @@ class FakeKeystoneClient(object):
 
     def stack_domain_user_token(self, user_id, project_id, password):
         return 'adomainusertoken'
+
+    @property
+    def auth_token(self):
+        if self.context is not None:
+            return self.context.auth_plugin.get_token(self.session)
+        else:
+            return self.token

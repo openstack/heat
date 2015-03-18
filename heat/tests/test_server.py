@@ -99,7 +99,6 @@ class ServersTest(common.HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
         self.fc = fakes_v1_1.FakeClient()
-        self.stub_keystoneclient()
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
 
