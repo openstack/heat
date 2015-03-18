@@ -21,10 +21,11 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
-from heat.db import api as db_api
 from heat.engine import stack
 from heat.engine import timestamp
 from heat.objects import stack as stack_object
+from heat.objects import watch_data as watch_data_objects
+from heat.objects import watch_rule as watch_rule_objects
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -48,8 +49,10 @@ class WatchRule(object):
                   NORMAL: 'OKActions',
                   NODATA: 'InsufficientDataActions'}
 
-    created_at = timestamp.Timestamp(db_api.watch_rule_get, 'created_at')
-    updated_at = timestamp.Timestamp(db_api.watch_rule_get, 'updated_at')
+    created_at = timestamp.Timestamp(watch_rule_objects.WatchRule.get_by_id,
+                                     'created_at')
+    updated_at = timestamp.Timestamp(watch_rule_objects.WatchRule.get_by_id,
+                                     'updated_at')
 
     def __init__(self, context, watch_name, rule, stack_id=None,
                  state=NODATA, wid=None, watch_data=None,
@@ -77,7 +80,8 @@ class WatchRule(object):
         '''
         if watch is None:
             try:
-                watch = db_api.watch_rule_get_by_name(context, watch_name)
+                watch = watch_rule_objects.WatchRule.get_by_name(context,
+                                                                 watch_name)
             except Exception as ex:
                 LOG.warn(_LW('WatchRule.load (%(watch_name)s) db error '
                              '%(ex)s'), {'watch_name': watch_name, 'ex': ex})
@@ -107,17 +111,18 @@ class WatchRule(object):
         }
 
         if not self.id:
-            wr = db_api.watch_rule_create(self.context, wr_values)
+            wr = watch_rule_objects.WatchRule.create(self.context, wr_values)
             self.id = wr.id
         else:
-            db_api.watch_rule_update(self.context, self.id, wr_values)
+            watch_rule_objects.WatchRule.update_by_id(self.context, self.id,
+                                                      wr_values)
 
     def destroy(self):
         '''
         Delete the watchrule from the database.
         '''
         if self.id:
-            db_api.watch_rule_delete(self.context, self.id)
+            watch_rule_objects.WatchRule.delete(self.context, self.id)
 
     def do_data_cmp(self, data, threshold):
         op = self.rule['ComparisonOperator']
@@ -320,7 +325,7 @@ class WatchRule(object):
             'data': data,
             'watch_rule_id': self.id
         }
-        wd = db_api.watch_data_create(None, watch_data)
+        wd = watch_data_objects.WatchData.create(self.context, watch_data)
         LOG.debug('new watch:%(name)s data:%(data)s'
                   % {'name': self.name, 'data': str(wd.data)})
 

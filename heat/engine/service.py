@@ -35,7 +35,6 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
 from heat.common import service_utils
-from heat.db import api as db_api
 from heat.engine import api
 from heat.engine import attributes
 from heat.engine import clients
@@ -56,6 +55,8 @@ from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
+from heat.objects import watch_data
+from heat.objects import watch_rule
 from heat.openstack.common import service
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
@@ -1336,7 +1337,7 @@ class EngineService(service.Service):
             if watch_name:
                 yield watchrule.WatchRule.load(cnxt, watch_name)
             else:
-                for wr in db_api.watch_rule_get_all(cnxt):
+                for wr in watch_rule.WatchRule.get_all(cnxt):
                     if watchrule.rule_can_use_sample(wr, stats_data):
                         yield watchrule.WatchRule.load(cnxt, watch=wr)
 
@@ -1365,7 +1366,7 @@ class EngineService(service.Service):
             wrn = [watch_name]
         else:
             try:
-                wrn = [w.name for w in db_api.watch_rule_get_all(cnxt)]
+                wrn = [w.name for w in watch_rule.WatchRule.get_all(cnxt)]
             except Exception as ex:
                 LOG.warn(_LW('show_watch (all) db error %s'), ex)
                 return
@@ -1394,7 +1395,7 @@ class EngineService(service.Service):
             return
 
         try:
-            wds = db_api.watch_data_get_all(cnxt)
+            wds = watch_data.WatchData.get_all(cnxt)
         except Exception as ex:
             LOG.warn(_LW('show_metric (all) db error %s'), ex)
             return

@@ -256,6 +256,10 @@ def watch_data_get_all(context):
     return IMPL.watch_data_get_all(context)
 
 
+def watch_data_get_all_by_watch_rule_id(context, watch_rule_id):
+    return IMPL.watch_data_get_all_by_watch_rule_id(context, watch_rule_id)
+
+
 def software_config_create(context, values):
     return IMPL.software_config_create(context, values)
 
