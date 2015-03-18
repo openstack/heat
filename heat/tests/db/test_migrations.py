@@ -29,6 +29,7 @@ from oslo_db.sqlalchemy import test_base
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
+import six
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
@@ -546,12 +547,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         # confirm the resource.id is an int and the uuid field has been
         # copied from the old id.
         for r in res_in_db:
-            # now sqlalchemy returns `long` for mysql
-            # need more convenient way for type check
-            if engine.name == 'mysql':
-                self.assertEqual(long, type(r.id))
-            else:
-                self.assertEqual(int, type(r.id))
+            self.assertIsInstance(r.id, six.integer_types)
             self.assertTrue(uuid_in_res_data(r.uuid))
 
         # confirm that the new resource_id points to the correct resource.

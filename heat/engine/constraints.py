@@ -244,7 +244,7 @@ class AnyIndexDict(collections.Mapping):
         self.value = value
 
     def __getitem__(self, key):
-        if key != self.ANYTHING and not isinstance(key, (int, long)):
+        if key != self.ANYTHING and not isinstance(key, six.integer_types):
             raise KeyError(_('Invalid key %s') % str(key))
 
         return self.value
@@ -333,7 +333,7 @@ class Range(Constraint):
         self.max = max
 
         for param in (min, max):
-            if not isinstance(param, (float, int, long, type(None))):
+            if not isinstance(param, (float, six.integer_types, type(None))):
                 raise exception.InvalidSchemaError(
                     message=_('min/max must be numeric'))
 
@@ -402,7 +402,7 @@ class Length(Range):
         super(Length, self).__init__(min, max, description)
 
         for param in (min, max):
-            if not isinstance(param, (int, long, type(None))):
+            if not isinstance(param, (six.integer_types, type(None))):
                 msg = _('min/max length must be integral')
                 raise exception.InvalidSchemaError(message=msg)
 
