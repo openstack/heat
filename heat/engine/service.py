@@ -53,6 +53,7 @@ from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import event as event_object
 from heat.objects import resource as resource_objects
+from heat.objects import service as service_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.openstack.common import service
@@ -383,7 +384,7 @@ class EngineService(service.Service):
 
         self.manage_thread_grp.stop()
         ctxt = context.get_admin_context()
-        db_api.service_delete(ctxt, self.service_id)
+        service_objects.Service.delete(ctxt, self.service_id)
         LOG.info(_LI('Service %s is deleted'), self.service_id)
 
         # Terminate the engine process
@@ -1503,7 +1504,7 @@ class EngineService(service.Service):
     @context.request_context
     def list_services(self, cnxt):
         result = [service_utils.format_service(srv)
-                  for srv in db_api.service_get_all(cnxt)]
+                  for srv in service_objects.Service.get_all(cnxt)]
         return result
 
     def service_manage_report(self):
@@ -1511,16 +1512,17 @@ class EngineService(service.Service):
 
         if self.service_id is not None:
             # Service is already running
-            db_api.service_update(
+            service_objects.Service.update_by_id(
                 cnxt,
                 self.service_id,
                 dict())
             LOG.info(_LI('Service %s is updated'), self.service_id)
         else:
-            service_refs = db_api.service_get_all_by_args(cnxt,
-                                                          self.host,
-                                                          self.binary,
-                                                          self.hostname)
+            service_refs = service_objects.Service.get_all_by_args(
+                cnxt,
+                self.host,
+                self.binary,
+                self.hostname)
             if len(service_refs) == 1:
                 # Service was aborted or stopped
                 service_ref = service_refs[0]
@@ -1528,7 +1530,7 @@ class EngineService(service.Service):
                 if service_ref['deleted_at'] is None:
                     LOG.info(_LI('Service %s was aborted'), self.service_id)
 
-                service_ref = db_api.service_update(
+                service_ref = service_objects.Service.update_by_id(
                     cnxt,
                     service_ref['id'],
                     dict(engine_id=self.engine_id,
@@ -1538,7 +1540,7 @@ class EngineService(service.Service):
                 LOG.info(_LI('Service %s is restarted'), self.service_id)
             elif len(service_refs) == 0:
                 # Service is started now
-                service_ref = db_api.service_create(
+                service_ref = service_objects.Service.create(
                     cnxt,
                     dict(host=self.host,
                          hostname=self.hostname,
