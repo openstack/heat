@@ -15,8 +15,8 @@ import mock
 import oslo_messaging as messaging
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import stack_lock
+from heat.objects import stack_lock as stack_lock_object
 from heat.tests import common
 from heat.tests import utils
 
@@ -35,7 +35,8 @@ class StackLockTest(common.HeatTestCase):
             pass
 
     def test_successful_acquire_new_lock(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value=None)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -44,7 +45,8 @@ class StackLockTest(common.HeatTestCase):
         mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_failed_acquire_existing_lock_current_engine(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value=self.engine_id)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -53,9 +55,11 @@ class StackLockTest(common.HeatTestCase):
         mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_successful_acquire_existing_lock_engine_dead(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value='fake-engine-id')
-        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+        mock_steal = self.patchobject(stack_lock_object.StackLock,
+                                      'steal',
                                       return_value=None)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -67,7 +71,8 @@ class StackLockTest(common.HeatTestCase):
                                            self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_alive(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value='fake-engine-id')
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -77,9 +82,11 @@ class StackLockTest(common.HeatTestCase):
         mock_create.assert_called_once_with(self.stack.id, self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_dead(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value='fake-engine-id')
-        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+        mock_steal = self.patchobject(stack_lock_object.StackLock,
+                                      'steal',
                                       return_value='fake-engine-id2')
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -91,9 +98,11 @@ class StackLockTest(common.HeatTestCase):
                                            self.engine_id)
 
     def test_successful_acquire_with_retry(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value='fake-engine-id')
-        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+        mock_steal = self.patchobject(stack_lock_object.StackLock,
+                                      'steal',
                                       side_effect=[True, None])
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -106,9 +115,11 @@ class StackLockTest(common.HeatTestCase):
             [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_failed_acquire_one_retry_only(self):
-        mock_create = self.patchobject(db_api, 'stack_lock_create',
+        mock_create = self.patchobject(stack_lock_object.StackLock,
+                                       'create',
                                        return_value='fake-engine-id')
-        mock_steal = self.patchobject(db_api, 'stack_lock_steal',
+        mock_steal = self.patchobject(stack_lock_object.StackLock,
+                                      'steal',
                                       return_value=True)
 
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
@@ -121,68 +132,73 @@ class StackLockTest(common.HeatTestCase):
             [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_thread_lock_context_mgr_exception_acquire_success(self):
-        db_api.stack_lock_create = mock.Mock(return_value=None)
-        db_api.stack_lock_release = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
 
         def check_thread_lock():
             with slock.thread_lock(self.stack.id):
-                self.assertEqual(1, db_api.stack_lock_create.call_count)
+                self.assertEqual(1,
+                                 stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
         self.assertRaises(self.TestThreadLockException, check_thread_lock)
-        self.assertEqual(1, db_api.stack_lock_release.call_count)
+        self.assertEqual(1, stack_lock_object.StackLock.release.call_count)
 
     def test_thread_lock_context_mgr_exception_acquire_fail(self):
-        db_api.stack_lock_create = mock.Mock(return_value=self.engine_id)
-        db_api.stack_lock_release = mock.Mock()
+        stack_lock_object.StackLock.create = mock.Mock(
+            return_value=self.engine_id)
+        stack_lock_object.StackLock.release = mock.Mock()
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
 
         def check_thread_lock():
             with slock.thread_lock(self.stack.id):
-                self.assertEqual(1, db_api.stack_lock_create.call_count)
+                self.assertEqual(1,
+                                 stack_lock_object.StackLock.create.call_count)
                 raise exception.ActionInProgress
         self.assertRaises(exception.ActionInProgress, check_thread_lock)
-        assert not db_api.stack_lock_release.called
+        assert not stack_lock_object.StackLock.release.called
 
     def test_thread_lock_context_mgr_no_exception(self):
-        db_api.stack_lock_create = mock.Mock(return_value=None)
-        db_api.stack_lock_release = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         with slock.thread_lock(self.stack.id):
-            self.assertEqual(1, db_api.stack_lock_create.call_count)
-        assert not db_api.stack_lock_release.called
+            self.assertEqual(1, stack_lock_object.StackLock.create.call_count)
+        assert not stack_lock_object.StackLock.release.called
 
     def test_try_thread_lock_context_mgr_exception(self):
-        db_api.stack_lock_create = mock.Mock(return_value=None)
-        db_api.stack_lock_release = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
 
         def check_thread_lock():
             with slock.try_thread_lock(self.stack.id):
-                self.assertEqual(1, db_api.stack_lock_create.call_count)
+                self.assertEqual(1,
+                                 stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
         self.assertRaises(self.TestThreadLockException, check_thread_lock)
-        self.assertEqual(1, db_api.stack_lock_release.call_count)
+        self.assertEqual(1, stack_lock_object.StackLock.release.call_count)
 
     def test_try_thread_lock_context_mgr_no_exception(self):
-        db_api.stack_lock_create = mock.Mock(return_value=None)
-        db_api.stack_lock_release = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.create = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
         with slock.try_thread_lock(self.stack.id):
-            self.assertEqual(1, db_api.stack_lock_create.call_count)
-        assert not db_api.stack_lock_release.called
+            self.assertEqual(1, stack_lock_object.StackLock.create.call_count)
+        assert not stack_lock_object.StackLock.release.called
 
     def test_try_thread_lock_context_mgr_existing_lock(self):
-        db_api.stack_lock_create = mock.Mock(return_value=1234)
-        db_api.stack_lock_release = mock.Mock(return_value=None)
+        stack_lock_object.StackLock.create = mock.Mock(return_value=1234)
+        stack_lock_object.StackLock.release = mock.Mock(return_value=None)
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
 
         def check_thread_lock():
             with slock.try_thread_lock(self.stack.id):
-                self.assertEqual(1, db_api.stack_lock_create.call_count)
+                self.assertEqual(1,
+                                 stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
         self.assertRaises(self.TestThreadLockException, check_thread_lock)
-        assert not db_api.stack_lock_release.called
+        assert not stack_lock_object.StackLock.release.called
 
     def test_engine_alive_ok(self):
         slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
