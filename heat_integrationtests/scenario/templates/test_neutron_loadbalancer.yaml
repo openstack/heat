@@ -1,0 +1,108 @@
+heat_template_version: 2014-10-16
+
+description: |
+  Template which tests neutron load balancing resources
+
+parameters:
+  key_name:
+    type: string
+  flavor:
+    type: string
+  image:
+    type: string
+  private_subnet_id:
+    type: string
+  external_network_id:
+    type: string
+  port:
+    type: string
+    default: '80'
+
+resources:
+  sec_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Add security group rules for servers
+      name: security-group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: { get_param: port }
+          port_range_max: { get_param: port }
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  server1 :
+    type: OS::Nova::Server
+    properties:
+      name: Server1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      security_groups: [{ get_resource: sec_group }]
+      user_data:
+        list_join:
+        - ''
+        - - '#!/bin/bash -v
+
+            '
+          - 'echo  $(hostname) > index.html
+
+            '
+          - 'python -m SimpleHTTPServer '
+          - { get_param: port }
+
+  server2 :
+    type: OS::Nova::Server
+    properties:
+      name: Server2
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      security_groups: [{ get_resource: sec_group }]
+      user_data:
+        list_join:
+        - ''
+        - - '#!/bin/bash -v
+
+            '
+          - 'echo  $(hostname) > index.html
+
+            '
+          - 'python -m SimpleHTTPServer '
+          - { get_param: port }
+
+  health_monitor:
+    type: OS::Neutron::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTP
+      timeout: 3
+      max_retries: 3
+
+  test_pool:
+    type: OS::Neutron::Pool
+    properties:
+      lb_method: ROUND_ROBIN
+      protocol: HTTP
+      subnet: { get_param: private_subnet_id }
+      monitors:
+      - { get_resource: health_monitor }
+      vip:
+        protocol_port: { get_param: port }
+
+  floating_ip:
+     type: OS::Neutron::FloatingIP
+     properties:
+       floating_network: { get_param: external_network_id }
+       port_id:
+         { get_attr: [test_pool, vip, 'port_id'] }
+
+  LBaaS:
+    type: OS::Neutron::LoadBalancer
+    properties:
+      pool_id: { get_resource: test_pool }
+      protocol_port: { get_param: port }
+      members:
+      - { get_resource: server1 }
+

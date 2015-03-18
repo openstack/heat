@@ -15,6 +15,7 @@ import random
 import re
 import subprocess
 import time
+import urllib
 
 import fixtures
 from heatclient import exc as heat_exceptions
@@ -106,6 +107,22 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             raise
 
         return linux_client
+
+    def check_connectivity(self, check_ip):
+        def try_connect(ip):
+            try:
+                urllib.urlopen('http://%s/' % ip)
+                return True
+            except IOError:
+                return False
+
+        timeout = self.conf.connectivity_timeout
+        elapsed_time = 0
+        while not try_connect(check_ip):
+            time.sleep(10)
+            elapsed_time += 10
+            if elapsed_time > timeout:
+                raise exceptions.TimeoutException()
 
     def _log_console_output(self, servers=None):
         if not servers:
