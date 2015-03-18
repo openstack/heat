@@ -1053,16 +1053,18 @@ class HotStackTest(common.HeatTestCase):
                                'update_template_diff')
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
-                                  template.Template(tmpl),
-                                  environment.Environment({'foo': 'abc'}))
+                                  template.Template(
+                                      tmpl, env=environment.Environment(
+                                          {'foo': 'abc'})))
         self.stack.store()
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
-                                     template.Template(tmpl),
-                                     environment.Environment({'foo': 'xyz'}))
+                                     template.Template(
+                                         tmpl, env=environment.Environment(
+                                             {'foo': 'xyz'})))
 
         def check_props(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
@@ -1307,9 +1309,9 @@ class StackParametersTest(common.HeatTestCase):
 
     def test_param_refs(self):
         """Test if parameter references work."""
-        tmpl = parser.Template(self.props_template)
         env = environment.Environment(self.params)
-        stack = parser.Stack(utils.dummy_context(), 'test', tmpl, env,
+        tmpl = parser.Template(self.props_template, env=env)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              stack_id='1ba8c334-2297-4312-8c7c-43763a988ced',
                              tenant_id='9913ef0a-b8be-4b33-b574-9061441bd373')
         self.assertEqual(self.expected,

@@ -73,7 +73,7 @@ class Stack(collections.Mapping):
 
     _zones = None
 
-    def __init__(self, context, stack_name, tmpl, env=None,
+    def __init__(self, context, stack_name, tmpl,
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=None, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
@@ -138,7 +138,6 @@ class Stack(collections.Mapping):
 
         resources.initialise()
 
-        self.env = env or self.t.env
         self.parameters = self.t.parameters(
             self.identifier(),
             user_params=self.env.params,
@@ -149,6 +148,11 @@ class Stack(collections.Mapping):
             self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
+
+    @property
+    def env(self):
+        """This is a helper to allow resources to access stack.env."""
+        return self.t.env
 
     @property
     def parent_resource(self):
@@ -327,10 +331,15 @@ class Stack(collections.Mapping):
                  use_stored_context=False):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
-        return cls(context, stack.name, template, template.env,
-                   stack.id, stack.action, stack.status, stack.status_reason,
-                   stack.timeout, resolve_data, stack.disable_rollback,
-                   parent_resource, owner_id=stack.owner_id,
+        return cls(context, stack.name, template,
+                   stack_id=stack.id,
+                   action=stack.action, status=stack.status,
+                   status_reason=stack.status_reason,
+                   timeout_mins=stack.timeout,
+                   resolve_data=resolve_data,
+                   disable_rollback=stack.disable_rollback,
+                   parent_resource=parent_resource,
+                   owner_id=stack.owner_id,
                    stack_user_project_id=stack.stack_user_project_id,
                    created_time=stack.created_at,
                    updated_time=stack.updated_at,
@@ -729,7 +738,7 @@ class Stack(collections.Mapping):
             return self.load(self.context, stack=s)
         elif create_if_missing:
             prev = type(self)(self.context, self.name, copy.deepcopy(self.t),
-                              self.env, owner_id=self.id,
+                              owner_id=self.id,
                               user_creds_id=self.user_creds_id,
                               convergence=self.convergence)
             prev.store(backup=True)
@@ -806,7 +815,7 @@ class Stack(collections.Mapping):
             # Oldstack is useless when the action is not UPDATE , so we don't
             # need to build it, this can avoid some unexpected errors.
             oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
-                             self.env, convergence=self.convergence)
+                             convergence=self.convergence)
         backup_stack = self._backup_stack()
         try:
             update_task = update.StackUpdate(
@@ -815,7 +824,6 @@ class Stack(collections.Mapping):
                 error_wait_time=cfg.CONF.error_wait_time)
             updater = scheduler.TaskRunner(update_task)
 
-            self.env = newstack.env
             self.parameters = newstack.parameters
             self.t.files = newstack.t.files
             self.t.env = newstack.t.env
@@ -1152,7 +1160,7 @@ class Stack(collections.Mapping):
             return
         self.updated_time = datetime.datetime.utcnow()
 
-        template = tmpl.Template(snapshot.data['template'])
+        template = tmpl.Template(snapshot.data['template'], env=self.env)
 
         for name, defn in six.iteritems(template.resource_definitions(self)):
             rsrc = resource.Resource(name, defn, self)
@@ -1162,7 +1170,7 @@ class Stack(collections.Mapping):
                 defn = handle_restore(defn, data)
             template.add_resource(defn, name)
 
-        newstack = self.__class__(self.context, self.name, template, self.env,
+        newstack = self.__class__(self.context, self.name, template,
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
         newstack.parameters.set_stack_id(self.identifier())

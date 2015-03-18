@@ -276,10 +276,12 @@ class StackTest(common.HeatTestCase):
         ).AndReturn(t)
 
         self.m.StubOutWithMock(stack.Stack, '__init__')
-        stack.Stack.__init__(self.ctx, stk.name, t, t.env, stk.id,
-                             stk.action, stk.status, stk.status_reason,
-                             stk.timeout, True, stk.disable_rollback,
-                             'parent', owner_id=None,
+        stack.Stack.__init__(self.ctx, stk.name, t, stack_id=stk.id,
+                             action=stk.action, status=stk.status,
+                             status_reason=stk.status_reason,
+                             timeout_mins=stk.timeout, resolve_data=True,
+                             disable_rollback=stk.disable_rollback,
+                             parent_resource='parent', owner_id=None,
                              stack_user_project_id=None,
                              created_time=mox.IgnoreArg(),
                              updated_time=None,
@@ -319,10 +321,9 @@ class StackTest(common.HeatTestCase):
         "metadata": {}}}'''
         env = environment.Environment({'parameters': {'param1': 'test'}})
         self.stack = stack.Stack(self.ctx, 'stack_details_test',
-                                 template.Template(tpl),
+                                 template.Template(tpl, env=env),
                                  tenant_id='123',
-                                 stack_user_project_id='234',
-                                 env=env)
+                                 stack_user_project_id='234')
         self.stack.store()
         info = self.stack.prepare_abandon()
         self.assertEqual('CREATE', info['action'])
@@ -1459,9 +1460,9 @@ class StackTest(common.HeatTestCase):
 
         self.m.ReplayAll()
 
+        test_env = environment.Environment({'flavor': 'dummy'})
         self.stack = stack.Stack(self.ctx, 'stack_with_custom_constraint',
-                                 template.Template(tmpl),
-                                 environment.Environment({'flavor': 'dummy'}))
+                                 template.Template(tmpl, env=test_env))
 
         self.stack.validate()
         self.stack.store()
@@ -1627,10 +1628,9 @@ class StackTest(common.HeatTestCase):
             Type: Number
         """)
 
-        env1 = {'parameters': {'foo': 'abc'}}
+        env1 = environment.Environment({'parameters': {'foo': 'abc'}})
         self.stack = stack.Stack(self.ctx, 'stack_with_bad_param',
-                                 template.Template(tmpl),
-                                 env=environment.Environment(env1))
+                                 template.Template(tmpl, env=env1))
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)

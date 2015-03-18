@@ -16,6 +16,7 @@ from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
+from heat.engine import environment
 from heat.engine import function
 from heat.engine import properties
 from heat.engine.resources import stack_resource
@@ -264,7 +265,12 @@ class InstanceGroup(stack_resource.StackResource):
         definitions = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
 
-        return template.make_template(definitions, version=template_version)
+        child_env = environment.get_child_environment(
+            self.stack.env,
+            self.child_params(), item_to_remove=self.resource_info)
+
+        return template.make_template(definitions, version=template_version,
+                                      child_env=child_env)
 
     def _try_rolling_update(self, prop_diff):
         if (self.update_policy[self.ROLLING_UPDATE] and

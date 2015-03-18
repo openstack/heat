@@ -559,17 +559,17 @@ Mappings:
             self.assertRaises(KeyError, self.resolve, find, tmpl, stk)
 
     def test_param_refs(self):
-        tmpl = template.Template(parameter_template)
         env = environment.Environment({'foo': 'bar', 'blarg': 'wibble'})
-        stk = stack.Stack(self.ctx, 'test', tmpl, env)
+        tmpl = template.Template(parameter_template, env=env)
+        stk = stack.Stack(self.ctx, 'test', tmpl)
         p_snippet = {"Ref": "foo"}
         self.assertEqual("bar", self.resolve(p_snippet, tmpl, stk))
 
     def test_param_ref_missing(self):
-        tmpl = template.Template(parameter_template)
         env = environment.Environment({'foo': 'bar'})
-        stk = stack.Stack(self.ctx, 'test', tmpl, env)
-        stk.env = environment.Environment({})
+        tmpl = template.Template(parameter_template, env=env)
+        stk = stack.Stack(self.ctx, 'test', tmpl)
+        tmpl.env = environment.Environment({})
         stk.parameters = parameters.Parameters(stk.identifier(), tmpl)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
@@ -728,9 +728,9 @@ Mappings:
         self.assertEqual('"foo" is "${var3}"', self.resolve(snippet, tmpl))
 
     def test_replace_param_values(self):
-        tmpl = template.Template(parameter_template)
         env = environment.Environment({'foo': 'wibble'})
-        stk = stack.Stack(self.ctx, 'test_stack', tmpl, env)
+        tmpl = template.Template(parameter_template, env=env)
+        stk = stack.Stack(self.ctx, 'test_stack', tmpl)
         snippet = {"Fn::Replace": [
             {'$var1': {'Ref': 'foo'}, '%var2%': {'Ref': 'blarg'}},
             '$var1 is %var2%'
@@ -1007,8 +1007,7 @@ class ResolveDataTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
         self.stack = stack.Stack(self.ctx, 'resolve_test_stack',
-                                 template.Template(empty_template),
-                                 environment.Environment({}))
+                                 template.Template(empty_template))
 
     def resolve(self, snippet):
         return function.resolve(self.stack.t.parse(self.stack, snippet))

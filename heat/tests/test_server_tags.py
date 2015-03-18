@@ -65,9 +65,10 @@ class ServerTagsTest(common.HeatTestCase):
     def _setup_test_instance(self, intags=None, nova_tags=None):
         stack_name = 'tag_test'
         t = template_format.parse(instance_template)
-        template = parser.Template(t)
+        template = parser.Template(t,
+                                   env=environment.Environment(
+                                       {'KeyName': 'test'}))
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             environment.Environment({'KeyName': 'test'}),
                              stack_id=str(uuid.uuid4()))
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags

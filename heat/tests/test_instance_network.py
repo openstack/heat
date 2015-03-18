@@ -198,12 +198,12 @@ class instancesTest(common.HeatTestCase):
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
+        template = parser.Template(t,
+                                   env=environment.Environment(kwargs))
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             environment.Environment(kwargs),
                              stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
@@ -253,12 +253,12 @@ class instancesTest(common.HeatTestCase):
     def _create_test_instance_with_nic(self, return_server, name):
         stack_name = '%s_s' % name
         t = template_format.parse(wp_template_with_nic)
-        template = parser.Template(t)
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
+        template = parser.Template(t,
+                                   env=environment.Environment(kwargs))
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             environment.Environment(kwargs),
                              stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id

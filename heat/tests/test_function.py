@@ -177,8 +177,9 @@ class ValidateGetAttTest(common.HeatTestCase):
 
         self.stack = parser.Stack(
             utils.dummy_context(), 'test_stack',
-            parser.Template({"HeatTemplateFormatVersion": "2012-12-12"}),
-            env=env, stack_id=str(uuid.uuid4()))
+            parser.Template({"HeatTemplateFormatVersion": "2012-12-12"},
+                            env=env),
+            stack_id=str(uuid.uuid4()))
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
                                                 'OS::Test::GenericResource')
         self.rsrc = resource.Resource('test_rsrc', res_defn, self.stack)

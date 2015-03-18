@@ -80,10 +80,10 @@ class HeatWaitConditionTest(common.HeatTestCase):
                      params={},
                      stub=True, stub_status=True):
         temp = template_format.parse(template)
-        template = parser.Template(temp)
+        template = parser.Template(temp,
+                                   env=environment.Environment(params))
         ctx = utils.dummy_context(tenant_id=self.tenant_id)
         stack = parser.Stack(ctx, 'test_stack', template,
-                             environment.Environment(params),
                              disable_rollback=True)
 
         # Stub out the stack ID so we have a known value

@@ -119,7 +119,8 @@ class Template(collections.Mapping):
         self.version = get_version(self.t, _template_classes.keys())
 
     def __deepcopy__(self, memo):
-        return Template(copy.deepcopy(self.t, memo), files=self.files)
+        return Template(copy.deepcopy(self.t, memo), files=self.files,
+                        env=self.env)
 
     @classmethod
     def load(cls, context, template_id, t=None):

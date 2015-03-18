@@ -154,10 +154,10 @@ class MetadataRefreshTest(common.HeatTestCase):
     def create_stack(self, stack_name='test_stack', params=None):
         params = params or {}
         temp = template_format.parse(test_template_metadata)
-        template = parser.Template(temp)
+        template = parser.Template(temp,
+                                   env=environment.Environment(params))
         ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
-                             environment.Environment(params),
                              disable_rollback=True)
 
         self.stack_id = stack.store()
@@ -314,10 +314,10 @@ class MetadataRefreshTestServer(common.HeatTestCase):
     def create_stack(self, stack_name='test_stack_native', params=None):
         params = params or {}
         temp = template_format.parse(test_template_server)
-        template = parser.Template(temp)
+        template = parser.Template(temp,
+                                   env=environment.Environment(params))
         ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
-                             environment.Environment(params),
                              disable_rollback=True)
 
         self.stack_id = stack.store()

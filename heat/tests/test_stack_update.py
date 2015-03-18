@@ -261,17 +261,18 @@ class StackUpdateTest(common.HeatTestCase):
             }
         }
 
-        self.stack = stack.Stack(self.ctx, 'update_test_stack',
-                                 template.Template(tmpl),
-                                 environment.Environment({'foo': 'abc'}))
+        self.stack = stack.Stack(
+            self.ctx, 'update_test_stack',
+            template.Template(
+                tmpl, env=environment.Environment({'foo': 'abc'})))
         self.stack.store()
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
 
+        env2 = environment.Environment({'foo': 'xyz'})
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
-                                    template.Template(tmpl),
-                                    environment.Environment({'foo': 'xyz'}))
+                                    template.Template(tmpl, env=env2))
 
         def check_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
@@ -800,11 +801,10 @@ class StackUpdateTest(common.HeatTestCase):
                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
-        env1 = {'parameters': {'AParam': 'abc'}}
+        env1 = environment.Environment({'parameters': {'AParam': 'abc'}})
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
-                                 template.Template(tmpl),
-                                 disable_rollback=False,
-                                 env=environment.Environment(env1))
+                                 template.Template(tmpl, env=env1),
+                                 disable_rollback=False)
         self.stack.store()
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
@@ -815,11 +815,10 @@ class StackUpdateTest(common.HeatTestCase):
                  'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
-        env2 = {'parameters': {'BParam': 'smelly'}}
+        env2 = environment.Environment({'parameters': {'BParam': 'smelly'}})
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
-                                    template.Template(tmpl2),
-                                    disable_rollback=False,
-                                    env=environment.Environment(env2))
+                                    template.Template(tmpl2, env=env2),
+                                    disable_rollback=False)
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)
@@ -1344,11 +1343,10 @@ class StackUpdateTest(common.HeatTestCase):
                     'AResource': {'Type': 'ResourceWithPropsType',
                                   'Properties': {'Foo': {'Ref': 'AParam'}}}}}
 
-        env1 = {'parameters': {'AParam': 'abc'}}
-        env2 = {'parameters': {'AParam': 'smelly'}}
+        env1 = environment.Environment({'parameters': {'AParam': 'abc'}})
+        env2 = environment.Environment({'parameters': {'AParam': 'smelly'}})
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
-                                 template.Template(tmpl),
-                                 environment.Environment(env1))
+                                 template.Template(tmpl, env=env1))
 
         self.stack.store()
         self.stack.create()
@@ -1357,8 +1355,7 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
-                                    template.Template(tmpl),
-                                    environment.Environment(env2))
+                                    template.Template(tmpl, env=env2))
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)

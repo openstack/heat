@@ -79,9 +79,9 @@ class InstancesTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
+        template = parser.Template(
+            t, env=environment.Environment({'KeyName': 'test'}))
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             environment.Environment({'KeyName': 'test'}),
                              stack_id=str(uuid.uuid4()))
         return (template, stack)
 
