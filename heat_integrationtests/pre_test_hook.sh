@@ -15,4 +15,6 @@
 # This script is executed inside pre_test_hook function in devstack gate.
 
 localrc_path=$BASE/new/devstack/localrc
+localconf=$BASE/new/devstack/local.conf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
+echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\nnotification_driver=messagingv2' >> $localconf
