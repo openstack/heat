@@ -129,3 +129,55 @@ resource. The supported URL types are "http, https and file".
     resources:
       my_db_server:
         "OS::DBInstance": file:///home/mine/all_my_cool_templates/db.yaml
+
+
+7) Pause stack creation/update on a given resource
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you want to debug your stack as it's being created or updated or if you want
+to run it in phases you can set `pre-create` and `pre-update` hooks in the
+`resources` section of `resource_registry`.
+
+To set a hook, add either `hooks: pre-create` or `hooks: pre-update` to the
+resource's dictionary. You can also use the `[pre-create, pre-update]` to stop
+on both actions.
+
+Hooks can be combined with other `resources` properties (e.g. provider
+templates or type mapping).
+
+Example:
+
+::
+
+  resource_registry:
+    resources:
+      my_server:
+        "OS::DBInstance": file:///home/mine/all_my_cool_templates/db.yaml
+        hooks: pre-create
+      nested_stack:
+        nested_resource:
+          hooks: pre-update
+        another_resource:
+          hooks: [pre-create, pre-update]
+
+When Heat encounters a resource that has a hook, it will pause the resource
+action until the hook is cleared. Any resources that depend on it will wait as
+well. Any resources that don't will be created in parallel (unless they have
+hooks, too).
+
+It is also possible to do a partial match by putting an asterisk (`*`) in the
+name.
+
+This example:
+
+::
+
+  resource_registry:
+    resources:
+      "*_server":
+        hooks: pre-create
+
+will pause while creating `app_server` and `database_server` but not `server`
+or `app_network`.
+
+Hook is cleared by signalling the resource with `{unset_hook: pre-create}` (or
+`pre-update`).

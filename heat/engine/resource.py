@@ -31,6 +31,7 @@ from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
 from heat.engine import attributes
+from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
 from heat.engine import properties
@@ -264,6 +265,34 @@ class Resource(object):
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
         self._rsrc_metadata = metadata
+
+    def _break_if_required(self, action, hook):
+        '''Block the resource until the hook is cleared if there is one.'''
+        if self.stack.env.registry.matches_hook(self.name, hook):
+            self._add_event(self.action, self.status,
+                            _("%(a)s paused until Hook %(h)s is cleared")
+                            % {'a': action, 'h': hook})
+            self.trigger_hook(hook)
+            LOG.info(_LI('Reached hook on %s'), six.text_type(self))
+        while self.has_hook(hook) and self.status != self.FAILED:
+            try:
+                yield
+            except Exception:
+                self.clear_hook(hook)
+                self._add_event(
+                    self.action, self.status,
+                    "Failure occured while waiting.")
+
+    def has_hook(self, hook):
+        # Clear the cache to make sure the data is up to date:
+        self._data = None
+        return self.data().get(hook) == "True"
+
+    def trigger_hook(self, hook):
+        self.data_set(hook, "True")
+
+    def clear_hook(self, hook):
+        self.data_delete(hook)
 
     def type(self):
         return self.t.resource_type
@@ -550,6 +579,13 @@ class Resource(object):
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
+        # This method can be called when we replace a resource, too. In that
+        # case, a hook has already been dealt with in `Resource.update` so we
+        # shouldn't do it here again:
+        if self.stack.action == self.stack.CREATE:
+            yield self._break_if_required(
+                self.CREATE, environment.HOOK_PRE_CREATE)
+
         LOG.info(_LI('creating %s'), six.text_type(self))
 
         # Re-resolve the template, since if the resource Ref's
@@ -688,6 +724,9 @@ class Resource(object):
                                          self.context)
         after_props = after.properties(self.properties_schema,
                                        self.context)
+
+        yield self._break_if_required(
+            self.UPDATE, environment.HOOK_PRE_UPDATE)
 
         if not self._needs_update(after, before, after_props, before_props,
                                   prev_resource):
@@ -1081,6 +1120,20 @@ class Resource(object):
                     return 'alarm state changed to %(state)s' % details
 
             return 'Unknown'
+
+        # Clear the hook without interfering with resources'
+        # `handle_signal` callbacks:
+        if (details and 'unset_hook' in details and
+                environment.valid_hook_type(details.get('unset_hook'))):
+            hook = details['unset_hook']
+            if self.has_hook(hook):
+                self.clear_hook(hook)
+                LOG.info(_LI('Clearing %(hook)s hook on %(resource)s'),
+                         {'hook': hook, 'resource': six.text_type(self)})
+                self._add_event(self.action, self.status,
+                                "Hook %s is cleared" % hook)
+                return
+
         if not callable(getattr(self, 'handle_signal', None)):
             raise exception.ResourceActionNotSupported(action='signal')
 

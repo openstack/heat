@@ -1812,3 +1812,92 @@ class ReducePhysicalResourceNameTest(common.HeatTestCase):
             else:
                 # check that nothing has changed
                 self.assertEqual(self.original, reduced)
+
+
+class ResourceHookTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(ResourceHookTest, self).setUp()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithCustomConstraint',
+                                 generic_rsrc.ResourceWithCustomConstraint)
+
+        self.env = environment.Environment()
+        self.env.load({u'resource_registry':
+                      {u'OS::Test::GenericResource': u'GenericResourceType',
+                       u'OS::Test::ResourceWithCustomConstraint':
+                       u'ResourceWithCustomConstraint'}})
+
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  parser.Template(empty_template,
+                                                  env=self.env),
+                                  stack_id=str(uuid.uuid4()))
+
+    def test_hook(self):
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+
+        res.data = mock.Mock(return_value={})
+        self.assertFalse(res.has_hook('pre-create'))
+        self.assertFalse(res.has_hook('pre-update'))
+
+        res.data = mock.Mock(return_value={'pre-create': 'True'})
+        self.assertTrue(res.has_hook('pre-create'))
+        self.assertFalse(res.has_hook('pre-update'))
+
+        res.data = mock.Mock(return_value={'pre-create': 'False'})
+        self.assertFalse(res.has_hook('pre-create'))
+        self.assertFalse(res.has_hook('pre-update'))
+
+        res.data = mock.Mock(return_value={'pre-update': 'True'})
+        self.assertFalse(res.has_hook('pre-create'))
+        self.assertTrue(res.has_hook('pre-update'))
+
+    def test_set_hook(self):
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+
+        res.data_set = mock.Mock()
+        res.data_delete = mock.Mock()
+
+        res.trigger_hook('pre-create')
+        res.data_set.assert_called_with('pre-create', 'True')
+
+        res.trigger_hook('pre-update')
+        res.data_set.assert_called_with('pre-update', 'True')
+
+        res.clear_hook('pre-create')
+        res.data_delete.assert_called_with('pre-create')
+
+    def test_signal_clear_hook(self):
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+
+        res.clear_hook = mock.Mock()
+        res.has_hook = mock.Mock(return_value=True)
+        self.assertRaises(exception.ResourceActionNotSupported,
+                          res.signal, None)
+        self.assertFalse(res.clear_hook.called)
+
+        self.assertRaises(exception.ResourceActionNotSupported,
+                          res.signal, {})
+        self.assertFalse(res.clear_hook.called)
+
+        self.assertRaises(exception.ResourceActionNotSupported,
+                          res.signal, {'unset_hook': 'unknown_hook'})
+        self.assertFalse(res.clear_hook.called)
+
+        res.signal({'unset_hook': 'pre-create'})
+        res.clear_hook.assert_called_with('pre-create')
+
+        res.signal({'unset_hook': 'pre-update'})
+        res.clear_hook.assert_called_with('pre-update')
+
+        res.has_hook = mock.Mock(return_value=False)
+        self.assertRaises(exception.ResourceActionNotSupported,
+                          res.signal, {'unset_hook': 'pre-create'})

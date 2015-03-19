@@ -11,7 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
+import fnmatch
 import glob
 import itertools
 import os.path
@@ -30,6 +32,24 @@ from heat.common.i18n import _LW
 from heat.engine import support
 
 LOG = log.getLogger(__name__)
+
+
+HOOK_TYPES = (HOOK_PRE_CREATE, HOOK_PRE_UPDATE) = ('pre-create', 'pre-update')
+
+
+def valid_hook_type(hook):
+    return hook in HOOK_TYPES
+
+
+def is_hook_definition(key, value):
+    if key == 'hooks':
+        if isinstance(value, six.string_types):
+            return valid_hook_type(value)
+        elif isinstance(value, collections.Sequence):
+            return all(valid_hook_type(hook) for hook in value)
+        else:
+            return False
+    return False
 
 
 class ResourceInfo(object):
@@ -174,11 +194,22 @@ class ResourceRegistry(object):
         for k, v in iter(registry.items()):
             if v is None:
                 self._register_info(path + [k], None)
+            elif is_hook_definition(k, v):
+                self._register_hook(path + [k], v)
             elif isinstance(v, dict):
                 self._load_registry(path + [k], v)
             else:
                 self._register_info(path + [k],
                                     ResourceInfo(self, path + [k], v))
+
+    def _register_hook(self, path, hook):
+        name = path[-1]
+        registry = self._registry
+        for key in path[:-1]:
+            if key not in registry:
+                registry[key] = {}
+            registry = registry[key]
+        registry[name] = hook
 
     def _register_info(self, path, info):
         """place the new info in the correct location in the registry.
@@ -241,6 +272,53 @@ class ResourceRegistry(object):
             registry = registry[key]
         if info.path[-1] in registry:
             registry.pop(info.path[-1])
+
+    def matches_hook(self, resource_name, hook):
+        '''Return whether a resource have a hook set in the environment.
+
+        For a given resource and a hook type, we check to see if the the passed
+        group of resources has the right hook associated with the name.
+
+        Hooks are set in this format via `resources`:
+
+            {
+                "res_name": {
+                    "hooks": [pre-create, pre-update]
+                },
+                "*_suffix": {
+                    "hooks": pre-create
+                },
+                "prefix_*": {
+                    "hooks": pre-update
+                }
+            }
+
+        A hook value is either `pre-create`, `pre-update` or a list of those
+        values. Resources support wildcard matching. The asterisk sign matches
+        everything.
+        '''
+        ress = self._registry['resources']
+        for name_pattern, resource in six.iteritems(ress):
+            if fnmatch.fnmatchcase(resource_name, name_pattern):
+                if 'hooks' in resource:
+                    hooks = resource['hooks']
+                    if isinstance(hooks, six.string_types):
+                        if hook == hooks:
+                            return True
+                    elif isinstance(hooks, collections.Sequence):
+                        if hook in hooks:
+                            return True
+        return False
+
+    def remove_resources_except(self, resource_name):
+        ress = self._registry['resources']
+        new_resources = {}
+        for name, res in six.iteritems(ress):
+            if fnmatch.fnmatchcase(resource_name, name):
+                new_resources.update(res)
+        if resource_name in ress:
+            new_resources.update(ress[resource_name])
+        self._registry['resources'] = new_resources
 
     def iterable_by(self, resource_type, resource_name=None):
         is_templ_type = resource_type.endswith(('.yaml', '.template'))
@@ -334,6 +412,8 @@ class ResourceRegistry(object):
             for k, v in iter(level.items()):
                 if isinstance(v, dict):
                     tmp[k] = _as_dict(v)
+                elif is_hook_definition(k, v):
+                    tmp[k] = v
                 elif v.user_resource:
                     tmp[k] = v.value
             return tmp
@@ -445,7 +525,8 @@ class Environment(object):
         return self.stack_lifecycle_plugins
 
 
-def get_child_environment(parent_env, child_params, item_to_remove=None):
+def get_child_environment(parent_env, child_params, item_to_remove=None,
+                          child_resource_name=None):
     """Build a child environment using the parent environment and params.
 
     This is built from the child_params and the parent env so some
@@ -456,6 +537,10 @@ def get_child_environment(parent_env, child_params, item_to_remove=None):
        parent env to take presdence).
     2. child parameters must overwrite the parent's as they won't be relevant
        in the child template.
+
+    If `child_resource_name` is provided, resources in the registry will be
+    replaced with the contents of the matching child resource plus anything
+    that passes a wildcard match.
     """
     def is_flat_params(env_or_param):
         if env_or_param is None:
@@ -478,6 +563,9 @@ def get_child_environment(parent_env, child_params, item_to_remove=None):
 
     if item_to_remove is not None:
         new_env.registry.remove_item(item_to_remove)
+
+    if child_resource_name:
+        new_env.registry.remove_resources_except(child_resource_name)
     return new_env
 
 
