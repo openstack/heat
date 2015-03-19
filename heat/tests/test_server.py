@@ -205,9 +205,9 @@ class ServersTest(common.HeatTestCase):
                 security_groups=[],
                 userdata=mox.IgnoreArg(), scheduler_hints=None,
                 meta=None, nics=None, availability_zone=None,
-                block_device_mapping=None, config_drive=None,
-                disk_config=None, reservation_id=None, files={},
-                admin_pass=None).AndReturn(return_server)
+                block_device_mapping=None, block_device_mapping_v2=None,
+                config_drive=None, disk_config=None, reservation_id=None,
+                files={}, admin_pass=None).AndReturn(return_server)
 
         return server
 
@@ -346,9 +346,9 @@ class ServersTest(common.HeatTestCase):
             name=mox.IgnoreArg(), security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=instance_meta, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(return_server)
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
@@ -421,7 +421,6 @@ class ServersTest(common.HeatTestCase):
         self._mock_get_image_id_fail('Slackware',
                                      exception.ImageNotFound(
                                          image_name='Slackware'))
-        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -447,7 +446,6 @@ class ServersTest(common.HeatTestCase):
         self._mock_get_image_id_fail('CentOS 5.2',
                                      exception.PhysicalResourceNameAmbiguity(
                                          name='CentOS 5.2'))
-        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -472,7 +470,6 @@ class ServersTest(common.HeatTestCase):
 
         self._mock_get_image_id_fail('1',
                                      exception.ImageNotFound(image_name='1'))
-        self._mock_get_keypair_success('test', ('test', 'abc123'))
         self.m.ReplayAll()
 
         create = scheduler.TaskRunner(server.create)
@@ -543,9 +540,9 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata='wordpress', scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -583,9 +580,9 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata='wordpress from config', scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -623,9 +620,9 @@ class ServersTest(common.HeatTestCase):
             userdata=sc_id,
             scheduler_hints=None, meta=None,
             nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(return_server)
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
@@ -657,9 +654,9 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -721,9 +718,9 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -792,9 +789,9 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -852,8 +849,8 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mock.ANY, scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None,
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
             files={}, admin_pass=None)
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
@@ -879,8 +876,8 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mock.ANY, scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None,
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
             files={}, admin_pass='foo')
 
     def test_check_maximum(self):
@@ -1004,6 +1001,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
         self.m.ReplayAll()
 
         error = self.assertRaises(exception.StackValidationFailed,
@@ -1960,9 +1958,14 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
         self.assertIn("Value '10a' is not an integer", six.text_type(exc))
+        self.m.VerifyAll()
 
     def test_validate_conflict_block_device_mapping_props(self):
         stack_name = 'val_blkdev1'
@@ -2030,6 +2033,112 @@ class ServersTest(common.HeatTestCase):
         msg = ('Neither image nor bootable volume is specified '
                'for instance %s' % server.name)
         self.assertEqual(msg, six.text_type(ex))
+
+        self.m.VerifyAll()
+
+    def test_build_block_device_mapping_v2(self):
+        self.assertIsNone(servers.Server._build_block_device_mapping_v2([]))
+        self.assertIsNone(servers.Server._build_block_device_mapping_v2(None))
+
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'volume',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': False}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'volume_id': '1'}
+        ]))
+
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'snapshot',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': False}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'snapshot_id': '1'}
+        ]))
+
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'image',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': False}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'image_id': '1'}
+        ]))
+
+        self.assertEqual([{
+            'source_type': 'blank', 'destination_type': 'local',
+            'boot_index': -1, 'delete_on_termination': True,
+            'guest_format': 'swap', 'volume_size': 1}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'swap_size': 1}
+        ]))
+
+    def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self):
+        stack_name = 'invalid_stack'
+        tmpl, stack = self._setup_test_stack(stack_name)
+        bdm = [{'device_name': 'vda', 'volume_id': '1234',
+                'volume_size': '10'}]
+        bdm_v2 = [{'volume_id': '1'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping'] = bdm
+        wsp['block_device_mapping_v2'] = bdm_v2
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_VolumeConstraint_validate()
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.ResourcePropertyConflict,
+                                server.validate)
+        msg = ('Cannot define the following properties at the same time: '
+               'block_device_mapping, block_device_mapping_v2.')
+        self.assertEqual(msg, six.text_type(exc))
+
+        self.m.VerifyAll()
+
+    def test_validate_conflict_block_device_mapping_v2_props(self):
+        stack_name = 'val_blkdev2'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        bdm_v2 = [{'volume_id': '1', 'snapshot_id': 2}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_VolumeConstraint_validate()
+        self.stub_SnapshotConstraint_validate()
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourcePropertyConflict, server.validate)
+        self.m.VerifyAll()
+
+    def test_validate_without_bootable_source_in_bdm_v2(self):
+        stack_name = 'val_blkdev2'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        bdm_v2 = [{}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        msg = ('Either volume_id, snapshot_id, image_id or swap_size must '
+               'be specified.')
+        self.assertEqual(msg, six.text_type(exc))
 
         self.m.VerifyAll()
 
@@ -2252,9 +2361,9 @@ class ServersTest(common.HeatTestCase):
             name=mox.IgnoreArg(), security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=mox.IgnoreArg(), nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(return_server)
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', image_id)
@@ -2825,18 +2934,18 @@ class ServersTest(common.HeatTestCase):
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(return_server)
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
         self.fc.servers.create(
             image=1, flavor=3, key_name='test',
             name=utils.PhysName("server_restore", "WebServer"),
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None, files={},
-            admin_pass=None).AndReturn(return_server)
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
 
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
         glance.GlanceClientPlugin.get_image_id(
