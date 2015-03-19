@@ -64,23 +64,11 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
             parameters=parameters
         )
 
-        server1_id = self.client.resources.get(
-            sid, 'server1').physical_resource_id
-        server2_id = self.client.resources.get(
-            sid, 'server2').physical_resource_id
-        floating_ip_id = self.client.resources.get(
-            sid, 'floating_ip').physical_resource_id
-        floating_ip = self.network_client.show_floatingip(
-            floating_ip_id)['floatingip']['floating_ip_address']
-        pool_id = self.client.resources.get(
-            sid, 'test_pool').physical_resource_id
-        vip_id = self.network_client.show_pool(pool_id)['pool']['vip_id']
-
-        vip = self.network_client.show_vip(vip_id)['vip']['address']
-        server1_ip = self.compute_client.servers.get(
-            server1_id).networks['private'][0]
-        server2_ip = self.compute_client.servers.get(
-            server2_id).networks['private'][0]
+        stack = self.client.stacks.get(sid)
+        floating_ip = self._stack_output(stack, 'fip')
+        vip = self._stack_output(stack, 'vip')
+        server1_ip = self._stack_output(stack, 'serv1_ip')
+        server2_ip = self._stack_output(stack, 'serv2_ip')
 
         # Check connection and info about received responces
         self.check_connectivity(server1_ip)
