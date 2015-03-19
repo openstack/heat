@@ -541,7 +541,7 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_stack_get_all_non_existing_marker(self):
         [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
-        uuid = 'this stack doesnt exist'
+        uuid = 'this stack doesn\'t exist'
         st_db = db_api.stack_get_all(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
 
