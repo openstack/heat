@@ -878,6 +878,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.id = 55
         self.res.uuid = six.text_type(uuid.uuid4())
         self.res.resource_id = six.text_type(uuid.uuid4())
+        self.res.action = self.res.CREATE
         ident = identifier.HeatIdentifier(self.ctx.tenant_id,
                                           self.res.physical_resource_name(),
                                           self.res.resource_id)

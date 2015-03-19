@@ -430,6 +430,8 @@ class Stack(collections.Mapping):
         self.t.add_resource(definition)
         if self.t.id is not None:
             self.t.store(self.context)
+        if resource.action == resource.INIT:
+            resource._store()
 
     def remove_resource(self, resource_name):
         '''Remove the resource with the specified name.'''
@@ -618,6 +620,11 @@ class Stack(collections.Mapping):
         return [resource.preview()
                 for resource in self.resources.itervalues()]
 
+    def _store_resources(self):
+        for r in reversed(self.dependencies):
+            if r.action == r.INIT:
+                r._store()
+
     @profiler.trace('Stack.create', hide_args=False)
     def create(self):
         '''
@@ -627,6 +634,8 @@ class Stack(collections.Mapping):
             if not self.disable_rollback and self.state == (self.CREATE,
                                                             self.FAILED):
                 self.delete(action=self.ROLLBACK)
+
+        self._store_resources()
 
         creator = scheduler.TaskRunner(
             self.stack_task, action=self.CREATE,

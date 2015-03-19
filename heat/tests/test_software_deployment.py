@@ -869,6 +869,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.deployment.id = 23
         self.deployment.uuid = str(uuid.uuid4())
+        self.deployment.action = self.deployment.CREATE
         container = self.deployment.physical_resource_name()
 
         temp_url = self.deployment._get_temp_url()

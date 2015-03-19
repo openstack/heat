@@ -1115,7 +1115,8 @@ class EngineService(service.Service):
             # when signalling a WaitConditionHandle resource, and other
             # resources may refer to WaitCondition Fn::GetAtt Data
             for r in stack.dependencies:
-                if r.name != rsrc.name and r.id is not None:
+                if (r.name != rsrc.name and r.id is not None and
+                        r.action != r.INIT):
                     r.metadata_update()
 
         s = self._get_stack(cnxt, stack_identity)

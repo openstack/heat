@@ -353,6 +353,7 @@ Outputs:
 
     def test_handle_delete(self):
         self.res.rpc_client = mock.MagicMock()
+        self.res.action = self.res.CREATE
         stack_identity = identifier.HeatIdentifier(
             self.ctx.tenant_id,
             self.res.physical_resource_name(),

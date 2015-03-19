@@ -249,7 +249,7 @@ class Resource(object):
     def metadata_get(self, refresh=False):
         if refresh:
             self._rsrc_metadata = None
-        if self.id is None:
+        if self.id is None or self.action == self.INIT:
             return self.t.metadata()
         if self._rsrc_metadata is not None:
             return self._rsrc_metadata
@@ -259,7 +259,7 @@ class Resource(object):
         return rs.rsrc_metadata
 
     def metadata_set(self, metadata):
-        if self.id is None:
+        if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id)
         rs.update_and_save({'rsrc_metadata': metadata})
@@ -790,7 +790,7 @@ class Resource(object):
         yield self.action_handler_task('delete_snapshot', args=[data])
 
     def physical_resource_name(self):
-        if self.id is None:
+        if self.id is None or self.action == self.INIT:
             return None
 
         name = '%s-%s-%s' % (self.stack.name,
@@ -904,9 +904,8 @@ class Resource(object):
             except Exception as ex:
                 LOG.warn(_LW('db error %s'), ex)
 
-    def _store(self):
+    def _store(self, metadata=None):
         '''Create the resource in the database.'''
-        metadata = self.metadata_get()
         try:
             rs = {'action': self.action,
                   'status': self.status,
@@ -940,35 +939,43 @@ class Resource(object):
         ev.store()
 
     def _store_or_update(self, action, status, reason):
+        prev_action = self.action
         self.action = action
         self.status = status
         self.status_reason = reason
 
+        data = {
+            'action': self.action,
+            'status': self.status,
+            'status_reason': reason,
+            'stack_id': self.stack.id,
+            'updated_at': self.updated_time,
+            'properties_data': self._stored_properties_data,
+            'needed_by': self.needed_by,
+            'requires': self.requires,
+            'replaces': self.replaces,
+            'replaced_by': self.replaced_by,
+            'current_template_id': self.current_template_id,
+            'nova_instance': self.resource_id
+        }
+        if prev_action == self.INIT:
+            metadata = self.t.metadata()
+            data['rsrc_metadata'] = metadata
+        else:
+            metadata = self._rsrc_metadata
+
         if self.id is not None:
             try:
                 rs = resource_objects.Resource.get_obj(self.context, self.id)
-                rs.update_and_save({
-                    'action': self.action,
-                    'status': self.status,
-                    'status_reason': reason,
-                    'stack_id': self.stack.id,
-                    'updated_at': self.updated_time,
-                    'properties_data': self._stored_properties_data,
-                    'needed_by': self.needed_by,
-                    'requires': self.requires,
-                    'replaces': self.replaces,
-                    'replaced_by': self.replaced_by,
-                    'current_template_id': self.current_template_id,
-                    'nova_instance': self.resource_id})
+                rs.update_and_save(data)
             except Exception as ex:
                 LOG.error(_LE('DB error %s'), ex)
-
-        # store resource in DB on transition to CREATE_IN_PROGRESS
-        # all other transitions (other than to DELETE_COMPLETE)
-        # should be handled by the update_and_save above..
-        elif (action, status) in [(self.CREATE, self.IN_PROGRESS),
-                                  (self.ADOPT, self.IN_PROGRESS)]:
-            self._store()
+            else:
+                self._rsrc_metadata = metadata
+        else:
+            # This should only happen in unit tests
+            LOG.warning(_LW('Resource "%s" not pre-stored in DB'), self)
+            self._store(metadata)
 
     def _resolve_attribute(self, name):
         """
