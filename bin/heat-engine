@@ -42,6 +42,7 @@ from heat.common import profiler
 from heat.engine import template
 from heat.openstack.common import service
 from heat.rpc import api as rpc_api
+from heat import version
 
 i18n.enable_lazy()
 
@@ -49,7 +50,8 @@ LOG = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
     logging.register_options(cfg.CONF)
-    cfg.CONF(project='heat', prog='heat-engine')
+    version = version.version_info.version_string()
+    cfg.CONF(project='heat', prog='heat-engine', version=version)
     logging.setup(cfg.CONF, 'heat-engine')
     logging.set_defaults()
     messaging.setup()
