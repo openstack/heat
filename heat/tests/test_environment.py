@@ -549,3 +549,268 @@ class ChildEnvTest(common.HeatTestCase):
         cenv = environment.get_child_environment(penv, None)
         res = cenv.get_resource_info('OS::Food', resource_name='abc')
         self.assertIsNotNone(res)
+
+    def test_drill_down_to_child_resource(self):
+        env = {
+            u'resource_registry': {
+                u'OS::Food': u'fruity.yaml',
+                u'resources': {
+                    u'a': {
+                        u'OS::Fruit': u'apples.yaml',
+                        u'hooks': 'pre-create',
+                    },
+                    u'nested': {
+                        u'b': {
+                            u'OS::Fruit': u'carrots.yaml',
+                        },
+                        u'nested_res': {
+                            u'hooks': 'pre-create',
+                        }
+                    }
+                }
+            }
+        }
+        penv = environment.Environment(env)
+        cenv = environment.get_child_environment(
+            penv, None, child_resource_name=u'nested')
+        registry = cenv.user_env_as_dict()['resource_registry']
+        resources = registry['resources']
+        self.assertIn('nested_res', resources)
+        self.assertIn('hooks', resources['nested_res'])
+        self.assertIsNotNone(
+            cenv.get_resource_info('OS::Food', resource_name='abc'))
+        self.assertIsNone(
+            cenv.get_resource_info('OS::Fruit', resource_name='a'))
+        res = cenv.get_resource_info('OS::Fruit', resource_name='b')
+        self.assertIsNotNone(res)
+        self.assertEqual(u'carrots.yaml', res.value)
+
+    def test_drill_down_non_matching_wildcard(self):
+        env = {
+            u'resource_registry': {
+                u'resources': {
+                    u'nested': {
+                        u'c': {
+                            u'OS::Fruit': u'carrots.yaml',
+                            u'hooks': 'pre-create',
+                        },
+                    },
+                    u'*_doesnt_match_nested': {
+                        u'nested_res': {
+                            u'hooks': 'pre-create',
+                        },
+                    }
+                }
+            }
+        }
+        penv = environment.Environment(env)
+        cenv = environment.get_child_environment(
+            penv, None, child_resource_name=u'nested')
+        registry = cenv.user_env_as_dict()['resource_registry']
+        resources = registry['resources']
+        self.assertIn('c', resources)
+        self.assertNotIn('nested_res', resources)
+        res = cenv.get_resource_info('OS::Fruit', resource_name='c')
+        self.assertIsNotNone(res)
+        self.assertEqual(u'carrots.yaml', res.value)
+
+    def test_drill_down_matching_wildcard(self):
+        env = {
+            u'resource_registry': {
+                u'resources': {
+                    u'nested': {
+                        u'c': {
+                            u'OS::Fruit': u'carrots.yaml',
+                            u'hooks': 'pre-create',
+                        },
+                    },
+                    u'nest*': {
+                        u'nested_res': {
+                            u'hooks': 'pre-create',
+                        },
+                    }
+                }
+            }
+        }
+        penv = environment.Environment(env)
+        cenv = environment.get_child_environment(
+            penv, None, child_resource_name=u'nested')
+        registry = cenv.user_env_as_dict()['resource_registry']
+        resources = registry['resources']
+        self.assertIn('c', resources)
+        self.assertIn('nested_res', resources)
+        res = cenv.get_resource_info('OS::Fruit', resource_name='c')
+        self.assertIsNotNone(res)
+        self.assertEqual(u'carrots.yaml', res.value)
+
+    def test_drill_down_prefer_exact_match(self):
+        env = {
+            u'resource_registry': {
+                u'resources': {
+                    u'*esource': {
+                        u'hooks': 'pre-create',
+                    },
+                    u'res*': {
+                        u'hooks': 'pre-create',
+                    },
+                    u'resource': {
+                        u'OS::Fruit': u'carrots.yaml',
+                        u'hooks': 'pre-update',
+                    },
+                    u'resource*': {
+                        u'hooks': 'pre-create',
+                    },
+                    u'*resource': {
+                        u'hooks': 'pre-create',
+                    },
+                    u'*sour*': {
+                        u'hooks': 'pre-create',
+                    },
+                }
+            }
+        }
+        penv = environment.Environment(env)
+        cenv = environment.get_child_environment(
+            penv, None, child_resource_name=u'resource')
+        registry = cenv.user_env_as_dict()['resource_registry']
+        resources = registry['resources']
+        self.assertEqual(u'carrots.yaml', resources[u'OS::Fruit'])
+        self.assertEqual('pre-update', resources[u'hooks'])
+
+
+class ResourceRegistryTest(common.HeatTestCase):
+
+    def test_resources_load(self):
+        resources = {
+            u'pre_create': {
+                u'OS::Fruit': u'apples.yaml',
+                u'hooks': 'pre-create',
+            },
+            u'pre_update': {
+                u'hooks': 'pre-update',
+            },
+            u'both': {
+                u'hooks': ['pre-create', 'pre-update'],
+            },
+            u'b': {
+                u'OS::Food': u'fruity.yaml',
+            },
+            u'nested': {
+                u'res': {
+                    u'hooks': 'pre-create',
+                },
+            },
+        }
+        registry = environment.ResourceRegistry(None, {})
+        registry.load({'resources': resources})
+        self.assertIsNotNone(registry.get_resource_info(
+            'OS::Fruit', resource_name='pre_create'))
+        self.assertIsNotNone(registry.get_resource_info(
+            'OS::Food', resource_name='b'))
+        resources = registry.as_dict()['resources']
+        self.assertEqual('pre-create',
+                         resources['pre_create']['hooks'])
+        self.assertEqual('pre-update',
+                         resources['pre_update']['hooks'])
+        self.assertEqual(['pre-create', 'pre-update'],
+                         resources['both']['hooks'])
+        self.assertEqual('pre-create',
+                         resources['nested']['res']['hooks'])
+
+
+class HookMatchTest(common.HeatTestCase):
+
+    def test_plain_matches(self):
+        resources = {
+            u'a': {
+                u'OS::Fruit': u'apples.yaml',
+                u'hooks': [u'pre-create', u'pre-update'],
+            },
+            u'b': {
+                u'OS::Food': u'fruity.yaml',
+            },
+            u'nested': {
+                u'res': {
+                    u'hooks': 'pre-create',
+                },
+            },
+        }
+        registry = environment.ResourceRegistry(None, {})
+        registry.load({
+            u'OS::Fruit': u'apples.yaml',
+            'resources': resources})
+
+        self.assertTrue(registry.matches_hook(
+            'a', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'b', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'OS::Fruit', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'res', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'unknown', environment.HOOK_PRE_CREATE))
+
+    def test_wildcard_matches(self):
+        resources = {
+            u'prefix_*': {
+                u'hooks': 'pre-create',
+            },
+            u'*_suffix': {
+                u'hooks': 'pre-create',
+            },
+            u'*': {
+                u'hooks': 'pre-update',
+            },
+        }
+        registry = environment.ResourceRegistry(None, {})
+        registry.load({'resources': resources})
+
+        self.assertTrue(registry.matches_hook(
+            'prefix_', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook(
+            'prefix_some', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'some_prefix', environment.HOOK_PRE_CREATE))
+
+        self.assertTrue(registry.matches_hook(
+            '_suffix', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook(
+            'some_suffix', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            '_suffix_blah', environment.HOOK_PRE_CREATE))
+
+        self.assertTrue(registry.matches_hook(
+            'some_prefix', environment.HOOK_PRE_UPDATE))
+        self.assertTrue(registry.matches_hook(
+            '_suffix_blah', environment.HOOK_PRE_UPDATE))
+
+    def test_hook_types(self):
+        resources = {
+            u'pre_create': {
+                u'hooks': 'pre-create',
+            },
+            u'pre_update': {
+                u'hooks': 'pre-update',
+            },
+            u'both': {
+                u'hooks': ['pre-create', 'pre-update'],
+            },
+        }
+        registry = environment.ResourceRegistry(None, {})
+        registry.load({'resources': resources})
+
+        self.assertTrue(registry.matches_hook(
+            'pre_create', environment.HOOK_PRE_CREATE))
+        self.assertFalse(registry.matches_hook(
+            'pre_create', environment.HOOK_PRE_UPDATE))
+
+        self.assertTrue(registry.matches_hook(
+            'pre_update', environment.HOOK_PRE_UPDATE))
+        self.assertFalse(registry.matches_hook(
+            'pre_update', environment.HOOK_PRE_CREATE))
+
+        self.assertTrue(registry.matches_hook(
+            'both', environment.HOOK_PRE_CREATE))
+        self.assertTrue(registry.matches_hook(
+            'both', environment.HOOK_PRE_UPDATE))

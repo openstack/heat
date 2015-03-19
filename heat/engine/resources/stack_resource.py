@@ -166,6 +166,7 @@ class StackResource(resource.Resource):
 
         child_env = environment.get_child_environment(
             self.stack.env, child_params,
+            child_resource_name=self.name,
             item_to_remove=self.resource_info)
 
         parsed_template = self._child_parsed_template(child_template,
@@ -229,6 +230,7 @@ class StackResource(resource.Resource):
         child_env = environment.get_child_environment(
             self.stack.env,
             user_params,
+            child_resource_name=self.name,
             item_to_remove=self.resource_info)
 
         new_nested_depth = self._child_nested_depth()
@@ -369,7 +371,9 @@ class StackResource(resource.Resource):
 
         child_env = environment.get_child_environment(
             self.stack.env,
-            user_params, item_to_remove=self.resource_info)
+            user_params,
+            child_resource_name=self.name,
+            item_to_remove=self.resource_info)
         parsed_template = self._child_parsed_template(child_template,
                                                       child_env)
 
