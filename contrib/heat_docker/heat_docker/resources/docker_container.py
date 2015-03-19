@@ -20,6 +20,7 @@ import six
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 
@@ -41,10 +42,12 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
         IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
+        RESTART_POLICY, CAP_ADD, CAP_DROP,
     ) = (
         'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
         'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
-        'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name'
+        'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name',
+        'restart_policy', 'cap_add', 'cap_drop'
     )
 
     ATTRIBUTES = (
@@ -56,6 +59,23 @@ class DockerContainer(resource.Resource):
         'network_tcp_ports', 'network_udp_ports', 'logs', 'logs_head',
         'logs_tail',
     )
+
+    _RESTART_POLICY_KEYS = (
+        POLICY_NAME, POLICY_MAXIMUM_RETRY_COUNT,
+    ) = (
+        'Name', 'MaximumRetryCount',
+    )
+
+    _CAPABILITIES = ['SETPCAP', 'SYS_MODULE', 'SYS_RAWIO', 'SYS_PACCT',
+                     'SYS_ADMIN', 'SYS_NICE', 'SYS_RESOURCE', 'SYS_TIME',
+                     'SYS_TTY_CONFIG', 'MKNOD', 'AUDIT_WRITE',
+                     'AUDIT_CONTROL', 'MAC_OVERRIDE', 'MAC_ADMIN',
+                     'NET_ADMIN', 'SYSLOG', 'CHOWN', 'NET_RAW',
+                     'DAC_OVERRIDE', 'FOWNER', 'DAC_READ_SEARCH', 'FSETID',
+                     'KILL', 'SETGID', 'SETUID', 'LINUX_IMMUTABLE',
+                     'NET_BIND_SERVICE', 'NET_BROADCAST', 'IPC_LOCK',
+                     'IPC_OWNER', 'SYS_CHROOT', 'SYS_PTRACE', 'SYS_BOOT',
+                     'LEASE', 'SETFCAP', 'WAKE_ALARM', 'BLOCK_SUSPEND', 'ALL']
 
     properties_schema = {
         DOCKER_ENDPOINT: properties.Schema(
@@ -143,6 +163,54 @@ class DockerContainer(resource.Resource):
             _('Mount all specified volumes.'),
             default=''
         ),
+        RESTART_POLICY: properties.Schema(
+            properties.Schema.MAP,
+            _('Restart policies (only supported for API version >= 1.2.0).'),
+            schema={
+                POLICY_NAME: properties.Schema(
+                    properties.Schema.STRING,
+                    _('The behavior to apply when the container exits.'),
+                    default='no',
+                    constraints=[
+                        constraints.AllowedValues(['no', 'on-failure',
+                                                   'always']),
+                    ]
+                ),
+                POLICY_MAXIMUM_RETRY_COUNT: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('A maximum restart count for the '
+                      'on-failure policy.'),
+                    default=0
+                )
+            },
+            default={}
+        ),
+        CAP_ADD: properties.Schema(
+            properties.Schema.LIST,
+            _('Be used to add kernel capabilities (only supported for '
+              'API version >= 1.2.0).'),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                _('The security features provided by Linux kernels.'),
+                constraints=[
+                    constraints.AllowedValues(_CAPABILITIES),
+                ]
+            ),
+            default=[]
+        ),
+        CAP_DROP: properties.Schema(
+            properties.Schema.LIST,
+            _('Be used to drop kernel capabilities (only supported for '
+              'API version >= 1.2.0).'),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                _('The security features provided by Linux kernels.'),
+                constraints=[
+                    constraints.AllowedValues(_CAPABILITIES),
+                ]
+            ),
+            default=[]
+        )
     }
 
     attributes_schema = {
@@ -279,6 +347,12 @@ class DockerContainer(resource.Resource):
             start_args['port_bindings'] = self.properties[self.PORT_BINDINGS]
         if self.properties[self.LINKS]:
             start_args['links'] = self.properties[self.LINKS]
+        if self.properties[self.RESTART_POLICY]:
+            start_args['restart_policy'] = self.properties[self.RESTART_POLICY]
+        if self.properties[self.CAP_ADD]:
+            start_args['cap_add'] = self.properties[self.CAP_ADD]
+        if self.properties[self.CAP_DROP]:
+            start_args['cap_drop'] = self.properties[self.CAP_DROP]
 
         client.start(container_id, **start_args)
         return container_id
