@@ -27,10 +27,12 @@ class StackServiceWatcherTest(common.HeatTestCase):
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
         self.patch('heat.engine.service.warnings')
 
-    @mock.patch.object(service_stack_watch.db_api, 'stack_get_all_by_owner_id')
-    @mock.patch.object(service_stack_watch.db_api,
-                       'watch_rule_get_all_by_stack')
-    @mock.patch.object(service_stack_watch.db_api, 'watch_rule_update')
+    @mock.patch.object(service_stack_watch.stack_object.Stack,
+                       'get_all_by_owner_id')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'get_all_by_stack')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'update_by_id')
     def test_periodic_watch_task_not_created(self, watch_rule_update,
                                              watch_rule_get_all_by_stack,
                                              stack_get_all_by_owner_id):
@@ -47,10 +49,12 @@ class StackServiceWatcherTest(common.HeatTestCase):
         # assert that add_timer is NOT called.
         self.assertEqual([], tg.add_timer.call_args_list)
 
-    @mock.patch.object(service_stack_watch.db_api, 'stack_get_all_by_owner_id')
-    @mock.patch.object(service_stack_watch.db_api,
-                       'watch_rule_get_all_by_stack')
-    @mock.patch.object(service_stack_watch.db_api, 'watch_rule_update')
+    @mock.patch.object(service_stack_watch.stack_object.Stack,
+                       'get_all_by_owner_id')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'get_all_by_stack')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'update_by_id')
     def test_periodic_watch_task_created(self, watch_rule_update,
                                          watch_rule_get_all_by_stack,
                                          stack_get_all_by_owner_id):
@@ -73,10 +77,12 @@ class StackServiceWatcherTest(common.HeatTestCase):
                                     sid=stack_id)],
                          tg.add_timer.call_args_list)
 
-    @mock.patch.object(service_stack_watch.db_api, 'stack_get_all_by_owner_id')
-    @mock.patch.object(service_stack_watch.db_api,
-                       'watch_rule_get_all_by_stack')
-    @mock.patch.object(service_stack_watch.db_api, 'watch_rule_update')
+    @mock.patch.object(service_stack_watch.stack_object.Stack,
+                       'get_all_by_owner_id')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'get_all_by_stack')
+    @mock.patch.object(service_stack_watch.watch_rule_object.WatchRule,
+                       'update_by_id')
     def test_periodic_watch_task_created_nested(self, watch_rule_update,
                                                 watch_rule_get_all_by_stack,
                                                 stack_get_all_by_owner_id):

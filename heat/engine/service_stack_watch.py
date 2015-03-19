@@ -17,9 +17,10 @@ from oslo_utils import timeutils
 from heat.common import context
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
-from heat.db import api as db_api
 from heat.engine import stack
 from heat.engine import watchrule
+from heat.objects import stack as stack_object
+from heat.objects import watch_rule as watch_rule_object
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
@@ -32,19 +33,21 @@ class StackWatch(object):
     def start_watch_task(self, stack_id, cnxt):
 
         def stack_has_a_watchrule(sid):
-            wrs = db_api.watch_rule_get_all_by_stack(cnxt, sid)
+            wrs = watch_rule_object.WatchRule.get_all_by_stack(cnxt, sid)
 
             now = timeutils.utcnow()
             start_watch_thread = False
             for wr in wrs:
                 # reset the last_evaluated so we don't fire off alarms when
                 # the engine has not been running.
-                db_api.watch_rule_update(cnxt, wr.id, {'last_evaluated': now})
+                watch_rule_object.WatchRule.update_by_id(
+                    cnxt, wr.id,
+                    {'last_evaluated': now})
 
                 if wr.state != rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
                     start_watch_thread = True
 
-            children = db_api.stack_get_all_by_owner_id(cnxt, sid)
+            children = stack_object.Stack.get_all_by_owner_id(cnxt, sid)
             for child in children:
                 if stack_has_a_watchrule(child.id):
                     start_watch_thread = True
@@ -63,8 +66,10 @@ class StackWatch(object):
         # scoping otherwise we fail to retrieve the stack
         LOG.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
-        db_stack = db_api.stack_get(admin_context, sid, tenant_safe=False,
-                                    eager_load=True)
+        db_stack = stack_object.Stack.get_by_id(admin_context,
+                                                sid,
+                                                tenant_safe=False,
+                                                eager_load=True)
         if not db_stack:
             LOG.error(_LE("Unable to retrieve stack %s for periodic task"),
                       sid)
@@ -73,13 +78,14 @@ class StackWatch(object):
                                use_stored_context=True)
 
         # recurse into any nested stacks.
-        children = db_api.stack_get_all_by_owner_id(admin_context, sid)
+        children = stack_object.Stack.get_all_by_owner_id(admin_context, sid)
         for child in children:
             self.check_stack_watches(child.id)
 
         # Get all watchrules for this stack and evaluate them
         try:
-            wrs = db_api.watch_rule_get_all_by_stack(admin_context, sid)
+            wrs = watch_rule_object.WatchRule.get_all_by_stack(admin_context,
+                                                               sid)
         except Exception as ex:
             LOG.warn(_LW('periodic_task db error watch rule removed? %(ex)s'),
                      ex)
