@@ -20,8 +20,8 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-from heat.db import api as db_api
 from heat.engine import api
+from heat.objects import resource as resource_object
 from heat.objects import software_config as software_config_object
 from heat.objects import software_deployment as software_deployment_object
 from heat.openstack.common import service
@@ -72,7 +72,8 @@ class SoftwareConfigService(service.Service):
         return result
 
     def _push_metadata_software_deployments(self, cnxt, server_id):
-        rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
+        rs = (resource_object.Resource.
+              get_by_physical_resource_id(cnxt, server_id))
         if not rs:
             return
         deployments = self.metadata_software_deployments(cnxt, server_id)
