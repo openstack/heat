@@ -24,7 +24,6 @@ import six
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
-import heat.db.api as db_api
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import environment
@@ -134,8 +133,9 @@ class StackTest(common.HeatTestCase):
         self.stack.id = '1234'
 
         # Simulate a deleted stack
-        self.m.StubOutWithMock(db_api, 'stack_get')
-        db_api.stack_get(self.stack.context, self.stack.id).AndReturn(None)
+        self.m.StubOutWithMock(stack_object.Stack, 'get_by_id')
+        stack_object.Stack.get_by_id(self.stack.context,
+                                     self.stack.id).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -506,12 +506,12 @@ class StackTest(common.HeatTestCase):
 
         self.stack.set_stack_user_project_id(project_id='aproject456')
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete(abandon=True)
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -1079,7 +1079,7 @@ class StackTest(common.HeatTestCase):
         stack_ownee = stack.Stack(self.ctx, 'ownee_stack', self.tmpl,
                                   owner_id=self.stack.id)
         stack_ownee.store()
-        db_stack = db_api.stack_get(self.ctx, stack_ownee.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, stack_ownee.id)
         self.assertEqual(self.stack.id, db_stack.owner_id)
 
     def test_init_user_creds_id(self):
@@ -1104,7 +1104,7 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
 
         # The store should've created a user_creds row and set user_creds_id
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         user_creds_id = db_stack.user_creds_id
         self.assertIsNotNone(user_creds_id)
 
@@ -1140,7 +1140,7 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
 
         # The store should've created a user_creds row and set user_creds_id
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         user_creds_id = db_stack.user_creds_id
         self.assertIsNotNone(user_creds_id)
 
@@ -1190,7 +1190,7 @@ class StackTest(common.HeatTestCase):
                                  self.tmpl, username='foobar')
         self.ctx.username = 'not foobar'
         self.stack.store()
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertEqual('foobar', db_stack.username)
 
     def test_store_backup_true(self):
@@ -1198,7 +1198,7 @@ class StackTest(common.HeatTestCase):
                                  self.tmpl, username='foobar')
         self.ctx.username = 'not foobar'
         self.stack.store(backup=True)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertTrue(db_stack.backup)
 
     def test_store_backup_false(self):
@@ -1206,7 +1206,7 @@ class StackTest(common.HeatTestCase):
                                  self.tmpl, username='foobar')
         self.ctx.username = 'not foobar'
         self.stack.store(backup=False)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertFalse(db_stack.backup)
 
     def test_init_stored_context_false(self):
@@ -1296,7 +1296,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'user_project_none', self.tmpl)
         self.stack.store()
         self.assertIsNone(self.stack.stack_user_project_id)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertIsNone(db_stack.stack_user_project_id)
 
     def test_stack_user_project_id_constructor(self):
@@ -1308,7 +1308,7 @@ class StackTest(common.HeatTestCase):
                                  stack_user_project_id='aproject1234')
         self.stack.store()
         self.assertEqual('aproject1234', self.stack.stack_user_project_id)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertEqual('aproject1234', db_stack.stack_user_project_id)
 
         self.stack.delete()
@@ -1325,7 +1325,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(self.stack.stack_user_project_id)
         self.stack.set_stack_user_project_id(project_id='aproject456')
         self.assertEqual('aproject456', self.stack.stack_user_project_id)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertEqual('aproject456', db_stack.stack_user_project_id)
 
         self.stack.delete()
@@ -1343,7 +1343,7 @@ class StackTest(common.HeatTestCase):
         self.stack.create_stack_user_project_id()
 
         self.assertEqual('aprojectid', self.stack.stack_user_project_id)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertEqual('aprojectid', db_stack.stack_user_project_id)
 
         self.stack.delete()

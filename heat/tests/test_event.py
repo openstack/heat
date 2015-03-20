@@ -13,13 +13,13 @@
 
 from oslo_config import cfg
 
-from heat.db import api as db_api
 from heat.engine import event
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import template
 from heat.objects import event as event_object
+from heat.objects import stack as stack_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -57,7 +57,7 @@ class EventTest(common.HeatTestCase):
 
         self.resource = self.stack['EventTestResource']
         self.resource._store()
-        self.addCleanup(db_api.stack_delete, self.ctx, self.stack.id)
+        self.addCleanup(stack_object.Stack.delete, self.ctx, self.stack.id)
 
     def test_load(self):
         self.resource.resource_id_set('resource_physical_id')

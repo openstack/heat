@@ -20,12 +20,12 @@ import mock
 from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from heat.common import template_format
-import heat.db.api as db_api
 from heat.engine.clients.os import keystone
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack
 from heat.engine import template
+from heat.objects import stack as stack_object
 from heat.objects import user_creds as ucreds_object
 from heat.tests import common
 from heat.tests import fakes
@@ -50,12 +50,12 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -64,7 +64,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         self.assertIsNotNone(db_s.user_creds_id)
         user_creds_id = db_s.user_creds_id
@@ -73,11 +73,13 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         db_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
         self.assertIsNone(db_creds)
-        del_db_s = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
+        del_db_s = stack_object.Stack.get_by_id(self.ctx,
+                                                stack_id,
+                                                show_deleted=True)
         self.assertIsNone(del_db_s.user_creds_id)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -92,7 +94,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         self.assertIsNotNone(db_s.user_creds_id)
         user_creds_id = db_s.user_creds_id
@@ -103,11 +105,13 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         db_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
         self.assertIsNone(db_creds)
-        del_db_s = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
+        del_db_s = stack_object.Stack.get_by_id(self.ctx,
+                                                stack_id,
+                                                show_deleted=True)
         self.assertIsNone(del_db_s.user_creds_id)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -122,15 +126,16 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         self.assertIsNotNone(db_s.user_creds_id)
         exc = exception.Error('Cannot get user credentials')
-        self.patchobject(db_api, 'user_creds_get').side_effect = exc
+        self.patchobject(ucreds_object.UserCreds,
+                         'get_by_id').side_effect = exc
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -141,12 +146,12 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -158,7 +163,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         user_creds_id = db_s.user_creds_id
@@ -168,7 +173,7 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(trustor_ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(trustor_ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -189,7 +194,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         user_creds_id = db_s.user_creds_id
@@ -203,7 +208,7 @@ class StackTest(common.HeatTestCase):
         loaded_stack.delete()
         mock_sc.assert_called_with()
 
-        db_s = db_api.stack_get(other_ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(other_ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          loaded_stack.state)
@@ -219,12 +224,12 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete(backup=True)
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual(self.stack.state,
                          (stack.Stack.DELETE, stack.Stack.COMPLETE))
@@ -241,7 +246,7 @@ class StackTest(common.HeatTestCase):
                                  owner_id='owner123')
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         user_creds_id = db_s.user_creds_id
         self.assertIsNotNone(user_creds_id)
@@ -250,7 +255,7 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         user_creds = ucreds_object.UserCreds.get_by_id(user_creds_id)
         self.assertIsNotNone(user_creds)
@@ -268,7 +273,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
@@ -276,7 +281,7 @@ class StackTest(common.HeatTestCase):
         mock_kcp.assert_called_with()
         self.assertEqual(2, mock_kcp.call_count)
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
                          self.stack.state)
@@ -294,14 +299,14 @@ class StackTest(common.HeatTestCase):
 
         self.stack.set_stack_user_project_id(project_id='aproject456')
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete()
 
         mock_kcp.assert_called_with()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -313,12 +318,12 @@ class StackTest(common.HeatTestCase):
                                  self.tmpl, disable_rollback=False)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete(action=self.stack.ROLLBACK)
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
@@ -327,12 +332,12 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_badaction_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         self.stack.delete(action="wibble")
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
                          self.stack.state)
@@ -341,7 +346,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
 
-        db_s = db_api.stack_get(self.ctx, stack_id)
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
 
         def dummy_task():
@@ -406,7 +411,7 @@ class StackTest(common.HeatTestCase):
                                  stack_user_project_id='aproject1234')
         self.stack.store()
         self.assertEqual('aproject1234', self.stack.stack_user_project_id)
-        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        db_stack = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         self.assertEqual('aproject1234', db_stack.stack_user_project_id)
 
         self.stack.delete()

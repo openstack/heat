@@ -596,7 +596,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                                        template, input_params, None,
                                        {'adopt_stack_data': str(adopt_data)})
 
-        stack = db_api.stack_get(self.ctx, result['stack_id'])
+        stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
         self.assertEqual(input_params['parameters'],
                          stack.raw_template.environment['parameters'])
@@ -612,7 +612,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                                        template, {}, None,
                                        {'adopt_stack_data': str(adopt_data)})
 
-        stack = db_api.stack_get(self.ctx, result['stack_id'])
+        stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),
                          (stack.action, stack.status))
 
@@ -1992,7 +1992,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_passes_marker_info(self, mock_stack_get_all):
         limit = object()
         marker = object()
@@ -2011,7 +2011,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_passes_filtering_info(self, mock_stack_get_all):
         filters = {'foo': 'bar'}
         self.eng.list_stacks(self.ctx, filters=filters)
@@ -2026,7 +2026,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_tenant_safe_defaults_to_true(self, mock_stack_get_all):
         self.eng.list_stacks(self.ctx)
         mock_stack_get_all.assert_called_once_with(mock.ANY,
@@ -2040,7 +2040,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_passes_tenant_safe_info(self, mock_stack_get_all):
         self.eng.list_stacks(self.ctx, tenant_safe=False)
         mock_stack_get_all.assert_called_once_with(mock.ANY,
@@ -2054,7 +2054,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_show_nested(self, mock_stack_get_all):
         self.eng.list_stacks(self.ctx, show_nested=True)
         mock_stack_get_all.assert_called_once_with(mock.ANY,
@@ -2068,7 +2068,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    True,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     def test_stack_list_show_deleted(self, mock_stack_get_all):
         self.eng.list_stacks(self.ctx, show_deleted=True)
         mock_stack_get_all.assert_called_once_with(mock.ANY,
@@ -2082,7 +2082,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    )
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_passes_filter_info(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, filters={'foo': 'bar'})
         mock_stack_count_all.assert_called_once_with(mock.ANY,
@@ -2091,7 +2091,7 @@ class StackServiceTest(common.HeatTestCase):
                                                      show_deleted=False,
                                                      show_nested=False)
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
@@ -2100,7 +2100,7 @@ class StackServiceTest(common.HeatTestCase):
                                                      show_deleted=False,
                                                      show_nested=False)
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, tenant_safe=False)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
@@ -2109,7 +2109,7 @@ class StackServiceTest(common.HeatTestCase):
                                                      show_deleted=False,
                                                      show_nested=False)
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_show_nested(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, show_nested=True)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
@@ -2118,7 +2118,7 @@ class StackServiceTest(common.HeatTestCase):
                                                      show_deleted=False,
                                                      show_nested=True)
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stack_show_deleted(self, mock_stack_count_all):
         self.eng.count_stacks(self.ctx, show_deleted=True)
         mock_stack_count_all.assert_called_once_with(mock.ANY,
@@ -2575,7 +2575,7 @@ class StackServiceTest(common.HeatTestCase):
         test_data = {'food': 'yum'}
 
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = db_api.stack_get(self.ctx, self.stack.id)
+        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
 
@@ -2668,7 +2668,7 @@ class StackServiceTest(common.HeatTestCase):
 
         test_data = {'food': 'yum'}
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
-        s = db_api.stack_get(self.ctx, self.stack.id)
+        s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
                                          self.stack.identifier()).AndReturn(s)
         self.m.ReplayAll()
@@ -3093,7 +3093,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertRaises(exception.StackExists, self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', tmpl)
 
-    @mock.patch.object(db_api, 'stack_count_all')
+    @mock.patch.object(service.stack_object.Stack, 'count_all')
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
