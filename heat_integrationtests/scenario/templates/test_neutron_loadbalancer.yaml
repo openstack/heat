@@ -32,7 +32,7 @@ resources:
         - remote_ip_prefix: 0.0.0.0/0
           protocol: icmp
 
-  server1 :
+  server1:
     type: OS::Nova::Server
     properties:
       name: Server1
@@ -52,7 +52,7 @@ resources:
           - 'python -m SimpleHTTPServer '
           - { get_param: port }
 
-  server2 :
+  server2:
     type: OS::Nova::Server
     properties:
       name: Server2
@@ -106,3 +106,12 @@ resources:
       members:
       - { get_resource: server1 }
 
+outputs:
+  serv1_ip:
+    value: {get_attr: [server1, networks, private, 0]}
+  serv2_ip:
+    value: {get_attr: [server2, networks, private, 0]}
+  vip:
+    value: {get_attr: [test_pool, vip, address]}
+  fip:
+    value: {get_attr: [floating_ip, floating_ip_address]}
