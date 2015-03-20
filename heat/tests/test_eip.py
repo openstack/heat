@@ -391,7 +391,6 @@ class AllocTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'list_routers')
         self.m.StubOutWithMock(neutronclient.Client,
                                'remove_gateway_router')
-        self.stub_keystoneclient()
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(ipassoc_template_validate)

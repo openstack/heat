@@ -501,13 +501,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_abandon_nodelete_project(self):
-        fkc = fakes.FakeKeystoneClient()
-        fkc.delete_stack_domain_project = mock.Mock()
-
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(fkc)
-        self.m.ReplayAll()
-
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
 
@@ -522,7 +515,6 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertFalse(fkc.delete_stack_domain_project.called)
 
     def test_suspend_resume(self):
         self.m.ReplayAll()
@@ -1107,6 +1099,7 @@ class StackTest(common.HeatTestCase):
         """
         A user_creds entry is created on first stack store
         """
+        cfg.CONF.set_default('deferred_auth_method', 'password')
         self.stack = stack.Stack(self.ctx, 'creds_stack', self.tmpl)
         self.stack.store()
 

@@ -171,7 +171,6 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_vpnservice')
         self.m.StubOutWithMock(neutronclient.Client, 'update_vpnservice')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def create_vpnservice(self, resolve_neutron=True, resolve_router=True):
         self.stub_SubnetConstraint_validate()
@@ -350,7 +349,6 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
                                'show_ipsec_site_connection')
         self.m.StubOutWithMock(neutronclient.Client,
                                'update_ipsec_site_connection')
-        self.stub_keystoneclient()
 
     def create_ipsec_site_connection(self):
         neutronclient.Client.create_ipsec_site_connection(
@@ -497,7 +495,6 @@ class IKEPolicyTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_ikepolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'show_ikepolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ikepolicy')
-        self.stub_keystoneclient()
 
     def create_ikepolicy(self):
         neutronclient.Client.create_ikepolicy(
@@ -638,7 +635,6 @@ class IPsecPolicyTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_ipsecpolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'show_ipsecpolicy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_ipsecpolicy')
-        self.stub_keystoneclient()
 
     def create_ipsecpolicy(self):
         neutronclient.Client.create_ipsecpolicy(

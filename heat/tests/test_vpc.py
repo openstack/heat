@@ -59,7 +59,6 @@ class VPCTestBase(common.HeatTestCase):
             neutronclient.Client, 'create_security_group_rule')
         self.m.StubOutWithMock(
             neutronclient.Client, 'delete_security_group_rule')
-        self.stub_keystoneclient()
 
     def create_stack(self, templ):
         t = template_format.parse(templ)

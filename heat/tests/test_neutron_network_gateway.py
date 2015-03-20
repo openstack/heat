@@ -104,7 +104,6 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                                'disconnect_network_gateway')
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def mock_create_fail_network_not_found_delete_success(self):
         neutronclient.Client.create_network_gateway({

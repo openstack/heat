@@ -71,7 +71,6 @@ class CloudServersTest(common.HeatTestCase):
             'nova')._create = mock_nova_create
         mock_nova_create.return_value = self.fc
 
-        self.stub_keystoneclient()
         # Test environment may not have pyrax client library installed and if
         # pyrax is not installed resource class would not be registered.
         # So register resource provider class explicitly for unit testing.

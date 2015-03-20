@@ -132,7 +132,6 @@ Resources:
         super(SecurityGroupTest, self).setUp()
         self.fc = fakes_v1_1.FakeClient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.stub_keystoneclient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'create')

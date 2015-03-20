@@ -121,7 +121,6 @@ class CeilometerAlarmTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-        self.stub_keystoneclient()
         self.fa = mock.Mock()
 
     def create_stack(self, template=None):

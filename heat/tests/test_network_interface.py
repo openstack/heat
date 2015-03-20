@@ -44,7 +44,6 @@ class NetworkInterfaceTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
         self.m.StubOutWithMock(neutronclient.Client, 'update_port')
-        self.stub_keystoneclient()
 
     def mock_show_subnet(self):
         neutronclient.Client.show_subnet('ssss').AndReturn({

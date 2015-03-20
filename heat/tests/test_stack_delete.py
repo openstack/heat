@@ -16,7 +16,6 @@ import time
 
 from keystoneclient import exceptions as kc_exceptions
 import mock
-from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
@@ -137,7 +136,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_trust(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.stub_keystoneclient()
 
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
@@ -154,16 +152,11 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_trust_trustor(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
+        self.stub_keystoneclient(user_id='thetrustor')
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
-        mock_kc = self.patchobject(hkc, 'KeystoneClient')
-        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='thetrustor')
 
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
-
-        mock_kc.assert_called_once_with(trustor_ctx)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
@@ -181,8 +174,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_trust_not_trustor(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         # Stack gets created with trustor_ctx, deleted with other_ctx
         # then the trust delete should be with stored_ctx
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
@@ -190,14 +181,13 @@ class StackTest(common.HeatTestCase):
         stored_ctx = utils.dummy_context(trust_id='thetrust')
 
         mock_kc = self.patchobject(hkc, 'KeystoneClient')
-        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='thetrustor')
+        self.stub_keystoneclient(user_id='thetrustor')
 
         mock_sc = self.patchobject(stack.Stack, 'stored_context')
         mock_sc.return_value = stored_ctx
 
         self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
         stack_id = self.stack.store()
-        mock_kc.assert_called_once_with(trustor_ctx)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNotNone(db_s)
@@ -212,8 +202,6 @@ class StackTest(common.HeatTestCase):
         loaded_stack = stack.Stack.load(other_ctx, self.stack.id)
         loaded_stack.delete()
         mock_sc.assert_called_with()
-        mock_kc.assert_has_calls([mock.call(trustor_ctx),
-                                  mock.call(stored_ctx)])
 
         db_s = db_api.stack_get(other_ctx, stack_id)
         self.assertIsNone(db_s)
@@ -221,8 +209,6 @@ class StackTest(common.HeatTestCase):
                          loaded_stack.state)
 
     def test_delete_trust_backup(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
@@ -245,8 +231,6 @@ class StackTest(common.HeatTestCase):
         mock_kcp.assert_called_once_with()
 
     def test_delete_trust_nested(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
@@ -274,8 +258,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_trust_fail(self):
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
@@ -317,7 +299,7 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        mock_kcp.assert_called_once_with()
+        mock_kcp.assert_called_with()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertIsNone(db_s)
@@ -429,7 +411,7 @@ class StackTest(common.HeatTestCase):
 
         self.stack.delete()
 
-        mock_kcp.assert_called_once_with()
+        mock_kcp.assert_called_with()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
                          self.stack.state)
         self.assertIn('Error deleting project', self.stack.status_reason)

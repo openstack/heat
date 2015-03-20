@@ -98,7 +98,6 @@ class FakeVersion(object):
 class OSDBInstanceTest(common.HeatTestCase):
     def setUp(self):
         super(OSDBInstanceTest, self).setUp()
-        self.stub_keystoneclient()
         self.fc = self.m.CreateMockAnything()
         self.nova = self.m.CreateMockAnything()
         self.m.StubOutWithMock(trove.TroveClientPlugin, '_create')

@@ -725,7 +725,6 @@ class NeutronNetTest(common.HeatTestCase):
                                'remove_network_from_dhcp_agent')
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_dhcp_agent_hosting_networks')
-        self.stub_keystoneclient()
 
     def create_net(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -918,7 +917,6 @@ class NeutronProviderNetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
         self.m.StubOutWithMock(neutronclient.Client, 'update_network')
-        self.stub_keystoneclient()
 
     def create_provider_net(self):
         # Create script
@@ -1037,7 +1035,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'update_subnet')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def create_subnet(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -1436,7 +1433,6 @@ class NeutronRouterTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client,
                                'list_l3_agent_hosting_routers')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def create_router(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -2197,7 +2193,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronV20,
                                'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def test_floating_ip_router_interface(self):
         t = template_format.parse(neutron_floating_template)
@@ -2704,7 +2699,6 @@ class NeutronPortTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'update_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.stub_keystoneclient()
 
     def test_missing_subnet_id(self):
         neutronV20.find_resourceid_by_name_or_id(

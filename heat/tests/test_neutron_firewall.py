@@ -93,7 +93,6 @@ class FirewallTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_firewall')
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall')
-        self.stub_keystoneclient()
 
     def create_firewall(self):
         neutronclient.Client.create_firewall({
@@ -222,7 +221,6 @@ class FirewallPolicyTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_firewall_policy')
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall_policy')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall_policy')
-        self.stub_keystoneclient()
 
     def create_firewall_policy(self):
         neutronclient.Client.create_firewall_policy({
@@ -348,7 +346,6 @@ class FirewallRuleTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_firewall_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'show_firewall_rule')
         self.m.StubOutWithMock(neutronclient.Client, 'update_firewall_rule')
-        self.stub_keystoneclient()
 
     def create_firewall_rule(self):
         neutronclient.Client.create_firewall_rule({

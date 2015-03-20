@@ -80,7 +80,6 @@ class WaitConditionTest(common.HeatTestCase):
         super(WaitConditionTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params=None,
@@ -353,7 +352,6 @@ class WaitConditionHandleTest(common.HeatTestCase):
         super(WaitConditionHandleTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
@@ -524,7 +522,6 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         super(WaitConditionUpdateTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
-        self.stub_keystoneclient()
 
     def create_stack(self, tmpl=None):
         if tmpl is None:
