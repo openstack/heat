@@ -19,6 +19,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import template
+from heat.objects import event as event_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -89,7 +90,7 @@ class EventTest(common.HeatTestCase):
         e.store()
         self.assertIsNotNone(e.id)
 
-        ev = db_api.event_get(self.ctx, e.id)
+        ev = event_object.Event.get_by_id(self.ctx, e.id)
 
         loaded_e = event.Event.load(self.ctx, e.id, stack=self.stack, event=ev)
 
@@ -111,13 +112,14 @@ class EventTest(common.HeatTestCase):
                         'alabama', self.resource.properties,
                         self.resource.name, self.resource.type())
         e.store()
-        self.assertEqual(1, len(db_api.event_get_all_by_stack(self.ctx,
-                                                              self.stack.id)))
+        self.assertEqual(1, len(event_object.Event.get_all_by_stack(
+            self.ctx,
+            self.stack.id)))
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'arizona', self.resource.properties,
                         self.resource.name, self.resource.type())
         e.store()
-        events = db_api.event_get_all_by_stack(self.ctx, self.stack.id)
+        events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
         self.assertEqual(1, len(events))
         self.assertEqual('arizona', events[0].physical_resource_id)
 
