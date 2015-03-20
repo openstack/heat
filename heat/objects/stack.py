@@ -156,12 +156,11 @@ class Stack(
         return super(Stack, self).__eq__(another)
 
     def refresh(self):
+        db_stack = db_api.stack_get(
+            self._context, self.id, show_deleted=True)
+        db_stack.refresh()
         return self.__class__._from_db_object(
             self._context,
             self,
-            db_api.stack_get(
-                self._context,
-                self.id,
-                show_deleted=True,
-            ),
+            db_stack
         )
