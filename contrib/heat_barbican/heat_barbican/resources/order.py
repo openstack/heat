@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 import six
 
 from heat.common import exception
@@ -21,9 +20,6 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-
-
-LOG = logging.getLogger(__name__)
 
 
 class Order(resource.Resource):
@@ -133,7 +129,7 @@ class Order(resource.Resource):
         client = self.barbican()
         try:
             client.orders.delete(self.resource_id)
-        except client.barbican_client.HTTPClientError as exc:
+        except Exception as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
             if 'Not Found' not in six.text_type(exc):
