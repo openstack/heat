@@ -53,6 +53,8 @@ from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import software_deployment as software_deployment_object
 from heat.objects import stack as stack_object
+from heat.objects import watch_data as watch_data_object
+from heat.objects import watch_rule as watch_rule_object
 from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api
@@ -2838,13 +2840,14 @@ class StackServiceTest(common.HeatTestCase):
         self.wr.store()
 
         # And add a metric datapoint
-        watch = db_api.watch_rule_get_by_name(self.ctx, 'show_watch_metric_1')
+        watch = watch_rule_object.WatchRule.get_by_name(self.ctx,
+                                                        'show_watch_metric_1')
         self.assertIsNotNone(watch)
         values = {'watch_rule_id': watch.id,
                   'data': {u'Namespace': u'system/linux',
                            u'ServiceFailure': {
                                u'Units': u'Counter', u'Value': 1}}}
-        watch = db_api.watch_data_create(self.ctx, values)
+        watch_data_object.WatchData.create(self.ctx, values)
 
         # Check there is one result returned
         result = self.eng.show_watch_metric(self.ctx,
@@ -2853,7 +2856,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(1, len(result))
 
         # Create another metric datapoint and check we get two
-        watch = db_api.watch_data_create(self.ctx, values)
+        watch_data_object.WatchData.create(self.ctx, values)
         result = self.eng.show_watch_metric(self.ctx,
                                             metric_namespace=None,
                                             metric_name=None)
