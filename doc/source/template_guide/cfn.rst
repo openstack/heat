@@ -13,4 +13,4 @@
 
 CloudFormation Compatible Resource Types
 ----------------------------------------
-.. resourcepages:: AWS::
+.. integratedrespages:: AWS::

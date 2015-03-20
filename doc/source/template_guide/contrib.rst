@@ -14,6 +14,11 @@
 Contributed Heat Resource Types
 ===============================
 
+.. rubric:: These resources are not enabled by default.
+
+.. contribrespages:: OS::
+
+
 Rackspace Cloud Resource Types
 ------------------------------
 
@@ -31,7 +36,7 @@ properly. More information about them can be found in the
 <https://github.com/openstack/heat/blob/master/contrib/rackspace/README.md>`_.
 
 
-.. resourcepages:: Rackspace::
+.. contribrespages:: Rackspace::
 
 
 DockerInc Resource
@@ -44,16 +49,4 @@ requires the `docker-py <https://pypi.python.org/pypi/docker-py>`_
 package. You can find more information in the `DOCKER_README
 <https://github.com/openstack/heat/blob/master/contrib/heat_docker/README.md>`_.
 
-.. resourcepages:: DockerInc::
-
-Nova Flavor Resource
---------------------
-
-.. rubric:: This resource is not enabled by default.
-
-This plugin enables dynamic creation of Nova flavors through Heat. You can
-find more information in the `NOVA_FLAVOR_README
-<https://github.com/openstack/heat/blob/master/contrib/nova_flavor
-/README.md>`_.
-
-.. resourcepages:: OS::Nova::Flavor
+.. contribrespages:: DockerInc::

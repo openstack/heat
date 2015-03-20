@@ -14,4 +14,4 @@
 
 OpenStack Resource Types
 ------------------------
-.. resourcepages:: OS::
+.. integratedrespages:: OS::

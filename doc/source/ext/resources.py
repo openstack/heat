@@ -17,24 +17,27 @@ import itertools
 from docutils import core
 from docutils import nodes
 import pydoc
+import six
 from sphinx.util import compat
 
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine import environment
 from heat.engine import plugin_manager
 from heat.engine import properties
-from heat.engine import resources
 from heat.engine import support
 
 _CODE_NAMES = {'2014.1': 'Icehouse',
                '2014.2': 'Juno',
                '2015.1': 'Kilo'}
 
-global_env = environment.Environment({}, user_env=False)
+all_resources = {}
 
 
-class resourcepages(nodes.General, nodes.Element):
+class integratedrespages(nodes.General, nodes.Element):
+    pass
+
+
+class contribresourcepages(nodes.General, nodes.Element):
     pass
 
 
@@ -45,33 +48,38 @@ class ResourcePages(compat.Directive):
     final_argument_whitespace = False
     option_spec = {}
 
+    def path(self):
+        return None
+
     def run(self):
         prefix = self.arguments and self.arguments.pop() or None
         content = []
-        for resource_type, resource_class in _all_resources(prefix):
-            self.resource_type = resource_type
-            self.resource_class = resource_class
-            section = self._section(content, resource_type, '%s')
+        for resource_type, resource_classes in _filter_resources(prefix,
+                                                                 self.path()):
+            for resource_class in resource_classes:
+                self.resource_type = resource_type
+                self.resource_class = resource_class
+                section = self._section(content, resource_type, '%s')
 
-            self.props_schemata = properties.schemata(
-                self.resource_class.properties_schema)
-            self.attrs_schemata = attributes.schemata(
-                self.resource_class.attributes_schema)
+                self.props_schemata = properties.schemata(
+                    self.resource_class.properties_schema)
+                self.attrs_schemata = attributes.schemata(
+                    self.resource_class.attributes_schema)
 
-            self._status_str(resource_class.support_status, section)
+                self._status_str(resource_class.support_status, section)
 
-            cls_doc = pydoc.getdoc(resource_class)
-            if cls_doc:
-                # allow for rst in the class comments
-                cls_nodes = core.publish_doctree(cls_doc).children
-                section.extend(cls_nodes)
+                cls_doc = pydoc.getdoc(resource_class)
+                if cls_doc:
+                    # allow for rst in the class comments
+                    cls_nodes = core.publish_doctree(cls_doc).children
+                    section.extend(cls_nodes)
 
-            self.contribute_properties(section)
-            self.contribute_attributes(section)
+                self.contribute_properties(section)
+                self.contribute_attributes(section)
 
-            self.contribute_hot_syntax(section)
-            self.contribute_yaml_syntax(section)
-            self.contribute_json_syntax(section)
+                self.contribute_hot_syntax(section)
+                self.contribute_yaml_syntax(section)
+                self.contribute_json_syntax(section)
 
         return content
 
@@ -323,18 +331,36 @@ Resources:
                 definition.append(def_para)
 
 
-def _all_resources(prefix=None):
-    type_names = sorted(global_env.get_types())
-    if prefix is not None:
-        def prefix_match(name):
-            return name.startswith(prefix)
+class IntegrateResourcePages(ResourcePages):
 
-        type_names = itertools.ifilter(prefix_match, type_names)
+    def path(self):
+        return 'heat.engine.resources'
 
-    def resource_type(name):
-        return name, global_env.get_class(name)
 
-    return itertools.imap(resource_type, type_names)
+class ContribResourcePages(ResourcePages):
+
+    def path(self):
+        return 'heat.engine.plugins'
+
+
+def _filter_resources(prefix=None, path=None):
+    def prefix_match(name):
+        return prefix is None or name.startswith(prefix)
+
+    def path_match(cls):
+        return path is None or cls.__module__.startswith(path)
+
+    filtered_resources = {}
+    for name in sorted(all_resources.keys()):
+        if prefix_match(name):
+            for cls in all_resources.get(name):
+                if path_match(cls):
+                    if filtered_resources.get(name) is not None:
+                        filtered_resources[name].append(cls)
+                    else:
+                        filtered_resources[name] = [cls]
+
+    return sorted(six.iteritems(filtered_resources))
 
 
 def _load_all_resources():
@@ -342,12 +368,20 @@ def _load_all_resources():
     resource_mapping = plugin_manager.PluginMapping('resource')
     res_plugin_mappings = resource_mapping.load_all(manager)
 
-    resources._register_resources(global_env, res_plugin_mappings)
-    environment.read_global_environment(global_env)
+    for mapping in res_plugin_mappings:
+        name, cls = mapping
+        if all_resources.get(name) is not None:
+            all_resources[name].append(cls)
+        else:
+            all_resources[name] = [cls]
 
 
 def setup(app):
     _load_all_resources()
-    app.add_node(resourcepages)
+    app.add_node(integratedrespages)
 
-    app.add_directive('resourcepages', ResourcePages)
+    app.add_directive('integratedrespages', IntegrateResourcePages)
+
+    app.add_node(contribresourcepages)
+
+    app.add_directive('contribrespages', ContribResourcePages)

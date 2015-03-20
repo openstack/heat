@@ -18,22 +18,7 @@ from heat.engine import support
 
 
 class KeystoneRole(resource.Resource):
-    '''
-    Heat Template Resource for Keystone Role.
-
-    heat_template_version: 2013-05-23
-
-    parameters:
-      role_name:
-        type: string
-        description: Keystone role name
-
-    resources:
-      sample_role:
-        type: OS::Keystone::Role
-        properties:
-          name: {get_param: role_name}
-    '''
+    """Heat Template Resource for Keystone Role."""
 
     support_status = support.SupportStatus(
         version='2015.1',

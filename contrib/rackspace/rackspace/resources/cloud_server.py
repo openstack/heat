@@ -29,7 +29,11 @@ LOG = logging.getLogger(__name__)
 
 
 class CloudServer(server.Server):
-    """Resource for Rackspace Cloud Servers."""
+    """Resource for Rackspace Cloud Servers.
+
+    This resource overloads existent integrated OS::Nova::Server resource and
+    is used for Rackspace Cloud Servers.
+    """
 
     # Managed Cloud automation statuses
     MC_STATUS_IN_PROGRESS = 'In Progress'
