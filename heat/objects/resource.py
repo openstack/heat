@@ -140,10 +140,10 @@ class Resource(
         resource = cls._from_db_object(cls(context), context, resource_db)
         return resource
 
-    def update_and_save(cls, values):
-        resource_db = db_api.resource_get(cls._context, cls.id)
+    def update_and_save(self, values):
+        resource_db = db_api.resource_get(self._context, self.id)
         resource_db.update_and_save(values)
-        cls._refresh()
+        self._refresh()
         return resource_db
 
     def _refresh(self):
