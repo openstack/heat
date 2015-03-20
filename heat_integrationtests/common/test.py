@@ -275,7 +275,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             success_on_not_found=True)
 
     def update_stack(self, stack_identifier, template, environment=None,
-                     files=None, parameters=None):
+                     files=None, parameters=None,
+                     expected_status='UPDATE_COMPLETE'):
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
@@ -289,9 +290,29 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             parameters=parameters,
             environment=env
         )
-        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
+        self._wait_for_stack_status(stack_identifier, expected_status)
 
-    def assert_resource_is_a_stack(self, stack_identifier, res_name):
+    def assert_resource_is_a_stack(self, stack_identifier, res_name,
+                                   wait=False):
+        build_timeout = self.conf.build_timeout
+        build_interval = self.conf.build_interval
+        start = timeutils.utcnow()
+        while timeutils.delta_seconds(start,
+                                      timeutils.utcnow()) < build_timeout:
+            time.sleep(build_interval)
+            try:
+                nested_identifier = self._get_nested_identifier(
+                    stack_identifier, res_name)
+            except Exception:
+                # We may have to wait, if the create is in-progress
+                if wait:
+                    time.sleep(build_interval)
+                else:
+                    raise
+            else:
+                return nested_identifier
+
+    def _get_nested_identifier(self, stack_identifier, res_name):
         rsrc = self.client.resources.get(stack_identifier, res_name)
         nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
         nested_href = nested_link[0]['href']
@@ -375,3 +396,22 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         stack_name = stack_identifier.split('/')[0]
         self.client.actions.resume(stack_name)
         self._wait_for_stack_status(stack_identifier, 'RESUME_COMPLETE')
+
+    def wait_for_event_with_reason(self, stack_identifier, reason,
+                                   rsrc_name=None, num_expected=1):
+        build_timeout = self.conf.build_timeout
+        build_interval = self.conf.build_interval
+        start = timeutils.utcnow()
+        while timeutils.delta_seconds(start,
+                                      timeutils.utcnow()) < build_timeout:
+            try:
+                rsrc_events = self.client.events.list(stack_identifier,
+                                                      resource_name=rsrc_name)
+            except heat_exceptions.HTTPNotFound:
+                LOG.debug("No events yet found for %s" % rsrc_name)
+            else:
+                matched = [e for e in rsrc_events
+                           if e.resource_status_reason == reason]
+                if len(matched) == num_expected:
+                    return matched
+            time.sleep(build_interval)
