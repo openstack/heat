@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev298\n"
+"Project-Id-Version: heat 2015.1.dev4\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-11 06:06+0000\n"
+"POT-Creation-Date: 2015-03-20 06:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,12 +94,12 @@ msgstr ""
 msgid "Unable to serialize exception response"
 msgstr ""
 
-#: heat/engine/environment.py:202 heat/engine/environment.py:208
+#: heat/engine/environment.py:233 heat/engine/environment.py:239
 #, python-format
 msgid "Removing %(item)s from %(path)s"
 msgstr ""
 
-#: heat/engine/environment.py:221
+#: heat/engine/environment.py:252
 #, python-format
 msgid "Changing %(path)s from %(was)s to %(now)s"
 msgstr ""
@@ -123,37 +123,42 @@ msgstr ""
 msgid "Instance (%(server)s) not found: %(ex)s"
 msgstr ""
 
-#: heat/engine/resource.py:891
+#: heat/engine/resource.py:944
 #, python-format
 msgid "db error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1077
+#: heat/engine/resource.py:1016
+#, python-format
+msgid "Resource \"%s\" not pre-stored in DB"
+msgstr ""
+
+#: heat/engine/resource.py:1162
 #, python-format
 msgid "Resource %s does not implement metadata update"
 msgstr ""
 
-#: heat/engine/service.py:1069
+#: heat/engine/service.py:1089
 #, python-format
 msgid "Access denied to resource %s"
 msgstr ""
 
-#: heat/engine/service.py:1351
+#: heat/engine/service.py:1372
 #, python-format
 msgid "show_watch (all) db error %s"
 msgstr ""
 
-#: heat/engine/service.py:1380
+#: heat/engine/service.py:1401
 #, python-format
 msgid "show_metric (all) db error %s"
 msgstr ""
 
-#: heat/engine/service_stack_watch.py:84
+#: heat/engine/service_stack_watch.py:90
 #, python-format
 msgid "periodic_task db error watch rule removed? %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:272
+#: heat/engine/stack.py:280
 msgid "Unable to set parameters StackId identifier"
 msgstr ""
 
@@ -162,17 +167,17 @@ msgstr ""
 msgid "Lock was already released on stack %s!"
 msgstr ""
 
-#: heat/engine/watchrule.py:81
+#: heat/engine/watchrule.py:86
 #, python-format
 msgid "WatchRule.load (%(watch_name)s) db error %(ex)s"
 msgstr ""
 
-#: heat/engine/watchrule.py:268
+#: heat/engine/watchrule.py:276
 #, python-format
 msgid "Could not process watch state %s for stack"
 msgstr ""
 
-#: heat/engine/watchrule.py:352
+#: heat/engine/watchrule.py:360
 #, python-format
 msgid "Unable to override state %(state)s for watch %(name)s"
 msgstr ""
@@ -191,7 +196,7 @@ msgstr ""
 msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:141
+#: heat/engine/resources/stack_resource.py:142
 #, python-format
 msgid "Preview of '%s' not yet implemented"
 msgstr ""
@@ -209,7 +214,7 @@ msgstr ""
 msgid "Skipping association, resource not specified"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:333
+#: heat/engine/resources/openstack/neutron/port.py:339
 #, python-format
 msgid "Failed to fetch resource attributes: %s"
 msgstr ""
@@ -219,11 +224,18 @@ msgstr ""
 msgid "Head container failed: %s"
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:347
+#: heat/engine/resources/openstack/trove/os_database.py:350
 #, python-format
 msgid ""
 "Stack %(name)s (%(id)s) received an OverLimit response during "
 "instance.get(): %(exception)s"
+msgstr ""
+
+#: heat/engine/resources/openstack/trove/trove_cluster.py:164
+#, python-format
+msgid ""
+"Stack %(name)s (%(id)s) received an OverLimit response during "
+"clusters.get(): %(exception)s"
 msgstr ""
 
 #: heat/openstack/common/loopingcall.py:87
