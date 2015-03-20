@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-11 06:06+0000\n"
-"PO-Revision-Date: 2015-03-10 14:17+0000\n"
+"POT-Creation-Date: 2015-03-20 06:35+0000\n"
+"PO-Revision-Date: 2015-03-19 22:55+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -49,7 +49,7 @@ msgstr "Succès de l'authentification AWS"
 msgid "AWS authentication failure."
 msgstr "Echec de l'authentification AWS"
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:771
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:787
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -86,189 +86,199 @@ msgstr "Enfant démarré %s"
 msgid "Starting single process server"
 msgstr "Démarrage de serveur de processus unique"
 
-#: heat/engine/environment.py:224
+#: heat/engine/environment.py:255
 #, python-format
 msgid "Registering %(path)s -> %(value)s"
 msgstr ""
 
-#: heat/engine/environment.py:499
+#: heat/engine/environment.py:587
 #, python-format
 msgid "Loading %s"
 msgstr "Chargement %s"
 
-#: heat/engine/resource.py:539
+#: heat/engine/resource.py:276
+#, python-format
+msgid "Reached hook on %s"
+msgstr ""
+
+#: heat/engine/resource.py:589
 #, python-format
 msgid "creating %s"
 msgstr ""
 
-#: heat/engine/resource.py:688
+#: heat/engine/resource.py:741
 #, python-format
 msgid "updating %s"
 msgstr "Mise à jour %s"
 
-#: heat/engine/resource.py:713
+#: heat/engine/resource.py:766
 #, python-format
 msgid "Checking %s"
 msgstr "Vérification %s"
 
-#: heat/engine/resource.py:750
+#: heat/engine/resource.py:803
 #, python-format
 msgid "suspending %s"
 msgstr ""
 
-#: heat/engine/resource.py:766
+#: heat/engine/resource.py:819
 #, python-format
 msgid "resuming %s"
 msgstr ""
 
-#: heat/engine/resource.py:771
+#: heat/engine/resource.py:824
 #, python-format
 msgid "snapshotting %s"
 msgstr ""
 
-#: heat/engine/resource.py:817
+#: heat/engine/resource.py:870
 #, python-format
 msgid "Validating %s"
 msgstr "Validation %s"
 
-#: heat/engine/resource.py:850
+#: heat/engine/resource.py:903
 #, python-format
 msgid "deleting %s"
 msgstr "Suppression %s"
+
+#: heat/engine/resource.py:1131
+#, python-format
+msgid "Clearing %(hook)s hook on %(resource)s"
+msgstr ""
 
 #: heat/engine/scheduler.py:214
 #, python-format
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:354
+#: heat/engine/service.py:362
 msgid "Engine service is stopped successfully"
-msgstr ""
-
-#: heat/engine/service.py:364
-#, python-format
-msgid "WorkerService is stopped in engine %s"
 msgstr ""
 
 #: heat/engine/service.py:372
 #, python-format
+msgid "WorkerService is stopped in engine %s"
+msgstr ""
+
+#: heat/engine/service.py:380
+#, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:376
+#: heat/engine/service.py:384
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:381
+#: heat/engine/service.py:389
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:384
+#: heat/engine/service.py:392
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:575
+#: heat/engine/service.py:591
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:615
+#: heat/engine/service.py:631
 #, python-format
 msgid "Creating stack %s"
 msgstr "Création de la stack %s"
 
-#: heat/engine/service.py:638
+#: heat/engine/service.py:654
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr "Echec de création de la stack, status %s"
 
-#: heat/engine/service.py:673
+#: heat/engine/service.py:689
 #, python-format
 msgid "Updating stack %s"
 msgstr "Mise à jour de la stack %s"
 
-#: heat/engine/service.py:737
+#: heat/engine/service.py:753
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:866
+#: heat/engine/service.py:882
 #, python-format
 msgid "Deleting stack %s"
 msgstr "Suppresion de la stack %s"
 
-#: heat/engine/service.py:919
+#: heat/engine/service.py:935
 #, python-format
 msgid "abandoning stack %s"
 msgstr "Abandon de la stack %s"
 
-#: heat/engine/service.py:1204
+#: heat/engine/service.py:1225
 #, python-format
 msgid ""
 "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1247
+#: heat/engine/service.py:1268
 #, python-format
 msgid "Checking stack %s"
 msgstr "Vérification de la stack %s"
 
-#: heat/engine/service.py:1500
+#: heat/engine/service.py:1521
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1511
+#: heat/engine/service.py:1533
 #, python-format
 msgid "Service %s was aborted"
 msgstr ""
 
-#: heat/engine/service.py:1520
+#: heat/engine/service.py:1542
 #, python-format
 msgid "Service %s is restarted"
 msgstr ""
 
-#: heat/engine/service.py:1533
+#: heat/engine/service.py:1555
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service_software_config.py:99
-#: heat/engine/service_software_config.py:121
+#: heat/engine/service_software_config.py:104
+#: heat/engine/service_software_config.py:126
 #, python-format
 msgid "Signal object not found: %(c)s %(o)s"
 msgstr ""
 
-#: heat/engine/stack.py:572
+#: heat/engine/stack.py:594
 #, python-format
 msgid "Stack %(action)s %(status)s (%(name)s): %(reason)s"
 msgstr ""
 
-#: heat/engine/stack.py:962
+#: heat/engine/stack.py:993
 #, python-format
 msgid ""
 "Tried to delete user_creds that do not exist (stack=%(stack)s user_creds_id="
 "%(uc)s)"
 msgstr ""
 
-#: heat/engine/stack.py:970
+#: heat/engine/stack.py:1001
 #, python-format
 msgid "Tried to store a stack that does not exist %s"
 msgstr ""
 
-#: heat/engine/stack.py:1055 heat/engine/stack.py:1067
+#: heat/engine/stack.py:1087 heat/engine/stack.py:1099
 #, python-format
 msgid "Tried to delete stack that does not exist %s "
 msgstr ""
 
-#: heat/engine/stack.py:1083
+#: heat/engine/stack.py:1115
 #, python-format
 msgid "%s is already suspended"
 msgstr "%s est déjà suspendu"
 
-#: heat/engine/stack.py:1104
+#: heat/engine/stack.py:1136
 #, python-format
 msgid "%s is already resumed"
 msgstr ""
@@ -339,13 +349,13 @@ msgstr ""
 msgid "Volume %(vol)s is detached from server %(srv)s"
 msgstr ""
 
-#: heat/engine/watchrule.py:252
+#: heat/engine/watchrule.py:258
 #, python-format
 msgid ""
 "WATCH: stack:%(stack)s, watch_name:%(watch_name)s, new_state:%(new_state)s"
 msgstr ""
 
-#: heat/engine/watchrule.py:258
+#: heat/engine/watchrule.py:264
 #, python-format
 msgid "no action for new state %s"
 msgstr ""
@@ -393,10 +403,6 @@ msgstr ""
 msgid "Multiple images %s were found in sahara with name"
 msgstr ""
 
-#: heat/engine/resources/stack_resource.py:306
-msgid "Stack not found to delete"
-msgstr ""
-
 #: heat/engine/resources/aws/autoscaling/autoscaling_group.py:301
 #, python-format
 msgid "%(name)s NOT performing scaling adjustment, cooldown %(cooldown)s"
@@ -438,7 +444,7 @@ msgstr ""
 msgid "could not get secret for %(username)s Error:%(msg)s"
 msgstr ""
 
-#: heat/engine/resources/aws/lb/loadbalancer.py:507
+#: heat/engine/resources/aws/lb/loadbalancer.py:511
 #, python-format
 msgid "Using custom loadbalancer template %s"
 msgstr ""
@@ -479,7 +485,7 @@ msgstr "%s Succès"
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1017
+#: heat/engine/resources/openstack/nova/server.py:1212
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network "
@@ -493,6 +499,7 @@ msgid "Cluster \"%s\" is being started."
 msgstr ""
 
 #: heat/engine/resources/openstack/sahara/sahara_cluster.py:177
+#: heat/engine/resources/openstack/trove/trove_cluster.py:187
 #, python-format
 msgid "Cluster '%s' has been created"
 msgstr ""
@@ -522,7 +529,7 @@ msgstr ""
 msgid "Cluster Template '%s' has been deleted."
 msgstr ""
 
-#: heat/engine/resources/openstack/trove/os_database.py:370
+#: heat/engine/resources/openstack/trove/os_database.py:373
 #, python-format
 msgid ""
 "Database instance %(database)s created (flavor:%(flavor)s,volume:%(volume)s, "
