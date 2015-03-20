@@ -58,24 +58,13 @@ class ResourcePages(compat.Directive):
             self.attrs_schemata = attributes.schemata(
                 self.resource_class.attributes_schema)
 
-            if resource_class.support_status.status == support.DEPRECATED:
-                para = nodes.paragraph('', self._status_str(
-                                       resource_class.support_status))
-                note = nodes.note('', para)
-                section.append(note)
+            self._status_str(resource_class.support_status, section)
 
             cls_doc = pydoc.getdoc(resource_class)
             if cls_doc:
                 # allow for rst in the class comments
                 cls_nodes = core.publish_doctree(cls_doc).children
                 section.extend(cls_nodes)
-
-            if (resource_class.support_status.status == support.SUPPORTED and
-               resource_class.support_status.version is not None):
-                tag = resource_class.support_status.version.title()
-                message = (_('Available since %s.') % self._version_str(tag))
-                para = nodes.paragraph('', message)
-                section.append(para)
 
             self.contribute_properties(section)
             self.contribute_attributes(section)
@@ -88,20 +77,27 @@ class ResourcePages(compat.Directive):
 
     def _version_str(self, version):
         if version in _CODE_NAMES:
-            return "%(version)s (%(code)s)" % {'version': version,
-                                               'code': _CODE_NAMES[version]}
+            return _("%(version)s (%(code)s)") % {'version': version,
+                                                  'code': _CODE_NAMES[version]}
         else:
             return version
 
-    def _status_str(self, support_status):
+    def _status_str(self, support_status, section):
         sstatus = support_status.to_dict()
-        msg = sstatus['status']
+        if sstatus['status'] is support.SUPPORTED:
+            msg = _('Available')
+        else:
+            msg = sstatus['status']
         if sstatus['version'] is not None:
-            msg += ' since %s' % self._version_str(sstatus['version'])
+            msg = _('%s since %s') % (msg,
+                                      self._version_str(sstatus['version']))
         if sstatus['message'] is not None:
-            msg += ' - %s' % sstatus['message']
-
-        return msg
+            msg = _('%s - %s') % (msg, sstatus['message'])
+        if not (sstatus['status'] is support.SUPPORTED and
+                sstatus['version'] is None):
+            para = nodes.paragraph(_(''), msg)
+            note = nodes.note(_(''), para)
+            section.append(note)
 
     def _section(self, parent, title, id_pattern):
         id = id_pattern % self.resource_type
@@ -232,18 +228,7 @@ Resources:
         definition = nodes.definition()
         prop_item.append(definition)
 
-        if prop.support_status.status != support.SUPPORTED:
-            para = nodes.paragraph('', self._status_str(prop.support_status))
-            note = nodes.note('', para)
-            definition.append(note)
-
-        if (prop.support_status.status == support.SUPPORTED and
-            prop.support_status.version is not None):
-            tag = prop.support_status.version.title()
-            message = (_('Available since %s.') % self._version_str(tag))
-            para = nodes.paragraph('', message)
-            note = nodes.note('', para)
-            definition.append(note)
+        self._status_str(prop.support_status, definition)
 
         if not prop.implemented:
             para = nodes.paragraph('', _('Not implemented.'))
@@ -331,11 +316,7 @@ Resources:
             definition = nodes.definition()
             prop_item.append(definition)
 
-            if prop.support_status.status != support.SUPPORTED:
-                para = nodes.paragraph('',
-                                       self._status_str(prop.support_status))
-                note = nodes.note('', para)
-                definition.append(note)
+            self._status_str(prop.support_status, definition)
 
             if description:
                 def_para = nodes.paragraph('', description)
