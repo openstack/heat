@@ -295,3 +295,43 @@ class DockerContainerTest(common.HeatTestCase):
         self.assertEqual(['samalba/wordpress'], client.pulled_images)
         self.assertEqual(['NET_ADMIN'], client.container_start[0]['cap_add'])
         self.assertEqual(['MKNOD'], client.container_start[0]['cap_drop'])
+
+    def test_start_with_read_only(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['read_only'] = True
+        resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value.set_api_version('1.17')
+        self.assertIsNone(resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
+        client = resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertIs(True, client.container_start[0]['read_only'])
+
+    def test_start_with_read_only_for_low_api_version(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['read_only'] = True
+        my_resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(my_resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        get_client_mock.return_value.set_api_version('1.16')
+        self.assertIsNone(my_resource.validate())
+        msg = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(my_resource.create))
+        expected = ('InvalidArgForVersion: "read_only" is not supported '
+                    'for API version < "1.17"')
+        self.assertEqual(expected, six.text_type(msg))
+
+    def test_compare_version(self):
+        self.assertEqual(docker_container.compare_version('1.17', '1.17'), 0)
+        self.assertEqual(docker_container.compare_version('1.17', '1.16'), -1)
+        self.assertEqual(docker_container.compare_version('1.17', '1.18'), 1)

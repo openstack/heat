@@ -14,19 +14,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import distutils
+
 from oslo_log import log as logging
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 LOG = logging.getLogger(__name__)
 
 DOCKER_INSTALLED = False
+READ_ONLY_MIN_API_VERSION = '1.17'
 # conditionally import so tests can work without having the dependency
 # satisfied
 try:
@@ -42,12 +47,12 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
         IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
-        RESTART_POLICY, CAP_ADD, CAP_DROP,
+        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY,
     ) = (
         'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
         'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
         'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name',
-        'restart_policy', 'cap_add', 'cap_drop'
+        'restart_policy', 'cap_add', 'cap_drop', 'read_only'
     )
 
     ATTRIBUTES = (
@@ -210,6 +215,14 @@ class DockerContainer(resource.Resource):
                 ]
             ),
             default=[]
+        ),
+        READ_ONLY: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('If true, mount the container\'s root filesystem '
+              'as read only (only supported for API version >= %s).') %
+            READ_ONLY_MIN_API_VERSION,
+            default=False,
+            support_status=support.SupportStatus(version='2015.1'),
         )
     }
 
@@ -330,6 +343,7 @@ class DockerContainer(resource.Resource):
             'name': self.properties[self.NAME]
         }
         client = self.get_client()
+        version = client.version()['ApiVersion']
         client.pull(self.properties[self.IMAGE])
         result = client.create_container(**create_args)
         container_id = result['Id']
@@ -353,6 +367,13 @@ class DockerContainer(resource.Resource):
             start_args['cap_add'] = self.properties[self.CAP_ADD]
         if self.properties[self.CAP_DROP]:
             start_args['cap_drop'] = self.properties[self.CAP_DROP]
+        if self.properties[self.READ_ONLY]:
+            if compare_version(READ_ONLY_MIN_API_VERSION, version) >= 0:
+                start_args[self.READ_ONLY] = True
+            else:
+                raise InvalidArgForVersion(arg=self.READ_ONLY,
+                                           min_version=(
+                                               READ_ONLY_MIN_API_VERSION))
 
         client.start(container_id, **start_args)
         return container_id
@@ -428,3 +449,19 @@ def available_resource_mapping():
     else:
         LOG.warn(_LW("Docker plug-in loaded, but docker lib not installed."))
         return {}
+
+
+def compare_version(v1, v2):
+    s1 = distutils.version.StrictVersion(v1)
+    s2 = distutils.version.StrictVersion(v2)
+    if s1 == s2:
+        return 0
+    elif s1 > s2:
+        return -1
+    else:
+        return 1
+
+
+class InvalidArgForVersion(exception.HeatException):
+    msg_fmt = _('"%(arg)s" is not supported for API version '
+                '< "%(min_version)s"')
