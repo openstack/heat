@@ -3089,7 +3089,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertRaises(exception.StackExists, self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', tmpl)
 
-    @mock.patch.object(service.db_api, 'stack_count_all')
+    @mock.patch.object(db_api, 'stack_count_all')
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
