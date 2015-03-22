@@ -293,7 +293,7 @@ class EngineListener(service.Service):
         super(EngineListener, self).start()
         self.target = messaging.Target(
             server=self.engine_id,
-            topic="heat-engine-listener")
+            topic=rpc_api.LISTENER_TOPIC)
         server = rpc_messaging.get_rpc_server(self.target, self)
         server.start()
 
@@ -845,7 +845,8 @@ class EngineService(service.Service):
         self.cctxt = self._client.prepare(
             version='1.0',
             timeout=timeout,
-            topic=lock_engine_id)
+            topic=rpc_api.LISTENER_TOPIC,
+            server=lock_engine_id)
         try:
             self.cctxt.call(cnxt, call, *args, **kwargs)
         except messaging.MessagingTimeout:

@@ -12,6 +12,7 @@
 #    under the License.
 
 ENGINE_TOPIC = 'engine'
+LISTENER_TOPIC = 'heat-engine-listener'
 
 PARAM_KEYS = (
     PARAM_TIMEOUT, PARAM_DISABLE_ROLLBACK, PARAM_ADOPT_STACK_DATA,
