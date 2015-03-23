@@ -272,7 +272,7 @@ Assume the following simple property and attribute definition:
                 default='foo',
                 required=True
             ),
-            'bar': properies.Schema(
+            'bar': properties.Schema(
                 properties.Schema.INTEGER,
                 _('bar prop description'),
                 required=True,
