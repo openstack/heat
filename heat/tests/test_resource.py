@@ -23,7 +23,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import short_id
 from heat.common import timeutils
-from heat.db import api as db_api
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import dependencies
@@ -96,8 +95,9 @@ class ResourceTest(common.HeatTestCase):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'GenericResourceType')
         self.stack.id = None
-        db_method = 'resource_get_by_name_and_stack'
-        with mock.patch.object(db_api, db_method) as resource_get:
+        db_method = 'get_by_name_and_stack'
+        with mock.patch.object(resource_objects.Resource,
+                               db_method) as resource_get:
             res = resource.Resource('aresource', snippet, self.stack)
             self.assertEqual("INIT", res.action)
             self.assertIs(False, resource_get.called)
