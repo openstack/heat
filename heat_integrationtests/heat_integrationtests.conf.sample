@@ -52,6 +52,9 @@
 # Visible fixed network name  (string value)
 #fixed_network_name = private
 
+# Visible floating network name  (string value)
+#floating_network_name = public
+
 # Path to environment file which defines the resource type
 # Heat::InstallConfigAgent. Needs to be appropriate for the image_ref. (string
 # value)

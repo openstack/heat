@@ -24,7 +24,7 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(NeutronLoadBalancerTest, self).setUp()
-        self.public_net = self._get_network('public')
+        self.public_net = self._get_network(self.conf.floating_network_name)
         self.template_name = 'test_neutron_loadbalancer.yaml'
 
     def collect_responses(self, ip, expected_resp):
