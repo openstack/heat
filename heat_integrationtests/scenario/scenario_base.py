@@ -31,6 +31,11 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
         if not self.conf.instance_type:
             raise self.skipException("No flavor configured to test")
 
+        if not self.conf.minimal_image_ref:
+            raise self.skipException("No minimal image configured to test")
+        if not self.conf.minimal_instance_type:
+            raise self.skipException("No minimal flavor configured to test")
+
     def launch_stack(self, template_name, expected_status='CREATE_COMPLETE',
                      parameters=None, **kwargs):
         template = self._load_template(__file__, template_name, self.sub_dir)

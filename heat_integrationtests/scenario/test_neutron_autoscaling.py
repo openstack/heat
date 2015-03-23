@@ -20,8 +20,6 @@ class NeutronAutoscalingTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(NeutronAutoscalingTest, self).setUp()
-        if not self.conf.minimal_image_ref:
-            raise self.skipException("No minimal image configured to test")
         if not self.conf.fixed_subnet_name:
             raise self.skipException("No sub-network configured to test")
         self.template_name = 'test_neutron_autoscaling.yaml'
@@ -41,7 +39,7 @@ class NeutronAutoscalingTest(scenario_base.ScenarioTestsBase):
         parameters = {
             "image_id": self.conf.minimal_image_ref,
             "capacity": "1",
-            "instance_type": self.conf.instance_type,
+            "instance_type": self.conf.minimal_instance_type,
             "fixed_subnet_name": self.conf.fixed_subnet_name,
         }
 

@@ -22,8 +22,9 @@ class StackValidationTest(test.HeatIntegrationTest):
         if not self.conf.minimal_image_ref:
             raise self.skipException("No image configured to test")
 
-        if not self.conf.instance_type:
-            raise self.skipException("No instance_type configured to test")
+        if not self.conf.minimal_instance_type:
+            raise self.skipException(
+                "No minimal_instance_type configured to test")
 
         self.assign_keypair()
 
@@ -72,7 +73,7 @@ resources:
         env = {'resource_registry':
                {'My::Config': 'provider.yaml'}}
         parameters = {'keyname': self.keypair_name,
-                      'flavor': self.conf.instance_type,
+                      'flavor': self.conf.minimal_instance_type,
                       'image': self.conf.minimal_image_ref}
         # Note we don't wait for CREATE_COMPLETE, because we're using a
         # minimal image without the tools to apply the config.
