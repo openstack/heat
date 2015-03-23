@@ -48,6 +48,7 @@ from heat.engine import stack_lock
 from heat.engine import template as templatem
 from heat.engine import watchrule
 from heat.engine import worker
+from heat.objects import event as event_object
 from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import software_deployment as software_deployment_object
@@ -1921,7 +1922,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @mock.patch.object(db_api, 'event_get_all_by_stack')
+    @mock.patch.object(event_object.Event, 'get_all_by_stack')
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_stack_events_list_passes_marker_and_filters(self,
                                                          mock_get_stack,
@@ -1944,7 +1945,7 @@ class StackServiceTest(common.HeatTestCase):
                                                     sort_dir=sort_dir,
                                                     filters=filters)
 
-    @mock.patch.object(db_api, 'event_get_all_by_tenant')
+    @mock.patch.object(event_object.Event, 'get_all_by_tenant')
     def test_tenant_events_list_passes_marker_and_filters(
             self, mock_tenant_events_get_all):
         limit = object()
