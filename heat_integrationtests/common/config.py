@@ -36,17 +36,14 @@ IntegrationTestGroup = [
                default=os.environ.get('OS_REGION_NAME'),
                help="The region name to us"),
     cfg.StrOpt('instance_type',
-               default=os.environ.get('HEAT_TEST_INSTANCE_TYPE'),
                help="Instance type for tests. Needs to be big enough for a "
                     "full OS plus the test workload"),
     cfg.StrOpt('image_ref',
-               default=os.environ.get('HEAT_TEST_IMAGE_REF'),
                help="Name of image to use for tests which boot servers."),
     cfg.StrOpt('keypair_name',
                default=None,
                help="Name of existing keypair to launch servers with."),
     cfg.StrOpt('minimal_image_ref',
-               default=os.environ.get('HEAT_TEST_MINIMAL_IMAGE_REF'),
                help="Name of minimal (e.g cirros) image to use when "
                     "launching test instances."),
     cfg.StrOpt('auth_version',

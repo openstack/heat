@@ -14,14 +14,10 @@
 
 # This script is executed inside post_test_hook function in devstack gate.
 
-# Register the flavor for booting test servers
+set -x
+
+export DEST=${DEST:-/opt/stack/new}
 source /opt/stack/new/devstack/accrc/admin/admin
-export HEAT_TEST_INSTANCE_TYPE=m1.heat_int
-nova flavor-create $HEAT_TEST_INSTANCE_TYPE 452 512 0 1
-
-export HEAT_TEST_IMAGE_REF=Fedora-x86_64-20-20140618-sda
-export HEAT_TEST_MINIMAL_IMAGE_REF=cirros-0.3.2-x86_64-uec
-
+sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 source /opt/stack/new/devstack/accrc/demo/demo
-cd /opt/stack/new/heat
 sudo -E tox -eintegration
