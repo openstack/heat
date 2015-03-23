@@ -98,10 +98,6 @@ class AWSScalingPolicy(signal_responder.SignalResponder,
         return self.properties[self.ADJUSTMENT_TYPE]
 
     def handle_signal(self, details=None):
-        if self.action in (self.SUSPEND, self.DELETE):
-            msg = _('Cannot signal resource during %s') % self.action
-            raise Exception(msg)
-
         # ceilometer sends details like this:
         # {u'alarm_id': ID, u'previous': u'ok', u'current': u'alarm',
         #  u'reason': u'...'})

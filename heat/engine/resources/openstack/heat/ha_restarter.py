@@ -71,10 +71,6 @@ class Restarter(signal_responder.SignalResponder):
         self.resource_id_set(self._get_user_id())
 
     def handle_signal(self, details=None):
-        if self.action in (self.SUSPEND, self.DELETE):
-            msg = _('Cannot signal resource during %s') % self.action
-            raise Exception(msg)
-
         if details is None:
             alarm_state = 'alarm'
         else:

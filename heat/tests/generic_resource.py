@@ -14,7 +14,6 @@
 from oslo_log import log as logging
 import six
 
-from heat.common.i18n import _
 from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
@@ -139,10 +138,6 @@ class SignalResource(signal_responder.SignalResponder):
         self.resource_id_set(self._get_user_id())
 
     def handle_signal(self, details=None):
-        if self.action in (self.SUSPEND, self.DELETE):
-            msg = _('Cannot signal resource during %s') % self.action
-            raise Exception(msg)
-
         LOG.warn(_LW('Signaled resource (Type "%(type)s") %(details)s'),
                  {'type': self.type(), 'details': details})
 

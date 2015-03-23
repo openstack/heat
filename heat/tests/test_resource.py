@@ -123,6 +123,19 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.INIT, res.COMPLETE), res.state)
         self.assertEqual('', res.status_reason)
 
+    def test_signal_wrong_action_state(self):
+        snippet = rsrc_defn.ResourceDefinition('res',
+                                               'GenericResourceType')
+        res = resource.Resource('res', snippet, self.stack)
+        actions = [res.SUSPEND, res.DELETE]
+        for action in actions:
+            for status in res.STATUSES:
+                res.state_set(action, status)
+                ex = self.assertRaises(exception.ResourceFailure,
+                                       res.signal)
+                self.assertEqual('Exception: Cannot signal resource during '
+                                 '%s' % action, six.text_type(ex))
+
     def test_resource_str_repr_stack_id_resource_id(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res_str_repr', 'Foo')
         res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,

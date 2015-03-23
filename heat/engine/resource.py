@@ -1104,6 +1104,12 @@ class Resource(object):
         to implement the signal, the base-class raise an exception if no
         handler is implemented.
         '''
+        if self.action in (self.SUSPEND, self.DELETE):
+            LOG.exception(_LE('Cannot signal resource '
+                              'during %s'), self.action)
+            ex = Exception(_('Cannot signal resource during %s') % self.action)
+            raise exception.ResourceFailure(ex, self)
+
         def get_string_details():
             if details is None:
                 return 'No signal details provided'
