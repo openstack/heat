@@ -30,7 +30,6 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import service_utils
 from heat.common import template_format
-from heat.db import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
@@ -53,6 +52,7 @@ from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import software_deployment as software_deployment_object
 from heat.objects import stack as stack_object
+from heat.objects import stack_lock as stack_lock_object
 from heat.objects import watch_data as watch_data_object
 from heat.objects import watch_rule as watch_rule_object
 from heat.openstack.common import threadgroup
@@ -886,7 +886,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        db_api.stack_lock_create(stack.id, self.man.engine_id)
+        stack_lock_object.StackLock.create(stack.id, self.man.engine_id)
 
         # Create a fake ThreadGroup too
         self.man.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
@@ -915,7 +915,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
@@ -948,7 +948,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
@@ -980,7 +980,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         sid = stack.store()
 
         # Insert a fake lock into the db
-        db_api.stack_lock_create(stack.id, "other-engine-fake-uuid")
+        stack_lock_object.StackLock.create(stack.id, "other-engine-fake-uuid")
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
