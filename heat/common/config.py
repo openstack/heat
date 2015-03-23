@@ -21,9 +21,13 @@ from eventlet.green import socket
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.common import wsgi
 
+
+LOG = logging.getLogger(__name__)
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor',
@@ -275,6 +279,24 @@ revision_opts = [
                       'If you would prefer to manage your build revision '
                       'separately, you can move this section to a different '
                       'file and add it as another config option.'))]
+
+
+def startup_sanity_check():
+    if (not cfg.CONF.stack_user_domain_id and
+            not cfg.CONF.stack_user_domain_name):
+        # FIXME(shardy): Legacy fallback for folks using old heat.conf
+        # files which lack domain configuration
+        LOG.warn(_LW('stack_user_domain_id or stack_user_domain_name not '
+                     'set in heat.conf falling back to using default'))
+    else:
+        domain_admin_user = cfg.CONF.stack_domain_admin
+        domain_admin_password = cfg.CONF.stack_domain_admin_password
+        if not (domain_admin_user and domain_admin_password):
+            raise exception.Error(_('heat.conf misconfigured, cannot '
+                                    'specify "stack_user_domain_id" or '
+                                    '"stack_user_domain_name" without '
+                                    '"stack_domain_admin" and '
+                                    '"stack_domain_admin_password"'))
 
 
 def list_opts():

@@ -102,16 +102,6 @@ class KeystoneClientV3(object):
             self._stack_domain_is_id = False
         self.domain_admin_user = cfg.CONF.stack_domain_admin
         self.domain_admin_password = cfg.CONF.stack_domain_admin_password
-        if self.stack_domain:
-            if not (self.domain_admin_user and self.domain_admin_password):
-                raise exception.Error(_('heat.conf misconfigured, cannot '
-                                        'specify "stack_user_domain_id" or '
-                                        '"stack_user_domain_name" without '
-                                        '"stack_domain_admin" and '
-                                        '"stack_domain_admin_password"'))
-        else:
-            LOG.warn(_LW('stack_user_domain_id or stack_user_domain_name not '
-                         'set in heat.conf falling back to using default'))
         LOG.debug('Using stack domain %s' % self.stack_domain)
 
     @property
@@ -360,8 +350,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain user create, '
-                         'configure domain in heat.conf'))
             return self.create_stack_user(username=username, password=password)
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
@@ -413,8 +401,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain user delete, '
-                         'configure domain in heat.conf'))
             return self.delete_stack_user(user_id)
 
         try:
@@ -434,8 +420,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain project, '
-                         'configure domain in heat.conf'))
             return self.context.tenant_id
         # Note we use the tenant ID not name to ensure uniqueness in a multi-
         # domain environment (where the tenant name may not be globally unique)
@@ -451,8 +435,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain project, '
-                         'configure domain in heat.conf'))
             return
 
         # If stacks are created before configuring the heat domain, they
@@ -544,8 +526,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain keypair, '
-                         'configure domain in heat.conf'))
             return self.create_ec2_keypair(user_id)
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
@@ -561,8 +541,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain keypair, '
-                         'configure domain in heat.conf'))
             return self.delete_ec2_keypair(credential_id=credential_id)
         self._check_stack_domain_user(user_id, project_id, 'delete_keypair')
         try:
@@ -580,8 +558,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain disable, '
-                         'configure domain in heat.conf'))
             return self.disable_stack_user(user_id)
         self._check_stack_domain_user(user_id, project_id, 'disable')
         self.domain_admin_client.users.update(user=user_id, enabled=False)
@@ -590,8 +566,6 @@ class KeystoneClientV3(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            LOG.warn(_LW('Falling back to legacy non-domain enable, '
-                         'configure domain in heat.conf'))
             return self.enable_stack_user(user_id)
         self._check_stack_domain_user(user_id, project_id, 'enable')
         self.domain_admin_client.users.update(user=user_id, enabled=True)

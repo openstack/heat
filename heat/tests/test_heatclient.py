@@ -25,6 +25,7 @@ import mox
 from oslo_config import cfg
 import six
 
+from heat.common import config
 from heat.common import context
 from heat.common import exception
 from heat.common import heat_keystoneclient
@@ -574,7 +575,6 @@ class KeystoneClientTest(common.HeatTestCase):
         self.assertIn(expected, six.text_type(exc))
 
     def test_init_domain_cfg_not_set_fallback(self):
-
         """Test error path when config lacks domain config."""
 
         self._clear_domain_override()
@@ -594,12 +594,8 @@ class KeystoneClientTest(common.HeatTestCase):
         cfg.CONF.clear_override('stack_domain_admin')
         cfg.CONF.clear_override('stack_domain_admin_password')
 
-        ctx = utils.dummy_context()
-        ctx.username = None
-        ctx.password = None
-        ctx.trust_id = None
         err = self.assertRaises(exception.Error,
-                                heat_keystoneclient.KeystoneClient, ctx)
+                                config.startup_sanity_check)
         exp_msg = ('heat.conf misconfigured, cannot specify '
                    '"stack_user_domain_id" or "stack_user_domain_name" '
                    'without "stack_domain_admin" and '
