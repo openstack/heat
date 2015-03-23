@@ -77,8 +77,12 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
                     sid, res, 'CREATE_COMPLETE')
         except (exceptions.StackResourceBuildErrorException,
                 exceptions.TimeoutException) as e:
-            self._log_console_output(servers=[server])
             raise e
+        finally:
+            # attempt to log the server console regardless of deployments
+            # going to complete. This allows successful and failed boot
+            # logs to be compared
+            self._log_console_output(servers=[server])
 
         # Check that stack was fully created
         self._wait_for_stack_status(sid, 'CREATE_COMPLETE')
