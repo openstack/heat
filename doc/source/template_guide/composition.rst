@@ -156,6 +156,10 @@ accessible as follows:
 
 Making your template resource more "transparent"
 ================================================
+.. note::
+
+  Available since 2015.1 (Kilo).
+
 If you wish to be able to return the ID of one of the inner resources
 instead of the nested stack's identifier, you can add the special reserved
 output "OS::stack_id" to your template resource.
