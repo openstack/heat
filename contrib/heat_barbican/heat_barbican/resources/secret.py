@@ -11,19 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 import six
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-
-
-LOG = logging.getLogger(__name__)
 
 
 class Secret(resource.Resource):
@@ -64,7 +59,6 @@ class Secret(resource.Resource):
         PAYLOAD_CONTENT_ENCODING: properties.Schema(
             properties.Schema.STRING,
             _('The encoding format used to provide the payload data.'),
-            default='base64',
             constraints=[
                 constraints.AllowedValues([
                     'base64',
@@ -110,20 +104,6 @@ class Secret(resource.Resource):
     def barbican(self):
         return self.client('barbican')
 
-    def validate(self):
-        super(Secret, self).validate()
-        self._validate_payload()
-
-    def _validate_payload(self):
-        '''Payload is optional, but requires content type if provided.'''
-
-        payload = self.properties.get(self.PAYLOAD)
-        content_type = self.properties.get(self.PAYLOAD_CONTENT_TYPE)
-        if bool(payload) != bool(content_type):
-            msg = _("'payload' and 'payload_content_type' must both be "
-                    "provided or omitted.")
-            raise exception.StackValidationFailed(message=msg)
-
     def handle_create(self):
         info = dict(self.properties)
         secret = self.barbican().secrets.create(**info)
@@ -138,7 +118,7 @@ class Secret(resource.Resource):
         client = self.barbican()
         try:
             client.secrets.delete(self.resource_id)
-        except client.barbican_client.HTTPClientError as exc:
+        except Exception as exc:
             # This is the only exception the client raises
             # Inspecting the message to see if it's a 'Not Found'
             if 'Not Found' not in six.text_type(exc):

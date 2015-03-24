@@ -144,23 +144,6 @@ class TestSecret(common.HeatTestCase):
                           self._create_resource, defn.name, defn,
                           self.stack)
 
-    def test_validate_payload_and_content_type(self):
-        props = {'payload_content_type': 'text/plain'}
-        defn = rsrc_defn.ResourceDefinition('nopayload',
-                                            'OS::Barbican::Secret',
-                                            props)
-        res = self._create_resource(defn.name, defn, self.stack)
-        exc = self.assertRaises(exception.StackValidationFailed, res.validate)
-        self.assertIn('payload', six.text_type(exc))
-        self.assertIn('payload_content_type', six.text_type(exc))
-
-        defn = rsrc_defn.ResourceDefinition('notype', 'OS::Barbican::Secret',
-                                            {'payload': 'foo'})
-        res = self._create_resource(defn.name, defn, self.stack)
-        exc = self.assertRaises(exception.StackValidationFailed, res.validate)
-        self.assertIn('payload', six.text_type(exc))
-        self.assertIn('payload_content_type', six.text_type(exc))
-
     def test_delete_secret(self):
         self.assertEqual('foo_id', self.res.resource_id)
 

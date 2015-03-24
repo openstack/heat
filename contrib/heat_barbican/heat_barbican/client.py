@@ -23,13 +23,11 @@ except ImportError:
 class BarbicanClientPlugin(client_plugin.ClientPlugin):
 
     def _create(self):
-        keystone_client = self.clients.client('keystone').client
         endpoint_type = self._get_client_option('barbican', 'endpoint_type')
         endpoint = self.url_for(service_type='key-manager',
                                 endpoint_type=endpoint_type)
-        # Remove version if set
-        endpoint = endpoint.rsplit("/", 1)[0]
+        self._keystone_session.auth = self.context.auth_plugin
         client = barbican_client.Client(
-            session=keystone_client.session, endpoint=endpoint)
+            session=self._keystone_session, endpoint=endpoint)
 
         return client
