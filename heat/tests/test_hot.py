@@ -651,7 +651,7 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'repeat': {'template': 'this is %var%'}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
 
-        # mispelled for_each
+        # misspelled for_each
         snippet = {'repeat': {'template': 'this is %var%',
                               'foreach': {'%var%': ['a', 'b', 'c']}}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
@@ -666,7 +666,7 @@ class HOTemplateTest(common.HeatTestCase):
                               'for_each': {'%var%': 'a'}}}
         self.assertRaises(TypeError, self.resolve, snippet, tmpl)
 
-        # mispelled template
+        # misspelled template
         snippet = {'repeat': {'templte': 'this is %var%',
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
         self.assertRaises(KeyError, self.resolve, snippet, tmpl)
