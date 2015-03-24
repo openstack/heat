@@ -58,14 +58,16 @@ class WorkerClientTest(common.HeatTestCase):
         msg = method, kwargs
 
         # go with default version
-        worker_client.cast(mock_cnxt, msg)
+        return_value = worker_client.cast(mock_cnxt, msg)
+        self.assertIsNone(return_value)
         mock_rpc_client.cast.assert_called_once_with(mock_cnxt,
                                                      method,
                                                      **kwargs)
 
         # Check cast in given version
         version = '1.2'
-        worker_client.cast(mock_cnxt, msg, version)
+        return_value = worker_client.cast(mock_cnxt, msg, version)
+        self.assertIsNone(return_value)
         mock_rpc_client.prepare.assert_called_once_with(version=version)
         mock_rpc_client.cast.assert_called_once_with(mock_cnxt,
                                                      method,
