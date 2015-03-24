@@ -51,7 +51,6 @@ if __name__ == '__main__':
         logging.register_options(cfg.CONF)
         cfg.CONF(project='heat', prog='heat-api')
         logging.setup(cfg.CONF, 'heat-api')
-        logging.set_defaults()
         messaging.setup()
 
         app = config.load_paste_app()
