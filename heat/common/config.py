@@ -96,7 +96,8 @@ engine_opts = [
                       "with your cloud image (for OS::Nova::Server) or "
                       "'ec2-user' (for AWS::EC2::Instance).")),
     cfg.ListOpt('plugin_dirs',
-                default=['/usr/lib64/heat', '/usr/lib/heat'],
+                default=['/usr/lib64/heat', '/usr/lib/heat',
+                         '/usr/local/lib/heat', '/usr/local/lib64/heat'],
                 help=_('List of directories to search for plug-ins.')),
     cfg.StrOpt('environment_dir',
                default='/etc/heat/environment.d',
