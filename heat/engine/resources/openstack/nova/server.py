@@ -35,6 +35,7 @@ from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('instance_user', 'heat.common.config')
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
+cfg.CONF.import_opt('stack_scheduler_hints', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
@@ -651,6 +652,14 @@ class Server(stack_user.StackUser):
                 instance_meta)
 
         scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
+        if cfg.CONF.stack_scheduler_hints:
+            if scheduler_hints is None:
+                scheduler_hints = {}
+            scheduler_hints['heat_root_stack_id'] = self.stack.root_stack.id
+            scheduler_hints['heat_stack_id'] = self.stack.id
+            scheduler_hints['heat_stack_name'] = self.stack.name
+            scheduler_hints['heat_path_in_stack'] = self.stack.path_in_stack()
+            scheduler_hints['heat_resource_name'] = self.name
         nics = self._build_nics(self.properties.get(self.NETWORKS))
         block_device_mapping = self._build_block_device_mapping(
             self.properties.get(self.BLOCK_DEVICE_MAPPING))

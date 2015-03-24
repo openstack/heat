@@ -53,6 +53,7 @@ Developers Documentation
 
    architecture
    pluginguide
+   schedulerhints
 
 API Documentation
 ========================

@@ -879,6 +879,49 @@ class ServersTest(common.HeatTestCase):
             config_drive=None, disk_config=None, reservation_id=None,
             files={}, admin_pass='foo')
 
+    def test_server_create_with_stack_scheduler_hints(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '5678'
+        servers.cfg.CONF.set_override('stack_scheduler_hints', True)
+        # Unroll _create_test_server, to enable check
+        # for addition of heat ids (stack id, resource name)
+        stack_name = 'test_server_w_stack_sched_hints_s'
+        server_name = 'server_w_stack_sched_hints'
+        (t, stack) = self._get_test_template(stack_name, server_name)
+
+        resource_defns = t.resource_definitions(stack)
+        server = servers.Server(server_name,
+                                resource_defns['WebServer'], stack)
+
+        self._mock_get_image_id_success('CentOS 5.2', 1,
+                                        server_rebuild=False)
+
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name=server_name,
+            security_groups=[],
+            userdata=mox.IgnoreArg(),
+            scheduler_hints={'heat_root_stack_id': stack.root_stack.id,
+                             'heat_stack_id': stack.id,
+                             'heat_stack_name': stack.name,
+                             'heat_path_in_stack': [(None, stack.name)],
+                             'heat_resource_name': server.name},
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, block_device_mapping_v2=None,
+            config_drive=None, disk_config=None, reservation_id=None,
+            files={}, admin_pass=None).AndReturn(return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        # this makes sure the auto increment worked on server creation
+        self.assertTrue(server.id > 0)
+
+        self.m.VerifyAll()
+
     def test_check_maximum(self):
         msg = 'test_check_maximum'
         self.assertIsNone(servers.Server._check_maximum(1, 1, msg))

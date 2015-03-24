@@ -251,6 +251,32 @@ class Stack(collections.Mapping):
             return self.parent_resource.stack.root_stack
         return self
 
+    def object_path_in_stack(self):
+        '''
+        If this is not nested return (None, self), else return stack resources
+        and stacks in path from the root stack and including this stack
+
+        :returns: a list of (stack_resource, stack) tuples
+        '''
+        if self.parent_resource and self.parent_resource.stack:
+            path = self.parent_resource.stack.object_path_in_stack()
+            path.extend([(self.parent_resource, self)])
+            return path
+        return [(None, self)]
+
+    def path_in_stack(self):
+        '''
+        If this is not nested return (None, self.name), else return tuples of
+        names (stack_resource.name, stack.name) in path from the root stack and
+        including this stack.
+
+        :returns: a list of (string, string) tuples.
+
+        '''
+        opis = self.object_path_in_stack()
+        return [(stckres.name if stckres else None,
+                 stck.name if stck else None) for stckres, stck in opis]
+
     def total_resources(self):
         '''
         Return the total number of resources in a stack, including nested
