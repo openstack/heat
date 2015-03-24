@@ -41,6 +41,7 @@ from heat.common import messaging
 from heat.common import profiler
 from heat.common import wsgi
 from heat.openstack.common import systemd
+from heat import version
 
 i18n.enable_lazy()
 
@@ -49,7 +50,8 @@ LOG = logging.getLogger('heat.api')
 if __name__ == '__main__':
     try:
         logging.register_options(cfg.CONF)
-        cfg.CONF(project='heat', prog='heat-api')
+        version = version.version_info.version_string()
+        cfg.CONF(project='heat', prog='heat-api', version=version)
         logging.setup(cfg.CONF, 'heat-api')
         logging.set_defaults()
         messaging.setup()
