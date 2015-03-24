@@ -25,8 +25,9 @@ from oslo_log import log
 from heat.common import context
 from heat.common.i18n import _
 from heat.common import service_utils
-from heat.db import api
+from heat.db import api as db_api
 from heat.db import utils
+from heat.objects import service as service_objects
 from heat import version
 
 
@@ -35,7 +36,7 @@ CONF = cfg.CONF
 
 def do_db_version():
     """Print database's current migration level."""
-    print(api.db_version(api.get_engine()))
+    print(db_api.db_version(db_api.get_engine()))
 
 
 def do_db_sync():
@@ -43,14 +44,14 @@ def do_db_sync():
     Place a database under migration control and upgrade,
     creating first if necessary.
     """
-    api.db_sync(api.get_engine(), CONF.command.version)
+    db_api.db_sync(db_api.get_engine(), CONF.command.version)
 
 
 class ServiceManageCommand(object):
     def service_list(self):
         ctxt = context.get_admin_context()
         services = [service_utils.format_service(service)
-                    for service in api.service_get_all(ctxt)]
+                    for service in service_objects.Service.get_all(ctxt)]
 
         print_format = "%-16s %-16s %-36s %-10s %-10s %-10s %-10s"
         print(print_format % (_('Hostname'),
