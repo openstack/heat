@@ -20,6 +20,8 @@ import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client
 from oslo_config import cfg
 
+from heat import version
+
 logger = logging.getLogger(__name__)
 
 DEBUG = False
@@ -53,7 +55,10 @@ opts = [
 ]
 
 cfg.CONF.register_cli_opts(opts)
-cfg.CONF(sys.argv[1:], project='heat', prog='heat-keystone-setup-domain')
+cfg.CONF(sys.argv[1:],
+         project='heat',
+         prog='heat-keystone-setup-domain',
+         version=version.version_info.version_string())
 
 HEAT_DOMAIN_NAME = os.environ.get(
     'HEAT_DOMAIN', cfg.CONF.stack_user_domain_name)
