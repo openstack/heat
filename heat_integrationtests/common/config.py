@@ -65,6 +65,9 @@ IntegrationTestGroup = [
     cfg.StrOpt('fixed_network_name',
                default='private',
                help="Visible fixed network name "),
+    cfg.StrOpt('floating_network_name',
+               default='public',
+               help="Visible floating network name "),
     cfg.StrOpt('boot_config_env',
                default=('heat_integrationtests/scenario/templates'
                         '/boot_config_none_env.yaml'),
