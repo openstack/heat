@@ -25,9 +25,10 @@ from heat import version
 logger = logging.getLogger(__name__)
 
 DEBUG = False
-USERNAME = os.environ.get('OS_USERNAME', None)
-PASSWORD = os.environ.get('OS_PASSWORD', None)
+USERNAME = os.environ.get('OS_USERNAME')
+PASSWORD = os.environ.get('OS_PASSWORD')
 AUTH_URL = os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
+TENANT_NAME = os.environ.get('OS_TENANT_NAME')
 
 opts = [
     cfg.StrOpt('stack-user-domain-name',
@@ -84,23 +85,25 @@ def main():
         level=log_lvl)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
-    if insecure:
-        c = client.Client(debug=DEBUG,
-                          username=USERNAME,
-                          password=PASSWORD,
-                          auth_url=AUTH_URL,
-                          endpoint=AUTH_URL,
-                          verify=False)
-    else:
-        c = client.Client(debug=DEBUG,
-                          username=USERNAME,
-                          password=PASSWORD,
-                          auth_url=AUTH_URL,
-                          endpoint=AUTH_URL,
-                          cacert=CACERT,
-                          cert=CERT,
-                          key=KEY)
+    client_kwargs = {
+        'debug': DEBUG,
+        'username': USERNAME,
+        'password': PASSWORD,
+        'auth_url': AUTH_URL,
+        'endpoint': AUTH_URL,
+        'tenant_name': TENANT_NAME
+    }
 
+    if insecure:
+        client_kwargs['verify'] = False
+    else:
+        client_kwargs.update({
+            'cacert': CACERT,
+            'cert': CERT,
+            'key': KEY
+        })
+
+    c = client.Client(**client_kwargs)
     c.authenticate()
 
     # Create the heat domain
