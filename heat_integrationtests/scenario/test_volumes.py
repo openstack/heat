@@ -119,7 +119,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
         """
         parameters = {
             'key_name': self.keypair_name,
-            'instance_type': self.conf.instance_type,
+            'instance_type': self.conf.minimal_instance_type,
             'image_id': self.conf.minimal_image_ref,
             'volume_description': self.volume_description,
             'timeout': self.conf.build_timeout,

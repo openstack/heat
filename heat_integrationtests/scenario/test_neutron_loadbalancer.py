@@ -52,7 +52,7 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
 
         parameters = {
             'key_name': self.keypair_name,
-            'flavor': self.conf.instance_type,
+            'flavor': self.conf.minimal_instance_type,
             'image': self.conf.image_ref,
             'private_subnet_id': self.net['subnets'][0],
             'external_network_id': self.public_net['id']

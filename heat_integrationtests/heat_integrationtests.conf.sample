@@ -23,6 +23,9 @@
 # workload (string value)
 #instance_type = <None>
 
+# Instance type enough for simplest cases. (string value)
+#minimal_instance_type = <None>
+
 # Name of image to use for tests which boot servers. (string value)
 #image_ref = <None>
 

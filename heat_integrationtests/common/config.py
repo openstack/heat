@@ -38,6 +38,8 @@ IntegrationTestGroup = [
     cfg.StrOpt('instance_type',
                help="Instance type for tests. Needs to be big enough for a "
                     "full OS plus the test workload"),
+    cfg.StrOpt('minimal_instance_type',
+               help="Instance type enough for simplest cases."),
     cfg.StrOpt('image_ref',
                help="Name of image to use for tests which boot servers."),
     cfg.StrOpt('keypair_name',
