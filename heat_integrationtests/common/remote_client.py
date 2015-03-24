@@ -143,7 +143,7 @@ class Client(object):
         connection.close()
 
 
-class RemoteClient():
+class RemoteClient(object):
 
     # NOTE(afazekas): It should always get an address instead of server
     def __init__(self, server, username, password=None, pkey=None,
