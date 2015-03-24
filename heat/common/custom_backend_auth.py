@@ -18,12 +18,11 @@
 Middleware for authenticating against custom backends.
 """
 
-import logging
-
+from oslo_context import context
+from oslo_log import log as logging
 import webob.exc
 
 from heat.common.i18n import _
-from heat.openstack.common import local
 from heat.rpc import client as rpc_client
 
 LOG = logging.getLogger(__name__)
@@ -43,8 +42,8 @@ class AuthProtocol(object):
         we can't authenticate.
         """
         LOG.debug('Authenticating user token')
-        context = local.store.context
-        authenticated = self.rpc_client.authenticated_to_backend(context)
+        ctx = context.get_current()
+        authenticated = self.rpc_client.authenticated_to_backend(ctx)
         if authenticated:
             return self.app(env, start_response)
         else:
