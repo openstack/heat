@@ -51,9 +51,9 @@ class NovaFlavor(resource.Resource):
         ),
         DISK: properties.Schema(
             properties.Schema.INTEGER,
-            _('Size of local disk in GB. Set the value to 0 to remove limit '
-              'on disk size.'),
-            required=True,
+            _('Size of local disk in GB. The "0" size is a special case that '
+              'uses the native base image size as the size of the ephemeral '
+              'root volume.'),
             default=0
         ),
         SWAP: properties.Schema(

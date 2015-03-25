@@ -13,6 +13,8 @@
 
 import itertools
 import json
+import os
+import sys
 import uuid
 
 import mock
@@ -25,9 +27,11 @@ from heat.common import short_id
 from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine import constraints
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -1139,6 +1143,64 @@ class ResourceTest(common.HeatTestCase):
             }
         }, env=self.env)
         self._test_skip_validation_if_custom_constraint(tmpl)
+
+    def test_no_resource_properties_required_default(self):
+        """Test that there is no required properties with default value
+
+        Check all resources if they have properties with required flag and
+        default value because it is ambiguous.
+        """
+        env = environment.Environment({}, user_env=False)
+        resources._load_global_environment(env)
+
+        # change loading mechanism for resources that require template files
+        mod_dir = os.path.dirname(sys.modules[__name__].__file__)
+        project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
+        template_path = os.path.join(project_dir, 'etc', 'heat', 'templates')
+
+        tri_db_instance = env.get_resource_info(
+            'AWS::RDS::DBInstance',
+            registry_type=environment.TemplateResourceInfo)
+        tri_db_instance.template_name = tri_db_instance.template_name.replace(
+            '/etc/heat/templates', template_path)
+        tri_alarm = env.get_resource_info(
+            'AWS::CloudWatch::Alarm',
+            registry_type=environment.TemplateResourceInfo)
+        tri_alarm.template_name = tri_alarm.template_name.replace(
+            '/etc/heat/templates', template_path)
+
+        def _validate_property_schema(prop_name, prop, res_name):
+            if isinstance(prop, properties.Schema) and prop.implemented:
+                ambiguous = (prop.default is not None) and prop.required
+                self.assertFalse(ambiguous,
+                                 "The definition of the property '{0}' "
+                                 "in resource '{1}' is ambiguous: it "
+                                 "has default value and required flag. "
+                                 "Please delete one of these options."
+                                 .format(prop_name, res_name))
+
+            if prop.schema is not None:
+                if isinstance(prop.schema, constraints.AnyIndexDict):
+                    _validate_property_schema(
+                        prop_name,
+                        prop.schema.value,
+                        res_name)
+                else:
+                    for nest_prop_name, nest_prop in six.iteritems(
+                            prop.schema):
+                        _validate_property_schema(nest_prop_name,
+                                                  nest_prop,
+                                                  res_name)
+
+        resource_types = env.get_types()
+        for res_type in resource_types:
+            res_class = env.get_class(res_type)
+            if hasattr(res_class, "properties_schema"):
+                for property_schema_name, property_schema in six.iteritems(
+                        res_class.properties_schema):
+                    _validate_property_schema(
+                        property_schema_name, property_schema,
+                        res_class.__name__)
 
 
 class ResourceAdoptTest(common.HeatTestCase):
