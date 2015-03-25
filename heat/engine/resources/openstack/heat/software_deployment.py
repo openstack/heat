@@ -223,12 +223,15 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return derived_config[rpc_api.SOFTWARE_CONFIG_ID]
 
     def _handle_action(self, action):
-        config_id = self.properties.get(self.CONFIG)
-        config = self.rpc_client().show_software_config(
-            self.context, config_id)
+        if self.properties.get(self.CONFIG):
+            config = self.rpc_client().show_software_config(
+                self.context, self.properties.get(self.CONFIG))
+        else:
+            config = {}
 
         if (action not in self.properties[self.DEPLOY_ACTIONS]
-                and not config[rpc_api.SOFTWARE_CONFIG_GROUP] == 'component'):
+                and not config.get(
+                    rpc_api.SOFTWARE_CONFIG_GROUP) == 'component'):
             return
 
         props = self._build_properties(
@@ -272,20 +275,23 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             exc = exception.Error(message)
             raise exc
 
+    def empty_config(self):
+        return ''
+
     def _build_derived_config_params(self, action, source):
         scl = sc.SoftwareConfig
         derived_inputs = self._build_derived_inputs(action, source)
         derived_options = self._build_derived_options(action, source)
         derived_config = self._build_derived_config(
             action, source, derived_inputs, derived_options)
-        derived_name = self.properties.get(self.NAME) or source[scl.NAME]
+        derived_name = self.properties.get(self.NAME) or source.get(scl.NAME)
         return {
-            scl.GROUP: source[scl.GROUP],
-            scl.CONFIG: derived_config,
+            scl.GROUP: source.get(scl.GROUP) or 'Heat::Ungrouped',
+            scl.CONFIG: derived_config or self.empty_config(),
             scl.OPTIONS: derived_options,
             scl.INPUTS: derived_inputs,
             scl.OUTPUTS: source.get(scl.OUTPUTS),
-            scl.NAME: derived_name
+            scl.NAME: derived_name or self.physical_resource_name()
         }
 
     def _build_derived_config(self, action, source,

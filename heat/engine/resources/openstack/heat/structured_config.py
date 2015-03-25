@@ -129,6 +129,9 @@ class StructuredDeployment(sd.SoftwareDeployment):
         )
     }
 
+    def empty_config(self):
+        return {}
+
     def _build_derived_config(self, action, source,
                               derived_inputs, derived_options):
         cfg = source.get(sc.SoftwareConfig.CONFIG)
