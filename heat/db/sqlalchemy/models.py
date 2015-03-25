@@ -86,18 +86,9 @@ class SoftDelete(object):
 
 
 class StateAware(object):
-
     action = sqlalchemy.Column('action', sqlalchemy.String(255))
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
-    _status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
-
-    @property
-    def status_reason(self):
-        return self._status_reason
-
-    @status_reason.setter
-    def status_reason(self, reason):
-        self._status_reason = reason and reason[:255] or ''
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.Text)
 
 
 class RawTemplate(BASE, HeatBase):
