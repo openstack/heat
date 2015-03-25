@@ -21,8 +21,8 @@ from heat.engine import function
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 ig_tmpl_without_updt_policy = '''
@@ -156,7 +156,7 @@ class InstanceGroupTest(common.HeatTestCase):
 
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
 
     def get_launch_conf_name(self, stack, ig_name):
         return stack[ig_name].properties['LaunchConfigurationName']

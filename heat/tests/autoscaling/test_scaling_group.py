@@ -26,8 +26,8 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 as_template = inline_templates.as_template
@@ -520,7 +520,7 @@ def asg_tmpl_with_updt_policy():
 class RollingUpdatePolicyTest(common.HeatTestCase):
     def setUp(self):
         super(RollingUpdatePolicyTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
@@ -590,7 +590,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):
     def setUp(self):
         super(RollingUpdatePolicyDiffTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.stub_keystoneclient(username='test_stack.CfnLBUser')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')

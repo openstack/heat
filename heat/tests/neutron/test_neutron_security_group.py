@@ -13,8 +13,8 @@
 
 from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
-from novaclient.v1_1 import security_group_rules as nova_sgr
-from novaclient.v1_1 import security_groups as nova_sg
+from novaclient.v2 import security_group_rules as nova_sgr
+from novaclient.v2 import security_groups as nova_sg
 
 from heat.common import exception
 from heat.common import template_format
@@ -22,8 +22,8 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class SecurityGroupTest(common.HeatTestCase):
@@ -85,7 +85,7 @@ Resources:
 
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'create')
         self.m.StubOutWithMock(nova_sgr.SecurityGroupRuleManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'create')

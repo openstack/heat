@@ -23,8 +23,8 @@ from heat.engine.resources.openstack.nova import nova_floatingip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 floating_ip_template = '''
@@ -148,7 +148,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
     def test_delete_floating_ip_assoc_successful_if_create_failed(self):
         rsrc = self.prepare_floating_ip_assoc()
         self.novaclient.servers.add_floating_ip(None, '11.0.0.1').AndRaise(
-            fakes_v1_1.fake_exception(400))
+            fakes_nova.fake_exception(400))
 
         self.m.ReplayAll()
 
@@ -215,7 +215,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
         )
         self.novaclient.servers.remove_floating_ip("server",
                                                    "11.0.0.1").AndRaise(
-            fakes_v1_1.fake_exception(exc_code))
+            fakes_nova.fake_exception(exc_code))
 
         self.m.ReplayAll()
 

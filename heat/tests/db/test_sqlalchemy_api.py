@@ -32,8 +32,8 @@ from heat.engine import resource as rsrc
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 wp_template = '''
@@ -86,7 +86,7 @@ class MyResource(rsrc.Resource):
 class SqlAlchemyTest(common.HeatTestCase):
     def setUp(self):
         super(SqlAlchemyTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.ctx = utils.dummy_context()
 
     def tearDown(self):
@@ -111,7 +111,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         return (template, stack)
 
     def _mock_create(self, mocks):
-        fc = fakes_v1_1.FakeClient()
+        fc = fakes_nova.FakeClient()
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -130,12 +130,12 @@ class SqlAlchemyTest(common.HeatTestCase):
         return fc
 
     def _mock_delete(self, mocks):
-        fc = fakes_v1_1.FakeClient()
+        fc = fakes_nova.FakeClient()
         mocks.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         mocks.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().MultipleTimes().AndRaise(fakes_v1_1.fake_exception())
+        get().MultipleTimes().AndRaise(fakes_nova.fake_exception())
 
     @mock.patch.object(db_api, '_paginate_query')
     def test_filter_and_page_query_paginates_query(self, mock_paginate_query):

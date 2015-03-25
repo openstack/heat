@@ -22,8 +22,8 @@ from heat.engine import parser
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 instance_template = '''
@@ -55,7 +55,7 @@ instance_template = '''
 class ServerTagsTest(common.HeatTestCase):
     def setUp(self):
         super(ServerTagsTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
