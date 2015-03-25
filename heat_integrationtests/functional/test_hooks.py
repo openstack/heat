@@ -191,8 +191,6 @@ class HooksTest(test.HeatIntegrationTest):
             reason='Hook pre-update is cleared',
             rsrc_name='rg')
         self.assertEqual('CREATE_COMPLETE', ev[0].resource_status)
-        self._wait_for_resource_status(
-            stack_identifier, 'rg', 'CREATE_COMPLETE')
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
         res_after = self.client.resources.get(stack_identifier, 'rg')
         self.assertEqual(res_before.physical_resource_id,
