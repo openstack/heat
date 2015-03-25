@@ -196,6 +196,7 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.AllowedValues(['normal', 'direct', 'macvtap']),
             ],
+            support_status=support.SupportStatus(version='2015.1'),
             update_allowed=True
         ),
     }
