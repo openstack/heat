@@ -30,6 +30,7 @@ class FakeDockerClient(object):
         self.pulled_images = []
         self.container_create = []
         self.container_start = []
+        self.version_info = {}
 
     def _generate_string(self, n=32):
         return ''.join(random.choice(string.lowercase) for i in range(n))
@@ -88,3 +89,11 @@ class FakeDockerClient(object):
 
     def pull(self, image):
         self.pulled_images.append(image)
+
+    def version(self, api_version=True):
+        if not self.version_info:
+            self.version_info['ApiVersion'] = '1.15'
+        return self.version_info
+
+    def set_api_version(self, version):
+        self.version_info['ApiVersion'] = version
