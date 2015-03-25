@@ -74,8 +74,7 @@ class SoftwareComponent(sc.SoftwareConfig):
                 schema=properties.Schema(properties.Schema.STRING),
                 constraints=[
                     constr.Length(min=1),
-                ],
-                required=True
+                ]
             ),
             CONFIG_CONFIG: sc.SoftwareConfig.properties_schema[
                 sc.SoftwareConfig.CONFIG
