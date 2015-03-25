@@ -22,7 +22,6 @@ Utility methods for working with WSGI servers
 
 import abc
 import errno
-import logging
 import os
 import signal
 import sys
@@ -35,6 +34,8 @@ import eventlet.greenio
 import eventlet.wsgi
 from oslo_config import cfg
 import oslo_i18n as i18n
+from oslo_log import log as logging
+from oslo_log import loggers
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 from paste import deploy
@@ -53,6 +54,7 @@ from heat.common.i18n import _LW
 from heat.common import serializers
 
 
+LOG = logging.getLogger(__name__)
 URL_LENGTH_LIMIT = 50000
 
 api_opts = [
@@ -171,17 +173,6 @@ def list_opts():
     yield 'heat_api_cloudwatch', api_cw_opts
 
 
-class WritableLogger(object):
-    """A thin wrapper that responds to `write` and logs."""
-
-    def __init__(self, LOG, level=logging.DEBUG):
-        self.LOG = LOG
-        self.level = level
-
-    def write(self, msg):
-        self.LOG.log(self.level, msg.strip("\n"))
-
-
 def get_bind_addr(conf, default_port=None):
     """Return the host and port to bind to."""
     return (conf.bind_host, conf.bind_port or default_port)
@@ -262,7 +253,7 @@ class Server(object):
         """
         def kill_children(*args):
             """Kills the entire process group."""
-            self.LOG.error(_LE('SIGTERM received'))
+            LOG.error(_LE('SIGTERM received'))
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             self.running = False
             os.killpg(0, signal.SIGTERM)
@@ -271,7 +262,7 @@ class Server(object):
             """
             Shuts down the server(s), but allows running requests to complete
             """
-            self.LOG.error(_LE('SIGHUP received'))
+            LOG.error(_LE('SIGHUP received'))
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
             os.killpg(0, signal.SIGHUP)
             signal.signal(signal.SIGHUP, hup)
@@ -280,7 +271,9 @@ class Server(object):
         self.application = application
         self.sock = get_socket(conf, default_port)
 
-        self.LOG = logging.getLogger('eventlet.wsgi.server')
+        os.umask(0o27)  # ensure files are created with the correct privileges
+        self._logger = logging.getLogger("eventlet.wsgi.server")
+        self._wsgi_logger = loggers.WritableLogger(self._logger)
 
         if conf.workers == 0:
             # Useful for profiling, test, debug etc.
@@ -288,7 +281,7 @@ class Server(object):
             self.pool.spawn_n(self._single_run, application, self.sock)
             return
 
-        self.LOG.info(_LI("Starting %d workers") % conf.workers)
+        LOG.info(_LI("Starting %d workers") % conf.workers)
         signal.signal(signal.SIGTERM, kill_children)
         signal.signal(signal.SIGHUP, hup)
         while len(self.children) < conf.workers:
@@ -299,19 +292,19 @@ class Server(object):
             try:
                 pid, status = os.wait()
                 if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                    self.LOG.error(_LE('Removing dead child %s') % pid)
+                    LOG.error(_LE('Removing dead child %s') % pid)
                     self.children.remove(pid)
                     self.run_child()
             except OSError as err:
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
-                self.LOG.info(_LI('Caught keyboard interrupt. Exiting.'))
+                LOG.info(_LI('Caught keyboard interrupt. Exiting.'))
                 os.killpg(0, signal.SIGTERM)
                 break
         eventlet.greenio.shutdown_safe(self.sock)
         self.sock.close()
-        self.LOG.debug('Exited')
+        LOG.debug('Exited')
 
     def wait(self):
         """Wait until all servers have completed running."""
@@ -329,10 +322,10 @@ class Server(object):
             signal.signal(signal.SIGHUP, signal.SIG_DFL)
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             self.run_server()
-            self.LOG.info(_LI('Child %d exiting normally') % os.getpid())
+            LOG.info(_LI('Child %d exiting normally') % os.getpid())
             return
         else:
-            self.LOG.info(_LI('Started child %s') % pid)
+            LOG.info(_LI('Started child %s') % pid)
             self.children.append(pid)
 
     def run_server(self):
@@ -346,7 +339,7 @@ class Server(object):
                                  self.application,
                                  custom_pool=self.pool,
                                  url_length_limit=URL_LENGTH_LIMIT,
-                                 log=WritableLogger(self.LOG),
+                                 log=self._wsgi_logger,
                                  debug=cfg.CONF.debug)
         except socket.error as err:
             if err[0] != errno.EINVAL:
@@ -355,11 +348,11 @@ class Server(object):
 
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
-        self.LOG.info(_LI("Starting single process server"))
+        LOG.info(_LI("Starting single process server"))
         eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
-                             log=WritableLogger(self.LOG),
+                             log=self._wsgi_logger,
                              debug=cfg.CONF.debug)
 
 
@@ -650,14 +643,13 @@ class Resource(object):
                                                  action, request)
             action_args.update(deserialized_request)
 
-            logging.debug(
-                ('Calling %(controller)s : %(action)s'),
-                {'controller': self.controller, 'action': action})
+            LOG.debug(('Calling %(controller)s : %(action)s'),
+                      {'controller': self.controller, 'action': action})
 
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            logging.error(_LE('Exception handling resource: %s') % err)
+            LOG.error(_LE('Exception handling resource: %s') % err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = webob.exc.HTTPBadRequest(msg)
@@ -678,7 +670,7 @@ class Resource(object):
                 # error log, disguise or translate those
                 raise
             if isinstance(err, webob.exc.HTTPServerError):
-                logging.error(
+                LOG.error(
                     _LE("Returning %(code)s to user: %(explanation)s"),
                     {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
@@ -718,7 +710,7 @@ class Resource(object):
                     err_body = action_result.get_unserialized_body()
                     serializer.default(action_result, err_body)
                 except Exception:
-                    logging.warning(_LW("Unable to serialize exception "
+                    LOG.warning(_LW("Unable to serialize exception "
                                     "response"))
 
             return action_result
@@ -753,8 +745,8 @@ class Resource(object):
 
 def log_exception(err, exc_info):
     args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
-    logging.error(_LE("Unexpected error occurred serving API: %s") % err,
-                  **args)
+    LOG.error(_LE("Unexpected error occurred serving API: %s") % err,
+              **args)
 
 
 def translate_exception(exc, locale):

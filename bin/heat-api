@@ -53,7 +53,6 @@ if __name__ == '__main__':
         version = version.version_info.version_string()
         cfg.CONF(project='heat', prog='heat-api', version=version)
         logging.setup(cfg.CONF, 'heat-api')
-        logging.set_defaults()
         messaging.setup()
 
         app = config.load_paste_app()
