@@ -30,6 +30,7 @@ from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
 import six
+import sqlalchemy
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.db.sqlalchemy import migration
@@ -71,6 +72,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
     def assertColumnExists(self, engine, table, column):
         t = utils.get_table(engine, table)
         self.assertIn(column, t.c)
+
+    def assertColumnType(self, engine, table, column, sqltype):
+        t = utils.get_table(engine, table)
+        col = getattr(t.c, column)
+        self.assertIsInstance(col.type, sqltype)
 
     def assertColumnNotExists(self, engine, table, column):
         t = utils.get_table(engine, table)
@@ -585,6 +591,11 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                        'current_template_id']
         for column in column_list:
             self.assertColumnExists(engine, 'resource', column)
+
+    def _check_061(self, engine, data):
+        for tab_name in ['stack', 'resource', 'software_deployment']:
+            self.assertColumnType(engine, tab_name, 'status_reason',
+                                  sqlalchemy.Text)
 
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,

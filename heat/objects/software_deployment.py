@@ -48,9 +48,7 @@ class SoftwareDeployment(base.VersionedObject,
     @staticmethod
     def _from_db_object(context, deployment, db_deployment):
         for field in deployment.fields:
-            if field == 'status_reason':
-                deployment[field] = db_deployment['_status_reason']
-            elif field == 'config':
+            if field == 'config':
                 deployment[field] = (
                     software_config.SoftwareConfig._from_db_object(
                         context, software_config.SoftwareConfig(),
