@@ -34,8 +34,8 @@ from heat.engine import clients
 from heat.engine.clients import client_plugin
 from heat.tests import common
 from heat.tests import fakes
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class ClientsTest(common.HeatTestCase):
@@ -509,7 +509,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=False,
             is_unprocessable_entity=False,
             plugin='nova',
-            exception=lambda: fakes_v1_1.fake_exception(),
+            exception=lambda: fakes_nova.fake_exception(),
         )),
         ('nova_exception', dict(
             is_not_found=False,
@@ -527,7 +527,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=False,
             is_unprocessable_entity=False,
             plugin='nova',
-            exception=lambda: fakes_v1_1.fake_exception(413),
+            exception=lambda: fakes_nova.fake_exception(413),
         )),
         ('nova_unprocessable_entity', dict(
             is_not_found=False,
@@ -536,7 +536,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=False,
             is_unprocessable_entity=True,
             plugin='nova',
-            exception=lambda: fakes_v1_1.fake_exception(422),
+            exception=lambda: fakes_nova.fake_exception(422),
         )),
         ('nova_conflict', dict(
             is_not_found=False,
@@ -545,7 +545,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=True,
             is_unprocessable_entity=False,
             plugin='nova',
-            exception=lambda: fakes_v1_1.fake_exception(409),
+            exception=lambda: fakes_nova.fake_exception(409),
         )),
         ('swift_not_found', dict(
             is_not_found=True,

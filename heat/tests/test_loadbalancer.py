@@ -22,8 +22,8 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.aws.lb import loadbalancer as lb
 from heat.engine import rsrc_defn
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 lb_template = '''
@@ -72,7 +72,7 @@ lb_template = '''
 class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 

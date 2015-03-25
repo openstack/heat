@@ -32,8 +32,8 @@ from heat.engine import resource
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 wp_template = '''
@@ -75,7 +75,7 @@ wp_template = '''
 class InstancesTest(common.HeatTestCase):
     def setUp(self):
         super(InstancesTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
@@ -603,7 +603,7 @@ class InstancesTest(common.HeatTestCase):
             d2['server']['status'] = vm_delete_status
             get().AndReturn((200, d2))
         else:
-            get().AndRaise(fakes_v1_1.fake_exception())
+            get().AndRaise(fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 

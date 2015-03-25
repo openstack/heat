@@ -61,8 +61,8 @@ from heat.rpc import worker_api
 from heat.tests import common
 from heat.tests import fakes as test_fakes
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
@@ -216,7 +216,7 @@ def setup_mock_for_image_constraint(mocks, imageId_input,
 
 def setup_mocks(mocks, stack, mock_image_constraint=True,
                 mock_keystone=True):
-    fc = fakes_v1_1.FakeClient()
+    fc = fakes_nova.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
     mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
@@ -270,12 +270,12 @@ def setup_stack(stack_name, ctx, create_res=True):
 def clean_up_stack(stack, delete_res=True):
     if delete_res:
         m = mox.Mox()
-        fc = fakes_v1_1.FakeClient()
+        fc = fakes_nova.FakeClient()
         m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(fc)
         m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         m.ReplayAll()
     stack.delete()
     if delete_res:
@@ -433,7 +433,7 @@ class StackCreateTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         mox.Replay(get)
         stack.delete()
 
@@ -1671,7 +1671,7 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         fc = setup_mocks(self.m, stack)
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
 
         self.m.ReplayAll()
         stack.store()

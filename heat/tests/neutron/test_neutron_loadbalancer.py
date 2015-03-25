@@ -27,8 +27,8 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.openstack.neutron import loadbalancer
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 health_monitor_template = '''
@@ -847,7 +847,7 @@ class PoolMemberTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolMemberTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(neutronclient.Client, 'update_member')
@@ -948,7 +948,7 @@ class LoadBalancerTest(common.HeatTestCase):
 
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.m.StubOutWithMock(neutronclient.Client, 'create_member')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')

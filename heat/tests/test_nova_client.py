@@ -23,8 +23,8 @@ import six
 from heat.common import exception
 from heat.engine.clients.os import nova
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 class NovaClientPluginTestCase(common.HeatTestCase):
@@ -327,7 +327,7 @@ class ServerConstraintTest(common.HeatTestCase):
 class FlavorConstraintTest(common.HeatTestCase):
 
     def test_validate(self):
-        client = fakes_v1_1.FakeClient()
+        client = fakes_nova.FakeClient()
         self.stub_keystoneclient()
         self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
         client.flavors = mock.MagicMock()
@@ -351,14 +351,14 @@ class FlavorConstraintTest(common.HeatTestCase):
 class KeypairConstraintTest(common.HeatTestCase):
 
     def test_validation(self):
-        client = fakes_v1_1.FakeClient()
+        client = fakes_nova.FakeClient()
         self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
         client.keypairs = mock.MagicMock()
 
         key = collections.namedtuple("Key", ["name"])
         key.name = "foo"
         client.keypairs.get.side_effect = [
-            fakes_v1_1.fake_exception(), key]
+            fakes_nova.fake_exception(), key]
 
         constraint = nova.KeypairConstraint()
         ctx = utils.dummy_context()
