@@ -60,6 +60,34 @@ class Ec2TokenTest(common.HeatTestCase):
             'http://192.0.2.9/v2.0/ec2tokens',
             ec2._conf_get_keystone_ec2_uri('http://192.0.2.9/v2.0/'))
 
+    def test_conf_get_ssl_default_options(self):
+        ec2 = ec2token.EC2Token(app=None, conf={})
+        self.assertTrue(ec2.ssl_options['verify'],
+                        "SSL verify should be True by default")
+        self.assertIsNone(ec2.ssl_options['cert'],
+                          "SSL client cert should be None by default")
+
+    def test_conf_ssl_insecure_option(self):
+        ec2 = ec2token.EC2Token(app=None, conf={})
+        cfg.CONF.set_default('insecure', 'True', group='ec2authtoken')
+        cfg.CONF.set_default('ca_file', None, group='ec2authtoken')
+        self.assertFalse(ec2.ssl_options['verify'])
+
+    def test_conf_get_ssl_opts(self):
+        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
+                             group='ec2authtoken')
+        cfg.CONF.set_default('ca_file', '/home/user/cacert.pem',
+                             group='ec2authtoken')
+        cfg.CONF.set_default('insecure', 'false', group='ec2authtoken')
+        cfg.CONF.set_default('cert_file', '/home/user/mycert',
+                             group='ec2authtoken')
+        cfg.CONF.set_default('key_file', '/home/user/mykey',
+                             group='ec2authtoken')
+        ec2 = ec2token.EC2Token(app=None, conf={})
+        self.assertEqual('/home/user/cacert.pem', ec2.ssl_options['verify'])
+        self.assertEqual(('/home/user/mycert', '/home/user/mykey'),
+                         ec2.ssl_options['cert'])
+
     def test_get_signature_param_old(self):
         params = {'Signature': 'foo'}
         dummy_req = self._dummy_GET_request(params)
@@ -183,7 +211,8 @@ class Ec2TokenTest(common.HeatTestCase):
         self.assertEqual('xyz', ec2.__call__(dummy_req))
 
     def _stub_http_connection(self, headers=None, params=None, response=None,
-                              req_url='http://123:5000/v2.0/ec2tokens'):
+                              req_url='http://123:5000/v2.0/ec2tokens',
+                              verify=True, cert=None):
 
         headers = headers or {}
         params = params or {}
@@ -206,7 +235,7 @@ class Ec2TokenTest(common.HeatTestCase):
                                  "path": "/v1",
                                  "body_hash": body_hash}})
         req_headers = {'Content-Type': 'application/json'}
-        requests.post(req_url, data=req_creds,
+        requests.post(req_url, data=req_creds, verify=verify, cert=cert,
                       headers=req_headers).AndReturn(DummyHTTPResponse())
 
     def test_call_ok(self):

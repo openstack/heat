@@ -39,7 +39,21 @@ opts = [
                 default=[],
                 help=_('Allowed keystone endpoints for auth_uri when '
                        'multi_cloud is enabled. At least one endpoint needs '
-                       'to be specified.'))
+                       'to be specified.')),
+    cfg.StrOpt('cert_file',
+               default=None,
+               help=_('Optional PEM-formatted certificate chain file.')),
+    cfg.StrOpt('key_file',
+               default=None,
+               help=_('Optional PEM-formatted file that contains the '
+                      'private key.')),
+    cfg.StrOpt('ca_file',
+               default=None,
+               help=_('Optional CA cert file to use in SSL connections.')),
+    cfg.BoolOpt('insecure',
+                default=False,
+                help=_('If set, then the server\'s certificate will not '
+                       'be verified.')),
 ]
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 
@@ -50,6 +64,7 @@ class EC2Token(wsgi.Middleware):
     def __init__(self, app, conf):
         self.conf = conf
         self.application = app
+        self._ssl_options = None
 
     def _conf_get(self, name):
         # try config from paste-deploy first
@@ -131,6 +146,19 @@ class EC2Token(wsgi.Middleware):
                     last_failure = e
             raise last_failure or exception.HeatAccessDeniedError()
 
+    @property
+    def ssl_options(self):
+        if not self._ssl_options:
+            cacert = self._conf_get('ca_file')
+            insecure = self._conf_get('insecure')
+            cert = self._conf_get('cert_file')
+            key = self._conf_get('key_file')
+            self._ssl_options = {
+                'verify': cacert if cacert else not insecure,
+                'cert': (cert, key) if cert else None
+            }
+        return self._ssl_options
+
     def _authorize(self, req, auth_uri):
         # Read request signature and access id.
         # If we find X-Auth-User in the headers we ignore a key error
@@ -185,7 +213,9 @@ class EC2Token(wsgi.Middleware):
         keystone_ec2_uri = self._conf_get_keystone_ec2_uri(auth_uri)
         LOG.info(_LI('Authenticating with %s'), keystone_ec2_uri)
         response = requests.post(keystone_ec2_uri, data=creds_json,
-                                 headers=headers)
+                                 headers=headers,
+                                 verify=self.ssl_options['verify'],
+                                 cert=self.ssl_options['cert'])
         result = response.json()
         try:
             token_id = result['access']['token']['id']
