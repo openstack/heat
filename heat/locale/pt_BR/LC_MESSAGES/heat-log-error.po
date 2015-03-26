@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-07 06:04+0000\n"
-"PO-Revision-Date: 2015-02-25 19:06+0000\n"
+"POT-Creation-Date: 2015-03-26 06:00+0000\n"
+"PO-Revision-Date: 2015-03-26 03:23+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/heat/"
 "language/pt_BR/)\n"
@@ -35,7 +35,7 @@ msgstr "Requisição não contém parâmetro %s!"
 msgid "Request does not contain required MetricData"
 msgstr "Requisição não contém MetricData requerida"
 
-#: heat/common/context.py:202
+#: heat/common/context.py:196
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 
@@ -43,28 +43,28 @@ msgstr ""
 msgid "Exception in string format operation"
 msgstr "Exceção na operação de formato de sequência"
 
-#: heat/common/heat_keystoneclient.py:135
+#: heat/common/heat_keystoneclient.py:125
 msgid "Admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:156
+#: heat/common/heat_keystoneclient.py:146
 msgid "Domain admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:170
+#: heat/common/heat_keystoneclient.py:160
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:176
+#: heat/common/heat_keystoneclient.py:166
 msgid "trust token re-scoping failed!"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:180
+#: heat/common/heat_keystoneclient.py:170
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:310
-#: heat/common/heat_keystoneclient.py:384
+#: heat/common/heat_keystoneclient.py:300
+#: heat/common/heat_keystoneclient.py:372
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -92,30 +92,30 @@ msgstr ""
 msgid "Failed to import module %s"
 msgstr "Falha ao importar módulo %s"
 
-#: heat/common/wsgi.py:265
+#: heat/common/wsgi.py:256
 msgid "SIGTERM received"
 msgstr "SIGTERM recebido"
 
-#: heat/common/wsgi.py:274
+#: heat/common/wsgi.py:265
 msgid "SIGHUP received"
 msgstr "SIGHUP recebido"
 
-#: heat/common/wsgi.py:302
+#: heat/common/wsgi.py:295
 #, python-format
 msgid "Removing dead child %s"
 msgstr "Removendo filho inativo %s"
 
-#: heat/common/wsgi.py:660
+#: heat/common/wsgi.py:652
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "Exceção ao manipular recurso: %s"
 
-#: heat/common/wsgi.py:682
+#: heat/common/wsgi.py:674
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "Retornando %(code)s para o usuário: %(explanation)s"
 
-#: heat/common/wsgi.py:756
+#: heat/common/wsgi.py:748
 #, python-format
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
@@ -128,17 +128,17 @@ msgstr ""
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
-#: heat/engine/environment.py:492
+#: heat/engine/environment.py:580
 #, python-format
 msgid "Failed to read %s"
 msgstr ""
 
-#: heat/engine/environment.py:504
+#: heat/engine/environment.py:592
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr ""
 
-#: heat/engine/environment.py:508
+#: heat/engine/environment.py:596
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr ""
@@ -153,55 +153,60 @@ msgstr ""
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr ""
 
-#: heat/engine/resource.py:459
+#: heat/engine/resource.py:502
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:912 heat/engine/resource.py:939
+#: heat/engine/resource.py:970 heat/engine/resource.py:1011
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1063
+#: heat/engine/resource.py:1108
+#, python-format
+msgid "Cannot signal resource during %s"
+msgstr ""
+
+#: heat/engine/resource.py:1154
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:356
+#: heat/engine/service.py:364
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1374
+#: heat/engine/service.py:1396
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
-#: heat/engine/service_stack_watch.py:69
+#: heat/engine/service_stack_watch.py:74
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/stack.py:520
+#: heat/engine/stack.py:568
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:770
+#: heat/engine/stack.py:826
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1000
+#: heat/engine/stack.py:1057
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1184
+#: heat/engine/stack.py:1242
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1193
+#: heat/engine/stack.py:1251
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -221,7 +226,7 @@ msgstr ""
 msgid "Metadata failed validation for %s"
 msgstr ""
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:341
+#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:336
 msgid "Failed sending error notification"
 msgstr ""
 
