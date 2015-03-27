@@ -30,49 +30,37 @@ from heat.tests import utils
 
 
 gw_template_deprecated = '''
-{
-  'AWSTemplateFormatVersion': '2010-09-09',
-  'Description': 'Template to test Network Gateway resource',
-  'Parameters': {},
-  'Resources': {
-    'NetworkGateway': {
-      'Type': 'OS::Neutron::NetworkGateway',
-      'Properties': {
-        'name': 'NetworkGateway',
-        'devices': [{
-          'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-          'interface_name': 'breth1'}],
-        'connections': [{
-          'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
-          'segmentation_type': 'vlan',
-          'segmentation_id': 10}]
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test Network Gateway resource
+resources:
+  NetworkGateway:
+    type: OS::Neutron::NetworkGateway
+    properties:
+      name: NetworkGateway
+      devices:
+        - id: e52148ca-7db9-4ec3-abe6-2c7c0ff316eb
+          interface_name: breth1
+      connections:
+        - network_id: 6af055d3-26f6-48dd-a597-7611d7e58d35
+          segmentation_type: vlan
+          segmentation_id: 10
 '''
 
 gw_template = '''
-{
-  'AWSTemplateFormatVersion': '2010-09-09',
-  'Description': 'Template to test Network Gateway resource',
-  'Parameters': {},
-  'Resources': {
-    'NetworkGateway': {
-      'Type': 'OS::Neutron::NetworkGateway',
-      'Properties': {
-        'name': 'NetworkGateway',
-        'devices': [{
-          'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-          'interface_name': 'breth1'}],
-        'connections': [{
-          'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
-          'segmentation_type': 'vlan',
-          'segmentation_id': 10}]
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test Network Gateway resource
+resources:
+  NetworkGateway:
+    type: OS::Neutron::NetworkGateway
+    properties:
+      name: NetworkGateway
+      devices:
+        - id: e52148ca-7db9-4ec3-abe6-2c7c0ff316eb
+          interface_name: breth1
+      connections:
+        - network: 6af055d3-26f6-48dd-a597-7611d7e58d35
+          segmentation_type: vlan
+          segmentation_id: 10
 '''
 
 sng = {
@@ -528,7 +516,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
     def test_gateway_validate_failed_with_vlan(self):
         t = template_format.parse(gw_template)
-        del t['Resources']['NetworkGateway']['Properties'][
+        del t['resources']['NetworkGateway']['properties'][
             'connections'][0]['segmentation_id']
         stack = utils.parse_stack(t)
         resource_defns = stack.t.resource_definitions(stack)
@@ -550,7 +538,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
     def test_gateway_validate_failed_with_flat(self):
         t = template_format.parse(gw_template)
-        t['Resources']['NetworkGateway']['Properties'][
+        t['resources']['NetworkGateway']['properties'][
             'connections'][0]['segmentation_type'] = 'flat'
         stack = utils.parse_stack(t)
         resource_defns = stack.t.resource_definitions(stack)
