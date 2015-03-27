@@ -43,7 +43,8 @@ class TestRequestContext(common.HeatTestCase):
                     'tenant': 'atenant',
                     'auth_url': 'http://xyz',
                     'aws_creds': 'blah',
-                    'region_name': 'regionOne'}
+                    'region_name': 'regionOne',
+                    'user_identity': 'mick atenant'}
 
         super(TestRequestContext, self).setUp()
 
@@ -79,6 +80,8 @@ class TestRequestContext(common.HeatTestCase):
         ctx = context.RequestContext.from_dict(self.ctx)
 
         for k in self.ctx:
+            if k == 'user_identity':
+                continue
             self.assertEqual(self.ctx.get(k), ctx.to_dict().get(k))
             override = '%s_override' % k
             setattr(ctx, k, override)
