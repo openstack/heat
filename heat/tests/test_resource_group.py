@@ -568,6 +568,16 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         expected = ['ID-0', 'ID-1']
         self.assertEqual(expected, resg.FnGetAtt("refs"))
 
+    def test_aggregate_refs_with_index(self):
+        """
+        Test resource id aggregation with index
+        """
+        resg = self._create_dummy_stack()
+        expected = ['ID-0', 'ID-1']
+        self.assertEqual(expected[0], resg.FnGetAtt("refs", 0))
+        self.assertEqual(expected[1], resg.FnGetAtt("refs", 1))
+        self.assertIsNone(resg.FnGetAtt("refs", 2))
+
     def test_aggregate_outputs(self):
         """
         Test outputs aggregation
