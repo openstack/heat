@@ -129,6 +129,9 @@ class RequestContext(context.RequestContext):
         return self._clients
 
     def to_dict(self):
+        user_idt = '{user} {tenant}'.format(user=self.username or '-',
+                                            tenant=self.tenant or '-')
+
         return {'auth_token': self.auth_token,
                 'username': self.username,
                 'user_id': self.user_id,
@@ -145,7 +148,8 @@ class RequestContext(context.RequestContext):
                 'user': self.user,
                 'request_id': self.request_id,
                 'show_deleted': self.show_deleted,
-                'region_name': self.region_name}
+                'region_name': self.region_name,
+                'user_identity': user_idt}
 
     @classmethod
     def from_dict(cls, values):
