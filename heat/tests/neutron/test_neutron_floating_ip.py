@@ -549,6 +549,42 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertIn(stack['floating_ip'], required_by)
         p_show.assert_called_once_with('net_uuid')
 
+    def test_floatingip_create_specify_ip_address(self):
+        t = template_format.parse(neutron_floating_template)
+        props = t['resources']['floating_ip']['properties']
+        props['floating_ip_address'] = '172.24.4.98'
+        stack = utils.parse_stack(t)
+
+        self.stub_NetworkConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'abcd1234'
+        ).AndReturn('xyz1234')
+        neutronclient.Client.create_floatingip({
+            'floatingip': {'floating_network_id': u'xyz1234',
+                           'floating_ip_address': '172.24.4.98'}
+        }).AndReturn({'floatingip': {
+            'status': 'ACTIVE',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_ip_address': '172.24.4.98'
+        }})
+        neutronclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({'floatingip': {
+            'status': 'ACTIVE',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_ip_address': '172.24.4.98'
+        }})
+
+        self.m.ReplayAll()
+        fip = stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        self.assertEqual('172.24.4.98', fip.FnGetAtt('floating_ip_address'))
+
+        self.m.VerifyAll()
+
     def test_floatip_port(self):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),

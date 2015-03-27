@@ -25,11 +25,11 @@ from heat.engine import support
 
 class FloatingIP(neutron.NeutronResource):
     PROPERTIES = (
-        FLOATING_NETWORK_ID, FLOATING_NETWORK,
-        VALUE_SPECS, PORT_ID, FIXED_IP_ADDRESS,
+        FLOATING_NETWORK_ID, FLOATING_NETWORK, VALUE_SPECS,
+        PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
     ) = (
-        'floating_network_id', 'floating_network',
-        'value_specs', 'port_id', 'fixed_ip_address',
+        'floating_network_id', 'floating_network', 'value_specs',
+        'port_id', 'fixed_ip_address', 'floating_ip_address',
     )
 
     ATTRIBUTES = (
@@ -79,6 +79,13 @@ class FloatingIP(neutron.NeutronResource):
             properties.Schema.STRING,
             _('IP address to use if the port has multiple addresses.'),
             update_allowed=True
+        ),
+        FLOATING_IP_ADDRESS: properties.Schema(
+            properties.Schema.STRING,
+            _('IP address of the floating IP. NOTE: The default policy '
+              'setting in Neutron restricts usage of this property to '
+              'administrative users only.'),
+            support_status=support.SupportStatus(version='2015.2'),
         ),
     }
 
