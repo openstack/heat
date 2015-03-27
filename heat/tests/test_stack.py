@@ -936,6 +936,35 @@ class StackTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_create_bad_attribute(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'AResource': {'Type': 'GenericResourceType'},
+                    'BResource': {'Type': 'ResourceWithPropsType',
+                                  'Properties': {
+                                      'Foo': {'Fn::GetAtt': ['AResource',
+                                                             'Foo']}}}}}
+        self.stack = stack.Stack(self.ctx, 'bad_attr_test_stack',
+                                 template.Template(tmpl),
+                                 disable_rollback=True)
+
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
+                               '_update_stored_properties')
+
+        generic_rsrc.ResourceWithProps._update_stored_properties().AndRaise(
+            exception.InvalidTemplateAttribute(resource='a', key='foo'))
+
+        self.m.ReplayAll()
+
+        self.stack.store()
+        self.stack.create()
+
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.FAILED),
+                         self.stack.state)
+        self.assertEqual('Resource CREATE failed: The Referenced Attribute '
+                         '(a foo) is incorrect.', self.stack.status_reason)
+        self.m.VerifyAll()
+
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')
