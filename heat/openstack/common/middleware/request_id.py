@@ -22,6 +22,6 @@ HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
 
 
 @versionutils.deprecated(as_of=versionutils.deprecated.KILO,
-                         in_favor_of='oslo.middleware.RequestId')
+                         in_favor_of='oslo_middleware.RequestId')
 class RequestIdMiddleware(request_id.RequestId):
     pass
