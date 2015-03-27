@@ -264,7 +264,8 @@ class ResourceGroup(stack_resource.StackResource):
 
         names = self._resource_names()
         if key == self.REFS:
-            return [grouputils.get_rsrc_id(self, key, False, n) for n in names]
+            vals = [grouputils.get_rsrc_id(self, key, False, n) for n in names]
+            return attributes.select_from_attribute(vals, path)
         if key == self.ATTR_ATTRIBUTES:
             if not path:
                 raise exception.InvalidTemplateAttribute(
