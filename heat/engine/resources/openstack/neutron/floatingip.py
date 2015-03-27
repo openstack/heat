@@ -132,22 +132,34 @@ class FloatingIP(neutron.NeutronResource):
                 def port_on_subnet(resource, subnet):
                     if not resource.has_interface('OS::Neutron::Port'):
                         return False
-                    for fixed_ip in resource.properties.get(
-                            port.Port.FIXED_IPS):
+                    fixed_ips = resource.properties.get(port.Port.FIXED_IPS)
+                    if not fixed_ips:
+                        p_net = (resource.properties.get(port.Port.NETWORK) or
+                                 resource.properties.get(port.Port.NETWORK_ID))
+                        if p_net and p_net != 'None':
+                            subnets = self.neutron().show_network(p_net)[
+                                'network']['subnets']
+                            return subnet in subnets
+                    else:
+                        for fixed_ip in resource.properties.get(
+                                port.Port.FIXED_IPS):
 
-                        port_subnet = (
-                            fixed_ip.get(port.Port.FIXED_IP_SUBNET)
-                            or fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))
-                        return subnet == port_subnet
+                            port_subnet = (
+                                fixed_ip.get(port.Port.FIXED_IP_SUBNET)
+                                or fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))
+                            return subnet == port_subnet
                     return False
 
                 interface_subnet = (
                     resource.properties.get(router.RouterInterface.SUBNET) or
                     resource.properties.get(router.RouterInterface.SUBNET_ID))
-                for d in deps.graph()[self]:
-                    if port_on_subnet(d, interface_subnet):
-                        deps += (self, resource)
-                        break
+                # during create we have only unresolved value for functions, so
+                # cat not use None value for building correct dependencies
+                if interface_subnet != 'None':
+                    for d in deps.graph()[self]:
+                        if port_on_subnet(d, interface_subnet):
+                            deps += (self, resource)
+                            break
             # depend on Router with EXTERNAL_GATEWAY_NETWORK property
             # this template with the same network_id as this
             # floating_network_id
