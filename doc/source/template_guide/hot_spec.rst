@@ -153,6 +153,7 @@ For example, Heat currently supports the following values for the
   get_resource
   list_join
   repeat
+  digest
   resource_facade
   str_replace
   Fn::Select
@@ -816,6 +817,40 @@ A sample use of this function with a simple list is shown below.
   list_join: [', ', ['one', 'two', 'and three']]
 
 This would resolve to "one, two, and three".
+
+
+digest
+--------
+The *digest* function allows for performing digest operations on a given value.
+This function has been introduced in the Kilo release and is usable with HOT versions
+later than `2015-04-30`.
+
+The syntax of the digest function is as follows:
+
+::
+
+  digest:
+    - <algorithm>
+    - <value>
+
+algorithm
+    The digest algorithm. Valid algorithms are the ones
+    provided natively by hashlib (md5, sha1, sha224, sha256, sha384,
+    and sha512) or any one provided by OpenSSL.
+value
+    The value to digest. This function will resolve to the corresponding hash of
+    the value.
+
+
+An example of how to use the digest function is shown below:
+
+::
+
+  # from a user supplied parameter
+  pwd_hash: { digest: ['sha512', { get_param: raw_password }] }
+
+The value of the digest function would resolve to the corresponding hash of
+the value of 'raw_password'.
 
 
 repeat
