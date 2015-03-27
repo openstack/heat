@@ -46,4 +46,4 @@ class WorkerClient(object):
             client = self._client.prepare(version=version)
         else:
             client = self._client
-        return client.cast(ctxt, method, **kwargs)
+        client.cast(ctxt, method, **kwargs)
