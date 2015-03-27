@@ -75,7 +75,10 @@ class Port(neutron.NeutronResource):
 
         NETWORK: properties.Schema(
             properties.Schema.STRING,
-            _('Network this port belongs to.'),
+            _('Network this port belongs to. If you plan to use current port '
+              'to assign Floating IP, you should specify %(fixed_ips)s '
+              'with %(subnet)s') % {'fixed_ips': FIXED_IPS,
+                                    'subnet': FIXED_IP_SUBNET},
             support_status=support.SupportStatus(version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')

@@ -344,12 +344,23 @@ neutron_floating_no_assoc_template = '''
   "Description" : "Template to test Neutron resources",
   "Parameters" : {},
   "Resources" : {
+    "network": {
+      "Type": "OS::Neutron::Net"
+    },
+    "subnet": {
+      "Type": "OS::Neutron::Subnet",
+      "Properties": {
+        "network": { "Ref" : "network" },
+        "cidr": "10.0.3.0/24",
+      }
+    },
+
     "port_floating": {
       "Type": "OS::Neutron::Port",
       "Properties": {
-        "network": "xyz1234",
+        "network": { "Ref" : "network" },
         "fixed_ips": [{
-          "subnet": "sub1234",
+          "subnet": { "Ref" : "subnet" },
           "ip_address": "10.0.0.10"
         }]
       }
@@ -368,7 +379,7 @@ neutron_floating_no_assoc_template = '''
       "Type": "OS::Neutron::RouterInterface",
       "Properties": {
         "router_id": { "Ref" : "router" },
-        "subnet": "sub1234"
+        "subnet": { "Ref" : "subnet" }
       }
     },
     "gateway": {
@@ -2567,6 +2578,41 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_floatip_port_dependency_subnet(self):
+        t = template_format.parse(neutron_floating_no_assoc_template)
+        stack = utils.parse_stack(t)
+
+        p_result = self.patchobject(cfn_funcs.ResourceRef, 'result')
+        p_result.return_value = 'subnet_uuid'
+        # check dependencies for fip resource
+        required_by = set(stack.dependencies.required_by(
+            stack['router_interface']))
+        self.assertIn(stack['floating_ip'], required_by)
+
+    def test_floatip_port_dependency_network(self):
+        t = template_format.parse(neutron_floating_no_assoc_template)
+        del t['Resources']['port_floating']['Properties']['fixed_ips']
+        stack = utils.parse_stack(t)
+
+        p_show = self.patchobject(neutronclient.Client, 'show_network')
+        p_show.return_value = {'network': {'subnets': ['subnet_uuid']}}
+
+        p_result = self.patchobject(cfn_funcs.ResourceRef, 'result',
+                                    autospec=True)
+
+        def return_uuid(self):
+            if self.args == 'network':
+                return 'net_uuid'
+            return 'subnet_uuid'
+
+        p_result.side_effect = return_uuid
+
+        # check dependencies for fip resource
+        required_by = set(stack.dependencies.required_by(
+            stack['router_interface']))
+        self.assertIn(stack['floating_ip'], required_by)
+        p_show.assert_called_once_with('net_uuid')
+
     def test_floatip_port(self):
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
@@ -2650,6 +2696,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(neutron_floating_no_assoc_template)
+        t['Resources']['port_floating']['Properties']['network'] = "xyz1234"
+        t['Resources']['port_floating']['Properties'][
+            'fixed_ips'][0]['subnet'] = "sub1234"
+        t['Resources']['router_interface']['Properties']['subnet'] = "sub1234"
         stack = utils.parse_stack(t)
 
         # check dependencies for fip resource
