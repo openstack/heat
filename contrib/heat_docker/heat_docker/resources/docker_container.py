@@ -31,7 +31,9 @@ from heat.engine import support
 LOG = logging.getLogger(__name__)
 
 DOCKER_INSTALLED = False
-MIN_API_VERSION_MAP = {'read_only': '1.17', 'cpu_shares': '1.8'}
+MIN_API_VERSION_MAP = {'read_only': '1.17', 'cpu_shares': '1.8',
+                       'devices': '1.14'}
+DEVICE_PATH_REGEX = r"^/dev/[/_\-a-zA-Z0-9]+$"
 # conditionally import so tests can work without having the dependency
 # satisfied
 try:
@@ -47,12 +49,13 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
         IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
-        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY, CPU_SHARES,
+        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY, CPU_SHARES, DEVICES,
     ) = (
         'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
         'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
         'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name',
         'restart_policy', 'cap_add', 'cap_drop', 'read_only', 'cpu_shares',
+        'devices'
     )
 
     ATTRIBUTES = (
@@ -69,6 +72,12 @@ class DockerContainer(resource.Resource):
         POLICY_NAME, POLICY_MAXIMUM_RETRY_COUNT,
     ) = (
         'Name', 'MaximumRetryCount',
+    )
+
+    _DEVICES_KEYS = (
+        PATH_ON_HOST, PATH_IN_CONTAINER, PERMISSIONS
+    ) = (
+        'path_on_host', 'path_in_container', 'permissions'
     )
 
     _CAPABILITIES = ['SETPCAP', 'SYS_MODULE', 'SYS_RAWIO', 'SYS_PACCT',
@@ -234,7 +243,48 @@ class DockerContainer(resource.Resource):
             MIN_API_VERSION_MAP['cpu_shares'],
             default=0,
             support_status=support.SupportStatus(version='2015.2'),
-        )
+        ),
+        DEVICES: properties.Schema(
+            properties.Schema.LIST,
+            _('Device mappings (only supported for API version >= %s).') %
+            MIN_API_VERSION_MAP['devices'],
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    PATH_ON_HOST: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The device path on the host.'),
+                        constraints=[
+                            constraints.Length(max=255),
+                            constraints.AllowedPattern(DEVICE_PATH_REGEX),
+                        ],
+                        required=True
+                    ),
+                    PATH_IN_CONTAINER: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The device path of the container'
+                          ' mappings to the host.'),
+                        constraints=[
+                            constraints.Length(max=255),
+                            constraints.AllowedPattern(DEVICE_PATH_REGEX),
+                        ],
+                    ),
+                    PERMISSIONS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The permissions of the container to'
+                          ' read/write/create the devices.'),
+                        constraints=[
+                            constraints.AllowedValues(['r', 'w', 'm',
+                                                       'rw', 'rm', 'wm',
+                                                       'rwm']),
+                        ],
+                        default='rwm'
+                    )
+                }
+            ),
+            default=[],
+            support_status=support.SupportStatus(version='2015.2'),
+        ),
     }
 
     attributes_schema = {
@@ -380,9 +430,28 @@ class DockerContainer(resource.Resource):
             start_args['cap_drop'] = self.properties[self.CAP_DROP]
         if self.properties[self.READ_ONLY]:
             start_args[self.READ_ONLY] = True
+        if (self.properties[self.DEVICES] and
+                not self.properties[self.PRIVILEGED]):
+            start_args['devices'] = self._get_mapping_devices(
+                self.properties[self.DEVICES])
 
         client.start(container_id, **start_args)
         return container_id
+
+    def _get_mapping_devices(self, devices):
+        actual_devices = []
+        for device in devices:
+            if device[self.PATH_IN_CONTAINER]:
+                actual_devices.append(':'.join(
+                    [device[self.PATH_ON_HOST],
+                     device[self.PATH_IN_CONTAINER],
+                     device[self.PERMISSIONS]]))
+            else:
+                actual_devices.append(':'.join(
+                    [device[self.PATH_ON_HOST],
+                     device[self.PATH_ON_HOST],
+                     device[self.PERMISSIONS]]))
+        return actual_devices
 
     def _get_container_status(self, container_id):
         client = self.get_client()

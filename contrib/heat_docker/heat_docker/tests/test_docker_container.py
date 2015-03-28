@@ -360,3 +360,75 @@ class DockerContainerTest(common.HeatTestCase):
 
     def test_create_with_cpu_shares_for_low_api_version(self):
         self.arg_for_low_api_version('cpu_shares', 512, '1.7')
+
+    def test_start_with_mapping_devices(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['devices'] = (
+            [{'path_on_host': '/dev/sda',
+              'path_in_container': '/dev/xvdc',
+              'permissions': 'r'},
+             {'path_on_host': '/dev/mapper/a_bc-d',
+              'path_in_container': '/dev/xvdd',
+              'permissions': 'rw'}])
+        my_resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(my_resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(my_resource.validate())
+        scheduler.TaskRunner(my_resource.create)()
+        self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
+                         my_resource.state)
+        client = my_resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual(['/dev/sda:/dev/xvdc:r',
+                          '/dev/mapper/a_bc-d:/dev/xvdd:rw'],
+                         client.container_start[0]['devices'])
+
+    def test_start_with_mapping_devices_also_with_privileged(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['devices'] = (
+            [{'path_on_host': '/dev/sdb',
+              'path_in_container': '/dev/xvdc',
+              'permissions': 'r'}])
+        definition['Properties']['privileged'] = True
+        my_resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(my_resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(my_resource.validate())
+        scheduler.TaskRunner(my_resource.create)()
+        self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
+                         my_resource.state)
+        client = my_resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertNotIn('devices', client.container_start[0])
+
+    def test_start_with_mapping_devices_for_low_api_version(self):
+        value = ([{'path_on_host': '/dev/sda',
+                   'path_in_container': '/dev/xvdc',
+                   'permissions': 'rwm'}])
+        self.arg_for_low_api_version('devices', value, '1.13')
+
+    def test_start_with_mapping_devices_not_set_path_in_container(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['devices'] = (
+            [{'path_on_host': '/dev/sda',
+              'permissions': 'rwm'}])
+        my_resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(my_resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(my_resource.validate())
+        scheduler.TaskRunner(my_resource.create)()
+        self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
+                         my_resource.state)
+        client = my_resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual(['/dev/sda:/dev/sda:rwm'],
+                         client.container_start[0]['devices'])
