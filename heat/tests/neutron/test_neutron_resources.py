@@ -22,7 +22,6 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
-from heat.engine.clients.os import neutron
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import provider_net
@@ -3156,101 +3155,5 @@ class NeutronPortTest(common.HeatTestCase):
         scheduler.TaskRunner(port.update, update_snippet)()
         self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
         self.assertEqual('direct', port.properties['binding:vnic_type'])
-
-        self.m.VerifyAll()
-
-
-class NetworkConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        nc = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().AndReturn(nc)
-        self.m.StubOutWithMock(neutron.neutronV20,
-                               'find_resourceid_by_name_or_id')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'network', 'foo'
-        ).AndReturn('foo')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'network', 'bar'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-        self.m.ReplayAll()
-
-        constraint = neutron.NetworkConstraint()
-        ctx = utils.dummy_context()
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertFalse(constraint.validate("bar", ctx))
-
-        self.m.VerifyAll()
-
-
-class PortConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        nc = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().AndReturn(nc)
-        self.m.StubOutWithMock(neutron.neutronV20,
-                               'find_resourceid_by_name_or_id')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'port', 'foo'
-        ).AndReturn('foo')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'port', 'bar'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-        self.m.ReplayAll()
-
-        constraint = neutron.PortConstraint()
-        ctx = utils.dummy_context()
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertFalse(constraint.validate("bar", ctx))
-
-        self.m.VerifyAll()
-
-
-class RouterConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        nc = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().AndReturn(nc)
-        self.m.StubOutWithMock(neutron.neutronV20,
-                               'find_resourceid_by_name_or_id')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'router', 'foo'
-        ).AndReturn('foo')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'router', 'bar'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-        self.m.ReplayAll()
-
-        constraint = neutron.RouterConstraint()
-        ctx = utils.dummy_context()
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertFalse(constraint.validate("bar", ctx))
-
-        self.m.VerifyAll()
-
-
-class SubnetConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        nc = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().AndReturn(nc)
-        self.m.StubOutWithMock(neutron.neutronV20,
-                               'find_resourceid_by_name_or_id')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'subnet', 'foo'
-        ).AndReturn('foo')
-        neutron.neutronV20.find_resourceid_by_name_or_id(
-            nc, 'subnet', 'bar'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-        self.m.ReplayAll()
-
-        constraint = neutron.SubnetConstraint()
-        ctx = utils.dummy_context()
-        self.assertTrue(constraint.validate("foo", ctx))
-        self.assertFalse(constraint.validate("bar", ctx))
 
         self.m.VerifyAll()

@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+from neutronclient.common import exceptions as qe
 
 from heat.common import exception
 from heat.engine.clients.os import neutron
@@ -148,3 +149,36 @@ class NeutronClientPluginTests(NeutronClientPluginTestCase):
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
                           self.neutron_plugin.get_secgroup_uuids,
                           sgs_non_uuid)
+
+
+class NeutronConstraintsValidate(common.HeatTestCase):
+    scenarios = [
+        ('validate_network',
+            dict(constraint_class=neutron.NetworkConstraint,
+                 resource_type='network')),
+        ('validate_port',
+            dict(constraint_class=neutron.PortConstraint,
+                 resource_type='port')),
+        ('validate_router',
+            dict(constraint_class=neutron.RouterConstraint,
+                 resource_type='router')),
+        ('validate_subnet',
+            dict(constraint_class=neutron.SubnetConstraint,
+                 resource_type='subnet'))
+    ]
+
+    def test_validate(self):
+        nc = mock.Mock()
+        mock_create = self.patchobject(neutron.NeutronClientPlugin, '_create')
+        mock_create.return_value = nc
+        mock_find = self.patchobject(neutron.neutronV20,
+                                     'find_resourceid_by_name_or_id')
+        mock_find.side_effect = ['foo',
+                                 qe.NeutronClientException(status_code=404)]
+
+        constraint = self.constraint_class()
+        ctx = utils.dummy_context()
+        self.assertTrue(constraint.validate("foo", ctx))
+        self.assertFalse(constraint.validate("bar", ctx))
+        mock_find.assert_has_calls([mock.call(nc, self.resource_type, 'foo'),
+                                    mock.call(nc, self.resource_type, 'bar')])
