@@ -1736,3 +1736,45 @@ class StackTest(common.HeatTestCase):
 
         self.assertEqual(
             'foo', self.stack.resources['A'].properties['a_string'])
+
+
+class StackKwargsForCloningTest(common.HeatTestCase):
+    scenarios = [
+        ('default', dict(keep_status=False, only_db=False,
+                         not_included=['action', 'status', 'status_reason'])),
+        ('only_db', dict(keep_status=False, only_db=True,
+                         not_included=['action', 'status', 'status_reason',
+                                       'parent_resource',
+                                       'strict_validate'])),
+        ('keep_status', dict(keep_status=True, only_db=False,
+                             not_included=[])),
+        ('status_db', dict(keep_status=True, only_db=True,
+                           not_included=['parent_resource',
+                                         'strict_validate'])),
+    ]
+
+    def test_kwargs(self):
+        tmpl = template.Template(copy.deepcopy(empty_template))
+        ctx = utils.dummy_context()
+        test_data = dict(action='x', status='y',
+                         status_reason='z', timeout_mins=33,
+                         disable_rollback=True, parent_resource='fred',
+                         owner_id=32, stack_user_project_id=569,
+                         user_creds_id=123, tenant_id='some-uuid',
+                         username='jo', nested_depth=3,
+                         strict_validate=True, convergence=False,
+                         current_traversal=45)
+        self.stack = stack.Stack(ctx, utils.random_name(), tmpl,
+                                 **test_data)
+        res = self.stack.get_kwargs_for_cloning(keep_status=self.keep_status,
+                                                only_db=self.only_db)
+        for key in self.not_included:
+            self.assertNotIn(key, res)
+
+        for key in test_data:
+            if key not in self.not_included:
+                self.assertEqual(test_data[key], res[key])
+
+        # just make sure that the kwargs are valid
+        # (no exception should be raised)
+        stack.Stack(ctx, utils.random_name(), tmpl, **res)

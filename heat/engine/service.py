@@ -710,15 +710,17 @@ class EngineService(service.Service):
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name
-        convergence = current_stack.convergence
+        current_kwargs = current_stack.get_kwargs_for_cloning()
+
         common_params = api.extract_args(args)
         common_params.setdefault(rpc_api.PARAM_TIMEOUT,
                                  current_stack.timeout_mins)
         common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
                                  current_stack.disable_rollback)
+
+        current_kwargs.update(common_params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     convergence=convergence,
-                                     **common_params)
+                                     **current_kwargs)
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)

@@ -49,6 +49,26 @@ resources:
         type: My::RandomString
 '''
 
+    update_userdata_template = '''
+heat_template_version: 2014-10-16
+parameters:
+  flavor:
+    type: string
+  user_data:
+    type: string
+  image:
+    type: string
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: image}
+      flavor: {get_param: flavor}
+      user_data_format: SOFTWARE_CONFIG
+      user_data: {get_param: user_data}
+'''
+
     def setUp(self):
         super(UpdateStackTest, self).setUp()
         self.client = self.orchestration_client
@@ -188,3 +208,33 @@ resources:
                                   'random2': 'OS::Heat::RandomString'}
             self.assertEqual(provider_resources,
                              self.list_resources(provider_identifier))
+
+    def test_stack_update_with_replacing_userdata(self):
+        """Confirm that we can update userdata of instance during updating
+        stack by the user of member role.
+
+        Make sure that a resource that inherites from StackUser can be deleted
+        during updating stack.
+        """
+        if not self.conf.minimal_image_ref:
+            raise self.skipException("No minimal image configured to test")
+        if not self.conf.minimal_instance_type:
+            raise self.skipException("No flavor configured to test")
+
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'image': self.conf.minimal_image_ref,
+                 'user_data': ''}
+        name = self._stack_rand_name()
+
+        stack_identifier = self.stack_create(
+            stack_name=name,
+            template=self.update_userdata_template,
+            parameters=parms
+        )
+
+        parms_updated = parms
+        parms_updated['user_data'] = 'two'
+        self.update_stack(
+            stack_identifier,
+            template=self.update_userdata_template,
+            parameters=parms_updated)
