@@ -72,6 +72,7 @@ class TemplateResource(stack_resource.StackResource):
                 '.template are supported'))
         else:
             self.template_name = tri.template_name
+            self.resource_type = tri.name
             if tri.user_resource:
                 self.allowed_schemes = ('http', 'https')
             else:
@@ -188,6 +189,8 @@ class TemplateResource(stack_resource.StackResource):
 
         if t_data is not None:
             self.stack.t.files[self.template_name] = t_data
+            self.stack.t.env.register_class(self.resource_type,
+                                            self.template_name)
             return t_data
         if reported_excp is None:
             reported_excp = ValueError(_('Unknown error retrieving %s') %
