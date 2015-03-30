@@ -147,7 +147,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
             update_allowed=True
         ),
         COOLDOWN: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Cooldown period, in seconds.'),
             update_allowed=True
         ),

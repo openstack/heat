@@ -71,7 +71,7 @@ class Order(resource.Resource):
             ],
         ),
         BIT_LENGTH: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The bit-length of the secret.'),
             constraints=[
                 constraints.AllowedValues([

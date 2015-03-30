@@ -42,7 +42,7 @@ class NestedStack(stack_resource.StackResource):
             update_allowed=True
         ),
         TIMEOUT_IN_MINS: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The length of time, in minutes, to wait for the nested stack '
               'creation.'),
             update_allowed=True

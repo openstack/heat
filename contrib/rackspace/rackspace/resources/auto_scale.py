@@ -125,7 +125,7 @@ class Group(resource.Resource):
                         required=True
                     ),
                     LAUNCH_CONFIG_ARGS_LOAD_BALANCER_PORT: properties.Schema(
-                        properties.Schema.NUMBER,
+                        properties.Schema.INTEGER,
                         _('Server port to connect the load balancer to.'),
                         required=True
                     ),
@@ -210,7 +210,7 @@ class Group(resource.Resource):
             _('Group configuration.'),
             schema={
                 GROUP_CONFIGURATION_MAX_ENTITIES: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('Maximum number of entities in this scaling group.'),
                     required=True
                 ),
@@ -226,7 +226,7 @@ class Group(resource.Resource):
                     required=True
                 ),
                 GROUP_CONFIGURATION_MIN_ENTITIES: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('Minimum number of entities in this scaling group.'),
                     required=True
                 ),
@@ -407,7 +407,7 @@ class ScalingPolicy(resource.Resource):
             update_allowed=True
         ),
         CHANGE: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Amount to add to or remove from current number of instances. '
               'Incompatible with changePercent and desiredCapacity.'),
             update_allowed=True
@@ -419,7 +419,7 @@ class ScalingPolicy(resource.Resource):
             update_allowed=True
         ),
         DESIRED_CAPACITY: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Absolute number to set the number of instances to. '
               'Incompatible with change and changePercent.'),
             update_allowed=True

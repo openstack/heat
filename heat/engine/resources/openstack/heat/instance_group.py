@@ -107,9 +107,9 @@ class InstanceGroup(stack_resource.StackResource):
         ),
     }
     rolling_update_schema = {
-        MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.NUMBER,
+        MIN_INSTANCES_IN_SERVICE: properties.Schema(properties.Schema.INTEGER,
                                                     default=0),
-        MAX_BATCH_SIZE: properties.Schema(properties.Schema.NUMBER,
+        MAX_BATCH_SIZE: properties.Schema(properties.Schema.INTEGER,
                                           default=1),
         PAUSE_TIME: properties.Schema(properties.Schema.STRING,
                                       default='PT0S')

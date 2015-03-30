@@ -52,7 +52,7 @@ class AWSScalingPolicy(signal_responder.SignalResponder,
             required=True
         ),
         SCALING_ADJUSTMENT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Size of adjustment.'),
             required=True,
             update_allowed=True
@@ -69,7 +69,7 @@ class AWSScalingPolicy(signal_responder.SignalResponder,
             update_allowed=True
         ),
         COOLDOWN: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Cooldown period, in seconds.'),
             update_allowed=True
         ),

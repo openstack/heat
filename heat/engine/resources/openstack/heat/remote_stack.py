@@ -72,7 +72,7 @@ class RemoteStack(resource.Resource):
             update_allowed=True
         ),
         TIMEOUT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('Number of minutes to wait for this stack creation.'),
             update_allowed=True
         ),

@@ -61,7 +61,7 @@ class HeatWaitCondition(resource.Resource):
             ]
         ),
         COUNT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The number of success signals that must be received before '
               'the stack creation process continues.'),
             constraints=[

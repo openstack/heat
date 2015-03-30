@@ -311,14 +311,14 @@ class LoadBalancer(stack_resource.StackResource):
             _('An application health check for the instances.'),
             schema={
                 HEALTH_CHECK_HEALTHY_THRESHOLD: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('The number of consecutive health probe successes '
                       'required before moving the instance to the '
                       'healthy state.'),
                     required=True
                 ),
                 HEALTH_CHECK_INTERVAL: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('The approximate interval, in seconds, between '
                       'health checks of an individual instance.'),
                     required=True
@@ -329,12 +329,12 @@ class LoadBalancer(stack_resource.StackResource):
                     required=True
                 ),
                 HEALTH_CHECK_TIMEOUT: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('Health probe timeout, in seconds.'),
                     required=True
                 ),
                 HEALTH_CHECK_UNHEALTHY_THRESHOLD: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('The number of consecutive health probe failures '
                       'required before moving the instance to the '
                       'unhealthy state'),
@@ -354,13 +354,13 @@ class LoadBalancer(stack_resource.StackResource):
                 properties.Schema.MAP,
                 schema={
                     LISTENER_INSTANCE_PORT: properties.Schema(
-                        properties.Schema.NUMBER,
+                        properties.Schema.INTEGER,
                         _('TCP port on which the instance server is '
                           'listening.'),
                         required=True
                     ),
                     LISTENER_LOAD_BALANCER_PORT: properties.Schema(
-                        properties.Schema.NUMBER,
+                        properties.Schema.INTEGER,
                         _('The external load balancer port number.'),
                         required=True
                     ),
