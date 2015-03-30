@@ -1254,7 +1254,9 @@ class EngineService(service.Service):
 
     @context.request_context
     def show_snapshot(self, cnxt, stack_identity, snapshot_id):
-        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
+        s = self._get_stack(cnxt, stack_identity)
+        snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
+            cnxt, snapshot_id, s)
         return api.format_snapshot(snapshot)
 
     @context.request_context
@@ -1265,7 +1267,8 @@ class EngineService(service.Service):
 
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
-        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
+        snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
+            cnxt, snapshot_id, s)
         self.thread_group_mgr.start(
             stack.id, _delete_snapshot, stack, snapshot)
 
@@ -1288,9 +1291,9 @@ class EngineService(service.Service):
             stack.restore(snapshot)
 
         s = self._get_stack(cnxt, stack_identity)
-        snapshot = snapshot_object.Snapshot.get_by_id(cnxt, snapshot_id)
-
         stack = parser.Stack.load(cnxt, stack=s)
+        snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
+            cnxt, snapshot_id, s)
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               _stack_restore, stack, snapshot)

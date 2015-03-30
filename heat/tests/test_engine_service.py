@@ -4380,18 +4380,40 @@ class SnapshotServiceTest(common.HeatTestCase):
         sid = stack.store()
 
         s = stack_object.Stack.get_by_id(self.ctx, sid)
+        stack.state_set(stack.CREATE, stack.COMPLETE, 'mock completion')
         if stub:
             self.m.StubOutWithMock(parser.Stack, 'load')
-        stack.state_set(stack.CREATE, stack.COMPLETE, 'mock completion')
-        parser.Stack.load(self.ctx, stack=s).MultipleTimes().AndReturn(stack)
+            parser.Stack.load(self.ctx,
+                              stack=s).MultipleTimes().AndReturn(stack)
         return stack
 
     def test_show_snapshot_not_found(self):
+        stack1 = self._create_stack(stub=False)
         snapshot_id = str(uuid.uuid4())
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.engine.show_snapshot,
-                               self.ctx, None, snapshot_id)
+                               self.ctx, stack1.identifier(),
+                               snapshot_id)
+        expected = 'Snapshot with id %s not found' % snapshot_id
         self.assertEqual(exception.NotFound, ex.exc_info[0])
+        self.assertIn(expected, six.text_type(ex.exc_info[1]))
+
+    def test_show_snapshot_not_belong_to_stack(self):
+        stack1 = self._create_stack(stub=False)
+        snapshot1 = self.engine.stack_snapshot(
+            self.ctx, stack1.identifier(), 'snap1')
+        self.engine.thread_group_mgr.groups[stack1.id].wait()
+        snapshot_id = snapshot1['id']
+        stack2 = self._create_stack(stub=False)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.show_snapshot,
+                               self.ctx, stack2.identifier(),
+                               snapshot_id)
+        expected = ('The Snapshot (%(snapshot)s) for Stack (%(stack)s) '
+                    'could not be found') % {'snapshot': snapshot_id,
+                                             'stack': stack2.name}
+        self.assertEqual(exception.SnapshotNotFound, ex.exc_info[0])
+        self.assertIn(expected, six.text_type(ex.exc_info[1]))
 
     def test_create_snapshot(self):
         stack = self._create_stack()
@@ -4432,6 +4454,28 @@ class SnapshotServiceTest(common.HeatTestCase):
                                self.engine.delete_snapshot,
                                self.ctx, stack.identifier(), snapshot_id)
         self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    def test_delete_snapshot_not_belong_to_stack(self):
+        stack1 = self._create_stack()
+        self.m.ReplayAll()
+        snapshot1 = self.engine.stack_snapshot(
+            self.ctx, stack1.identifier(), 'snap1')
+        self.engine.thread_group_mgr.groups[stack1.id].wait()
+        snapshot_id = snapshot1['id']
+        self.m.UnsetStubs()
+        stack2 = self._create_stack()
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.delete_snapshot,
+                               self.ctx,
+                               stack2.identifier(),
+                               snapshot_id)
+        expected = ('The Snapshot (%(snapshot)s) for Stack (%(stack)s) '
+                    'could not be found') % {'snapshot': snapshot_id,
+                                             'stack': stack2.name}
+        self.assertEqual(exception.SnapshotNotFound, ex.exc_info[0])
+        self.assertIn(expected, six.text_type(ex.exc_info[1]))
 
     def test_delete_snapshot(self):
         stack = self._create_stack()
@@ -4488,8 +4532,13 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.m.UnsetStubs()
         stack2 = self._create_stack()
         self.m.ReplayAll()
-        self.engine.stack_restore(self.ctx, stack2.identifier(), snapshot_id)
-        self.engine.thread_group_mgr.groups[stack2.id].wait()
-        self.assertEqual((stack2.RESTORE, stack2.FAILED), stack2.state)
-        self.assertEqual("Can't restore snapshot from other stack",
-                         stack2.status_reason)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.stack_restore,
+                               self.ctx,
+                               stack2.identifier(),
+                               snapshot_id)
+        expected = ('The Snapshot (%(snapshot)s) for Stack (%(stack)s) '
+                    'could not be found') % {'snapshot': snapshot_id,
+                                             'stack': stack2.name}
+        self.assertEqual(exception.SnapshotNotFound, ex.exc_info[0])
+        self.assertIn(expected, six.text_type(ex.exc_info[1]))

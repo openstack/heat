@@ -315,6 +315,11 @@ class ResourceNotFound(HeatException):
                 "in Stack %(stack_name)s.")
 
 
+class SnapshotNotFound(HeatException):
+    msg_fmt = _("The Snapshot (%(snapshot)s) for Stack (%(stack)s) "
+                "could not be found.")
+
+
 class ResourceTypeNotFound(HeatException):
     msg_fmt = _("The Resource Type (%(type_name)s) could not be found.")
 

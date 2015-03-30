@@ -317,6 +317,10 @@ def snapshot_get(context, snapshot_id):
     return IMPL.snapshot_get(context, snapshot_id)
 
 
+def snapshot_get_by_stack(context, snapshot_id, stack):
+    return IMPL.snapshot_get_by_stack(context, snapshot_id, stack)
+
+
 def snapshot_update(context, snapshot_id, values):
     return IMPL.snapshot_update(context, snapshot_id, values)
 

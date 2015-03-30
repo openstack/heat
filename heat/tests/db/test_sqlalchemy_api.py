@@ -1052,6 +1052,20 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(values['status'], snapshot.status)
         self.assertIsNotNone(snapshot.created_at)
 
+    def test_snapshot_get_by_another_stack(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        stack1 = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.assertIsNotNone(snapshot)
+        snapshot_id = snapshot.id
+        self.assertRaises(exception.SnapshotNotFound,
+                          db_api.snapshot_get_by_stack,
+                          self.ctx, snapshot_id, stack1)
+
     def test_snapshot_get_not_found_invalid_tenant(self):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)

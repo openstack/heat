@@ -870,6 +870,15 @@ def snapshot_get(context, snapshot_id):
     return result
 
 
+def snapshot_get_by_stack(context, snapshot_id, stack):
+    snapshot = snapshot_get(context, snapshot_id)
+    if snapshot.stack_id != stack.id:
+        raise exception.SnapshotNotFound(snapshot=snapshot_id,
+                                         stack=stack.name)
+
+    return snapshot
+
+
 def snapshot_update(context, snapshot_id, values):
     snapshot = snapshot_get(context, snapshot_id)
     snapshot.update(values)
