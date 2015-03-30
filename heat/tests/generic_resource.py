@@ -59,10 +59,11 @@ class GenericResource(resource.Resource):
 
 class ResWithComplexPropsAndAttrs(GenericResource):
 
-    properties_schema = {'a_string': {'Type': 'String'},
-                         'a_list': {'Type': 'List'},
-                         'a_map': {'Type': 'Map'},
-                         'an_int': {'Type': 'Integer'}}
+    properties_schema = {
+        'a_string': properties.Schema(properties.Schema.STRING),
+        'a_list': properties.Schema(properties.Schema.LIST),
+        'a_map': properties.Schema(properties.Schema.MAP),
+        'an_int': properties.Schema(properties.Schema.INTEGER)}
 
     attributes_schema = {'list': attributes.Schema('A list'),
                          'map': attributes.Schema('A map'),
@@ -77,8 +78,9 @@ class ResWithComplexPropsAndAttrs(GenericResource):
 
 
 class ResourceWithProps(GenericResource):
-    properties_schema = {'Foo': {'Type': 'String'},
-                         'FooInt': {'Type': 'Integer'}}
+    properties_schema = {
+        'Foo': properties.Schema(properties.Schema.STRING),
+        'FooInt': properties.Schema(properties.Schema.INTEGER)}
 
 
 class ResourceWithPropsAndAttrs(ResourceWithProps):
@@ -86,7 +88,7 @@ class ResourceWithPropsAndAttrs(ResourceWithProps):
 
 
 class ResourceWithResourceID(GenericResource):
-    properties_schema = {'ID': {'Type': 'String'}}
+    properties_schema = {'ID': properties.Schema(properties.Schema.STRING)}
 
     def handle_create(self):
         super(ResourceWithResourceID, self).handle_create()
@@ -125,8 +127,8 @@ class ResourceWithComplexAttributes(GenericResource):
 
 
 class ResourceWithRequiredProps(GenericResource):
-    properties_schema = {'Foo': {'Type': 'String',
-                                 'Required': True}}
+    properties_schema = {'Foo': properties.Schema(properties.Schema.STRING,
+                                                  required=True)}
 
 
 class SignalResource(signal_responder.SignalResponder):
