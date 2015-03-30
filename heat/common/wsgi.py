@@ -159,10 +159,25 @@ cfg.CONF.register_group(api_cw_group)
 cfg.CONF.register_opts(api_cw_opts,
                        group=api_cw_group)
 
+wsgi_elt_opts = [
+    cfg.BoolOpt('wsgi_keep_alive',
+                default=True,
+                help=_("If False, closes the client socket connection "
+                       "explicitly.")),
+    cfg.IntOpt('client_socket_timeout', default=900,
+               help=_("Timeout for client connections' socket operations. "
+                      "If an incoming connection is idle for this number of "
+                      "seconds it will be closed. A value of '0' means "
+                      "wait forever.")),
+]
+wsgi_elt_group = cfg.OptGroup('eventlet_opts')
+cfg.CONF.register_group(wsgi_elt_group)
+cfg.CONF.register_opts(wsgi_elt_opts,
+                       group=wsgi_elt_group)
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,
-                           help='Maximum raw byte size of JSON request body.'
-                                ' Should be larger than max_template_size.')
+                           help=_('Maximum raw byte size of JSON request body.'
+                                  ' Should be larger than max_template_size.'))
 cfg.CONF.register_opt(json_size_opt)
 
 
@@ -171,6 +186,7 @@ def list_opts():
     yield 'heat_api', api_opts
     yield 'heat_api_cfn', api_cfn_opts
     yield 'heat_api_cloudwatch', api_cw_opts
+    yield 'eventlet_opts', wsgi_elt_opts
 
 
 def get_bind_addr(conf, default_port=None):
@@ -334,13 +350,17 @@ class Server(object):
         eventlet.hubs.use_hub('poll')
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
+        socket_timeout = cfg.CONF.eventlet_opts.client_socket_timeout or None
         try:
-            eventlet.wsgi.server(self.sock,
-                                 self.application,
-                                 custom_pool=self.pool,
-                                 url_length_limit=URL_LENGTH_LIMIT,
-                                 log=self._wsgi_logger,
-                                 debug=cfg.CONF.debug)
+            eventlet.wsgi.server(
+                self.sock,
+                self.application,
+                custom_pool=self.pool,
+                url_length_limit=URL_LENGTH_LIMIT,
+                log=self._wsgi_logger,
+                debug=cfg.CONF.debug,
+                keepalive=cfg.CONF.eventlet_opts.wsgi_keep_alive,
+                socket_timeout=socket_timeout)
         except socket.error as err:
             if err[0] != errno.EINVAL:
                 raise
