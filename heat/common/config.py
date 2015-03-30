@@ -315,6 +315,10 @@ def startup_sanity_check():
                                     '"stack_user_domain_name" without '
                                     '"stack_domain_admin" and '
                                     '"stack_domain_admin_password"'))
+    auth_key_len = len(cfg.CONF.auth_encryption_key)
+    if auth_key_len not in [16, 24, 32]:
+        raise exception.Error(_('heat.conf misconfigured, auth_encryption_key '
+                                'length must be 16, 24 or 32'))
 
 
 def list_opts():
