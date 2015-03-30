@@ -383,7 +383,16 @@ class ResourceRegistry(object):
         for info in sorted(matches):
             match = info.get_resource_info(resource_type,
                                            resource_name)
-            if ((registry_type is None or isinstance(match, registry_type))):
+            if registry_type is None or isinstance(match, registry_type):
+                # NOTE(prazumovsky): if resource_type defined in outer env
+                # there is a risk to lose it due to h-eng restarting, so
+                # store it to local env (exclude ClassResourceInfo because it
+                # loads from resources; TemplateResourceInfo handles by
+                # template_resource module).
+                if (match and not match.user_resource and
+                    not isinstance(info, (TemplateResourceInfo,
+                                          ClassResourceInfo))):
+                        self._register_info([resource_type], info)
                 return match
 
     def get_class(self, resource_type, resource_name=None):
