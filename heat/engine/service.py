@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import datetime
 import os
 import socket
 import warnings
@@ -347,6 +348,7 @@ class EngineService(service.Service):
         self._client = rpc_messaging.get_rpc_client(
             version=self.RPC_API_VERSION)
 
+        self.service_manage_cleanup()
         self.manage_thread_grp = threadgroup.ThreadGroup()
         self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
                                          self.service_manage_report)
@@ -1518,39 +1520,35 @@ class EngineService(service.Service):
             service_objects.Service.update_by_id(
                 cnxt,
                 self.service_id,
-                dict())
+                dict(deleted_at=None))
             LOG.info(_LI('Service %s is updated'), self.service_id)
         else:
-            service_refs = service_objects.Service.get_all_by_args(
+            service_ref = service_objects.Service.create(
                 cnxt,
-                self.host,
-                self.binary,
-                self.hostname)
-            if len(service_refs) == 1:
-                # Service was aborted or stopped
-                service_ref = service_refs[0]
+                dict(host=self.host,
+                     hostname=self.hostname,
+                     binary=self.binary,
+                     engine_id=self.engine_id,
+                     topic=self.topic,
+                     report_interval=cfg.CONF.periodic_interval)
+            )
+            self.service_id = service_ref['id']
+            LOG.info(_LI('Service %s is started'), self.service_id)
 
-                if service_ref['deleted_at'] is None:
-                    LOG.info(_LI('Service %s was aborted'), self.service_id)
+    def service_manage_cleanup(self):
+        cnxt = context.get_admin_context()
+        last_updated_window = (3 * cfg.CONF.periodic_interval)
+        time_line = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=last_updated_window)
 
-                service_ref = service_objects.Service.update_by_id(
-                    cnxt,
-                    service_ref['id'],
-                    dict(engine_id=self.engine_id,
-                         deleted_at=None,
-                         report_interval=cfg.CONF.periodic_interval))
-                self.service_id = service_ref['id']
-                LOG.info(_LI('Service %s is restarted'), self.service_id)
-            elif len(service_refs) == 0:
-                # Service is started now
-                service_ref = service_objects.Service.create(
-                    cnxt,
-                    dict(host=self.host,
-                         hostname=self.hostname,
-                         binary=self.binary,
-                         engine_id=self.engine_id,
-                         topic=self.topic,
-                         report_interval=cfg.CONF.periodic_interval)
-                )
-                self.service_id = service_ref['id']
-                LOG.info(_LI('Service %s is started'), self.service_id)
+        service_refs = service_objects.Service.get_all_by_args(
+            cnxt, self.host, self.binary, self.hostname)
+        for service_ref in service_refs:
+            if (service_ref['id'] == self.service_id or
+                    service_ref['deleted_at'] is not None or
+                    service_ref['updated_at'] is None):
+                continue
+            if service_ref['updated_at'] < time_line:
+                # hasn't been updated, assuming it's died.
+                LOG.info(_LI('Service %s was aborted'), service_ref['id'])
+                service_objects.Service.delete(cnxt, service_ref['id'])

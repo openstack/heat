@@ -3152,24 +3152,17 @@ class StackServiceTest(common.HeatTestCase):
         self.assertTrue(mock_get_all.called)
         mock_format_service.assert_called_once_with(mock.ANY)
 
-    @mock.patch.object(service_objects.Service, 'get_all_by_args')
     @mock.patch.object(service_objects.Service, 'create')
     @mock.patch.object(context, 'get_admin_context')
     def test_service_manage_report_start(self,
                                          mock_admin_context,
-                                         mock_service_create,
-                                         mock_get_all):
+                                         mock_service_create):
         self.eng.service_id = None
         mock_admin_context.return_value = self.ctx
-        mock_get_all.return_value = []
         srv = dict(id='mock_id')
         mock_service_create.return_value = srv
         self.eng.service_manage_report()
         mock_admin_context.assert_called_once_with()
-        mock_get_all.assert_called_once_with(self.ctx,
-                                             self.eng.host,
-                                             self.eng.binary,
-                                             self.eng.hostname)
         mock_service_create.assert_called_once_with(
             self.ctx,
             dict(host=self.eng.host,
@@ -3182,32 +3175,26 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(self.eng.service_id, srv['id'])
 
     @mock.patch.object(service_objects.Service, 'get_all_by_args')
-    @mock.patch.object(service_objects.Service, 'update_by_id')
+    @mock.patch.object(service_objects.Service, 'delete')
     @mock.patch.object(context, 'get_admin_context')
-    def test_service_manage_report_restart(
-            self,
-            mock_admin_context,
-            mock_service_update,
-            mock_get_all):
-        self.eng.service_id = None
-        srv = dict(id='mock_id', deleted_at=None)
-        mock_get_all.return_value = [srv]
+    def test_service_manage_report_cleanup(self,
+                                           mock_admin_context,
+                                           mock_service_delete,
+                                           mock_get_all):
         mock_admin_context.return_value = self.ctx
-        mock_service_update.return_value = srv
-        self.eng.service_manage_report()
+        ages_a_go = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=4000)
+        mock_get_all.return_value = [{'id': 'foo',
+                                      'deleted_at': None,
+                                      'updated_at': ages_a_go}]
+        self.eng.service_manage_cleanup()
         mock_admin_context.assert_called_once_with()
         mock_get_all.assert_called_once_with(self.ctx,
                                              self.eng.host,
                                              self.eng.binary,
                                              self.eng.hostname)
-        mock_service_update.assert_called_once_with(
-            self.ctx,
-            srv['id'],
-            dict(engine_id=self.eng.engine_id,
-                 deleted_at=None,
-                 report_interval=cfg.CONF.periodic_interval))
-
-        self.assertEqual(self.eng.service_id, srv['id'])
+        mock_service_delete.assert_called_once_with(
+            self.ctx, 'foo')
 
     @mock.patch.object(service_objects.Service, 'update_by_id')
     @mock.patch.object(context, 'get_admin_context')
@@ -3222,7 +3209,7 @@ class StackServiceTest(common.HeatTestCase):
         mock_service_update.assert_called_once_with(
             self.ctx,
             'mock_id',
-            dict())
+            dict(deleted_at=None))
 
     def test_stop_rpc_server(self):
         with mock.patch.object(self.eng,
@@ -3241,6 +3228,7 @@ class StackServiceTest(common.HeatTestCase):
             rpc_client_class,
             target_class,
             rpc_server_method):
+        self.patchobject(self.eng, 'service_manage_cleanup')
         self.eng.start()
 
         # engine id
@@ -3388,6 +3376,7 @@ class StackServiceTest(common.HeatTestCase):
             service_delete_method,
             admin_context_method):
         cfg.CONF.set_default('periodic_interval', 60)
+        self.patchobject(self.eng, 'service_manage_cleanup')
 
         self.eng.start()
         # Add dummy thread group to test thread_group_mgr.stop() is executed?
