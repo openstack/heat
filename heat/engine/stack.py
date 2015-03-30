@@ -1181,8 +1181,10 @@ class Stack(collections.Mapping):
     def delete_snapshot(self, snapshot):
         '''Remove a snapshot from the backends.'''
         for name, rsrc in six.iteritems(self.resources):
-            data = snapshot.data['resources'].get(name)
-            scheduler.TaskRunner(rsrc.delete_snapshot, data)()
+            snapshot_data = snapshot.data
+            if snapshot_data:
+                data = snapshot.data['resources'].get(name)
+                scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
     @profiler.trace('Stack.restore', hide_args=False)
     def restore(self, snapshot):
