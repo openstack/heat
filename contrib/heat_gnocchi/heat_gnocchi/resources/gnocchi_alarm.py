@@ -71,9 +71,9 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
     support_status = support.SupportStatus(version='2015.1')
 
     PROPERTIES = (
-        METRIC, RESOURCE_CONSTRAINT, RESOURCE_TYPE
+        METRIC, RESOURCE_ID, RESOURCE_TYPE
     ) = (
-        'metric', 'resource_constraint', 'resource_type'
+        'metric', 'resource_id', 'resource_type'
     )
     PROPERTIES += COMMON_GNOCCHI_PROPERTIES
 
@@ -84,9 +84,9 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
             required=True,
             update_allowed=True
         ),
-        RESOURCE_CONSTRAINT: properties.Schema(
+        RESOURCE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Id of a resource or expression to select multiple resources'),
+            _('Id of a resource'),
             required=True,
             update_allowed=True
         ),
@@ -103,7 +103,8 @@ class CeilometerGnocchiResourcesAlarm(alarm.BaseCeilometerAlarm):
     ceilometer_alarm_type = 'gnocchi_resources_threshold'
 
 
-class CeilometerGnocchiMetricsAlarm(CeilometerGnocchiResourcesAlarm):
+class CeilometerGnocchiAggregationByMetricsAlarm(
+        CeilometerGnocchiResourcesAlarm):
 
     support_status = support.SupportStatus(version='2015.1')
 
@@ -121,12 +122,54 @@ class CeilometerGnocchiMetricsAlarm(CeilometerGnocchiResourcesAlarm):
     properties_schema.update(common_gnocchi_properties_schema)
     properties_schema.update(alarm.common_properties_schema)
 
-    ceilometer_alarm_type = 'gnocchi_metrics_threshold'
+    ceilometer_alarm_type = 'gnocchi_aggregation_by_metrics_threshold'
+
+
+class CeilometerGnocchiAggregationByResourcesAlarm(
+        CeilometerGnocchiResourcesAlarm):
+
+    support_status = support.SupportStatus(version='2015.1')
+
+    PROPERTIES = (
+        METRIC, QUERY, RESOURCE_TYPE
+    ) = (
+        'metric', 'query', 'resource_type'
+    )
+    PROPERTIES += COMMON_GNOCCHI_PROPERTIES
+
+    properties_schema = {
+        METRIC: properties.Schema(
+            properties.Schema.STRING,
+            _('Metric name watched by the alarm.'),
+            required=True,
+            update_allowed=True
+        ),
+        QUERY: properties.Schema(
+            properties.Schema.STRING,
+            _('The query to filter the metrics'),
+            required=True,
+            update_allowed=True
+        ),
+        RESOURCE_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Resource type'),
+            required=True,
+            update_allowed=True
+        ),
+    }
+
+    properties_schema.update(common_gnocchi_properties_schema)
+    properties_schema.update(alarm.common_properties_schema)
+
+    ceilometer_alarm_type = 'gnocchi_aggregation_by_resources_threshold'
 
 
 def resource_mapping():
     return {
         'OS::Ceilometer::GnocchiResourcesAlarm':
             CeilometerGnocchiResourcesAlarm,
-        'OS::Ceilometer::GnocchiMetricsAlarm': CeilometerGnocchiMetricsAlarm,
+        'OS::Ceilometer::GnocchiAggregationByMetricsAlarm':
+            CeilometerGnocchiAggregationByMetricsAlarm,
+        'OS::Ceilometer::GnocchiAggregationByResourcesAlarm':
+            CeilometerGnocchiAggregationByResourcesAlarm,
     }

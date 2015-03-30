@@ -43,17 +43,17 @@ resources:
       threshold: 50
       alarm_actions: []
       resource_type: instance
-      resource_constraint: server_group=mystack
+      resource_id: 5a517ceb-b068-4aca-9eb9-3e4eb9b90d9a
       comparison_operator: gt
 '''
 
 
-gnocchi_metrics_alarm_template = '''
+gnocchi_aggregation_by_metrics_alarm_template = '''
 heat_template_version: 2013-05-23
-description: Gnocchi Metrics Alarm Test
+description: Gnocchi Aggregation by Metrics Alarm Test
 resources:
-  GnoMetricsAlarm:
-    type: OS::Ceilometer::GnocchiMetricsAlarm
+  GnoAggregationByMetricsAlarm:
+    type: OS::Ceilometer::GnocchiAggregationByMetricsAlarm
     properties:
       description: Do stuff with gnocchi metrics
       metrics: ["911fce07-e0d7-4210-8c8c-4a9d811fcabc",
@@ -63,6 +63,25 @@ resources:
       evaluation_periods: 1
       threshold: 50
       alarm_actions: []
+      comparison_operator: gt
+'''
+
+gnocchi_aggregation_by_resources_alarm_template = '''
+heat_template_version: 2013-05-23
+description: Gnocchi Aggregation by Resources Alarm Test
+resources:
+  GnoAggregationByResourcesAlarm:
+    type: OS::Ceilometer::GnocchiAggregationByResourcesAlarm
+    properties:
+      description: Do stuff with gnocchi aggregation by resource
+      aggregation_method: mean
+      granularity: 60
+      evaluation_periods: 1
+      threshold: 50
+      metric: cpu_util
+      alarm_actions: []
+      resource_type: instance
+      query: '{"=": {"server_group": "my_autoscaling_group"}}'
       comparison_operator: gt
 '''
 
@@ -101,7 +120,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
                 "evaluation_periods": 1,
                 "threshold": 50,
                 "resource_type": "instance",
-                "resource_constraint": "server_group=mystack",
+                "resource_id": "5a517ceb-b068-4aca-9eb9-3e4eb9b90d9a",
                 "comparison_operator": "gt",
             }
         ).AndReturn(FakeCeilometerAlarm())
@@ -117,13 +136,13 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.fc.alarms.update(
             alarm_id='foo',
             gnocchi_resources_threshold_rule={
-                'resource_constraint': 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'})
+                'resource_id': 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'})
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
         update_template = copy.deepcopy(rsrc.t)
-        update_template['Properties']['resource_constraint'] = (
+        update_template['Properties']['resource_id'] = (
             'd3d6c642-921e-4fc2-9c5f-15d9a5afb598')
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
@@ -213,7 +232,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.assertIn('Boom', res.status_reason)
 
 
-class GnocchiMetricsAlarmTest(GnocchiResourcesAlarmTest):
+class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
     def create_alarm(self):
         self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
@@ -226,9 +245,10 @@ class GnocchiMetricsAlarmTest(GnocchiResourcesAlarmTest):
             enabled=True,
             insufficient_data_actions=None,
             ok_actions=None,
-            name=mox.IgnoreArg(), type='gnocchi_metrics_threshold',
+            name=mox.IgnoreArg(),
+            type='gnocchi_aggregation_by_metrics_threshold',
             repeat_actions=True,
-            gnocchi_metrics_threshold_rule={
+            gnocchi_aggregation_by_metrics_threshold_rule={
                 "aggregation_method": "mean",
                 "granularity": 60,
                 "evaluation_periods": 1,
@@ -238,18 +258,20 @@ class GnocchiMetricsAlarmTest(GnocchiResourcesAlarmTest):
                             "2543d435-fe93-4443-9351-fb0156930f94"],
             }
         ).AndReturn(FakeCeilometerAlarm())
-        snippet = template_format.parse(gnocchi_metrics_alarm_template)
+        snippet = template_format.parse(
+            gnocchi_aggregation_by_metrics_alarm_template)
         stack = utils.parse_stack(snippet)
         resource_defns = stack.t.resource_definitions(stack)
-        return gnocchi.CeilometerGnocchiMetricsAlarm(
-            'GnoMetricsAlarm', resource_defns['GnoMetricsAlarm'], stack)
+        return gnocchi.CeilometerGnocchiAggregationByMetricsAlarm(
+            'GnoAggregationByMetricsAlarm',
+            resource_defns['GnoAggregationByMetricsAlarm'], stack)
 
     def test_update(self):
         rsrc = self.create_alarm()
         self.m.StubOutWithMock(self.fc.alarms, 'update')
         self.fc.alarms.update(
             alarm_id='foo',
-            gnocchi_metrics_threshold_rule={
+            gnocchi_aggregation_by_metrics_threshold_rule={
                 'metrics': ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
                             'bc60f822-18a0-4a0c-94e7-94c554b00901']})
 
@@ -266,9 +288,75 @@ class GnocchiMetricsAlarmTest(GnocchiResourcesAlarmTest):
         self.m.VerifyAll()
 
     def _prepare_check_resource(self):
-        snippet = template_format.parse(gnocchi_metrics_alarm_template)
+        snippet = template_format.parse(
+            gnocchi_aggregation_by_metrics_alarm_template)
         stack = utils.parse_stack(snippet)
-        res = stack['GnoMetricsAlarm']
+        res = stack['GnoAggregationByMetricsAlarm']
+        res.ceilometer = mock.Mock()
+        mock_alarm = mock.Mock(enabled=True, state='ok')
+        res.ceilometer().alarms.get.return_value = mock_alarm
+        return res
+
+
+class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
+
+    def create_alarm(self):
+        self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
+        ceilometer.CeilometerClientPlugin._create().AndReturn(
+            self.fc)
+        self.m.StubOutWithMock(self.fc.alarms, 'create')
+        self.fc.alarms.create(
+            alarm_actions=[],
+            description=u'Do stuff with gnocchi aggregation by resource',
+            enabled=True,
+            insufficient_data_actions=None,
+            ok_actions=None,
+            name=mox.IgnoreArg(),
+            type='gnocchi_aggregation_by_resources_threshold',
+            repeat_actions=True,
+            gnocchi_aggregation_by_resources_threshold_rule={
+                "aggregation_method": "mean",
+                "granularity": 60,
+                "evaluation_periods": 1,
+                "threshold": 50,
+                "comparison_operator": "gt",
+                "metric": "cpu_util",
+                "resource_type": "instance",
+                "query": '{"=": {"server_group": "my_autoscaling_group"}}',
+            }
+        ).AndReturn(FakeCeilometerAlarm())
+        snippet = template_format.parse(
+            gnocchi_aggregation_by_resources_alarm_template)
+        stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
+        return gnocchi.CeilometerGnocchiAggregationByResourcesAlarm(
+            'GnoAggregationByResourcesAlarm',
+            resource_defns['GnoAggregationByResourcesAlarm'], stack)
+
+    def test_update(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'update')
+        self.fc.alarms.update(
+            alarm_id='foo',
+            gnocchi_aggregation_by_resources_threshold_rule={
+                'query': '{"=": {"server_group": "my_new_group"}}'})
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['query'] = (
+            '{"=": {"server_group": "my_new_group"}}')
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def _prepare_check_resource(self):
+        snippet = template_format.parse(
+            gnocchi_aggregation_by_resources_alarm_template)
+        stack = utils.parse_stack(snippet)
+        res = stack['GnoAggregationByResourcesAlarm']
         res.ceilometer = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.ceilometer().alarms.get.return_value = mock_alarm
