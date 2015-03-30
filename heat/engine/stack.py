@@ -1078,6 +1078,7 @@ class Stack(collections.Mapping):
                                                      self.id)
         for snapshot in snapshots:
             self.delete_snapshot(snapshot)
+            snapshot_object.Snapshot.delete(self.context, snapshot.id)
 
         if not backup:
             try:
