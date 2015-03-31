@@ -171,6 +171,14 @@ class GetAtt(function.Function):
             raise exception.InvalidTemplateReference(resource=resource_name,
                                                      key=path)
 
+    def dep_attrs(self, resource_name):
+        if self._resource().name == resource_name:
+            attrs = [function.resolve(self._attribute)]
+        else:
+            attrs = []
+        return itertools.chain(super(GetAtt, self).dep_attrs(resource_name),
+                               attrs)
+
     def dependencies(self, path):
         return itertools.chain(super(GetAtt, self).dependencies(path),
                                [self._resource(path)])

@@ -14,6 +14,7 @@
 import collections
 import copy
 import datetime
+import itertools
 import re
 import warnings
 
@@ -304,6 +305,19 @@ class Stack(collections.Mapping):
         '''
         if not self.parameters.set_stack_id(self.identifier()):
             LOG.warn(_LW("Unable to set parameters StackId identifier"))
+
+    @staticmethod
+    def get_dep_attrs(resources, outputs, resource_name):
+        '''
+        Return the set of dependent attributes for specified resource name by
+        inspecting all resources and outputs in template.
+        '''
+        attr_lists = itertools.chain((res.dep_attrs(resource_name)
+                                      for res in resources),
+                                     (function.dep_attrs(out.get('Value', ''),
+                                                         resource_name)
+                                      for out in six.itervalues(outputs)))
+        return set(itertools.chain.from_iterable(attr_lists))
 
     @staticmethod
     def _get_dependencies(resources):

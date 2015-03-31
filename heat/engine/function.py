@@ -59,6 +59,9 @@ class Function(object):
     def dependencies(self, path):
         return dependencies(self.args, '.'.join([path, self.fn_name]))
 
+    def dep_attrs(self, resource_name):
+        return dep_attrs(self.args, resource_name)
+
     def __reduce__(self):
         """
         Return a representation of the function suitable for pickling.
@@ -167,3 +170,25 @@ def dependencies(snippet, path=''):
 
     else:
         return []
+
+
+def dep_attrs(snippet, resource_name):
+    """
+    Return an iterator over dependent attributes for specified resource_name
+    in a template snippet.
+
+    The snippet should be already parsed to insert Function objects where
+    appropriate.
+    """
+
+    if isinstance(snippet, Function):
+        return snippet.dep_attrs(resource_name)
+
+    elif isinstance(snippet, collections.Mapping):
+        attrs = (dep_attrs(value, resource_name) for value in snippet.items())
+        return itertools.chain.from_iterable(attrs)
+    elif (not isinstance(snippet, six.string_types) and
+          isinstance(snippet, collections.Iterable)):
+        attrs = (dep_attrs(value, resource_name) for value in snippet)
+        return itertools.chain.from_iterable(attrs)
+    return []
