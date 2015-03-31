@@ -168,13 +168,14 @@ class TaskRunner(object):
         """
         Start and run the task to completion.
 
-        The task will sleep for `wait_time` seconds between steps. To avoid
-        sleeping, pass `None` for `wait_time`.
+        The task will first sleep for zero seconds, then sleep for `wait_time`
+        seconds between steps. To avoid sleeping, pass `None` for `wait_time`.
         """
         self.start(timeout=timeout)
-        # ensure that wait is applied only if task has not completed.
-        if not self.done():
-            self._sleep(wait_time)
+        # ensure that zero second sleep is applied only if task
+        # has not completed.
+        if not self.done() and wait_time:
+            self._sleep(0)
         self.run_to_completion(wait_time=wait_time)
 
     def start(self, timeout=None):
