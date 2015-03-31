@@ -13,12 +13,11 @@
 
 import uuid
 
-import testtools
-
 from heat.common import short_id
+from heat.tests import common
 
 
-class ShortIdTest(testtools.TestCase):
+class ShortIdTest(common.HeatTestCase):
 
     def test_byte_string_8(self):
         self.assertEqual('\xab', short_id._to_byte_string(0xab, 8))

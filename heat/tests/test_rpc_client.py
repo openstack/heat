@@ -22,28 +22,23 @@ import copy
 import mock
 from oslo_messaging._drivers import common as rpc_common
 import stubout
-import testtools
 
 from heat.common import exception
 from heat.common import identifier
-from heat.common import messaging
 from heat.rpc import client as rpc_client
+from heat.tests import common
 from heat.tests import utils
 
 
-class EngineRpcAPITestCase(testtools.TestCase):
+class EngineRpcAPITestCase(common.HeatTestCase):
 
     def setUp(self):
-        messaging.setup("fake://", optional=True)
-        self.addCleanup(messaging.cleanup)
-        self.context = utils.dummy_context()
-
+        super(EngineRpcAPITestCase, self).setUp()
         self.stubs = stubout.StubOutForTesting()
         self.identity = dict(identifier.HeatIdentifier('engine_test_tenant',
                                                        '6',
                                                        'wordpress'))
         self.rpcapi = rpc_client.EngineClient()
-        super(EngineRpcAPITestCase, self).setUp()
 
     def _to_remote_error(self, error):
         """Converts the given exception to the one with the _Remote suffix.

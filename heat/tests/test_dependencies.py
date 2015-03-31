@@ -12,12 +12,11 @@
 #    under the License.
 
 
-import testtools
-
 from heat.engine import dependencies
+from heat.tests import common
 
 
-class dependenciesTest(testtools.TestCase):
+class dependenciesTest(common.HeatTestCase):
 
     def _dep_test(self, func, checkorder, deps):
         nodes = set.union(*[set(e) for e in deps])

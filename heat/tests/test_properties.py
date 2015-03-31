@@ -13,7 +13,6 @@
 
 from oslo_serialization import jsonutils
 import six
-import testtools
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
@@ -23,9 +22,10 @@ from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
+from heat.tests import common
 
 
-class PropertySchemaTest(testtools.TestCase):
+class PropertySchemaTest(common.HeatTestCase):
     def test_schema_all(self):
         d = {
             'type': 'string',
@@ -582,7 +582,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertTrue(schema.allow_conversion)
 
 
-class PropertyTest(testtools.TestCase):
+class PropertyTest(common.HeatTestCase):
     def test_required_default(self):
         p = properties.Property({'Type': 'String'})
         self.assertFalse(p.required())
@@ -932,7 +932,7 @@ class PropertyTest(testtools.TestCase):
                          "an integer", six.text_type(ex))
 
 
-class PropertiesTest(testtools.TestCase):
+class PropertiesTest(common.HeatTestCase):
     def setUp(self):
         super(PropertiesTest, self).setUp()
         schema = {
@@ -1509,7 +1509,7 @@ class PropertiesTest(testtools.TestCase):
         self.assertTrue(props_a != props_b)
 
 
-class PropertiesValidationTest(testtools.TestCase):
+class PropertiesValidationTest(common.HeatTestCase):
     def test_required(self):
         schema = {'foo': {'Type': 'String', 'Required': True}}
         props = properties.Properties(schema, {'foo': 'bar'})

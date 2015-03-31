@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import testtools
 
 from heat.engine import attributes
 from heat.engine import resources
@@ -20,7 +19,7 @@ from heat.engine import support
 from heat.tests import common
 
 
-class AttributeSchemaTest(testtools.TestCase):
+class AttributeSchemaTest(common.HeatTestCase):
     def test_schema_all(self):
         d = {'description': 'A attribute'}
         s = attributes.Schema('A attribute')
