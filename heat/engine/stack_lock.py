@@ -54,6 +54,9 @@ class StackLock(object):
     def generate_engine_id():
         return str(uuid.uuid4())
 
+    def get_engine_id(self):
+        return stack_lock_object.StackLock.get_engine_id(self.stack.id)
+
     def try_acquire(self):
         """
         Try to acquire a stack lock, but don't raise an ActionInProgress

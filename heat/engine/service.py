@@ -352,6 +352,7 @@ class EngineService(service.Service):
         self.manage_thread_grp = threadgroup.ThreadGroup()
         self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
                                          self.service_manage_report)
+        self.manage_thread_grp.add_thread(self.reset_stack_status)
 
         super(EngineService, self).start()
 
@@ -1554,3 +1555,33 @@ class EngineService(service.Service):
                 # hasn't been updated, assuming it's died.
                 LOG.info(_LI('Service %s was aborted'), service_ref['id'])
                 service_objects.Service.delete(cnxt, service_ref['id'])
+
+    def reset_stack_status(self):
+        cnxt = context.get_admin_context()
+        filters = {'status': parser.Stack.IN_PROGRESS}
+        stacks = stack_object.Stack.get_all(cnxt,
+                                            filters=filters,
+                                            tenant_safe=False) or []
+        for s in stacks:
+            stk = parser.Stack.load(cnxt, stack=s,
+                                    use_stored_context=True)
+            lock = stack_lock.StackLock(cnxt, stk, self.engine_id)
+            # If stacklock is released, means stack status may changed.
+            engine_id = lock.get_engine_id()
+            if not engine_id:
+                continue
+            # Try to steal the lock and set status to failed.
+            try:
+                lock.acquire(retry=False)
+            except exception.ActionInProgress:
+                continue
+            LOG.info(_LI('Engine %(engine)s went down when stack %(stack_id)s'
+                         ' was in action %(action)s'),
+                     {'engine': engine_id, 'action': stk.action,
+                      'stack_id': stk.id})
+            # Set stack status to FAILED.
+            status_reason = ('Engine went down during stack %s' % stk.action)
+            self.thread_group_mgr.start_with_acquired_lock(
+                stk, lock, stk.state_set, stk.action,
+                stk.FAILED, six.text_type(status_reason)
+            )

@@ -470,6 +470,14 @@ def stack_lock_create(stack_id, engine_id):
         session.add(models.StackLock(stack_id=stack_id, engine_id=engine_id))
 
 
+def stack_lock_get_engine_id(stack_id):
+    session = get_session()
+    with session.begin():
+        lock = session.query(models.StackLock).get(stack_id)
+        if lock is not None:
+            return lock.engine_id
+
+
 def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
     session = get_session()
     with session.begin():
