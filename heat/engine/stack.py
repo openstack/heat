@@ -733,12 +733,17 @@ class Stack(collections.Mapping):
 
         try:
             yield action_task()
-        except (exception.ResourceFailure, scheduler.ExceptionGroup) as ex:
-            stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
+        except Exception as ex:
+            # We use a catch-all here to ensure any raised exceptions
+            # make the stack fail. This is necessary for when
+            # aggregate_exceptions is false, as in that case we don't get
+            # ExceptionGroup, but the raw exception.
+            # see scheduler.py line 395-399
+            stack_status = self.FAILED
+            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
 
         self.state_set(action, stack_status, reason)
 
