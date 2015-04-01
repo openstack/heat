@@ -742,6 +742,12 @@ outputs:
 
         # Send a signal and confirm nothing happened.
         self.client.resources.signal(stack_identifier, 'ScaleUpPolicy')
+        ev = self.wait_for_event_with_reason(
+            stack_identifier,
+            reason='Cannot signal resource during SUSPEND',
+            rsrc_name='ScaleUpPolicy')
+        self.assertEqual('SUSPEND_COMPLETE', ev[0].resource_status)
+
         # still SUSPEND_COMPLETE (not gone to UPDATE_COMPLETE)
         self._wait_for_stack_status(nested_ident, 'SUSPEND_COMPLETE')
         # still 2 instances.

@@ -131,10 +131,14 @@ class ResourceTest(common.HeatTestCase):
         for action in actions:
             for status in res.STATUSES:
                 res.state_set(action, status)
+                ev = self.patchobject(res, '_add_event')
                 ex = self.assertRaises(exception.ResourceFailure,
                                        res.signal)
                 self.assertEqual('Exception: Cannot signal resource during '
                                  '%s' % action, six.text_type(ex))
+                ev.assert_called_with(
+                    action, status,
+                    'Cannot signal resource during %s' % action)
 
     def test_resource_str_repr_stack_id_resource_id(self):
         tmpl = rsrc_defn.ResourceDefinition('test_res_str_repr', 'Foo')
