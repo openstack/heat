@@ -720,3 +720,31 @@ outputs:
         self.assertTrue(test.call_until_true(
             self.build_timeout, self.build_interval,
             self.check_instance_count, stack_identifier, 5))
+
+    def test_signal_during_suspend(self):
+        """Prove that a signal will fail when the stack is in suspend."""
+
+        stack_identifier = self.stack_create(template=self.template,
+                                             files=self.files,
+                                             environment=self.env)
+
+        self.assertTrue(test.call_until_true(
+            self.build_timeout, self.build_interval,
+            self.check_instance_count, stack_identifier, 2))
+
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'JobServerGroup')
+
+        # suspend the top level stack.
+        self.client.actions.suspend(stack_id=stack_identifier)
+        self._wait_for_resource_status(
+            stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
+
+        # Send a signal and confirm nothing happened.
+        self.client.resources.signal(stack_identifier, 'ScaleUpPolicy')
+        # still SUSPEND_COMPLETE (not gone to UPDATE_COMPLETE)
+        self._wait_for_stack_status(nested_ident, 'SUSPEND_COMPLETE')
+        # still 2 instances.
+        self.assertTrue(test.call_until_true(
+            self.build_timeout, self.build_interval,
+            self.check_instance_count, stack_identifier, 2))
