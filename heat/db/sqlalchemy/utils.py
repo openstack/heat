@@ -66,9 +66,7 @@ def migrate_data(migrate_engine,
 
     table_name = table.name
 
-    list_of_rows = list(table.select().order_by(
-        sqlalchemy.sql.expression.asc(table.c.created_at))
-        .execute())
+    list_of_rows = list(table.select().execute())
 
     colnames = [c.name for c in table.columns]
 

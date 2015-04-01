@@ -156,3 +156,57 @@ class DBMigrationUtilsTest(common.HeatTestCase):
                                               meta, ignorecons=ignorecons)
         self.assertFalse(_has_constraint(new_table.constraints,
                                          UniqueConstraint, 'uix_1'))
+
+    def test_migrate_data(self):
+        meta = MetaData(bind=self.engine)
+
+        # create TableA
+        table_a = Table('TableA',
+                        meta,
+                        Column('id', Integer, primary_key=True),
+                        Column('first', String(8), nullable=False),
+                        Column('second', Integer))
+        table_a.create()
+
+        # update it with sample data
+        values = [
+            {'id': 1, 'first': 'a'},
+            {'id': 2, 'first': 'b'},
+            {'id': 3, 'first': 'c'}
+        ]
+
+        for value in values:
+            self.engine.execute(table_a.insert(values=value))
+
+        # create TableB similar to TableA, except column 'second'
+        table_b = Table('TableB',
+                        meta,
+                        Column('id', Integer, primary_key=True),
+                        Column('first', String(8), nullable=False))
+        table_b.create()
+
+        # migrate data
+        migrate_utils.migrate_data(self.engine,
+                                   table_a,
+                                   table_b,
+                                   ['second'])
+
+        # validate table_a is dropped
+        self.assertTrue(self.engine.dialect.has_table(
+            self.engine.connect(),
+            'TableA'),
+            'Data migration failed to drop source table')
+
+        # validate table_b is updated with data from table_a
+        table_b_rows = list(table_b.select().execute())
+        self.assertEqual(3,
+                         len(table_b_rows),
+                         "Data migration is failed")
+        table_b_values = []
+        for row in table_b_rows:
+            table_b_values.append({'id': row.id,
+                                   'first': row.first})
+
+        self.assertEqual(values,
+                         table_b_values,
+                         "Data migration failed with invalid data copy")
