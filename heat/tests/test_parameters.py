@@ -13,7 +13,6 @@
 
 from oslo_serialization import jsonutils as json
 import six
-import testtools
 
 from heat.common import exception
 from heat.common import identifier
@@ -156,7 +155,7 @@ class ParameterTestCommon(common.HeatTestCase):
         self.assertEqual(self.zero, p.value())
 
 
-class ParameterTestSpecific(testtools.TestCase):
+class ParameterTestSpecific(common.HeatTestCase):
     def test_new_bad_type(self):
         self.assertRaises(exception.InvalidSchemaError, new_parameter,
                           'p', {'Type': 'List'}, validate_value=False)
@@ -434,7 +433,7 @@ params_schema = json.loads('''{
 }''')
 
 
-class ParametersTest(testtools.TestCase):
+class ParametersTest(common.HeatTestCase):
     def new_parameters(self, stack_name, tmpl, user_params=None,
                        stack_id=None, validate_value=True,
                        param_defaults=None):
@@ -566,7 +565,7 @@ class ParametersTest(testtools.TestCase):
         self.assertEqual(111, params['a'])
 
 
-class ParameterSchemaTest(testtools.TestCase):
+class ParameterSchemaTest(common.HeatTestCase):
 
     def test_validate_schema_wrong_key(self):
         error = self.assertRaises(exception.InvalidSchemaError,

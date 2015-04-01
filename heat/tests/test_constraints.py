@@ -13,14 +13,14 @@
 
 
 import six
-import testtools
 
 from heat.common import exception
 from heat.engine import constraints
 from heat.engine import environment
+from heat.tests import common
 
 
-class SchemaTest(testtools.TestCase):
+class SchemaTest(common.HeatTestCase):
     def test_range_schema(self):
         d = {'range': {'min': 5, 'max': 10}, 'description': 'a range'}
         r = constraints.Range(5, 10, description='a range')
@@ -432,7 +432,7 @@ class SchemaTest(testtools.TestCase):
         self.assertEqual(['a', 'b'], res)
 
 
-class CustomConstraintTest(testtools.TestCase):
+class CustomConstraintTest(common.HeatTestCase):
 
     def setUp(self):
         super(CustomConstraintTest, self).setUp()

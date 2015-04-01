@@ -14,12 +14,12 @@
 from sqlalchemy.dialects.mysql import base as mysql_base
 from sqlalchemy.dialects.sqlite import base as sqlite_base
 from sqlalchemy import types
-import testtools
 
 from heat.db.sqlalchemy import types as db_types
+from heat.tests import common
 
 
-class ListTest(testtools.TestCase):
+class ListTest(common.HeatTestCase):
 
     def setUp(self):
         super(ListTest, self).setUp()

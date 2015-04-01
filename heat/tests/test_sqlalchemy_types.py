@@ -14,12 +14,12 @@
 from sqlalchemy.dialects.mysql import base as mysql_base
 from sqlalchemy.dialects.sqlite import base as sqlite_base
 from sqlalchemy import types
-import testtools
 
 from heat.db.sqlalchemy import types as db_types
+from heat.tests import common
 
 
-class LongTextTest(testtools.TestCase):
+class LongTextTest(common.HeatTestCase):
 
     def setUp(self):
         super(LongTextTest, self).setUp()
@@ -34,7 +34,7 @@ class LongTextTest(testtools.TestCase):
         self.assertEqual(types.Text, type(impl))
 
 
-class JsonTest(testtools.TestCase):
+class JsonTest(common.HeatTestCase):
 
     def setUp(self):
         super(JsonTest, self).setUp()
