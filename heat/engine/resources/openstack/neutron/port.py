@@ -181,7 +181,7 @@ class Port(neutron.NeutronResource):
               'REPLACE_ALWAYS will replace the port regardless of any '
               'property changes. AUTO will update the existing port for any '
               'changed update-allowed property.'),
-            default='REPLACE_ALWAYS',
+            default='AUTO',
             constraints=[
                 constraints.AllowedValues(['REPLACE_ALWAYS', 'AUTO']),
             ],
