@@ -19,6 +19,7 @@ from oslo.serialization import jsonutils
 from heat.common import environment_format
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import parser
@@ -227,12 +228,21 @@ class StackResource(resource.Resource):
     def update_with_template(self, child_template, user_params,
                              timeout_mins=None):
         """Update the nested stack with the new template."""
+        if self.id is None:
+            self._store()
+        name = self.physical_resource_name()
+
         nested_stack = self.nested()
         if nested_stack is None:
-            raise exception.Error(_('Cannot update %s, stack not created')
-                                  % self.name)
+            # if the create failed for some reason and the nested
+            # stack was not created, we need to create an empty stack
+            # here so that the update will work.
+            empty_temp = template_format.parse(
+                "heat_template_version: '2013-05-23'")
+            stack_creator = self.create_with_template(empty_temp, {})
+            stack_creator.run_to_completion()
+            nested_stack = self.nested()
 
-        name = self.physical_resource_name()
         stack = self._parse_nested_stack(name, child_template, user_params,
                                          timeout_mins)
         stack.parameters.set_stack_id(nested_stack.identifier())
