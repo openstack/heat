@@ -1068,6 +1068,11 @@ class Server(stack_user.StackUser):
                                                None, self._get_network_id(net),
                                                net.get('fixed_ip'))
                 checkers.append(checker)
+            elif net.get('uuid'):
+                checker = scheduler.TaskRunner(server.interface_attach,
+                                               None, net['uuid'],
+                                               net.get('fixed_ip'))
+                checkers.append(checker)
 
         # if new_networks is None, we should attach first free port,
         # according to similar behavior during instance creation
