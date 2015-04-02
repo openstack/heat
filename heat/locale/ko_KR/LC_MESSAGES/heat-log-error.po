@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:00+0000\n"
-"PO-Revision-Date: 2015-03-26 03:23+0000\n"
+"POT-Creation-Date: 2015-04-02 06:02+0000\n"
+"PO-Revision-Date: 2015-04-02 01:48+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: heat/api/aws/ec2token.py:161
+#: heat/api/aws/ec2token.py:189
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
@@ -33,7 +33,7 @@ msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 msgid "Request does not contain required MetricData"
 msgstr "요청에 필요한 MetricData 가 없음. "
 
-#: heat/common/context.py:196
+#: heat/common/context.py:200
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
@@ -153,31 +153,26 @@ msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#: heat/engine/resource.py:502
+#: heat/engine/resource.py:505
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:970 heat/engine/resource.py:1011
+#: heat/engine/resource.py:973 heat/engine/resource.py:1014
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
 
-#: heat/engine/resource.py:1108
-#, python-format
-msgid "Cannot signal resource during %s"
-msgstr ""
-
-#: heat/engine/resource.py:1154
+#: heat/engine/resource.py:1157
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:364
+#: heat/engine/service.py:366
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1396
+#: heat/engine/service.py:1400
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
@@ -186,27 +181,27 @@ msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않�
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/stack.py:568
+#: heat/engine/stack.py:615
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:826
+#: heat/engine/stack.py:878
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:1057
+#: heat/engine/stack.py:1111
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1242
+#: heat/engine/stack.py:1299
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
-#: heat/engine/stack.py:1251
+#: heat/engine/stack.py:1308
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -273,6 +268,6 @@ msgstr "%s 규칙을 이해하는데 실패했습니다"
 msgid "No handler for matches of kind %s"
 msgstr "%s 유형의 일치에 대한 핸들러가 없음"
 
-#: heat/openstack/common/service.py:268
+#: heat/openstack/common/service.py:264
 msgid "Unhandled exception"
 msgstr "처리되지 않은 예외"

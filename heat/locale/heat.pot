@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev82\n"
+"Project-Id-Version: heat 2015.1.dev155\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:00+0000\n"
+"POT-Creation-Date: 2015-04-02 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,17 +21,37 @@ msgstr ""
 msgid "Authentication Endpoint URI."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:37 heat/common/config.py:236
+#: heat/api/aws/ec2token.py:37 heat/common/config.py:237
 msgid "Allow orchestration of multiple clouds."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:40 heat/common/config.py:239
+#: heat/api/aws/ec2token.py:40 heat/common/config.py:240
 msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
 msgstr ""
 
-#: heat/api/aws/ec2token.py:163
+#: heat/api/aws/ec2token.py:45 heat/common/config.py:254
+#: heat/common/config.py:274
+msgid "Optional PEM-formatted certificate chain file."
+msgstr ""
+
+#: heat/api/aws/ec2token.py:48 heat/common/config.py:256
+#: heat/common/config.py:276
+msgid "Optional PEM-formatted file that contains the private key."
+msgstr ""
+
+#: heat/api/aws/ec2token.py:52 heat/common/config.py:252
+#: heat/common/config.py:272
+msgid "Optional CA cert file to use in SSL connections."
+msgstr ""
+
+#: heat/api/aws/ec2token.py:55 heat/common/config.py:260
+#: heat/common/config.py:279
+msgid "If set, then the server's certificate will not be verified."
+msgstr ""
+
+#: heat/api/aws/ec2token.py:191
 msgid "Service misconfigured"
 msgstr ""
 
@@ -266,81 +286,81 @@ msgstr ""
 msgid "Header X-Auth-Url \"%s\" not an allowed endpoint"
 msgstr ""
 
-#: heat/common/config.py:34
+#: heat/common/config.py:35
 msgid "The flavor to use."
 msgstr ""
 
-#: heat/common/config.py:36
+#: heat/common/config.py:37
 msgid "The API paste config file to use."
 msgstr ""
 
-#: heat/common/config.py:42
+#: heat/common/config.py:43
 msgid "Seconds between running periodic tasks."
 msgstr ""
 
-#: heat/common/config.py:45
+#: heat/common/config.py:46
 msgid "URL of the Heat metadata server."
 msgstr ""
 
-#: heat/common/config.py:48
+#: heat/common/config.py:49
 msgid "URL of the Heat waitcondition server."
 msgstr ""
 
-#: heat/common/config.py:51
+#: heat/common/config.py:52
 msgid "URL of the Heat CloudWatch server."
 msgstr ""
 
-#: heat/common/config.py:54
+#: heat/common/config.py:55
 msgid "Instance connection to CFN/CW API via https."
 msgstr ""
 
-#: heat/common/config.py:57
+#: heat/common/config.py:58
 msgid "Instance connection to CFN/CW API validate certs if SSL is used."
 msgstr ""
 
-#: heat/common/config.py:60
+#: heat/common/config.py:61
 msgid "Default region name used to get services endpoints."
 msgstr ""
 
-#: heat/common/config.py:63
+#: heat/common/config.py:64
 msgid "Keystone role for heat template-defined users."
 msgstr ""
 
-#: heat/common/config.py:67
+#: heat/common/config.py:68
 msgid ""
 "Keystone domain ID which contains heat template-defined users. If this "
 "option is set, stack_user_domain_name option will be ignored."
 msgstr ""
 
-#: heat/common/config.py:71
+#: heat/common/config.py:72
 msgid ""
 "Keystone domain name which contains heat template-defined users. If "
 "`stack_user_domain_id` option is set, this option is ignored."
 msgstr ""
 
-#: heat/common/config.py:75
+#: heat/common/config.py:76
 msgid ""
 "Keystone username, a user with roles sufficient to manage users and "
 "projects in the stack_user_domain."
 msgstr ""
 
-#: heat/common/config.py:79
+#: heat/common/config.py:80
 msgid "Keystone password for stack_domain_admin user."
 msgstr ""
 
-#: heat/common/config.py:82
+#: heat/common/config.py:83
 msgid "Maximum raw byte size of any template."
 msgstr ""
 
-#: heat/common/config.py:85
+#: heat/common/config.py:86
 msgid "Maximum depth allowed when using nested stacks."
 msgstr ""
 
-#: heat/common/config.py:88
+#: heat/common/config.py:89
 msgid "Number of heat-engine processes to fork and run."
 msgstr ""
 
-#: heat/common/config.py:93
+#: heat/common/config.py:94
 msgid ""
 "The default user for new instances. This option is deprecated and will be"
 " removed in the Juno release. If it's empty, Heat will use the default "
@@ -348,82 +368,82 @@ msgid ""
 "(for AWS::EC2::Instance)."
 msgstr ""
 
-#: heat/common/config.py:101
+#: heat/common/config.py:102
 msgid "List of directories to search for plug-ins."
 msgstr ""
 
-#: heat/common/config.py:104
+#: heat/common/config.py:105
 msgid "The directory to search for environment files."
 msgstr ""
 
-#: heat/common/config.py:108
+#: heat/common/config.py:109
 msgid "Select deferred auth method, stored password or trusts."
 msgstr ""
 
-#: heat/common/config.py:112
+#: heat/common/config.py:113
 msgid ""
 "Subset of trustor roles to be delegated to heat. If left unset, all roles"
 " of a user will be delegated to heat when creating a stack."
 msgstr ""
 
-#: heat/common/config.py:117
+#: heat/common/config.py:118
 msgid "Maximum resources allowed per top-level stack."
 msgstr ""
 
-#: heat/common/config.py:120
+#: heat/common/config.py:121
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr ""
 
-#: heat/common/config.py:124
+#: heat/common/config.py:125
 msgid ""
 "Number of times to retry to bring a resource to a non-error state. Set to"
 " 0 to disable retries."
 msgstr ""
 
-#: heat/common/config.py:129
+#: heat/common/config.py:130
 msgid ""
 "Controls how many events will be pruned whenever a stack's events exceed "
 "max_events_per_stack. Set this lower to keep more events at the expense "
 "of more frequent purges."
 msgstr ""
 
-#: heat/common/config.py:135
+#: heat/common/config.py:136
 msgid ""
 "Maximum events that will be available per stack. Older events will be "
 "deleted when this is reached. Set to 0 for unlimited events per stack."
 msgstr ""
 
-#: heat/common/config.py:140
+#: heat/common/config.py:141
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr ""
 
-#: heat/common/config.py:144
+#: heat/common/config.py:145
 msgid "Error wait time in seconds for stack action (ie. create or update)."
 msgstr ""
 
-#: heat/common/config.py:148
+#: heat/common/config.py:149
 msgid "RPC timeout for the engine liveness check that is used for stack locking."
 msgstr ""
 
-#: heat/common/config.py:152
+#: heat/common/config.py:153
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr ""
 
-#: heat/common/config.py:155
+#: heat/common/config.py:156
 msgid "Enable the preview Stack Abandon feature."
 msgstr ""
 
-#: heat/common/config.py:158
+#: heat/common/config.py:159
 msgid "Enable the preview Stack Adopt feature."
 msgstr ""
 
-#: heat/common/config.py:161
+#: heat/common/config.py:162
 msgid ""
 "Enables engine with convergence architecture. All stacks with this option"
 " will be created using convergence engine ."
 msgstr ""
 
-#: heat/common/config.py:169
+#: heat/common/config.py:170
 msgid ""
 "Template default for how the server should receive the metadata required "
 "for software configuration. POLL_SERVER_CFN will allow calls to the cfn "
@@ -435,7 +455,7 @@ msgid ""
 "polling (requires object-store endpoint which supports TempURL)."
 msgstr ""
 
-#: heat/common/config.py:186
+#: heat/common/config.py:187
 msgid ""
 "Template default for how the server should signal to heat with the "
 "deployment output values. CFN_SIGNAL will allow an HTTP POST to a CFN "
@@ -445,11 +465,11 @@ msgid ""
 "Heat API resource-signal using the provided keystone credentials"
 msgstr ""
 
-#: heat/common/config.py:197
+#: heat/common/config.py:198
 msgid "Deprecated."
 msgstr ""
 
-#: heat/common/config.py:200
+#: heat/common/config.py:201
 msgid ""
 "When this feature is enabled, scheduler hints identifying the heat stack "
 "context of a server resource are passed to the configured schedulers in "
@@ -463,70 +483,54 @@ msgid ""
 "name."
 msgstr ""
 
-#: heat/common/config.py:219
+#: heat/common/config.py:220
 msgid ""
 "Name of the engine node. This can be an opaque identifier. It is not "
 "necessarily a hostname, FQDN, or IP address."
 msgstr ""
 
-#: heat/common/config.py:227
+#: heat/common/config.py:228
 msgid "If False fully disable profiling feature."
 msgstr ""
 
-#: heat/common/config.py:229
+#: heat/common/config.py:230
 msgid "If False do not trace SQL requests."
 msgstr ""
 
-#: heat/common/config.py:247 heat/common/config.py:267
+#: heat/common/config.py:248 heat/common/config.py:268
 msgid ""
 "Type of endpoint in Identity service catalog to use for communication "
 "with the OpenStack service."
 msgstr ""
 
-#: heat/common/config.py:251 heat/common/config.py:271
-msgid "Optional CA cert file to use in SSL connections."
-msgstr ""
-
-#: heat/common/config.py:253 heat/common/config.py:273
-msgid "Optional PEM-formatted certificate chain file."
-msgstr ""
-
-#: heat/common/config.py:255 heat/common/config.py:275
-msgid "Optional PEM-formatted file that contains the private key."
-msgstr ""
-
-#: heat/common/config.py:259 heat/common/config.py:278
-msgid "If set, then the server's certificate will not be verified."
-msgstr ""
-
-#: heat/common/config.py:284
+#: heat/common/config.py:285
 #, python-format
 msgid "Optional heat url in format like http://0.0.0.0:8004/v1/%(tenant_id)s."
 msgstr ""
 
-#: heat/common/config.py:290
+#: heat/common/config.py:291
 msgid "Allow client's debug log output."
 msgstr ""
 
-#: heat/common/config.py:296
+#: heat/common/config.py:297
 msgid ""
 "Heat build revision. If you would prefer to manage your build revision "
 "separately, you can move this section to a different file and add it as "
 "another config option."
 msgstr ""
 
-#: heat/common/config.py:313
+#: heat/common/config.py:314
 msgid ""
 "heat.conf misconfigured, cannot specify \"stack_user_domain_id\" or "
 "\"stack_user_domain_name\" without \"stack_domain_admin\" and "
 "\"stack_domain_admin_password\""
 msgstr ""
 
-#: heat/common/config.py:393
+#: heat/common/config.py:394
 msgid "Unable to locate config file"
 msgstr ""
 
-#: heat/common/config.py:405
+#: heat/common/config.py:406
 #, python-format
 msgid ""
 "Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
@@ -1496,59 +1500,59 @@ msgstr ""
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr ""
 
-#: heat/engine/resource.py:578
+#: heat/engine/resource.py:581
 #, python-format
 msgid "State %s invalid for create"
 msgstr ""
 
-#: heat/engine/resource.py:665
+#: heat/engine/resource.py:668
 msgid "Resource ID was not provided."
 msgstr ""
 
-#: heat/engine/resource.py:738
+#: heat/engine/resource.py:741
 msgid "Resource update already requested"
 msgstr ""
 
-#: heat/engine/resource.py:781
+#: heat/engine/resource.py:784
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr ""
 
-#: heat/engine/resource.py:799
+#: heat/engine/resource.py:802
 #, python-format
 msgid "State %s invalid for suspend"
 msgstr ""
 
-#: heat/engine/resource.py:815
+#: heat/engine/resource.py:818
 #, python-format
 msgid "State %s invalid for resume"
 msgstr ""
 
-#: heat/engine/resource.py:864
+#: heat/engine/resource.py:867
 msgid "limit cannot be less than 4"
 msgstr ""
 
-#: heat/engine/resource.py:879
+#: heat/engine/resource.py:882
 #, python-format
 msgid "Invalid deletion policy \"%s\""
 msgstr ""
 
-#: heat/engine/resource.py:884
+#: heat/engine/resource.py:887
 #, python-format
 msgid "\"%s\" deletion policy not supported"
 msgstr ""
 
-#: heat/engine/resource.py:1039 heat/engine/stack.py:603
+#: heat/engine/resource.py:1042 heat/engine/stack.py:650
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/resource.py:1042 heat/engine/stack.py:606
+#: heat/engine/resource.py:1045 heat/engine/stack.py:653
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
 
-#: heat/engine/resource.py:1110
+#: heat/engine/resource.py:1113
 #, python-format
 msgid "Cannot signal resource during %s"
 msgstr ""
@@ -1558,31 +1562,31 @@ msgstr ""
 msgid "%s Timed out"
 msgstr ""
 
-#: heat/engine/service.py:531
+#: heat/engine/service.py:533
 #, python-format
 msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:595 heat/engine/service.py:658
+#: heat/engine/service.py:597 heat/engine/service.py:660
 msgid "Convergence engine"
 msgstr ""
 
-#: heat/engine/service.py:694
+#: heat/engine/service.py:696
 msgid "Updating a stack when it is suspended"
 msgstr ""
 
-#: heat/engine/service.py:698
+#: heat/engine/service.py:700
 msgid "Updating a stack when it is deleting"
 msgstr ""
 
-#: heat/engine/service.py:750
+#: heat/engine/service.py:754
 #, python-format
 msgid "Cancelling update when stack is %s"
 msgstr ""
 
-#: heat/engine/service.py:789
+#: heat/engine/service.py:793
 msgid "No Template provided."
 msgstr ""
 
@@ -1603,37 +1607,37 @@ msgstr ""
 msgid "Outputs received"
 msgstr ""
 
-#: heat/engine/stack.py:94
+#: heat/engine/stack.py:95
 #, python-format
 msgid ""
 "Invalid stack name %s must contain only alphanumeric or \"_-.\" "
 "characters, must start with alpha"
 msgstr ""
 
-#: heat/engine/stack.py:190
+#: heat/engine/stack.py:191
 msgid "Attempt to use stored_context with no user_creds"
 msgstr ""
 
-#: heat/engine/stack.py:328
+#: heat/engine/stack.py:342
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/stack.py:559
+#: heat/engine/stack.py:606
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/stack.py:577
+#: heat/engine/stack.py:624
 msgid "Each Output must contain a Value key."
 msgstr ""
 
-#: heat/engine/stack.py:582
+#: heat/engine/stack.py:629
 #, python-format
 msgid "Output validation error: Outputs must contain Output. Found a [%s] instead"
 msgstr ""
 
-#: heat/engine/stack.py:587
+#: heat/engine/stack.py:634
 #, python-format
 msgid "Output validation error: %s"
 msgstr ""
@@ -1728,117 +1732,117 @@ msgstr ""
 msgid "Arguments to \"%s\" must be of the form [resource_name, attribute]"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:219
+#: heat/engine/cfn/functions.py:227
 #, python-format
 msgid "Arguments to \"%s\" must be of the form [index, collection]"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:245
+#: heat/engine/cfn/functions.py:253
 #, python-format
 msgid "\"%(fn_name)s\": %(err)s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:249
+#: heat/engine/cfn/functions.py:257
 #, python-format
 msgid "Index to \"%s\" must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:256
+#: heat/engine/cfn/functions.py:264
 #, python-format
 msgid "Index to \"%s\" must be an integer"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:267
+#: heat/engine/cfn/functions.py:275
 #, python-format
 msgid "Arguments to %s not fully resolved"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:292 heat/engine/cfn/functions.py:298
-#: heat/engine/cfn/functions.py:346 heat/engine/cfn/functions.py:352
-#: heat/engine/cfn/functions.py:405 heat/engine/cfn/functions.py:411
+#: heat/engine/cfn/functions.py:300 heat/engine/cfn/functions.py:306
+#: heat/engine/cfn/functions.py:354 heat/engine/cfn/functions.py:360
+#: heat/engine/cfn/functions.py:413 heat/engine/cfn/functions.py:419
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:307
+#: heat/engine/cfn/functions.py:315
 #, python-format
 msgid "\"%s\" must operate on a list"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:311
+#: heat/engine/cfn/functions.py:319
 #, python-format
 msgid "\"%s\" delimiter must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:319
+#: heat/engine/cfn/functions.py:327
 #, python-format
 msgid "Items to join must be strings %s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:359
+#: heat/engine/cfn/functions.py:367
 #, python-format
 msgid "Delimiter for %s must be string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:362
+#: heat/engine/cfn/functions.py:370
 #, python-format
 msgid "String to split must be string; got %s"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:393
+#: heat/engine/cfn/functions.py:401
 #, python-format
 msgid "\"%s\" parameters must be a mapping"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:421
+#: heat/engine/cfn/functions.py:429
 #, python-format
 msgid "\"%s\" template must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:424
+#: heat/engine/cfn/functions.py:432
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:430
+#: heat/engine/cfn/functions.py:438
 #, python-format
 msgid "\"%s\" param placeholders must be strings"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:439
+#: heat/engine/cfn/functions.py:447
 #, python-format
 msgid "\"%s\" params must be strings or numbers"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:463
+#: heat/engine/cfn/functions.py:471
 #, python-format
 msgid "\"%s\" argument must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:498
+#: heat/engine/cfn/functions.py:506
 #, python-format
 msgid "Wrong Arguments try: \"%s\""
 msgstr ""
 
-#: heat/engine/cfn/functions.py:501
+#: heat/engine/cfn/functions.py:509
 #, python-format
 msgid "%s Key Name must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:504
+#: heat/engine/cfn/functions.py:512
 #, python-format
 msgid "%s Value Name must be a string"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:510
+#: heat/engine/cfn/functions.py:518
 msgid "Member list must be a list"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:514
+#: heat/engine/cfn/functions.py:522
 msgid "Member list items must be strings"
 msgstr ""
 
-#: heat/engine/cfn/functions.py:549
+#: heat/engine/cfn/functions.py:557
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be one of: %(allowed)s"
 msgstr ""
@@ -3020,7 +3024,7 @@ msgstr ""
 #: heat/engine/resources/openstack/neutron/loadbalancer.py:217
 #: heat/engine/resources/openstack/neutron/network_gateway.py:99
 #: heat/engine/resources/openstack/neutron/port.py:70
-#: heat/engine/resources/openstack/neutron/port.py:113
+#: heat/engine/resources/openstack/neutron/port.py:116
 #: heat/engine/resources/openstack/neutron/router.py:276
 #: heat/engine/resources/openstack/neutron/router.py:285
 #: heat/engine/resources/openstack/neutron/router.py:411
@@ -3902,7 +3906,7 @@ msgstr ""
 #: heat/engine/resources/openstack/neutron/loadbalancer.py:596
 #: heat/engine/resources/openstack/neutron/net.py:97
 #: heat/engine/resources/openstack/neutron/network_gateway.py:143
-#: heat/engine/resources/openstack/neutron/port.py:239
+#: heat/engine/resources/openstack/neutron/port.py:243
 #: heat/engine/resources/openstack/neutron/provider_net.py:83
 #: heat/engine/resources/openstack/neutron/router.py:143
 #: heat/engine/resources/openstack/neutron/subnet.py:218
@@ -4062,14 +4066,14 @@ msgid ""
 msgstr ""
 
 #: heat/engine/resources/openstack/neutron/floatingip.py:72
-#: heat/engine/resources/openstack/neutron/floatingip.py:226
+#: heat/engine/resources/openstack/neutron/floatingip.py:238
 msgid ""
 "ID of an existing port with at least one IP address to associate with "
 "this floating IP."
 msgstr ""
 
 #: heat/engine/resources/openstack/neutron/floatingip.py:81
-#: heat/engine/resources/openstack/neutron/floatingip.py:236
+#: heat/engine/resources/openstack/neutron/floatingip.py:248
 msgid "IP address to use if the port has multiple addresses."
 msgstr ""
 
@@ -4097,7 +4101,7 @@ msgstr ""
 msgid "ID of the port associated with this IP."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/floatingip.py:220
+#: heat/engine/resources/openstack/neutron/floatingip.py:232
 msgid "ID of the floating IP to associate."
 msgstr ""
 
@@ -4250,7 +4254,7 @@ msgid "Vip associated with the pool."
 msgstr ""
 
 #: heat/engine/resources/openstack/neutron/loadbalancer.py:374
-#: heat/tests/test_neutron_loadbalancer.py:619
+#: heat/tests/neutron/test_neutron_loadbalancer.py:619
 msgid ""
 "Property cookie_name is required, when session_persistence type is set to"
 " APP_COOKIE."
@@ -4480,67 +4484,70 @@ msgid "Resource is not built"
 msgstr ""
 
 #: heat/engine/resources/openstack/neutron/port.py:78
-msgid "Network this port belongs to."
+#, python-format
+msgid ""
+"Network this port belongs to. If you plan to use current port to assign "
+"Floating IP, you should specify %(fixed_ips)s with %(subnet)s"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:87
+#: heat/engine/resources/openstack/neutron/port.py:90
 msgid "A symbolic name for this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:92
+#: heat/engine/resources/openstack/neutron/port.py:95
 msgid ""
 "Extra parameters to include in the \"port\" object in the creation "
 "request."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:98
-#: heat/engine/resources/openstack/neutron/port.py:205
+#: heat/engine/resources/openstack/neutron/port.py:101
+#: heat/engine/resources/openstack/neutron/port.py:209
 msgid "The administrative state of this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:104
+#: heat/engine/resources/openstack/neutron/port.py:107
 msgid "Desired IPs for this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:120
+#: heat/engine/resources/openstack/neutron/port.py:123
 msgid "Subnet in which to allocate the IP address for this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:129
+#: heat/engine/resources/openstack/neutron/port.py:132
 msgid "IP address desired in the subnet for this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:137
+#: heat/engine/resources/openstack/neutron/port.py:140
 msgid "MAC address to give to this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:141
+#: heat/engine/resources/openstack/neutron/port.py:144
 msgid "Device ID of this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:146
+#: heat/engine/resources/openstack/neutron/port.py:149
 msgid "Security group IDs to associate with this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:151
+#: heat/engine/resources/openstack/neutron/port.py:154
 msgid "Additional MAC/IP address pairs allowed to pass through the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:158
+#: heat/engine/resources/openstack/neutron/port.py:161
 msgid "MAC address to allow through this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:162
+#: heat/engine/resources/openstack/neutron/port.py:165
 msgid "IP address to allow through this port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:170
+#: heat/engine/resources/openstack/neutron/port.py:173
 msgid ""
 "Name of the network owning the port. The value is typically "
 "network:floatingip or network:router_interface or network:dhcp"
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:177
+#: heat/engine/resources/openstack/neutron/port.py:180
 msgid ""
 "Policy on how to respond to a stack-update for this resource. "
 "REPLACE_ALWAYS will replace the port regardless of any property changes. "
@@ -4548,7 +4555,7 @@ msgid ""
 "property."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:189
+#: heat/engine/resources/openstack/neutron/port.py:192
 msgid ""
 "The vnic type to be bound on the neutron port. To support SR-IOV PCI "
 "passthrough networking, you can request that the neutron port to be "
@@ -4557,47 +4564,47 @@ msgid ""
 "only works for Neutron deployments that support the bindings extension."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:208
+#: heat/engine/resources/openstack/neutron/port.py:212
 msgid "Unique identifier for the device."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:211
+#: heat/engine/resources/openstack/neutron/port.py:215
 msgid "Name of the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:214
+#: heat/engine/resources/openstack/neutron/port.py:218
 msgid "Fixed IP addresses."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:217
+#: heat/engine/resources/openstack/neutron/port.py:221
 msgid "MAC address of the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:220
+#: heat/engine/resources/openstack/neutron/port.py:224
 msgid "Friendly name of the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:223
+#: heat/engine/resources/openstack/neutron/port.py:227
 msgid "Unique identifier for the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:226
+#: heat/engine/resources/openstack/neutron/port.py:230
 msgid "A list of security groups for the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:229
+#: heat/engine/resources/openstack/neutron/port.py:233
 msgid "The status of the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:232
+#: heat/engine/resources/openstack/neutron/port.py:236
 msgid "Tenant owning the port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:235
+#: heat/engine/resources/openstack/neutron/port.py:239
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr ""
 
-#: heat/engine/resources/openstack/neutron/port.py:242
+#: heat/engine/resources/openstack/neutron/port.py:246
 msgid "A list of all subnet attributes for the port."
 msgstr ""
 
@@ -6021,36 +6028,36 @@ msgstr ""
 msgid "Rules must be an instance of dict or Rules, got %s instead"
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:99
+#: heat/openstack/common/versionutils.py:108
 #, python-format
 msgid ""
 "%(what)s is deprecated as of %(as_of)s in favor of %(in_favor_of)s and "
 "may be removed in %(remove_in)s."
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:103
+#: heat/openstack/common/versionutils.py:112
 #, python-format
 msgid ""
 "%(what)s is deprecated as of %(as_of)s and may be removed in "
 "%(remove_in)s. It will not be superseded."
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:107
+#: heat/openstack/common/versionutils.py:116
 #, python-format
 msgid "%(what)s is deprecated as of %(as_of)s in favor of %(in_favor_of)s."
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:110
+#: heat/openstack/common/versionutils.py:119
 #, python-format
 msgid "%(what)s is deprecated as of %(as_of)s. It will not be superseded."
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:232
+#: heat/openstack/common/versionutils.py:241
 #, python-format
 msgid "Deprecated: %s"
 msgstr ""
 
-#: heat/openstack/common/versionutils.py:250
+#: heat/openstack/common/versionutils.py:259
 #, python-format
 msgid "Fatal call to deprecated config: %(msg)s"
 msgstr ""

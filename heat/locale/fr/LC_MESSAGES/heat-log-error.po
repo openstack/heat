@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-03-26 06:00+0000\n"
-"PO-Revision-Date: 2015-03-26 03:23+0000\n"
+"POT-Creation-Date: 2015-04-02 06:02+0000\n"
+"PO-Revision-Date: 2015-04-02 01:48+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: heat/api/aws/ec2token.py:161
+#: heat/api/aws/ec2token.py:189
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr ""
 "Échec de l’autorisation Ec2Token, pas auth_uri spécifié dans le fichier de "
@@ -35,7 +35,7 @@ msgstr "La requete ne doit pas contenir le paramètre %s!"
 msgid "Request does not contain required MetricData"
 msgstr "La requête ne doit pas contenir comme pré-requis MetricData"
 
-#: heat/common/context.py:196
+#: heat/common/context.py:200
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr ""
 "Échec de la connexion Keystone v3 API, pas de mot de passe de confiance ou "
@@ -157,31 +157,26 @@ msgstr "Echec de chargement %(mapping_name)s depuis %(module)s"
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "Type invalide pour  %(mapping_name)s depuis %(module)s"
 
-#: heat/engine/resource.py:502
+#: heat/engine/resource.py:505
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:970 heat/engine/resource.py:1011
+#: heat/engine/resource.py:973 heat/engine/resource.py:1014
 #, python-format
 msgid "DB error %s"
 msgstr "Erreur base de donné %s"
 
-#: heat/engine/resource.py:1108
-#, python-format
-msgid "Cannot signal resource during %s"
-msgstr ""
-
-#: heat/engine/resource.py:1154
+#: heat/engine/resource.py:1157
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr "signal %(name)s : %(msg)s"
 
-#: heat/engine/service.py:364
+#: heat/engine/service.py:366
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1396
+#: heat/engine/service.py:1400
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -190,27 +185,27 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "Impossible de récupérer la stack %s pour la tache périodique"
 
-#: heat/engine/stack.py:568
+#: heat/engine/stack.py:615
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:826
+#: heat/engine/stack.py:878
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "Action inattendu %s à mettre à jour!"
 
-#: heat/engine/stack.py:1057
+#: heat/engine/stack.py:1111
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "Action inattendu %s à supprimer!"
 
-#: heat/engine/stack.py:1242
+#: heat/engine/stack.py:1299
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "Ressource %(name)s échec de suppression: %(ex)s"
 
-#: heat/engine/stack.py:1251
+#: heat/engine/stack.py:1308
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
@@ -274,6 +269,6 @@ msgstr "Règle %s incompréhensible"
 msgid "No handler for matches of kind %s"
 msgstr "Aucun gestionnaire pour les correspondances de type %s"
 
-#: heat/openstack/common/service.py:268
+#: heat/openstack/common/service.py:264
 msgid "Unhandled exception"
 msgstr "Exception non gérée"
