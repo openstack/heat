@@ -1016,6 +1016,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         template = '{ "Template": "data" }'
         old_stack = get_wordpress_stack(stack_name, self.ctx)
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         stack = get_wordpress_stack(stack_name, self.ctx)
@@ -1027,8 +1028,18 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     timeout_mins=60, disable_rollback=True,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     current_traversal=None,
+                     disable_rollback=True,
+                     nested_depth=0,
+                     owner_id=None,
+                     parent_resource=None,
+                     stack_user_project_id='1234',
+                     strict_validate=True,
+                     tenant_id='test_tenant_id',
+                     timeout_mins=60,
+                     user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1061,6 +1072,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         old_stack = get_wordpress_stack_no_params(stack_name, self.ctx)
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         t = template_format.parse(wp_template_no_default)
@@ -1076,8 +1088,14 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(no_params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     timeout_mins=60, disable_rollback=True,
-                     convergence=False).AndReturn(stack)
+                     convergence=False, current_traversal=None,
+                     disable_rollback=True, nested_depth=0,
+                     owner_id=None, parent_resource=None,
+                     stack_user_project_id='1234',
+                     strict_validate=True,
+                     tenant_id='test_tenant_id', timeout_mins=60,
+                     user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1110,6 +1128,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         old_stack.timeout_mins = 1
         old_stack.disable_rollback = False
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         stack = get_wordpress_stack(stack_name, self.ctx)
@@ -1121,8 +1140,14 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     timeout_mins=1, disable_rollback=False,
-                     convergence=False).AndReturn(stack)
+                     convergence=False, current_traversal=None,
+                     disable_rollback=False, nested_depth=0,
+                     owner_id=None, parent_resource=None,
+                     stack_user_project_id='1234',
+                     strict_validate=True,
+                     tenant_id='test_tenant_id', timeout_mins=1,
+                     user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1189,6 +1214,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
         old_stack = parser.Stack(self.ctx, stack_name, template)
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         stack = parser.Stack(self.ctx, stack_name, template)
@@ -1200,8 +1226,13 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     timeout_mins=60, disable_rollback=True,
-                     convergence=False).AndReturn(stack)
+                     convergence=False, current_traversal=None,
+                     disable_rollback=True, nested_depth=0,
+                     owner_id=None, parent_resource=None,
+                     stack_user_project_id='1234', strict_validate=True,
+                     tenant_id='test_tenant_id',
+                     timeout_mins=60, user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -1313,6 +1344,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         old_stack = get_wordpress_stack(stack_name, self.ctx)
         old_stack.store()
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
         stack = get_wordpress_stack(stack_name, self.ctx)
 
@@ -1323,8 +1355,13 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
                      stack.t,
-                     timeout_mins=60, disable_rollback=True,
-                     convergence=False).AndReturn(stack)
+                     convergence=False, current_traversal=None,
+                     disable_rollback=True, nested_depth=0,
+                     owner_id=None, parent_resource=None,
+                     stack_user_project_id='1234', strict_validate=True,
+                     tenant_id='test_tenant_id',
+                     timeout_mins=60, user_creds_id=u'1',
+                     username='test_username').AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -1367,6 +1404,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         old_stack['WebServer'].requires_deferred_auth = True
 
         sid = old_stack.store()
+        old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
         self.ctx = utils.dummy_context(password=None)
@@ -1382,8 +1420,18 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         environment.Environment(params).AndReturn(old_stack.env)
         parser.Stack(self.ctx, old_stack.name,
                      old_stack.t,
-                     timeout_mins=60, disable_rollback=True,
-                     convergence=False).AndReturn(old_stack)
+                     convergence=False,
+                     current_traversal=None,
+                     disable_rollback=True,
+                     nested_depth=0,
+                     owner_id=None,
+                     parent_resource=None,
+                     stack_user_project_id='1234',
+                     strict_validate=True,
+                     tenant_id='test_tenant_id',
+                     timeout_mins=60,
+                     user_creds_id=u'1',
+                     username='test_username').AndReturn(old_stack)
 
         self.m.ReplayAll()
 
