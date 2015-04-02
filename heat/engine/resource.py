@@ -1108,8 +1108,8 @@ class Resource(object):
         handler is implemented.
         '''
         if self.action in (self.SUSPEND, self.DELETE):
-            LOG.exception(_LE('Cannot signal resource '
-                              'during %s'), self.action)
+            self._add_event(self.action, self.status,
+                            'Cannot signal resource during %s' % self.action)
             ex = Exception(_('Cannot signal resource during %s') % self.action)
             raise exception.ResourceFailure(ex, self)
 
