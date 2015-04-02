@@ -89,6 +89,32 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         self.assertNotIn('BResource', self.stack)
 
+    def test_update_different_type(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('GenericResourceType',
+                         self.stack['AResource'].type())
+
+        tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
+                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                             'Properties': {'Foo': 'abc'}}}}
+
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl2))
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('ResourceWithPropsType',
+                         self.stack['AResource'].type())
+
     def test_update_description(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Description': 'ATemplate',
