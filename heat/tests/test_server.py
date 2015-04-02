@@ -1590,6 +1590,7 @@ class ServersTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'mustreplace'
+        update_template['Properties']['image_update_policy'] = 'REPLACE'
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
@@ -2945,6 +2946,7 @@ class ServersTest(common.HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['image'] = 'Update Image'
+        update_template['Properties']['image_update_policy'] = 'REPLACE'
 
         # update
         updater = scheduler.TaskRunner(server.update, update_template)
@@ -3034,15 +3036,6 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
-            name=utils.PhysName("server_restore", "WebServer"),
-            security_groups=[],
-            userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, block_device_mapping_v2=None,
-            config_drive=None, disk_config=None, reservation_id=None,
-            files={}, admin_pass=None).AndReturn(return_server)
-        self.fc.servers.create(
-            image=1, flavor=3, key_name='test',
             name=utils.PhysName("server_restore", "WebServer"),
             security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
