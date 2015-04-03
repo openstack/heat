@@ -17,6 +17,7 @@ from neutronclient.v2_0 import client as neutronclient
 import six
 
 from heat.common import exception
+from heat.engine.clients.os import neutron
 from heat.engine.hot import functions
 from heat.engine import properties
 from heat.engine import resource
@@ -114,14 +115,19 @@ class NeutronTest(common.HeatTestCase):
         mock_show_resource.side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
                                           {'attr1': 'val1', 'attr2': 'val2'},
                                           {'attr1': 'val1', 'attr2': 'val2'},
+                                          qe.NotFound,
                                           qe.NeutronClientException]
         res._show_resource = mock_show_resource
+        nclientplugin = neutron.NeutronClientPlugin(mock.MagicMock())
+        res.client_plugin = mock.Mock(return_value=nclientplugin)
 
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res._resolve_attribute('show'))
         self.assertEqual('val2', res._resolve_attribute('attr2'))
         self.assertRaises(KeyError, res._resolve_attribute, 'attr3')
         self.assertIsNone(res._resolve_attribute('attr2'))
+        res.resource_id = None
+        self.assertIsNone(res._resolve_attribute('show'))
 
 
 class GetSecGroupUuidTest(common.HeatTestCase):
