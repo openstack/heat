@@ -45,7 +45,7 @@ class PollingTaskGroupTest(common.HeatTestCase):
             self.m.StubOutWithMock(t, 'do_step')
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
 
         for t in tasks:
             t.do_step(1).AndReturn(None)
@@ -220,7 +220,6 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         self.steps = 0
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         with self._dep_test(('second', 'first')):
-            scheduler.TaskRunner._sleep(None).AndReturn(None)
             scheduler.TaskRunner._sleep(None).AndReturn(None)
 
     def test_single_node(self):
@@ -453,7 +452,7 @@ class TaskTest(common.HeatTestCase):
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
-        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
         task.do_step(2).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
         task.do_step(3).AndReturn(None)
@@ -469,7 +468,7 @@ class TaskTest(common.HeatTestCase):
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
-        scheduler.TaskRunner._sleep(42).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
         task.do_step(2).AndReturn(None)
         scheduler.TaskRunner._sleep(42).AndReturn(None)
         task.do_step(3).AndReturn(None)
@@ -516,6 +515,7 @@ class TaskTest(common.HeatTestCase):
     def test_sleep(self):
         sleep_time = 42
         self.m.StubOutWithMock(eventlet, 'sleep')
+        eventlet.sleep(0).AndReturn(None)
         eventlet.sleep(sleep_time).MultipleTimes().AndReturn(None)
 
         self.m.ReplayAll()
@@ -970,7 +970,7 @@ class WrapperTaskTest(common.HeatTestCase):
             self.m.StubOutWithMock(child_task, 'do_step')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
-        scheduler.TaskRunner._sleep(1).AndReturn(None)
+        scheduler.TaskRunner._sleep(0).AndReturn(None)
         for child_task in child_tasks:
             child_task.do_step(1).AndReturn(None)
             scheduler.TaskRunner._sleep(1).AndReturn(None)
