@@ -26,9 +26,9 @@ from heat.objects import fields as heat_fields
 class WatchData(base.VersionedObject, base.VersionedObjectDictCompat):
 
     fields = {
-        'id': fields.IntegerField(nullable=False),
+        'id': fields.IntegerField(),
         'data': heat_fields.JsonField(nullable=True),
-        'watch_rule_id': fields.StringField(nullable=False),
+        'watch_rule_id': fields.StringField(),
         'watch_rule': fields.ObjectField('WatchRule'),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
