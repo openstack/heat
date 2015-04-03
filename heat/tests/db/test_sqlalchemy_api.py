@@ -1681,6 +1681,15 @@ class DBAPIStackLockTest(common.HeatTestCase):
         observed = db_api.stack_lock_create(self.stack.id, UUID2)
         self.assertEqual(UUID1, observed)
 
+    def test_stack_lock_get_id_success(self):
+        db_api.stack_lock_create(self.stack.id, UUID1)
+        observed = db_api.stack_lock_get_engine_id(self.stack.id)
+        self.assertEqual(UUID1, observed)
+
+    def test_stack_lock_get_id_return_none(self):
+        observed = db_api.stack_lock_get_engine_id(self.stack.id)
+        self.assertIsNone(observed)
+
     def test_stack_lock_steal_success(self):
         db_api.stack_lock_create(self.stack.id, UUID1)
         observed = db_api.stack_lock_steal(self.stack.id, UUID1, UUID2)

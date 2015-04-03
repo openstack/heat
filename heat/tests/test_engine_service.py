@@ -3277,6 +3277,7 @@ class StackServiceTest(common.HeatTestCase):
             target_class,
             rpc_server_method):
         self.patchobject(self.eng, 'service_manage_cleanup')
+        self.patchobject(self.eng, 'reset_stack_status')
         self.eng.start()
 
         # engine id
@@ -3344,6 +3345,57 @@ class StackServiceTest(common.HeatTestCase):
         manage_thread_group.add_timer.assert_called_once_with(
             cfg.CONF.periodic_interval,
             self.eng.service_manage_report
+        )
+
+    @mock.patch('heat.engine.service.ThreadGroupManager',
+                return_value=mock.Mock())
+    @mock.patch.object(service_objects.Stack, 'get_all')
+    @mock.patch('heat.engine.stack_lock.StackLock',
+                return_value=mock.Mock())
+    @mock.patch.object(parser.Stack, 'load')
+    @mock.patch.object(context, 'get_admin_context')
+    def test_engine_reset_stack_status(
+            self,
+            mock_admin_context,
+            mock_stack_load,
+            mock_stacklock,
+            mock_get_all,
+            mock_thread):
+        mock_admin_context.return_value = self.ctx
+
+        db_stack = mock.MagicMock()
+        db_stack.id = 'foo'
+        db_stack.status = 'IN_PROGRESS'
+        db_stack.status_reason = None
+        mock_get_all.return_value = [db_stack]
+
+        fake_stack = mock.MagicMock()
+        fake_stack.action = 'CREATE'
+        fake_stack.id = 'foo'
+        fake_stack.status = 'IN_PROGRESS'
+        fake_stack.state_set.return_value = None
+        mock_stack_load.return_value = fake_stack
+
+        fake_lock = mock.MagicMock()
+        fake_lock.get_engine_id.return_value = 'old-engine'
+        fake_lock.acquire.return_value = None
+        mock_stacklock.return_value = fake_lock
+
+        self.eng.thread_group_mgr = mock_thread
+
+        self.eng.reset_stack_status()
+
+        mock_admin_context.assert_called_once_with()
+        filters = {'status': parser.Stack.IN_PROGRESS}
+        mock_get_all.assert_called_once_with(self.ctx,
+                                             filters=filters,
+                                             tenant_safe=False)
+        mock_stack_load.assert_call_once_with(self.ctx,
+                                              stack=db_stack,
+                                              use_stored_context=True)
+        mock_thread.start_with_acquired_lock.assert_call_once_with(
+            fake_stack, fake_stack.state_set, fake_stack.action,
+            parser.Stack.FAILED, 'Engine went down during stack CREATE'
         )
 
     @mock.patch('heat.common.messaging.get_rpc_server',
@@ -3425,6 +3477,7 @@ class StackServiceTest(common.HeatTestCase):
             admin_context_method):
         cfg.CONF.set_default('periodic_interval', 60)
         self.patchobject(self.eng, 'service_manage_cleanup')
+        self.patchobject(self.eng, 'reset_stack_status')
 
         self.eng.start()
         # Add dummy thread group to test thread_group_mgr.stop() is executed?

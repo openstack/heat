@@ -164,6 +164,10 @@ def stack_lock_create(stack_id, engine_id):
     return IMPL.stack_lock_create(stack_id, engine_id)
 
 
+def stack_lock_get_engine_id(stack_id):
+    return IMPL.stack_lock_get_engine_id(stack_id)
+
+
 def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
     return IMPL.stack_lock_steal(stack_id, old_engine_id, new_engine_id)
 

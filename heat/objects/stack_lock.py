@@ -45,3 +45,7 @@ class StackLock(base.VersionedObject,
     @classmethod
     def release(cls, stack_id, engine_id):
         return db_api.stack_lock_release(stack_id, engine_id)
+
+    @classmethod
+    def get_engine_id(cls, stack_id):
+        return db_api.stack_lock_get_engine_id(stack_id)
