@@ -363,17 +363,18 @@ class StackResourceTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              templatem.Template(tmpl, files=files))
         rsrc = stack['volume_server']
-        raise_exc_msg = ('The specified reference "instance" ('
-                         'in volume_attachment.Properties.instance_uuid) '
-                         'is incorrect')
+        raise_exc_msg = ('Failed to validate : resources.volume_server: '
+                         'The specified reference "instance" '
+                         '(in volume_attachment.Properties.instance_uuid) '
+                         'is incorrect.')
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(raise_exc_msg, six.text_type(exc))
+        self.assertEqual(raise_exc_msg, six.text_type(exc))
 
     def _test_validate_unknown_resource_type(self, stack_name, tmpl,
                                              resource_name,
                                              stack_resource=True):
-        raise_exc_msg = ('The Resource Type (idontexist) could not be found.')
+        raise_exc_msg = 'The Resource Type (idontexist) could not be found.'
         stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         rsrc = stack[resource_name]
         if stack_resource:
