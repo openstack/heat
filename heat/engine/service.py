@@ -53,6 +53,14 @@ from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
+SCALING_GROUP_RESOURCES = ('OS::Heat::AutoScalingGroup',
+                           'OS::Heat::InstanceGroup',
+                           'OS::Heat::ResourceGroup',
+                           'AWS::AutoScaling::AutoScalingGroup')
+
+INSTANCE_RESOURCES = ('OS::Nova::Server',
+                      'AWS::EC2::Instance')
+
 
 def request_context(func):
     @functools.wraps(func)
@@ -864,6 +872,27 @@ class EngineService(service.Service):
         access_key = ec2_creds.get('access')
         return stack.access_allowed(access_key, resource_name)
 
+    def _get_scaling_group_instances(self, resource):
+        instance_list = []
+
+        if hasattr(resource, 'nested') and callable(resource.nested):
+            nested_stack = resource.nested()
+        else:
+            nested_stack = None
+
+        if nested_stack:
+            for r in nested_stack.values():
+                instance_list.extend(self._get_scaling_group_instances(r))
+        else:
+            if resource.type() in INSTANCE_RESOURCES:
+                instance_name = resource.physical_resource_name()
+                instance_uuid = resource.resource_id
+                instance_info = {'instance_name': instance_name,
+                                 'instance_uuid': instance_uuid}
+                return [instance_info]
+
+        return instance_list
+
     @request_context
     def describe_stack_resource(self, cnxt, stack_identity, resource_name):
         s = self._get_stack(cnxt, stack_identity)
@@ -883,7 +912,11 @@ class EngineService(service.Service):
         if resource.id is None:
             raise exception.ResourceNotAvailable(resource_name=resource_name)
 
-        return api.format_stack_resource(stack[resource_name])
+        if resource.type() in SCALING_GROUP_RESOURCES:
+            instance_list = self._get_scaling_group_instances(resource)
+            resource.instance_list = instance_list
+
+        return api.format_stack_resource(resource)
 
     @request_context
     def resource_signal(self, cnxt, stack_identity, resource_name, details):
@@ -933,9 +966,17 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=s)
 
+        resources = []
+        for name, resource in stack.iteritems():
+            if resource_name is None or name == resource_name:
+                if resource.type() in SCALING_GROUP_RESOURCES:
+                    instance_list = self._get_scaling_group_instances(
+                        resource)
+                    resource.instance_list = instance_list
+                resources.append(resource)
+
         return [api.format_stack_resource(resource)
-                for name, resource in stack.iteritems()
-                if resource_name is None or name == resource_name]
+                for resource in resources]
 
     @request_context
     def list_stack_resources(self, cnxt, stack_identity):

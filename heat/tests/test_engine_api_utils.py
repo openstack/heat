@@ -133,6 +133,19 @@ class FormatTest(HeatTestCase):
                      uuid='abc123yc-9f88-404d-a85b-531529456xyz',
                      id=event_id)
 
+    def _create_stack_with_scaling_group_res(self):
+        utils.setup_dummy_db()
+        template = parser.Template({
+            'Resources': {
+                'asg': {'Type': 'OS::Heat::AutoScalingGroup'}
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  template, stack_id=str(uuid.uuid4()))
+
+        self.stack['asg'].instance_list = [{'instance_name': '1234',
+                                            'instance_uuid': '1234'}]
+
     def test_format_stack_resource(self):
         res = self.stack['generic1']
 
@@ -158,6 +171,31 @@ class FormatTest(HeatTestCase):
 
         formatted = api.format_stack_resource(res, False)
         self.assertEqual(resource_keys, set(formatted.keys()))
+
+    def test_format_stack_scaling_group_resource(self):
+        self._create_stack_with_scaling_group_res()
+        res = self.stack['asg']
+
+        resource_keys = set((
+            rpc_api.RES_UPDATED_TIME,
+            rpc_api.RES_NAME,
+            rpc_api.RES_PHYSICAL_ID,
+            rpc_api.RES_METADATA,
+            rpc_api.RES_ACTION,
+            rpc_api.RES_STATUS,
+            rpc_api.RES_STATUS_DATA,
+            rpc_api.RES_TYPE,
+            rpc_api.RES_ID,
+            rpc_api.RES_STACK_ID,
+            rpc_api.RES_STACK_NAME,
+            rpc_api.RES_REQUIRED_BY,
+            rpc_api.RES_SG_INST))
+
+        resource_details_keys = resource_keys.union(set(
+            (rpc_api.RES_DESCRIPTION, rpc_api.RES_METADATA)))
+
+        formatted = api.format_stack_resource(res, True)
+        self.assertEqual(resource_details_keys, set(formatted.keys()))
 
     def test_format_stack_resource_required_by(self):
         res1 = api.format_stack_resource(self.stack['generic1'])
