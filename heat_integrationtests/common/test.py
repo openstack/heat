@@ -276,7 +276,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
     def update_stack(self, stack_identifier, template, environment=None,
                      files=None, parameters=None,
-                     expected_status='UPDATE_COMPLETE'):
+                     expected_status='UPDATE_COMPLETE',
+                     disable_rollback=True):
         env = environment or {}
         env_files = files or {}
         parameters = parameters or {}
@@ -286,11 +287,19 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             stack_name=stack_name,
             template=template,
             files=env_files,
-            disable_rollback=True,
+            disable_rollback=disable_rollback,
             parameters=parameters,
             environment=env
         )
-        self._wait_for_stack_status(stack_identifier, expected_status)
+        kwargs = {'stack_identifier': stack_identifier,
+                  'status': expected_status}
+        if expected_status in ['ROLLBACK_COMPLETE']:
+            self.addCleanup(self.client.stacks.delete, stack_name)
+            # To trigger rollback you would intentionally fail the stack
+            # Hence check for rollback failures
+            kwargs['failure_pattern'] = '^ROLLBACK_FAILED$'
+
+        self._wait_for_stack_status(**kwargs)
 
     def assert_resource_is_a_stack(self, stack_identifier, res_name,
                                    wait=False):
@@ -334,7 +343,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
     def stack_create(self, stack_name=None, template=None, files=None,
                      parameters=None, environment=None,
-                     expected_status='CREATE_COMPLETE'):
+                     expected_status='CREATE_COMPLETE', disable_rollback=True):
         name = stack_name or self._stack_rand_name()
         templ = template or self.template
         templ_files = files or {}
@@ -344,16 +353,23 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             stack_name=name,
             template=templ,
             files=templ_files,
-            disable_rollback=True,
+            disable_rollback=disable_rollback,
             parameters=params,
             environment=env
         )
-        self.addCleanup(self.client.stacks.delete, name)
+        if expected_status not in ['ROLLBACK_COMPLETE']:
+            self.addCleanup(self.client.stacks.delete, name)
 
         stack = self.client.stacks.get(name)
         stack_identifier = '%s/%s' % (name, stack.id)
+        kwargs = {'stack_identifier': stack_identifier,
+                  'status': expected_status}
         if expected_status:
-            self._wait_for_stack_status(stack_identifier, expected_status)
+            if expected_status in ['ROLLBACK_COMPLETE']:
+                # To trigger rollback you would intentionally fail the stack
+                # Hence check for rollback failures
+                kwargs['failure_pattern'] = '^ROLLBACK_FAILED$'
+            self._wait_for_stack_status(**kwargs)
         return stack_identifier
 
     def stack_adopt(self, stack_name=None, files=None,
