@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-02 06:02+0000\n"
-"PO-Revision-Date: 2015-03-30 06:41+0000\n"
+"POT-Creation-Date: 2015-04-06 06:03+0000\n"
+"PO-Revision-Date: 2015-04-03 19:08+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/heat/language/"
 "fr/)\n"
@@ -49,7 +49,7 @@ msgstr "Succès de l'authentification AWS"
 msgid "AWS authentication failure."
 msgstr "Echec de l'authentification AWS"
 
-#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:791
+#: heat/api/cfn/v1/stacks.py:440 heat/engine/service.py:792
 msgid "validate_template"
 msgstr "validate_template"
 
@@ -146,98 +146,104 @@ msgstr "Suppression %s"
 msgid "Clearing %(hook)s hook on %(resource)s"
 msgstr ""
 
-#: heat/engine/scheduler.py:214
+#: heat/engine/scheduler.py:215
 #, python-format
 msgid "%s timed out"
 msgstr ""
 
-#: heat/engine/service.py:364
+#: heat/engine/service.py:365
 msgid "Engine service is stopped successfully"
 msgstr ""
 
-#: heat/engine/service.py:374
+#: heat/engine/service.py:375
 #, python-format
 msgid "WorkerService is stopped in engine %s"
 msgstr ""
 
-#: heat/engine/service.py:382
+#: heat/engine/service.py:383
 #, python-format
 msgid "Waiting stack %s processing to be finished"
 msgstr ""
 
-#: heat/engine/service.py:386
+#: heat/engine/service.py:387
 #, python-format
 msgid "Stack %s processing was finished"
 msgstr ""
 
-#: heat/engine/service.py:391
+#: heat/engine/service.py:392
 #, python-format
 msgid "Service %s is deleted"
 msgstr ""
 
-#: heat/engine/service.py:394
+#: heat/engine/service.py:395
 msgid "All threads were gone, terminating engine"
 msgstr ""
 
-#: heat/engine/service.py:593
+#: heat/engine/service.py:594
 #, python-format
 msgid "previewing stack %s"
 msgstr ""
 
-#: heat/engine/service.py:633
+#: heat/engine/service.py:634
 #, python-format
 msgid "Creating stack %s"
 msgstr "Création de la stack %s"
 
-#: heat/engine/service.py:656
+#: heat/engine/service.py:657
 #, python-format
 msgid "Stack create failed, status %s"
 msgstr "Echec de création de la stack, status %s"
 
-#: heat/engine/service.py:691
+#: heat/engine/service.py:692
 #, python-format
 msgid "Updating stack %s"
 msgstr "Mise à jour de la stack %s"
 
-#: heat/engine/service.py:757
+#: heat/engine/service.py:758
 #, python-format
 msgid "Starting cancel of updating stack %s"
 msgstr ""
 
-#: heat/engine/service.py:887
+#: heat/engine/service.py:888
 #, python-format
 msgid "Deleting stack %s"
 msgstr "Suppresion de la stack %s"
 
-#: heat/engine/service.py:940
+#: heat/engine/service.py:941
 #, python-format
 msgid "abandoning stack %s"
 msgstr "Abandon de la stack %s"
 
-#: heat/engine/service.py:1230
+#: heat/engine/service.py:1231
 #, python-format
 msgid ""
 "%(stack)s is in state %(action)s_IN_PROGRESS, snapshot is not permitted."
 msgstr ""
 
-#: heat/engine/service.py:1273
+#: heat/engine/service.py:1274
 #, python-format
 msgid "Checking stack %s"
 msgstr "Vérification de la stack %s"
 
-#: heat/engine/service.py:1526
+#: heat/engine/service.py:1527
 #, python-format
 msgid "Service %s is updated"
 msgstr ""
 
-#: heat/engine/service.py:1538
+#: heat/engine/service.py:1539
 #, python-format
 msgid "Service %s is started"
 msgstr ""
 
-#: heat/engine/service.py:1555
+#: heat/engine/service.py:1556
 #, python-format
 msgid "Service %s was aborted"
+msgstr ""
+
+#: heat/engine/service.py:1578
+#, python-format
+msgid ""
+"Engine %(engine)s went down when stack %(stack_id)s was in action %(action)s"
 msgstr ""
 
 #: heat/engine/service_software_config.py:104
@@ -278,26 +284,26 @@ msgstr "%s est déjà suspendu"
 msgid "%s is already resumed"
 msgstr ""
 
-#: heat/engine/stack_lock.py:88
+#: heat/engine/stack_lock.py:91
 #, python-format
 msgid ""
 "Stale lock detected on stack %(stack)s.  Engine %(engine)s will attempt to "
 "steal the lock"
 msgstr ""
 
-#: heat/engine/stack_lock.py:97
+#: heat/engine/stack_lock.py:100
 #, python-format
 msgid "Engine %(engine)s successfully stole the lock on stack %(stack)s"
 msgstr ""
 
-#: heat/engine/stack_lock.py:104
+#: heat/engine/stack_lock.py:107
 #, python-format
 msgid ""
 "The lock on stack %(stack)s was released while engine %(engine)s was "
 "stealing it. Trying again"
 msgstr ""
 
-#: heat/engine/stack_lock.py:111
+#: heat/engine/stack_lock.py:114
 #, python-format
 msgid ""
 "Failed to steal lock on stack %(stack)s. Engine %(engine)s stole the lock "
@@ -480,7 +486,7 @@ msgstr "%s Succès"
 msgid "%(name)s Timed out (%(timeout)s)"
 msgstr ""
 
-#: heat/engine/resources/openstack/nova/server.py:1221
+#: heat/engine/resources/openstack/nova/server.py:1237
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"%(uuid)s\" property is set to network "
