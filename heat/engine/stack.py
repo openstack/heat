@@ -329,7 +329,7 @@ class Stack(collections.Mapping):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id=None, stack=None, parent_resource=None,
+    def load(cls, context, stack_id=None, stack=None,
              show_deleted=True, use_stored_context=False, force_reload=False):
         '''Retrieve a Stack from the database.'''
         if stack is None:
@@ -345,7 +345,7 @@ class Stack(collections.Mapping):
         if force_reload:
             stack.refresh()
 
-        return cls._from_db(context, stack, parent_resource=parent_resource,
+        return cls._from_db(context, stack,
                             use_stored_context=use_stored_context)
 
     @classmethod
@@ -367,7 +367,7 @@ class Stack(collections.Mapping):
             yield cls._from_db(context, stack, resolve_data=resolve_data)
 
     @classmethod
-    def _from_db(cls, context, stack, parent_resource=None, resolve_data=True,
+    def _from_db(cls, context, stack, resolve_data=True,
                  use_stored_context=False):
         template = tmpl.Template.load(
             context, stack.raw_template_id, stack.raw_template)
@@ -378,7 +378,7 @@ class Stack(collections.Mapping):
                    timeout_mins=stack.timeout,
                    resolve_data=resolve_data,
                    disable_rollback=stack.disable_rollback,
-                   parent_resource=parent_resource,
+                   parent_resource=stack.parent_resource_name,
                    owner_id=stack.owner_id,
                    stack_user_project_id=stack.stack_user_project_id,
                    created_time=stack.created_at,
@@ -406,8 +406,6 @@ class Stack(collections.Mapping):
         stack = {
             'owner_id': self.owner_id,
             'username': self.username,
-            'tenant_id': self.tenant_id,
-            'timeout_mins': self.timeout_mins,
             'disable_rollback': self.disable_rollback,
             'stack_user_project_id': self.stack_user_project_id,
             'user_creds_id': self.user_creds_id,
@@ -420,8 +418,15 @@ class Stack(collections.Mapping):
                 'action': self.action,
                 'status': self.status,
                 'status_reason': self.status_reason})
-        if not only_db:
+
+        if only_db:
+            stack['parent_resource_name'] = self.parent_resource_name
+            stack['tenant'] = self.tenant_id
+            stack['timeout'] = self.timeout_mins
+        else:
             stack['parent_resource'] = self.parent_resource_name
+            stack['tenant_id'] = self.tenant_id
+            stack['timeout_mins'] = self.timeout_mins
             stack['strict_validate'] = self.strict_validate
 
         return stack
@@ -440,11 +445,6 @@ class Stack(collections.Mapping):
             s['raw_template_id'] = self.t.store(self.context)
         else:
             s['raw_template_id'] = self.t.id
-        # name inconsistencies
-        s['tenant'] = s['tenant_id']
-        del s['tenant_id']
-        s['timeout'] = s['timeout_mins']
-        del s['timeout_mins']
 
         if self.id:
             stack_object.Stack.update_by_id(self.context, self.id, s)

@@ -152,6 +152,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         call_kwargs['nested_depth'] = 0
         call_kwargs['user_creds_id'] = None
         call_kwargs['stack_user_project_id'] = None
+        call_kwargs['parent_resource_name'] = None
         expected_message = self.rpcapi.make_msg('create_stack', **call_kwargs)
         kwargs['expected_message'] = expected_message
         self._test_engine_api('create_stack', 'call', **kwargs)

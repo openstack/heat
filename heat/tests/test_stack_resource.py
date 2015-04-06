@@ -430,7 +430,6 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=False).AndReturn('s')
         self.m.ReplayAll()
@@ -443,7 +442,6 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=True).AndReturn('ok')
         self.m.ReplayAll()
@@ -457,7 +455,6 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=False).AndReturn(None)
         self.m.ReplayAll()
@@ -475,7 +472,6 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=True).AndReturn('s')
         self.m.ReplayAll()
@@ -489,7 +485,6 @@ class StackResourceTest(common.HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource.name,
                           show_deleted=False,
                           force_reload=True).AndReturn(None)
         self.m.ReplayAll()
