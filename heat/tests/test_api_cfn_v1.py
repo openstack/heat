@@ -506,8 +506,9 @@ class CfnStackControllerTest(common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(failure)
 
     def _stub_rpc_create_stack_call_success(self, stack_name, engine_parms,
@@ -533,8 +534,9 @@ class CfnStackControllerTest(common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()

@@ -606,6 +606,9 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
             self.assertColumnType(engine, tab_name, 'status_reason',
                                   sqlalchemy.Text)
 
+    def _check_062(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'parent_resource_name')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
