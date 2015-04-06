@@ -17,6 +17,8 @@ parameters:
   port:
     type: string
     default: '80'
+  timeout:
+    type: number
 
 resources:
   sec_group:
@@ -32,6 +34,31 @@ resources:
         - remote_ip_prefix: 0.0.0.0/0
           protocol: icmp
 
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_condition_handle }
+      count: 2
+      timeout: { get_param: timeout }
+
+  wait_condition_handle:
+    type: OS::Heat::WaitConditionHandle
+
+  config:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            echo  $(hostname) > index.html
+            python -m SimpleHTTPServer port &
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_condition_handle', 'curl_cli'] }
+            port: { get_param: port }
+
   server1:
     type: OS::Nova::Server
     properties:
@@ -40,17 +67,8 @@ resources:
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
       security_groups: [{ get_resource: sec_group }]
-      user_data:
-        list_join:
-        - ''
-        - - '#!/bin/bash -v
-
-            '
-          - 'echo  $(hostname) > index.html
-
-            '
-          - 'python -m SimpleHTTPServer '
-          - { get_param: port }
+      user_data_format: SOFTWARE_CONFIG
+      user_data: { get_resource: config }
 
   server2:
     type: OS::Nova::Server
@@ -60,17 +78,8 @@ resources:
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
       security_groups: [{ get_resource: sec_group }]
-      user_data:
-        list_join:
-        - ''
-        - - '#!/bin/bash -v
-
-            '
-          - 'echo  $(hostname) > index.html
-
-            '
-          - 'python -m SimpleHTTPServer '
-          - { get_param: port }
+      user_data_format: SOFTWARE_CONFIG
+      user_data: { get_resource: config }
 
   health_monitor:
     type: OS::Neutron::HealthMonitor
@@ -100,6 +109,7 @@ resources:
 
   LBaaS:
     type: OS::Neutron::LoadBalancer
+    depends_on: wait_condition
     properties:
       pool_id: { get_resource: test_pool }
       protocol_port: { get_param: port }

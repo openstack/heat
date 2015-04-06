@@ -55,7 +55,8 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
             'flavor': self.conf.minimal_instance_type,
             'image': self.conf.image_ref,
             'private_subnet_id': self.net['subnets'][0],
-            'external_network_id': self.public_net['id']
+            'external_network_id': self.public_net['id'],
+            'timeout': self.conf.build_timeout
         }
 
         # Launch stack
@@ -70,7 +71,7 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
         server1_ip = self._stack_output(stack, 'serv1_ip')
         server2_ip = self._stack_output(stack, 'serv2_ip')
 
-        # Check connection and info about received responces
+        # Check connection and info about received responses
         self.check_connectivity(server1_ip)
         self.collect_responses(server1_ip, {'server1\n'})
 
