@@ -750,6 +750,7 @@ outputs:
 
         # still SUSPEND_COMPLETE (not gone to UPDATE_COMPLETE)
         self._wait_for_stack_status(nested_ident, 'SUSPEND_COMPLETE')
+        self._wait_for_stack_status(stack_identifier, 'SUSPEND_COMPLETE')
         # still 2 instances.
         self.assertTrue(test.call_until_true(
             self.build_timeout, self.build_interval,
