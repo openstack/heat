@@ -32,6 +32,11 @@ OPTIONS
   over-ridden. The set is parsed after the file(s), if any, specified via 
   --config-file, hence over-ridden options in the directory take precedence.
 
+.. cmdoption:: --version
+
+  Show program's version number and exit. The output could be empty if
+  the distribution didn't specify any version information.
+
 FILES
 ========
 
