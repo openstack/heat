@@ -29,7 +29,7 @@ class SoftwareConfig(base.VersionedObject,
                      base.VersionedObjectDictCompat,
                      base.ComparableVersionedObject):
     fields = {
-        'id': fields.StringField(nullable=False),
+        'id': fields.StringField(),
         'name': fields.StringField(nullable=True),
         'group': fields.StringField(nullable=True),
         'tenant': fields.StringField(nullable=True),

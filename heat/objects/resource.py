@@ -35,7 +35,7 @@ class Resource(
     fields = {
         'id': fields.IntegerField(),
         'uuid': fields.StringField(),
-        'stack_id': fields.StringField(nullable=False),
+        'stack_id': fields.StringField(),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'nova_instance': fields.StringField(nullable=True),
@@ -49,7 +49,7 @@ class Resource(
             resource_data.ResourceData,
             nullable=True
         ),
-        'stack': fields.ObjectField(stack.Stack, nullable=False),
+        'stack': fields.ObjectField(stack.Stack),
         'engine_id': fields.StringField(nullable=True),
         'atomic_key': fields.IntegerField(nullable=True),
         'current_template_id': fields.IntegerField(),

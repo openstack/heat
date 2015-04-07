@@ -25,9 +25,9 @@ from heat.objects import fields as heat_fields
 
 class Event(base.VersionedObject, base.VersionedObjectDictCompat):
     fields = {
-        'id': fields.IntegerField(nullable=False),
-        'stack_id': fields.StringField(nullable=False),
-        'uuid': fields.StringField(nullable=False),
+        'id': fields.IntegerField(),
+        'stack_id': fields.StringField(),
+        'uuid': fields.StringField(),
         'resource_action': fields.StringField(nullable=True),
         'resource_status': fields.StringField(nullable=True),
         'resource_name': fields.StringField(nullable=True),

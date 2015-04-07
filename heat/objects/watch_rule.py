@@ -28,12 +28,12 @@ from heat.objects import watch_data
 class WatchRule(base.VersionedObject, base.VersionedObjectDictCompat):
 
     fields = {
-        'id': fields.IntegerField(nullable=False),
+        'id': fields.IntegerField(),
         'name': fields.StringField(nullable=True),
         'rule': heat_fields.JsonField(nullable=True),
         'state': fields.StringField(nullable=True),
         'last_evaluated': fields.DateTimeField(nullable=True),
-        'stack_id': fields.StringField(nullable=False),
+        'stack_id': fields.StringField(),
         'stack': fields.ObjectField(stack.Stack),
         'watch_data': fields.ListOfObjectsField(watch_data.WatchData),
         'created_at': fields.DateTimeField(read_only=True),
