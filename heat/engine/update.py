@@ -124,8 +124,10 @@ class StackUpdate(object):
     @scheduler.wrappertask
     def _process_new_resource_update(self, new_res):
         res_name = new_res.name
+        res_type = new_res.type()
 
-        if res_name in self.existing_stack:
+        if (res_name in self.existing_stack and
+                res_type == self.existing_stack[res_name].type()):
             existing_res = self.existing_stack[res_name]
             try:
                 yield self._update_in_place(existing_res,
