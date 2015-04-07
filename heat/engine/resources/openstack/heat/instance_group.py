@@ -135,10 +135,11 @@ class InstanceGroup(stack_resource.StackResource):
         """
         super(InstanceGroup, self).validate()
 
-        if self.update_policy:
+        if self.update_policy is not None:
             self.update_policy.validate()
-            policy_name = self.update_policy_schema.keys()[0]
-            if self.update_policy[policy_name]:
+            policy_name = self.ROLLING_UPDATE
+            if (policy_name in self.update_policy and
+                    self.update_policy[policy_name] is not None):
                 pause_time = self.update_policy[policy_name][self.PAUSE_TIME]
                 if iso8601utils.parse_isoduration(pause_time) > 3600:
                     msg = _('Maximum %s is 1 hour.') % self.PAUSE_TIME
