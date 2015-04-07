@@ -130,6 +130,9 @@ def format_stack_resource(resource, detail=True):
         api.RES_REQUIRED_BY: resource.required_by(),
     }
 
+    if hasattr(resource, 'instance_list'):
+        res[api.RES_SG_INST] = resource.instance_list
+
     if detail:
         res[api.RES_DESCRIPTION] = resource.parsed_template('Description', '')
         res[api.RES_METADATA] = resource.metadata

@@ -32,16 +32,20 @@ from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine.properties import Properties
+from heat.engine.resource import Metadata
 from heat.engine import resource as res
+from heat.engine.resources import image
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.engine import service
+from heat.engine import scheduler
 from heat.engine import stack_lock
 from heat.engine import watchrule
 from heat.openstack.common.fixture import mockpatch
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
 from heat.openstack.common import threadgroup
+from heat.openstack.common import timeutils
 import heat.rpc.api as engine_api
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes as test_fakes
@@ -168,6 +172,49 @@ heat_template_version: 2013-05-23
 resources:
   WebServer:
     type: OS::Nova::Server
+'''
+
+as_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AutoScaling Test",
+  "Resources" : {
+    "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "5",
+      }
+    },
+    "WebServerScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "1"
+      }
+    },
+    "WebServerScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "-1"
+      }
+    },
+    "LaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId" :  "foo",
+        "InstanceType"   : "bar",
+      }
+    }
+  }
+}
 '''
 
 
@@ -1938,6 +1985,98 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('physical_resource_id', r)
         self.assertIn('resource_name', r)
         self.assertEqual('WebServer', r['resource_name'])
+
+        self.m.VerifyAll()
+
+    def _stub_validate(self):
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate().MultipleTimes()
+
+    def _stub_create(self, num):
+        self._stub_validate()
+        self.m.StubOutWithMock(instances.Instance, 'handle_create')
+        self.m.StubOutWithMock(instances.Instance, 'check_create_complete')
+        self.m.StubOutWithMock(image.ImageConstraint, "validate")
+        image.ImageConstraint.validate(
+            mox.IgnoreArg(), mox.IgnoreArg()).MultipleTimes().AndReturn(True)
+        cookie = object()
+        for x in range(num):
+            instances.Instance.handle_create().AndReturn(cookie)
+        instances.Instance.check_create_complete(cookie).AndReturn(False)
+        instances.Instance.check_create_complete(
+            cookie).MultipleTimes().AndReturn(True)
+
+    def _stub_meta_expected(self, now, data, nmeta=1):
+        # Stop time at now
+        self.m.StubOutWithMock(timeutils, 'utcnow')
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
+
+        # Then set a stub to ensure the metadata update is as
+        # expected based on the timestamp and data
+        self.m.StubOutWithMock(Metadata, '__set__')
+        expected = {timeutils.strtime(now): data}
+        # Note for ScalingPolicy, we expect to get a metadata
+        # update for the policy and autoscaling group, so pass nmeta=2
+        for x in range(nmeta):
+            Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
+
+    def create_scaling_group(self, t, stack, resource_name):
+        # create the launch configuration resource
+        conf = stack['LaunchConfig']
+        self.assertIsNone(conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        # create the group resource
+        rsrc = stack[resource_name]
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        return rsrc
+
+    def test_stack_resource_describe_with_scaling_group_resource(self):
+        stack_name = 'service_stack_resource_describe__test_sg_stack'
+        t = template_format.parse(as_template)
+        t_stack = utils.parse_stack(t)
+
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        rsrc = self.create_scaling_group(t, t_stack, 'WebServerGroup')
+        self.assertEqual(utils.PhysName(t_stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
+        self.assertEqual(1, len(rsrc.get_instance_names()))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+        template = parser.Template(t)
+        self.stack = parser.Stack(self.ctx, stack_name, template)
+        self.stack.store()
+        self.stack['WebServerGroup'] = rsrc
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
+                                             'WebServerGroup')
+
+        self.assertIn('resource_identity', r)
+        self.assertIn('description', r)
+        self.assertIn('updated_time', r)
+        self.assertIn('stack_identity', r)
+        self.assertIsNotNone(r['stack_identity'])
+        self.assertIn('stack_name', r)
+        self.assertEqual(self.stack.name, r['stack_name'])
+        self.assertIn('metadata', r)
+        self.assertIn('resource_status', r)
+        self.assertIn('resource_status_reason', r)
+        self.assertIn('resource_type', r)
+        self.assertIn('physical_resource_id', r)
+        self.assertIn('resource_name', r)
+        self.assertEqual('WebServerGroup', r['resource_name'])
+        self.assertIn('scaling_group_instances', r)
 
         self.m.VerifyAll()
 
