@@ -535,3 +535,42 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
     def test_update_policy_removed(self):
         self.validate_update_policy_diff(asg_tmpl_with_updt_policy(),
                                          inline_templates.as_heat_template)
+
+
+class IncorrectUpdatePolicyTest(common.HeatTestCase):
+    def setUp(self):
+        super(IncorrectUpdatePolicyTest, self).setUp()
+        self.stub_keystoneclient(username='test_stack.CfnLBUser')
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_resource.ResourceWithPropsAndAttrs)
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def test_with_update_policy_aws(self):
+        t = template_format.parse(inline_templates.as_heat_template)
+        ag = t['resources']['my-group']
+        ag["update_policy"] = {"AutoScalingRollingUpdate": {
+            "MinInstancesInService": "1",
+            "MaxBatchSize": "2",
+            "PauseTime": "PT1S"
+        }}
+        tmpl = template_format.parse(json.dumps(t))
+        stack = utils.parse_stack(tmpl)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+        self.assertIn('Unknown Property AutoScalingRollingUpdate',
+                      six.text_type(exc))
+
+    def test_with_update_policy_inst_group(self):
+        t = template_format.parse(inline_templates.as_heat_template)
+        ag = t['resources']['my-group']
+        ag["update_policy"] = {"RollingUpdate": {
+            "MinInstancesInService": "1",
+            "MaxBatchSize": "2",
+            "PauseTime": "PT1S"
+        }}
+        tmpl = template_format.parse(json.dumps(t))
+        stack = utils.parse_stack(tmpl)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+        self.assertIn('Unknown Property RollingUpdate', six.text_type(exc))

@@ -123,6 +123,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             _("The current size of AutoscalingResourceGroup.")
         ),
     }
+    update_policy_schema = {}
 
     def _get_instance_definition(self):
         rsrc = self.properties[self.RESOURCE]
