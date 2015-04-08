@@ -25,9 +25,9 @@ from heat.engine.clients.os import glance
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import test_volume_utils as vt_base
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 cinder_volume_template = '''
 heat_template_version: 2013-05-23
@@ -265,7 +265,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 
@@ -431,7 +431,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fvd)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         # resize script
         self.cinder_fc.volumes.extend(fvd.id, 2)
@@ -671,7 +671,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),
@@ -724,7 +724,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         # attach script
         fv2a = vt_base.FakeVolume('attaching', id='vol-456')
@@ -770,7 +770,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         # attach script
         self._mock_create_server_volume_script(vt_base.FakeVolume('attaching'),

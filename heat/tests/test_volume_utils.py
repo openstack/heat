@@ -21,13 +21,13 @@ from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine.resources.openstack.cinder import volume as os_vol
 from heat.engine import scheduler
 from heat.tests import common
-from heat.tests.v1_1 import fakes as fakes_v1_1
+from heat.tests.nova import fakes as fakes_nova
 
 
 class BaseVolumeTest(common.HeatTestCase):
     def setUp(self):
         super(BaseVolumeTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
         self.cinder_fc.volume_api_version = 2
         self.m.StubOutWithMock(cinder.CinderClientPlugin, '_create')

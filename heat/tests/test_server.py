@@ -35,8 +35,8 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 wp_template = '''
@@ -98,7 +98,7 @@ resources:
 class ServersTest(common.HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
 
@@ -1126,7 +1126,7 @@ class ServersTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
         get().AndReturn(server_get)
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         mox.Replay(get)
         self.m.ReplayAll()
 
@@ -1145,7 +1145,7 @@ class ServersTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         mox.Replay(get)
 
         scheduler.TaskRunner(server.delete)()
@@ -1634,7 +1634,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         mox.Replay(get)
         self.m.ReplayAll()
 
@@ -1803,7 +1803,7 @@ class ServersTest(common.HeatTestCase):
         # return the SUSPENDED state first (twice, so we sleep)
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         server.state_set(server.SUSPEND, server.COMPLETE)
@@ -2340,7 +2340,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
         get = self.fc.client.get_servers_1234
-        get().AndRaise(fakes_v1_1.fake_exception())
+        get().AndRaise(fakes_nova.fake_exception())
         mox.Replay(get)
         self.m.ReplayAll()
 
