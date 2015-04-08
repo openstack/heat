@@ -20,66 +20,7 @@ from heat.engine import support
 
 
 class KeystoneUser(role_assignments.KeystoneRoleAssignment):
-    '''
-    Heat Template Resource for Keystone User.
-
-    heat_template_version: 2013-05-23
-
-    description: Sample Keystone User template
-
-    parameters:
-      user_name:
-        type: string
-        description: Keystone user name
-      user_description:
-        type: string
-        description: Keystone user description
-      user_enabled:
-        type: boolean
-        description: Keystone user is enabled or disabled
-      user_domain:
-        type: string
-        description: Keystone user domain name
-      user_email:
-        type: string
-        description: Keystone user email address
-      user_password:
-        type: string
-        description: Keystone user password
-      user_default_project:
-        type: string
-        description: Keystone user default project id
-      user_groups:
-        type: comma_delimited_list
-        description: Keystone groups, where this user is part of
-      group_role:
-        type: string
-        description: role
-      group_role_domain:
-        type: string
-        description: group role domain
-      group_role_project:
-        type: string
-        description: group role project
-
-    resources:
-      admin_user:
-        type: OS::Keystone::User
-        properties:
-          name: {get_param: user_name}
-          domain: {get_param: user_domain}
-          description: {get_param: user_description}
-          enabled: {get_param: user_enabled}
-          email: {get_param: user_email}
-          password: {get_param: user_password}
-          default_project: {get_param: user_default_project}
-          groups: {get_param: user_groups}
-          roles:
-            - role: {get_param: group_role}
-              domain: {get_param: group_role_domain}
-            - role: {get_param: group_role}
-              project: {get_param: group_role_project}
-    '''
+    """Heat Template Resource for Keystone User."""
 
     support_status = support.SupportStatus(
         version='2015.1',

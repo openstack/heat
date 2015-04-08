@@ -20,46 +20,7 @@ from heat.engine import support
 
 
 class KeystoneGroup(role_assignments.KeystoneRoleAssignment):
-    '''
-    Heat Template Resource for Keystone Group.
-
-    heat_template_version: 2013-05-23
-
-    description: Sample Keystone Group template
-
-    parameters:
-      group_name:
-        type: string
-        description: Keystone group name
-      group_description:
-        type: string
-        description: Keystone group description
-      group_domain:
-        type: string
-        description: Keystone group domain name
-      group_role:
-        type: string
-        description: role
-      group_role_domain:
-        type: string
-        description: group role domain
-      group_role_project:
-        type: string
-        description: group role project
-
-    resources:
-      admin_group:
-        type: OS::Keystone::Group
-        properties:
-          name: {get_param: group_name}
-          domain: {get_param: group_domain}
-          description: {get_param: group_description}
-          roles:
-            - role: {get_param: group_role}
-              domain: {get_param: group_role_domain}
-            - role: {get_param: group_role}
-              project: {get_param: group_role_project}
-    '''
+    """Heat Template Resource for Keystone Group."""
 
     support_status = support.SupportStatus(
         version='2015.1',

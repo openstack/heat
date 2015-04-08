@@ -19,37 +19,7 @@ from heat.engine import support
 
 
 class KeystoneProject(resource.Resource):
-    '''
-    Heat Template Resource for Keystone Project.
-
-    heat_template_version: 2013-05-23
-
-    description: Sample Keystone Project template
-
-    parameters:
-      project_name:
-        type: string
-        description: Keystone project name
-      project_description:
-        type: string
-        description: Keystone project description
-      project_enabled:
-        type: boolean
-        description: Keystone project is enabled or disabled
-      project_domain:
-        type: string
-        description: Keystone project domain name or id
-
-    resources:
-      admin_project:
-        type: OS::Keystone::Project
-        properties:
-          name: {get_param: project_name}
-          domain: {get_param: project_domain}
-          description: {get_param: project_description}
-          enabled: {get_param: project_enabled}
-
-    '''
+    """Heat Template Resource for Keystone Project."""
 
     support_status = support.SupportStatus(
         version='2015.1',
