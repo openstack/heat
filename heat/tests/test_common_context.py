@@ -16,6 +16,7 @@ import os
 import mock
 from oslo_config import cfg
 from oslo_middleware import request_id
+from oslo_policy import opts as policy_opts
 import webob
 
 from heat.common import context
@@ -247,7 +248,7 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
             cfg.StrOpt('project', default='heat'),
         ]
         cfg.CONF.register_opts(opts)
-        cfg.CONF.set_override('policy_file', 'check_admin.json')
+        policy_opts.set_defaults(cfg.CONF, 'check_admin.json')
 
     def test_context_middleware(self):
 

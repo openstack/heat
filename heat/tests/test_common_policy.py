@@ -17,10 +17,10 @@
 import os.path
 
 from oslo_config import cfg
+from oslo_policy import policy as base_policy
 
 from heat.common import exception
 from heat.common import policy
-from heat.openstack.common import policy as base_policy
 from heat.tests import common
 from heat.tests import utils
 
@@ -155,11 +155,10 @@ class TestPolicyEnforcer(common.HeatTestCase):
 
     def test_default_rule(self):
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
-        default_rule = base_policy.FalseCheck()
         enforcer = policy.Enforcer(
             scope='cloudformation',
             policy_file=self.get_policy_file('deny_stack_user.json'),
-            exc=None, default_rule=default_rule)
+            exc=None, default_rule='!')
         action = 'no_such_action'
         self.assertFalse(enforcer.enforce(ctx, action))
 
