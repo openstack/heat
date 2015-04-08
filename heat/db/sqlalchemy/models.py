@@ -168,11 +168,10 @@ class Stack(BASE, HeatBase, SoftDelete, StateAware):
     user_creds_id = sqlalchemy.Column(
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('user_creds.id'))
-    owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
+    owner_id = sqlalchemy.Column(sqlalchemy.String(36))
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
     disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
-    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
-                                              nullable=True)
+    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64))
     backup = sqlalchemy.Column('backup', sqlalchemy.Boolean)
     nested_depth = sqlalchemy.Column('nested_depth', sqlalchemy.Integer)
     convergence = sqlalchemy.Column('convergence', sqlalchemy.Boolean)
@@ -280,7 +279,7 @@ class Resource(BASE, HeatBase, StateAware):
     uuid = sqlalchemy.Column(sqlalchemy.String(36),
                              default=lambda: str(uuid.uuid4()),
                              unique=True)
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
     nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String(255))
     # odd name as "metadata" is reserved
     rsrc_metadata = sqlalchemy.Column('rsrc_metadata', types.Json)
@@ -319,7 +318,7 @@ class WatchRule(BASE, HeatBase):
     __tablename__ = 'watch_rule'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
     rule = sqlalchemy.Column('rule', types.Json)
     state = sqlalchemy.Column('state', sqlalchemy.String(255))
     last_evaluated = sqlalchemy.Column(sqlalchemy.DateTime,
@@ -356,8 +355,7 @@ class SoftwareConfig(BASE, HeatBase):
 
     id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
                            default=lambda: str(uuid.uuid4()))
-    name = sqlalchemy.Column('name', sqlalchemy.String(255),
-                             nullable=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
     group = sqlalchemy.Column('group', sqlalchemy.String(255))
     config = sqlalchemy.Column('config', types.Json)
     tenant = sqlalchemy.Column(
@@ -388,8 +386,7 @@ class SoftwareDeployment(BASE, HeatBase, StateAware):
     output_values = sqlalchemy.Column('output_values', types.Json)
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(64), nullable=False, index=True)
-    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64),
-                                              nullable=True)
+    stack_user_project_id = sqlalchemy.Column(sqlalchemy.String(64))
     updated_at = sqlalchemy.Column(sqlalchemy.DateTime)
 
 
@@ -402,7 +399,7 @@ class Snapshot(BASE, HeatBase):
     stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
-    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255))
     data = sqlalchemy.Column('data', types.Json)
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(64), nullable=False, index=True)
