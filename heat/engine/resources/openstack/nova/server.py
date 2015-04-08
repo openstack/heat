@@ -439,13 +439,19 @@ class Server(stack_user.StackUser):
         ),
         ADDRESSES: attributes.Schema(
             _('A dict of all network addresses with corresponding port_id. '
+              'Each network will have two keys in dict, they are network '
+              'name and network id. '
               'The port ID may be obtained through the following expression: '
-              '"{get_attr: [<server>, addresses, <network name>, 0, port]}".'),
+              '"{get_attr: [<server>, addresses, <network name_or_id>, 0, '
+              'port]}".'),
             type=attributes.Schema.MAP
         ),
         NETWORKS_ATTR: attributes.Schema(
             _('A dict of assigned network addresses of the form: '
-              '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
+              '{"public": [ip1, ip2...], "private": [ip3, ip4], '
+              '"public_uuid": [ip1, ip2...], "private_uuid": [ip3, ip4]}. '
+              'Each network will have two keys in dict, they are network '
+              'name and network id. '),
             type=attributes.Schema.MAP
         ),
         FIRST_ADDRESS: attributes.Schema(
@@ -877,6 +883,18 @@ class Server(stack_user.StackUser):
             for addr in nets[net_name]:
                 addr['port'] = ip_mac_mapping_on_port_id.get(
                     (addr['addr'], addr['OS-EXT-IPS-MAC:mac_addr']))
+        return self._extend_networks(nets)
+
+    def _extend_networks(self, networks):
+        nets = copy.deepcopy(networks)
+        for key in nets.keys():
+            try:
+                net_id = self.client_plugin().get_net_id_by_label(key)
+            except (exception.NovaNetworkNotFound,
+                    exception.PhysicalResourceNameAmbiguity):
+                net_id = None
+            if net_id:
+                nets[net_id] = nets[key]
         return nets
 
     def _resolve_attribute(self, name):
@@ -893,7 +911,7 @@ class Server(stack_user.StackUser):
         if name == self.ADDRESSES:
             return self._add_port_for_address(server)
         if name == self.NETWORKS_ATTR:
-            return server.networks
+            return self._extend_networks(server.networks)
         if name == self.INSTANCE_NAME:
             return server._info.get('OS-EXT-SRV-ATTR:instance_name')
         if name == self.ACCESSIPV4:

@@ -2501,6 +2501,25 @@ class ServersTest(common.HeatTestCase):
                          set(six.iterkeys(console_urls)))
         self.m.VerifyAll()
 
+    def test_resolve_attribute_networks(self):
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'srv_resolve_attr')
+
+        server.resource_id = '1234'
+        server.networks = {"fake_net": ["10.0.0.3"]}
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(server.resource_id).AndReturn(server)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_net_id_by_label')
+        nova.NovaClientPlugin.get_net_id_by_label(
+            'fake_net').AndReturn('fake_uuid')
+        self.m.ReplayAll()
+        expect_networks = {"fake_uuid": ["10.0.0.3"],
+                           "fake_net": ["10.0.0.3"]}
+        self.assertEqual(expect_networks,
+                         server._resolve_attribute("networks"))
+        self.m.VerifyAll()
+
     def test_default_instance_user(self):
         """The default value for instance_user in heat.conf is ec2-user."""
         return_server = self.fc.servers.list()[1]
