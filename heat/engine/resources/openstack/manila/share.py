@@ -300,6 +300,45 @@ class ManilaShare(resource.Resource):
                    'current': share.status}]
         self._verify_check_conditions(checks)
 
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        kwargs = {}
+        if self.IS_PUBLIC in prop_diff:
+            kwargs['is_public'] = prop_diff.get(self.IS_PUBLIC)
+        if self.NAME in prop_diff:
+            kwargs['display_name'] = prop_diff.get(self.NAME)
+        if self.DESCRIPTION in prop_diff:
+            kwargs['display_description'] = prop_diff.get(self.DESCRIPTION)
+        if kwargs:
+            self.client().shares.update(self.resource_id,
+                                        **kwargs)
+
+        if self.METADATA in prop_diff:
+            metadata = prop_diff.get(self.METADATA)
+            self.client().shares.update_all_metadata(
+                self.resource_id, metadata)
+
+        if self.ACCESS_RULES in prop_diff:
+            actual_old_rules = []
+            for rule in self.client().shares.access_list(self.resource_id):
+                old_rule = {
+                    self.ACCESS_TO: getattr(rule, self.ACCESS_TO),
+                    self.ACCESS_TYPE: getattr(rule, self.ACCESS_TYPE),
+                    self.ACCESS_LEVEL: getattr(rule, self.ACCESS_LEVEL)
+                }
+                if old_rule in prop_diff[self.ACCESS_RULES]:
+                    actual_old_rules.append(old_rule)
+                else:
+                    self.client().shares.deny(share=self.resource_id,
+                                              id=rule.id)
+            for rule in prop_diff[self.ACCESS_RULES]:
+                if rule not in actual_old_rules:
+                    self.client().shares.allow(
+                        share=self.resource_id,
+                        access_type=rule.get(self.ACCESS_TYPE),
+                        access=rule.get(self.ACCESS_TO),
+                        access_level=rule.get(self.ACCESS_LEVEL)
+                    )
+
 
 def resource_mapping():
     return {'OS::Manila::Share': ManilaShare}
