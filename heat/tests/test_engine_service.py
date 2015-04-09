@@ -3349,7 +3349,7 @@ class StackServiceTest(common.HeatTestCase):
 
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())
-    @mock.patch.object(service_objects.Stack, 'get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     @mock.patch('heat.engine.stack_lock.StackLock',
                 return_value=mock.Mock())
     @mock.patch.object(parser.Stack, 'load')
