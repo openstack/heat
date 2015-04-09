@@ -75,7 +75,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         result = self.man.stack_suspend(self.ctx, stk.identifier())
         self.assertIsNone(result)
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_link.assert_called_once_with(mock.ANY, sid)
+        mock_link.assert_called_once_with(mock.ANY)
         mock_start.assert_called_once_with(sid, mock.ANY, stk)
 
         stk.delete()
@@ -96,7 +96,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         self.assertIsNone(result)
 
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
-        mock_link.assert_called_once_with(mock.ANY, sid)
+        mock_link.assert_called_once_with(mock.ANY)
         mock_start.assert_called_once_with(sid, mock.ANY, stk)
 
         stk.delete()

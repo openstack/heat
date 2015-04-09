@@ -16,6 +16,7 @@ import oslo_messaging as messaging
 
 from heat.common import exception
 from heat.engine import stack_lock
+from heat.objects import stack as stack_object
 from heat.objects import stack_lock as stack_lock_object
 from heat.tests import common
 from heat.tests import utils
@@ -25,11 +26,14 @@ class StackLockTest(common.HeatTestCase):
     def setUp(self):
         super(StackLockTest, self).setUp()
         self.context = utils.dummy_context()
-        self.stack = mock.MagicMock()
-        self.stack.id = "aae01f2d-52ae-47ac-8a0d-3fde3d220fea"
-        self.stack.name = "test_stack"
-        self.stack.action = "CREATE"
+        self.stack_id = "aae01f2d-52ae-47ac-8a0d-3fde3d220fea"
         self.engine_id = stack_lock.StackLock.generate_engine_id()
+        stack = mock.MagicMock()
+        stack.id = self.stack_id
+        stack.name = "test_stack"
+        stack.action = "CREATE"
+        self.patchobject(stack_object.Stack, 'get_by_id',
+                         return_value=stack)
 
     class TestThreadLockException(Exception):
             pass
@@ -39,20 +43,22 @@ class StackLockTest(common.HeatTestCase):
                                        'create',
                                        return_value=None)
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         slock.acquire()
 
-        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
+        mock_create.assert_called_once_with(self.stack_id, self.engine_id)
 
     def test_failed_acquire_existing_lock_current_engine(self):
         mock_create = self.patchobject(stack_lock_object.StackLock,
                                        'create',
                                        return_value=self.engine_id)
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
 
         self.assertRaises(exception.ActionInProgress, slock.acquire)
-        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
+        mock_create.assert_called_once_with(self.stack_id, self.engine_id)
 
     def test_successful_acquire_existing_lock_engine_dead(self):
         mock_create = self.patchobject(stack_lock_object.StackLock,
@@ -62,12 +68,13 @@ class StackLockTest(common.HeatTestCase):
                                       'steal',
                                       return_value=None)
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
 
-        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
-        mock_steal.assert_called_once_with(self.stack.id, 'fake-engine-id',
+        mock_create.assert_called_once_with(self.stack_id, self.engine_id)
+        mock_steal.assert_called_once_with(self.stack_id, 'fake-engine-id',
                                            self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_alive(self):
@@ -75,11 +82,12 @@ class StackLockTest(common.HeatTestCase):
                                        'create',
                                        return_value='fake-engine-id')
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=True)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
 
-        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
+        mock_create.assert_called_once_with(self.stack_id, self.engine_id)
 
     def test_failed_acquire_existing_lock_engine_dead(self):
         mock_create = self.patchobject(stack_lock_object.StackLock,
@@ -89,12 +97,13 @@ class StackLockTest(common.HeatTestCase):
                                       'steal',
                                       return_value='fake-engine-id2')
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
 
-        mock_create.assert_called_once_with(self.stack.id, self.engine_id)
-        mock_steal.assert_called_once_with(self.stack.id, 'fake-engine-id',
+        mock_create.assert_called_once_with(self.stack_id, self.engine_id)
+        mock_steal.assert_called_once_with(self.stack_id, 'fake-engine-id',
                                            self.engine_id)
 
     def test_successful_acquire_with_retry(self):
@@ -105,14 +114,15 @@ class StackLockTest(common.HeatTestCase):
                                       'steal',
                                       side_effect=[True, None])
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         slock.acquire()
 
         mock_create.assert_has_calls(
-            [mock.call(self.stack.id, self.engine_id)] * 2)
+            [mock.call(self.stack_id, self.engine_id)] * 2)
         mock_steal.assert_has_calls(
-            [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
+            [mock.call(self.stack_id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_failed_acquire_one_retry_only(self):
         mock_create = self.patchobject(stack_lock_object.StackLock,
@@ -122,22 +132,24 @@ class StackLockTest(common.HeatTestCase):
                                       'steal',
                                       return_value=True)
 
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         self.patchobject(slock, 'engine_alive', return_value=False)
         self.assertRaises(exception.ActionInProgress, slock.acquire)
 
         mock_create.assert_has_calls(
-            [mock.call(self.stack.id, self.engine_id)] * 2)
+            [mock.call(self.stack_id, self.engine_id)] * 2)
         mock_steal.assert_has_calls(
-            [mock.call(self.stack.id, 'fake-engine-id', self.engine_id)] * 2)
+            [mock.call(self.stack_id, 'fake-engine-id', self.engine_id)] * 2)
 
     def test_thread_lock_context_mgr_exception_acquire_success(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=None)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
 
         def check_thread_lock():
-            with slock.thread_lock(self.stack.id):
+            with slock.thread_lock():
                 self.assertEqual(1,
                                  stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
@@ -148,10 +160,11 @@ class StackLockTest(common.HeatTestCase):
         stack_lock_object.StackLock.create = mock.Mock(
             return_value=self.engine_id)
         stack_lock_object.StackLock.release = mock.Mock()
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
 
         def check_thread_lock():
-            with slock.thread_lock(self.stack.id):
+            with slock.thread_lock():
                 self.assertEqual(1,
                                  stack_lock_object.StackLock.create.call_count)
                 raise exception.ActionInProgress
@@ -161,18 +174,20 @@ class StackLockTest(common.HeatTestCase):
     def test_thread_lock_context_mgr_no_exception(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=None)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        with slock.thread_lock(self.stack.id):
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
+        with slock.thread_lock():
             self.assertEqual(1, stack_lock_object.StackLock.create.call_count)
         assert not stack_lock_object.StackLock.release.called
 
     def test_try_thread_lock_context_mgr_exception(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=None)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
 
         def check_thread_lock():
-            with slock.try_thread_lock(self.stack.id):
+            with slock.try_thread_lock():
                 self.assertEqual(1,
                                  stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
@@ -182,18 +197,20 @@ class StackLockTest(common.HeatTestCase):
     def test_try_thread_lock_context_mgr_no_exception(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=None)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
-        with slock.try_thread_lock(self.stack.id):
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
+        with slock.try_thread_lock():
             self.assertEqual(1, stack_lock_object.StackLock.create.call_count)
         assert not stack_lock_object.StackLock.release.called
 
     def test_try_thread_lock_context_mgr_existing_lock(self):
         stack_lock_object.StackLock.create = mock.Mock(return_value=1234)
         stack_lock_object.StackLock.release = mock.Mock(return_value=None)
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
 
         def check_thread_lock():
-            with slock.try_thread_lock(self.stack.id):
+            with slock.try_thread_lock():
                 self.assertEqual(1,
                                  stack_lock_object.StackLock.create.call_count)
                 raise self.TestThreadLockException
@@ -201,7 +218,8 @@ class StackLockTest(common.HeatTestCase):
         assert not stack_lock_object.StackLock.release.called
 
     def test_engine_alive_ok(self):
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         mget_client = self.patchobject(stack_lock.rpc_messaging,
                                        'get_rpc_client')
         mclient = mget_client.return_value
@@ -213,7 +231,8 @@ class StackLockTest(common.HeatTestCase):
         mclient_ctx.call.assert_called_once_with(self.context, 'listening')
 
     def test_engine_alive_timeout(self):
-        slock = stack_lock.StackLock(self.context, self.stack, self.engine_id)
+        slock = stack_lock.StackLock(self.context, self.stack_id,
+                                     self.engine_id)
         mget_client = self.patchobject(stack_lock.rpc_messaging,
                                        'get_rpc_client')
         mclient = mget_client.return_value
