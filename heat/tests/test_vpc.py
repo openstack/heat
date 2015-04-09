@@ -15,9 +15,9 @@ import uuid
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine.resources.aws.ec2 import subnet as sn
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -454,7 +454,7 @@ Resources:
         self.m.ReplayAll()
 
         t = template_format.parse(self.test_template)
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         stack = parser.Stack(utils.dummy_context(), 'test_subnet_', tmpl,
                              stack_id=str(uuid.uuid4()))
         tmpl.t['Resources']['the_subnet']['Properties']['VpcId'] = 'aaaa'

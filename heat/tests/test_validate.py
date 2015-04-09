@@ -20,10 +20,11 @@ from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
-from heat.engine.hot import template as tmpl
-from heat.engine import parser
+from heat.engine.hot import template as hot_tmpl
 from heat.engine import resources
 from heat.engine import service
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -832,14 +833,14 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
-        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
+        stack = parser.Stack(self.ctx, 'test_stack', tmpl.Template(t))
 
         volumeattach = stack['MountPoint']
         self.assertIsNone(volumeattach.validate())
 
     def test_validate_volumeattach_invalid(self):
         t = template_format.parse(test_template_volumeattach % 'sda')
-        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
+        stack = parser.Stack(self.ctx, 'test_stack', tmpl.Template(t))
 
         volumeattach = stack['MountPoint']
         self.assertRaises(exception.StackValidationFailed,
@@ -1246,7 +1247,7 @@ class validateTest(common.HeatTestCase):
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
         params = {'KeyName': 'not_registered'}
-        template = parser.Template(t, env=environment.Environment(params))
+        template = tmpl.Template(t, env=environment.Environment(params))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_success('image_name', 'image_id')
@@ -1258,9 +1259,9 @@ class validateTest(common.HeatTestCase):
 
     def test_unregistered_image(self):
         t = template_format.parse(test_template_image)
-        template = parser.Template(t,
-                                   env=environment.Environment(
-                                       {'KeyName': 'test'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment(
+                                     {'KeyName': 'test'}))
 
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
@@ -1276,9 +1277,9 @@ class validateTest(common.HeatTestCase):
 
     def test_duplicated_image(self):
         t = template_format.parse(test_template_image)
-        template = parser.Template(t,
-                                   env=environment.Environment(
-                                       {'KeyName': 'test'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment(
+                                     {'KeyName': 'test'}))
 
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
@@ -1296,9 +1297,9 @@ class validateTest(common.HeatTestCase):
 
     def test_invalid_security_groups_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroups)
-        template = parser.Template(t,
-                                   env=environment.Environment(
-                                       {'KeyName': 'test'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment(
+                                     {'KeyName': 'test'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self._mock_get_image_id_success('image_name', 'image_id')
@@ -1314,7 +1315,7 @@ class validateTest(common.HeatTestCase):
 
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
-        template = parser.Template(
+        template = tmpl.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
@@ -1331,7 +1332,7 @@ class validateTest(common.HeatTestCase):
 
     def test_client_exception_from_glance_client(self):
         t = template_format.parse(test_template_glance_client_exception)
-        template = parser.Template(t)
+        template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self.m.StubOutWithMock(self.gc.images, 'list')
@@ -1346,7 +1347,7 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_unique_logical_name(self):
         t = template_format.parse(test_template_unique_logical_name)
-        template = parser.Template(
+        template = tmpl.Template(
             t, env=environment.Environment(
                 {'AName': 'test', 'KeyName': 'test'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
@@ -1355,7 +1356,7 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_duplicate_parameters_in_group(self):
         t = template_format.parse(test_template_duplicate_parameters)
-        template = tmpl.HOTemplate20130523(
+        template = hot_tmpl.HOTemplate20130523(
             t, env=environment.Environment({
                 'KeyName': 'test',
                 'ImageId': 'sometestid',
@@ -1370,11 +1371,11 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
-        template = tmpl.HOTemplate20130523(t,
-                                           env=environment.Environment({
-                                               'KeyName': 'test',
-                                               'ImageId': 'sometestid',
-                                               'db_password': 'Pass123'}))
+        template = hot_tmpl.HOTemplate20130523(t,
+                                               env=environment.Environment({
+                                                   'KeyName': 'test',
+                                                   'ImageId': 'sometestid',
+                                                   'db_password': 'Pass123'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -1386,7 +1387,7 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_no_parameters_in_group(self):
         t = template_format.parse(test_template_no_parameters)
-        template = tmpl.HOTemplate20130523(t)
+        template = hot_tmpl.HOTemplate20130523(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
@@ -1396,8 +1397,8 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
-        template = parser.Template(t,
-                                   env=environment.Environment({'size': '4'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment({'size': '4'}))
 
         # test with size parameter provided as string
         stack = parser.Stack(self.ctx, 'test_stack', template)
@@ -1410,8 +1411,8 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
-        template = parser.Template(t,
-                                   env=environment.Environment({'size': '4'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment({'size': '4'}))
 
         # test with size parameter provided as string
         stack = parser.Stack(self.ctx, 'test_stack', template)
@@ -1423,8 +1424,8 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_not_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
-        template = parser.Template(t,
-                                   env=environment.Environment({'size': '3'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment({'size': '3'}))
 
         # test with size parameter provided as string
         stack = parser.Stack(self.ctx, 'test_stack', template)
@@ -1443,8 +1444,8 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_not_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
-        template = parser.Template(t,
-                                   env=environment.Environment({'size': '3'}))
+        template = tmpl.Template(t,
+                                 env=environment.Environment({'size': '3'}))
 
         # test with size parameter provided as string
         stack = parser.Stack(self.ctx, 'test_stack', template)
@@ -1463,7 +1464,7 @@ class validateTest(common.HeatTestCase):
 
     def test_validate_invalid_outputs(self):
         t = template_format.parse(test_template_invalid_outputs)
-        template = parser.Template(t)
+        template = tmpl.Template(t)
         err = self.assertRaises(exception.StackValidationFailed,
                                 parser.Stack, self.ctx, 'test_stack', template)
         error_message = ('Arguments to "get_attr" must be of the form '
@@ -1477,7 +1478,7 @@ class validateTest(common.HeatTestCase):
           resource:
               type: 123
         """)
-        template = parser.Template(t)
+        template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.assertEqual('Resource resource type type must be string',
@@ -1490,7 +1491,7 @@ class validateTest(common.HeatTestCase):
           Resource:
             Type: [Wrong, Type]
         """)
-        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
+        stack = parser.Stack(self.ctx, 'test_stack', tmpl.Template(t))
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.assertEqual('Resource Resource Type type must be string',
                          six.text_type(ex))

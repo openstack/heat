@@ -14,9 +14,9 @@
 import mock
 
 from heat.engine import constraints
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -51,7 +51,7 @@ class KeystoneProjectTest(common.HeatTestCase):
         # For unit testing purpose. Register resource provider explicitly.
         resource._register_class(RESOURCE_TYPE, KeystoneProject)
 
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
             template.Template(keystone_project_template)
         )

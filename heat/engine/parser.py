@@ -11,11 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import warnings
+
 from heat.engine import stack
 from heat.engine import template
 
 # Note: these classes are here for backwards compatibility.
 #       New uses of the Stack class should use stack.Stack().
 #
+warnings.warn('Module parser.py is deprecated. Please use class Template '
+              'in heat.engine.template and class Stack in heat.engine.stack.')
 Template = template.Template
 Stack = stack.Stack

@@ -28,10 +28,11 @@ from heat.db.sqlalchemy import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource as rsrc
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -101,7 +102,7 @@ class SqlAlchemyTest(common.HeatTestCase):
     def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None,
                           stack_user_project_id=None, backup=False):
         t = template_format.parse(wp_template)
-        template = parser.Template(
+        template = tmpl.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
         stack_id = stack_id or str(uuid.uuid4())
         stack = parser.Stack(self.ctx, stack_name, template,
@@ -283,8 +284,8 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def test_encryption(self):
         stack_name = 'test_encryption'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-        resource_defns = tmpl.resource_definitions(stack)
+        (template, stack) = self._setup_test_stack(stack_name)
+        resource_defns = template.resource_definitions(stack)
         cs = MyResource('cs_encryption',
                         resource_defns['WebServer'],
                         stack)

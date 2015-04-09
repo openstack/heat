@@ -23,11 +23,12 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import remote_stack
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack
+from heat.engine import template
 from heat.tests import common as tests_common
 from heat.tests import utils
 
@@ -168,8 +169,8 @@ class RemoteStackTest(tests_common.HeatTestCase):
             self.this_context = utils.dummy_context(
                 region_name=self.this_region)
 
-        tmpl = parser.Template(snippet, files=self.files)
-        parent = parser.Stack(self.this_context, 'parent_stack', tmpl)
+        tmpl = template.Template(snippet, files=self.files)
+        parent = stack.Stack(self.this_context, 'parent_stack', tmpl)
 
         # parent context checking
         ctx = parent.context.to_dict()

@@ -22,11 +22,12 @@ from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.trove import os_database
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
 
@@ -105,7 +106,7 @@ class OSDBInstanceTest(common.HeatTestCase):
 
     def _setup_test_clouddbinstance(self, name, t):
         stack_name = '%s_stack' % name
-        template = parser.Template(t)
+        template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              template,

@@ -21,9 +21,10 @@ from heat.common.i18n import _
 from heat.engine.cfn import functions
 from heat.engine import environment
 from heat.engine import function
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine import rsrc_defn
+from heat.engine import stack
+from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -175,10 +176,10 @@ class ValidateGetAttTest(common.HeatTestCase):
         env.load({u'resource_registry':
                   {u'OS::Test::FakeResource': u'OverwrittenFnGetAttType'}})
 
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             utils.dummy_context(), 'test_stack',
-            parser.Template({"HeatTemplateFormatVersion": "2012-12-12"},
-                            env=env),
+            template.Template({"HeatTemplateFormatVersion": "2012-12-12"},
+                              env=env),
             stack_id=str(uuid.uuid4()))
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
                                                 'OS::Test::GenericResource')

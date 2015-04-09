@@ -22,10 +22,11 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws.cfn import stack as stack_res
 from heat.engine import rsrc_defn
+from heat.engine import stack as parser
+from heat.engine import template
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
@@ -78,7 +79,7 @@ Outputs:
     def parse_stack(self, t, data=None):
         ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         stack_name = 'test_stack'
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
         stack = parser.Stack(ctx, stack_name, tmpl, adopt_stack_data=data)
         stack.store()
         return stack
@@ -122,7 +123,7 @@ Resources:
         urlfetch.get.assert_has_calls(calls)
 
     def test_nested_stack_six_deep(self):
-        template = '''
+        tmpl = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
@@ -130,12 +131,12 @@ Resources:
         Properties:
             TemplateURL: 'https://server.test/depth%i.template'
 '''
-        root_template = template % 1
-        depth1_template = template % 2
-        depth2_template = template % 3
-        depth3_template = template % 4
-        depth4_template = template % 5
-        depth5_template = template % 6
+        root_template = tmpl % 1
+        depth1_template = tmpl % 2
+        depth2_template = tmpl % 3
+        depth3_template = tmpl % 4
+        depth4_template = tmpl % 5
+        depth5_template = tmpl % 6
         depth5_template += '''
             Parameters:
                 KeyName: foo
@@ -202,7 +203,7 @@ Resources:
         urlfetch.get.assert_has_calls(calls, any_order=True)
 
     def test_nested_stack_infinite_recursion(self):
-        template = '''
+        tmpl = '''
 HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
@@ -210,8 +211,8 @@ Resources:
         Properties:
             TemplateURL: 'https://server.test/the.template'
 '''
-        urlfetch.get.return_value = template
-        t = template_format.parse(template)
+        urlfetch.get.return_value = tmpl
+        t = template_format.parse(tmpl)
         stack = self.parse_stack(t)
         res = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
@@ -260,7 +261,7 @@ class ResDataResource(generic_rsrc.GenericResource):
 
 
 class ResDataStackTest(common.HeatTestCase):
-    template = '''
+    tmpl = '''
 HeatTemplateFormatVersion: "2012-12-12"
 Parameters:
   KeyName:
@@ -285,7 +286,7 @@ Outputs:
         return stack
 
     def test_res_data_delete(self):
-        stack = self.create_stack(self.template)
+        stack = self.create_stack(self.tmpl)
         res = stack['res']
         stack.delete()
         self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
@@ -310,7 +311,8 @@ Outputs:
 
         self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         empty_template = {"HeatTemplateFormatVersion": "2012-12-12"}
-        stack = parser.Stack(self.ctx, 'test', parser.Template(empty_template))
+        stack = parser.Stack(self.ctx, 'test',
+                             template.Template(empty_template))
         stack.store()
 
         self.patchobject(urlfetch, 'get', return_value=self.nested_template)

@@ -12,8 +12,8 @@
 #    under the License.
 
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
@@ -171,8 +171,8 @@ class DepAttrsTest(common.HeatTestCase):
     def test_dep_attrs(self):
 
         parsed_tmpl = template_format.parse(self.tmpl)
-        self.stack = parser.Stack(self.ctx, 'test_stack',
-                                  template.Template(parsed_tmpl))
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(parsed_tmpl))
         resources = self.stack.resources.values()
         outputs = self.stack.outputs
 

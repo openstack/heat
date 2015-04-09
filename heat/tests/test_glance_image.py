@@ -17,9 +17,10 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.glance import glance_image as gi
+from heat.engine import stack as parser
+from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
 
@@ -68,7 +69,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template)
         self.stack = parser.Stack(
             self.ctx, 'glance_image_test_stack',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
 
         self.my_image = self.stack['my_image']
@@ -94,7 +95,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties']['min_disk'] = -1
@@ -106,7 +107,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties']['min_ram'] = -1
@@ -118,7 +119,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties'].pop('disk_format')
@@ -130,7 +131,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties']['disk_format'] = 'incorrect_format'
@@ -143,7 +144,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties'].pop('container_format')
@@ -155,7 +156,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties']['container_format'] = 'incorrect_format'
@@ -168,7 +169,7 @@ class GlanceImageTest(common.HeatTestCase):
         tpl = template_format.parse(image_template_validate)
         stack = parser.Stack(
             self.ctx, 'glance_image_stack_validate',
-            parser.Template(tpl)
+            template.Template(tpl)
         )
         image = stack['image']
         image.t['Properties'].pop('location')

@@ -24,8 +24,9 @@ from heat.common import template_format
 from heat.engine import api
 from heat.engine import event
 from heat.engine import parameters
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack as parser
+from heat.engine import template
 from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
@@ -38,7 +39,7 @@ class FormatTest(common.HeatTestCase):
     def setUp(self):
         super(FormatTest, self).setUp()
 
-        template = parser.Template({
+        tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'generic1': {'Type': 'GenericResourceType'},
@@ -52,7 +53,7 @@ class FormatTest(common.HeatTestCase):
         resource._register_class('ResWithComplexPropsAndAttrs',
                                  generic_rsrc.ResWithComplexPropsAndAttrs)
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  template, stack_id=str(uuid.uuid4()))
+                                  tmpl, stack_id=str(uuid.uuid4()))
 
     def _dummy_event(self, event_id):
         resource = self.stack['generic1']
@@ -145,7 +146,7 @@ class FormatTest(common.HeatTestCase):
         self.assertIn('a2', formatted_attributes)
 
     def _get_formatted_resource_properties(self, res_name):
-        tmpl = parser.Template(template_format.parse('''
+        tmpl = template.Template(template_format.parse('''
             heat_template_version: 2013-05-23
             resources:
               resource1:
@@ -341,7 +342,7 @@ class FormatTest(common.HeatTestCase):
         self.assertEqual('foobar', info[rpc_api.STACK_OUTPUTS])
 
     def test_format_stack_outputs(self):
-        template = parser.Template({
+        tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
                 'generic': {'Type': 'GenericResourceType'}
@@ -357,7 +358,7 @@ class FormatTest(common.HeatTestCase):
             }
         })
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             template, stack_id=str(uuid.uuid4()))
+                             tmpl, stack_id=str(uuid.uuid4()))
         stack.action = 'CREATE'
         stack.status = 'COMPLETE'
         stack['generic'].action = 'CREATE'
@@ -908,7 +909,7 @@ class FormatValidateParameterTest(common.HeatTestCase):
         """
 
         t = template_format.parse(self.template % self.param)
-        tmpl = parser.Template(t)
+        tmpl = template.Template(t)
 
         tmpl_params = parameters.Parameters(None, tmpl)
         tmpl_params.validate(validate_value=False)

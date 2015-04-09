@@ -24,10 +24,11 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.objects import resource as resource_objects
 from heat.tests import common
 from heat.tests import utils
@@ -86,8 +87,8 @@ class WaitConditionTest(common.HeatTestCase):
                      stub=True, stub_status=True):
         params = params or {}
         temp = template_format.parse(template)
-        template = parser.Template(temp,
-                                   env=environment.Environment(params))
+        template = tmpl.Template(temp,
+                                 env=environment.Environment(params))
         ctx = utils.dummy_context(tenant_id='test_tenant')
         stack = parser.Stack(ctx, 'test_stack', template,
                              disable_rollback=True)
@@ -355,7 +356,7 @@ class WaitConditionHandleTest(common.HeatTestCase):
 
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
-        template = parser.Template(temp)
+        template = tmpl.Template(temp)
         ctx = utils.dummy_context(tenant_id='test_tenant')
         if stack_name is None:
             stack_name = utils.random_name()
@@ -523,11 +524,11 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
-    def create_stack(self, tmpl=None):
-        if tmpl is None:
-            tmpl = test_template_wc_count
-        temp = template_format.parse(tmpl)
-        template = parser.Template(temp)
+    def create_stack(self, temp=None):
+        if temp is None:
+            temp = test_template_wc_count
+        temp_fmt = template_format.parse(temp)
+        template = tmpl.Template(temp_fmt)
         ctx = utils.dummy_context(tenant_id='test_tenant')
         stack = parser.Stack(ctx, 'test_stack', template,
                              disable_rollback=True)

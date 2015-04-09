@@ -14,8 +14,8 @@
 import mock
 
 from heat.common import exception
-from heat.engine import parser
 from heat.engine.resources.openstack.heat import structured_config as sc
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils

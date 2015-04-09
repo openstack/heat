@@ -19,10 +19,11 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine.resources.aws.ec2 import network_interface as net_interfaces
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -201,9 +202,9 @@ class instancesTest(common.HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        template = parser.Template(t,
-                                   env=environment.Environment(kwargs))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        tmpl = template.Template(t,
+                                 env=environment.Environment(kwargs))
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
                              stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
@@ -256,9 +257,9 @@ class instancesTest(common.HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        template = parser.Template(t,
-                                   env=environment.Environment(kwargs))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        tmpl = template.Template(t,
+                                 env=environment.Environment(kwargs))
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
                              stack_id=str(uuid.uuid4()))
         image_id = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['ImageId'] = image_id
