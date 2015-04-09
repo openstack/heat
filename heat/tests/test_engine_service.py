@@ -1738,7 +1738,7 @@ class StackServiceTest(common.HeatTestCase):
              'added in new version'))
 
     @mock.patch.object(service_stack_watch.StackWatch, 'start_watch_task')
-    @mock.patch.object(service.stack_object.Stack, 'get_all')
+    @mock.patch.object(stack_object.Stack, 'get_all')
     @mock.patch.object(service.service.Service, 'start')
     def test_start_watches_all_stacks(self, mock_super_start, mock_get_all,
                                       start_watch_task):
@@ -3133,7 +3133,7 @@ class StackServiceTest(common.HeatTestCase):
                                self._preview_stack)
         self.assertEqual(exception.StackValidationFailed, ex.exc_info[0])
 
-    @mock.patch.object(service.stack_object.Stack, 'get_by_name')
+    @mock.patch.object(stack_object.Stack, 'get_by_name')
     def test_validate_new_stack_checks_existing_stack(self, mock_stack_get):
         mock_stack_get.return_value = 'existing_db_stack'
         tmpl = templatem.Template(
@@ -3141,7 +3141,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertRaises(exception.StackExists, self.eng._validate_new_stack,
                           self.ctx, 'test_existing_stack', tmpl)
 
-    @mock.patch.object(service.stack_object.Stack, 'count_all')
+    @mock.patch.object(stack_object.Stack, 'count_all')
     def test_validate_new_stack_checks_stack_limit(self, mock_db_count):
         cfg.CONF.set_override('max_stacks_per_tenant', 99)
         mock_db_count.return_value = 99
