@@ -779,16 +779,6 @@ class Instance(resource.Resource):
                             "when specifying BlockDeviceMappings.")
                     raise exception.StackValidationFailed(message=msg)
 
-    def _detach_volumes_task(self):
-        '''
-        Detach volumes from the instance
-        '''
-        detach_tasks = (vol_task.VolumeDetachTask(self.stack,
-                                                  self.resource_id,
-                                                  volume_id)
-                        for volume_id, device in self.volumes())
-        return scheduler.PollingTaskGroup(detach_tasks)
-
     def handle_delete(self):
         # make sure to delete the port which implicit-created by heat
         self._port_data_delete()
@@ -800,21 +790,16 @@ class Instance(resource.Resource):
         except Exception as e:
             self.client_plugin().ignore_not_found(e)
             return
-        deleters = (
-            scheduler.TaskRunner(self._detach_volumes_task()),
-            scheduler.TaskRunner(self.client_plugin().delete_server,
-                                 server))
-        deleters[0].start()
-        return deleters
+        deleter = scheduler.TaskRunner(self.client_plugin().delete_server,
+                                       server)
+        deleter.start()
+        return deleter
 
-    def check_delete_complete(self, deleters):
+    def check_delete_complete(self, deleter):
         # if the resource was already deleted, deleters will be None
-        if deleters:
-            for deleter in deleters:
-                if not deleter.started():
-                    deleter.start()
-                if not deleter.step():
-                    return False
+        if deleter:
+            if not deleter.step():
+                return False
         return True
 
     def handle_suspend(self):
@@ -835,44 +820,27 @@ class Instance(resource.Resource):
                                          self.resource_id)
         else:
             LOG.debug("suspending instance %s" % self.resource_id)
-            # We want the server.suspend to happen after the volume
-            # detachement has finished, so pass both tasks and the server
-            suspend_runner = scheduler.TaskRunner(server.suspend)
-            volumes_runner = scheduler.TaskRunner(self._detach_volumes_task())
-            return server, suspend_runner, volumes_runner
+            server.suspend()
+            return server
 
-    def check_suspend_complete(self, cookie):
-        server, suspend_runner, volumes_runner = cookie
+    def check_suspend_complete(self, server):
 
-        if not volumes_runner.started():
-            volumes_runner.start()
+        if server.status == 'SUSPENDED':
+            return True
 
-        if volumes_runner.done():
-            if not suspend_runner.started():
-                suspend_runner.start()
-
-            if suspend_runner.done():
-                if server.status == 'SUSPENDED':
-                    return True
-
-                cp = self.client_plugin()
-                cp.refresh_server(server)
-                LOG.debug("%(name)s check_suspend_complete "
-                          "status = %(status)s",
-                          {'name': self.name, 'status': server.status})
-                if server.status in list(cp.deferred_server_statuses +
-                                         ['ACTIVE']):
-                    return server.status == 'SUSPENDED'
-                else:
-                    raise exception.Error(_(' nova reported unexpected '
-                                            'instance[%(instance)s] '
-                                            'status[%(status)s]') %
-                                          {'instance': self.name,
-                                           'status': server.status})
-            else:
-                suspend_runner.step()
+        cp = self.client_plugin()
+        cp.refresh_server(server)
+        LOG.debug("%(name)s check_suspend_complete "
+                  "status = %(status)s",
+                  {'name': self.name, 'status': server.status})
+        if server.status in list(cp.deferred_server_statuses + ['ACTIVE']):
+            return server.status == 'SUSPENDED'
         else:
-            volumes_runner.step()
+            raise exception.Error(_(' nova reported unexpected '
+                                    'instance[%(instance)s] '
+                                    'status[%(status)s]') %
+                                  {'instance': self.name,
+                                  'status': server.status})
 
     def handle_resume(self):
         '''
@@ -893,12 +861,10 @@ class Instance(resource.Resource):
         else:
             LOG.debug("resuming instance %s" % self.resource_id)
             server.resume()
-            return server, scheduler.TaskRunner(self._attach_volumes_task())
+            return server
 
-    def check_resume_complete(self, cookie):
-        server, volume_attach_task = cookie
-        return (self._check_active(server) and
-                self._check_volume_attached(server, volume_attach_task))
+    def check_resume_complete(self, server):
+        return self._check_active(server)
 
 
 def resource_mapping():
