@@ -76,6 +76,18 @@ def resource_data_delete(resource, key):
     return IMPL.resource_data_delete(resource, key)
 
 
+def stack_tags_set(context, stack_id, tags):
+    return IMPL.stack_tags_set(context, stack_id, tags)
+
+
+def stack_tags_delete(context, stack_id):
+    return IMPL.stack_tags_delete(context, stack_id)
+
+
+def stack_tags_get(context, stack_id):
+    return IMPL.stack_tags_get(context, stack_id)
+
+
 def resource_get(context, resource_id):
     return IMPL.resource_get(context, resource_id)
 

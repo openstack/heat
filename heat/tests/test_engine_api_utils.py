@@ -304,6 +304,7 @@ class FormatTest(common.HeatTestCase):
             'stack_user_project_id': None,
             'template_description': 'No description',
             'timeout_mins': None,
+            'tags': None,
             'parameters': {
                 'AWS::Region': 'ap-southeast-1',
                 'AWS::StackId': aws_id,
@@ -1056,3 +1057,36 @@ class TestExtractArgs(common.HeatTestCase):
     def test_disable_rollback_extract_bad(self):
         self.assertRaises(ValueError, api.extract_args,
                           {'disable_rollback': 'bad'})
+
+    def test_tags_extract(self):
+        p = {'tags': ["tag1", "tag2"]}
+        args = api.extract_args(p)
+        self.assertEqual(['tag1', 'tag2'], args['tags'])
+
+    def test_tags_extract_not_present(self):
+        args = api.extract_args({})
+        self.assertNotIn('tags', args)
+
+    def test_tags_extract_not_map(self):
+        p = {'tags': {"foo": "bar"}}
+        exc = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertIn('Invalid tags, not a list: ', six.text_type(exc))
+
+    def test_tags_extract_not_string(self):
+        p = {'tags': ["tag1", 2]}
+        exc = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertIn('Invalid tag, "2" is not a string', six.text_type(exc))
+
+    def test_tags_extract_over_limit(self):
+        p = {'tags': ["tag1", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}
+        exc = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertIn('Invalid tag, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" is longer '
+                      'than 80 characters', six.text_type(exc))
+
+    def test_tags_extract_comma(self):
+        p = {'tags': ["tag1", 'tag2,']}
+        exc = self.assertRaises(ValueError, api.extract_args, p)
+        self.assertIn('Invalid tag, "tag2," contains a comma',
+                      six.text_type(exc))

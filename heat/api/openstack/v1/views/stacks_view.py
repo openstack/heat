@@ -31,6 +31,7 @@ basic_keys = (
     rpc_api.STACK_OWNER,
     rpc_api.STACK_PARENT,
     rpc_api.STACK_USER_PROJECT_ID,
+    rpc_api.STACK_TAGS,
 )
 
 

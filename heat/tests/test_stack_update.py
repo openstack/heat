@@ -187,6 +187,49 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual(True, self.stack.disable_rollback)
 
+    def test_update_tags(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Description': 'ATemplate',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 template.Template(tmpl),
+                                 tags=['tag1', 'tag2'])
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(['tag1', 'tag2'], self.stack.tags)
+
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl),
+                                    tags=['tag3', 'tag4'])
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(['tag3', 'tag4'], self.stack.tags)
+
+    def test_update_tags_remove_all(self):
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Description': 'ATemplate',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = stack.Stack(self.ctx, 'update_test_stack',
+                                 template.Template(tmpl),
+                                 tags=['tag1', 'tag2'])
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(['tag1', 'tag2'], self.stack.tags)
+
+        updated_stack = stack.Stack(self.ctx, 'updated_stack',
+                                    template.Template(tmpl))
+        self.stack.update(updated_stack)
+        self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual(None, self.stack.tags)
+
     def test_update_modify_ok_replace(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
