@@ -143,7 +143,8 @@ class CloudWatchAlarm(resource.Resource):
     support_status = support.SupportStatus(
         status=support.DEPRECATED,
         message=_('OS::Heat::CWLiteAlarm is deprecated, '
-                  'use OS::Ceilometer::Alarm instead.'))
+                  'use OS::Ceilometer::Alarm instead.'),
+        version='2014.2')
 
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,

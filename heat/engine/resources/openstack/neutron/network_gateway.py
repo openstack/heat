@@ -95,8 +95,9 @@ class NetworkGateway(neutron.NeutronResource):
                     NETWORK_ID: properties.Schema(
                         properties.Schema.STRING,
                         support_status=support.SupportStatus(
-                            support.DEPRECATED,
-                            _('Use property %s.') % NETWORK),
+                            status=support.DEPRECATED,
+                            message=_('Use property %s.') % NETWORK,
+                            version='2014.2'),
                         required=False,
                         constraints=[
                             constraints.CustomConstraint('neutron.network')

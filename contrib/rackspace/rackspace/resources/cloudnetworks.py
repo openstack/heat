@@ -48,8 +48,9 @@ class CloudNetwork(resource.Resource):
     """
 
     support_status = support.SupportStatus(
-        support.DEPRECATED,
-        _('Use OS::Neutron::Net instead.'),
+        status=support.DEPRECATED,
+        message=_('Use OS::Neutron::Net instead.'),
+        version='2015.1'
     )
 
     PROPERTIES = (

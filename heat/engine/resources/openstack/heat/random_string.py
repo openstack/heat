@@ -79,8 +79,9 @@ class RandomString(resource.Resource):
                                            'octdigits']),
             ],
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % CHARACTER_CLASSES
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % CHARACTER_CLASSES,
+                version='2014.2'
             )
         ),
         CHARACTER_CLASSES: properties.Schema(

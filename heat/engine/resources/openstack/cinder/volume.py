@@ -106,8 +106,9 @@ class CinderVolume(aws_vol.Volume):
             properties.Schema.STRING,
             _('The ID of the image to create the volume from.'),
             support_status=support.SupportStatus(
-                support.DEPRECATED,
-                _('Use property %s.') % IMAGE)
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % IMAGE,
+                version='2014.1')
         ),
         IMAGE: properties.Schema(
             properties.Schema.STRING,
