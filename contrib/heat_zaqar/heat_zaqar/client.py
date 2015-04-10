@@ -42,12 +42,12 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
             'os_auth_token': con.auth_token,
             'os_auth_url': con.auth_url,
             'os_project_id': con.tenant,
-            'os_service_type': 'queuing',
+            'os_service_type': 'messaging',
         }
         auth_opts = {'backend': 'keystone',
                      'options': opts}
         conf = {'auth_opts': auth_opts}
-        endpoint = self.url_for(service_type='queuing')
+        endpoint = self.url_for(service_type='messaging')
 
         client = zaqarclient.Client(url=endpoint, conf=conf)
 
