@@ -28,7 +28,8 @@ from heat.engine import support
 
 _CODE_NAMES = {'2014.1': 'Icehouse',
                '2014.2': 'Juno',
-               '2015.1': 'Kilo'}
+               '2015.1': 'Kilo',
+               '2015.2': 'Liberty'}
 
 all_resources = {}
 
