@@ -14,6 +14,7 @@
 import collections
 import numbers
 import re
+import warnings
 
 from oslo_utils import strutils
 import six
@@ -83,6 +84,10 @@ class Schema(collections.Mapping):
         if self.type not in self.TYPES:
             raise exception.InvalidSchemaError(
                 message=_('Invalid type (%s)') % self.type)
+
+        if required and default is not None:
+            warnings.warn("Option 'required=True' should not be used with "
+                          "any 'default' value ({0})".format(default))
 
         self.description = description
         self.required = required
