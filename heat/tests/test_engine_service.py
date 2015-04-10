@@ -1750,7 +1750,8 @@ class StackServiceTest(common.HeatTestCase):
         self.eng.thread_group_mgr = None
         self.eng.create_periodic_tasks()
 
-        mock_get_all.assert_called_once_with(mock.ANY, tenant_safe=False)
+        mock_get_all.assert_called_once_with(mock.ANY, tenant_safe=False,
+                                             show_hidden=True)
         calls = start_watch_task.call_args_list
         self.assertEqual(2, start_watch_task.call_count)
         self.assertIn(mock.call(1, mock.ANY), calls)
@@ -2057,6 +2058,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
+                                                   mock.ANY,
                                                    )
 
     @mock.patch.object(stack_object.Stack, 'get_all')
@@ -2069,6 +2071,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    filters,
+                                                   mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
@@ -2086,6 +2089,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    True,
                                                    mock.ANY,
                                                    mock.ANY,
+                                                   mock.ANY,
                                                    )
 
     @mock.patch.object(stack_object.Stack, 'get_all')
@@ -2098,6 +2102,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    False,
+                                                   mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
                                                    )
@@ -2114,6 +2119,7 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    True,
+                                                   mock.ANY,
                                                    )
 
     @mock.patch.object(stack_object.Stack, 'get_all')
@@ -2128,6 +2134,22 @@ class StackServiceTest(common.HeatTestCase):
                                                    mock.ANY,
                                                    True,
                                                    mock.ANY,
+                                                   mock.ANY,
+                                                   )
+
+    @mock.patch.object(stack_object.Stack, 'get_all')
+    def test_stack_list_show_hidden(self, mock_stack_get_all):
+        self.eng.list_stacks(self.ctx, show_hidden=True)
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   True,
                                                    )
 
     @mock.patch.object(stack_object.Stack, 'count_all')
@@ -2137,7 +2159,8 @@ class StackServiceTest(common.HeatTestCase):
                                                      filters={'foo': 'bar'},
                                                      tenant_safe=mock.ANY,
                                                      show_deleted=False,
-                                                     show_nested=False)
+                                                     show_nested=False,
+                                                     show_hidden=False)
 
     @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
@@ -2146,7 +2169,8 @@ class StackServiceTest(common.HeatTestCase):
                                                      filters=mock.ANY,
                                                      tenant_safe=True,
                                                      show_deleted=False,
-                                                     show_nested=False)
+                                                     show_nested=False,
+                                                     show_hidden=False)
 
     @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
@@ -2155,7 +2179,8 @@ class StackServiceTest(common.HeatTestCase):
                                                      filters=mock.ANY,
                                                      tenant_safe=False,
                                                      show_deleted=False,
-                                                     show_nested=False)
+                                                     show_nested=False,
+                                                     show_hidden=False)
 
     @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stacks_show_nested(self, mock_stack_count_all):
@@ -2164,7 +2189,8 @@ class StackServiceTest(common.HeatTestCase):
                                                      filters=mock.ANY,
                                                      tenant_safe=True,
                                                      show_deleted=False,
-                                                     show_nested=True)
+                                                     show_nested=True,
+                                                     show_hidden=False)
 
     @mock.patch.object(stack_object.Stack, 'count_all')
     def test_count_stack_show_deleted(self, mock_stack_count_all):
@@ -2173,7 +2199,18 @@ class StackServiceTest(common.HeatTestCase):
                                                      filters=mock.ANY,
                                                      tenant_safe=True,
                                                      show_deleted=True,
-                                                     show_nested=False)
+                                                     show_nested=False,
+                                                     show_hidden=False)
+
+    @mock.patch.object(stack_object.Stack, 'count_all')
+    def test_count_stack_show_hidden(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx, show_hidden=True)
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters=mock.ANY,
+                                                     tenant_safe=True,
+                                                     show_deleted=False,
+                                                     show_nested=False,
+                                                     show_hidden=True)
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):

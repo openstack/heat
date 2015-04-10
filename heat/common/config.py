@@ -194,6 +194,11 @@ engine_opts = [
                       'HEAT_SIGNAL will allow calls to the Heat API '
                       'resource-signal using the provided keystone '
                       'credentials')),
+    cfg.ListOpt('hidden_stack_tags',
+                default=[],
+                help=_('Stacks containing these tag names will be hidden. '
+                       'Multiple tags should be given in a comma-delimited '
+                       'list (eg. hidden_stack_tags=hide_me,me_too).')),
     cfg.StrOpt('onready',
                help=_('Deprecated.')),
     cfg.BoolOpt('stack_scheduler_hints',
