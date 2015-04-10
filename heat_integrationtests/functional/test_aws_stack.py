@@ -203,11 +203,5 @@ Outputs:
         url = self.publish_template(self.nested_name, self.nested_template)
         self.template = self.test_template.replace('the.yaml', url)
         stack_identifier = self.stack_create(template=self.template)
-
-        self.client.actions.suspend(stack_id=stack_identifier)
-        self._wait_for_resource_status(
-            stack_identifier, 'the_nested', 'SUSPEND_COMPLETE')
-
-        self.client.actions.resume(stack_id=stack_identifier)
-        self._wait_for_resource_status(
-            stack_identifier, 'the_nested', 'RESUME_COMPLETE')
+        self.stack_suspend(stack_identifier)
+        self.stack_resume(stack_identifier)
