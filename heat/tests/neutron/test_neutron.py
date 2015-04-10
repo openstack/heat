@@ -109,6 +109,7 @@ class NeutronTest(common.HeatTestCase):
 
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         stack = mock.MagicMock()
+        stack.has_cache_data = mock.Mock(return_value=False)
         res = SomeNeutronResource('aresource', tmpl, stack)
 
         mock_show_resource = mock.MagicMock()
