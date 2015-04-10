@@ -26,62 +26,46 @@ from heat.tests import utils
 
 
 firewall_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test neutron firewall resource",
-  "Parameters" : {},
-  "Resources" : {
-    "firewall": {
-      "Type": "OS::Neutron::Firewall",
-      "Properties": {
-        "name": "test-firewall",
-        "firewall_policy_id": "policy-id",
-        "admin_state_up": True,
-        "shared": True,
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test neutron firewall resource
+resources:
+  firewall:
+    type: OS::Neutron::Firewall
+    properties:
+      name: test-firewall
+      firewall_policy_id: policy-id
+      admin_state_up: True
+      shared: True
 '''
 
 firewall_policy_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test neutron firewall policy resource",
-  "Parameters" : {},
-  "Resources" : {
-    "firewall_policy": {
-      "Type": "OS::Neutron::FirewallPolicy",
-      "Properties": {
-        "name": "test-firewall-policy",
-        "shared": True,
-        "audited": True,
-        "firewall_rules": ['rule-id-1', 'rule-id-2'],
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test neutron firewall policy resource
+resources:
+  firewall_policy:
+    type: OS::Neutron::FirewallPolicy
+    properties:
+      name: test-firewall-policy
+      shared: True
+      audited: True
+      firewall_rules:
+        - rule-id-1
+        - rule-id-2
 '''
 
 firewall_rule_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test neutron firewall rule resource",
-  "Parameters" : {},
-  "Resources" : {
-    "firewall_rule": {
-      "Type": "OS::Neutron::FirewallRule",
-      "Properties": {
-        "name": "test-firewall-rule",
-        "shared": True,
-        "protocol": "tcp",
-        "action": "allow",
-        "enabled": True,
-        "ip_version": "4",
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test neutron firewall rule resource
+resources:
+  firewall_rule:
+    type: OS::Neutron::FirewallRule
+    properties:
+      name: test-firewall-rule
+      shared: True
+      protocol: tcp
+      action: allow
+      enabled: True
+      ip_version: 4
 '''
 
 

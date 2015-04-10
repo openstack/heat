@@ -24,30 +24,23 @@ from heat.tests import utils
 
 
 metering_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test metering resources",
-  "Parameters" : {},
-  "Resources" : {
-    "label": {
-      "Type": "OS::Neutron::MeteringLabel",
-      "Properties": {
-        "name": "TestLabel",
-        "description": "Description of TestLabel",
-        "shared": True,
-       }
-    },
-    "rule": {
-      "Type": "OS::Neutron::MeteringRule",
-      "Properties": {
-        "metering_label_id": { "Ref" : "label" },
-        "remote_ip_prefix": "10.0.3.0/24",
-        "direction": "ingress",
-        "excluded": false
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test metering resources
+resources:
+  label:
+    type: OS::Neutron::MeteringLabel
+    properties:
+      name: TestLabel
+      description: Description of TestLabel
+      shared: True
+
+  rule:
+    type: OS::Neutron::MeteringRule
+    properties:
+      metering_label_id: { get_resource: label }
+      remote_ip_prefix: 10.0.3.0/24
+      direction: ingress
+      excluded: false
 '''
 
 

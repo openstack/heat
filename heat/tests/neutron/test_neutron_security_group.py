@@ -29,11 +29,11 @@ from heat.tests import utils
 class SecurityGroupTest(common.HeatTestCase):
 
     test_template = '''
-HeatTemplateFormatVersion: '2012-12-12'
-Resources:
+heat_template_version: 2015-04-30
+resources:
   the_sg:
-    Type: OS::Neutron::SecurityGroup
-    Properties:
+    type: OS::Neutron::SecurityGroup
+    properties:
       description: HTTP and SSH access
       rules:
       - port_range_min: 22
@@ -60,11 +60,11 @@ Resources:
 '''
 
     test_template_update = '''
-HeatTemplateFormatVersion: '2012-12-12'
-Resources:
+heat_template_version: 2015-04-30
+resources:
   the_sg:
-    Type: OS::Neutron::SecurityGroup
-    Properties:
+    type: OS::Neutron::SecurityGroup
+    properties:
       description: SSH access for private network
       name: myrules
       rules:
@@ -75,11 +75,11 @@ Resources:
 '''
 
     test_template_validate = '''
-HeatTemplateFormatVersion: '2012-12-12'
-Resources:
+heat_template_version: 2015-04-30
+resources:
   the_sg:
-    Type: OS::Neutron::SecurityGroup
-    Properties:
+    type: OS::Neutron::SecurityGroup
+    properties:
       name: default
 '''
 
