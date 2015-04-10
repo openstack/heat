@@ -188,7 +188,8 @@ class DockerContainer(resource.Resource):
                     default=0
                 )
             },
-            default={}
+            default={},
+            support_status=support.SupportStatus(version='2015.1')
         ),
         CAP_ADD: properties.Schema(
             properties.Schema.LIST,
@@ -201,7 +202,8 @@ class DockerContainer(resource.Resource):
                     constraints.AllowedValues(_CAPABILITIES),
                 ]
             ),
-            default=[]
+            default=[],
+            support_status=support.SupportStatus(version='2015.1')
         ),
         CAP_DROP: properties.Schema(
             properties.Schema.LIST,
@@ -214,7 +216,8 @@ class DockerContainer(resource.Resource):
                     constraints.AllowedValues(_CAPABILITIES),
                 ]
             ),
-            default=[]
+            default=[],
+            support_status=support.SupportStatus(version='2015.1')
         ),
         READ_ONLY: properties.Schema(
             properties.Schema.BOOLEAN,
