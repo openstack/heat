@@ -16,13 +16,16 @@ import base64
 from Crypto.Cipher import AES
 from oslo_config import cfg
 
+from heat.common.i18n import _
 from heat.openstack.common.crypto import utils
 
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
-               default='notgood but just long enough i think',
-               help="Encryption key used for authentication info in database.")
+               default='notgood but just long enough i t',
+               help=_('Encryption key used for authentication '
+                      'info in database. Length of this key '
+                      'must be 16, 24 or 32'))
 ]
 
 cfg.CONF.register_opts(auth_opts)
