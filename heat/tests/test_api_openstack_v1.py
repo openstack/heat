@@ -607,7 +607,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                                                         filters=mock.ANY,
                                                         tenant_safe=True,
                                                         show_deleted=True,
-                                                        show_nested=False)
+                                                        show_nested=False,
+                                                        show_hidden=False)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_detail(self, mock_call, mock_enforce):
