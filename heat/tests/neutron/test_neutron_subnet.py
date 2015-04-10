@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
@@ -22,7 +20,6 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_funcs
-from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -31,363 +28,70 @@ from heat.tests import utils
 
 
 neutron_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test Neutron resources",
-  "Parameters" : {},
-  "Resources" : {
-    "network": {
-      "Type": "OS::Neutron::Net",
-      "Properties": {
-        "name": "the_network",
-        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-        "shared": true,
-        "dhcp_agent_ids": [
-          "28c25a04-3f73-45a7-a2b4-59e183943ddc"
-        ]
-      }
-    },
-    "unnamed_network": {
-      "Type": "OS::Neutron::Net"
-    },
-    "admin_down_network": {
-      "Type": "OS::Neutron::Net",
-      "Properties": {
-        "admin_state_up": false
-      }
-    },
-    "subnet": {
-      "Type": "OS::Neutron::Subnet",
-      "Properties": {
-        "network": { "Ref" : "network" },
-        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-        "ip_version": 4,
-        "cidr": "10.0.3.0/24",
-        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
-        "host_routes": [
-            {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
-        "dns_nameservers": ["8.8.8.8"]
-      }
-    },
-    "port": {
-      "Type": "OS::Neutron::Port",
-      "Properties": {
-        "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
-        "name": "port1",
-        "network": { "Ref" : "network" },
-        "fixed_ips": [{
-          "subnet": { "Ref" : "subnet" },
-          "ip_address": "10.0.3.21"
-        }]
-      }
-    },
-    "port2": {
-      "Type": "OS::Neutron::Port",
-      "Properties": {
-        "name": "port2",
-        "network": { "Ref" : "network" }
-      }
-    },
-    "router": {
-      "Type": "OS::Neutron::Router",
-      "Properties": {
-        "l3_agent_id": "792ff887-6c85-4a56-b518-23f24fa65581"
-      }
-    },
-    "router_interface": {
-      "Type": "OS::Neutron::RouterInterface",
-      "Properties": {
-        "router_id": { "Ref" : "router" },
-        "subnet": { "Ref" : "subnet" }
-      }
-    },
-    "gateway": {
-      "Type": "OS::Neutron::RouterGateway",
-      "Properties": {
-        "router_id": { "Ref" : "router" },
-        "network": { "Ref" : "network" }
-      }
-    }
-  }
-}
+heat_template_version: 2015-04-30
+description: Template to test subnet Neutron resource
+resources:
+  net:
+    type: OS::Neutron::Net
+    properties:
+      name: the_net
+      tenant_id: c1210485b2424d48804aad5d39c61b8f
+      shared: true
+      dhcp_agent_ids:
+        - 28c25a04-3f73-45a7-a2b4-59e183943ddc
+
+  sub_net:
+    type: OS::Neutron::Subnet
+    properties:
+      network: { get_resource : net}
+      tenant_id: c1210485b2424d48804aad5d39c61b8f
+      ip_version: 4
+      cidr: 10.0.3.0/24
+      allocation_pools:
+        - start: 10.0.3.20
+          end: 10.0.3.150
+      host_routes:
+        - destination: 10.0.4.0/24
+          nexthop: 10.0.3.20
+      dns_nameservers:
+        - 8.8.8.8
+
+  port:
+    type: OS::Neutron::Port
+    properties:
+      device_id: d6b4d3a5-c700-476f-b609-1493dd9dadc0
+      name: port1
+      network: { get_resource : net}
+      fixed_ips:
+        - subnet: { get_resource : sub_net }
+          ip_address: 10.0.3.21
+
+  port2:
+    type: OS::Neutron::Port
+    properties:
+      name: port2
+      network: { get_resource : net}
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      l3_agent_id: 792ff887-6c85-4a56-b518-23f24fa65581
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource : router }
+      subnet: { get_resource : sub_net }
+
+  gateway:
+    type: OS::Neutron::RouterGateway
+    properties:
+      router_id: { get_resource : router }
+      network: { get_resource : net}
 '''
 
-neutron_template_deprecated = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test Neutron resources",
-  "Parameters" : {},
-  "Resources" : {
-    "network": {
-      "Type": "OS::Neutron::Net",
-      "Properties": {
-        "name": "the_network",
-        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-        "shared": true
-      }
-    },
-    "unnamed_network": {
-      "Type": "OS::Neutron::Net"
-    },
-    "admin_down_network": {
-      "Type": "OS::Neutron::Net",
-      "Properties": {
-        "admin_state_up": false
-      }
-    },
-    "subnet": {
-      "Type": "OS::Neutron::Subnet",
-      "Properties": {
-        "network_id": { "Ref" : "network" },
-        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-        "ip_version": 4,
-        "cidr": "10.0.3.0/24",
-        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
-        "host_routes": [
-            {"destination": "10.0.4.0/24", "nexthop": "10.0.3.20"}],
-        "dns_nameservers": ["8.8.8.8"]
-      }
-    },
-    "port": {
-      "Type": "OS::Neutron::Port",
-      "Properties": {
-        "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
-        "name": "port1",
-        "network_id": { "Ref" : "network" },
-        "fixed_ips": [{
-          "subnet_id": { "Ref" : "subnet" },
-          "ip_address": "10.0.3.21"
-        }]
-      }
-    },
-    "port2": {
-      "Type": "OS::Neutron::Port",
-      "Properties": {
-        "name": "port2",
-        "network_id": { "Ref" : "network" }
-      }
-    },
-    "router": {
-      "Type": "OS::Neutron::Router",
-      "Properties": {
-        "l3_agent_id": "792ff887-6c85-4a56-b518-23f24fa65581"
-      }
-    },
-    "router_interface": {
-      "Type": "OS::Neutron::RouterInterface",
-      "Properties": {
-        "router_id": { "Ref" : "router" },
-        "subnet_id": { "Ref" : "subnet" }
-      }
-    },
-    "gateway": {
-      "Type": "OS::Neutron::RouterGateway",
-      "Properties": {
-        "router_id": { "Ref" : "router" },
-        "network_id": { "Ref" : "network" }
-      }
-    }
-  }
-}
-'''
-
-
-class NeutronNetTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(NeutronNetTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_network')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'add_network_to_dhcp_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'remove_network_from_dhcp_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'list_dhcp_agent_hosting_networks')
-
-    def create_net(self, t, stack, resource_name):
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = net.Net('test_net', resource_defns[resource_name], stack)
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        return rsrc
-
-    def test_net(self):
-        # Create script
-        neutronclient.Client.create_network({
-            'network': {
-                'name': u'the_network',
-                'admin_state_up': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'shared': True}
-        }).AndReturn({"network": {
-            "status": "BUILD",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        neutronclient.Client.list_dhcp_agent_hosting_networks(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"agents": []})
-
-        neutronclient.Client.add_network_to_dhcp_agent(
-            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
-            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
-        ).AndReturn(None)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "BUILD",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        # Update script
-        neutronclient.Client.list_dhcp_agent_hosting_networks(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({
-            "agents": [{
-                "admin_state_up": True,
-                "agent_type": "DHCP agent",
-                "alive": True,
-                "binary": "neutron-dhcp-agent",
-                "configurations": {
-                    "dhcp_driver": "DummyDriver",
-                    "dhcp_lease_duration": 86400,
-                    "networks": 0,
-                    "ports": 0,
-                    "subnets": 0,
-                    "use_namespaces": True},
-                "created_at": "2014-03-20 05:12:34",
-                "description": None,
-                "heartbeat_timestamp": "2014-03-20 05:12:34",
-                "host": "hostname",
-                "id": "28c25a04-3f73-45a7-a2b4-59e183943ddc",
-                "started_at": "2014-03-20 05:12:34",
-                "topic": "dhcp_agent"
-            }]
-        })
-
-        neutronclient.Client.add_network_to_dhcp_agent(
-            'bb09cfcd-5277-473d-8336-d4ed8628ae68',
-            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
-        ).AndReturn(None)
-
-        neutronclient.Client.remove_network_from_dhcp_agent(
-            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(None)
-
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'shared': True,
-                'name': 'mynet',
-                'admin_state_up': True
-            }}).AndReturn(None)
-
-        # Delete script
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(None)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_net(t, stack, 'network')
-
-        # assert the implicit dependency between the gateway and the interface
-        deps = stack.dependencies[stack['router_interface']]
-        self.assertIn(stack['gateway'], deps)
-
-        # assert the implicit dependency between the gateway and the subnet
-        deps = stack.dependencies[stack['subnet']]
-        self.assertIn(stack['gateway'], deps)
-
-        rsrc.validate()
-
-        ref_id = rsrc.FnGetRefId()
-        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
-
-        self.assertIsNone(rsrc.FnGetAtt('status'))
-        self.assertEqual('ACTIVE', rsrc.FnGetAtt('status'))
-        self.assertRaises(
-            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
-        prop_diff = {
-            "name": "mynet",
-            "dhcp_agent_ids": [
-                "bb09cfcd-5277-473d-8336-d4ed8628ae68"
-            ]
-        }
-        props = copy.copy(rsrc.properties.data)
-        props.update(prop_diff)
-        update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
-                                                      props)
-        rsrc.handle_update(update_snippet, {}, prop_diff)
-
-        scheduler.TaskRunner(rsrc.delete)()
-        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+neutron_template_deprecated = neutron_template.replace(
+    'neutron', 'neutron_id').replace('subnet', 'subnet_id')
 
 
 class NeutronSubnetTest(common.HeatTestCase):
@@ -414,7 +118,7 @@ class NeutronSubnetTest(common.HeatTestCase):
             'None'
         ).AndReturn('None')
         stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'subnet')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -429,11 +133,11 @@ class NeutronSubnetTest(common.HeatTestCase):
         # assert the dependency (implicit or explicit) between the ports
         # and the subnet
 
-        self.assertIn(stack['port'], stack.dependencies[stack['subnet']])
-        self.assertIn(stack['port2'], stack.dependencies[stack['subnet']])
+        self.assertIn(stack['port'], stack.dependencies[stack['sub_net']])
+        self.assertIn(stack['port2'], stack.dependencies[stack['sub_net']])
         props = {
             "name": 'mysubnet',
-            "network_id": cfn_funcs.ResourceRef(stack, "Ref", "network"),
+            "network_id": cfn_funcs.ResourceRef(stack, "get_resource", "net"),
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "ip_version": 4,
             "cidr": "10.0.3.0/24",
@@ -459,7 +163,12 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         t = self._test_subnet(resolve_neutron=False)
         stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'subnet')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
+        neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'None'
+        ).AndReturn('None')
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -473,8 +182,8 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         # assert the dependency (implicit or explicit) between the ports
         # and the subnet
-        self.assertIn(stack['port'], stack.dependencies[stack['subnet']])
-        self.assertIn(stack['port2'], stack.dependencies[stack['subnet']])
+        self.assertIn(stack['port'], stack.dependencies[stack['sub_net']])
+        self.assertIn(stack['port2'], stack.dependencies[stack['sub_net']])
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
@@ -641,9 +350,9 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        t['Resources']['subnet']['Properties']['enable_dhcp'] = 'False'
+        t['resources']['sub_net']['properties']['enable_dhcp'] = 'False'
         stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'subnet')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -735,7 +444,7 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        props = t['Resources']['subnet']['Properties']
+        props = t['resources']['sub_net']['properties']
         props.pop('allocation_pools')
         props.pop('host_routes')
         props['ip_version'] = 6
@@ -744,7 +453,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         props['cidr'] = 'fdfa:6a50:d22b::/64'
         props['dns_nameservers'] = ['2001:4860:4860::8844']
         stack = utils.parse_stack(t)
-        rsrc = self.create_subnet(t, stack, 'subnet')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -753,12 +462,12 @@ class NeutronSubnetTest(common.HeatTestCase):
 
     def test_ipv6_validate_ra_mode(self):
         t = template_format.parse(neutron_template)
-        props = t['Resources']['subnet']['Properties']
+        props = t['resources']['sub_net']['properties']
         props['ipv6_address_mode'] = 'dhcpv6-stateful'
         props['ipv6_ra_mode'] = 'slaac'
         props['ip_version'] = 6
         stack = utils.parse_stack(t)
-        rsrc = stack['subnet']
+        rsrc = stack['sub_net']
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
         self.assertEqual("When both ipv6_ra_mode and ipv6_address_mode are "
@@ -766,12 +475,12 @@ class NeutronSubnetTest(common.HeatTestCase):
 
     def test_ipv6_validate_ip_version(self):
         t = template_format.parse(neutron_template)
-        props = t['Resources']['subnet']['Properties']
+        props = t['resources']['sub_net']['properties']
         props['ipv6_address_mode'] = 'slaac'
         props['ipv6_ra_mode'] = 'slaac'
         props['ip_version'] = 4
         stack = utils.parse_stack(t)
-        rsrc = stack['subnet']
+        rsrc = stack['sub_net']
         ex = self.assertRaises(exception.StackValidationFailed,
                                rsrc.validate)
         self.assertEqual("ipv6_ra_mode and ipv6_address_mode are not "
