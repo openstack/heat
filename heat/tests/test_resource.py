@@ -1285,6 +1285,25 @@ class ResourceTest(common.HeatTestCase):
                         property_schema_name, property_schema,
                         res_class.__name__)
 
+    def test_getatt_invalid_type(self):
+        resource._register_class('ResourceWithAttributeType',
+                                 generic_rsrc.ResourceWithAttributeType)
+
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'res': {
+                    'type': 'ResourceWithAttributeType'
+                }
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
+        res = stack['res']
+        self.assertEqual('valid_sting', res.FnGetAtt('attr1'))
+
+        res.FnGetAtt('attr2')
+        self.assertIn("Attribute attr2 is not of type Map", self.LOG.output)
+
 
 class ResourceAdoptTest(common.HeatTestCase):
     def setUp(self):

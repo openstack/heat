@@ -430,19 +430,23 @@ class Server(stack_user.StackUser):
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
-            _('Name of the server.')
+            _('Name of the server.'),
+            type=attributes.Schema.STRING
         ),
         SHOW: attributes.Schema(
-            _('A dict of all server details as returned by the API.')
+            _('A dict of all server details as returned by the API.'),
+            type=attributes.Schema.MAP
         ),
         ADDRESSES: attributes.Schema(
             _('A dict of all network addresses with corresponding port_id. '
               'The port ID may be obtained through the following expression: '
-              '"{get_attr: [<server>, addresses, <network name>, 0, port]}".')
+              '"{get_attr: [<server>, addresses, <network name>, 0, port]}".'),
+            type=attributes.Schema.MAP
         ),
         NETWORKS_ATTR: attributes.Schema(
             _('A dict of assigned network addresses of the form: '
-              '{"public": [ip1, ip2...], "private": [ip3, ip4]}.')
+              '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
+            type=attributes.Schema.MAP
         ),
         FIRST_ADDRESS: attributes.Schema(
             _('Convenience attribute to fetch the first assigned network '
@@ -458,15 +462,18 @@ class Server(stack_user.StackUser):
             )
         ),
         INSTANCE_NAME: attributes.Schema(
-            _('AWS compatible instance name.')
+            _('AWS compatible instance name.'),
+            type=attributes.Schema.STRING
         ),
         ACCESSIPV4: attributes.Schema(
             _('The manually assigned alternative public IPv4 address '
-              'of the server.')
+              'of the server.'),
+            type=attributes.Schema.STRING
         ),
         ACCESSIPV6: attributes.Schema(
             _('The manually assigned alternative public IPv6 address '
-              'of the server.')
+              'of the server.'),
+            type=attributes.Schema.STRING
         ),
         CONSOLE_URLS: attributes.Schema(
             _("URLs of server's consoles. "
@@ -475,7 +482,8 @@ class Server(stack_user.StackUser):
               "e.g. get_attr: [ <server>, console_urls, novnc ]. "
               "Currently supported types are "
               "novnc, xvpvnc, spice-html5, rdp-html5, serial."),
-            support_status=support.SupportStatus(version='2015.1')
+            support_status=support.SupportStatus(version='2015.1'),
+            type=attributes.Schema.MAP
         ),
     }
 
