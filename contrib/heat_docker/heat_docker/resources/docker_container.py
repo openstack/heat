@@ -31,7 +31,7 @@ from heat.engine import support
 LOG = logging.getLogger(__name__)
 
 DOCKER_INSTALLED = False
-READ_ONLY_MIN_API_VERSION = '1.17'
+MIN_API_VERSION_MAP = {'read_only': '1.17', 'cpu_shares': '1.8'}
 # conditionally import so tests can work without having the dependency
 # satisfied
 try:
@@ -47,12 +47,12 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
         IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
-        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY,
+        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY, CPU_SHARES,
     ) = (
         'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
         'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
         'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name',
-        'restart_policy', 'cap_add', 'cap_drop', 'read_only'
+        'restart_policy', 'cap_add', 'cap_drop', 'read_only', 'cpu_shares',
     )
 
     ATTRIBUTES = (
@@ -223,9 +223,17 @@ class DockerContainer(resource.Resource):
             properties.Schema.BOOLEAN,
             _('If true, mount the container\'s root filesystem '
               'as read only (only supported for API version >= %s).') %
-            READ_ONLY_MIN_API_VERSION,
+            MIN_API_VERSION_MAP['read_only'],
             default=False,
             support_status=support.SupportStatus(version='2015.1'),
+        ),
+        CPU_SHARES: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Relative weight which determines the allocation of the CPU '
+              'processing power(only supported for API version >= %s).') %
+            MIN_API_VERSION_MAP['cpu_shares'],
+            default=0,
+            support_status=support.SupportStatus(version='2015.2'),
         )
     }
 
@@ -343,10 +351,10 @@ class DockerContainer(resource.Resource):
             'environment': self.properties[self.ENV],
             'dns': self.properties[self.DNS],
             'volumes': self.properties[self.VOLUMES],
-            'name': self.properties[self.NAME]
+            'name': self.properties[self.NAME],
+            'cpu_shares': self.properties[self.CPU_SHARES]
         }
         client = self.get_client()
-        version = client.version()['ApiVersion']
         client.pull(self.properties[self.IMAGE])
         result = client.create_container(**create_args)
         container_id = result['Id']
@@ -371,12 +379,7 @@ class DockerContainer(resource.Resource):
         if self.properties[self.CAP_DROP]:
             start_args['cap_drop'] = self.properties[self.CAP_DROP]
         if self.properties[self.READ_ONLY]:
-            if compare_version(READ_ONLY_MIN_API_VERSION, version) >= 0:
-                start_args[self.READ_ONLY] = True
-            else:
-                raise InvalidArgForVersion(arg=self.READ_ONLY,
-                                           min_version=(
-                                               READ_ONLY_MIN_API_VERSION))
+            start_args[self.READ_ONLY] = True
 
         client.start(container_id, **start_args)
         return container_id
@@ -438,6 +441,22 @@ class DockerContainer(resource.Resource):
     def check_resume_complete(self, container_id):
         status = self._get_container_status(container_id)
         return status['Running']
+
+    def validate(self):
+        super(DockerContainer, self).validate()
+        self._validate_arg_for_api_version()
+
+    def _validate_arg_for_api_version(self):
+        version = None
+        for key in MIN_API_VERSION_MAP:
+            if self.properties[key]:
+                if not version:
+                    client = self.get_client()
+                    version = client.version()['ApiVersion']
+                min_version = MIN_API_VERSION_MAP[key]
+                if compare_version(min_version, version) < 0:
+                    raise InvalidArgForVersion(arg=key,
+                                               min_version=min_version)
 
 
 def resource_mapping():
