@@ -363,7 +363,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         kwargs = {'stack_identifier': stack_identifier,
                   'status': expected_status}
         if expected_status in ['ROLLBACK_COMPLETE']:
-            self.addCleanup(self.client.stacks.delete, stack_name)
             # To trigger rollback you would intentionally fail the stack
             # Hence check for rollback failures
             kwargs['failure_pattern'] = '^ROLLBACK_FAILED$'
