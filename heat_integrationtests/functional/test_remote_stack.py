@@ -140,17 +140,5 @@ outputs:
     def test_stack_suspend_resume(self):
         files = {'remote_stack.yaml': self.remote_template}
         stack_id = self.stack_create(files=files)
-        rsrc = self.client.resources.get(stack_id, 'my_stack')
-        remote_id = rsrc.physical_resource_id
-
-        # suspend stack
-        self.client.actions.suspend(stack_id)
-        self._wait_for_stack_status(stack_id, 'SUSPEND_COMPLETE')
-        rsrc = self.client.stacks.get(remote_id)
-        self.assertEqual('SUSPEND_COMPLETE', rsrc.stack_status)
-
-        # resume stack
-        self.client.actions.resume(stack_id)
-        self._wait_for_stack_status(stack_id, 'RESUME_COMPLETE')
-        rsrc = self.client.stacks.get(remote_id)
-        self.assertEqual('RESUME_COMPLETE', rsrc.stack_status)
+        self.stack_suspend(stack_id)
+        self.stack_resume(stack_id)

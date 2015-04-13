@@ -191,6 +191,15 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         return call_until_true(
             self.conf.build_timeout, 1, ping)
 
+    def _wait_for_all_resource_status(self, stack_identifier,
+                                      status, failure_pattern='^.*_FAILED$',
+                                      success_on_not_found=False):
+        for res in self.client.resources.list(stack_identifier):
+            self._wait_for_resource_status(
+                stack_identifier, res.resource_name,
+                status, failure_pattern=failure_pattern,
+                success_on_not_found=success_on_not_found)
+
     def _wait_for_resource_status(self, stack_identifier, resource_name,
                                   status, failure_pattern='^.*_FAILED$',
                                   success_on_not_found=False):
@@ -406,11 +415,19 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def stack_suspend(self, stack_identifier):
         stack_name = stack_identifier.split('/')[0]
         self.client.actions.suspend(stack_name)
+
+        # improve debugging by first checking the resource's state.
+        self._wait_for_all_resource_status(stack_identifier,
+                                           'SUSPEND_COMPLETE')
         self._wait_for_stack_status(stack_identifier, 'SUSPEND_COMPLETE')
 
     def stack_resume(self, stack_identifier):
         stack_name = stack_identifier.split('/')[0]
         self.client.actions.resume(stack_name)
+
+        # improve debugging by first checking the resource's state.
+        self._wait_for_all_resource_status(stack_identifier,
+                                           'RESUME_COMPLETE')
         self._wait_for_stack_status(stack_identifier, 'RESUME_COMPLETE')
 
     def wait_for_event_with_reason(self, stack_identifier, reason,

@@ -318,21 +318,11 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
 
-        self.client.actions.suspend(stack_id=stack_identifier)
-        self._wait_for_resource_status(
-            stack_identifier, 'JobServerGroup', 'SUSPEND_COMPLETE')
-        for res in self.client.resources.list(nested_ident):
-            self._wait_for_resource_status(nested_ident,
-                                           res.resource_name,
-                                           'SUSPEND_COMPLETE')
+        self.stack_suspend(stack_identifier)
+        self._wait_for_all_resource_status(nested_ident, 'SUSPEND_COMPLETE')
 
-        self.client.actions.resume(stack_id=stack_identifier)
-        self._wait_for_resource_status(
-            stack_identifier, 'JobServerGroup', 'RESUME_COMPLETE')
-        for res in self.client.resources.list(nested_ident):
-            self._wait_for_resource_status(nested_ident,
-                                           res.resource_name,
-                                           'RESUME_COMPLETE')
+        self.stack_resume(stack_identifier)
+        self._wait_for_all_resource_status(nested_ident, 'RESUME_COMPLETE')
 
 
 class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
