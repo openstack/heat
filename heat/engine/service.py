@@ -266,7 +266,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.8'
+    RPC_API_VERSION = '1.9'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -1028,16 +1028,17 @@ class EngineService(service.Service):
             rpc_api.RES_SCHEMA_ATTRIBUTES: dict(attributes_schema()),
         }
 
-    def generate_template(self, cnxt, type_name):
+    def generate_template(self, cnxt, type_name, template_type='cfn'):
         """
         Generate a template based on the specified type.
 
         :param cnxt: RPC context.
         :param type_name: Name of the resource type to generate a template for.
+        :param template_type: the template type to generate, cfn or hot.
         """
         try:
             return resources.global_env().get_class(
-                type_name).resource_to_template(type_name)
+                type_name).resource_to_template(type_name, template_type)
         except (exception.InvalidResourceType,
                 exception.ResourceTypeNotFound,
                 exception.TemplateNotFound) as ex:

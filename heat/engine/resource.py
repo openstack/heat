@@ -31,9 +31,11 @@ from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
 from heat.engine import attributes
+from heat.engine.cfn import template as cfn_tmpl
 from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
+from heat.engine.hot import template as hot_tmpl
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -1183,29 +1185,52 @@ class Resource(object):
                      self.name)
 
     @classmethod
-    def resource_to_template(cls, resource_type):
+    def resource_to_template(cls, resource_type, template_type='cfn'):
         '''
         :param resource_type: The resource type to be displayed in the template
+        :param template_type: the template type to generate, cfn or hot.
         :returns: A template where the resource's properties_schema is mapped
             as parameters, and the resource's attributes_schema is mapped as
             outputs
         '''
         schema = cls.properties_schema
         params, props = (properties.Properties.
-                         schema_to_parameters_and_properties(schema))
-
+                         schema_to_parameters_and_properties(schema,
+                                                             template_type))
         resource_name = cls.__name__
-        return {
-            'HeatTemplateFormatVersion': '2012-12-12',
-            'Parameters': params,
-            'Resources': {
-                resource_name: {
-                    'Type': resource_type,
-                    'Properties': props
-                }
-            },
-            'Outputs': attributes.Attributes.as_outputs(resource_name, cls)
-        }
+        outputs = attributes.Attributes.as_outputs(resource_name, cls,
+                                                   template_type)
+        description = 'Initial template of %s' % resource_name
+        return cls.build_template_dict(resource_name, resource_type,
+                                       template_type, params, props,
+                                       outputs, description)
+
+    @staticmethod
+    def build_template_dict(res_name, res_type, tmpl_type,
+                            params, props, outputs, description):
+        if tmpl_type == 'hot':
+            tmpl_dict = {
+                hot_tmpl.HOTemplate20150430.VERSION: '2015-04-30',
+                hot_tmpl.HOTemplate20150430.DESCRIPTION: description,
+                hot_tmpl.HOTemplate20150430.PARAMETERS: params,
+                hot_tmpl.HOTemplate20150430.OUTPUTS: outputs,
+                hot_tmpl.HOTemplate20150430.RESOURCES: {
+                    res_name: {
+                        hot_tmpl.RES_TYPE: res_type,
+                        hot_tmpl.RES_PROPERTIES: props}}}
+        else:
+            tmpl_dict = {
+                cfn_tmpl.CfnTemplate.ALTERNATE_VERSION: '2012-12-12',
+                cfn_tmpl.CfnTemplate.DESCRIPTION: description,
+                cfn_tmpl.CfnTemplate.PARAMETERS: params,
+                cfn_tmpl.CfnTemplate.RESOURCES: {
+                    res_name: {
+                        cfn_tmpl.RES_TYPE: res_type,
+                        cfn_tmpl.RES_PROPERTIES: props}
+                },
+                cfn_tmpl.CfnTemplate.OUTPUTS: outputs}
+
+        return tmpl_dict
 
     def data(self):
         '''

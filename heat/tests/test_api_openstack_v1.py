@@ -2071,12 +2071,31 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('generate_template', {'type_name': 'TEST_TYPE'})
+            ('generate_template', {'type_name': 'TEST_TYPE',
+                                   'template_type': 'cfn'}),
+            version='1.9'
         ).AndReturn(engine_response)
         self.m.ReplayAll()
         self.controller.generate_template(req, tenant_id=self.tenant,
                                           type_name='TEST_TYPE')
         self.m.VerifyAll()
+
+    def test_generate_template_invalid_template_type(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'generate_template', True)
+        params = {'template_type': 'invalid'}
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+
+        req = self._get('/resource_types/TEST_TYPE/template',
+                        params=params)
+
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.controller.generate_template,
+                               req, tenant_id=self.tenant,
+                               type_name='TEST_TYPE')
+        self.assertIn('Template type is not supported: Invalid template '
+                      'type "invalid", valid types are: cfn, hot.',
+                      six.text_type(ex))
+        self.assertFalse(mock_call.called)
 
     def test_generate_template_not_found(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'generate_template', True)
@@ -2086,7 +2105,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context,
-            ('generate_template', {'type_name': 'NOT_FOUND'})
+            ('generate_template', {'type_name': 'NOT_FOUND',
+                                   'template_type': 'cfn'}),
+            version='1.9'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,

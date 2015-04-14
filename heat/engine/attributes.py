@@ -95,19 +95,28 @@ class Attribute(object):
     def support_status(self):
         return self.schema.support_status
 
-    def as_output(self, resource_name):
+    def as_output(self, resource_name, template_type='cfn'):
         """
         Return an Output schema entry for a provider template with the given
         resource name.
 
         :param resource_name: the logical name of the provider resource
-        :returns: This attribute as a template 'Output' entry
+        :param template_type: the template type to generate
+        :returns: This attribute as a template 'Output' entry for
+                  cfn template and 'output' entry for hot template
         """
-        return {
-            "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
-                                                       self.name),
-            "Description": self.schema.description
-        }
+        if template_type == 'hot':
+            return {
+                "value": '{"get_attr": ["%s", "%s"]}' % (resource_name,
+                                                         self.name),
+                "description": self.schema.description
+            }
+        else:
+            return {
+                "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
+                                                           self.name),
+                "Description": self.schema.description
+            }
 
 
 class Attributes(collections.Mapping):
@@ -127,7 +136,7 @@ class Attributes(collections.Mapping):
         return dict((n, Attribute(n, d)) for n, d in schema.items())
 
     @staticmethod
-    def as_outputs(resource_name, resource_class):
+    def as_outputs(resource_name, resource_class, template_type='cfn'):
         """
         :param resource_name: logical name of the resource
         :param resource_class: resource implementation class
@@ -137,7 +146,8 @@ class Attributes(collections.Mapping):
         schema = resource_class.attributes_schema
         attribs = Attributes._make_attributes(schema).items()
 
-        return dict((n, att.as_output(resource_name)) for n, att in attribs)
+        return dict((n, att.as_output(resource_name,
+                                      template_type)) for n, att in attribs)
 
     @staticmethod
     def schema_from_outputs(json_snippet):

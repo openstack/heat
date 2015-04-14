@@ -62,3 +62,12 @@ def extract_tags(subject):
             raise ValueError(_('Invalid tag, "%s" is longer than 80 '
                                'characters') % tag)
     return tags
+
+
+def extract_template_type(subject):
+    template_type = subject.lower()
+    if template_type not in ('cfn', 'hot'):
+        raise ValueError(_('Invalid template type "%(value)s", valid '
+                           'types are: cfn, hot.') %
+                         {'value': subject})
+    return template_type
