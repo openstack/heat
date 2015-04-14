@@ -26,6 +26,7 @@ from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import support
 
 try:
     from pyrax.exceptions import NotFound  # noqa
@@ -78,14 +79,17 @@ class CloudLoadBalancer(resource.Resource):
         CONNECTION_LOGGING, METADATA, PORT, TIMEOUT,
         CONNECTION_THROTTLE, SESSION_PERSISTENCE, VIRTUAL_IPS,
         CONTENT_CACHING, HEALTH_MONITOR, SSL_TERMINATION, ERROR_PAGE,
+        HTTPS_REDIRECT,
     ) = (
         'name', 'nodes', 'protocol', 'accessList', 'halfClosed', 'algorithm',
         'connectionLogging', 'metadata', 'port', 'timeout',
         'connectionThrottle', 'sessionPersistence', 'virtualIps',
         'contentCaching', 'healthMonitor', 'sslTermination', 'errorPage',
+        'httpsRedirect',
     )
 
-    LB_UPDATE_PROPS = (NAME, ALGORITHM, PROTOCOL, HALF_CLOSED, PORT, TIMEOUT)
+    LB_UPDATE_PROPS = (NAME, ALGORITHM, PROTOCOL, HALF_CLOSED, PORT, TIMEOUT,
+                       HTTPS_REDIRECT)
 
     _NODE_KEYS = (
         NODE_ADDRESSES, NODE_PORT, NODE_CONDITION, NODE_TYPE,
@@ -428,6 +432,19 @@ class CloudLoadBalancer(resource.Resource):
             properties.Schema.STRING,
             update_allowed=True
         ),
+        HTTPS_REDIRECT: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _("Enables or disables HTTP to HTTPS redirection for the load "
+              "balancer. When enabled, any HTTP request returns status code "
+              "301 (Moved Permanently), and the requester is redirected to "
+              "the requested URL via the HTTPS protocol on port 443. Only "
+              "available for HTTPS protocol (port=443), or HTTP protocol with "
+              "a properly configured SSL termination (secureTrafficOnly=true, "
+              "securePort=443)."),
+            update_allowed=True,
+            default=False,
+            support_status=support.SupportStatus(version="2015.1")
+        )
     }
 
     attributes_schema = {
@@ -557,6 +574,7 @@ class CloudLoadBalancer(resource.Resource):
             'sessionPersistence': session_persistence,
             'timeout': self.properties.get(self.TIMEOUT),
             'connectionLogging': connection_logging,
+            self.HTTPS_REDIRECT: self.properties[self.HTTPS_REDIRECT]
         }
 
         lb_name = (self.properties.get(self.NAME) or
@@ -885,6 +903,22 @@ class CloudLoadBalancer(resource.Resource):
                                   health_monitor,
                                   function.resolve,
                                   self.name).validate()
+
+        # validate if HTTPS_REDIRECT is true and we're not HTTPS
+        redir = self.properties[self.HTTPS_REDIRECT]
+        proto = self.properties[self.PROTOCOL]
+
+        if redir and (proto != "HTTPS"):
+            termcfg = self.properties.get(self.SSL_TERMINATION) or {}
+            seconly = termcfg.get(self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY,
+                                  False)
+            secport = termcfg.get(self.SSL_TERMINATION_SECURE_PORT, 0)
+            if not (seconly and (secport == 443) and (proto == "HTTP")):
+                message = _("HTTPS redirect is only available for the HTTPS "
+                            "protocol (port=443), or the HTTP protocol with "
+                            "a properly configured SSL termination "
+                            "(secureTrafficOnly=true, securePort=443).")
+                raise exception.StackValidationFailed(message=message)
 
         # if a vip specifies and id, it can't specify version or type;
         # otherwise version and type are required
