@@ -38,6 +38,10 @@ lb_template_default = r'''
     "LbFlavor" : {
       "Type" : "String",
       "Default" : "m1.small"
+    },
+    "SecurityGroups" : {
+      "Type" : "CommaDelimitedList",
+      "Default" : []
     }
   },
   "Resources": {
@@ -164,6 +168,7 @@ lb_template_default = r'''
         "ImageId": "Fedora-Cloud-Base-20141203-21.x86_64",
         "InstanceType": { "Ref": "LbFlavor" },
         "KeyName": { "Ref": "KeyName" },
+        "SecurityGroups": { "Ref": "SecurityGroups" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
           "#!/bin/bash -v\n",
           "# Helper function\n",
@@ -397,9 +402,9 @@ class LoadBalancer(stack_resource.StackResource):
             implemented=False
         ),
         SECURITY_GROUPS: properties.Schema(
-            properties.Schema.STRING,
-            _('Not Implemented.'),
-            implemented=False
+            properties.Schema.LIST,
+            _('List of Security Groups assigned on current LB.'),
+            update_allowed=True
         ),
         SUBNETS: properties.Schema(
             properties.Schema.LIST,
@@ -519,6 +524,7 @@ backend servers
     def child_params(self):
         params = {}
 
+        params['SecurityGroups'] = self.properties[self.SECURITY_GROUPS]
         # If the owning stack defines KeyName, we use that key for the nested
         # template, otherwise use no key
         if 'KeyName' in self.stack.parameters:
@@ -576,6 +582,12 @@ backend servers
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
             self.nested()['LB_instance'].metadata_set(md)
+
+        if self.SECURITY_GROUPS in prop_diff:
+            templ = self.child_template()
+            params = self.child_params()
+            params['SecurityGroups'] = new_props[self.SECURITY_GROUPS]
+            self.update_with_template(templ, params)
 
     def check_update_complete(self, updater):
         """Because we are not calling update_with_template, return True."""
