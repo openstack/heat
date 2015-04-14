@@ -177,7 +177,8 @@ lb_template_default = r'''
           "/opt/aws/bin/cfn-init -s ",
           { "Ref": "AWS::StackId" },
           "    -r LB_instance ",
-          "    --region ", { "Ref": "AWS::Region" }, "\n",
+          "    --region ", { "Ref": "AWS::Region" },
+          " || error_exit 'Failed to run cfn-init'\n",
 
           "# HAProxy+SELinux, https://www.mankier.com/8/haproxy_selinux \n",
 
