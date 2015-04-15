@@ -22,9 +22,9 @@ from heat.common import exception as exc
 from heat.common.i18n import _
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
-from heat.engine import parser
 from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine import rsrc_defn
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils

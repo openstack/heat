@@ -13,8 +13,8 @@
 
 import mock
 
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -46,7 +46,7 @@ class KeystoneRoleTest(common.HeatTestCase):
         # For unit testing purpose. Register resource provider explicitly.
         resource._register_class(RESOURCE_TYPE, KeystoneRole)
 
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             self.ctx, 'test_stack_keystone',
             template.Template(keystone_role_template)
         )

@@ -18,7 +18,7 @@ import mox
 from oslo_utils import timeutils
 
 from heat.common import exception
-from heat.engine import parser
+from heat.engine import stack
 from heat.engine import template
 from heat.engine import watchrule
 from heat.objects import watch_rule
@@ -50,7 +50,7 @@ class WatchRuleTest(common.HeatTestCase):
         empty_tmpl = {'HeatTemplateFormatVersion': '2012-12-12'}
         tmpl = template.Template(empty_tmpl)
         stack_name = 'dummystack'
-        dummy_stack = parser.Stack(ctx, stack_name, tmpl)
+        dummy_stack = stack.Stack(ctx, stack_name, tmpl)
         dummy_stack.state_set(dummy_stack.CREATE, dummy_stack.COMPLETE,
                               'Testing')
         dummy_stack.store()
@@ -74,8 +74,8 @@ class WatchRuleTest(common.HeatTestCase):
 
         if action_expected:
             dummy_action = DummyAction()
-            self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
-            parser.Stack.resource_by_refid(
+            self.m.StubOutWithMock(stack.Stack, 'resource_by_refid')
+            stack.Stack.resource_by_refid(
                 mox.IgnoreArg()).MultipleTimes().AndReturn(dummy_action)
 
         self.m.ReplayAll()

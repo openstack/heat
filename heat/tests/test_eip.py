@@ -21,10 +21,11 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine import parser
 from heat.engine.resources.aws.ec2 import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -394,7 +395,7 @@ class AllocTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(ipassoc_template_validate)
-        template = parser.Template(t)
+        template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              template, stack_id='12233',
                              stack_user_project_id='8888')

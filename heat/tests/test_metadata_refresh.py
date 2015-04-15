@@ -18,12 +18,13 @@ from oslo_config import cfg
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources.aws.ec2 import instance
 from heat.engine.resources.openstack.nova import server
 from heat.engine import scheduler
 from heat.engine import service
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
 
@@ -153,8 +154,8 @@ class MetadataRefreshTest(common.HeatTestCase):
     def create_stack(self, stack_name='test_stack', params=None):
         params = params or {}
         temp = template_format.parse(test_template_metadata)
-        template = parser.Template(temp,
-                                   env=environment.Environment(params))
+        template = tmpl.Template(temp,
+                                 env=environment.Environment(params))
         ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
                              disable_rollback=True)
@@ -219,7 +220,7 @@ class WaitCondMetadataUpdateTest(common.HeatTestCase):
 
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)
-        template = parser.Template(temp)
+        template = tmpl.Template(temp)
         ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template, disable_rollback=True)
 
@@ -311,8 +312,8 @@ class MetadataRefreshTestServer(common.HeatTestCase):
     def create_stack(self, stack_name='test_stack_native', params=None):
         params = params or {}
         temp = template_format.parse(test_template_server)
-        template = parser.Template(temp,
-                                   env=environment.Environment(params))
+        template = tmpl.Template(temp,
+                                 env=environment.Environment(params))
         ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
                              disable_rollback=True)

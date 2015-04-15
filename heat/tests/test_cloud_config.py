@@ -15,8 +15,8 @@ import uuid
 
 import mock
 
-from heat.engine import parser
 from heat.engine.resources.openstack.heat import cloud_config
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -30,7 +30,7 @@ class CloudConfigTest(common.HeatTestCase):
         self.properties = {
             'cloud_config': {'foo': 'bar'}
         }
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             self.ctx, 'software_config_test_stack',
             template.Template({
                 'HeatTemplateFormatVersion': '2012-12-12',

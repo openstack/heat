@@ -27,10 +27,11 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template
 from heat.tests import common
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -79,11 +80,11 @@ class InstancesTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
-        template = parser.Template(
+        tmpl = template.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
-        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
                              stack_id=str(uuid.uuid4()))
-        return (template, stack)
+        return (tmpl, stack)
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')

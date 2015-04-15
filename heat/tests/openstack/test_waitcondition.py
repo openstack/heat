@@ -21,9 +21,10 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import wait_condition_handle as h_wch
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.objects import resource as resource_objects
 from heat.tests import common
 from heat.tests import utils
@@ -79,8 +80,8 @@ class HeatWaitConditionTest(common.HeatTestCase):
                      params={},
                      stub=True, stub_status=True):
         temp = template_format.parse(template)
-        template = parser.Template(temp,
-                                   env=environment.Environment(params))
+        template = tmpl.Template(temp,
+                                 env=environment.Environment(params))
         ctx = utils.dummy_context(tenant_id=self.tenant_id)
         stack = parser.Stack(ctx, 'test_stack', template,
                              disable_rollback=True)

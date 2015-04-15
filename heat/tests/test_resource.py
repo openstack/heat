@@ -30,12 +30,12 @@ from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
 from heat.engine import dependencies
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_object
@@ -65,8 +65,8 @@ class ResourceTest(common.HeatTestCase):
                        u'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template(empty_template,
-                                                  env=self.env),
+                                  template.Template(empty_template,
+                                                    env=self.env),
                                   stack_id=str(uuid.uuid4()))
         self.patch('heat.engine.resource.warnings')
 
@@ -400,7 +400,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl2 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         tmpl3 = rsrc_defn.ResourceDefinition('test_resource2', 'Bar')
         stack2 = parser.Stack(utils.dummy_context(), 'test_stack',
-                              parser.Template(empty_template), stack_id=-1)
+                              template.Template(empty_template), stack_id=-1)
         res1 = generic_rsrc.GenericResource('test_resource', tmpl1, self.stack)
         res2 = generic_rsrc.GenericResource('test_resource', tmpl2, stack2)
         res3 = generic_rsrc.GenericResource('test_resource2', tmpl3, stack2)
@@ -1797,7 +1797,7 @@ class MetadataTest(common.HeatTestCase):
         super(MetadataTest, self).setUp()
         self.stack = parser.Stack(utils.dummy_context(),
                                   'test_stack',
-                                  parser.Template(empty_template))
+                                  template.Template(empty_template))
         self.stack.store()
 
         metadata = {'Test': 'Initial metadata'}
@@ -1910,8 +1910,8 @@ class ResourceHookTest(common.HeatTestCase):
                        u'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template(empty_template,
-                                                  env=self.env),
+                                  template.Template(empty_template,
+                                                    env=self.env),
                                   stack_id=str(uuid.uuid4()))
 
     def test_hook(self):

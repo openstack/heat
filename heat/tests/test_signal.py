@@ -18,10 +18,10 @@ from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common

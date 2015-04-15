@@ -13,8 +13,8 @@
 
 import mock
 
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
@@ -46,7 +46,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         # explicitly.
         resource._register_class('OS::Cinder::VolumeType', CinderVolumeType)
 
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             self.ctx, 'cinder_volume_type_test_stack',
             template.Template(volume_type_template)
         )

@@ -28,10 +28,10 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
 from heat.engine import scheduler
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
@@ -3066,8 +3066,8 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_restore(self):
         t = template_format.parse(wp_template)
-        template = parser.Template(t)
-        stack = parser.Stack(utils.dummy_context(), "server_restore", template)
+        tmpl = template.Template(t)
+        stack = parser.Stack(utils.dummy_context(), "server_restore", tmpl)
         stack.store()
 
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')

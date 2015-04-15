@@ -23,12 +23,13 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import ceilometer
-from heat.engine import parser
 from heat.engine import properties as props
 from heat.engine import resource
 from heat.engine.resources.openstack.ceilometer import alarm
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stack as parser
+from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import generic_resource
 from heat.tests import utils
@@ -127,7 +128,7 @@ class CeilometerAlarmTest(common.HeatTestCase):
         if template is None:
             template = alarm_template
         temp = template_format.parse(template)
-        template = parser.Template(temp)
+        template = tmpl.Template(temp)
         ctx = utils.dummy_context()
         ctx.tenant_id = 'test_tenant'
         stack = parser.Stack(ctx, utils.random_name(), template,

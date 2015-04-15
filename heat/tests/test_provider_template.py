@@ -25,13 +25,14 @@ from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine.resources import template_resource
 from heat.engine import rsrc_defn
+from heat.engine import stack as parser
 from heat.engine import support
+from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -128,7 +129,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -209,7 +210,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -238,7 +239,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -271,7 +272,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -303,7 +304,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -333,7 +334,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, files=files,
+                             template.Template(empty_template, files=files,
                              env=env),
                              stack_id=str(uuid.uuid4()))
 
@@ -365,7 +366,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -401,7 +402,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -433,7 +434,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -467,7 +468,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                   {'DummyResource': 'test_resource.template',
                    'resources': {'foo': 'foo.template'}}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -502,7 +503,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                   {'DummyResource': 'test_resource.template',
                    'resources': {'foo': {'DummyResource': 'foo.template'}}}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -546,7 +547,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(
+                             template.Template(
                                  {'HeatTemplateFormatVersion': '2012-12-12'},
                                  files=files, env=env),
                              stack_id=str(uuid.uuid4()))
@@ -608,7 +609,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template),
+                             template.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
         properties = {
@@ -659,7 +660,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         g_env.load({'resource_registry':
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template),
+                             template.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
         minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
@@ -687,7 +688,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, env=env),
+                             template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
         definition = rsrc_defn.ResourceDefinition('test_t_res',
@@ -709,7 +710,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         g_env.load({'resource_registry':
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template),
+                             template.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
@@ -739,7 +740,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, env=env),
+                             template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
@@ -768,7 +769,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, env=env),
+                             template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
         self.m.ReplayAll()
@@ -791,7 +792,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'Test::Tmpl': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template(empty_template, env=env),
+                             template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
@@ -838,8 +839,8 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(self.ctx, 'test_stack',
-                             parser.Template(empty_template, files=files,
-                                             env=env),
+                             template.Template(empty_template, files=files,
+                                               env=env),
                              stack_id=str(uuid.uuid4()))
 
         self.defn = rsrc_defn.ResourceDefinition('test_t_res',

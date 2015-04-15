@@ -17,8 +17,8 @@ import uuid
 import mock
 
 from heat.common import exception as exc
-from heat.engine import parser
 from heat.engine.resources.openstack.heat import multi_part as mp
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils

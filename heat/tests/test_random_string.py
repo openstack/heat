@@ -18,8 +18,8 @@ from testtools import matchers
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine.resources.openstack.heat import random_string as rs
+from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils

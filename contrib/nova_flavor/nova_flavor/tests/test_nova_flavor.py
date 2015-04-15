@@ -13,8 +13,8 @@
 
 import mock
 
-from heat.engine import parser
 from heat.engine import resource
+from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests.nova import fakes
@@ -51,7 +51,7 @@ class NovaFlavorTest(common.HeatTestCase):
         # explicitly.
         resource._register_class("OS::Nova::Flavor", nova_flavor.NovaFlavor)
 
-        self.stack = parser.Stack(
+        self.stack = stack.Stack(
             self.ctx, 'nova_flavor_test_stack',
             template.Template(flavor_template)
         )
