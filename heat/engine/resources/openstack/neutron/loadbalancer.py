@@ -278,7 +278,10 @@ class Pool(neutron.NeutronResource):
                 ),
                 VIP_ADDRESS: properties.Schema(
                     properties.Schema.STRING,
-                    _('IP address of the vip.')
+                    _('IP address of the vip.'),
+                    constraints=[
+                        constraints.CustomConstraint('ip_addr')
+                    ]
                 ),
                 VIP_CONNECTION_LIMIT: properties.Schema(
                     properties.Schema.INTEGER,
@@ -547,7 +550,10 @@ class PoolMember(neutron.NeutronResource):
         ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('IP address of the pool member on the pool network.'),
-            required=True
+            required=True,
+            constraints=[
+                constraints.CustomConstraint('ip_addr')
+            ]
         ),
         PROTOCOL_PORT: properties.Schema(
             properties.Schema.INTEGER,

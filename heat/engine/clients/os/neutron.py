@@ -14,6 +14,7 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
+from oslo_utils import netutils
 from oslo_utils import uuidutils
 
 from heat.common import exception
@@ -172,3 +173,10 @@ class SubnetConstraint(constraints.BaseCustomConstraint):
         neutron_client = client.client('neutron')
         neutronV20.find_resourceid_by_name_or_id(
             neutron_client, 'subnet', value)
+
+
+class IPConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        self._error_message = 'Invalid IP address'
+        return netutils.is_valid_ip(value)

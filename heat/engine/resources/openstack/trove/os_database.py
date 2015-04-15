@@ -149,7 +149,10 @@ class OSDBInstance(resource.Resource):
                     ),
                     V4_FIXED_IP: properties.Schema(
                         properties.Schema.STRING,
-                        _('Fixed IPv4 address for this NIC.')
+                        _('Fixed IPv4 address for this NIC.'),
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
                     ),
                 },
             ),
