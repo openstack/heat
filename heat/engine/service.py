@@ -266,7 +266,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.6'
+    RPC_API_VERSION = '1.7'
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__()
@@ -549,7 +549,8 @@ class EngineService(service.Service):
                                            params, files, args, owner_id=None,
                                            nested_depth=0, user_creds_id=None,
                                            stack_user_project_id=None,
-                                           convergence=False):
+                                           convergence=False,
+                                           parent_resource_name=None):
         # If it is stack-adopt, use parameters from adopt_stack_data
         common_params = api.extract_args(args)
         if (rpc_api.PARAM_ADOPT_STACK_DATA in common_params and
@@ -574,6 +575,7 @@ class EngineService(service.Service):
                              user_creds_id=user_creds_id,
                              stack_user_project_id=stack_user_project_id,
                              convergence=convergence,
+                             parent_resource=parent_resource_name,
                              **common_params)
 
         self._validate_deferred_auth_context(cnxt, stack)
@@ -615,7 +617,7 @@ class EngineService(service.Service):
     @context.request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args,
                      owner_id=None, nested_depth=0, user_creds_id=None,
-                     stack_user_project_id=None):
+                     stack_user_project_id=None, parent_resource_name=None):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -635,6 +637,7 @@ class EngineService(service.Service):
         :param user_creds_id: the parent user_creds record for nested stacks
         :param stack_user_project_id: the parent stack_user_project_id for
                          nested stacks
+        :param parent_resource_name: the parent resource name
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
@@ -667,7 +670,8 @@ class EngineService(service.Service):
 
         stack = self._parse_template_and_validate_stack(
             cnxt, stack_name, template, params, files, args, owner_id,
-            nested_depth, user_creds_id, stack_user_project_id, convergence)
+            nested_depth, user_creds_id, stack_user_project_id, convergence,
+            parent_resource_name)
 
         stack.store()
 

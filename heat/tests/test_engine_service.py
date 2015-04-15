@@ -473,7 +473,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     parent_resource=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -528,7 +529,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      nested_depth=0,
                      user_creds_id=None,
                      stack_user_project_id=None,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     parent_resource=None).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -697,7 +699,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     parent_resource=None).AndReturn(stack)
 
         templatem.Template(template, files=None,
                            env=stack.env).AndReturn(stack.t)
@@ -706,7 +709,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      stack.t, owner_id=None,
                      nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     parent_resource=None).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -755,7 +759,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
                      nested_depth=0,
                      user_creds_id=None,
                      stack_user_project_id=None,
-                     convergence=False).AndReturn(stack)
+                     convergence=False,
+                     parent_resource=None).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -1731,7 +1736,7 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.6',
+            '1.7',
             service.EngineService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '

@@ -741,8 +741,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -803,8 +804,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -889,8 +891,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -932,8 +935,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(to_remote_error(AttributeError()))
         rpc_client.EngineClient.call(
             req.context,
@@ -948,8 +952,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(to_remote_error(unknown_parameter))
         rpc_client.EngineClient.call(
             req.context,
@@ -964,8 +969,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(to_remote_error(missing_parameter))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1017,8 +1023,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -1097,8 +1104,9 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'owner_id': None,
               'nested_depth': 0,
               'user_creds_id': None,
+              'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.2'
+            version='1.7'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 

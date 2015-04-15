@@ -79,7 +79,11 @@ resource_registry:
             template=main_templ,
             files={'nested.yaml': nested_templ},
             environment=env_templ)
-        self.assert_resource_is_a_stack(stack_identifier, 'secret1')
+        nested_ident = self.assert_resource_is_a_stack(stack_identifier,
+                                                       'secret1')
+        # prove that resource.parent_resource is populated.
+        sec2 = self.client.resources.get(nested_ident, 'secret2')
+        self.assertEqual('secret1', sec2.parent_resource)
 
     def test_no_infinite_recursion(self):
         """Prove that we can override a python resource.

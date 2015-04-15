@@ -97,7 +97,6 @@ class StackResource(resource.Resource):
         if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
                                              self.resource_id,
-                                             parent_resource=self.name,
                                              show_deleted=show_deleted,
                                              force_reload=force_reload)
 
@@ -259,7 +258,8 @@ class StackResource(resource.Resource):
                 owner_id=self.stack.id,
                 user_creds_id=self.stack.user_creds_id,
                 stack_user_project_id=stack_user_project_id,
-                nested_depth=new_nested_depth)
+                nested_depth=new_nested_depth,
+                parent_resource_name=self.name)
         except Exception as ex:
             self.raise_local_exception(ex)
 

@@ -266,7 +266,8 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('test value', stk.root_stack)
 
     def test_load_parent_resource(self):
-        self.stack = stack.Stack(self.ctx, 'load_parent_resource', self.tmpl)
+        self.stack = stack.Stack(self.ctx, 'load_parent_resource', self.tmpl,
+                                 parent_resource='parent')
         self.stack.store()
         stk = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
 
@@ -295,8 +296,7 @@ class StackTest(common.HeatTestCase):
                              tags=mox.IgnoreArg())
 
         self.m.ReplayAll()
-        stack.Stack.load(self.ctx, stack_id=self.stack.id,
-                         parent_resource='parent')
+        stack.Stack.load(self.ctx, stack_id=self.stack.id)
 
         self.m.VerifyAll()
 
@@ -1812,13 +1812,11 @@ class StackKwargsForCloningTest(common.HeatTestCase):
                          not_included=['action', 'status', 'status_reason'])),
         ('only_db', dict(keep_status=False, only_db=True,
                          not_included=['action', 'status', 'status_reason',
-                                       'parent_resource',
                                        'strict_validate'])),
         ('keep_status', dict(keep_status=True, only_db=False,
                              not_included=[])),
         ('status_db', dict(keep_status=True, only_db=True,
-                           not_included=['parent_resource',
-                                         'strict_validate'])),
+                           not_included=['strict_validate'])),
     ]
 
     def test_kwargs(self):
@@ -1832,6 +1830,13 @@ class StackKwargsForCloningTest(common.HeatTestCase):
                          username='jo', nested_depth=3,
                          strict_validate=True, convergence=False,
                          current_traversal=45)
+        db_map = {'parent_resource': 'parent_resource_name',
+                  'tenant_id': 'tenant', 'timeout_mins': 'timeout'}
+        test_db_data = {}
+        for key in test_data:
+            dbkey = db_map.get(key, key)
+            test_db_data[dbkey] = test_data[key]
+
         self.stack = stack.Stack(ctx, utils.random_name(), tmpl,
                                  **test_data)
         res = self.stack.get_kwargs_for_cloning(keep_status=self.keep_status,
@@ -1841,8 +1846,13 @@ class StackKwargsForCloningTest(common.HeatTestCase):
 
         for key in test_data:
             if key not in self.not_included:
-                self.assertEqual(test_data[key], res[key])
+                dbkey = db_map.get(key, key)
+                if self.only_db:
+                    self.assertEqual(test_data[key], res[dbkey])
+                else:
+                    self.assertEqual(test_data[key], res[key])
 
-        # just make sure that the kwargs are valid
-        # (no exception should be raised)
-        stack.Stack(ctx, utils.random_name(), tmpl, **res)
+        if not self.only_db:
+            # just make sure that the kwargs are valid
+            # (no exception should be raised)
+            stack.Stack(ctx, utils.random_name(), tmpl, **res)

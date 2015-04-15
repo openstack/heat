@@ -58,6 +58,7 @@ class Stack(
         'prev_raw_template_id': fields.IntegerField(),
         'prev_raw_template': fields.ObjectField('RawTemplate'),
         'tags': fields.ObjectField('StackTagList'),
+        'parent_resource_name': fields.StringField(nullable=True),
     }
 
     @staticmethod
