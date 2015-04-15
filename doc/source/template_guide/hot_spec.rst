@@ -630,7 +630,9 @@ get_attr
 --------
 The *get_attr* function allows referencing an attribute of a resource. At
 runtime, it will be resolved to the value of an attribute of a resource instance
-created from the respective resource definition of the template.
+created from the respective resource definition of the template. Path based
+attribute refrencing using keys or indexes requires heat_template_version
+'2014-10-16'or higher.
 The syntax of the get_attr function is as follows:
 
 ::
