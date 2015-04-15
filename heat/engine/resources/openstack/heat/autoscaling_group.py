@@ -19,6 +19,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
 from heat.engine import rsrc_defn
+from heat.engine import support
 
 
 class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
@@ -114,10 +115,14 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     attributes_schema = {
         OUTPUTS: attributes.Schema(
             _("A map of resource names to the specified attribute of each "
-              "individual resource.")
+              "individual resource. "
+              "Requires heat_template_version: 2014-10-16 or higher."),
+            support_status=support.SupportStatus(version='2014.2')
         ),
         OUTPUTS_LIST: attributes.Schema(
-            _("A list of the specified attribute of each individual resource.")
+            _("A list of the specified attribute of each individual resource. "
+              "Requires heat_template_version: 2014-10-16 or higher."),
+            support_status=support.SupportStatus(version='2014.2')
         ),
         CURRENT_SIZE: attributes.Schema(
             _("The current size of AutoscalingResourceGroup.")
