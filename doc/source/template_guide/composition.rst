@@ -138,8 +138,9 @@ To create the stack run:
 
 Get access to nested attributes
 ===============================
-There are implicit attributes of a template resource. These are
-accessible as follows:
+There are implicit attributes of a template resource. Accessing
+nested attributes require heat_template_version '2014-10-16' or
+higher and can be accessed as follows:
 
 .. code-block:: yaml
 
