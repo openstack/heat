@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 
 DOCKER_INSTALLED = False
 MIN_API_VERSION_MAP = {'read_only': '1.17', 'cpu_shares': '1.8',
-                       'devices': '1.14'}
+                       'devices': '1.14', 'cpu_set': '1.12'}
 DEVICE_PATH_REGEX = r"^/dev/[/_\-a-zA-Z0-9]+$"
 # conditionally import so tests can work without having the dependency
 # satisfied
@@ -49,13 +49,14 @@ class DockerContainer(resource.Resource):
         DOCKER_ENDPOINT, HOSTNAME, USER, MEMORY, PORT_SPECS,
         PRIVILEGED, TTY, OPEN_STDIN, STDIN_ONCE, ENV, CMD, DNS,
         IMAGE, VOLUMES, VOLUMES_FROM, PORT_BINDINGS, LINKS, NAME,
-        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY, CPU_SHARES, DEVICES,
+        RESTART_POLICY, CAP_ADD, CAP_DROP, READ_ONLY, CPU_SHARES,
+        DEVICES, CPU_SET
     ) = (
         'docker_endpoint', 'hostname', 'user', 'memory', 'port_specs',
         'privileged', 'tty', 'open_stdin', 'stdin_once', 'env', 'cmd', 'dns',
         'image', 'volumes', 'volumes_from', 'port_bindings', 'links', 'name',
         'restart_policy', 'cap_add', 'cap_drop', 'read_only', 'cpu_shares',
-        'devices'
+        'devices', 'cpu_set'
     )
 
     ATTRIBUTES = (
@@ -285,6 +286,13 @@ class DockerContainer(resource.Resource):
             default=[],
             support_status=support.SupportStatus(version='2015.2'),
         ),
+        CPU_SET: properties.Schema(
+            properties.Schema.STRING,
+            _('The CPUs in which to allow execution '
+              '(only supported for API version >= %s).') %
+            MIN_API_VERSION_MAP['cpu_set'],
+            support_status=support.SupportStatus(version='2015.2'),
+        )
     }
 
     attributes_schema = {
@@ -402,7 +410,8 @@ class DockerContainer(resource.Resource):
             'dns': self.properties[self.DNS],
             'volumes': self.properties[self.VOLUMES],
             'name': self.properties[self.NAME],
-            'cpu_shares': self.properties[self.CPU_SHARES]
+            'cpu_shares': self.properties[self.CPU_SHARES],
+            'cpuset': self.properties[self.CPU_SET]
         }
         client = self.get_client()
         client.pull(self.properties[self.IMAGE])
