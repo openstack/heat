@@ -325,7 +325,9 @@ class LoadBalancerTest(common.HeatTestCase):
             "healthMonitor": None,
             "metadata": None,
             "sessionPersistence": None,
-            "timeout": 110
+            "timeout": 110,
+            "httpsRedirect": False
+
         }
 
         lb.resource_mapping = override_resource
@@ -904,6 +906,30 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(fake_loadbalancer, 'update')
         fake_loadbalancer.update(protocol="IMAPS")
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update_lb_redirect(self):
+        templ = copy.deepcopy(self.lb_template)
+        rsrs = templ['Resources'].values()[0]
+        rsrs['Properties']['protocol'] = "HTTPS"
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['httpsRedirect'] = True
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'update')
+        fake_loadbalancer.update(httpsRedirect=True)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.update, update_template)()
@@ -1497,3 +1523,81 @@ class LoadBalancerTest(common.HeatTestCase):
 
         res = mock_loadbalancer.check_delete_complete(mock_task)
         self.assertTrue(res)
+
+    def test_redir(self):
+        mock_stack = mock.Mock()
+        mock_stack.db_resource_get.return_value = None
+        props = {'httpsRedirect': True,
+                 'protocol': 'HTTPS',
+                 'port': 443,
+                 'nodes': [],
+                 'virtualIps': [{'id': '1234'}]}
+        mock_resdef = rsrc_defn.ResourceDefinition("test_lb",
+                                                   LoadBalancerWithFakeClient,
+                                                   properties=props)
+        mock_lb = lb.CloudLoadBalancer("test", mock_resdef, mock_stack)
+        self.assertIsNone(mock_lb.validate())
+        props['protocol'] = 'HTTP'
+        props['sslTermination'] = {
+            'secureTrafficOnly': True,
+            'securePort': 443,
+            'privatekey': "bobloblaw",
+            'certificate': 'mycert'
+        }
+        mock_resdef = rsrc_defn.ResourceDefinition("test_lb_2",
+                                                   LoadBalancerWithFakeClient,
+                                                   properties=props)
+        mock_lb = lb.CloudLoadBalancer("test_2", mock_resdef, mock_stack)
+        self.assertIsNone(mock_lb.validate())
+
+    def test_invalid_redir_proto(self):
+        mock_stack = mock.Mock()
+        mock_stack.db_resource_get.return_value = None
+        props = {'httpsRedirect': True,
+                 'protocol': 'TCP',
+                 'port': 1234,
+                 'nodes': [],
+                 'virtualIps': [{'id': '1234'}]}
+        mock_resdef = rsrc_defn.ResourceDefinition("test_lb",
+                                                   LoadBalancerWithFakeClient,
+                                                   properties=props)
+        mock_lb = lb.CloudLoadBalancer("test", mock_resdef, mock_stack)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               mock_lb.validate)
+        self.assertIn("HTTPS redirect is only available", six.text_type(ex))
+
+    def test_invalid_redir_ssl(self):
+        mock_stack = mock.Mock()
+        mock_stack.db_resource_get.return_value = None
+        props = {'httpsRedirect': True,
+                 'protocol': 'HTTP',
+                 'port': 1234,
+                 'nodes': [],
+                 'virtualIps': [{'id': '1234'}]}
+        mock_resdef = rsrc_defn.ResourceDefinition("test_lb",
+                                                   LoadBalancerWithFakeClient,
+                                                   properties=props)
+        mock_lb = lb.CloudLoadBalancer("test", mock_resdef, mock_stack)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               mock_lb.validate)
+        self.assertIn("HTTPS redirect is only available", six.text_type(ex))
+        props['sslTermination'] = {
+            'secureTrafficOnly': False,
+            'securePort': 443,
+            'privatekey': "bobloblaw",
+            'certificate': 'mycert'
+        }
+        mock_lb = lb.CloudLoadBalancer("test", mock_resdef, mock_stack)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               mock_lb.validate)
+        self.assertIn("HTTPS redirect is only available", six.text_type(ex))
+        props['sslTermination'] = {
+            'secureTrafficOnly': True,
+            'securePort': 1234,
+            'privatekey': "bobloblaw",
+            'certificate': 'mycert'
+        }
+        mock_lb = lb.CloudLoadBalancer("test", mock_resdef, mock_stack)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               mock_lb.validate)
+        self.assertIn("HTTPS redirect is only available", six.text_type(ex))
