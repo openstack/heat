@@ -105,6 +105,13 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
             "share snapshot"
         )
 
+    def get_security_service(self, service_identity):
+        return self._find_resource_by_id_or_name(
+            service_identity,
+            self.client().security_services.list(),
+            'security service'
+        )
+
 
 class ManilaShareBaseConstraint(constraints.BaseCustomConstraint):
     # check that exceptions module has been loaded. Without this check

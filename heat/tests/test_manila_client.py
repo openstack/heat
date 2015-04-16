@@ -30,6 +30,9 @@ class ManilaClientPluginTests(common.HeatTestCase):
         ('share_snapshot',
             dict(manager_name="share_snapshots",
                  method_name="get_share_snapshot")),
+        ('security_service',
+            dict(manager_name="security_services",
+                 method_name="get_security_service")),
     ]
 
     def setUp(self):
