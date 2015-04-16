@@ -14,7 +14,6 @@
 import base64
 import contextlib
 import datetime as dt
-import warnings
 import weakref
 
 from oslo_config import cfg
@@ -248,22 +247,6 @@ class Resource(object):
         if result is NotImplemented:
             return result
         return not result
-
-    @property
-    def metadata(self):
-        """DEPRECATED. use method metadata_get instead."""
-        warnings.warn('metadata attribute is deprecated, '
-                      'use method metadata_get instead',
-                      DeprecationWarning)
-        return self.metadata_get(True)
-
-    @metadata.setter
-    def metadata(self, metadata):
-        """DEPRECATED. use method metadata_set instead."""
-        warnings.warn('metadata attribute is deprecated, '
-                      'use method metadata_set instead',
-                      DeprecationWarning)
-        self.metadata_set(metadata)
 
     def metadata_get(self, refresh=False):
         if refresh:
