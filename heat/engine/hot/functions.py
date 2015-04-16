@@ -199,13 +199,18 @@ class GetFile(function.Function):
     key.
     """
 
+    def __init__(self, stack, fn_name, args):
+        super(GetFile, self).__init__(stack, fn_name, args)
+
+        self.files = self.stack.t.files
+
     def result(self):
         args = function.resolve(self.args)
         if not (isinstance(args, basestring)):
             raise TypeError(_('Argument to "%s" must be a string') %
                             self.fn_name)
 
-        f = self.stack.t.files.get(args)
+        f = self.files.get(args)
         if f is None:
             fmt_data = {'fn_name': self.fn_name,
                         'file_key': args}
