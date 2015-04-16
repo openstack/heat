@@ -128,6 +128,19 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronV20,
                                'find_resourceid_by_name_or_id')
 
+    def test_floating_ip_validate(self):
+        t = template_format.parse(neutron_floating_no_assoc_template)
+        stack = utils.parse_stack(t)
+        fip = stack['floating_ip']
+        self.assertIsNone(fip.validate())
+        del t['resources']['floating_ip']['properties']['port_id']
+        t['resources']['floating_ip']['properties'][
+            'fixed_ip_address'] = '10.0.0.12'
+        stack = utils.parse_stack(t)
+        fip = stack['floating_ip']
+        self.assertRaises(exception.ResourcePropertyDependency,
+                          fip.validate)
+
     def test_floating_ip_router_interface(self):
         t = template_format.parse(neutron_floating_template)
         del t['resources']['gateway']

@@ -180,6 +180,11 @@ class FloatingIP(neutron.NeutronResource):
         super(FloatingIP, self).validate()
         self._validate_depr_property_required(
             self.properties, self.FLOATING_NETWORK, self.FLOATING_NETWORK_ID)
+        # fixed_ip_address cannot be specified without a port_id
+        if self.properties.get(self.PORT_ID) is None and self.properties.get(
+                self.FIXED_IP_ADDRESS) is not None:
+            raise exception.ResourcePropertyDependency(
+                prop1=self.FIXED_IP_ADDRESS, prop2=self.PORT_ID)
 
     def handle_create(self):
         props = self.prepare_properties(
