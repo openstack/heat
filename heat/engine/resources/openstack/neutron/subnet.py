@@ -67,7 +67,6 @@ class Subnet(neutron.NeutronResource):
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % NETWORK,
                 version='2014.2'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -75,7 +74,6 @@ class Subnet(neutron.NeutronResource):
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the attached network.'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
