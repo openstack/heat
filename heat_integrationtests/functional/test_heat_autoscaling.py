@@ -132,4 +132,3 @@ resources:
             'scaling_adjustment: 2')
 
         self.update_stack(stack_identifier, template=new_template)
-        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')

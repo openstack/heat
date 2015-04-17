@@ -61,8 +61,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
 
         # Delete the stack and ensure a backup is created for volume_id
         # but the volume itself is gone
-        self.client.stacks.delete(stack_id)
-        self._wait_for_stack_status(stack_id, 'DELETE_COMPLETE')
+        self._stack_delete(stack_id)
         self.assertRaises(cinder_exceptions.NotFound,
                           self.volume_client.volumes.get,
                           volume_id)
@@ -97,8 +96,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
                          testfile_data)
 
         # Delete the stack and ensure the volume is gone
-        self.client.stacks.delete(stack_identifier2)
-        self._wait_for_stack_status(stack_identifier2, 'DELETE_COMPLETE')
+        self._stack_delete(stack_identifier2)
         self.assertRaises(cinder_exceptions.NotFound,
                           self.volume_client.volumes.get,
                           volume_id2)

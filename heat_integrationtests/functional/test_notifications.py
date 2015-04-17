@@ -141,17 +141,9 @@ outputs:
         return len(handler.notifications) == count
 
     def test_basic_notifications(self):
-        stack_identifier = self._stack_rand_name()
-        # do this manually so we can call _stack_delete() directly.
-        self.client.stacks.create(
-            stack_name=stack_identifier,
-            template=self.basic_template,
-            files={},
-            disable_rollback=True,
-            parameters={},
-            environment={}
-        )
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+        # disable cleanup so we can call _stack_delete() directly.
+        stack_identifier = self.stack_create(template=self.basic_template,
+                                             enable_cleanup=False)
         self.update_stack(stack_identifier,
                           template=self.update_basic_template)
         self.stack_suspend(stack_identifier)

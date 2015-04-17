@@ -84,9 +84,6 @@ class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
             # logs to be compared
             self._log_console_output(servers=[server])
 
-        # Check that stack was fully created
-        self._wait_for_stack_status(sid, 'CREATE_COMPLETE')
-
         complete_server_metadata = self.client.resources.metadata(
             sid, 'server')
 
