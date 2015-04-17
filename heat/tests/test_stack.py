@@ -1683,6 +1683,18 @@ class StackTest(common.HeatTestCase):
         self.stack.strict_validate = False
         self.assertIsNone(self.stack.validate())
 
+    def test_validate_property_getatt(self):
+        tmpl = {
+            'HeatTemplateFormatVersion': '2012-12-12',
+            'Resources': {
+                'R1': {'Type': 'ResourceWithPropsType'},
+                'R2': {'Type': 'ResourceWithPropsType',
+                       'Properties': {'Foo': {'Fn::GetAtt': ['R1', 'Foo']}}}}
+        }
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tmpl))
+        self.assertIsNone(self.stack.validate())
+
     def test_param_validate_value(self):
         tmpl = template_format.parse("""
         HeatTemplateFormatVersion: '2012-12-12'

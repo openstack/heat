@@ -1062,6 +1062,9 @@ class PropertiesTest(common.HeatTestCase):
         def test_resolver(prop):
             return None
 
+        self.patchobject(properties.Properties,
+                         '_find_deps_any_in_init').return_value = True
+
         props = properties.Properties(schema,
                                       {'foo': 'get_attr: [db, value]'},
                                       test_resolver)
