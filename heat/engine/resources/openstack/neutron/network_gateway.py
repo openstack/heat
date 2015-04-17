@@ -98,7 +98,6 @@ class NetworkGateway(neutron.NeutronResource):
                             status=support.DEPRECATED,
                             message=_('Use property %s.') % NETWORK,
                             version='2014.2'),
-                        required=False,
                         constraints=[
                             constraints.CustomConstraint('neutron.network')
                         ],
@@ -108,7 +107,6 @@ class NetworkGateway(neutron.NeutronResource):
                         description=_(
                             'The internal network to connect on '
                             'the network gateway.'),
-                        required=False,
                         support_status=support.SupportStatus(version='2014.2'),
                         constraints=[
                             constraints.CustomConstraint('neutron.network')

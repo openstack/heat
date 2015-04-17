@@ -82,7 +82,6 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
         ROLLING_UPDATES: properties.Schema(
             properties.Schema.MAP,
             _('Policy for rolling updates for this scaling group.'),
-            required=False,
             update_allowed=True,
             schema={
                 MIN_IN_SERVICE: properties.Schema(

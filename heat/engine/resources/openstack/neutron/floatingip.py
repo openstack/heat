@@ -47,7 +47,6 @@ class FloatingIP(neutron.NeutronResource):
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % FLOATING_NETWORK,
                 version='2014.2'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -55,7 +54,6 @@ class FloatingIP(neutron.NeutronResource):
         FLOATING_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Network to allocate floating IP from.'),
-            required=False,
             support_status=support.SupportStatus(version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')

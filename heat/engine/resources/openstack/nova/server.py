@@ -422,7 +422,6 @@ class Server(stack_user.StackUser):
         ADMIN_PASS: properties.Schema(
             properties.Schema.STRING,
             _('The administrator password for the server.'),
-            required=False,
             update_allowed=True
         ),
     }

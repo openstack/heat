@@ -413,7 +413,6 @@ class RouterGateway(neutron.NeutronResource):
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % NETWORK,
                 version='2014.2'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -421,7 +420,6 @@ class RouterGateway(neutron.NeutronResource):
         NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('external network for the gateway.'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],

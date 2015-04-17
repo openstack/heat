@@ -216,7 +216,6 @@ class Pool(neutron.NeutronResource):
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % SUBNET,
                 version='2014.2'),
-            required=False,
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -225,7 +224,6 @@ class Pool(neutron.NeutronResource):
             properties.Schema.STRING,
             _('The subnet for the port on which the members '
               'of the pool will be connected.'),
-            required=False,
             support_status=support.SupportStatus(version='2014.2'),
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
