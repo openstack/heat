@@ -15,6 +15,7 @@ import abc
 import collections
 import copy
 import functools
+import hashlib
 
 from oslo_log import log as logging
 import six
@@ -115,8 +116,10 @@ class Template(collections.Mapping):
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
         self.env = env or environment.Environment({})
+
         self.version = get_version(self.t,
                                    list(six.iterkeys(_template_classes)))
+        self.t_digest = None
 
     def __deepcopy__(self, memo):
         return Template(copy.deepcopy(self.t, memo), files=self.files,
@@ -226,6 +229,18 @@ class Template(collections.Mapping):
         sections (e.g. parameters are check by parameters schema class).
 
         '''
+        t_digest = hashlib.sha256(six.text_type(self.t)).hexdigest()
+
+        # TODO(kanagaraj-manickam) currently t_digest is stored in self. which
+        # is used to check whether already template is validated or not.
+        # But it needs to be loaded from dogpile cache backend once its
+        # available in heat (http://specs.openstack.org/openstack/heat-specs/
+        # specs/liberty/constraint-validation-cache.html). This is required
+        # as multiple heat-engines may process the same template at least
+        # in case of instance_group. And it fixes partially bug 1444316
+
+        if t_digest == self.t_digest:
+            return
 
         # check top-level sections
         for k in six.iterkeys(self.t):
@@ -243,6 +258,7 @@ class Template(collections.Mapping):
                 message = _('Resources must contain Resource. '
                             'Found a [%s] instead') % type(res)
                 raise exception.StackValidationFailed(message=message)
+        self.t_digest = t_digest
 
     @classmethod
     def create_empty_template(cls,

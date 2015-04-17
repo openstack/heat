@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import hashlib
 import json
 
 import fixtures
@@ -271,6 +272,27 @@ class ParserTest(common.HeatTestCase):
 
 class TestTemplateValidate(common.HeatTestCase):
 
+    def test_template_validate_cfn_check_t_digest(self):
+        t = {
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'Description': 'foo',
+            'Parameters': {},
+            'Mappings': {},
+            'Resources': {
+                'server': {
+                    'Type': 'OS::Nova::Server'
+                }
+            },
+            'Outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        self.assertIsNone(tmpl.t_digest)
+        tmpl.validate()
+        self.assertEqual(hashlib.sha256(six.text_type(t)).hexdigest(),
+                         tmpl.t_digest,
+                         'invalid template digest')
+
     def test_template_validate_cfn_good(self):
         t = {
             'AWSTemplateFormatVersion': '2010-09-09',
@@ -328,14 +350,34 @@ class TestTemplateValidate(common.HeatTestCase):
 
     def test_template_validate_cfn_empty(self):
         t = template_format.parse('''
-AWSTemplateFormatVersion: 2010-09-09
-Parameters:
-Resources:
-Outputs:
-''')
+            AWSTemplateFormatVersion: 2010-09-09
+            Parameters:
+            Resources:
+            Outputs:
+            ''')
         tmpl = template.Template(t)
         err = tmpl.validate()
         self.assertIsNone(err)
+
+    def test_template_validate_hot_check_t_digest(self):
+        t = {
+            'heat_template_version': '2015-04-30',
+            'description': 'foo',
+            'parameters': {},
+            'resources': {
+                'server': {
+                    'type': 'OS::Nova::Server'
+                }
+            },
+            'outputs': {},
+        }
+
+        tmpl = template.Template(t)
+        self.assertIsNone(tmpl.t_digest)
+        tmpl.validate()
+        self.assertEqual(hashlib.sha256(six.text_type(t)).hexdigest(),
+                         tmpl.t_digest,
+                         'invalid template digest')
 
     def test_template_validate_hot_good(self):
         t = {
@@ -507,16 +549,16 @@ class TemplateTest(common.HeatTestCase):
 
     def test_invalid_template(self):
         scanner_error = '''
-1
-Mappings:
-  ValidMapping:
-    TestKey: TestValue
-'''
+            1
+            Mappings:
+              ValidMapping:
+                TestKey: TestValue
+            '''
         parser_error = '''
-Mappings:
-  ValidMapping:
-    TestKey: {TestKey1: "Value1" TestKey2: "Value2"}
-'''
+            Mappings:
+              ValidMapping:
+                TestKey: {TestKey1: "Value1" TestKey2: "Value2"}
+            '''
 
         self.assertRaises(ValueError, template_format.parse, scanner_error)
         self.assertRaises(ValueError, template_format.parse, parser_error)
