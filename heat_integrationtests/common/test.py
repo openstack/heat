@@ -234,7 +234,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             else:
                 if res.resource_status == status:
                     return
-                if fail_regexp.search(res.resource_status):
+                wait_for_action = status.split('_')[0]
+                resource_action = res.resource_status.split('_')[0]
+                if (resource_action == wait_for_action and
+                        fail_regexp.search(res.resource_status)):
                     raise exceptions.StackResourceBuildErrorException(
                         resource_name=res.resource_name,
                         stack_identifier=stack_identifier,
@@ -259,7 +262,9 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             else:
                 return True
 
-        if fail_regexp.search(stack.stack_status):
+        wait_for_action = status.split('_')[0]
+        if (stack.action == wait_for_action and
+                fail_regexp.search(stack.stack_status)):
             # Handle UPDATE_FAILED case.
             if status == 'UPDATE_FAILED':
                 if self.updated_time.get(
