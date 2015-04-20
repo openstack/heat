@@ -441,7 +441,7 @@ def _query_stack_get_all(context, tenant_safe=True, show_deleted=False,
             ~models.Stack.tags.any(
                 models.StackTag.tag.in_(not_tags_any)))
 
-    if not show_hidden:
+    if not show_hidden and cfg.CONF.hidden_stack_tags:
         query = query.filter(
             ~models.Stack.tags.any(
                 models.StackTag.tag.in_(cfg.CONF.hidden_stack_tags)))
