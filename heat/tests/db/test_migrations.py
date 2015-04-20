@@ -42,8 +42,8 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                              common.FakeLogMixin):
     """Test sqlalchemy-migrate migrations."""
 
-    snake_walk = True
-    downgrade = True
+    snake_walk = False
+    downgrade = False
 
     @property
     def INIT_VERSION(self):

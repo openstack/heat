@@ -1035,6 +1035,9 @@ def sync_point_update_input_data(context, entity_id,
 
 def db_sync(engine, version=None):
     """Migrate the database to `version` or the most recent version."""
+    if version is not None and int(version) < db_version(engine):
+        raise exception.Error(_("Cannot migrate to lower schema version."))
+
     return migration.db_sync(engine, version=version)
 
 
