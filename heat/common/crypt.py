@@ -21,8 +21,10 @@ from heat.openstack.common.crypto import utils
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
-               default='notgood but just long enough i think',
-               help="Encryption key used for authentication info in database.")
+               secret=True,
+               default='notgood but just long enough i t',
+               help="Key used to encrypt authentication info in the database. "
+                    "Length of this key must be 16, 24 or 32 characters.")
 ]
 
 cfg.CONF.register_opts(auth_opts)
