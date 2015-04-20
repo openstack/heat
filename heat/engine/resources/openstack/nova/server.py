@@ -249,7 +249,8 @@ class Server(stack_user.StackUser):
                           'when the server is terminated.')
                     ),
                 },
-            )
+            ),
+            support_status=support.SupportStatus(version='2015.1')
         ),
         FLAVOR: properties.Schema(
             properties.Schema.STRING,
