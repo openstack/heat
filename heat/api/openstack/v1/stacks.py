@@ -186,6 +186,10 @@ class StackController(object):
             'show_deleted': 'single',
             'show_nested': 'single',
             'show_hidden': 'single',
+            'tags': 'single',
+            'tags_any': 'single',
+            'not_tags': 'single',
+            'not_tags_any': 'single',
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
@@ -212,6 +216,30 @@ class StackController(object):
                 params[rpc_api.PARAM_SHOW_HIDDEN])
             show_hidden = params[rpc_api.PARAM_SHOW_HIDDEN]
 
+        tags = None
+        if rpc_api.PARAM_TAGS in params:
+            params[rpc_api.PARAM_TAGS] = param_utils.extract_tags(
+                params[rpc_api.PARAM_TAGS])
+            tags = params[rpc_api.PARAM_TAGS]
+
+        tags_any = None
+        if rpc_api.PARAM_TAGS_ANY in params:
+            params[rpc_api.PARAM_TAGS_ANY] = param_utils.extract_tags(
+                params[rpc_api.PARAM_TAGS_ANY])
+            tags_any = params[rpc_api.PARAM_TAGS_ANY]
+
+        not_tags = None
+        if rpc_api.PARAM_NOT_TAGS in params:
+            params[rpc_api.PARAM_NOT_TAGS] = param_utils.extract_tags(
+                params[rpc_api.PARAM_NOT_TAGS])
+            not_tags = params[rpc_api.PARAM_NOT_TAGS]
+
+        not_tags_any = None
+        if rpc_api.PARAM_NOT_TAGS_ANY in params:
+            params[rpc_api.PARAM_NOT_TAGS_ANY] = param_utils.extract_tags(
+                params[rpc_api.PARAM_NOT_TAGS_ANY])
+            not_tags_any = params[rpc_api.PARAM_NOT_TAGS_ANY]
+
         # get the with_count value, if invalid, raise ValueError
         with_count = False
         if req.params.get('with_count'):
@@ -236,7 +264,11 @@ class StackController(object):
                                                      tenant_safe=tenant_safe,
                                                      show_deleted=show_deleted,
                                                      show_nested=show_nested,
-                                                     show_hidden=show_hidden)
+                                                     show_hidden=show_hidden,
+                                                     tags=tags,
+                                                     tags_any=tags_any,
+                                                     not_tags=not_tags,
+                                                     not_tags_any=not_tags_any)
             except AttributeError as exc:
                 LOG.warn(_LW("Old Engine Version: %s") % exc)
 

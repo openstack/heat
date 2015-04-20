@@ -53,3 +53,12 @@ def extract_int(name, value, allow_zero=True, allow_negative=False):
                          {'name': name, 'value': value})
 
     return result
+
+
+def extract_tags(subject):
+    tags = subject.split(',')
+    for tag in tags:
+        if len(tag) > 80:
+            raise ValueError(_('Invalid tag, "%s" is longer than 80 '
+                               'characters') % tag)
+    return tags

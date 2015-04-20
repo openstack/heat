@@ -386,9 +386,11 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
                         'show_deleted': False, 'show_nested': False,
-                        'show_hidden': False}
+                        'show_hidden': False, 'tags': None,
+                        'tags_any': None, 'not_tags': None,
+                        'not_tags_any': None}
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', default_args))
+            req.context, ('list_stacks', default_args), version='1.8')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
@@ -407,7 +409,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[1][1]
-        self.assertEqual(9, len(engine_args))
+        self.assertEqual(13, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
@@ -608,7 +610,11 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
                                                         tenant_safe=True,
                                                         show_deleted=True,
                                                         show_nested=False,
-                                                        show_hidden=False)
+                                                        show_hidden=False,
+                                                        tags=None,
+                                                        tags_any=None,
+                                                        not_tags=None,
+                                                        not_tags_any=None)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_detail(self, mock_call, mock_enforce):
@@ -667,9 +673,11 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
                         'show_deleted': False, 'show_nested': False,
-                        'show_hidden': False}
+                        'show_hidden': False, 'tags': None,
+                        'tags_any': None, 'not_tags': None,
+                        'not_tags_any': None}
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', default_args))
+            req.context, ('list_stacks', default_args), version='1.8')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_rmt_aterr(self, mock_call, mock_enforce):
@@ -685,7 +693,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', mock.ANY))
+            req.context, ('list_stacks', mock.ANY), version='1.8')
 
     def test_index_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', False)
@@ -713,7 +721,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertEqual(500, resp.json['code'])
         self.assertEqual('Exception', resp.json['error']['type'])
         mock_call.assert_called_once_with(
-            req.context, ('list_stacks', mock.ANY))
+            req.context, ('list_stacks', mock.ANY), version='1.8')
 
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -743,7 +751,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -806,7 +814,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -893,7 +901,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndReturn(dict(identity))
         self.m.ReplayAll()
 
@@ -937,7 +945,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(to_remote_error(AttributeError()))
         rpc_client.EngineClient.call(
             req.context,
@@ -954,7 +962,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(to_remote_error(unknown_parameter))
         rpc_client.EngineClient.call(
             req.context,
@@ -971,7 +979,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(to_remote_error(missing_parameter))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1025,7 +1033,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
@@ -1106,7 +1114,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 

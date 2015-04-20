@@ -162,9 +162,11 @@ class CfnStackControllerTest(common.HeatTestCase):
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None, 'tenant_safe': True,
                         'show_deleted': False, 'show_nested': False,
-                        'show_hidden': False}
+                        'show_hidden': False, 'tags': None,
+                        'tags_any': None, 'not_tags': None,
+                        'not_tags_any': None}
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', default_args))
+            dummy_req.context, ('list_stacks', default_args), version='1.8')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_list_rmt_aterr(self, mock_call):
@@ -180,7 +182,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', mock.ANY))
+            dummy_req.context, ('list_stacks', mock.ANY), version='1.8')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_list_rmt_interr(self, mock_call):
@@ -196,7 +198,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInternalFailureError)
         mock_call.assert_called_once_with(
-            dummy_req.context, ('list_stacks', mock.ANY))
+            dummy_req.context, ('list_stacks', mock.ANY), version='1.8')
 
     def test_describe_last_updated_time(self):
         params = {'Action': 'DescribeStacks'}
@@ -508,7 +510,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndRaise(failure)
 
     def _stub_rpc_create_stack_call_success(self, stack_name, engine_parms,
@@ -536,7 +538,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'user_creds_id': None,
               'parent_resource_name': None,
               'stack_user_project_id': None}),
-            version='1.7'
+            version='1.8'
         ).AndReturn(engine_resp)
 
         self.m.ReplayAll()
