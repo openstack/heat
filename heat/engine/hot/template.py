@@ -61,7 +61,9 @@ class HOTemplate20130523(template.Template):
                                   'metadata': 'Metadata',
                                   'depends_on': 'DependsOn',
                                   'deletion_policy': 'DeletionPolicy',
-                                  'update_policy': 'UpdatePolicy'}
+                                  'update_policy': 'UpdatePolicy',
+                                  'description': 'Description',
+                                  'value': 'Value'}
     functions = {
         'Fn::GetAZs': cfn_funcs.GetAZs,
         'get_param': hot_funcs.GetParam,

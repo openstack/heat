@@ -627,22 +627,31 @@ class Stack(collections.Mapping):
             if result:
                 raise exception.StackValidationFailed(message=result)
 
-        for val in self.outputs.values():
+        for key, val in self.outputs.items():
             try:
                 if not val or not val.get('Value'):
                     message = _('Each Output must contain '
                                 'a Value key.')
-                    raise exception.StackValidationFailed(message=message)
+                    raise exception.StackValidationFailed(
+                        error='Output validation error',
+                        path=[self.t.OUTPUTS, key],
+                        message=message)
                 function.validate(val.get('Value'))
             except AttributeError:
-                message = _('Output validation error: '
-                            'Outputs must contain Output. '
+                message = _('Outputs must contain Output. '
                             'Found a [%s] instead') % type(val)
-                raise exception.StackValidationFailed(message=message)
+                raise exception.StackValidationFailed(
+                    error='Output validation error',
+                    path=[self.t.OUTPUTS],
+                    message=message)
+            except exception.StackValidationFailed as ex:
+                raise ex
             except Exception as ex:
-                reason = _('Output validation error: '
-                           '%s') % six.text_type(ex)
-                raise exception.StackValidationFailed(message=reason)
+                raise exception.StackValidationFailed(
+                    error='Output validation error',
+                    path=[self.t.OUTPUTS, key,
+                          self.t.get_section_name('Value')],
+                    message=six.text_type(ex))
 
     def requires_deferred_auth(self):
         '''
