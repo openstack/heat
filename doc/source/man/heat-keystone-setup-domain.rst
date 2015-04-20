@@ -86,7 +86,7 @@ OPTIONS
 
 .. cmdoption:: --version
 
-  Show program's version number and exit.  The output could be empty if
+  Show program's version number and exit. The output could be empty if
   the distribution didn't specify any version information.
 
 
