@@ -711,7 +711,7 @@ class StackTest(common.HeatTestCase):
         def _mock_check(res):
             res.handle_check = mock.Mock()
 
-        [_mock_check(res) for res in self.stack.resources.values()]
+        [_mock_check(res) for res in six.itervalues(self.stack.resources)]
         return self.stack
 
     def test_check_supported(self):
@@ -721,7 +721,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(stack1.COMPLETE, stack1.status)
         self.assertEqual(stack1.CHECK, stack1.action)
         [self.assertTrue(res.handle_check.called)
-         for res in stack1.resources.values()]
+         for res in six.itervalues(stack1.resources)]
         self.assertNotIn('not fully supported', stack1.status_reason)
 
     def test_check_not_supported(self):

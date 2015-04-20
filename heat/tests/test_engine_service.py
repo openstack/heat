@@ -2598,7 +2598,7 @@ class StackServiceTest(common.HeatTestCase):
     @stack_context('service_resources_list_test_stack_with_depth')
     def test_stack_resources_list_with_depth(self, mock_load):
         mock_load.return_value = self.stack
-        resources = self.stack.values()
+        resources = six.itervalues(self.stack)
         self.stack.iter_resources = mock.Mock(return_value=resources)
         resources = self.eng.list_stack_resources(self.ctx,
                                                   self.stack.identifier(),
@@ -2609,7 +2609,7 @@ class StackServiceTest(common.HeatTestCase):
     @stack_context('service_resources_list_test_stack_with_max_depth')
     def test_stack_resources_list_with_max_depth(self, mock_load):
         mock_load.return_value = self.stack
-        resources = self.stack.values()
+        resources = six.itervalues(self.stack)
         self.stack.iter_resources = mock.Mock(return_value=resources)
         resources = self.eng.list_stack_resources(self.ctx,
                                                   self.stack.identifier(),

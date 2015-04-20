@@ -491,7 +491,7 @@ class Parameters(collections.Mapping):
         self._validate_tmpl_parameters()
         self._validate_user_parameters()
 
-        for param in self.params.values():
+        for param in six.itervalues(self.params):
             param.validate(validate_value, context)
 
     def __contains__(self, key):

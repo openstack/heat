@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import stack
@@ -173,7 +175,7 @@ class DepAttrsTest(common.HeatTestCase):
         parsed_tmpl = template_format.parse(self.tmpl)
         self.stack = stack.Stack(self.ctx, 'test_stack',
                                  template.Template(parsed_tmpl))
-        resources = self.stack.resources.values()
+        resources = six.itervalues(self.stack.resources)
         outputs = self.stack.outputs
 
         for res in resources:

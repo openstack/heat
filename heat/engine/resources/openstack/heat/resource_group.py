@@ -294,7 +294,7 @@ class ResourceGroup(stack_resource.StackResource):
         if isinstance(val, six.string_types):
             return val.replace(repl_var, res_name)
         elif isinstance(val, collections.Mapping):
-            return dict(zip(val, map(recurse, val.values())))
+            return dict(zip(val, map(recurse, six.itervalues(val))))
         elif isinstance(val, collections.Sequence):
             return map(recurse, val)
         return val

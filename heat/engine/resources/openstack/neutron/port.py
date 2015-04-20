@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+import six
 
 from heat.common.i18n import _
 from heat.common.i18n import _LW
@@ -261,7 +262,7 @@ class Port(neutron.NeutronResource):
         # It is not known which subnet a port might be assigned
         # to so all subnets in a network should be created before
         # the ports in that network.
-        for res in self.stack.itervalues():
+        for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
                 dep_network = res.properties.get(
                     subnet.Subnet.NETWORK) or res.properties.get(

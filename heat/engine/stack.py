@@ -209,7 +209,7 @@ class Stack(collections.Mapping):
         Iterates over all the resources in a stack, including nested stacks up
         to `nested_depth` levels below.
         '''
-        for res in self.values():
+        for res in six.itervalues(self):
             yield res
 
             get_nested = getattr(res, 'nested', None)
@@ -239,7 +239,7 @@ class Stack(collections.Mapping):
     def dependencies(self):
         if self._dependencies is None:
             self._dependencies = self._get_dependencies(
-                self.resources.itervalues())
+                six.itervalues(self.resources))
         return self._dependencies
 
     def reset_dependencies(self):
@@ -298,7 +298,8 @@ class Stack(collections.Mapping):
                     return nested_stack.total_resources()
             return 0
 
-        return len(self) + sum(total_nested(res) for res in self.itervalues())
+        return len(self) + sum(total_nested(res)
+                               for res in six.itervalues(self))
 
     def _set_param_stackid(self):
         '''
@@ -557,7 +558,7 @@ class Stack(collections.Mapping):
         Return the resource in this stack with the specified
         refid, or None if not found
         '''
-        for r in self.values():
+        for r in six.itervalues(self):
             if r.state in (
                     (r.INIT, r.COMPLETE),
                     (r.CREATE, r.IN_PROGRESS),
@@ -664,7 +665,7 @@ class Stack(collections.Mapping):
         during its lifecycle using the configured deferred authentication
         method.
         '''
-        return any(res.requires_deferred_auth for res in self.values())
+        return any(res.requires_deferred_auth for res in six.itervalues(self))
 
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
@@ -714,7 +715,7 @@ class Stack(collections.Mapping):
         Preview the stack with all of the resources.
         '''
         return [resource.preview()
-                for resource in self.resources.itervalues()]
+                for resource in six.itervalues(self.resources)]
 
     def _store_resources(self):
         for r in reversed(self.dependencies):
@@ -824,7 +825,7 @@ class Stack(collections.Mapping):
                 return hasattr(res, 'handle_%s' % self.CHECK.lower())
 
         supported = [is_supported(self, res)
-                     for res in self.resources.values()]
+                     for res in six.itervalues(self.resources)]
 
         if not all(supported):
             msg = ". '%s' not fully supported (see resources)" % self.CHECK
@@ -866,7 +867,7 @@ class Stack(collections.Mapping):
             if not self.disable_rollback and self.state == (self.ADOPT,
                                                             self.FAILED):
                 # enter the same flow as abandon and just delete the stack
-                for res in self.resources.values():
+                for res in six.itervalues(self.resources):
                     res.abandon_in_progress = True
                 self.delete(action=self.ROLLBACK, abandon=True)
 
@@ -1368,7 +1369,7 @@ class Stack(collections.Mapping):
             'status': self.status,
             'template': self.t.t,
             'resources': dict((res.name, res.prepare_abandon())
-                              for res in self.resources.values()),
+                              for res in six.itervalues(self.resources)),
             'project_id': self.tenant_id,
             'stack_user_project_id': self.stack_user_project_id
         }
@@ -1393,5 +1394,5 @@ class Stack(collections.Mapping):
             return
         # a change in some resource may have side-effects in the attributes
         # of other resources, so ensure that attributes are re-calculated
-        for res in self.resources.itervalues():
+        for res in six.itervalues(self.resources):
             res.attributes.reset_resolved_values()

@@ -902,7 +902,7 @@ class Server(stack_user.StackUser):
         nets = self.properties.get(self.NETWORKS)
         if not nets:
             return
-        for res in self.stack.itervalues():
+        for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
                 subnet_net = (res.properties.get(subnet.Subnet.NETWORK_ID)
                               or res.properties.get(subnet.Subnet.NETWORK))

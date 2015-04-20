@@ -43,7 +43,7 @@ class BaseSecurityGroup(object):
         ids_to_delete = [id for id, rule in existing.items()
                          if rule not in updated]
         rules_to_create = [rule for rule in updated
-                           if rule not in existing.values()]
+                           if rule not in six.itervalues(existing)]
         return ids_to_delete, rules_to_create
 
 
@@ -320,7 +320,8 @@ class NeutronSecurityGroup(BaseSecurityGroup):
             rule['direction'] = 'egress'
         for rule in updated[self.sg.SECURITY_GROUP_INGRESS]:
             rule['direction'] = 'ingress'
-        updated_all = updated.values()[0] + updated.values()[1]
+        updated_rules = list(six.itervalues(updated))
+        updated_all = updated_rules[0] + updated_rules[1]
         return super(NeutronSecurityGroup, self).diff_rules(existing,
                                                             updated_all)
 

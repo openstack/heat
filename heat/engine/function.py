@@ -132,7 +132,7 @@ def validate(snippet):
     if isinstance(snippet, Function):
         snippet.validate()
     elif isinstance(snippet, collections.Mapping):
-        for v in snippet.values():
+        for v in six.itervalues(snippet):
             validate(v)
     elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
