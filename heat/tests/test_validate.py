@@ -1035,7 +1035,8 @@ class validateTest(common.HeatTestCase):
         t = template_format.parse(test_template_invalid_property)
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
-        self.assertEqual({'Error': 'Unknown Property UnknownProperty'}, res)
+        self.assertEqual({'Error': 'Property error : WikiDatabase.Properties: '
+                                   'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
@@ -1084,7 +1085,8 @@ class validateTest(common.HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t, {}))
         self.assertEqual(
-            {'Error': 'Property SourceDestCheck not implemented yet'},
+            {'Error': 'Property error : WikiDatabase.Properties: '
+                      'Property SourceDestCheck not implemented yet'},
             res)
 
     def test_invalid_deletion_policy(self):

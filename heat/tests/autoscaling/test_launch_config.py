@@ -133,8 +133,10 @@ class LaunchConfigurationTest(common.HeatTestCase):
 
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          side_effect=exception.ServerNotFound(server='5678'))
-        msg = ("Property error : LaunchConfig: InstanceId Error validating "
-               "value '5678': The server (5678) could not be found.")
+        msg = ("Property error : "
+               "Resources.LaunchConfig.Properties.InstanceId: "
+               "Error validating value '5678': The server (5678) "
+               "could not be found.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(msg, six.text_type(exc))
@@ -193,9 +195,10 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               self.validate_launch_config, t,
                               stack, 'LaunchConfig')
 
-        excepted_error = ('Property error : LaunchConfig: BlockDeviceMappings '
-                          'Property error : BlockDeviceMappings: 0 Property '
-                          'error : 0: Property DeviceName not assigned')
+        excepted_error = (
+            'Property error : '
+            'Resources.LaunchConfig.Properties.BlockDeviceMappings[0]: '
+            'Property DeviceName not assigned')
         self.assertIn(excepted_error, six.text_type(e))
 
         self.m.VerifyAll()

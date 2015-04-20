@@ -227,8 +227,9 @@ class InstancesTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 instance.validate)
-        self.assertIn("VolumeId Error validating value '1234': "
-                      "The Volume (1234) could not be found.",
+        self.assertIn("WebServer.Properties.Volumes[0].VolumeId: "
+                      "Error validating value '1234': The Volume "
+                      "(1234) could not be found.",
                       six.text_type(exc))
 
         self.m.VerifyAll()
@@ -322,9 +323,10 @@ class InstancesTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 instance.validate)
-        excepted_error = ('Property error : WebServer: BlockDeviceMappings '
-                          'Property error : BlockDeviceMappings: 0 Property '
-                          'error : 0: Property DeviceName not assigned')
+        excepted_error = (
+            'Property error : '
+            'Resources.WebServer.Properties.BlockDeviceMappings[0]: '
+            'Property DeviceName not assigned')
         self.assertIn(excepted_error, six.text_type(exc))
 
         self.m.VerifyAll()
@@ -382,9 +384,9 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            "StackValidationFailed: Property error : WebServer: "
-            "ImageId Error validating value 'Slackware': "
-            "The Image (Slackware) could not be found.",
+            "StackValidationFailed: Property error : "
+            "WebServer.Properties.ImageId: Error validating value "
+            "'Slackware': The Image (Slackware) could not be found.",
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -409,9 +411,9 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : WebServer: '
-            'ImageId Multiple physical resources were '
-            'found with name (CentOS 5.2).',
+            'StackValidationFailed: Property error : '
+            'WebServer.Properties.ImageId: Multiple physical '
+            'resources were found with name (CentOS 5.2).',
             six.text_type(error))
 
         self.m.VerifyAll()
@@ -433,8 +435,8 @@ class InstancesTest(common.HeatTestCase):
         create = scheduler.TaskRunner(instance.create)
         error = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(
-            'StackValidationFailed: Property error : WebServer: '
-            'ImageId 404 (HTTP 404)',
+            'StackValidationFailed: Property error : '
+            'WebServer.Properties.ImageId: 404 (HTTP 404)',
             six.text_type(error))
 
         self.m.VerifyAll()

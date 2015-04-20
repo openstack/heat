@@ -547,7 +547,8 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition(rname, 'Foo', {})
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
 
-        estr = 'Property error : test_resource: Property Foo not assigned'
+        estr = ('Property error : test_resource.Properties: '
+                'Property Foo not assigned')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
         self.assertIn(estr, six.text_type(err))
@@ -559,7 +560,8 @@ class ResourceTest(common.HeatTestCase):
                                             {'Food': 'abc'})
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
-        estr = 'StackValidationFailed: Unknown Property Food'
+        estr = ('StackValidationFailed: Property error : '
+                'test_resource.Properties: Unknown Property Food')
         create = scheduler.TaskRunner(res.create)
         err = self.assertRaises(exception.ResourceFailure, create)
         self.assertIn(estr, six.text_type(err))
@@ -1506,8 +1508,9 @@ class ResourceDependenciesTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.StackValidationFailed,
                                stack.validate)
-        expected = "FooInt Value 'notanint' is not an integer"
-        self.assertIn(expected, six.text_type(ex))
+        self.assertIn("Property error : resources.bar.properties.FooInt: "
+                      "Value 'notanint' is not an integer",
+                      six.text_type(ex))
 
         # You can turn off value validation via strict_validate
         stack_novalidate = parser.Stack(utils.dummy_context(), 'test', tmpl,

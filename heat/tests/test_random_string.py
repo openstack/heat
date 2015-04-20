@@ -223,7 +223,7 @@ Resources:
 '''
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.create_stack, template_random_string)
-        self.assertIn('length 513 is out of range (min: 1, max: 512)',
+        self.assertIn('513 is out of range (min: 1, max: 512)',
                       six.text_type(exc))
 
 

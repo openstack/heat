@@ -56,6 +56,12 @@ class HOTemplate20130523(template.Template):
                             cfn_template.CfnTemplate.RESOURCES: RESOURCES,
                             cfn_template.CfnTemplate.OUTPUTS: OUTPUTS}
 
+    _RESOURCE_HOT_TO_CFN_ATTRS = {'type': 'Type',
+                                  'properties': 'Properties',
+                                  'metadata': 'Metadata',
+                                  'depends_on': 'DependsOn',
+                                  'deletion_policy': 'DeletionPolicy',
+                                  'update_policy': 'UpdatePolicy'}
     functions = {
         'Fn::GetAZs': cfn_funcs.GetAZs,
         'get_param': hot_funcs.GetParam,
@@ -157,15 +163,14 @@ class HOTemplate20130523(template.Template):
 
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
-        HOT_TO_CFN_ATTRS = {'type': 'Type',
-                            'properties': 'Properties',
-                            'metadata': 'Metadata',
-                            'depends_on': 'DependsOn',
-                            'deletion_policy': 'DeletionPolicy',
-                            'update_policy': 'UpdatePolicy'}
 
         return self._translate_section('resources', 'type', resources,
-                                       HOT_TO_CFN_ATTRS)
+                                       self._RESOURCE_HOT_TO_CFN_ATTRS)
+
+    def get_section_name(self, section):
+        cfn_to_hot_attrs = dict(zip(self._RESOURCE_HOT_TO_CFN_ATTRS.values(),
+                                    self._RESOURCE_HOT_TO_CFN_ATTRS.keys()))
+        return cfn_to_hot_attrs.get(section, section)
 
     def _translate_outputs(self, outputs):
         """Get the outputs of the template translated into CFN format."""

@@ -874,7 +874,18 @@ class Resource(object):
 
         function.validate(self.t)
         self.validate_deletion_policy(self.t.deletion_policy())
-        return self.properties.validate(with_value=self.stack.strict_validate)
+        try:
+            validate = self.properties.validate(
+                with_value=self.stack.strict_validate)
+        except exception.StackValidationFailed as ex:
+            path = [self.stack.t.RESOURCES, ex.path[0],
+                    self.stack.t.get_section_name(ex.path[1])]
+            path.extend(ex.path[2:])
+            raise exception.StackValidationFailed(
+                error=ex.error,
+                path=path,
+                message=ex.error_message)
+        return validate
 
     @classmethod
     def validate_deletion_policy(cls, policy):

@@ -203,7 +203,9 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.create_volume, self.t, stack, 'DataVolume')
-        self.assertIn('Tags Property error', six.text_type(ex))
+        self.assertEqual("Property error : "
+                         "Resources.DataVolume.Properties.Tags[0]: "
+                         "Unknown Property Foo", six.text_type(ex))
 
         self.m.VerifyAll()
 
@@ -664,8 +666,8 @@ class VolumeTest(vt_base.BaseVolumeTest):
                                   self.create_volume,
                                   self.t, stack, 'DataVolume')
         self.assertEqual(
-            "Property error : DataVolume: Size 0 is out of "
-            "range (min: 1, max: None)", six.text_type(error))
+            "Property error : Resources.DataVolume.Properties.Size: "
+            "0 is out of range (min: 1, max: None)", six.text_type(error))
 
     def test_volume_attachment_updates_not_supported(self):
         self.m.StubOutWithMock(nova.NovaClientPlugin, 'get_server')

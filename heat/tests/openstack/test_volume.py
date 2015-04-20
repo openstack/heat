@@ -103,8 +103,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                                   self.create_volume,
                                   self.t, stack, 'volume')
         self.assertEqual(
-            "Property error : volume: size 0 is out of "
-            "range (min: 1, max: None)", six.text_type(error))
+            "Property error : resources.volume.properties.size: "
+            "0 is out of range (min: 1, max: None)", six.text_type(error))
 
     def test_cinder_create(self):
         fv = vt_base.FakeVolume('creating')
