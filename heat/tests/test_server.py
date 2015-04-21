@@ -1881,6 +1881,10 @@ class ServersTest(common.HeatTestCase):
                           {'v4-fixed-ip': '192.0.2.0'}],
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '192.0.2.0'}]))
+        self.assertEqual([{'port-id': 'aaaabbbb'},
+                          {'v6-fixed-ip': '2002::2'}],
+                         server._build_nics([{'port': 'aaaabbbb'},
+                                             {'fixed_ip': '2002::2'}]))
         self.patchobject(neutron.NeutronClientPlugin, 'resolve_network',
                          return_value='1234abcd')
         self.assertEqual([{'net-id': '1234abcd'}],
