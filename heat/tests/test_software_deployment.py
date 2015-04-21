@@ -596,7 +596,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
     def test_handle_delete_resource_id_is_None(self):
         self._create_stack(self.template_delete_suspend_resume)
         self.mock_software_config()
-        self.assertIsNone(self.deployment.handle_delete())
+        sd = self.mock_deployment()
+        self.assertEqual(sd, self.deployment.handle_delete())
 
     def test_delete_complete(self):
         self._create_stack(self.template_delete_suspend_resume)
