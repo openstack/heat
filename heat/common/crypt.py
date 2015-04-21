@@ -22,10 +22,11 @@ from heat.openstack.common.crypto import utils
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
+               secret=True,
                default='notgood but just long enough i t',
-               help=_('Encryption key used for authentication '
-                      'info in database. Length of this key '
-                      'must be 16, 24 or 32'))
+               help=_('Key used to encrypt authentication info in the '
+                      'database. Length of this key must be 16, 24 or 32 '
+                      'characters.'))
 ]
 
 cfg.CONF.register_opts(auth_opts)
