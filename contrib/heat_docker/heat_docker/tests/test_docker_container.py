@@ -432,3 +432,24 @@ class DockerContainerTest(common.HeatTestCase):
         self.assertEqual(['samalba/wordpress'], client.pulled_images)
         self.assertEqual(['/dev/sda:/dev/sda:rwm'],
                          client.container_start[0]['devices'])
+
+    def test_create_with_cpu_set(self):
+        t = template_format.parse(template)
+        stack = utils.parse_stack(t)
+        definition = stack.t.resource_definitions(stack)['Blog']
+        definition['Properties']['cpu_set'] = '0-8,16-24,28'
+        my_resource = docker_container.DockerContainer(
+            'Blog', definition, stack)
+        get_client_mock = self.patchobject(my_resource, 'get_client')
+        get_client_mock.return_value = fakeclient.FakeDockerClient()
+        self.assertIsNone(my_resource.validate())
+        scheduler.TaskRunner(my_resource.create)()
+        self.assertEqual((my_resource.CREATE, my_resource.COMPLETE),
+                         my_resource.state)
+        client = my_resource.get_client()
+        self.assertEqual(['samalba/wordpress'], client.pulled_images)
+        self.assertEqual('0-8,16-24,28',
+                         client.container_create[0]['cpuset'])
+
+    def test_create_with_cpu_set_for_low_api_version(self):
+        self.arg_for_low_api_version('cpu_set', '0-8,^2', '1.11')
