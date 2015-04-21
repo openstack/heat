@@ -17,6 +17,7 @@ import uuid
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import netutils
 from oslo_utils import uuidutils
 import six
 
@@ -848,7 +849,11 @@ class Server(stack_user.StackUser):
                         'nova').get_nova_network_id(net_identifier))
                 nic_info['net-id'] = net_id
             if net_data.get(self.NETWORK_FIXED_IP):
-                nic_info['v4-fixed-ip'] = net_data[self.NETWORK_FIXED_IP]
+                ip = net_data[self.NETWORK_FIXED_IP]
+                if netutils.is_valid_ipv6(ip):
+                    nic_info['v6-fixed-ip'] = ip
+                else:
+                    nic_info['v4-fixed-ip'] = ip
             if net_data.get(self.NETWORK_PORT):
                 nic_info['port-id'] = net_data[self.NETWORK_PORT]
             nics.append(nic_info)
