@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2015.1.dev155\n"
+"Project-Id-Version: heat 2015.2.dev102\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-02 06:02+0000\n"
+"POT-Creation-Date: 2015-04-21 06:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,28 +38,26 @@ msgstr ""
 msgid "Exception in string format operation"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:125
-msgid "Admin client authentication failed"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:146
+#: heat/common/heat_keystoneclient.py:152
+#: heat/common/heat_keystoneclient.py:235
 msgid "Domain admin client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:160
+#: heat/common/heat_keystoneclient.py:178
+#: heat/common/heat_keystoneclient.py:394
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:166
+#: heat/common/heat_keystoneclient.py:184
 msgid "trust token re-scoping failed!"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:170
+#: heat/common/heat_keystoneclient.py:188
 msgid "Trust impersonation failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:300
-#: heat/common/heat_keystoneclient.py:372
+#: heat/common/heat_keystoneclient.py:304
+#: heat/common/heat_keystoneclient.py:376
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -115,11 +113,11 @@ msgstr ""
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/engine/api.py:41
+#: heat/engine/api.py:42
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:299
+#: heat/engine/api.py:320
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr ""
 
@@ -152,22 +150,22 @@ msgstr ""
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:973 heat/engine/resource.py:1014
+#: heat/engine/resource.py:984 heat/engine/resource.py:1025
 #, python-format
 msgid "DB error %s"
 msgstr ""
 
-#: heat/engine/resource.py:1157
+#: heat/engine/resource.py:1168
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:366
+#: heat/engine/service.py:368
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1400
+#: heat/engine/service.py:1443
 msgid "Filtering by namespace/metric not yet supported"
 msgstr ""
 
@@ -176,27 +174,27 @@ msgstr ""
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr ""
 
-#: heat/engine/stack.py:615
+#: heat/engine/stack.py:629
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:878
+#: heat/engine/stack.py:901
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr ""
 
-#: heat/engine/stack.py:1111
+#: heat/engine/stack.py:1141
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr ""
 
-#: heat/engine/stack.py:1299
+#: heat/engine/stack.py:1325
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr ""
 
-#: heat/engine/stack.py:1308
+#: heat/engine/stack.py:1334
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""

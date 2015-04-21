@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-02 06:02+0000\n"
-"PO-Revision-Date: 2015-04-02 01:48+0000\n"
+"POT-Creation-Date: 2015-04-21 06:03+0000\n"
+"PO-Revision-Date: 2015-04-21 05:12+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
 "language/ko_KR/)\n"
@@ -41,28 +41,26 @@ msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연
 msgid "Exception in string format operation"
 msgstr "문자열 형식화 오퍼레이션의 예외"
 
-#: heat/common/heat_keystoneclient.py:125
-msgid "Admin client authentication failed"
-msgstr "관리자 계정 인증 실패."
-
-#: heat/common/heat_keystoneclient.py:146
+#: heat/common/heat_keystoneclient.py:152
+#: heat/common/heat_keystoneclient.py:235
 msgid "Domain admin client authentication failed"
 msgstr "Domain 관리자 인증 실패."
 
-#: heat/common/heat_keystoneclient.py:160
+#: heat/common/heat_keystoneclient.py:178
+#: heat/common/heat_keystoneclient.py:394
 msgid "Keystone client authentication failed"
 msgstr ""
 
-#: heat/common/heat_keystoneclient.py:166
+#: heat/common/heat_keystoneclient.py:184
 msgid "trust token re-scoping failed!"
 msgstr "신뢰할 수 있는 token 재설정 실패!"
 
-#: heat/common/heat_keystoneclient.py:170
+#: heat/common/heat_keystoneclient.py:188
 msgid "Trust impersonation failed"
 msgstr "트러스트의 위장이 실패했습니다."
 
-#: heat/common/heat_keystoneclient.py:300
-#: heat/common/heat_keystoneclient.py:372
+#: heat/common/heat_keystoneclient.py:304
+#: heat/common/heat_keystoneclient.py:376
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
@@ -120,11 +118,11 @@ msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/engine/api.py:41
+#: heat/engine/api.py:42
 msgid "Timeout conversion failed"
 msgstr ""
 
-#: heat/engine/api.py:299
+#: heat/engine/api.py:320
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
@@ -157,22 +155,22 @@ msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 msgid "Error marking resource as failed"
 msgstr ""
 
-#: heat/engine/resource.py:973 heat/engine/resource.py:1014
+#: heat/engine/resource.py:984 heat/engine/resource.py:1025
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
 
-#: heat/engine/resource.py:1157
+#: heat/engine/resource.py:1168
 #, python-format
 msgid "signal %(name)s : %(msg)s"
 msgstr ""
 
-#: heat/engine/service.py:366
+#: heat/engine/service.py:368
 #, python-format
 msgid "Failed to stop engine service, %s"
 msgstr ""
 
-#: heat/engine/service.py:1400
+#: heat/engine/service.py:1443
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
@@ -181,27 +179,27 @@ msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않�
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/stack.py:615
+#: heat/engine/stack.py:629
 #, python-format
 msgid "Exception: %s"
 msgstr ""
 
-#: heat/engine/stack.py:878
+#: heat/engine/stack.py:901
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:1111
+#: heat/engine/stack.py:1141
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1299
+#: heat/engine/stack.py:1325
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
-#: heat/engine/stack.py:1308
+#: heat/engine/stack.py:1334
 #, python-format
 msgid "Resource %(name)s create failed: %(ex)s"
 msgstr ""
