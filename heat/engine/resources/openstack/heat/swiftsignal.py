@@ -11,12 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
-
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import six
+from six.moves.urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -204,7 +203,7 @@ class SwiftSignal(resource.Resource):
     @property
     def url(self):
         if not self._url:
-            self._url = urlparse.urlparse(self.properties[self.HANDLE])
+            self._url = parse.urlparse(self.properties[self.HANDLE])
         return self._url
 
     @property

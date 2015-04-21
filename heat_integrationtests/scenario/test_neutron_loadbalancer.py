@@ -12,7 +12,8 @@
 #    under the License.
 
 import time
-import urllib
+
+from six.moves import urllib
 
 from heat_integrationtests.scenario import scenario_base
 
@@ -31,7 +32,7 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
         resp = set()
         for count in range(10):
             time.sleep(1)
-            resp.add(urllib.urlopen('http://%s/' % ip).read())
+            resp.add(urllib.request.urlopen('http://%s/' % ip).read())
 
         self.assertEqual(expected_resp, resp)
 
