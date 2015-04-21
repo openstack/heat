@@ -13,6 +13,7 @@
 
 from oslo_log import log as logging
 from oslo_utils import timeutils
+import six
 
 from heat.common import context
 from heat.common.i18n import _LE
@@ -94,7 +95,7 @@ class StackWatch(object):
         def run_alarm_action(stk, actions, details):
             for action in actions:
                 action(details=details)
-            for res in stk.itervalues():
+            for res in six.itervalues(stk):
                 res.metadata_update()
 
         for wr in wrs:

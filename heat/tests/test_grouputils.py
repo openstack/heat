@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import six
 
 from heat.common import grouputils
 from heat.common import template_format
@@ -61,7 +62,7 @@ class GroupUtilsTest(common.HeatTestCase):
         self.assertEqual(2, grouputils.get_size(group))
 
         # member list (sorted)
-        members = [r for r in stack.itervalues()]
+        members = [r for r in six.itervalues(stack)]
         expected = sorted(members, key=lambda r: (r.created_time, r.name))
         actual = grouputils.get_members(group)
         self.assertEqual(expected, actual)

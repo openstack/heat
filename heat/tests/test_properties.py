@@ -138,9 +138,9 @@ class PropertySchemaTest(common.HeatTestCase):
 
     def test_all_resource_schemata(self):
         for resource_type in resources.global_env().get_types():
-            for schema in getattr(resource_type,
-                                  'properties_schema',
-                                  {}).itervalues():
+            for schema in six.itervalues(getattr(resource_type,
+                                                 'properties_schema',
+                                                 {})):
                 properties.Schema.from_legacy(schema)
 
     def test_from_legacy_idempotency(self):

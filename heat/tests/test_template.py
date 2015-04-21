@@ -873,7 +873,7 @@ Mappings:
         empty = template.Template(copy.deepcopy(empty_template))
         stk = stack.Stack(self.ctx, 'test_stack', source)
 
-        for defn in source.resource_definitions(stk).values():
+        for defn in six.itervalues(source.resource_definitions(stk)):
             empty.add_resource(defn)
 
         self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])

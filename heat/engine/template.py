@@ -233,7 +233,7 @@ class Template(collections.Mapping):
                 raise exception.InvalidTemplateSection(section=k)
 
         # check resources
-        for res in self[self.RESOURCES].values():
+        for res in six.itervalues(self[self.RESOURCES]):
             try:
                 if not res or not res.get('Type'):
                     message = _('Each Resource must contain '

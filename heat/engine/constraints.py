@@ -133,7 +133,7 @@ class Schema(collections.Mapping):
             if isinstance(self.schema, AnyIndexDict):
                 self.schema.value.validate(context)
             else:
-                for nested_schema in self.schema.values():
+                for nested_schema in six.itervalues(self.schema):
                     nested_schema.validate(context)
 
     def _validate_default(self, context):

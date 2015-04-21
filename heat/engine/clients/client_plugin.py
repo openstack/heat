@@ -147,10 +147,11 @@ class ClientPlugin(object):
         if self.exceptions_module:
             if isinstance(self.exceptions_module, list):
                 for m in self.exceptions_module:
-                    if type(ex) in m.__dict__.values():
+                    if type(ex) in six.itervalues(m.__dict__):
                         return True
             else:
-                return type(ex) in self.exceptions_module.__dict__.values()
+                return type(ex) in six.itervalues(
+                    self.exceptions_module.__dict__)
         return False
 
     def is_not_found(self, ex):

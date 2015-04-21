@@ -371,7 +371,7 @@ class DependencyTaskGroup(object):
     def __call__(self):
         """Return a co-routine which runs the task group."""
         raised_exceptions = []
-        while any(self._runners.itervalues()):
+        while any(six.itervalues(self._runners)):
             try:
                 for k, r in self._ready():
                     r.start()
@@ -400,7 +400,7 @@ class DependencyTaskGroup(object):
                 raise exc_type, exc_val, traceback
 
     def cancel_all(self, grace_period=None):
-        for r in self._runners.itervalues():
+        for r in six.itervalues(self._runners):
             r.cancel(grace_period=grace_period)
 
     def _cancel_recursively(self, key, runner):

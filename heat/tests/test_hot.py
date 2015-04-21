@@ -881,7 +881,7 @@ class HOTemplateTest(common.HeatTestCase):
         empty = template.Template(copy.deepcopy(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack', source)
 
-        for defn in source.resource_definitions(stack).values():
+        for defn in six.itervalues(source.resource_definitions(stack)):
             empty.add_resource(defn)
 
         self.assertEqual(hot_tpl['resources'], empty.t['resources'])

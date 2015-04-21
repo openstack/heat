@@ -206,7 +206,7 @@ class ThreadGroupManager(object):
 
             for th in threads:
                 th.link(mark_done, th)
-            while not all(links_done.values()):
+            while not all(six.itervalues(links_done)):
                 eventlet.sleep()
 
     def send(self, stack_id, message):

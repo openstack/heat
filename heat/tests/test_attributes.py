@@ -12,6 +12,7 @@
 #    under the License.
 
 import mock
+import six
 
 from heat.engine import attributes
 from heat.engine import resources
@@ -27,9 +28,9 @@ class AttributeSchemaTest(common.HeatTestCase):
 
     def test_all_resource_schemata(self):
         for resource_type in resources.global_env().get_types():
-            for schema in getattr(resource_type,
-                                  'attributes_schema',
-                                  {}).itervalues():
+            for schema in six.itervalues(getattr(resource_type,
+                                                 'attributes_schema',
+                                                 {})):
                 attributes.Schema.from_attribute(schema)
 
     def test_from_attribute_new_schema_format(self):
