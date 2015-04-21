@@ -12,7 +12,6 @@
 #    under the License.
 
 import datetime
-import sys
 import uuid
 
 import eventlet
@@ -30,9 +29,6 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import service_utils
 from heat.common import template_format
-from heat.engine.clients.os import glance
-from heat.engine.clients.os import keystone
-from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine import dependencies
 from heat.engine import environment
@@ -59,7 +55,7 @@ from heat.openstack.common import threadgroup
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api
 from heat.tests import common
-from heat.tests import fakes as test_fakes
+from heat.tests.engine import tools
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
@@ -67,30 +63,6 @@ from heat.tests import utils
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 
-wp_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "WordPress",
-  "Parameters" : {
-    "KeyName" : {
-      "Description" : "KeyName",
-      "Type" : "String",
-      "Default" : "test"
-    }
-  },
-  "Resources" : {
-    "WebServer": {
-      "Type": "AWS::EC2::Instance",
-      "Properties": {
-        "ImageId" : "F17-x86_64-gold",
-        "InstanceType"   : "m1.large",
-        "KeyName"        : "test",
-        "UserData"       : "wordpress"
-      }
-    }
-  }
-}
-'''
 
 wp_template_no_default = '''
 {
@@ -179,185 +151,13 @@ resources:
 '''
 
 
-def get_wordpress_stack(stack_name, ctx):
-    t = template_format.parse(wp_template)
-    template = templatem.Template(
-        t, env=environment.Environment({'KeyName': 'test'}))
-    stack = parser.Stack(ctx, stack_name, template)
-    return stack
-
-
-def get_wordpress_stack_no_params(stack_name, ctx):
-    t = template_format.parse(wp_template)
-    template = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, template)
-    return stack
-
-
-def get_stack(stack_name, ctx, template):
-    t = template_format.parse(template)
-    template = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, template)
-    return stack
-
-
-def setup_keystone_mocks(mocks, stack):
-    fkc = test_fakes.FakeKeystoneClient()
-    mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-    keystone.KeystoneClientPlugin._create().AndReturn(fkc)
-
-
-def setup_mock_for_image_constraint(mocks, imageId_input,
-                                    imageId_output=744):
-    mocks.StubOutWithMock(glance.GlanceClientPlugin, 'get_image_id')
-    glance.GlanceClientPlugin.get_image_id(
-        imageId_input).MultipleTimes().AndReturn(imageId_output)
-
-
-def setup_mocks(mocks, stack, mock_image_constraint=True,
-                mock_keystone=True):
-    fc = fakes_nova.FakeClient()
-    mocks.StubOutWithMock(instances.Instance, 'nova')
-    instances.Instance.nova().MultipleTimes().AndReturn(fc)
-    mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
-    nova.NovaClientPlugin._create().AndReturn(fc)
-    instance = stack['WebServer']
-    metadata = instance.metadata_get()
-    if mock_image_constraint:
-        setup_mock_for_image_constraint(mocks,
-                                        instance.t['Properties']['ImageId'])
-
-    if mock_keystone:
-        setup_keystone_mocks(mocks, stack)
-
-    user_data = instance.properties['UserData']
-    server_userdata = instance.client_plugin().build_userdata(
-        metadata, user_data, 'ec2-user')
-    mocks.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-    nova.NovaClientPlugin.build_userdata(
-        metadata,
-        instance.t['Properties']['UserData'],
-        'ec2-user').AndReturn(server_userdata)
-
-    mocks.StubOutWithMock(fc.servers, 'create')
-    fc.servers.create(
-        image=744,
-        flavor=3,
-        key_name='test',
-        name=utils.PhysName(stack.name, 'WebServer'),
-        security_groups=None,
-        userdata=server_userdata,
-        scheduler_hints=None,
-        meta=None,
-        nics=None,
-        availability_zone=None,
-        block_device_mapping=None).AndReturn(fc.servers.list()[4])
-    return fc
-
-
-def setup_stack(stack_name, ctx, create_res=True):
-    stack = get_wordpress_stack(stack_name, ctx)
-    stack.store()
-    if create_res:
-        m = mox.Mox()
-        setup_mocks(m, stack)
-        m.ReplayAll()
-        stack.create()
-        m.UnsetStubs()
-    return stack
-
-
-def clean_up_stack(stack, delete_res=True):
-    if delete_res:
-        m = mox.Mox()
-        fc = fakes_nova.FakeClient()
-        m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(fc)
-        m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(fakes_nova.fake_exception())
-        m.ReplayAll()
-    stack.delete()
-    if delete_res:
-        m.UnsetStubs()
-
-
-def stack_context(stack_name, create_res=True):
-    """
-    Decorator which creates a stack by using the test case's context and
-    deletes it afterwards to ensure tests clean up their stacks regardless
-    of test success/failure
-    """
-    def stack_delete(test_fn):
-        @six.wraps(test_fn)
-        def wrapped_test(test_case, *args, **kwargs):
-            def create_stack():
-                ctx = getattr(test_case, 'ctx', None)
-                if ctx is not None:
-                    stack = setup_stack(stack_name, ctx, create_res)
-                    setattr(test_case, 'stack', stack)
-
-            def delete_stack():
-                stack = getattr(test_case, 'stack', None)
-                if stack is not None and stack.id is not None:
-                    clean_up_stack(stack, delete_res=create_res)
-
-            create_stack()
-            try:
-                test_fn(test_case, *args, **kwargs)
-            except Exception:
-                exc_class, exc_val, exc_tb = sys.exc_info()
-                try:
-                    delete_stack()
-                finally:
-                    raise exc_class, exc_val, exc_tb
-            else:
-                delete_stack()
-
-        return wrapped_test
-    return stack_delete
-
-
-class DummyThread(object):
-
-    def link(self, callback, *args):
-        pass
-
-
-class DummyThreadGroup(object):
-    def __init__(self):
-        self.threads = []
-
-    def add_timer(self, interval, callback, initial_delay=None,
-                  *args, **kwargs):
-        self.threads.append(callback)
-
-    def stop_timers(self):
-        pass
-
-    def add_thread(self, callback, *args, **kwargs):
-        # just to make _start_with_trace() easier to test:
-        # callback == _start_with_trace
-        # args[0] == trace_info
-        # args[1] == actual_callback
-        callback = args[1]
-        self.threads.append(callback)
-        return DummyThread()
-
-    def stop(self, graceful=False):
-        pass
-
-    def wait(self):
-        pass
-
-
 class StackCreateTest(common.HeatTestCase):
     def setUp(self):
         super(StackCreateTest, self).setUp()
 
     def test_wordpress_single_instance_stack_create(self):
-        stack = get_wordpress_stack('test_stack', utils.dummy_context())
-        setup_mocks(self.m, stack)
+        stack = tools.get_stack('test_stack', utils.dummy_context())
+        tools.setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -367,7 +167,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_adopt(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(tools.wp_template)
         template = templatem.Template(t)
         ctx = utils.dummy_context()
         adopt_data = {
@@ -382,7 +182,7 @@ class StackCreateTest(common.HeatTestCase):
                              template,
                              adopt_stack_data=adopt_data)
 
-        setup_mocks(self.m, stack)
+        tools.setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.adopt()
@@ -392,7 +192,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
 
     def test_wordpress_single_instance_stack_adopt_fail(self):
-        t = template_format.parse(wp_template)
+        t = template_format.parse(tools.wp_template)
         template = templatem.Template(t)
         ctx = utils.dummy_context()
         adopt_data = {
@@ -407,7 +207,7 @@ class StackCreateTest(common.HeatTestCase):
                              template,
                              adopt_stack_data=adopt_data)
 
-        setup_mocks(self.m, stack)
+        tools.setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.adopt()
@@ -419,8 +219,8 @@ class StackCreateTest(common.HeatTestCase):
 
     def test_wordpress_single_instance_stack_delete(self):
         ctx = utils.dummy_context()
-        stack = get_wordpress_stack('test_stack', ctx)
-        fc = setup_mocks(self.m, stack, mock_keystone=False)
+        stack = tools.get_stack('test_stack', ctx)
+        fc = tools.setup_mocks(self.m, stack, mock_keystone=False)
         self.m.ReplayAll()
         stack_id = stack.store()
         stack.create()
@@ -460,7 +260,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
@@ -480,7 +280,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -514,7 +314,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(templatem, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
@@ -636,8 +436,8 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertIn('Stack Adopt', six.text_type(ex.exc_info[1]))
 
     def test_stack_create_invalid_stack_name(self):
-        stack_name = 'service_create/test_stack'
-        stack = get_wordpress_stack('test_stack', self.ctx)
+        stack_name = 'service_create_test_stack_invalid_name'
+        stack = tools.get_stack('test_stack', self.ctx)
 
         self.assertRaises(dispatcher.ExpectedException,
                           self.man.create_stack,
@@ -647,17 +447,17 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', True)
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.create_stack, self.ctx, 'test',
-                               wp_template, {}, None, {})
+                               tools.wp_template, {}, None, {})
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertEqual('Convergence engine is not supported.',
                          six.text_type(ex.exc_info[1]))
 
     def test_stack_create_invalid_resource_name(self):
         stack_name = 'service_create_test_stack_invalid_res'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         tmpl = dict(stack.t)
-        tmpl['Resources']['Web/Server'] = tmpl['Resources']['WebServer']
-        del tmpl['Resources']['WebServer']
+        tmpl['resources']['Web/Server'] = tmpl['resources']['WebServer']
+        del tmpl['resources']['WebServer']
 
         self.assertRaises(dispatcher.ExpectedException,
                           self.man.create_stack,
@@ -666,7 +466,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_create_AuthorizationFailure(self):
         stack_name = 'service_create_test_stack_AuthorizationFailure'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         self.m.StubOutWithMock(parser.Stack, 'create_stack_user_project_id')
         parser.Stack.create_stack_user_project_id().AndRaise(
             exception.AuthorizationFailure)
@@ -681,7 +481,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         # force check for credentials on create
         stack['WebServer'].requires_deferred_auth = True
 
@@ -794,11 +594,11 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
-        stack = get_wordpress_stack(stack_name, self.ctx)
-        setup_mocks(self.m, stack, mock_image_constraint=False)
+        stack = tools.get_stack(stack_name, self.ctx)
+        tools.setup_mocks(self.m, stack, mock_image_constraint=False)
         resource = stack['WebServer']
 
-        setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
+        tools.setup_mock_for_image_constraint(self.m, 'CentOS 5.2')
         self.m.ReplayAll()
 
         resource.properties = properties.Properties(
@@ -822,7 +622,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         s = stack_object.Stack.get_by_id(self.ctx, sid)
@@ -837,7 +637,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_delete_nonexist(self):
         stack_name = 'service_delete_nonexist_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self.m.ReplayAll()
 
@@ -849,7 +649,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_delete_acquired_lock(self):
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
@@ -866,7 +666,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_delete_acquired_lock_stop_timers(self):
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
@@ -887,14 +687,14 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
     def test_stack_delete_current_engine_active_lock(self):
         self.man.start()
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         # Insert a fake lock into the db
         stack_lock_object.StackLock.create(stack.id, self.man.engine_id)
 
         # Create a fake ThreadGroup too
-        self.man.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
+        self.man.thread_group_mgr.groups[stack.id] = tools.DummyThreadGroup()
 
         st = stack_object.Stack.get_by_id(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
@@ -916,7 +716,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
     def test_stack_delete_other_engine_active_lock_failed(self):
         self.man.start()
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         # Insert a fake lock into the db
@@ -949,7 +749,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
     def test_stack_delete_other_engine_active_lock_succeeded(self):
         self.man.start()
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         # Insert a fake lock into the db
@@ -981,7 +781,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_delete_other_dead_engine_active_lock(self):
         stack_name = 'service_delete_test_stack'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
 
         # Insert a fake lock into the db
@@ -1019,12 +819,12 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_name = 'service_update_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self._stub_update_mocks(s, old_stack)
 
@@ -1053,7 +853,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.StubOutWithMock(grevent, 'Event')
         grevent.Event().AndReturn(evt_mock)
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -1075,7 +875,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         no_params = {}
         with_params = {'KeyName': 'foo'}
 
-        old_stack = get_wordpress_stack_no_params(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx, with_params=False)
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
@@ -1109,7 +909,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.StubOutWithMock(grevent, 'Event')
         grevent.Event().AndReturn(evt_mock)
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -1129,14 +929,14 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         old_stack.timeout_mins = 1
         old_stack.disable_rollback = False
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self._stub_update_mocks(s, old_stack)
 
@@ -1158,7 +958,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -1172,7 +972,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_cancel_update_same_engine(self):
         stack_name = 'service_update_cancel_test_stack'
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         old_stack.state_set(old_stack.UPDATE, old_stack.IN_PROGRESS,
                             'test_override')
         old_stack.disable_rollback = False
@@ -1188,7 +988,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
 
     def test_stack_cancel_update_wrong_state_fails(self):
         stack_name = 'service_update_cancel_test_stack'
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         old_stack.state_set(old_stack.UPDATE, old_stack.COMPLETE,
                             'test_override')
         old_stack.store()
@@ -1243,7 +1043,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(tools.DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -1346,12 +1146,12 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         old_stack.store()
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self._stub_update_mocks(s, old_stack)
 
@@ -1387,7 +1187,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         stack_name = 'service_update_nonexist_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
         self.m.ReplayAll()
 
@@ -1404,7 +1204,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = tools.get_stack(stack_name, self.ctx)
         # force check for credentials on create
         old_stack['WebServer'].requires_deferred_auth = True
 
@@ -1453,7 +1253,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_validate_deferred_auth_context_trusts(self):
-        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack = tools.get_stack('test_deferred_auth', self.ctx)
         stack['WebServer'].requires_deferred_auth = True
         ctx = utils.dummy_context(user=None, password=None)
         cfg.CONF.set_default('deferred_auth_method', 'trusts')
@@ -1462,7 +1262,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.man._validate_deferred_auth_context(ctx, stack)
 
     def test_validate_deferred_auth_context_not_required(self):
-        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack = tools.get_stack('test_deferred_auth', self.ctx)
         stack['WebServer'].requires_deferred_auth = False
         ctx = utils.dummy_context(user=None, password=None)
         cfg.CONF.set_default('deferred_auth_method', 'password')
@@ -1472,7 +1272,7 @@ class StackServiceCreateUpdateDeleteTest(common.HeatTestCase):
         self.man._validate_deferred_auth_context(ctx, stack)
 
     def test_validate_deferred_auth_context_missing_credentials(self):
-        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack = tools.get_stack('test_deferred_auth', self.ctx)
         stack['WebServer'].requires_deferred_auth = True
         cfg.CONF.set_default('deferred_auth_method', 'password')
 
@@ -1506,13 +1306,13 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
         res._register_class('ResourceWithPropsType',
                             generic_rsrc.ResourceWithProps)
 
-    @stack_context('service_authorize_stack_user_nocreds_test_stack')
+    @tools.stack_context('service_authorize_stack_user_nocreds_test_stack')
     def test_stack_authorize_stack_user_nocreds(self):
         self.assertFalse(self.eng._authorize_stack_user(self.ctx,
                                                         self.stack,
                                                         'foo'))
 
-    @stack_context('service_authorize_user_attribute_error_test_stack')
+    @tools.stack_context('service_authorize_user_attribute_error_test_stack')
     def test_stack_authorize_stack_user_attribute_error(self):
         self.m.StubOutWithMock(json, 'loads')
         json.loads(None).AndRaise(AttributeError)
@@ -1522,7 +1322,7 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
                                                         'foo'))
         self.m.VerifyAll()
 
-    @stack_context('service_authorize_stack_user_type_error_test_stack')
+    @tools.stack_context('service_authorize_stack_user_type_error_test_stack')
     def test_stack_authorize_stack_user_type_error(self):
         self.m.StubOutWithMock(json, 'loads')
         json.loads(mox.IgnoreArg()).AndRaise(TypeError)
@@ -1537,11 +1337,10 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
     def test_stack_authorize_stack_user(self):
         self.ctx = utils.dummy_context()
         self.ctx.aws_creds = '{"ec2Credentials": {"access": "4567"}}'
-        stack = get_stack('stack_authorize_stack_user',
-                          self.ctx,
-                          user_policy_template)
+        stack_name = 'stack_authorize_stack_user'
+        stack = tools.get_stack(stack_name, self.ctx, user_policy_template)
         self.stack = stack
-        fc = setup_mocks(self.m, stack)
+        fc = tools.setup_mocks(self.m, stack)
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
         get().AndRaise(fakes_nova.fake_exception())
@@ -1564,9 +1363,8 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
 
     def test_stack_authorize_stack_user_user_id(self):
         self.ctx = utils.dummy_context(user_id=str(uuid.uuid4()))
-        stack = get_stack('stack_authorize_stack_user',
-                          self.ctx,
-                          server_config_template)
+        stack_name = 'stack_authorize_stack_user_user_id'
+        stack = tools.get_stack(stack_name, self.ctx, server_config_template)
         self.stack = stack
 
         def handler(resource_name):
@@ -1630,7 +1428,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIn(mock.call(1, mock.ANY), calls)
         self.assertIn(mock.call(2, mock.ANY), calls)
 
-    @stack_context('service_identify_test_stack', False)
+    @tools.stack_context('service_identify_test_stack', False)
     def test_stack_identify(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -1642,7 +1440,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('ef0c41a4-644f-447c-ad80-7eecb0becf79', False)
+    @tools.stack_context('ef0c41a4-644f-447c-ad80-7eecb0becf79', False)
     def test_stack_identify_by_name_in_uuid(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -1654,7 +1452,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_identify_uuid_test_stack', False)
+    @tools.stack_context('service_identify_uuid_test_stack', False)
     def test_stack_identify_uuid(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -1671,14 +1469,14 @@ class StackServiceTest(common.HeatTestCase):
                                self.eng.identify_stack, self.ctx, 'wibble')
         self.assertEqual(exception.StackNotFound, ex.exc_info[0])
 
-    @stack_context('service_create_existing_test_stack', False)
+    @tools.stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.eng.create_stack, self.ctx,
                                self.stack.name, self.stack.t.t, {}, None, {})
         self.assertEqual(exception.StackExists, ex.exc_info[0])
 
-    @stack_context('service_name_tenants_test_stack', False)
+    @tools.stack_context('service_name_tenants_test_stack', False)
     def test_stack_by_name_tenants(self):
         self.assertEqual(
             self.stack.id,
@@ -1688,7 +1486,7 @@ class StackServiceTest(common.HeatTestCase):
             ctx2,
             self.stack.name))
 
-    @stack_context('service_event_list_test_stack')
+    @tools.stack_context('service_event_list_test_stack')
     def test_stack_event_list(self):
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
@@ -1738,7 +1536,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('event_list_deleted_stack')
+    @tools.stack_context('event_list_deleted_stack')
     def test_stack_event_list_deleted_resource(self):
         res._register_class('GenericResourceType',
                             generic_rsrc.GenericResource)
@@ -1803,7 +1601,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_event_list_test_stack')
+    @tools.stack_context('service_event_list_test_stack')
     def test_stack_event_list_by_tenant(self):
         events = self.eng.list_events(self.ctx, None)
 
@@ -1888,7 +1686,7 @@ class StackServiceTest(common.HeatTestCase):
                                                            sort_dir=sort_dir,
                                                            filters=filters)
 
-    @stack_context('service_list_all_test_stack')
+    @tools.stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
         self.m.StubOutWithMock(parser.Stack, '_from_db')
         parser.Stack._from_db(
@@ -2213,7 +2011,7 @@ class StackServiceTest(common.HeatTestCase):
                                                      not_tags=None,
                                                      not_tags_any=None)
 
-    @stack_context('service_abandon_stack')
+    @tools.stack_context('service_abandon_stack')
     def test_abandon_stack(self):
         cfg.CONF.set_override('enable_stack_abandon', True)
         self.m.StubOutWithMock(parser.Stack, 'load')
@@ -2281,7 +2079,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_describe_test_stack', False)
+    @tools.stack_context('service_describe_test_stack', False)
     def test_stack_describe(self):
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
@@ -2309,7 +2107,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_describe_all_test_stack', False)
+    @tools.stack_context('service_describe_all_test_stack', False)
     def test_stack_describe_all(self):
         sl = self.eng.show_stack(self.ctx, None)
 
@@ -2427,7 +2225,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_stack_resource_describe__test_stack')
+    @tools.stack_context('service_stack_resource_describe__test_stack')
     def test_stack_resource_describe(self):
         self._test_describe_stack_resource()
 
@@ -2450,7 +2248,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_resource_describe_nonexist_test_stack')
+    @tools.stack_context('service_resource_describe_nonexist_test_stack')
     def test_stack_resource_describe_nonexist_resource(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -2464,12 +2262,12 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_resource_describe_noncreated_test_stack',
-                   create_res=False)
+    @tools.stack_context('service_resource_describe_noncreated_test_stack',
+                         create_res=False)
     def test_stack_resource_describe_noncreated_resource(self):
         self._test_describe_stack_resource()
 
-    @stack_context('service_resource_describe_user_deny_test_stack')
+    @tools.stack_context('service_resource_describe_user_deny_test_stack')
     def test_stack_resource_describe_stack_user_deny(self):
         self.ctx.roles = [cfg.CONF.heat_stack_user_role]
         self.m.StubOutWithMock(service.EngineService, '_authorize_stack_user')
@@ -2484,7 +2282,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_resources_describe_test_stack')
+    @tools.stack_context('service_resources_describe_test_stack')
     def test_stack_resources_describe(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -2513,7 +2311,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_resources_describe_no_filter_test_stack')
+    @tools.stack_context('service_resources_describe_no_filter_test_stack')
     def test_stack_resources_describe_no_filter(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -2552,7 +2350,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.ctx, non_exist_identifier, 'WebServer')
         self.assertEqual(exception.StackNotFound, ex.exc_info[0])
 
-    @stack_context('find_phys_res_stack')
+    @tools.stack_context('find_phys_res_stack')
     def test_find_physical_resource(self):
         resources = self.eng.describe_stack_resources(self.ctx,
                                                       self.stack.identifier(),
@@ -2571,7 +2369,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.ctx, 'foo')
         self.assertEqual(exception.PhysicalResourceNotFound, ex.exc_info[0])
 
-    @stack_context('service_resources_list_test_stack')
+    @tools.stack_context('service_resources_list_test_stack')
     def test_stack_resources_list(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -2595,7 +2393,7 @@ class StackServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     @mock.patch.object(parser.Stack, 'load')
-    @stack_context('service_resources_list_test_stack_with_depth')
+    @tools.stack_context('service_resources_list_test_stack_with_depth')
     def test_stack_resources_list_with_depth(self, mock_load):
         mock_load.return_value = self.stack
         resources = six.itervalues(self.stack)
@@ -2606,7 +2404,7 @@ class StackServiceTest(common.HeatTestCase):
         self.stack.iter_resources.assert_called_once_with(2)
 
     @mock.patch.object(parser.Stack, 'load')
-    @stack_context('service_resources_list_test_stack_with_max_depth')
+    @tools.stack_context('service_resources_list_test_stack_with_max_depth')
     def test_stack_resources_list_with_max_depth(self, mock_load):
         mock_load.return_value = self.stack
         resources = six.itervalues(self.stack)
@@ -2619,10 +2417,10 @@ class StackServiceTest(common.HeatTestCase):
 
     @mock.patch.object(parser.Stack, 'load')
     def test_stack_resources_list_deleted_stack(self, mock_load):
-        stack = setup_stack('resource_list_test_deleted_stack', self.ctx)
+        stack = tools.setup_stack('resource_list_deleted_stack', self.ctx)
         stack_id = stack.identifier()
         mock_load.return_value = stack
-        clean_up_stack(stack)
+        tools.clean_up_stack(stack)
         resources = self.eng.list_stack_resources(self.ctx, stack_id)
         self.assertEqual(1, len(resources))
 
@@ -2650,11 +2448,10 @@ class StackServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_signal_reception_async(self):
-        stack = get_stack('signal_reception',
-                          self.ctx,
-                          policy_template)
+        stack_name = 'signal_reception_async'
+        stack = tools.get_stack(stack_name, self.ctx, policy_template)
         self.stack = stack
-        setup_keystone_mocks(self.m, stack)
+        tools.setup_keystone_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -2666,7 +2463,7 @@ class StackServiceTest(common.HeatTestCase):
                                          self.stack.identifier()).AndReturn(s)
 
         # Mock out the aync work of thread starting
-        self.eng.thread_group_mgr.groups[stack.id] = DummyThreadGroup()
+        self.eng.thread_group_mgr.groups[stack.id] = tools.DummyThreadGroup()
         self.m.StubOutWithMock(self.eng.thread_group_mgr, 'start')
         self.eng.thread_group_mgr.start(stack.id,
                                         mox.IgnoreArg(),
@@ -2685,11 +2482,10 @@ class StackServiceTest(common.HeatTestCase):
         self.stack.delete()
 
     def test_signal_reception_sync(self):
-        stack = get_stack('signal_reception',
-                          self.ctx,
-                          policy_template)
+        stack_name = 'signal_reception_sync'
+        stack = tools.get_stack(stack_name, self.ctx, policy_template)
         self.stack = stack
-        setup_keystone_mocks(self.m, stack)
+        tools.setup_keystone_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -2714,10 +2510,9 @@ class StackServiceTest(common.HeatTestCase):
         self.stack.delete()
 
     def test_signal_reception_no_resource(self):
-        stack = get_stack('signal_reception_no_resource',
-                          self.ctx,
-                          policy_template)
-        setup_keystone_mocks(self.m, stack)
+        stack_name = 'signal_reception_no_resource'
+        stack = tools.get_stack(stack_name, self.ctx, policy_template)
+        tools.setup_keystone_mocks(self.m, stack)
         self.stack = stack
         self.m.ReplayAll()
         stack.store()
@@ -2740,9 +2535,8 @@ class StackServiceTest(common.HeatTestCase):
         self.stack.delete()
 
     def test_signal_reception_unavailable_resource(self):
-        stack = get_stack('signal_reception_unavailable_resource',
-                          self.ctx,
-                          policy_template)
+        stack_name = 'signal_reception_unavailable_resource'
+        stack = tools.get_stack(stack_name, self.ctx, policy_template)
         stack.store()
         self.stack = stack
         self.m.StubOutWithMock(parser.Stack, 'load')
@@ -2769,11 +2563,9 @@ class StackServiceTest(common.HeatTestCase):
         self.stack.delete()
 
     def test_signal_returns_metadata(self):
-        stack = get_stack('signal_reception',
-                          self.ctx,
-                          policy_template)
+        stack = tools.get_stack('signal_reception', self.ctx, policy_template)
         self.stack = stack
-        setup_keystone_mocks(self.m, stack)
+        tools.setup_keystone_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -2798,7 +2590,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertIsNone(md)
         self.m.VerifyAll()
 
-    @stack_context('service_metadata_test_stack')
+    @tools.stack_context('service_metadata_test_stack')
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
         pre_update_meta = self.stack['WebServer'].metadata_get()
@@ -2839,7 +2631,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertEqual(exception.StackNotFound, ex.exc_info[0])
         self.m.VerifyAll()
 
-    @stack_context('service_metadata_err_resource_test_stack', False)
+    @tools.stack_context('service_metadata_err_resource_test_stack', False)
     def test_metadata_err_resource(self):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx,
@@ -2855,7 +2647,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_show_watch_test_stack', False)
+    @tools.stack_context('service_show_watch_test_stack', False)
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2909,7 +2701,7 @@ class StackServiceTest(common.HeatTestCase):
         for key in rpc_api.WATCH_KEYS:
             self.assertIn(key, result[0])
 
-    @stack_context('service_show_watch_metric_test_stack', False)
+    @tools.stack_context('service_show_watch_metric_test_stack', False)
     def test_show_watch_metric(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2956,7 +2748,7 @@ class StackServiceTest(common.HeatTestCase):
         for key in rpc_api.WATCH_DATA_KEYS:
             self.assertIn(key, result[0])
 
-    @stack_context('service_show_watch_state_test_stack')
+    @tools.stack_context('service_show_watch_state_test_stack')
     def test_set_watch_state(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -2987,7 +2779,8 @@ class StackServiceTest(common.HeatTestCase):
 
         # Replace the real stack threadgroup with a dummy one, so we can
         # check the function returned on ALARM is correctly scheduled
-        self.eng.thread_group_mgr.groups[self.stack.id] = DummyThreadGroup()
+        dtg = tools.DummyThreadGroup()
+        self.eng.thread_group_mgr.groups[self.stack.id] = dtg
 
         self.m.ReplayAll()
 
@@ -3018,7 +2811,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_show_watch_state_badstate_test_stack')
+    @tools.stack_context('service_show_watch_state_badstate_test_stack')
     def test_set_watch_state_badstate(self):
         # Insert dummy watch rule into the DB
         rule = {u'EvaluationPeriods': u'1',
@@ -3519,7 +3312,8 @@ class StackServiceTest(common.HeatTestCase):
 
         self.eng.start()
         # Add dummy thread group to test thread_group_mgr.stop() is executed?
-        self.eng.thread_group_mgr.groups['sample-uuid'] = DummyThreadGroup()
+        dtg = tools.DummyThreadGroup()
+        self.eng.thread_group_mgr.groups['sample-uuid'] = dtg
         self.eng.service_id = 'sample-service-uuid'
 
         self.eng.stop()
@@ -3680,9 +3474,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     def test_list_software_deployments(self):
         stack_name = 'test_list_software_deployments'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
-        setup_mocks(self.m, stack)
+        tools.setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -3716,9 +3510,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     def test_metadata_software_deployments(self):
         stack_name = 'test_list_software_deployments'
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        stack = tools.get_stack(stack_name, self.ctx)
 
-        setup_mocks(self.m, stack)
+        tools.setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -4365,7 +4159,8 @@ class ThreadGroupManagerStopTest(common.HeatTestCase):
 
 
 class SnapshotServiceTest(common.HeatTestCase):
-
+    # TODO(Qiming): Rework this test to handle OS::Nova::Server which
+    # has a real snapshot support.
     def setUp(self):
         super(SnapshotServiceTest, self).setUp()
         self.ctx = utils.dummy_context()
@@ -4377,7 +4172,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.addCleanup(self.m.VerifyAll)
 
     def _create_stack(self, stub=True):
-        stack = get_wordpress_stack('stack', self.ctx)
+        stack = tools.get_stack('stack', self.ctx)
         sid = stack.store()
 
         s = stack_object.Stack.get_by_id(self.ctx, sid)
