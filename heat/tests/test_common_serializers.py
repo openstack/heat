@@ -47,8 +47,8 @@ class JSONResponseSerializerTest(common.HeatTestCase):
         response = webob.Response()
         serializers.JSONResponseSerializer().default(response, fixture)
         self.assertEqual(200, response.status_int)
-        content_types = filter(lambda h: h[0] == 'Content-Type',
-                               response.headerlist)
+        content_types = list(filter(lambda h: h[0] == 'Content-Type',
+                                    response.headerlist))
         self.assertEqual(1, len(content_types))
         self.assertEqual('application/json', response.content_type)
         self.assertEqual('{"key": "value"}', response.body)
@@ -103,8 +103,8 @@ class XMLResponseSerializerTest(common.HeatTestCase):
         response = webob.Response()
         serializers.XMLResponseSerializer().default(response, fixture)
         self.assertEqual(200, response.status_int)
-        content_types = filter(lambda h: h[0] == 'Content-Type',
-                               response.headerlist)
+        content_types = list(filter(lambda h: h[0] == 'Content-Type',
+                                    response.headerlist))
         self.assertEqual(1, len(content_types))
         self.assertEqual('application/xml', response.content_type)
         self.assertEqual('<key>value</key>', response.body)
