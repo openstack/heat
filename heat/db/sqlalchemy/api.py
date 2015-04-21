@@ -245,7 +245,7 @@ def _decrypt(enc_value, method):
     decryptor = getattr(crypt, method)
     value = decryptor(enc_value)
     if value is not None:
-        return unicode(value, 'utf-8')
+        return six.text_type(value, 'utf-8')
 
 
 def resource_data_get_by_key(context, resource_id, key):

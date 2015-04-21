@@ -153,7 +153,7 @@ def dependencies(snippet, path=''):
 
     elif isinstance(snippet, collections.Mapping):
         def mkpath(key):
-            return '.'.join([path, unicode(key)])
+            return '.'.join([path, six.text_type(key)])
 
         deps = (dependencies(value,
                              mkpath(key)) for key, value in snippet.items())
