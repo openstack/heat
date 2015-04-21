@@ -69,44 +69,41 @@ class KeystoneClientTest(common.HeatTestCase):
     def _clear_domain_override(self):
         cfg.CONF.clear_override('stack_user_domain_id')
 
-    def _stub_admin_client(self, auth_ok=True):
-        kc_v3.Client(
-            auth_url='http://server.test:5000/v3',
-            cacert=None,
-            cert=None,
-            endpoint='http://server.test:5000/v3',
-            insecure=False,
-            key=None,
-            password='verybadpass',
-            project_name='service',
-            username='heat').AndReturn(self.mock_admin_client)
-        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
-        if auth_ok:
-            self.mock_admin_client.authenticate().AndReturn(auth_ok)
-            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
-            self.mock_admin_client.auth_ref.user_id = '1234'
-        else:
-            self.mock_admin_client.authenticate().AndRaise(
-                kc_exception.Unauthorized)
+    def _stub_admin_auth(self, auth_ok=True):
+        mock_ks_auth = self.m.CreateMockAnything()
+        auth_ref = self.m.CreateMockAnything()
 
-    def _stub_domain_admin_client(self, auth_ok=True):
-        kc_v3.Client(
-            auth_url='http://server.test:5000/v3',
-            cacert=None,
-            cert=None,
-            endpoint='http://server.test:5000/v3',
-            insecure=False,
-            key=None,
-            password='adminsecret',
-            user_domain_id='adomain123',
-            username='adminuser123').AndReturn(self.mock_admin_client)
-        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
-        self.mock_admin_client.authenticate(
-            domain_id='adomain123').AndReturn(auth_ok)
+        a = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
         if auth_ok:
-            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
-            self.mock_admin_client.auth_ref.user_id = '1234'
-            self.mock_admin_client.auth_ref.domain_id = 'adomain123'
+            auth_ref.user_id = '1234'
+            a.AndReturn(auth_ref)
+        else:
+            a.AndRaise(kc_exception.Unauthorized)
+
+        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                password='verybadpass',
+                                user_domain_id='default',
+                                project_name='service',
+                                project_domain_id='default',
+                                username='heat')
+        m.AndReturn(mock_ks_auth)
+
+    def _stub_domain_admin_client(self, domain_id=None):
+        mock_ks_auth = self.m.CreateMockAnything()
+        mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn('tok')
+
+        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                password='adminsecret',
+                                domain_id='adomain123',
+                                user_domain_id='adomain123',
+                                username='adminuser123')
+        m.AndReturn(mock_ks_auth)
+
+        n = kc_v3.Client(session=mox.IsA(ks_session.Session),
+                         auth=mock_ks_auth)
+        n.AndReturn(self.mock_admin_client)
+
+        self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
 
     def _stubs_v3(self, method='token', trust_scoped=True,
                   user_id='trustor_user_id', auth_ref=None, client=True,
@@ -277,7 +274,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
-        self._stub_domain_admin_client()
+        self._stub_domain_admin_client(domain_id=None)
 
         # mock keystone client functions
         self.mock_admin_client.roles = self.m.CreateMockAnything()
@@ -513,8 +510,8 @@ class KeystoneClientTest(common.HeatTestCase):
         class MockTrust(object):
             id = 'atrust123'
 
-        self._stub_admin_client()
-        mock_client, mock_auth_ref = self._stubs_v3(times=2)
+        self._stub_admin_auth()
+        mock_ks_auth, mock_auth_ref = self._stubs_v3(times=2)
 
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         if delegate_roles:
@@ -522,6 +519,10 @@ class KeystoneClientTest(common.HeatTestCase):
 
         trustor_roles = ['heat_stack_owner', 'admin', '__member__']
         trustee_roles = delegate_roles or trustor_roles
+
+        mock_auth_ref.user_id = '5678'
+        mock_auth_ref.project_id = '42'
+        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
 
         mock_auth_ref.user_id = '5678'
         mock_auth_ref.project_id = '42'
@@ -547,9 +548,11 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test create_trust_context when creating a trust."""
 
-        self._stub_admin_client()
-
+        self._stub_admin_auth()
+        # get_access gets called 2 times and so mox needs to have it registered
+        # twice, once for the trust check, then once to get the user_id
         mock_auth, mock_auth_ref = self._stubs_v3(times=2)
+
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
 
@@ -601,42 +604,6 @@ class KeystoneClientTest(common.HeatTestCase):
                    'without "stack_domain_admin" and '
                    '"stack_domain_admin_password"')
         self.assertIn(exp_msg, six.text_type(err))
-
-    def test_init_admin_client(self):
-
-        """Test the admin_client property."""
-
-        self._stub_admin_client()
-        self.m.ReplayAll()
-
-        ctx = utils.dummy_context()
-        ctx.username = None
-        ctx.password = None
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertEqual(self.mock_admin_client, heat_ks_client.admin_client)
-        self.assertEqual(self.mock_admin_client, heat_ks_client._admin_client)
-
-    def test_init_admin_client_denied(self):
-
-        """Test the admin_client property, auth failure path."""
-
-        self._stub_admin_client(auth_ok=False)
-        self.m.ReplayAll()
-
-        ctx = utils.dummy_context()
-        ctx.username = None
-        ctx.password = None
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-
-        # Define wrapper for property or the property raises the exception
-        # outside of the assertRaises which fails the test
-        def get_admin_client():
-            heat_ks_client.admin_client
-
-        self.assertRaises(exception.AuthorizationFailure,
-                          get_admin_client)
 
     def test_trust_init(self):
 
@@ -1042,7 +1009,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test creating ec2 credentials for domain user."""
 
-        self._stub_domain_admin_client()
+        self._stub_domain_admin_client(domain_id=None)
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
@@ -1302,7 +1269,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test the delete_stack_domain_project function."""
 
-        self._stub_domain_admin_client()
+        self._stub_domain_admin_client(domain_id=None)
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         self.mock_admin_client.projects.get(project='aprojectid').AndRaise(
             kc_exception.NotFound)
@@ -1317,7 +1284,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         """Test the delete_stack_domain_project function."""
 
-        self._stub_domain_admin_client()
+        self._stub_domain_admin_client(domain_id=None)
         self.mock_admin_client.projects = self.m.CreateMockAnything()
         self.mock_admin_client.projects.get(project='aprojectid').AndRaise(
             kc_exception.Forbidden)
@@ -1489,24 +1456,34 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
     def _clear_domain_override(self):
         cfg.CONF.clear_override('stack_user_domain_name')
 
-    def _stub_domain_admin_client(self, auth_ok=True):
-        kc_v3.Client(
-            auth_url='http://server.test:5000/v3',
-            cacert=None,
-            cert=None,
-            endpoint='http://server.test:5000/v3',
-            insecure=False,
-            key=None,
-            password='adminsecret',
-            user_domain_name='fake_domain_name',
-            username='adminuser123').AndReturn(self.mock_admin_client)
+    def _stub_domain_admin_client_domain_get(self):
+        dummy_domain = self.m.CreateMockAnything()
+        dummy_domain.id = 'adomain123'
+        self.mock_ks_v3_client_domain_mngr.list(
+            name='fake_domain_name').AndReturn([dummy_domain])
+
+    def _stub_domain_admin_client(self, domain_id='adomain123'):
+        mock_ks_auth = self.m.CreateMockAnything()
+        mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn('tok')
+
+        if domain_id:
+            a = self.m.CreateMockAnything()
+            a.domain_id = domain_id
+            mock_ks_auth.get_access(mox.IsA(ks_session.Session)).AndReturn(a)
+
+        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                password='adminsecret',
+                                domain_name='fake_domain_name',
+                                user_domain_name='fake_domain_name',
+                                username='adminuser123')
+
+        m.AndReturn(mock_ks_auth)
+
+        n = kc_v3.Client(session=mox.IsA(ks_session.Session),
+                         auth=mock_ks_auth)
+        n.AndReturn(self.mock_admin_client)
+
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
-        self.mock_admin_client.authenticate(
-            domain_name='fake_domain_name').AndReturn(auth_ok)
-        if auth_ok:
-            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
-            self.mock_admin_client.auth_ref.user_id = '1234'
-            self.mock_admin_client.auth_ref.domain_id = 'adomain123'
 
     def _stub_domain_user_pw_auth(self):
         ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
