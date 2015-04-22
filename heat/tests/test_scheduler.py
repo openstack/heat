@@ -1002,8 +1002,8 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('No exception raised in parent_task')
 
         task = parent_task()
-        task.next()
-        self.assertRaises(MyException, task.next)
+        next(task)
+        self.assertRaises(MyException, next, task)
 
     def test_child_exception_exit(self):
         class MyException(Exception):
@@ -1024,8 +1024,8 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('No exception raised in parent_task')
 
         task = parent_task()
-        task.next()
-        self.assertRaises(StopIteration, task.next)
+        next(task)
+        self.assertRaises(StopIteration, next, task)
 
     def test_child_exception_swallow(self):
         class MyException(Exception):
@@ -1048,8 +1048,8 @@ class WrapperTaskTest(common.HeatTestCase):
             yield
 
         task = parent_task()
-        task.next()
-        task.next()
+        next(task)
+        next(task)
 
     def test_child_exception_swallow_next(self):
         class MyException(Exception):
@@ -1074,7 +1074,7 @@ class WrapperTaskTest(common.HeatTestCase):
             yield dummy()
 
         task = parent_task()
-        task.next()
+        next(task)
 
         self.m.StubOutWithMock(dummy, 'do_step')
         for i in range(1, dummy.num_steps + 1):
@@ -1082,8 +1082,8 @@ class WrapperTaskTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         for i in range(1, dummy.num_steps + 1):
-            task.next()
-        self.assertRaises(StopIteration, task.next)
+            next(task)
+        self.assertRaises(StopIteration, next, task)
 
     def test_thrown_exception_swallow_next(self):
         class MyException(Exception):
@@ -1115,8 +1115,8 @@ class WrapperTaskTest(common.HeatTestCase):
         task.throw(MyException)
 
         for i in range(2, dummy.num_steps + 1):
-            task.next()
-        self.assertRaises(StopIteration, task.next)
+            next(task)
+        self.assertRaises(StopIteration, next, task)
 
     def test_thrown_exception_raise(self):
         class MyException(Exception):
@@ -1151,8 +1151,8 @@ class WrapperTaskTest(common.HeatTestCase):
         task.throw(MyException)
 
         for i in range(2, dummy.num_steps + 1):
-            task.next()
-        self.assertRaises(StopIteration, task.next)
+            next(task)
+        self.assertRaises(StopIteration, next, task)
 
     def test_thrown_exception_exit(self):
         class MyException(Exception):
@@ -1185,8 +1185,8 @@ class WrapperTaskTest(common.HeatTestCase):
         task.throw(MyException)
 
         for i in range(2, dummy.num_steps + 1):
-            task.next()
-        self.assertRaises(StopIteration, task.next)
+            next(task)
+        self.assertRaises(StopIteration, next, task)
 
     def test_parent_exception(self):
         class MyException(Exception):
@@ -1201,8 +1201,8 @@ class WrapperTaskTest(common.HeatTestCase):
             raise MyException()
 
         task = parent_task()
-        task.next()
-        self.assertRaises(MyException, task.next)
+        next(task)
+        self.assertRaises(MyException, next, task)
 
     def test_parent_throw(self):
         class MyException(Exception):
@@ -1218,7 +1218,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('No exception raised in parent_task')
 
         task = parent_task()
-        task.next()
+        next(task)
         self.assertRaises(MyException, task.throw, MyException())
 
     def test_parent_throw_exit(self):
@@ -1235,7 +1235,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('No exception raised in parent_task')
 
         task = parent_task()
-        task.next()
+        next(task)
         self.assertRaises(StopIteration, task.throw, MyException())
 
     def test_parent_cancel(self):
@@ -1249,7 +1249,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('parent_task not closed')
 
         task = parent_task()
-        task.next()
+        next(task)
         task.close()
 
     def test_parent_cancel_exit(self):
@@ -1263,7 +1263,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('parent_task not closed')
 
         task = parent_task()
-        task.next()
+        next(task)
         task.close()
 
     def test_cancel(self):
@@ -1285,7 +1285,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('parent_task not closed')
 
         task = parent_task()
-        task.next()
+        next(task)
         task.close()
 
     def test_cancel_exit(self):
@@ -1307,7 +1307,7 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('parent_task not closed')
 
         task = parent_task()
-        task.next()
+        next(task)
         task.close()
 
     def test_cancel_parent_exit(self):
@@ -1329,5 +1329,5 @@ class WrapperTaskTest(common.HeatTestCase):
                 self.fail('parent_task not closed')
 
         task = parent_task()
-        task.next()
+        next(task)
         task.close()

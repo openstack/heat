@@ -134,7 +134,7 @@ def upgrade_resource(migrate_engine):
         sqlalchemy.sql.expression.asc(
             res_table.c.created_at)).execute().fetchall()
     for res in res_list:
-        values = {'tmp_id': fake_autoincrement.next(), 'uuid': res.id}
+        values = {'tmp_id': next(fake_autoincrement), 'uuid': res.id}
         update = res_table.update().where(
             res_table.c.id == res.id).values(values)
         migrate_engine.execute(update)

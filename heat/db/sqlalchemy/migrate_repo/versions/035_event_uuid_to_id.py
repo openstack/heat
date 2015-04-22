@@ -61,7 +61,7 @@ def upgrade(migrate_engine):
         sqlalchemy.sql.expression.asc(
             event_table.c.created_at)).execute().fetchall()
     for event in event_list:
-        values = {'tmp_id': fake_autoincrement.next(), 'uuid': event.id}
+        values = {'tmp_id': next(fake_autoincrement), 'uuid': event.id}
         update = event_table.update().where(
             event_table.c.id == event.id).values(values)
         migrate_engine.execute(update)
