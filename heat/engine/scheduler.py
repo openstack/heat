@@ -429,7 +429,7 @@ class DependencyTaskGroup(object):
         been started but have not yet completed.
         """
         running = lambda k_r: k_r[0] in self._graph and k_r[1].started()
-        return itertools.ifilter(running, six.iteritems(self._runners))
+        return six.moves.filter(running, six.iteritems(self._runners))
 
 
 class PollingTaskGroup(object):
@@ -459,10 +459,10 @@ class PollingTaskGroup(object):
     @staticmethod
     def _kwargs(kwarg_lists):
         """Return a list containing the keyword args for each subtask."""
-        keygroups = (itertools.izip(itertools.repeat(name),
-                                    arglist)
+        keygroups = (six.moves.zip(itertools.repeat(name),
+                                   arglist)
                      for name, arglist in six.iteritems(kwarg_lists))
-        return [dict(kwargs) for kwargs in itertools.izip(*keygroups)]
+        return [dict(kwargs) for kwargs in six.moves.zip(*keygroups)]
 
     @classmethod
     def from_task_with_args(cls, task, *arg_lists, **kwarg_lists):
@@ -501,7 +501,7 @@ class PollingTaskGroup(object):
         elif arg_lists and not kwarg_lists:
             kwargs_list = [{}] * len(args_list)
 
-        task_args = itertools.izip(args_list, kwargs_list)
+        task_args = six.moves.zip(args_list, kwargs_list)
         tasks = (functools.partial(task, *a, **kwa) for a, kwa in task_args)
 
         return cls(tasks, name=task_description(task))

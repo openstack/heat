@@ -165,9 +165,9 @@ class ResourceDefinitionCore(object):
             return stack[res_name]
 
         def strict_func_deps(data, datapath):
-            return itertools.ifilter(lambda r: getattr(r, 'strict_dependency',
-                                                       True),
-                                     function.dependencies(data, datapath))
+            return six.moves.filter(lambda r: getattr(r, 'strict_dependency',
+                                                      True),
+                                    function.dependencies(data, datapath))
 
         return itertools.chain((get_resource(dep) for dep in self._depends),
                                strict_func_deps(self._properties,
