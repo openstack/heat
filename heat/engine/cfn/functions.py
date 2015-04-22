@@ -188,7 +188,7 @@ class GetAtt(function.Function):
         res = self._resource()
         attr = function.resolve(self._attribute)
         if (type(res).FnGetAtt == resource.Resource.FnGetAtt and
-                attr not in res.attributes_schema.keys()):
+                attr not in six.iterkeys(res.attributes_schema)):
             raise exception.InvalidTemplateAttribute(
                 resource=self._resource_name, key=attr)
 

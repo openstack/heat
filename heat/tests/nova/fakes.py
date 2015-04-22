@@ -18,6 +18,7 @@ import mock
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
 import requests
+import six
 from six.moves.urllib import parse as urlparse
 
 from heat.tests import fakes
@@ -243,19 +244,19 @@ class FakeHTTPClient(base_client.HTTPClient):
     def post_servers_1234_action(self, body, **kw):
         _body = None
         resp = 202
-        assert len(body.keys()) == 1
-        action = body.keys()[0]
+        assert len(list(six.iterkeys(body))) == 1
+        action = list(six.iterkeys(body))[0]
         if action == 'reboot':
-            assert body[action].keys() == ['type']
+            assert list(six.iterkeys(body[action])) == ['type']
             assert body[action]['type'] in ['HARD', 'SOFT']
         elif action == 'rebuild':
-            keys = body[action].keys()
+            keys = list(six.iterkeys(body[action]))
             if 'adminPass' in keys:
                 keys.remove('adminPass')
             assert keys == ['imageRef']
             _body = self.get_servers_1234()[1]
         elif action == 'resize':
-            assert body[action].keys() == ['flavorRef']
+            assert list(six.iterkeys(body[action])) == ['flavorRef']
         elif action == 'confirmResize':
             assert body[action] is None
             # This one method returns a different response code
@@ -268,27 +269,27 @@ class FakeHTTPClient(base_client.HTTPClient):
                         ]:
             assert body[action] is None
         elif action == 'addFixedIp':
-            assert body[action].keys() == ['networkId']
+            assert list(six.iterkeys(body[action])) == ['networkId']
         elif action in ['removeFixedIp',
                         'addFloatingIp',
                         'removeFloatingIp',
                         ]:
-            assert body[action].keys() == ['address']
+            assert list(six.iterkeys(body[action])) == ['address']
         elif action == 'createImage':
-            assert set(body[action].keys()) == set(['name', 'metadata'])
+            assert set(six.iterkeys(body[action])) == set(['name', 'metadata'])
             resp = {"status": 202,
                     "location": "http://blah/images/456"}
         elif action == 'changePassword':
-            assert body[action].keys() == ['adminPass']
+            assert list(six.iterkeys(body[action])) == ['adminPass']
         elif action == 'os-getConsoleOutput':
-            assert body[action].keys() == ['length']
+            assert list(six.iterkeys(body[action])) == ['length']
             return (202, {'output': 'foo'})
         elif action == 'os-getVNCConsole':
-            assert body[action].keys() == ['type']
+            assert list(six.iterkeys(body[action])) == ['type']
         elif action == 'os-migrateLive':
-            assert set(body[action].keys()) == set(['host',
-                                                    'block_migration',
-                                                    'disk_over_commit'])
+            assert set(six.iterkeys(body[action])) == set(['host',
+                                                           'block_migration',
+                                                           'disk_over_commit'])
         else:
             raise AssertionError("Unexpected server action: %s" % action)
         return (resp, _body)
@@ -296,8 +297,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     def post_servers_5678_action(self, body, **kw):
         _body = None
         resp = 202
-        assert len(body.keys()) == 1
-        action = body.keys()[0]
+        assert len(list(six.iterkeys(body))) == 1
+        action = list(six.iterkeys(body))[0]
         if action in ['addFloatingIp',
                       'removeFloatingIp',
                       ]:

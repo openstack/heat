@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -695,7 +697,7 @@ class LoadBalancer(resource.Resource):
                  new_props[self.MEMBERS] is not None)):
             members = set(new_props[self.MEMBERS] or [])
             rd_members = self.data()
-            old_members = set(rd_members.keys())
+            old_members = set(six.iterkeys(rd_members))
             client = self.neutron()
             for member in old_members - members:
                 member_id = rd_members[member]

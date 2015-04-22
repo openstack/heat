@@ -916,7 +916,7 @@ class HttpCheck(Check):
         # empty dict to avoid circular reference detection
         # errors in jsonutils.dumps().
         temp_target = copy.deepcopy(target)
-        for key in target.keys():
+        for key in six.iterkeys(target):
             element = target.get(key)
             if type(element) is object:
                 temp_target[key] = {}

@@ -43,11 +43,11 @@ class NeutronResource(resource.Resource):
         Also ensures that shared and tenant_id is not specified
         in value_specs.
         '''
-        if 'value_specs' in properties.keys():
+        if 'value_specs' in six.iterkeys(properties):
             vs = properties.get('value_specs')
             banned_keys = set(['shared', 'tenant_id']).union(
-                properties.keys())
-            for k in banned_keys.intersection(vs.keys()):
+                six.iterkeys(properties))
+            for k in banned_keys.intersection(six.iterkeys(vs)):
                 return '%s not allowed in value_specs' % k
 
     @staticmethod
@@ -78,10 +78,10 @@ class NeutronResource(resource.Resource):
         props = dict((k, v) for k, v in properties.items()
                      if v is not None and k != 'value_specs')
 
-        if 'name' in properties.keys():
+        if 'name' in six.iterkeys(properties):
             props.setdefault('name', name)
 
-        if 'value_specs' in properties.keys():
+        if 'value_specs' in six.iterkeys(properties):
             props.update(properties.get('value_specs'))
 
         return props

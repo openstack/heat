@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_utils import timeutils
+import six
 
 
 class CooldownMixin(object):
@@ -30,7 +31,7 @@ class CooldownMixin(object):
 
         metadata = self.metadata_get()
         if metadata and cooldown != 0:
-            last_adjust = metadata.keys()[0]
+            last_adjust = next(six.iterkeys(metadata))
             if not timeutils.is_older_than(last_adjust, cooldown):
                 inprogress = True
         return inprogress

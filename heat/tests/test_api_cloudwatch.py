@@ -12,6 +12,7 @@
 #    under the License.
 
 import os
+import six
 
 from oslo_config import cfg
 
@@ -446,7 +447,7 @@ class WatchControllerTest(common.HeatTestCase):
                      'ALARM': rpc_api.WATCH_STATE_ALARM,
                      'INSUFFICIENT_DATA': rpc_api.WATCH_STATE_NODATA}
 
-        for state in state_map.keys():
+        for state in six.iterkeys(state_map):
             params = {u'StateValue': state,
                       u'StateReason': u'',
                       u'AlarmName': u'HttpFailureAlarm',

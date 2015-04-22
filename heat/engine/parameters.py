@@ -536,7 +536,7 @@ class Parameters(collections.Mapping):
 
     def _validate_tmpl_parameters(self):
         param = None
-        for key in self.tmpl.t.keys():
+        for key in six.iterkeys(self.tmpl.t):
             if key == 'Parameters' or key == 'parameters':
                 param = key
                 break

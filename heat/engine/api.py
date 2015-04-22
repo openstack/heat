@@ -152,7 +152,7 @@ def format_resource_attributes(resource, with_attr=None):
             return None
 
     resolver = resource.attributes
-    if 'show' in resolver.keys():
+    if 'show' in six.iterkeys(resolver):
         show_attr = resolver['show']
         if isinstance(show_attr, collections.Mapping):
             resolver = show_attr
@@ -160,7 +160,7 @@ def format_resource_attributes(resource, with_attr=None):
     if not with_attr:
         with_attr = []
 
-    attributes = set(resolver.keys() + with_attr)
+    attributes = set(list(six.iterkeys(resolver)) + with_attr)
     return dict((attr, resolve(attr, resolver))
                 for attr in attributes)
 
@@ -173,7 +173,7 @@ def format_resource_properties(resource):
             return None
 
     return dict((prop, get_property(prop))
-                for prop in resource.properties_schema.keys())
+                for prop in six.iterkeys(resource.properties_schema))
 
 
 def format_stack_resource(resource, detail=True, with_props=False,

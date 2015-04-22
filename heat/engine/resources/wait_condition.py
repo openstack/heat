@@ -49,7 +49,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         return status in self.WAIT_STATUSES
 
     def _metadata_format_ok(self, metadata):
-        if sorted(tuple(metadata.keys())) == sorted(self.METADATA_KEYS):
+        if sorted(tuple(six.iterkeys(metadata))) == sorted(self.METADATA_KEYS):
             return self._status_ok(metadata[self.STATUS])
 
     def handle_signal(self, metadata=None):

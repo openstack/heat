@@ -104,7 +104,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         index_columns = None
         for idx in t.indexes:
             if idx.name == index:
-                index_columns = idx.columns.keys()
+                index_columns = six.iterkeys(idx.columns)
                 break
 
         self.assertEqual(sorted(members), sorted(index_columns))

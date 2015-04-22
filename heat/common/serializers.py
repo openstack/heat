@@ -77,7 +77,7 @@ class XMLResponseSerializer(object):
 
     def to_xml(self, data):
         # Assumption : root node is dict with single key
-        root = data.keys()[0]
+        root = next(six.iterkeys(data))
         eltree = etree.Element(root)
         self.object_to_element(data.get(root), eltree)
         response = etree.tostring(eltree)
