@@ -171,6 +171,7 @@ class StackController(object):
 
     def _index(self, req, tenant_safe=True):
         filter_whitelist = {
+            'id': 'mixed',
             'status': 'mixed',
             'name': 'mixed',
             'action': 'mixed',
