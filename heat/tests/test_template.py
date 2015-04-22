@@ -35,8 +35,8 @@ from heat.engine import stack
 from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 mapping_template = template_format.parse('''{
@@ -684,7 +684,7 @@ Mappings:
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template))
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        fc = fakes_v1_1.FakeClient()
+        fc = fakes_nova.FakeClient()
         nova.NovaClientPlugin._create().AndReturn(fc)
         self.m.ReplayAll()
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stk))

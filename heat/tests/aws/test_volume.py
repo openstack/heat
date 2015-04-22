@@ -27,9 +27,9 @@ from heat.engine.resources.aws.ec2 import instance
 from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import test_volume_utils as vt_base
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 volume_template = '''
@@ -251,7 +251,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 
@@ -279,13 +279,13 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.get(fva.id).AndReturn(fva)
 
         self.fc.volumes.delete_server_volume(
-            'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception(400))
+            'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception(400))
         self.cinder_fc.volumes.get(fva.id).AndReturn(
             vt_base.FakeVolume('available', id=fva.id))
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
@@ -370,7 +370,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.fc.volumes.get_server_volume(u'WikiDatabase',
                                           'vol-123').AndReturn(fva)
         self.fc.volumes.get_server_volume(
-            u'WikiDatabase', 'vol-123').AndRaise(fakes_v1_1.fake_exception())
+            u'WikiDatabase', 'vol-123').AndRaise(fakes_nova.fake_exception())
 
         self.m.ReplayAll()
 

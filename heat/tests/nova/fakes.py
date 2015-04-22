@@ -17,11 +17,15 @@
 import mock
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
-from novaclient.v1_1 import client
 import requests
 from six.moves.urllib import parse as urlparse
 
 from heat.tests import fakes
+
+
+NOVACLIENT_VERSION = "2"
+
+Client = base_client.get_client_class(NOVACLIENT_VERSION)
 
 
 def fake_exception(status_code=404, message=None, details=None):
@@ -32,11 +36,11 @@ def fake_exception(status_code=404, message=None, details=None):
     return nova_exceptions.from_response(resp, body, None)
 
 
-class FakeClient(fakes.FakeClient, client.Client):
+class FakeClient(fakes.FakeClient, Client):
 
     def __init__(self, *args, **kwargs):
-        client.Client.__init__(self, 'username', 'password',
-                               'project_id', 'auth_url')
+        super(FakeClient, self).__init__('username', 'password', 'project_id',
+                                         'auth_url')
         self.client = FakeHTTPClient(**kwargs)
 
 

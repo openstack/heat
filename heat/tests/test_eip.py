@@ -26,8 +26,8 @@ from heat.engine.resources.aws.ec2 import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
+from heat.tests.nova import fakes as fakes_nova
 from heat.tests import utils
-from heat.tests.v1_1 import fakes as fakes_v1_1
 
 
 eip_template = '''
@@ -160,7 +160,7 @@ class EIPTest(common.HeatTestCase):
     def setUp(self):
         # force Nova, will test Neutron below
         super(EIPTest, self).setUp()
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(self.fc.servers, 'get')
 
@@ -286,7 +286,7 @@ class EIPTest(common.HeatTestCase):
     def test_eip_with_exception(self):
         self.m.StubOutWithMock(self.fc.floating_ips, 'create')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.fc.floating_ips.create().AndRaise(fakes_v1_1.fake_exception())
+        self.fc.floating_ips.create().AndRaise(fakes_nova.fake_exception())
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template)
@@ -305,7 +305,7 @@ class EIPTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.floating_ips, 'delete')
         nova.NovaClientPlugin._create().AndReturn(self.fc)
         self.fc.floating_ips.delete(mox.IsA(object)).AndRaise(
-            fakes_v1_1.fake_exception())
+            fakes_nova.fake_exception())
         self.fc.servers.get(mox.IsA(object)).AndReturn(False)
         self.m.ReplayAll()
 
@@ -371,7 +371,7 @@ class AllocTest(common.HeatTestCase):
     def setUp(self):
         super(AllocTest, self).setUp()
 
-        self.fc = fakes_v1_1.FakeClient()
+        self.fc = fakes_nova.FakeClient()
         self.m.StubOutWithMock(self.fc.servers, 'get')
         self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
@@ -700,7 +700,7 @@ class AllocTest(common.HeatTestCase):
         self._mock_server_get(mock_server=server, multiple=True)
         self.m.StubOutWithMock(self.fc.servers, 'add_floating_ip')
         self.fc.servers.add_floating_ip(server, '11.0.0.1').AndRaise(
-            fakes_v1_1.fake_exception(400))
+            fakes_nova.fake_exception(400))
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc)

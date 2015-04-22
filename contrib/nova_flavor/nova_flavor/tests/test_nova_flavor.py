@@ -17,8 +17,8 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import template
 from heat.tests import common
+from heat.tests.nova import fakes
 from heat.tests import utils
-from heat.tests.v1_1 import fakes
 
 from ..resources import nova_flavor  # noqa
 
