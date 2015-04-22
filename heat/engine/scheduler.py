@@ -428,7 +428,7 @@ class DependencyTaskGroup(object):
         Iterate over all subtasks that are currently running - i.e. they have
         been started but have not yet completed.
         """
-        running = lambda (k, r): k in self._graph and r.started()
+        running = lambda k_r: k_r[0] in self._graph and k_r[1].started()
         return itertools.ifilter(running, six.iteritems(self._runners))
 
 

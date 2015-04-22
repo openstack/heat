@@ -381,7 +381,7 @@ class SwiftSignalTest(common.HeatTestCase):
 
         time_now = timeutils.utcnow()
         time_series = [datetime.timedelta(0, t) + time_now
-                       for t in xrange(1, 100)]
+                       for t in six.moves.xrange(1, 100)]
         timeutils.set_time_override(time_series)
         self.addCleanup(timeutils.clear_time_override)
 
