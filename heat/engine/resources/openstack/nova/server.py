@@ -274,7 +274,7 @@ class Server(stack_user.StackUser):
             properties.Schema.STRING,
             _('Policy on how to apply an image-id update; either by '
               'requesting a server rebuild or by replacing the entire server'),
-            default='REPLACE',
+            default='REBUILD',
             constraints=[
                 constraints.AllowedValues(['REBUILD', 'REPLACE',
                                            'REBUILD_PRESERVE_EPHEMERAL']),
