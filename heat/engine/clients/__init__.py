@@ -156,4 +156,4 @@ def initialise():
     _mgr = extension.ExtensionManager(
         namespace='heat.clients',
         invoke_on_load=False,
-        verify_requirements=True)
+        verify_requirements=False)

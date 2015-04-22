@@ -38,7 +38,7 @@ def _get_mapping(namespace):
     mgr = extension.ExtensionManager(
         namespace=namespace,
         invoke_on_load=False,
-        verify_requirements=True)
+        verify_requirements=False)
     return [[name, mgr[name].plugin] for name in mgr.names()]
 
 
