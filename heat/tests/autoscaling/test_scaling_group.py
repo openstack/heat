@@ -345,6 +345,66 @@ class TestGroupAdjust(common.HeatTestCase):
         resize.assert_called_once_with(3)
         cd_stamp.assert_called_once_with('ExactCapacity : 3')
 
+    def test_scale_up_min_adjustment(self):
+        self.patchobject(grouputils, 'get_size', return_value=1)
+        resize = self.patchobject(self.group, 'resize')
+        cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+        self.group.adjust(33, adjustment_type='PercentChangeInCapacity',
+                          min_adjustment_step=2)
+
+        expected_notifies = [
+            mock.call(
+                capacity=1, suffix='start',
+                adjustment_type='PercentChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'Start resizing the group WebServerGroup',
+                adjustment=33,
+                stack=self.group.stack),
+            mock.call(
+                capacity=3, suffix='end',
+                adjustment_type='PercentChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'End resizing the group WebServerGroup',
+                adjustment=33,
+                stack=self.group.stack)]
+
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        resize.assert_called_once_with(3)
+        cd_stamp.assert_called_once_with('PercentChangeInCapacity : 33')
+
+    def test_scale_down_min_adjustment(self):
+        self.patchobject(grouputils, 'get_size', return_value=5)
+        resize = self.patchobject(self.group, 'resize')
+        cd_stamp = self.patchobject(self.group, '_cooldown_timestamp')
+        notify = self.patch('heat.engine.notification.autoscaling.send')
+        self.patchobject(self.group, '_cooldown_inprogress',
+                         return_value=False)
+        self.group.adjust(-33, adjustment_type='PercentChangeInCapacity',
+                          min_adjustment_step=2)
+
+        expected_notifies = [
+            mock.call(
+                capacity=5, suffix='start',
+                adjustment_type='PercentChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'Start resizing the group WebServerGroup',
+                adjustment=-33,
+                stack=self.group.stack),
+            mock.call(
+                capacity=3, suffix='end',
+                adjustment_type='PercentChangeInCapacity',
+                groupname=u'WebServerGroup',
+                message=u'End resizing the group WebServerGroup',
+                adjustment=-33,
+                stack=self.group.stack)]
+
+        self.assertEqual(expected_notifies, notify.call_args_list)
+        resize.assert_called_once_with(3)
+        cd_stamp.assert_called_once_with('PercentChangeInCapacity : -33')
+
     def test_scaling_policy_cooldown_ok(self):
         self.patchobject(grouputils, 'get_members', return_value=[])
         resize = self.patchobject(self.group, 'resize')

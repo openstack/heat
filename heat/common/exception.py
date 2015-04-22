@@ -381,6 +381,11 @@ class ResourcePropertyDependency(HeatException):
     msg_fmt = _('%(prop1)s cannot be specified without %(prop2)s.')
 
 
+class ResourcePropertyValueDependency(HeatException):
+    msg_fmt = _('%(prop1)s property should only be specified '
+                'for %(prop2)s with value %(value)s.')
+
+
 class PropertyUnspecifiedError(HeatException):
     msg_fmt = _('At least one of the following properties '
                 'must be specified: %(props)s')
