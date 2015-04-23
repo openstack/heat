@@ -135,8 +135,8 @@ class ThreadGroupManager(object):
         :param args: Args to be passed to func
         :param kwargs: Keyword-args to be passed to func.
         """
-        lock = stack_lock.StackLock(cnxt, stack, engine_id)
-        with lock.thread_lock(stack.id):
+        lock = stack_lock.StackLock(cnxt, stack.id, engine_id)
+        with lock.thread_lock():
             th = self.start_with_acquired_lock(stack, lock,
                                                func, *args, **kwargs)
             return th
@@ -156,14 +156,14 @@ class ThreadGroupManager(object):
         :param kwargs: Keyword-args to be passed to func
 
         """
-        def release(gt, *args):
+        def release(gt):
             """
             Callback function that will be passed to GreenThread.link().
             """
-            lock.release(*args)
+            lock.release()
 
         th = self.start(stack.id, func, *args, **kwargs)
-        th.link(release, stack.id)
+        th.link(release)
         return th
 
     def add_timer(self, stack_id, func, *args, **kwargs):
@@ -795,7 +795,7 @@ class EngineService(service.Service):
         # stop the running update and take the lock
         # as we cancel only running update, the acquire_result is
         # always some engine_id, not None
-        lock = stack_lock.StackLock(cnxt, current_stack,
+        lock = stack_lock.StackLock(cnxt, current_stack.id,
                                     self.engine_id)
         engine_id = lock.try_acquire()
         # Current engine has the lock
@@ -927,8 +927,8 @@ class EngineService(service.Service):
         LOG.info(_LI('Deleting stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
 
-        lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
-        with lock.try_thread_lock(stack.id) as acquire_result:
+        lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
+        with lock.try_thread_lock() as acquire_result:
 
             # Successfully acquired lock
             if acquire_result is None:
@@ -979,8 +979,8 @@ class EngineService(service.Service):
         st = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('abandoning stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
-        lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
-        with lock.thread_lock(stack.id):
+        lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
+        with lock.thread_lock():
             # Get stack details before deleting it.
             stack_info = stack.prepare_abandon()
             self.thread_group_mgr.start_with_acquired_lock(stack,
@@ -1274,9 +1274,9 @@ class EngineService(service.Service):
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
 
-        lock = stack_lock.StackLock(cnxt, stack, self.engine_id)
+        lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
 
-        with lock.thread_lock(stack.id):
+        with lock.thread_lock():
             snapshot = snapshot_object.Snapshot.create(cnxt, {
                 'tenant': cnxt.tenant_id,
                 'name': name,
@@ -1605,9 +1605,7 @@ class EngineService(service.Service):
                                             filters=filters,
                                             tenant_safe=False) or []
         for s in stacks:
-            stk = parser.Stack.load(cnxt, stack=s,
-                                    use_stored_context=True)
-            lock = stack_lock.StackLock(cnxt, stk, self.engine_id)
+            lock = stack_lock.StackLock(cnxt, s.id, self.engine_id)
             # If stacklock is released, means stack status may changed.
             engine_id = lock.get_engine_id()
             if not engine_id:
@@ -1617,6 +1615,8 @@ class EngineService(service.Service):
                 lock.acquire(retry=False)
             except exception.ActionInProgress:
                 continue
+            stk = parser.Stack.load(cnxt, stack=s,
+                                    use_stored_context=True)
             LOG.info(_LI('Engine %(engine)s went down when stack %(stack_id)s'
                          ' was in action %(action)s'),
                      {'engine': engine_id, 'action': stk.action,

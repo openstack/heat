@@ -1744,7 +1744,7 @@ class StackServiceTest(common.HeatTestCase):
                             generic_rsrc.GenericResource)
 
         thread = self.m.CreateMockAnything()
-        thread.link(mox.IgnoreArg(), self.stack.id).AndReturn(None)
+        thread.link(mox.IgnoreArg()).AndReturn(None)
         thread.link(mox.IgnoreArg(), self.stack.id,
                     mox.IgnoreArg()).AndReturn(None)
 
@@ -4280,7 +4280,7 @@ class ThreadGroupManagerTest(common.HeatTestCase):
             thm.start_with_lock(self.cnxt, self.stack, self.engine_id, self.f,
                                 *self.fargs, **self.fkwargs)
             self.stlock_mock.StackLock.assert_called_with(self.cnxt,
-                                                          self.stack,
+                                                          self.stack.id,
                                                           self.engine_id)
 
             thm.start_with_acquired_lock.assert_called_once_with(
