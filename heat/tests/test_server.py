@@ -2289,6 +2289,50 @@ class ServersTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_validate_bdm_v2_properties_success(self):
+        stack_name = 'v2_properties'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        bdm_v2 = [{'volume_id': '1'}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self._mock_get_image_id_success('F17-x86_64-gold', 'image_id')
+        self.stub_VolumeConstraint_validate()
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+
+        self.m.VerifyAll()
+
+    def test_validate_bdm_v2_properties_no_bootable_vol(self):
+        stack_name = 'v2_properties'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        bdm_v2 = [{'swap_size': 10}]
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+        wsp.pop('image')
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.stub_VolumeConstraint_validate()
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        msg = ('Neither image nor bootable volume is specified for instance '
+               'server_create_image_err')
+        self.assertEqual(msg, six.text_type(exc))
+
+        self.m.VerifyAll()
+
     def test_validate_metadata_too_many(self):
         stack_name = 'srv_val_metadata'
         (tmpl, stack) = self._setup_test_stack(stack_name)
