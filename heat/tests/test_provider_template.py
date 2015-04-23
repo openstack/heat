@@ -522,7 +522,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": "some_magic.yaml"}}}}
         env = environment.Environment(env_str)
-        ex = self.assertRaises(exception.NotFound, env.get_class,
+        ex = self.assertRaises(exception.TemplateNotFound, env.get_class,
                                'OS::ResourceType', 'fred')
         self.assertIn('Could not fetch remote template "some_magic.yaml"',
                       six.text_type(ex))
