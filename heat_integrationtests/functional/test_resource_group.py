@@ -109,9 +109,12 @@ resources:
                                environment=env, files=files)
         self.assertIn(expected_err, six.text_type(ex))
 
-    def _validate_resources(self, stack_identifier, expected_count):
+    def _list_group_resources(self, stack_identifier):
         nested_identifier = self._group_nested_identifier(stack_identifier)
-        resources = self.list_resources(nested_identifier)
+        return self.list_resources(nested_identifier)
+
+    def _validate_resources(self, stack_identifier, expected_count):
+        resources = self._list_group_resources(stack_identifier)
         self.assertEqual(expected_count, len(resources))
         expected_resources = dict(
             (str(idx), 'My::RandomString')
@@ -167,6 +170,44 @@ resources:
         self.update_stack(stack_identifier, update_template, environment=env)
         # verify that the resource group has 3 resources
         self._validate_resources(stack_identifier, 3)
+
+    def test_update_removal_policies(self):
+        rp_template = '''
+heat_template_version: 2014-10-16
+resources:
+  random_group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: 5
+      removal_policies: []
+      resource_def:
+        type: OS::Heat::RandomString
+'''
+
+        # create stack with resource group, initial count 5
+        stack_identifier = self.stack_create(template=rp_template)
+        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+                         self.list_resources(stack_identifier))
+        group_resources = self._list_group_resources(stack_identifier)
+        expected_resources = {u'0': u'OS::Heat::RandomString',
+                              u'1': u'OS::Heat::RandomString',
+                              u'2': u'OS::Heat::RandomString',
+                              u'3': u'OS::Heat::RandomString',
+                              u'4': u'OS::Heat::RandomString'}
+        self.assertEqual(expected_resources, group_resources)
+
+        # Remove three, specifying the middle resources to be removed
+        update_template = rp_template.replace(
+            'removal_policies: []',
+            'removal_policies: [{resource_list: [\'1\', \'2\', \'3\']}]')
+        self.update_stack(stack_identifier, update_template)
+        group_resources = self._list_group_resources(stack_identifier)
+        expected_resources = {u'0': u'OS::Heat::RandomString',
+                              u'4': u'OS::Heat::RandomString',
+                              u'5': u'OS::Heat::RandomString',
+                              u'6': u'OS::Heat::RandomString',
+                              u'7': u'OS::Heat::RandomString'}
+        self.assertEqual(expected_resources, group_resources)
 
     def test_props_update(self):
         """Test update of resource_def properties behaves as expected."""

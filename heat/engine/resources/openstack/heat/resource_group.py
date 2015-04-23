@@ -182,7 +182,13 @@ class ResourceGroup(stack_resource.StackResource):
         ),
     }
 
-    def validate(self):
+    def validate_nested_stack(self):
+        # Only validate the resource definition (which may be a
+        # nested template) if count is non-zero, to enable folks
+        # to disable features via a zero count if they wish
+        if not self.properties.get(self.COUNT):
+            return
+
         test_tmpl = self._assemble_nested(["0"], include_all=True)
         val_templ = template.Template(test_tmpl)
         res_def = val_templ.resource_definitions(self.stack)["0"]
@@ -193,8 +199,17 @@ class ResourceGroup(stack_resource.StackResource):
             # its a template resource
             pass
 
-        # validate the nested template definition
-        super(ResourceGroup, self).validate()
+        try:
+            name = "%s-%s" % (self.stack.name, self.name)
+            nested_stack = self._parse_nested_stack(
+                name,
+                test_tmpl,
+                self.child_params())
+            nested_stack.strict_validate = False
+            nested_stack.validate()
+        except Exception as ex:
+            msg = _("Failed to validate: %s") % six.text_type(ex)
+            raise exception.StackValidationFailed(message=msg)
 
     def _name_blacklist(self):
         """Resolve the remove_policies to names for removal."""
