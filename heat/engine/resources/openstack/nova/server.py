@@ -1208,7 +1208,7 @@ class Server(stack_user.StackUser):
                         'swap_size must be specified.')
                 raise exception.StackValidationFailed(message=msg)
 
-            if any(volume_id, snapshot_id, image_id):
+            if any((volume_id, snapshot_id, image_id)):
                 bootable_vol = True
 
         return bootable_vol
