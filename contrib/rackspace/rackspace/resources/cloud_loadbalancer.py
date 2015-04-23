@@ -222,7 +222,7 @@ class CloudLoadBalancer(resource.Resource):
                         )
                     ),
                     NODE_PORT: properties.Schema(
-                        properties.Schema.NUMBER,
+                        properties.Schema.INTEGER,
                         required=True
                     ),
                     NODE_CONDITION: properties.Schema(
@@ -303,7 +303,7 @@ class CloudLoadBalancer(resource.Resource):
             update_allowed=True
         ),
         PORT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             required=True,
             update_allowed=True
         ),
@@ -324,13 +324,13 @@ class CloudLoadBalancer(resource.Resource):
                     ]
                 ),
                 CONNECTION_THROTTLE_MIN_CONNECTIONS: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     constraints=[
                         constraints.Range(1, 1000),
                     ]
                 ),
                 CONNECTION_THROTTLE_MAX_CONNECTIONS: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     constraints=[
                         constraints.Range(1, 100000),
                     ]
@@ -404,7 +404,7 @@ class CloudLoadBalancer(resource.Resource):
             properties.Schema.MAP,
             schema={
                 SSL_TERMINATION_SECURE_PORT: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     default=443
                 ),
                 SSL_TERMINATION_PRIVATEKEY: properties.Schema(

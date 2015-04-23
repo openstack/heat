@@ -77,7 +77,7 @@ class Secret(resource.Resource):
             _('The algorithm type used to generate the secret.'),
         ),
         BIT_LENGTH: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The bit-length of the secret.'),
             constraints=[
                 constraints.Range(

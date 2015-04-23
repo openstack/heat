@@ -45,7 +45,7 @@ class WaitCondition(heat_wc.HeatWaitCondition):
             required=True
         ),
         TIMEOUT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The number of seconds to wait for the correct number of '
               'signals to arrive.'),
             required=True,
@@ -54,7 +54,7 @@ class WaitCondition(heat_wc.HeatWaitCondition):
             ]
         ),
         COUNT: properties.Schema(
-            properties.Schema.NUMBER,
+            properties.Schema.INTEGER,
             _('The number of success signals that must be received before '
               'the stack creation process continues.'),
             constraints=[

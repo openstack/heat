@@ -85,13 +85,13 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             update_allowed=True,
             schema={
                 MIN_IN_SERVICE: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('The minimum number of resources in service while '
                       'rolling updates are being executed.'),
                     constraints=[constraints.Range(min=0)],
                     default=0),
                 MAX_BATCH_SIZE: properties.Schema(
-                    properties.Schema.NUMBER,
+                    properties.Schema.INTEGER,
                     _('The maximum number of resources to replace at once.'),
                     constraints=[constraints.Range(min=0)],
                     default=1),
