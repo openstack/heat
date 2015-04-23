@@ -435,6 +435,7 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
     def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
+            'id': 'fake id',
             'status': 'fake status',
             'name': 'fake name',
             'action': 'fake action',
@@ -453,7 +454,8 @@ class StackControllerTest(ControllerTest, common.HeatTestCase):
         self.assertIn('filters', engine_args)
 
         filters = engine_args['filters']
-        self.assertEqual(6, len(filters))
+        self.assertEqual(7, len(filters))
+        self.assertIn('id', filters)
         self.assertIn('status', filters)
         self.assertIn('name', filters)
         self.assertIn('action', filters)
