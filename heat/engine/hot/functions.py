@@ -83,7 +83,8 @@ class GetParam(function.Function):
             return collection[key]
 
         try:
-            return reduce(get_path_component, path_components, parameter)
+            return six.moves.reduce(get_path_component, path_components,
+                                    parameter)
         except (KeyError, IndexError, TypeError):
             return ''
 

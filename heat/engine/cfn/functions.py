@@ -449,7 +449,7 @@ class Replace(function.Function):
 
             return string.replace(placeholder, six.text_type(value))
 
-        return reduce(replace, six.iteritems(mapping), template)
+        return six.moves.reduce(replace, six.iteritems(mapping), template)
 
 
 class Base64(function.Function):

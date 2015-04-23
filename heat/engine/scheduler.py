@@ -89,10 +89,28 @@ class Timeout(BaseException):
             generator.close()
             return False
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
+        return not self < other and not other < self
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __gt__(self, other):
+        return other < self
+
+    def __ge__(self, other):
+        return not self < other
+
+    def __le__(self, other):
+        return not other < self
+
+    def __lt__(self, other):
         if not isinstance(other, Timeout):
             return NotImplemented
-        return cmp(self._endtime, other._endtime)
+        return self._endtime < other._endtime
+
+    def __cmp__(self, other):
+        return self < other
 
 
 class TimedCancel(Timeout):

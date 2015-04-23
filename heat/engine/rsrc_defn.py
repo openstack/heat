@@ -412,6 +412,6 @@ def _hash_data(data):
 
         if isinstance(data, collections.Mapping):
             item_hashes = (hash(k) ^ _hash_data(v) for k, v in data.items())
-            return reduce(operator.xor, item_hashes, 0L)
+            return six.moves.reduce(operator.xor, item_hashes, 0)
 
     return hash(data)

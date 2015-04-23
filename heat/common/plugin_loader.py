@@ -76,7 +76,7 @@ def _import_module(importer, module_name, package):
     # Make this accessible through the parent package for static imports
     local_name = module_name.partition(package.__name__ + '.')[2]
     module_components = local_name.split('.')
-    parent = reduce(getattr, module_components[:-1], package)
+    parent = six.moves.reduce(getattr, module_components[:-1], package)
     setattr(parent, module_components[-1], module)
 
     return module
