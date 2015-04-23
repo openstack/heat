@@ -201,8 +201,10 @@ class StackResourceTest(common.HeatTestCase):
         self.parent_resource.child_template = mock.Mock(
             return_value=self.simple_template)
         sig1, sig2 = self.parent_resource.implementation_signature()
-        self.assertEqual('3700dc2ae6ff4f0a236e7477ad6b8d51157f2153', sig1)
-        self.assertEqual('70e69545e0c47123159974c9166741085eb46dba', sig2)
+        self.assertEqual('3ce48c5d860e8e76087897376bc686d23591d4a00'
+                         'e8df8ec25e84e6bd83e70a6', sig1)
+        self.assertEqual('5a58b34cc3dd7f4e11fa35b63daad7b6b3aaa1744'
+                         '19eb1c42b75d102bdda5fc9', sig2)
         self.parent_stack.t.files["foo"] = "bar"
         sig1a, sig2a = self.parent_resource.implementation_signature()
         self.assertEqual(sig1, sig1a)
