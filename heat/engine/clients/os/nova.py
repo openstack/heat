@@ -20,9 +20,9 @@ import os
 import pkgutil
 import string
 
+from novaclient import client as nc
 from novaclient import exceptions
 from novaclient import shell as novashell
-from novaclient.v2 import client as nc
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
@@ -79,7 +79,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             'insecure': self._get_client_option('nova', 'insecure')
         }
 
-        client = nc.Client(**args)
+        client = nc.Client(NOVACLIENT_VERSION, **args)
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
 
