@@ -68,8 +68,6 @@ outputs:
         self.client = self.orchestration_client
 
     def test_defaults(self):
-        stack_name = self._stack_rand_name()
-
         env = {'parameters': {}, 'parameter_defaults': {}}
         if self.param:
             env['parameters'] = {'length': self.param}
@@ -84,22 +82,13 @@ outputs:
         else:
             nested_template = self.nested_template
 
-        self.client.stacks.create(
-            stack_name=stack_name,
+        stack_identifier = self.stack_create(
             template=self.template,
             files={'nested_random.yaml': nested_template},
-            disable_rollback=True,
-            parameters={},
             environment=env
         )
-        self.addCleanup(self.client.stacks.delete, stack_name)
 
-        stack = self.client.stacks.get(stack_name)
-        stack_identifier = '%s/%s' % (stack_name, stack.id)
-
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
-
-        stack = self.client.stacks.get(stack_name)
+        stack = self.client.stacks.get(stack_identifier)
         for out in stack.outputs:
             if out['output_key'] == 'random1':
                 self.assertEqual(self.expect1, len(out['output_value']))

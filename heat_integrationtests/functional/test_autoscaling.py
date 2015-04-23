@@ -183,7 +183,6 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
                                'flavor': self.conf.instance_type}}
         self.update_stack(stack_identifier, self.template,
                           environment=env2, files=files)
-        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
         stack = self.client.stacks.get(stack_identifier)
         self.assert_instance_count(stack, 5)
 
@@ -374,7 +373,6 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         # test stack update
         self.update_stack(stack_identifier, updt_template,
                           environment=env, files=files)
-        self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE')
         updt_stack = self.client.stacks.get(stack_identifier)
 
         # test that the launch configuration is replaced

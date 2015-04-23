@@ -102,17 +102,12 @@ resource_registry:
         This tests that if you manually delete a nested
         stack, the parent stack is still deletable.
         """
-        name = self._stack_rand_name()
-        # do this manually so we can call _stack_delete() directly.
-        self.client.stacks.create(
-            stack_name=name,
+        # disable cleanup so we can call _stack_delete() directly.
+        stack_identifier = self.stack_create(
             template=self.template,
             files={'nested.yaml': self.nested_templ},
             environment=self.env_templ,
-            disable_rollback=True)
-        stack = self.client.stacks.get(name)
-        stack_identifier = '%s/%s' % (name, stack.id)
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
+            enable_cleanup=False)
 
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'secret1')
@@ -445,16 +440,11 @@ Outputs:
         return yaml.load(yaml_templ)
 
     def test_abandon(self):
-        stack_name = self._stack_rand_name()
-        self.client.stacks.create(
-            stack_name=stack_name,
+        stack_identifier = self.stack_create(
             template=self.main_template,
             files={'the.yaml': self.nested_templ},
-            disable_rollback=True,
+            enable_cleanup=False
         )
-        stack = self.client.stacks.get(stack_name)
-        stack_identifier = '%s/%s' % (stack_name, stack.id)
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
 
         info = self.stack_abandon(stack_id=stack_identifier)
         self.assertEqual(self._yaml_to_json(self.main_template),
@@ -527,16 +517,10 @@ Outputs:
         self.client = self.orchestration_client
 
     def test_check(self):
-        stack_name = self._stack_rand_name()
-        self.client.stacks.create(
-            stack_name=stack_name,
+        stack_identifier = self.stack_create(
             template=self.main_template,
-            files={'the.yaml': self.nested_templ},
-            disable_rollback=True,
+            files={'the.yaml': self.nested_templ}
         )
-        stack = self.client.stacks.get(stack_name)
-        stack_identifier = '%s/%s' % (stack_name, stack.id)
-        self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
 
         self.client.actions.check(stack_id=stack_identifier)
         self._wait_for_stack_status(stack_identifier, 'CHECK_COMPLETE')
