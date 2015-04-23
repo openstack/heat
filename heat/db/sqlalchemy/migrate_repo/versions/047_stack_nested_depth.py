@@ -43,10 +43,3 @@ def upgrade(migrate_engine):
     # Iterate over all top-level non nested stacks
     for st in get_stacks(owner_id=None):
         set_nested_depth(st, 0)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.nested_depth.drop()

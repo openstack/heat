@@ -24,11 +24,3 @@ def upgrade(migrate_engine):
                                    sqlalchemy.String(length=64),
                                    default='heat_decrypt')
         method.create(table)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    for table in ('user_creds', 'resource_data'):
-        table = sqlalchemy.Table(table, meta, autoload=True)
-        table.c.decrypt_method.drop()

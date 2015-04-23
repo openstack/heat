@@ -22,10 +22,3 @@ def upgrade(migrate_engine):
     action = sqlalchemy.Column('action',
                                sqlalchemy.String(length=255))
     action.create(stack)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.action.drop()

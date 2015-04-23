@@ -13,7 +13,6 @@
 
 import sqlalchemy
 from sqlalchemy.dialects import mysql
-from sqlalchemy import types as sqltypes
 
 
 def upgrade(migrate_engine):
@@ -23,12 +22,3 @@ def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
     raw_template.c.template.alter(type=mysql.LONGTEXT())
-
-
-def downgrade(migrate_engine):
-    if migrate_engine.name != 'mysql':
-        return
-
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-    raw_template.c.template.alter(type=sqltypes.TEXT())

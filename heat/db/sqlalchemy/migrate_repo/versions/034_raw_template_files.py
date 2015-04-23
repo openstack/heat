@@ -23,11 +23,3 @@ def upgrade(migrate_engine):
     raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
     files = sqlalchemy.Column('files', types.Json, default={})
     files.create(raw_template)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-    raw_template.c.files.drop()

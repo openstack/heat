@@ -13,8 +13,6 @@
 
 import sqlalchemy
 
-from heat.db.sqlalchemy import utils as migrate_utils
-
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
@@ -23,23 +21,3 @@ def upgrade(migrate_engine):
     parent_resource_name = sqlalchemy.Column('parent_resource_name',
                                              sqlalchemy.String(255))
     parent_resource_name.create(stack)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    if migrate_engine.name == 'sqlite':
-        _downgrade_062_sqlite(migrate_engine, meta, stack)
-    else:
-        stack.c.parent_resource_name.drop()
-
-
-def _downgrade_062_sqlite(migrate_engine, metadata, table):
-    new_table = migrate_utils.clone_table(
-        table.name + '__tmp__', table, metadata,
-        ignorecols=['parent_resource_name'])
-    migrate_utils.migrate_data(migrate_engine,
-                               table,
-                               new_table,
-                               ['parent_resource_name'])

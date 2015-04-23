@@ -25,16 +25,3 @@ def upgrade(migrate_engine):
     tenant_index = sqlalchemy.Index('ix_stack_tenant', stack.c.tenant,
                                     mysql_length=255)
     tenant_index.create(migrate_engine)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-
-    name_index = sqlalchemy.Index('ix_stack_name', stack.c.name,
-                                  mysql_length=255)
-    name_index.drop(migrate_engine)
-
-    tenant_index = sqlalchemy.Index('ix_stack_tenant', stack.c.tenant,
-                                    mysql_length=255)
-    tenant_index.drop(migrate_engine)

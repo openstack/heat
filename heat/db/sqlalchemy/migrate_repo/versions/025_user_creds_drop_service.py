@@ -21,16 +21,3 @@ def upgrade(migrate_engine):
 
     user_creds.c.service_user.drop()
     user_creds.c.service_password.drop()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-
-    service_user = sqlalchemy.Column('service_user',
-                                     sqlalchemy.String(length=255))
-    service_user.create(user_creds)
-    service_password = sqlalchemy.Column('service_password',
-                                         sqlalchemy.String(length=255))
-    service_password.create(user_creds)

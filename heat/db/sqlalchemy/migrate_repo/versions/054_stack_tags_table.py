@@ -13,8 +13,6 @@
 
 import sqlalchemy
 
-from heat.db.sqlalchemy import types as heat_db_types
-
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
@@ -39,14 +37,3 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
     stack_tag.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    tags = sqlalchemy.Column('tags', heat_db_types.Json)
-    tags.create(stack)
-
-    stack_tag = sqlalchemy.Table('stack_tag', meta, autoload=True)
-    stack_tag.drop()

@@ -27,11 +27,3 @@ def upgrade(migrate_engine):
     trust_id = sqlalchemy.Column('trust_id', sqlalchemy.String(length=255))
     trustor_user_id.create(user_creds)
     trust_id.create(user_creds)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-    user_creds.c.trustor_user_id.drop()
-    user_creds.c.trust_id.drop()

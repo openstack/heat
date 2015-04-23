@@ -21,10 +21,3 @@ def upgrade(migrate_engine):
     atomic_key = sqlalchemy.Column('atomic_key', sqlalchemy.Integer)
     engine_id.create(resource)
     atomic_key.create(resource)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-    resource.c.engine_id.drop()
-    resource.c.atomic_key.drop()

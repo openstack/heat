@@ -10,13 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from migrate.versioning import util as migrate_util
 from oslo_serialization import jsonutils
 import six
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-from heat.common.i18n import _
 
 
 def upgrade(migrate_engine):
@@ -71,9 +68,3 @@ def upgrade(migrate_engine):
                     execute())
                 session.commit()
     session.close()
-
-
-def downgrade(migrate_engine):
-    migrate_util.log.warning(_('This version cannot be downgraded because '
-                               'it involves a data migration to the '
-                               'raw_template table.'))

@@ -13,10 +13,7 @@
 
 import uuid
 
-from migrate.versioning import util as migrate_util
 import sqlalchemy
-
-from heat.common.i18n import _
 
 
 def upgrade(migrate_engine):
@@ -25,19 +22,3 @@ def upgrade(migrate_engine):
     event = sqlalchemy.Table('event', meta, autoload=True)
     event.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
                      default=lambda: str(uuid.uuid4()))
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    event = sqlalchemy.Table('event', meta, autoload=True)
-
-    try:
-        event.c.id.alter(type=sqlalchemy.Integer, primary_key=True)
-    except Exception:
-        # NOTE(pafuent): since there is no way to downgrade just passing
-        # The same is did in 018_resource_id_uuid.py
-        migrate_util.log.warning(_('If you really want to downgrade to this '
-                                   'version, you should drop all the records.'
-                                   ))
-        pass

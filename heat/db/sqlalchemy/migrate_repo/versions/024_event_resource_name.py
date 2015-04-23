@@ -19,10 +19,3 @@ def upgrade(migrate_engine):
     meta.bind = migrate_engine
     event = sqlalchemy.Table('event', meta, autoload=True)
     event.c.logical_resource_id.alter(name='resource_name')
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-    event = sqlalchemy.Table('event', meta, autoload=True)
-    event.c.resource_name.alter(name='logical_resource_id')

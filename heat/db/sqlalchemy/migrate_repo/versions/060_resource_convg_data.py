@@ -15,7 +15,6 @@ from migrate.changeset import constraint
 import sqlalchemy
 
 from heat.db.sqlalchemy import types
-from heat.db.sqlalchemy import utils as migrate_utils
 
 
 def upgrade(migrate_engine):
@@ -41,49 +40,3 @@ def upgrade(migrate_engine):
         refcolumns=[raw_template.c.id],
         name='current_template_fkey_ref')
     fkey.create()
-
-
-def downgrade(migrate_engine):
-    if migrate_engine.name == 'sqlite':
-        _downgrade_sqlite(migrate_engine)
-        return
-
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-
-    fkey = constraint.ForeignKeyConstraint(
-        columns=[resource.c.current_template_id],
-        refcolumns=[raw_template.c.id],
-        name='current_template_fkey_ref')
-    fkey.drop()
-    resource.c.current_template_id.drop()
-    resource.c.needed_by.drop()
-    resource.c.requires.drop()
-    resource.c.replaces.drop()
-    resource.c.replaced_by.drop()
-
-
-def _downgrade_sqlite(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    resource_table = sqlalchemy.Table('resource', meta, autoload=True)
-
-    ignorecons = ['current_template_fkey_ref']
-    ignorecols = [resource_table.c.current_template_id.name,
-                  resource_table.c.needed_by.name,
-                  resource_table.c.requires.name,
-                  resource_table.c.replaces.name,
-                  resource_table.c.replaced_by.name]
-    new_resource = migrate_utils.clone_table('new_resource',
-                                             resource_table,
-                                             meta, ignorecols=ignorecols,
-                                             ignorecons=ignorecons)
-
-    # migrate resources to new table
-    migrate_utils.migrate_data(migrate_engine,
-                               resource_table,
-                               new_resource,
-                               skip_columns=ignorecols)
