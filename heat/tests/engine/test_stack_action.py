@@ -15,39 +15,13 @@ from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import environment
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import template as templatem
 from heat.objects import stack as stack_object
 from heat.tests import common
+from heat.tests.engine import tools
 from heat.tests import utils
-
-wp_template = '''
-heat_template_version: 2014-10-16
-description : WordPress
-parameters :
-  KeyName:
-    description: KeyName
-    type: string
-    default: test
-resources:
-  WebServer:
-    type: OS::Nova::Server
-    properties:
-      image : F17-x86_64-gold
-      flavor: m1.large
-      key_name: test
-      user_data: wordpress
-'''
-
-
-def get_wordpress_stack(stack_name, ctx):
-    t = template_format.parse(wp_template)
-    template = templatem.Template(
-        t, env=environment.Environment({'KeyName': 'test'}))
-    stk = stack.Stack(ctx, stack_name, template)
-    return stk
 
 
 class StackServiceActionsTest(common.HeatTestCase):
@@ -63,9 +37,9 @@ class StackServiceActionsTest(common.HeatTestCase):
     @mock.patch.object(service.ThreadGroupManager, 'start')
     def test_stack_suspend(self, mock_start, mock_load):
         stack_name = 'service_suspend_test_stack'
-        stk = get_wordpress_stack(stack_name, self.ctx)
-        sid = stk.store()
-        s = stack_object.Stack.get_by_id(self.ctx, sid)
+        t = template_format.parse(tools.wp_template)
+        stk = utils.parse_stack(t, stack_name=stack_name)
+        s = stack_object.Stack.get_by_id(self.ctx, stk.id)
 
         mock_load.return_value = stk
         thread = mock.MagicMock()
@@ -76,7 +50,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         self.assertIsNone(result)
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_link.assert_called_once_with(mock.ANY)
-        mock_start.assert_called_once_with(sid, mock.ANY, stk)
+        mock_start.assert_called_once_with(stk.id, mock.ANY, stk)
 
         stk.delete()
 
@@ -84,8 +58,8 @@ class StackServiceActionsTest(common.HeatTestCase):
     @mock.patch.object(service.ThreadGroupManager, 'start')
     def test_stack_resume(self, mock_start, mock_load):
         stack_name = 'service_resume_test_stack'
-        stk = get_wordpress_stack(stack_name, self.ctx)
-        sid = stk.store()
+        t = template_format.parse(tools.wp_template)
+        stk = utils.parse_stack(t, stack_name=stack_name)
 
         mock_load.return_value = stk
         thread = mock.MagicMock()
@@ -97,13 +71,15 @@ class StackServiceActionsTest(common.HeatTestCase):
 
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
         mock_link.assert_called_once_with(mock.ANY)
-        mock_start.assert_called_once_with(sid, mock.ANY, stk)
+        mock_start.assert_called_once_with(stk.id, mock.ANY, stk)
 
         stk.delete()
 
     def test_stack_suspend_nonexist(self):
         stack_name = 'service_suspend_nonexist_test_stack'
-        stk = get_wordpress_stack(stack_name, self.ctx)
+        t = template_format.parse(tools.wp_template)
+        tmpl = templatem.Template(t)
+        stk = stack.Stack(self.ctx, stack_name, tmpl)
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.stack_suspend, self.ctx,
@@ -112,7 +88,9 @@ class StackServiceActionsTest(common.HeatTestCase):
 
     def test_stack_resume_nonexist(self):
         stack_name = 'service_resume_nonexist_test_stack'
-        stk = get_wordpress_stack(stack_name, self.ctx)
+        t = template_format.parse(tools.wp_template)
+        tmpl = templatem.Template(t)
+        stk = stack.Stack(self.ctx, stack_name, tmpl)
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.stack_resume, self.ctx,
@@ -126,8 +104,10 @@ class StackServiceActionsTest(common.HeatTestCase):
     @mock.patch.object(service.ThreadGroupManager, 'start')
     @mock.patch.object(stack.Stack, 'load')
     def test_stack_check(self, mock_load, mock_start):
-        stk = get_wordpress_stack('test_stack_check', self.ctx)
-        stk.store()
+        stack_name = 'service_check_test_stack'
+        t = template_format.parse(tools.wp_template)
+        stk = utils.parse_stack(t, stack_name=stack_name)
+
         stk.check = mock.Mock()
         mock_load.return_value = stk
         mock_start.side_effect = self._mock_thread_start
@@ -158,8 +138,9 @@ class StackServiceUpdateActionsNotSupportedTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'load')
     def test_stack_update_actions_not_supported(self, mock_load):
         stack_name = '%s-%s' % (self.action, self.status)
+        t = template_format.parse(tools.wp_template)
+        old_stack = utils.parse_stack(t, stack_name=stack_name)
 
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
         old_stack.action = self.action
         old_stack.status = self.status
 
