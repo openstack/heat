@@ -376,6 +376,10 @@ class ResourcePropertyConflict(HeatException):
         super(ResourcePropertyConflict, self).__init__(**kwargs)
 
 
+class ResourcePropertyDependency(HeatException):
+    msg_fmt = _('%(prop1)s cannot be specified without %(prop2)s.')
+
+
 class PropertyUnspecifiedError(HeatException):
     msg_fmt = _('At least one of the following properties '
                 'must be specified: %(props)s')
