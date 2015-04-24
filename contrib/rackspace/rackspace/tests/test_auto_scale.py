@@ -64,7 +64,7 @@ class FakeAutoScale(object):
 
     def create(self, **kwargs):
         """Create a scaling group."""
-        new_id = str(self.group_counter.next())
+        new_id = str(next(self.group_counter))
         fsg = FakeScalingGroup(new_id, **kwargs)
         self.groups[new_id] = fsg
         return fsg
@@ -119,7 +119,7 @@ class FakeAutoScale(object):
             'scaling_group', 'name', 'policy_type', 'cooldown', 'change',
             'is_percent', 'desired_capacity', 'args']
         self._check_args(kwargs, allowed)
-        policy_id = str(self.policy_counter.next())
+        policy_id = str(next(self.policy_counter))
         policy = FakeScalePolicy(policy_id, **kwargs)
         self.policies[policy_id] = policy
         return policy
@@ -138,7 +138,7 @@ class FakeAutoScale(object):
         """Create and store a FakeWebHook."""
         allowed = ['scaling_group', 'policy', 'name', 'metadata']
         self._check_args(kwargs, allowed)
-        webhook_id = str(self.webhook_counter.next())
+        webhook_id = str(next(self.webhook_counter))
         webhook = FakeWebHook(webhook_id, **kwargs)
         self.webhooks[webhook_id] = webhook
         return webhook
@@ -399,7 +399,7 @@ Resources:
         delete_counter = itertools.count()
 
         def delete(group_id):
-            count = delete_counter.next()
+            count = next(delete_counter)
             if count < 3:
                 raise auto_scale.Forbidden("Not empty!")
 
@@ -407,7 +407,7 @@ Resources:
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
         # It really called delete until it succeeded:
-        self.assertEqual(4, delete_counter.next())
+        self.assertEqual(4, next(delete_counter))
 
     def test_delete_blows_up_on_other_errors(self):
         """

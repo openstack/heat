@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import itertools
 
 from heat.common import short_id
@@ -23,7 +24,9 @@ class ResourceTemplatesTest(common.HeatTestCase):
     def setUp(self):
         super(ResourceTemplatesTest, self).setUp()
         ids = ('stubbed-id-%s' % (i,) for i in itertools.count())
-        self.patchobject(short_id, 'generate_id').side_effect = ids.next
+        self.patchobject(
+            short_id, 'generate_id').side_effect = functools.partial(next,
+                                                                     ids)
 
     def test_create_template(self):
         """
