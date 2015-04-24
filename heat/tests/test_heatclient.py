@@ -143,7 +143,7 @@ class KeystoneClientTest(common.HeatTestCase):
                              auth=mock_ks_auth)
             c.AndReturn(self.mock_ks_v3_client)
 
-            for x in xrange(0, times):
+            for x in six.moves.xrange(0, times):
                 m = mock_ks_auth.get_access(mox.IsA(ks_session.Session))
                 m.AndReturn(mock_auth_ref)
 

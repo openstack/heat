@@ -165,7 +165,7 @@ class StackController(object):
             }
 
             def replacecolon(d):
-                return dict(map(lambda (k, v): (k.replace(':', '.'), v),
+                return dict(map(lambda k_v: (k_v[0].replace(':', '.'), k_v[1]),
                                 d.items()))
 
             def transform(attrs):
