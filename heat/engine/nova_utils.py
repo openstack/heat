@@ -364,7 +364,7 @@ def meta_update(client, server, metadata):
                   'Use self.client_plugin("nova").meta_update')
     metadata = meta_serialize(metadata)
     current_md = server.metadata
-    to_del = [key for key in current_md.keys() if key not in metadata]
+    to_del = [key for key in six.iterkeys(current_md) if key not in metadata]
     if len(to_del) > 0:
         client.servers.delete_meta(server, to_del)
 

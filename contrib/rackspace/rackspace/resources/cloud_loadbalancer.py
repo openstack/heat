@@ -607,7 +607,7 @@ class CloudLoadBalancer(resource.Resource):
             checkers.extend(self._update_nodes(lb, updated_nodes))
 
         updated_props = {}
-        for prop in prop_diff.keys():
+        for prop in six.iterkeys(prop_diff):
             if prop in self.LB_UPDATE_PROPS:
                 updated_props[prop] = prop_diff[prop]
         if updated_props:
@@ -674,8 +674,8 @@ class CloudLoadBalancer(resource.Resource):
                               node[self.NODE_PORT]), node)
                    for node in diff_nodes)
 
-        old_set = set(old.keys())
-        new_set = set(new.keys())
+        old_set = set(six.iterkeys(old))
+        new_set = set(six.iterkeys(new))
 
         deleted = old_set.difference(new_set)
         added = new_set.difference(old_set)
@@ -701,7 +701,7 @@ class CloudLoadBalancer(resource.Resource):
         # Update nodes that have been changed
         for node in updated:
             node_changed = False
-            for attribute in new[node].keys():
+            for attribute in six.iterkeys(new[node]):
                 new_value = new[node][attribute]
                 if new_value and new_value != getattr(old[node], attribute):
                     node_changed = True

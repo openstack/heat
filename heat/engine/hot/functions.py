@@ -335,7 +335,7 @@ class Repeat(function.Function):
 
     def result(self):
         for_each = function.resolve(self._for_each)
-        keys = for_each.keys()
+        keys = list(six.iterkeys(for_each))
         lists = [for_each[key] for key in keys]
         template = function.resolve(self._template)
         return [self._do_replacement(keys, items, template)

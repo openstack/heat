@@ -88,10 +88,10 @@ class FormatTest(common.HeatTestCase):
         )))
 
         formatted = api.format_stack_resource(res, True)
-        self.assertEqual(resource_details_keys, set(formatted.keys()))
+        self.assertEqual(resource_details_keys, set(six.iterkeys(formatted)))
 
         formatted = api.format_stack_resource(res, False)
-        self.assertEqual(resource_keys, set(formatted.keys()))
+        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
 
     @mock.patch.object(api, 'format_resource_properties')
     def test_format_stack_resource_with_props(self, mock_format_props):
@@ -207,7 +207,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.RES_REQUIRED_BY))
 
         formatted = api.format_stack_resource(res, False)
-        self.assertEqual(resource_keys, set(formatted.keys()))
+        self.assertEqual(resource_keys, set(six.iterkeys(formatted)))
 
     def test_format_stack_resource_with_nested_stack_empty(self):
         res = self.stack['generic1']
@@ -254,7 +254,7 @@ class FormatTest(common.HeatTestCase):
             rpc_api.EVENT_RES_PROPERTIES))
 
         formatted = api.format_event(event)
-        self.assertEqual(event_keys, set(formatted.keys()))
+        self.assertEqual(event_keys, set(six.iterkeys(formatted)))
 
         event_id_formatted = formatted[rpc_api.EVENT_ID]
         event_identifier = identifier.EventIdentifier(

@@ -203,7 +203,7 @@ class Workflow(signal_responder.SignalResponder,
                     raise exception.StackValidationFailed(
                         error=_('Signal data error'),
                         message=message)
-                for key in input_value.keys():
+                for key in six.iterkeys(input_value):
                     if (self.properties.get(self.INPUT) is None
                             or key not in self.properties.get(self.INPUT)):
                         message = _('Unknown input %s') % key
@@ -291,7 +291,8 @@ class Workflow(signal_responder.SignalResponder,
                       defn_name: {self.TYPE: props[self.TYPE],
                                   self.DESCRIPTION: props[self.DESCRIPTION],
                                   self.OUTPUT: props[self.OUTPUT],
-                                  self.INPUT: props[self.INPUT].keys(),
+                                  self.INPUT: list(six.iterkeys(
+                                      props[self.INPUT])),
                                   self.TASKS: {}}}
 
         for task in self.build_tasks(props):

@@ -2367,7 +2367,8 @@ class ServersTest(common.HeatTestCase):
         self.assertIsInstance(console_urls, collections.Mapping)
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
                               'serial')
-        self.assertEqual(set(supported_consoles), set(console_urls.keys()))
+        self.assertEqual(set(supported_consoles),
+                         set(six.iterkeys(console_urls)))
         self.m.VerifyAll()
 
     def test_default_instance_user(self):

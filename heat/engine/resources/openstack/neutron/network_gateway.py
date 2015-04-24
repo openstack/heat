@@ -14,6 +14,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -184,7 +186,7 @@ class NetworkGateway(neutron.NeutronResource):
         for connection in connections:
             self.client_plugin().resolve_network(
                 connection, self.NETWORK, 'network_id')
-            if self.NETWORK in connection.keys():
+            if self.NETWORK in six.iterkeys(connection):
                 connection.pop(self.NETWORK)
             self.neutron().connect_network_gateway(
                 ret['id'], connection
@@ -200,7 +202,7 @@ class NetworkGateway(neutron.NeutronResource):
             try:
                 self.client_plugin().resolve_network(
                     connection, self.NETWORK, 'network_id')
-                if self.NETWORK in connection.keys():
+                if self.NETWORK in six.iterkeys(connection):
                     connection.pop(self.NETWORK)
                 client.disconnect_network_gateway(
                     self.resource_id, connection
@@ -236,7 +238,7 @@ class NetworkGateway(neutron.NeutronResource):
                 try:
                     self.client_plugin().resolve_network(
                         connection, self.NETWORK, 'network_id')
-                    if self.NETWORK in connection.keys():
+                    if self.NETWORK in six.iterkeys(connection):
                         connection.pop(self.NETWORK)
                     self.neutron().disconnect_network_gateway(
                         self.resource_id, connection
@@ -246,7 +248,7 @@ class NetworkGateway(neutron.NeutronResource):
             for connection in connections:
                 self.client_plugin().resolve_network(
                     connection, self.NETWORK, 'network_id')
-                if self.NETWORK in connection.keys():
+                if self.NETWORK in six.iterkeys(connection):
                     connection.pop(self.NETWORK)
                 self.neutron().connect_network_gateway(
                     self.resource_id, connection

@@ -137,7 +137,7 @@ class ResourcePages(compat.Directive):
     def contribute_hot_syntax(self, parent):
         section = self._section(parent, _('HOT Syntax'), '%s-hot')
         props = []
-        for prop_key in sorted(self.props_schemata.keys()):
+        for prop_key in sorted(six.iterkeys(self.props_schemata)):
             prop = self.props_schemata[prop_key]
             if (prop.implemented
                     and prop.support_status.status == support.SUPPORTED):
@@ -162,7 +162,7 @@ resources:
     def contribute_yaml_syntax(self, parent):
         section = self._section(parent, _('YAML Syntax'), '%s-yaml')
         props = []
-        for prop_key in sorted(self.props_schemata.keys()):
+        for prop_key in sorted(six.iterkeys(self.props_schemata)):
             prop = self.props_schemata[prop_key]
             if (prop.implemented
                     and prop.support_status.status == support.SUPPORTED):
@@ -188,7 +188,7 @@ Resources:
         section = self._section(parent, _('JSON Syntax'), '%s-json')
 
         props = []
-        for prop_key in sorted(self.props_schemata.keys()):
+        for prop_key in sorted(six.iterkeys(self.props_schemata)):
             prop = self.props_schemata[prop_key]
             if (prop.implemented
                     and prop.support_status.status == support.SUPPORTED):
@@ -352,7 +352,7 @@ def _filter_resources(prefix=None, path=None):
         return path is None or cls.__module__.startswith(path)
 
     filtered_resources = {}
-    for name in sorted(all_resources.keys()):
+    for name in sorted(six.iterkeys(all_resources)):
         if prefix_match(name):
             for cls in all_resources.get(name):
                 if path_match(cls):

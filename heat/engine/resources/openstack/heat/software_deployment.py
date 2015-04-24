@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import six
 import uuid
 
 from oslo_config import cfg
@@ -631,7 +632,7 @@ class SoftwareDeployments(resource_group.ResourceGroup):
     }
 
     def _resource_names(self):
-        return self.properties.get(self.SERVERS, {}).keys()
+        return six.iterkeys(self.properties.get(self.SERVERS, {}))
 
     def _do_prop_replace(self, res_name, res_def_template):
         res_def = copy.deepcopy(res_def_template)

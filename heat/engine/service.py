@@ -377,7 +377,7 @@ class EngineService(service.Service):
                      self.engine_id)
 
         # Wait for all active threads to be finished
-        for stack_id in self.thread_group_mgr.groups.keys():
+        for stack_id in six.iterkeys(self.thread_group_mgr.groups):
             # Ignore dummy service task
             if stack_id == cfg.CONF.periodic_interval:
                 continue

@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -106,7 +108,7 @@ class ProviderNet(net.Net):
 
         self.add_provider_extension(props, self.PROVIDER_PHYSICAL_NETWORK)
 
-        if self.PROVIDER_SEGMENTATION_ID in props.keys():
+        if self.PROVIDER_SEGMENTATION_ID in six.iterkeys(props):
             self.add_provider_extension(props, self.PROVIDER_SEGMENTATION_ID)
 
     def handle_create(self):

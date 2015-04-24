@@ -68,7 +68,7 @@ class TemplatePluginNotRegistered(exception.HeatException):
 
 
 def get_template_class(template_data):
-    available_versions = _template_classes.keys()
+    available_versions = list(six.iterkeys(_template_classes))
     version = get_version(template_data, available_versions)
     version_type = version[0]
     try:
@@ -116,7 +116,8 @@ class Template(collections.Mapping):
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
         self.env = env or environment.Environment({})
-        self.version = get_version(self.t, _template_classes.keys())
+        self.version = get_version(self.t,
+                                   list(six.iterkeys(_template_classes)))
 
     def __deepcopy__(self, memo):
         return Template(copy.deepcopy(self.t, memo), files=self.files,
@@ -228,7 +229,7 @@ class Template(collections.Mapping):
         '''
 
         # check top-level sections
-        for k in self.t.keys():
+        for k in six.iterkeys(self.t):
             if k not in self.SECTIONS:
                 raise exception.InvalidTemplateSection(section=k)
 

@@ -12,6 +12,7 @@
 #    under the License.
 
 import datetime
+import six
 
 from keystoneclient import exceptions as kc_exceptions
 from oslo_config import cfg
@@ -114,7 +115,7 @@ class SignalTest(common.HeatTestCase):
         self.assertEqual('verysecret', rs_data.get('secret_key'))
         self.assertEqual('1234', rs_data.get('user_id'))
         self.assertEqual(rsrc.resource_id, rs_data.get('user_id'))
-        self.assertEqual(4, len(rs_data.keys()))
+        self.assertEqual(4, len(list(six.iterkeys(rs_data))))
         self.m.VerifyAll()
 
     def test_get_user_id(self):

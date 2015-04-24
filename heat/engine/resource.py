@@ -349,8 +349,8 @@ class Resource(object):
         None.
         '''
         # Create a set containing the keys in both current and update template
-        template_keys = set(before.keys())
-        template_keys.update(set(after.keys()))
+        template_keys = set(six.iterkeys(before))
+        template_keys.update(set(six.iterkeys(after)))
 
         # Create a set of keys which differ (or are missing/added)
         changed_keys_set = set([k for k in template_keys

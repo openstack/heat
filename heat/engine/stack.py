@@ -613,7 +613,8 @@ class Stack(collections.Mapping):
         self.t.validate_resource_definitions(self)
 
         # Check duplicate names between parameters and resources
-        dup_names = set(self.parameters.keys()) & set(self.keys())
+        dup_names = (set(six.iterkeys(self.parameters)) &
+                     set(six.iterkeys(self)))
 
         if dup_names:
             LOG.debug("Duplicate names %s" % dup_names)

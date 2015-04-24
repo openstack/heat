@@ -172,7 +172,7 @@ class HOTemplate20130523(template.Template):
     def get_section_name(self, section):
         cfn_to_hot_attrs = dict(
             zip(six.itervalues(self._RESOURCE_HOT_TO_CFN_ATTRS),
-                self._RESOURCE_HOT_TO_CFN_ATTRS.keys()))
+                six.iterkeys(self._RESOURCE_HOT_TO_CFN_ATTRS)))
         return cfn_to_hot_attrs.get(section, section)
 
     def _translate_outputs(self, outputs):
