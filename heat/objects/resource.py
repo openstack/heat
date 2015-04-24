@@ -20,6 +20,7 @@ Resource object
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
+import six
 
 from heat.db import api as db_api
 from heat.objects import fields as heat_fields
@@ -91,7 +92,7 @@ class Resource(
                 resource_name,
                 cls._from_db_object(cls(context), context, resource_db)
             )
-            for resource_name, resource_db in resources_db.iteritems()
+            for resource_name, resource_db in six.iteritems(resources_db)
         ]
         return dict(resources)
 
@@ -119,7 +120,7 @@ class Resource(
                 resource_name,
                 cls._from_db_object(cls(context), context, resource_db)
             )
-            for resource_name, resource_db in resources_db.iteritems()
+            for resource_name, resource_db in six.iteritems(resources_db)
         ]
         return dict(resources)
 
