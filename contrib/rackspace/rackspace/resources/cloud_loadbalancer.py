@@ -547,7 +547,7 @@ class CloudLoadBalancer(resource.Resource):
                 yield norm_node
 
     def _process_nodes(self, node_list):
-        node_itr = itertools.imap(self._process_node, node_list)
+        node_itr = six.moves.map(self._process_node, node_list)
         return itertools.chain.from_iterable(node_itr)
 
     def handle_create(self):

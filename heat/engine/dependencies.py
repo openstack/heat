@@ -222,8 +222,8 @@ class Dependencies(object):
                 return itertools.chain([(rqr, key)], get_edges(rqr))
 
             # Get the edge list for each node that requires the current node
-            edge_lists = itertools.imap(requirer_edges,
-                                        self._graph[key].required_by())
+            edge_lists = six.moves.map(requirer_edges,
+                                       self._graph[key].required_by())
             # Combine the lists into one long list
             return itertools.chain.from_iterable(edge_lists)
 

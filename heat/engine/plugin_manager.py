@@ -51,15 +51,15 @@ class PluginManager(object):
                                                   'heat.engine')
 
         def modules():
-            pkg_modules = itertools.imap(plugin_loader.load_modules,
-                                         packages())
+            pkg_modules = six.moves.map(plugin_loader.load_modules,
+                                        packages())
             return itertools.chain.from_iterable(pkg_modules)
 
         self.modules = list(modules())
 
     def map_to_modules(self, function):
         '''Iterate over the results of calling a function on every module.'''
-        return itertools.imap(function, self.modules)
+        return six.moves.map(function, self.modules)
 
 
 class PluginMapping(object):

@@ -348,7 +348,7 @@ class ResourceRegistry(object):
         # handle: "OS::*" -> "Dreamhost::*"
         def is_a_glob(resource_type):
             return resource_type.endswith('*')
-        globs = itertools.ifilter(is_a_glob, six.iterkeys(self._registry))
+        globs = six.moves.filter(is_a_glob, six.iterkeys(self._registry))
         for pattern in globs:
             if self._registry[pattern].matches(resource_type):
                 yield self._registry[pattern]
