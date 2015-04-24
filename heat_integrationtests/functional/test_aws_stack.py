@@ -13,9 +13,9 @@
 import hashlib
 import json
 import random
-import urlparse
 
 from oslo_log import log as logging
+from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 import yaml
 
@@ -103,7 +103,7 @@ Outputs:
         timeout = self.conf.build_timeout * 10
         tempurl = swiftclient_utils.generate_temp_url(path, timeout,
                                                       key, 'GET')
-        sw_url = urlparse.urlparse(oc.url)
+        sw_url = parse.urlparse(oc.url)
         return '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
 
     def test_nested_stack_create(self):

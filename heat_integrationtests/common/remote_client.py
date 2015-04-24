@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import cStringIO
 import re
 import select
 import socket
@@ -34,7 +33,7 @@ class Client(object):
         self.password = password
         if isinstance(pkey, six.string_types):
             pkey = paramiko.RSAKey.from_private_key(
-                cStringIO.StringIO(str(pkey)))
+                six.moves.cStringIO(str(pkey)))
         self.pkey = pkey
         self.look_for_keys = look_for_keys
         self.key_filename = key_filename

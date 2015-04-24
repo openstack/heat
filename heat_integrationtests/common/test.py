@@ -15,13 +15,13 @@ import random
 import re
 import subprocess
 import time
-import urllib
 
 import fixtures
 from heatclient import exc as heat_exceptions
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
+from six.moves import urllib
 import testscenarios
 import testtools
 
@@ -111,7 +111,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def check_connectivity(self, check_ip):
         def try_connect(ip):
             try:
-                urllib.urlopen('http://%s/' % ip)
+                urllib.request.urlopen('http://%s/' % ip)
                 return True
             except IOError:
                 return False

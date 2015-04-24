@@ -13,9 +13,8 @@
 
 """Controller that returns information on the heat API versions."""
 
-import httplib
-
 from oslo_serialization import jsonutils
+from six.moves import http_client
 import webob.dec
 
 
@@ -43,7 +42,7 @@ class Controller(object):
         body = jsonutils.dumps(dict(versions=version_objs))
 
         response = webob.Response(request=req,
-                                  status=httplib.MULTIPLE_CHOICES,
+                                  status=http_client.MULTIPLE_CHOICES,
                                   content_type='application/json')
         response.body = body
 

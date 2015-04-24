@@ -16,11 +16,11 @@
 import hashlib
 import random
 import time
-import urlparse
 
 from glanceclient import client as gc
 from oslo_config import cfg
 from oslo_log import log as logging
+from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 from troveclient import client as tc
 
@@ -220,7 +220,7 @@ class RackspaceSwiftClient(swift.SwiftClientPlugin):
             timeout = swift.MAX_EPOCH - 60 - time.time()
         tempurl = swiftclient_utils.generate_temp_url(path, timeout, key,
                                                       method)
-        sw_url = urlparse.urlparse(self.client().url)
+        sw_url = parse.urlparse(self.client().url)
         return '%s://%s%s' % (sw_url.scheme, sw_url.netloc, tempurl)
 
 
@@ -235,7 +235,7 @@ class RackspaceGlanceClient(glance.GlanceClientPlugin):
             region_name=cfg.CONF.region_name_for_services)
         # Rackspace service catalog includes a tenant scoped glance
         # endpoint so we have to munge the url a bit
-        glance_url = urlparse.urlparse(endpoint)
+        glance_url = parse.urlparse(endpoint)
         # remove the tenant and following from the url
         endpoint = "%s://%s" % (glance_url.scheme, glance_url.hostname)
         args = {
