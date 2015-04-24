@@ -67,8 +67,10 @@ class StackResource(resource.Resource):
             nested_stack.strict_validate = False
             nested_stack.validate()
         except Exception as ex:
-            msg = _("Failed to validate: %s") % six.text_type(ex)
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.StackValidationFailed(
+                error=_("Failed to validate"),
+                path=[self.stack.t.get_section_name('resources'), self.name],
+                message=six.text_type(ex))
 
     def _outputs_to_attribs(self, json_snippet):
         outputs = json_snippet.get('Outputs')
