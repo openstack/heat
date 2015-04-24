@@ -18,6 +18,7 @@ import json
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import excutils
 import six
 
 from heat.common import exception
@@ -83,6 +84,20 @@ class StackResource(resource.Resource):
         # Always issue an update to the nested stack and let the individual
         # resources in it decide if they need updating.
         return True
+
+    @scheduler.wrappertask
+    def update(self, after, before=None, prev_resource=None):
+        try:
+            yield super(StackResource, self).update(after, before,
+                                                    prev_resource)
+        except StopIteration:
+            with excutils.save_and_reraise_exception():
+                stack_identity = identifier.HeatIdentifier(
+                    self.context.tenant_id,
+                    self.physical_resource_name(),
+                    self.resource_id)
+                self.rpc_client().stack_cancel_update(self.context,
+                                                      stack_identity)
 
     def nested(self, force_reload=False, show_deleted=False):
         '''Return a Stack object representing the nested (child) stack.
@@ -277,6 +292,13 @@ class StackResource(resource.Resource):
             message, msg_trace = full_message.split('\n', 1)
         else:
             message = full_message
+
+        if (isinstance(ex, exception.ActionInProgress) and
+                self.stack.action == self.stack.ROLLBACK):
+            # The update was interrupted and the rollback is already in
+            # progress, so just ignore the error and wait for the rollback to
+            # finish
+            return
 
         if isinstance(ex, exception.HeatException):
             message = ex.message
