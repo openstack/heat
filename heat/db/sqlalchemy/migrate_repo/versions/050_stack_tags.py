@@ -22,10 +22,3 @@ def upgrade(migrate_engine):
     stack = sqlalchemy.Table('stack', meta, autoload=True)
     tags = sqlalchemy.Column('tags', heat_db_types.Json)
     tags.create(stack)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.tags.drop()

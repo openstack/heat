@@ -21,12 +21,3 @@ def upgrade(migrate_engine):
     software_config = sqlalchemy.Table('software_config', meta, autoload=True)
     software_config.c.config.alter(type=types.Json)
     software_config.c.io.drop()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    software_config = sqlalchemy.Table('software_config', meta, autoload=True)
-    software_config.c.config.alter(type=types.LongText)
-
-    io = sqlalchemy.Column('io', types.Json)
-    io.create(software_config)

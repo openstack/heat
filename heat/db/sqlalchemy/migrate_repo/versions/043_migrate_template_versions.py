@@ -12,12 +12,9 @@
 
 import time
 
-from migrate.versioning import util as migrate_util
 from oslo_serialization import jsonutils
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
-
-from heat.common.i18n import _
 
 
 def upgrade(migrate_engine):
@@ -58,9 +55,3 @@ def upgrade(migrate_engine):
                         execute())
                     session.commit()
     session.close()
-
-
-def downgrade(migrate_engine):
-    migrate_util.log.warning(_('This version cannot be downgraded because '
-                               'it involves a data migration to the '
-                               'raw_template table.'))

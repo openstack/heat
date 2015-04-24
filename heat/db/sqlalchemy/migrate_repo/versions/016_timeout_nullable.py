@@ -20,14 +20,3 @@ def upgrade(migrate_engine):
 
     stack = sqlalchemy.Table('stack', meta, autoload=True)
     stack.c.timeout.alter(nullable=True)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    # NOTE(viktors): We must be sure, that there are no nullable columns in
-    #                `stack` table before we alter it.
-    migrate_engine.execute('UPDATE stack set timeout=60 WHERE timeout IS NULL')
-    stack.c.timeout.alter(nullable=False)

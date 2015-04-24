@@ -19,11 +19,3 @@ def upgrade(migrate_engine):
     software_deployment = sqlalchemy.Table(
         'software_deployment', meta, autoload=True)
     software_deployment.c.signal_id.drop()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    software_deployment = sqlalchemy.Table(
-        'software_deployment', meta, autoload=True)
-    signal_id = sqlalchemy.Column('signal_id', sqlalchemy.String(1024))
-    signal_id.create(software_deployment)

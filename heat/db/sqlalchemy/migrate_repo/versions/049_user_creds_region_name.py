@@ -22,10 +22,3 @@ def upgrade(migrate_engine):
     region_name = sqlalchemy.Column('region_name',
                                     sqlalchemy.String(length=255))
     region_name.create(user_creds)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-    user_creds.c.region_name.drop()

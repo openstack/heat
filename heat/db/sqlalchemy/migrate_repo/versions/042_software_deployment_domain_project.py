@@ -22,10 +22,3 @@ def upgrade(migrate_engine):
     stack_user_project_id = sqlalchemy.Column('stack_user_project_id',
                                               sqlalchemy.String(length=64))
     stack_user_project_id.create(stack)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('software_deployment', meta, autoload=True)
-    stack.c.stack_user_project_id.drop()

@@ -24,12 +24,3 @@ def upgrade(migrate_engine):
     # action is e.g "CREATE" and status is e.g "IN_PROGRESS"
     event.c.name.alter(name='resource_status')
     sqlalchemy.Column('resource_action', sqlalchemy.String(255)).create(event)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    event = sqlalchemy.Table('event', meta, autoload=True)
-    event.c.resource_status.alter(name='name')
-    event.c.resource_action.drop()

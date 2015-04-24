@@ -40,12 +40,3 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
     service.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    service = sqlalchemy.Table(
-        'service', meta, autoload=True)
-    service.drop()

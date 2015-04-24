@@ -45,12 +45,3 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
     sync_point.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    sync_point = sqlalchemy.Table(
-        'sync_point', meta, autoload=True)
-    sync_point.drop()

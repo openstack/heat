@@ -22,13 +22,3 @@ def upgrade(migrate_engine):
     if migrate_engine.name == 'postgresql':
         resource = sqlalchemy.Table('resource', meta)
         resource.c.id.alter(server_default=None)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    if migrate_engine.name == 'postgresql':
-        resource = sqlalchemy.Table('resource', meta, autoload=True)
-        resource.c.id.alter(
-            server_default=sqlalchemy.Sequence('resource_id_seq').next_value())

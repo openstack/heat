@@ -25,12 +25,3 @@ def upgrade(migrate_engine):
     action.create(resource)
     resource.c.state.alter(name='status')
     resource.c.state_description.alter(name='status_reason')
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-    resource.c.action.drop()
-    resource.c.status.alter(name='state')
-    resource.c.status_reason.alter(name='state_description')

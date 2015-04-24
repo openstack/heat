@@ -43,11 +43,3 @@ def upgrade(migrate_engine):
     )
     sqlalchemy.Table('stack', meta, autoload=True)
     snapshot.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    snapshot = sqlalchemy.Table('snapshot', meta, autoload=True)
-    snapshot.drop()

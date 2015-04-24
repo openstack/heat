@@ -32,11 +32,3 @@ def upgrade(migrate_engine):
     )
     sqlalchemy.Table('stack', meta, autoload=True)
     stack_lock.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    stack_lock = sqlalchemy.Table('stack_lock', meta, autoload=True)
-    stack_lock.drop()

@@ -79,52 +79,6 @@ def _upgrade_sqlite(migrate_engine):
     _add_indexes(migrate_engine, new_stack)
 
 
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-
-    if migrate_engine.name == 'sqlite':
-        _downgrade_sqlite(migrate_engine)
-    else:
-        raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-        fkey = ForeignKeyConstraint(columns=[stack.c.prev_raw_template_id],
-                                    refcolumns=[raw_template.c.id],
-                                    name='prev_raw_template_ref')
-        fkey.drop()
-        stack.c.prev_raw_template_id.drop()
-        stack.c.current_traversal.drop()
-        stack.c.current_deps.drop()
-
-
-def _downgrade_sqlite(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    table_name = stack.name
-    # ignore CheckConstraints and FK Constraint on prev_raw_template_id.
-    ignorecols = [
-        stack.c.prev_raw_template_id.name,
-        stack.c.current_traversal.name,
-        stack.c.current_deps.name,
-    ]
-    ignorecons = [
-        'prev_raw_template_ref',
-    ]
-    new_stack = migrate_utils.clone_table(table_name + '__tmp__', stack, meta,
-                                          ignorecols=ignorecols,
-                                          ignorecons=ignorecons)
-
-    migrate_utils.migrate_data(migrate_engine,
-                               stack,
-                               new_stack,
-                               ['prev_raw_template_id',
-                                'current_traversal',
-                                'current_deps'])
-
-    # add the indexes back to new table
-    _add_indexes(migrate_engine, new_stack)
-
-
 def _add_indexes(migrate_engine, stack):
     name_index = sqlalchemy.Index('ix_stack_name',
                                   stack.c.name,

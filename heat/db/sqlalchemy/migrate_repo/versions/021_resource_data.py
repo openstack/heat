@@ -38,11 +38,3 @@ def upgrade(migrate_engine):
     )
     sqlalchemy.Table('resource', meta, autoload=True)
     resource_data.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    resource_data = sqlalchemy.Table('resource_data', meta, autoload=True)
-    resource_data.drop()

@@ -158,8 +158,3 @@ def upgrade(migrate_engine):
             # to the previously existing state.
             meta.drop_all(tables=tables[:index])
             raise
-
-
-def downgrade(migrate_engine):
-    raise NotImplementedError('Database downgrade not supported - '
-                              'would drop all tables')

@@ -13,7 +13,6 @@
 
 import sqlalchemy
 from sqlalchemy.dialects import mysql
-from sqlalchemy import types as sqltypes
 
 
 def upgrade(migrate_engine):
@@ -33,22 +32,3 @@ def upgrade(migrate_engine):
 
     watch_data = sqlalchemy.Table('watch_data', meta, autoload=True)
     watch_data.c.data.alter(type=mysql.LONGTEXT())
-
-
-def downgrade(migrate_engine):
-    if migrate_engine.name != 'mysql':
-        return
-
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.parameters.alter(type=sqltypes.TEXT())
-
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-    resource.c.rsrc_metadata.alter(type=sqltypes.TEXT())
-
-    watch_rule = sqlalchemy.Table('watch_rule', meta, autoload=True)
-    watch_rule.c.rule.alter(type=sqltypes.TEXT())
-
-    watch_data = sqlalchemy.Table('watch_data', meta, autoload=True)
-    watch_data.c.data.alter(type=sqltypes.TEXT())

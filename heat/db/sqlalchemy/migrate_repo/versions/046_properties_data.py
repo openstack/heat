@@ -23,10 +23,3 @@ def upgrade(migrate_engine):
     resources = sqlalchemy.Table('resource', meta, autoload=True)
     properties_data = sqlalchemy.Column('properties_data', heat_db_types.Json)
     properties_data.create(resources)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    table = sqlalchemy.Table('resource', meta, autoload=True)
-    table.c.properties_data.drop()

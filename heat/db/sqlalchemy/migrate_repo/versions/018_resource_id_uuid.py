@@ -23,15 +23,3 @@ def upgrade(migrate_engine):
 
     resource.c.id.alter(sqlalchemy.String(36), primary_key=True,
                         default=lambda: str(uuid.uuid4()))
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-
-    try:
-        resource.c.id.alter(sqlalchemy.Integer, primary_key=True)
-    except Exception:
-        # NOTE(sshturm): since there is no way to downgrade just passing
-        pass

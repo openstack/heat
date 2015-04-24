@@ -67,15 +67,3 @@ def upgrade(migrate_engine):
         mysql_charset='utf8'
     )
     software_deployment.create()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    software_deployment = sqlalchemy.Table(
-        'software_deployment', meta, autoload=True)
-    software_deployment.drop()
-    software_config = sqlalchemy.Table(
-        'software_config', meta, autoload=True)
-    software_config.drop()

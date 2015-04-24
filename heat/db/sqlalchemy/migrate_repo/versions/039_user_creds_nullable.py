@@ -20,11 +20,3 @@ def upgrade(migrate_engine):
 
     stack = sqlalchemy.Table('stack', meta, autoload=True)
     stack.c.user_creds_id.alter(nullable=True)
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData()
-    meta.bind = migrate_engine
-
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack.c.user_creds_id.alter(nullable=False)

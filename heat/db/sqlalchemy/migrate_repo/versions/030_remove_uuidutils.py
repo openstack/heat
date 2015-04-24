@@ -30,8 +30,3 @@ def upgrade(migrate_engine):
     resource = sqlalchemy.Table('resource', meta, autoload=True)
     resource.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
                         default=lambda: str(uuid.uuid4()))
-
-
-def downgrade(migrate_engine):
-    # since uuid.uuid4() works so no need to do downgrade
-    pass

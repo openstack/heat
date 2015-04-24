@@ -21,16 +21,3 @@ def upgrade(migrate_engine):
 
     user_creds.c.aws_creds.drop()
     user_creds.c.aws_auth_url.drop()
-
-
-def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-
-    aws_creds = sqlalchemy.Column('aws_creds',
-                                  sqlalchemy.String(length=255))
-    aws_creds.create(user_creds)
-    aws_auth_url = sqlalchemy.Column('aws_auth_url',
-                                     sqlalchemy.String(length=255))
-    aws_auth_url.create(user_creds)
