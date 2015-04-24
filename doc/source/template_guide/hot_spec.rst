@@ -256,6 +256,31 @@ constraints
     This *optional* block allows for specifying additional constraints on the
     parameter, such as minimum or maximum values for numeric parameters.
 
+The table below describes all currently supported types with examples:
+
++----------------------+-------------------------------+------------------+
+| Type                 | Description                   | Examples         |
++======================+===============================+==================+
+| string               | A literal string.             | "String param"   |
++----------------------+-------------------------------+------------------+
+| number               | An integer or float.          | "2"; "0.2"       |
++----------------------+-------------------------------+------------------+
+| comma_delimited_list | An array of literal strings   | ["one", "two"];  |
+|                      | that are separated by commas. | "one, two";      |
+|                      | The total number of strings   | Note: "one, two" |
+|                      | should be one more than the   | returns          |
+|                      | total number of commas.       | ["one", " two"]  |
++----------------------+-------------------------------+------------------+
+| json                 | A JSON-formatted map or list. | {"key": "value"} |
++----------------------+-------------------------------+------------------+
+| boolean              | Boolean type value, which can | "on"; "n"        |
+|                      | be equal "t", "true", "on",   |                  |
+|                      | "y", "yes", or "1" for true   |                  |
+|                      | value and "f", "false",       |                  |
+|                      | "off", "n", "no", or "0" for  |                  |
+|                      | false value.                  |                  |
++----------------------+-------------------------------+------------------+
+
 The following example shows a minimalistic definition of two parameters. Note
 that the description and label are actually optional, but is good practice to
 provide a useful description and label for each parameter.
