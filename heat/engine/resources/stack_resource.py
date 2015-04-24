@@ -508,8 +508,8 @@ class StackResource(resource.Resource):
     def implementation_signature(self):
         schema_names = ([prop for prop in self.properties_schema] +
                         [at for at in self.attributes_schema])
-        schema_hash = hashlib.sha1(';'.join(schema_names))
+        schema_hash = hashlib.sha256(';'.join(schema_names))
         definition = {'template': self.child_template(),
                       'files': self.stack.t.files}
-        definition_hash = hashlib.sha1(jsonutils.dumps(definition))
+        definition_hash = hashlib.sha256(jsonutils.dumps(definition))
         return (schema_hash.hexdigest(), definition_hash.hexdigest())
