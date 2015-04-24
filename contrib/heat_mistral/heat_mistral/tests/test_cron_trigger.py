@@ -40,6 +40,7 @@ class FakeCronTrigger(object):
     def __init__(self, name):
         self.name = name
         self.next_execution_time = '2015-03-01 00:00:00'
+        self.remaining_executions = 3
 
 
 class CronTriggerTest(common.HeatTestCase):
@@ -89,6 +90,7 @@ class CronTriggerTest(common.HeatTestCase):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
         self.assertEqual('2015-03-01 00:00:00',
                          ct.FnGetAtt('next_execution_time'))
+        self.assertEqual(3, ct.FnGetAtt('remaining_executions'))
 
     def test_delete(self):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
