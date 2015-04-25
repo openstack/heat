@@ -751,7 +751,7 @@ class EngineService(service.Service):
         elif stack_lock.StackLock.engine_alive(cnxt, engine_id):
             cancel_result = self._remote_call(
                 cnxt, engine_id, self.listener.SEND,
-                stack_identity, rpc_api.THREAD_CANCEL)
+                stack_identity=stack_identity, message=rpc_api.THREAD_CANCEL)
             if cancel_result is None:
                 LOG.debug("Successfully sent %(msg)s message "
                           "to remote task on engine %(eng)s" % {
@@ -844,7 +844,7 @@ class EngineService(service.Service):
             return s.raw_template.template
         return None
 
-    def _remote_call(self, cnxt, lock_engine_id, call, *args, **kwargs):
+    def _remote_call(self, cnxt, lock_engine_id, call, **kwargs):
         timeout = cfg.CONF.engine_life_check_timeout
         self.cctxt = self._client.prepare(
             version='1.0',
@@ -852,7 +852,7 @@ class EngineService(service.Service):
             topic=rpc_api.LISTENER_TOPIC,
             server=lock_engine_id)
         try:
-            self.cctxt.call(cnxt, call, *args, **kwargs)
+            self.cctxt.call(cnxt, call, **kwargs)
         except messaging.MessagingTimeout:
             return False
 

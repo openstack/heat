@@ -27,6 +27,7 @@ import six
 
 from heat.common import exception
 from heat.common import identifier
+from heat.common import messaging
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.db import api as db_api
@@ -1073,6 +1074,29 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.man.stack_cancel_update(self.ctx, old_stack.identifier())
         self.man.thread_group_mgr.send.assert_called_once_with(old_stack.id,
                                                                'cancel')
+
+    def test_stack_cancel_update_different_engine(self):
+        stack_name = 'service_update_cancel_test_stack'
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack.state_set(old_stack.UPDATE, old_stack.IN_PROGRESS,
+                            'test_override')
+        old_stack.disable_rollback = False
+        old_stack.store()
+        load_mock = self.patchobject(parser.Stack, 'load')
+        load_mock.return_value = old_stack
+        lock_mock = self.patchobject(stack_lock.StackLock, 'try_acquire')
+        another_engine_has_lock = str(uuid.uuid4())
+        lock_mock.return_value = another_engine_has_lock
+        self.patchobject(stack_lock.StackLock,
+                         'engine_alive').return_value(True)
+        self.man.listener = mock.Mock()
+        self.man.listener.SEND = 'send'
+        self.man._client = messaging.get_rpc_client(
+            version=self.man.RPC_API_VERSION)
+        # In fact the another engine is not alive, so the call will timeout
+        self.assertRaises(dispatcher.ExpectedException,
+                          self.man.stack_cancel_update,
+                          self.ctx, old_stack.identifier())
 
     def test_stack_cancel_update_wrong_state_fails(self):
         stack_name = 'service_update_cancel_test_stack'
