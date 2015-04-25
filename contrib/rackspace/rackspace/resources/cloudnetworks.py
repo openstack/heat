@@ -22,6 +22,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+import six
 
 try:
     from pyrax.exceptions import NetworkInUse  # noqa
@@ -161,7 +162,7 @@ class CloudNetwork(resource.Resource):
     def _resolve_attribute(self, name):
         net = self.network()
         if net:
-            return unicode(getattr(net, name))
+            return six.text_type(getattr(net, name))
         return ""
 
 

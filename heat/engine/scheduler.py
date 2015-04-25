@@ -22,6 +22,7 @@ from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import excutils
 import six
+from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LI
@@ -118,8 +119,8 @@ class ExceptionGroup(Exception):
         self.exceptions = list(exceptions)
 
     def __str__(self):
-        return unicode([unicode(ex).encode('utf-8')
-                        for ex in self.exceptions]).encode('utf-8')
+        return six.text_type([six.text_type(ex).encode('utf-8')
+                              for ex in self.exceptions]).encode('utf-8')
 
     def __unicode__(self):
         return six.text_type(map(six.text_type, self.exceptions))
@@ -397,7 +398,7 @@ class DependencyTaskGroup(object):
                 raise ExceptionGroup(v for t, v, tb in raised_exceptions)
             else:
                 exc_type, exc_val, traceback = raised_exceptions[0]
-                raise exc_type, exc_val, traceback
+                raise_(exc_type, exc_val, traceback)
 
     def cancel_all(self, grace_period=None):
         for r in six.itervalues(self._runners):

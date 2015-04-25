@@ -939,7 +939,7 @@ class CloudLoadBalancer(resource.Resource):
     def _public_ip(self, lb):
         for ip in lb.virtual_ips:
             if ip.type == 'PUBLIC':
-                return unicode(ip.address)
+                return six.text_type(ip.address)
 
     def _resolve_attribute(self, key):
         if self.resource_id:

@@ -21,6 +21,7 @@ import sys
 from oslo_log import log as logging
 import six
 from six.moves.urllib import parse as urlparse
+from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -86,7 +87,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                                     payload)
 
                 # re-raise original exception since it may have been clobbered
-                raise exc_info[0], exc_info[1], exc_info[2]
+                raise_(exc_info[0], exc_info[1], exc_info[2])
 
         return six.wraps(f)(wrapped)
     return inner
@@ -116,13 +117,13 @@ class HeatException(Exception):
                 LOG.error("%s: %s" % (name, value))  # noqa
 
             if _FATAL_EXCEPTION_FORMAT_ERRORS:
-                raise exc_info[0], exc_info[1], exc_info[2]
+                raise_(exc_info[0], exc_info[1], exc_info[2])
 
     def __str__(self):
-        return unicode(self.message).encode('UTF-8')
+        return six.text_type(self.message).encode('UTF-8')
 
     def __unicode__(self):
-        return unicode(self.message)
+        return six.text_type(self.message)
 
     def __deepcopy__(self, memo):
         return self.__class__(**self.kwargs)

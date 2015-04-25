@@ -447,7 +447,7 @@ class Replace(function.Function):
                 raise TypeError(_('"%s" params must be strings or numbers') %
                                 self.fn_name)
 
-            return string.replace(placeholder, unicode(value))
+            return string.replace(placeholder, six.text_type(value))
 
         return reduce(replace, six.iteritems(mapping), template)
 
