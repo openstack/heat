@@ -198,6 +198,6 @@ def select_from_attribute(attribute_value, path):
         return collection[key]
 
     try:
-        return reduce(get_path_component, path, attribute_value)
+        return six.moves.reduce(get_path_component, path, attribute_value)
     except (KeyError, IndexError, TypeError):
         return None
