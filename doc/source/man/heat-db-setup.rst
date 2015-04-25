@@ -15,7 +15,7 @@ DESCRIPTION
 ===========
 heat-db-setup is a tool which configures the local MySQL database for
 heat. Typically distro-specific tools would provide this functionality
-so please read the distro-specific documentation for configuring Heat.
+so please read the distro-specific documentation for configuring heat.
 
 
 COMMANDS
