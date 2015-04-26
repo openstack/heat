@@ -12,6 +12,8 @@
 #    under the License.
 
 import copy
+import fixtures
+import logging
 import time
 
 from keystoneclient import exceptions as kc_exceptions
@@ -420,6 +422,23 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual('Resource DELETE failed: Exception: foo',
                          self.stack.status_reason)
+
+    def test_delete_stack_with_resource_log_is_clear(self):
+        debug_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.DEBUG,
+                                format="%(levelname)8s [%(name)s] %("
+                                       "message)s"))
+        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'delete_log_test',
+                                 template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
+        self.stack.delete()
+        self.assertNotIn("destroy from None running",
+                         debug_logger.output)
 
     def test_stack_user_project_id_delete_fail(self):
 
