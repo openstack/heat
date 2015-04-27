@@ -647,7 +647,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.SNAPSHOT, rsrc.FAILED), rsrc.state)
         self.assertEqual("Error: error", rsrc.status_reason)
 
-        self.assertEqual({}, resource_data_object.ResourceData.get_all(rsrc))
+        self.assertEqual({u'backup_id': u'backup-123'},
+                         resource_data_object.ResourceData.get_all(rsrc))
 
         self.m.VerifyAll()
 

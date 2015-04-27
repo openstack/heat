@@ -1412,12 +1412,12 @@ class Server(stack_user.StackUser):
     def handle_snapshot(self):
         image_id = self.nova().servers.create_image(
             self.resource_id, self.physical_resource_name())
+        self.data_set('snapshot_image_id', image_id)
         return image_id
 
     def check_snapshot_complete(self, image_id):
         image = self.nova().images.get(image_id)
         if image.status == 'ACTIVE':
-            self.data_set('snapshot_image_id', image.id)
             return True
         elif image.status == 'ERROR' or image.status == 'DELETED':
             raise exception.Error(image.status)
@@ -1425,7 +1425,7 @@ class Server(stack_user.StackUser):
         return False
 
     def handle_delete_snapshot(self, snapshot):
-        image_id = snapshot['resource_data']['snapshot_image_id']
+        image_id = snapshot['resource_data'].get('snapshot_image_id')
         try:
             self.nova().images.delete(image_id)
         except Exception as e:
