@@ -1335,23 +1335,26 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def test_stack_domain_user_token(self):
         """Test stack_domain_user_token function."""
-        dummysession = self.m.CreateMockAnything()
-        dummyresp = self.m.CreateMockAnything()
-        dummyresp.headers = {'X-Subject-Token': 'dummytoken'}
-        dummysession.post('http://server.test:5000/v3/auth/tokens?nocatalog',
-                          authenticated=False,
-                          headers={'Accept': 'application/json'},
-                          json=mox.IgnoreArg()).AndReturn(dummyresp)
-        self.m.StubOutWithMock(ks_session, 'Session')
-        ks_session.Session.construct(mox.IsA(dict)).AndReturn(dummysession)
+        dum_tok = 'dummytoken'
+        mock_ks_auth = self.m.CreateMockAnything()
+        mock_ks_auth.get_token(mox.IsA(ks_session.Session)).AndReturn(dum_tok)
+
+        m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
+                                password='apassw',
+                                project_id='aproject',
+                                user_id='duser',
+                                include_catalog=False)
+        m.AndReturn(mock_ks_auth)
+
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        token = heat_ks_client.stack_domain_user_token(
-            user_id='duser', project_id='aproject', password='apassw')
-        self.assertEqual('dummytoken', token)
+        token = heat_ks_client.stack_domain_user_token(user_id='duser',
+                                                       project_id='aproject',
+                                                       password='apassw')
+        self.assertEqual(dum_tok, token)
 
     def test_stack_domain_user_token_err_nodomain(self):
         """Test stack_domain_user_token error path."""
