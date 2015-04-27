@@ -14,21 +14,21 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The `heat-keystone-setup-domain` tool configures Keystone by creating
+The `heat-keystone-setup-domain` tool configures keystone by creating
 a 'stack user domain' and the user credential used to manage this domain.
 A 'stack user domain' can be treated as a namespace for projects,
-groups and users created by Heat.  The domain will have an admin user
+groups and users created by heat.  The domain will have an admin user
 that manages other users, groups and projects in the domain.
 
 This script requires admin keystone credentials to be available in the
 shell environment by setting `OS_USERNAME` and `OS_PASSWORD`.
 
 After running this script, a user needs to take actions to check or
-modify Heat configuration file (e.g. /etc/heat/heat.conf).  The tool
+modify the heat configuration file (e.g. /etc/heat/heat.conf).  The tool
 is NOT performing these updates on behalf of the user.
 
 Distributions may provide other tools to setup 'stack user domain' for
-use with Heat, so check the distro documentation first.  Other tools
+use with heat, so check the distro documentation first.  Other tools
 are available to set up the 'stack user domain', for example
 `python-openstackclient`, which is preferred to this tool where it is
 available.
