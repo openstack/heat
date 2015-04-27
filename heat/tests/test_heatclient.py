@@ -95,7 +95,9 @@ class KeystoneClientTest(common.HeatTestCase):
         m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                                 password='adminsecret',
                                 domain_id='adomain123',
+                                domain_name=None,
                                 user_domain_id='adomain123',
+                                user_domain_name=None,
                                 username='adminuser123')
         m.AndReturn(mock_ks_auth)
 
@@ -1473,7 +1475,9 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
 
         m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                                 password='adminsecret',
+                                domain_id=None,
                                 domain_name='fake_domain_name',
+                                user_domain_id=None,
                                 user_domain_name='fake_domain_name',
                                 username='adminuser123')
 
