@@ -630,8 +630,9 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create(fv.id).AndReturn(fb)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
+        fail_reason = 'Could not determine which Swift endpoint to use'
         self.cinder_fc.backups.get(fb.id).AndReturn(
-            vt_base.FakeBackup('error'))
+            vt_base.FakeBackup('error', fail_reason=fail_reason))
 
         self.m.ReplayAll()
 
@@ -645,7 +646,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
                           scheduler.TaskRunner(rsrc.snapshot))
 
         self.assertEqual((rsrc.SNAPSHOT, rsrc.FAILED), rsrc.state)
-        self.assertEqual("Error: error", rsrc.status_reason)
+        self.assertIn(fail_reason, rsrc.status_reason)
 
         self.assertEqual({}, resource_data_object.ResourceData.get_all(rsrc))
 
