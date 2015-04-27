@@ -918,7 +918,7 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def test_user_creds_password(self):
         self.ctx.trust_id = None
-        self.ctx.region_name = 'regionOne'
+        self.ctx.region_name = 'RegionOne'
         db_creds = db_api.user_creds_create(self.ctx)
         load_creds = db_api.user_creds_get(db_creds.id)
 
@@ -926,7 +926,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual('password', load_creds.get('password'))
         self.assertEqual('test_tenant', load_creds.get('tenant'))
         self.assertEqual('test_tenant_id', load_creds.get('tenant_id'))
-        self.assertEqual('regionOne', load_creds.get('region_name'))
+        self.assertEqual('RegionOne', load_creds.get('region_name'))
         self.assertIsNotNone(load_creds.get('created_at'))
         self.assertIsNone(load_creds.get('updated_at'))
         self.assertEqual('http://server.test:5000/v2.0',
