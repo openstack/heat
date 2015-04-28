@@ -78,19 +78,19 @@ class ZaqarQueue(resource.Resource):
                                   % queue_name)
         queue.ensure_exists()
         self.resource_id_set(queue_name)
-        return queue
+        return queue_name
 
-    def check_create_complete(self, queue):
+    def check_create_complete(self, queue_name):
         """Set metadata of the newly created queue."""
+        queue = self.client().queue(queue_name, auto_create=False)
         if queue.exists():
             metadata = self.properties.get('metadata')
             if metadata:
                 queue.metadata(new_meta=metadata)
             return True
-
-        queue_name = self.physical_resource_name()
-        raise exception.Error(_('Message queue %s creation failed.')
-                              % queue_name)
+        else:
+            raise exception.Error(_('Message queue %s creation failed.')
+                                  % queue_name)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Update queue metadata."""

@@ -108,6 +108,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         fake_q.exists().AndReturn(False)
         self.m.StubOutWithMock(fake_q, 'ensure_exists')
         fake_q.ensure_exists()
+        self.fc.queue(queue.physical_resource_name(),
+                      auto_create=False).AndReturn(fake_q)
         fake_q.exists().AndReturn(True)
         self.m.StubOutWithMock(fake_q, 'metadata')
         fake_q.metadata(new_meta=queue.properties.get('metadata'))
@@ -156,6 +158,8 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.m.StubOutWithMock(fake_q, 'exists')
         fake_q.exists().AndReturn(False)
         self.m.StubOutWithMock(fake_q, 'ensure_exists')
+        self.fc.queue(queue.physical_resource_name(),
+                      auto_create=False).AndReturn(fake_q)
         fake_q.ensure_exists()
         fake_q.exists().AndReturn(False)
 
