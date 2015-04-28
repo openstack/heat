@@ -3312,42 +3312,49 @@ class StackServiceTest(common.HeatTestCase):
 
         self.eng.start()
         # Add dummy thread group to test thread_group_mgr.stop() is executed?
-        dtg = tools.DummyThreadGroup()
-        self.eng.thread_group_mgr.groups['sample-uuid'] = dtg
+        dtg1 = tools.DummyThreadGroup()
+        dtg2 = tools.DummyThreadGroup()
+        self.eng.thread_group_mgr.groups['sample-uuid1'] = dtg1
+        self.eng.thread_group_mgr.groups['sample-uuid2'] = dtg2
         self.eng.service_id = 'sample-service-uuid'
 
-        self.eng.stop()
+        orig_stop = self.eng.thread_group_mgr.stop
 
-        # RPC server
-        self.eng._stop_rpc_server.assert_called_once_with()
+        with mock.patch.object(self.eng.thread_group_mgr, 'stop') as stop:
+            stop.side_effect = orig_stop
 
-        if cfg.CONF.convergence_engine:
-            # WorkerService
-            self.eng.worker_service.stop.assert_called_once_with()
+            self.eng.stop()
 
-        # Wait for all active threads to be finished
-        self.eng.thread_group_mgr.stop.assert_called_with(
-            'sample-uuid',
-            True)
+            # RPC server
+            self.eng._stop_rpc_server.assert_called_once_with()
 
-        # # Manage Thread group
-        self.eng.manage_thread_grp.stop.assert_called_with(False)
+            if cfg.CONF.convergence_engine:
+                # WorkerService
+                self.eng.worker_service.stop.assert_called_once_with()
 
-        # Service delete
-        admin_context_method.assert_called_once_with()
-        ctxt = admin_context_method.return_value
-        service_delete_method.assert_called_once_with(
-            ctxt,
-            self.eng.service_id
-        )
+            # Wait for all active threads to be finished
+            calls = [mock.call('sample-uuid1', True),
+                     mock.call('sample-uuid2', True)]
+            self.eng.thread_group_mgr.stop.assert_has_calls(
+                calls,
+                True)
+
+            # # Manage Thread group
+            self.eng.manage_thread_grp.stop.assert_called_with(False)
+
+            # Service delete
+            admin_context_method.assert_called_once_with()
+            ctxt = admin_context_method.return_value
+            service_delete_method.assert_called_once_with(
+                ctxt,
+                self.eng.service_id
+            )
 
     @mock.patch.object(service.EngineService,
                        '_stop_rpc_server')
     @mock.patch.object(worker.WorkerService,
                        'stop')
     @mock.patch.object(threadgroup.ThreadGroup,
-                       'stop')
-    @mock.patch.object(service.ThreadGroupManager,
                        'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
@@ -3357,7 +3364,6 @@ class StackServiceTest(common.HeatTestCase):
             self,
             service_delete_method,
             admin_context_method,
-            thread_group_mgr_stop,
             thread_group_stop,
             worker_service_stop,
             rpc_server_stop):
@@ -3371,8 +3377,6 @@ class StackServiceTest(common.HeatTestCase):
                        '_stop_rpc_server')
     @mock.patch.object(threadgroup.ThreadGroup,
                        'stop')
-    @mock.patch.object(service.ThreadGroupManager,
-                       'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
     @mock.patch('heat.objects.service.Service.delete',
@@ -3381,7 +3385,6 @@ class StackServiceTest(common.HeatTestCase):
             self,
             service_delete_method,
             admin_context_method,
-            thread_group_mgr_stop,
             thread_group_stop,
             rpc_server_stop):
         cfg.CONF.set_default('convergence_engine', False)
