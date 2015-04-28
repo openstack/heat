@@ -43,7 +43,7 @@ class TestRequestContext(common.HeatTestCase):
                     'tenant': 'atenant',
                     'auth_url': 'http://xyz',
                     'aws_creds': 'blah',
-                    'region_name': 'regionOne',
+                    'region_name': 'RegionOne',
                     'user_identity': 'mick atenant'}
 
         super(TestRequestContext, self).setUp()
