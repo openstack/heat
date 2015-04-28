@@ -1175,8 +1175,12 @@ class Stack(collections.Mapping):
                                e.args[0] if e.args else
                                'Failed stack pre-ops: %s' % six.text_type(e))
                 return
+
+        def destroy_resource(stack_resource):
+            return stack_resource.destroy()
+
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
-                                                    resource.Resource.destroy,
+                                                    destroy_resource,
                                                     reverse=True)
         try:
             scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
