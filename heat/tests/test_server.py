@@ -3110,6 +3110,26 @@ class ServersTest(common.HeatTestCase):
                          resource_data_object.ResourceData.get_all(server))
         self.m.VerifyAll()
 
+    def test_server_check_snapshot_complete_image_in_deleted(self):
+        self.test_server_check_snapshot_complete_fail(image_status='DELETED')
+
+    def test_server_check_snapshot_complete_image_in_error(self):
+        self.test_server_check_snapshot_complete_fail()
+
+    def test_server_check_snapshot_complete_fail(self, image_status='ERROR'):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        server = self._create_test_server(return_server,
+                                          'test_server_snapshot')
+        image_in_error = mock.Mock()
+        image_in_error.status = image_status
+        self.fc.images.get = mock.Mock(return_value=image_in_error)
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(server.snapshot))
+        self.assertEqual((server.SNAPSHOT, server.FAILED), server.state)
+
+        self.m.VerifyAll()
+
     def test_server_dont_validate_personality_if_personality_isnt_set(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)

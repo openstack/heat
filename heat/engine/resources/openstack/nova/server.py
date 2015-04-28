@@ -1426,8 +1426,9 @@ class Server(stack_user.StackUser):
         if image.status == 'ACTIVE':
             self.data_set('snapshot_image_id', image.id)
             return True
-        elif image.status == 'ERROR':
+        elif image.status == 'ERROR' or image.status == 'DELETED':
             raise exception.Error(image.status)
+
         return False
 
     def handle_delete_snapshot(self, snapshot):
