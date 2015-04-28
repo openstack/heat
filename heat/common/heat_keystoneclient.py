@@ -127,9 +127,7 @@ class KeystoneClientV3(object):
                 username=cfg.CONF.keystone_authtoken.admin_user,
                 password=cfg.CONF.keystone_authtoken.admin_password,
                 user_domain_id='default',
-                auth_url=self.v3_endpoint,
-                project_name=cfg.CONF.keystone_authtoken.admin_tenant_name,
-                project_domain_id='default')
+                auth_url=self.v3_endpoint)
 
         return self._admin_auth
 

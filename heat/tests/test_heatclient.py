@@ -81,8 +81,6 @@ class KeystoneClientTest(common.HeatTestCase):
         m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                                 password='verybadpass',
                                 user_domain_id='default',
-                                project_name='service',
-                                project_domain_id='default',
                                 username='heat')
         m.AndReturn(mock_ks_auth)
 
