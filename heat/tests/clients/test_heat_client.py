@@ -81,7 +81,8 @@ class KeystoneClientTest(common.HeatTestCase):
         m = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
                                 password='verybadpass',
                                 user_domain_id='default',
-                                username='heat')
+                                username='heat',
+                                trust_id=None)
         m.AndReturn(mock_ks_auth)
 
     def _stub_domain_admin_client(self, domain_id=None):

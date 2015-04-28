@@ -112,19 +112,6 @@ class KeystoneClientV3(object):
         return self._client
 
     @property
-    def admin_auth(self):
-        if not self._admin_auth:
-            importutils.import_module('keystonemiddleware.auth_token')
-
-            self._admin_auth = kc_auth_v3.Password(
-                username=cfg.CONF.keystone_authtoken.admin_user,
-                password=cfg.CONF.keystone_authtoken.admin_password,
-                user_domain_id='default',
-                auth_url=self.v3_endpoint)
-
-        return self._admin_auth
-
-    @property
     def domain_admin_auth(self):
         if not self._domain_admin_auth:
             # Note we must specify the domain when getting the token
@@ -219,7 +206,8 @@ class KeystoneClientV3(object):
         # workaround this by getting the user_id from admin_client
 
         try:
-            trustee_user_id = self.admin_auth.get_user_id(self.session)
+            trustee_user_id = self.context.trusts_auth_plugin.get_user_id(
+                self.session)
         except kc_exception.Unauthorized:
             LOG.error(_LE("Domain admin client authentication failed"))
             raise exception.AuthorizationFailure()
