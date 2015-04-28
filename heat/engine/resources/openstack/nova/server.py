@@ -924,9 +924,16 @@ class Server(stack_user.StackUser):
 
     def _get_network_matches(self, old_networks, new_networks):
         # make new_networks similar on old_networks
-        for net in new_networks:
+        for new_net in new_networks:
             for key in ('port', 'network', 'fixed_ip', 'uuid'):
-                net.setdefault(key)
+                # if new_net.get(key) is '', convert to None
+                if not new_net.get(key):
+                    new_net[key] = None
+        for old_net in old_networks:
+            for key in ('port', 'network', 'fixed_ip', 'uuid'):
+                # if old_net.get(key) is '', convert to None
+                if not old_net.get(key):
+                    old_net[key] = None
         # find matches and remove them from old and new networks
         not_updated_networks = []
         for net in old_networks:

@@ -2591,6 +2591,28 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual([old_nets_copy[2]], old_nets)
         self.assertEqual([new_nets_copy[2]], new_nets)
 
+    def test_get_network_matches_not_to_update(self):
+        return_server = self.fc.servers.list()[3]
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_nets = [
+            self.create_old_net(
+                net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                ip='',
+                port='',
+                uuid='')]
+        new_nets = [
+            {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+             'fixed_ip': None,
+             'port': None,
+             'uuid': None}]
+        new_nets_copy = copy.deepcopy(new_nets)
+
+        matched_nets = server._get_network_matches(old_nets, new_nets)
+        self.assertEqual(new_nets_copy, matched_nets)
+        self.assertEqual([], old_nets)
+        self.assertEqual([], new_nets)
+
     def test_update_networks_matching_iface_port(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
