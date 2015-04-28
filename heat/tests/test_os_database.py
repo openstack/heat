@@ -267,6 +267,9 @@ class OSDBInstanceTest(common.HeatTestCase):
         self.fc.instances.get(fake_dbinstance.id).AndRaise(
             troveexc.RequestEntityTooLarge)
 
+        self.fc.instances.get(fake_dbinstance.id).AndReturn(
+            fake_dbinstance)
+
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()

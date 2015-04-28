@@ -339,11 +339,11 @@ class OSDBInstance(resource.Resource):
             nics=nics)
         self.resource_id_set(instance.id)
 
-        return instance
+        return instance.id
 
-    def _refresh_instance(self, instance):
+    def _refresh_instance(self, instance_id):
         try:
-            instance = self.trove().instances.get(instance.id)
+            instance = self.trove().instances.get(instance_id)
             return instance
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
@@ -353,15 +353,17 @@ class OSDBInstance(resource.Resource):
                          {'name': self.stack.name,
                           'id': self.stack.id,
                           'exception': exc})
-                return instance
+                return None
             else:
                 raise
 
-    def check_create_complete(self, instance):
+    def check_create_complete(self, instance_id):
         '''
         Check if cloud DB instance creation is complete.
         '''
-        instance = self._refresh_instance(instance)  # get updated attributes
+        instance = self._refresh_instance(instance_id)  # refresh attributes
+        if instance is None:
+            return False
         if instance.status in self.BAD_STATUSES:
             raise resource.ResourceInError(
                 resource_status=instance.status,
@@ -402,18 +404,18 @@ class OSDBInstance(resource.Resource):
             self.client_plugin().ignore_not_found(ex)
         else:
             instance.delete()
-            return instance
+            return instance.id
 
-    def check_delete_complete(self, instance):
+    def check_delete_complete(self, instance_id):
         '''
         Check for completion of cloud DB instance deletion
         '''
-        if not instance:
+        if not instance_id:
             return True
 
         try:
             # For some time trove instance may continue to live
-            self._refresh_instance(instance)
+            self._refresh_instance(instance_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
             return True
