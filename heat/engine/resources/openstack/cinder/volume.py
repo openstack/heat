@@ -314,7 +314,7 @@ class CinderVolume(aws_vol.Volume):
         if backup.status == 'available':
             self.data_set('backup_id', backup_id)
             return True
-        raise exception.Error(backup.status)
+        raise exception.Error(backup.fail_reason)
 
     def handle_delete_snapshot(self, snapshot):
         backup_id = snapshot['resource_data']['backup_id']
