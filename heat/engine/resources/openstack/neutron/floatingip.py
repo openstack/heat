@@ -287,10 +287,7 @@ class FloatingIPAssociation(neutron.NeutronResource):
 
         self.neutron().update_floatingip(floatingip_id, {
             'floatingip': props})
-        if self.id is not None:
-            self.resource_id_set(self.id)
-        else:
-            raise exception.ResourceNotAvailable(resource_name=self.name)
+        self.resource_id_set(self.id)
 
     def handle_delete(self):
         if not self.resource_id:
@@ -332,10 +329,7 @@ class FloatingIPAssociation(neutron.NeutronResource):
                     'fixed_ip_address': fixed_ip_address}}
 
             neutron_client.update_floatingip(floatingip_id, request_body)
-            if self.id is not None:
-                self.resource_id_set(self.id)
-            else:
-                raise exception.ResourceNotAvailable(resource_name=self.name)
+            self.resource_id_set(self.id)
 
 
 def resource_mapping():
