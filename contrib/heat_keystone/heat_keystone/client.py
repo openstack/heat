@@ -69,6 +69,20 @@ class KeystoneClientPlugin(keystone.KeystoneClientPlugin):
 
         raise exceptions.KeystoneGroupNotFound(group_id=group)
 
+    def get_service_id(self, service):
+        try:
+            service_obj = self.client().client.services.get(service)
+            return service_obj.id
+        except keystone_exceptions.NotFound:
+            service_list = self.client().client.services.list(name=service)
+
+            if len(service_list) == 1:
+                return service_list[0].id
+            elif len(service_list) > 1:
+                raise exceptions.KeystoneServiceNameConflict(service=service)
+            else:
+                raise exceptions.KeystoneServiceNotFound(service_id=service)
+
 
 class KeystoneRoleConstraint(constraints.BaseCustomConstraint):
 
@@ -100,3 +114,12 @@ class KeystoneGroupConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, group):
         client.client_plugin('keystone').get_group_id(group)
+
+
+class KeystoneServiceConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.KeystoneServiceNotFound,
+                           exceptions.KeystoneServiceNameConflict,)
+
+    def validate_with_client(self, client, service):
+        client.client_plugin('keystone').get_service_id(service)
