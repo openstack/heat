@@ -17,7 +17,7 @@
 Environments
 ============
 
-The environment is used to affect the runtime behaviour of the
+The environment is used to affect the runtime behavior of the
 template. It provides a way to override the resource
 implementations and provide a mechanism to place parameters
 that the service needs.
@@ -72,7 +72,7 @@ If the "my_env.yaml" file from the example above had been put in the
 Usage examples
 --------------
 
-1) Pass parameters into Heat
+1) Pass parameters into heat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
@@ -159,7 +159,7 @@ Example:
         another_resource:
           hooks: [pre-create, pre-update]
 
-When Heat encounters a resource that has a hook, it will pause the resource
+When heat encounters a resource that has a hook, it will pause the resource
 action until the hook is cleared. Any resources that depend on it will wait as
 well. Any resources that don't will be created in parallel (unless they have
 hooks, too).
@@ -179,5 +179,5 @@ This example:
 will pause while creating `app_server` and `database_server` but not `server`
 or `app_network`.
 
-Hook is cleared by signalling the resource with `{unset_hook: pre-create}` (or
+Hook is cleared by signaling the resource with `{unset_hook: pre-create}` (or
 `pre-update`).
