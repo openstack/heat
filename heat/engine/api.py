@@ -46,14 +46,14 @@ def extract_args(params):
             else:
                 raise ValueError(_('Invalid timeout value %s') % timeout)
 
-    if rpc_api.PARAM_DISABLE_ROLLBACK in params:
-        disable_rollback = param_utils.extract_bool(
-            params[rpc_api.PARAM_DISABLE_ROLLBACK])
-        kwargs[rpc_api.PARAM_DISABLE_ROLLBACK] = disable_rollback
+    name = rpc_api.PARAM_DISABLE_ROLLBACK
+    if name in params:
+        disable_rollback = param_utils.extract_bool(name, params[name])
+        kwargs[name] = disable_rollback
 
-    if rpc_api.PARAM_SHOW_DELETED in params:
-        params[rpc_api.PARAM_SHOW_DELETED] = param_utils.extract_bool(
-            params[rpc_api.PARAM_SHOW_DELETED])
+    name = rpc_api.PARAM_SHOW_DELETED
+    if name in params:
+        params[name] = param_utils.extract_bool(name, params[name])
 
     adopt_data = params.get(rpc_api.PARAM_ADOPT_STACK_DATA)
     if adopt_data:

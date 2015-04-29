@@ -13,6 +13,7 @@
 
 import itertools
 
+import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -120,7 +121,11 @@ class EventController(object):
 
         key = rpc_api.PARAM_LIMIT
         if key in params:
-            limit = param_utils.extract_int(key, params[key], allow_zero=True)
+            try:
+                limit = param_utils.extract_int(key, params[key],
+                                                allow_zero=True)
+            except ValueError as e:
+                raise exc.HTTPBadRequest(six.text_type(e))
             params[key] = limit
 
         if resource_name is None:

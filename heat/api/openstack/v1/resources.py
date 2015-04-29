@@ -13,6 +13,9 @@
 
 import itertools
 
+import six
+from webob import exc
+
 from heat.api.openstack.v1 import util
 from heat.common import identifier
 from heat.common import param_utils
@@ -85,7 +88,10 @@ class ResourceController(object):
         nested_depth = 0
         key = rpc_api.PARAM_NESTED_DEPTH
         if key in req.params:
-            nested_depth = param_utils.extract_int(key, req.params[key])
+            try:
+                nested_depth = param_utils.extract_int(key, req.params[key])
+            except ValueError as e:
+                raise exc.HTTPBadRequest(six.text_type(e))
 
         res_list = self.rpc_client.list_stack_resources(req.context,
                                                         identity,
