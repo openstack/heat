@@ -172,6 +172,12 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             if net['name'] == net_name:
                 return net
 
+    def _get_subnet_by_version(self, network, ip_version=4):
+        for subnet_id in self.net['subnets']:
+            subnet_info = self.network_client.show_subnet(subnet_id)
+            if subnet_info['subnet']['ip_version'] == ip_version:
+                return subnet_id
+
     @staticmethod
     def _stack_output(stack, output_key):
         """Return a stack output value for a given key."""

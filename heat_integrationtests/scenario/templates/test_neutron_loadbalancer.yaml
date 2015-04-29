@@ -106,6 +106,8 @@ resources:
        floating_network: { get_param: external_network_id }
        port_id:
          { get_attr: [test_pool, vip, 'port_id'] }
+       fixed_ip_address:
+         { get_attr: [test_pool, vip, 'address'] }
 
   LBaaS:
     type: OS::Neutron::LoadBalancer
