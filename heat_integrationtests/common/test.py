@@ -178,6 +178,11 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             if subnet_info['subnet']['ip_version'] == ip_version:
                 return subnet_id
 
+    def _get_server_ip_by_version(self, addresses, ip_version=4):
+        for address in addresses:
+            if address['version'] == ip_version:
+                return address['addr']
+
     @staticmethod
     def _stack_output(stack, output_key):
         """Return a stack output value for a given key."""
