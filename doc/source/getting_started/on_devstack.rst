@@ -19,8 +19,16 @@ These instructions assume you already have a working DevStack installation which
 
 Configure DevStack to enable Heat
 ---------------------------------
-Heat is configured by default on devstack for Icehouse or newer
-versions of OpenStack.
+Heat is configured by default on devstack for Icehouse and Juno releases.
+Newer versions of OpenStack require enabling heat services in devstack
+`local.conf`.
+
+Add the following to `[[local|localrc]]` section of `local.conf`::
+
+  [[local|localrc]]
+
+  #Enable heat services
+  enable_service h-eng h-api h-api-cfn h-api-cw
 
 It would also be useful to automatically download and register
 a VM image that Heat can launch. To do that add the following to your
