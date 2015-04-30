@@ -68,7 +68,7 @@ class NovaFloatingIp(resource.Resource):
 
     def handle_create(self):
         try:
-            pool = self.properties.get(self.POOL)
+            pool = self.properties[self.POOL]
             floating_ip = self.nova().floating_ips.create(pool=pool)
         except Exception as e:
             with excutils.save_and_reraise_exception():

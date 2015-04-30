@@ -134,7 +134,7 @@ class SecurityGroup(neutron.NeutronResource):
 
     def validate(self):
         super(SecurityGroup, self).validate()
-        if self.properties.get(self.NAME) == 'default':
+        if self.properties[self.NAME] == 'default':
             msg = _('Security groups cannot be assigned the name "default".')
             raise exception.StackValidationFailed(message=msg)
 

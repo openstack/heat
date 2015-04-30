@@ -267,8 +267,8 @@ class Port(neutron.NeutronResource):
                 dep_network = res.properties.get(
                     subnet.Subnet.NETWORK) or res.properties.get(
                         subnet.Subnet.NETWORK_ID)
-                network = self.properties.get(
-                    self.NETWORK) or self.properties.get(self.NETWORK_ID)
+                network = self.properties[
+                    self.NETWORK] or self.properties[self.NETWORK_ID]
                 if dep_network == network:
                     deps += (self, res)
 

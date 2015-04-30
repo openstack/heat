@@ -228,9 +228,9 @@ class RandomString(resource.Resource):
 
     def validate(self):
         super(RandomString, self).validate()
-        sequence = self.properties.get(self.SEQUENCE)
-        char_sequences = self.properties.get(self.CHARACTER_SEQUENCES)
-        char_classes = self.properties.get(self.CHARACTER_CLASSES)
+        sequence = self.properties[self.SEQUENCE]
+        char_sequences = self.properties[self.CHARACTER_SEQUENCES]
+        char_classes = self.properties[self.CHARACTER_CLASSES]
 
         if sequence and (char_sequences or char_classes):
             msg = (_("Cannot use deprecated '%(seq)s' property along with "
@@ -245,7 +245,7 @@ class RandomString(resource.Resource):
                 return sum(char_dict[min_prop] for char_dict in char_dicts)
             return 0
 
-        length = self.properties.get(self.LENGTH)
+        length = self.properties[self.LENGTH]
         min_length = (char_min(char_sequences, self.CHARACTER_SEQUENCES_MIN) +
                       char_min(char_classes, self.CHARACTER_CLASSES_MIN))
         if min_length > length:
@@ -254,16 +254,16 @@ class RandomString(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
-        char_sequences = self.properties.get(self.CHARACTER_SEQUENCES)
-        char_classes = self.properties.get(self.CHARACTER_CLASSES)
-        length = self.properties.get(self.LENGTH)
+        char_sequences = self.properties[self.CHARACTER_SEQUENCES]
+        char_classes = self.properties[self.CHARACTER_CLASSES]
+        length = self.properties[self.LENGTH]
 
         if char_sequences or char_classes:
             random_string = self._generate_random_string(char_sequences,
                                                          char_classes,
                                                          length)
         else:
-            sequence = self.properties.get(self.SEQUENCE)
+            sequence = self.properties[self.SEQUENCE]
             if not sequence:  # Deprecated property not provided, use a default
                 sequence = "lettersdigits"
 

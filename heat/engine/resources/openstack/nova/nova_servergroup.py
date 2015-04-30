@@ -64,7 +64,7 @@ class ServerGroup(resource.Resource):
                 self.client_plugin('nova').ignore_not_found(e)
 
     def physical_resource_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
         return super(ServerGroup, self).physical_resource_name()

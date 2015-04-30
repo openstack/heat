@@ -111,7 +111,7 @@ class SoftwareComponent(sc.SoftwareConfig):
         props = dict(self.properties)
         props[self.NAME] = self.physical_resource_name()
         # use config property of SoftwareConfig to store configs list
-        configs = self.properties.get(self.CONFIGS)
+        configs = self.properties[self.CONFIGS]
         props[self.CONFIG] = {self.CONFIGS: configs}
         # set 'group' to enable component processing by in-instance hook
         props[self.GROUP] = 'component'

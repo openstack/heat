@@ -160,7 +160,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
     physical_resource_name_limit = 50
 
     def _ngt_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
         return self.physical_resource_name()
@@ -172,10 +172,10 @@ class SaharaNodeGroupTemplate(resource.Resource):
         description = self.properties[self.DESCRIPTION]
         flavor_id = self.client_plugin("nova").get_flavor_id(
             self.properties[self.FLAVOR])
-        volumes_per_node = self.properties.get(self.VOLUMES_PER_NODE)
-        volumes_size = self.properties.get(self.VOLUMES_SIZE)
-        volume_type = self.properties.get(self.VOLUME_TYPE)
-        floating_ip_pool = self.properties.get(self.FLOATING_IP_POOL)
+        volumes_per_node = self.properties[self.VOLUMES_PER_NODE]
+        volumes_size = self.properties[self.VOLUMES_SIZE]
+        volume_type = self.properties[self.VOLUME_TYPE]
+        floating_ip_pool = self.properties[self.FLOATING_IP_POOL]
         security_groups = self.properties[self.SECURITY_GROUPS]
         auto_security_group = self.properties[self.AUTO_SECURITY_GROUP]
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
@@ -185,7 +185,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
             floating_ip_pool = self.client_plugin(
                 'neutron').find_neutron_resource(
                     self.properties, self.FLOATING_IP_POOL, 'network')
-        node_configs = self.properties.get(self.NODE_CONFIGS)
+        node_configs = self.properties[self.NODE_CONFIGS]
 
         node_group_template = self.client().node_group_templates.create(
             self._ngt_name(),
@@ -349,7 +349,7 @@ class SaharaClusterTemplate(resource.Resource):
     physical_resource_name_limit = 50
 
     def _cluster_template_name(self):
-        name = self.properties.get(self.NAME)
+        name = self.properties[self.NAME]
         if name:
             return name
         return self.physical_resource_name()
@@ -357,9 +357,9 @@ class SaharaClusterTemplate(resource.Resource):
     def handle_create(self):
         plugin_name = self.properties[self.PLUGIN_NAME]
         hadoop_version = self.properties[self.HADOOP_VERSION]
-        description = self.properties.get(self.DESCRIPTION)
-        image_id = self.properties.get(self.IMAGE_ID)
-        net_id = self.properties.get(self.MANAGEMENT_NETWORK)
+        description = self.properties[self.DESCRIPTION]
+        image_id = self.properties[self.IMAGE_ID]
+        net_id = self.properties[self.MANAGEMENT_NETWORK]
         if net_id:
             if self.is_using_neutron():
                 net_id = self.client_plugin('neutron').find_neutron_resource(
@@ -367,9 +367,9 @@ class SaharaClusterTemplate(resource.Resource):
             else:
                 net_id = self.client_plugin('nova').get_nova_network_id(
                     net_id)
-        anti_affinity = self.properties.get(self.ANTI_AFFINITY)
-        cluster_configs = self.properties.get(self.CLUSTER_CONFIGS)
-        node_groups = self.properties.get(self.NODE_GROUPS)
+        anti_affinity = self.properties[self.ANTI_AFFINITY]
+        cluster_configs = self.properties[self.CLUSTER_CONFIGS]
+        node_groups = self.properties[self.NODE_GROUPS]
         cluster_template = self.client().cluster_templates.create(
             self._cluster_template_name(),
             plugin_name, hadoop_version,
@@ -402,7 +402,7 @@ class SaharaClusterTemplate(resource.Resource):
             return res
         # check if running on neutron and MANAGEMENT_NETWORK missing
         if (self.is_using_neutron() and
-                not self.properties.get(self.MANAGEMENT_NETWORK)):
+                not self.properties[self.MANAGEMENT_NETWORK]):
             msg = _("%s must be provided"
                     ) % self.MANAGEMENT_NETWORK
             raise exception.StackValidationFailed(message=msg)

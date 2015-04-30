@@ -604,7 +604,7 @@ class PoolMember(neutron.NeutronResource):
         protocol_port = self.properties[self.PROTOCOL_PORT]
         address = self.properties[self.ADDRESS]
         admin_state_up = self.properties[self.ADMIN_STATE_UP]
-        weight = self.properties.get(self.WEIGHT)
+        weight = self.properties[self.WEIGHT]
 
         params = {
             'pool_id': pool,

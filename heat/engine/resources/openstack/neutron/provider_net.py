@@ -93,8 +93,8 @@ class ProviderNet(net.Net):
         '''
         super(ProviderNet, self).validate()
 
-        if (self.properties.get(self.PROVIDER_SEGMENTATION_ID) and
-                self.properties.get(self.PROVIDER_NETWORK_TYPE) != 'vlan'):
+        if (self.properties[self.PROVIDER_SEGMENTATION_ID] and
+                self.properties[self.PROVIDER_NETWORK_TYPE] != 'vlan'):
             msg = _('segmentation_id not allowed for flat network type.')
             raise exception.StackValidationFailed(message=msg)
 

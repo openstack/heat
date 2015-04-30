@@ -235,9 +235,9 @@ class Subnet(neutron.NeutronResource):
         super(Subnet, self).validate()
         self._validate_depr_property_required(self.properties,
                                               self.NETWORK, self.NETWORK_ID)
-        ra_mode = self.properties.get(self.IPV6_RA_MODE)
-        address_mode = self.properties.get(self.IPV6_ADDRESS_MODE)
-        if (self.properties.get(self.IP_VERSION) == 4) and (
+        ra_mode = self.properties[self.IPV6_RA_MODE]
+        address_mode = self.properties[self.IPV6_ADDRESS_MODE]
+        if (self.properties[self.IP_VERSION] == 4) and (
                 ra_mode or address_mode):
             msg = _('ipv6_ra_mode and ipv6_address_mode are not supported '
                     'for ipv4.')
