@@ -96,15 +96,20 @@ class KeystoneClientV3(object):
         # If the domain is specified, then you must specify a domain
         # admin user.  If no domain is specified, we fall back to
         # legacy behavior with warnings.
-        self._stack_domain_is_id = True
-        self._stack_domain_id = None
-        self.stack_domain = cfg.CONF.stack_user_domain_id
-        if not self.stack_domain and cfg.CONF.stack_user_domain_name:
-            self.stack_domain = cfg.CONF.stack_user_domain_name
-            self._stack_domain_is_id = False
+        self._stack_domain_id = cfg.CONF.stack_user_domain_id
+        self.stack_domain_name = cfg.CONF.stack_user_domain_name
         self.domain_admin_user = cfg.CONF.stack_domain_admin
         self.domain_admin_password = cfg.CONF.stack_domain_admin_password
+
         LOG.debug('Using stack domain %s' % self.stack_domain)
+
+    @property
+    def stack_domain(self):
+        """Domain scope data.
+
+        This is only used for checking for scoping data, not using the value
+        """
+        return self._stack_domain_id or self.stack_domain_name
 
     @property
     def client(self):
@@ -133,17 +138,13 @@ class KeystoneClientV3(object):
         if not self._domain_admin_auth:
             # Note we must specify the domain when getting the token
             # as only a domain scoped token can create projects in the domain
-            if self._stack_domain_is_id:
-                auth_kwargs = {'domain_id': self.stack_domain,
-                               'user_domain_id': self.stack_domain}
-            else:
-                auth_kwargs = {'domain_name': self.stack_domain,
-                               'user_domain_name': self.stack_domain}
-
             auth = kc_auth_v3.Password(username=self.domain_admin_user,
                                        password=self.domain_admin_password,
                                        auth_url=self.v3_endpoint,
-                                       **auth_kwargs)
+                                       domain_id=self._stack_domain_id,
+                                       domain_name=self.stack_domain_name,
+                                       user_domain_id=self._stack_domain_id,
+                                       user_domain_name=self.stack_domain_name)
 
             # NOTE(jamielennox): just do something to ensure a valid token
             try:
@@ -327,10 +328,10 @@ class KeystoneClientV3(object):
         # no way to get a nocatalog token via keystoneclient
         token_url = "%s/auth/tokens?nocatalog" % self.v3_endpoint
         headers = {'Accept': 'application/json'}
-        if self._stack_domain_is_id:
-            domain = {'id': self.stack_domain}
+        if self._stack_domain_id:
+            domain = {'id': self._stack_domain_id}
         else:
-            domain = {'name': self.stack_domain}
+            domain = {'name': self.stack_domain_name}
         body = {'auth': {'scope':
                          {'project': {'id': project_id}},
                          'identity': {'password': {'user': {
@@ -385,16 +386,13 @@ class KeystoneClientV3(object):
     @property
     def stack_domain_id(self):
         if not self._stack_domain_id:
-            if self._stack_domain_is_id:
-                self._stack_domain_id = self.stack_domain
-            else:
-                try:
-                    access = self.domain_admin_auth.get_access(self.session)
-                except kc_exception.Unauthorized:
-                    LOG.error(_LE("Keystone client authentication failed"))
-                    raise exception.AuthorizationFailure()
+            try:
+                access = self.domain_admin_auth.get_access(self.session)
+            except kc_exception.Unauthorized:
+                LOG.error(_LE("Keystone client authentication failed"))
+                raise exception.AuthorizationFailure()
 
-                self._stack_domain_id = access.domain_id
+            self._stack_domain_id = access.domain_id
 
         return self._stack_domain_id
 
