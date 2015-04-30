@@ -119,10 +119,10 @@ resources:
       - { get_resource: server1 }
 
 outputs:
-  serv1_ip:
-    value: {get_attr: [server1, networks, private, 0]}
-  serv2_ip:
-    value: {get_attr: [server2, networks, private, 0]}
+  serv1_addresses:
+    value: {get_attr: [server1, addresses, private]}
+  serv2_addresses:
+    value: {get_attr: [server2, addresses, private]}
   vip:
     value: {get_attr: [test_pool, vip, address]}
   fip:

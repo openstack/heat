@@ -69,9 +69,10 @@ class NeutronLoadBalancerTest(scenario_base.ScenarioTestsBase):
         stack = self.client.stacks.get(sid)
         floating_ip = self._stack_output(stack, 'fip')
         vip = self._stack_output(stack, 'vip')
-        server1_ip = self._stack_output(stack, 'serv1_ip')
-        server2_ip = self._stack_output(stack, 'serv2_ip')
-
+        server1_ip = self._get_server_ip_by_version(
+            self._stack_output(stack, 'serv1_addresses'))
+        server2_ip = self._get_server_ip_by_version(
+            self._stack_output(stack, 'serv2_addresses'))
         # Check connection and info about received responses
         self.check_connectivity(server1_ip)
         self.collect_responses(server1_ip, {'server1\n'})
