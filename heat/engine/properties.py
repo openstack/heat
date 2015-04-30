@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints as constr
 from heat.engine import function
+from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import support
 
@@ -516,8 +517,57 @@ class Properties(collections.Mapping):
         else:
             return {'Ref': name}
 
+    @staticmethod
+    def _hot_param_def_from_prop(schema):
+        """
+        Return parameter definition corresponding to a property for
+        hot template.
+        """
+        param_type_map = {
+            schema.INTEGER: hot_param.HOTParamSchema.NUMBER,
+            schema.STRING: hot_param.HOTParamSchema.STRING,
+            schema.NUMBER: hot_param.HOTParamSchema.NUMBER,
+            schema.BOOLEAN: hot_param.HOTParamSchema.BOOLEAN,
+            schema.MAP: hot_param.HOTParamSchema.MAP,
+            schema.LIST: hot_param.HOTParamSchema.LIST,
+        }
+
+        def param_items():
+            yield hot_param.HOTParamSchema.TYPE, param_type_map[schema.type]
+
+            if schema.description is not None:
+                yield hot_param.HOTParamSchema.DESCRIPTION, schema.description
+
+            if schema.default is not None:
+                yield hot_param.HOTParamSchema.DEFAULT, schema.default
+
+            for constraint in schema.constraints:
+                if (isinstance(constraint, constr.Length) or
+                        isinstance(constraint, constr.Range)):
+                    if constraint.min is not None:
+                        yield hot_param.MIN, constraint.min
+                    if constraint.max is not None:
+                        yield hot_param.MAX, constraint.max
+                elif isinstance(constraint, constr.AllowedValues):
+                    yield hot_param.ALLOWED_VALUES, list(constraint.allowed)
+                elif isinstance(constraint, constr.AllowedPattern):
+                    yield hot_param.ALLOWED_PATTERN, constraint.pattern
+
+            if schema.type == schema.BOOLEAN:
+                yield hot_param.ALLOWED_VALUES, ['True', 'true',
+                                                 'False', 'false']
+
+        return dict(param_items())
+
+    @staticmethod
+    def _hot_prop_def_from_prop(name, schema):
+        """
+        Return a provider template property definition for a property.
+        """
+        return {'get_param': name}
+
     @classmethod
-    def schema_to_parameters_and_properties(cls, schema):
+    def schema_to_parameters_and_properties(cls, schema, template_type='cfn'):
         """Generates properties with params resolved for a resource's
         properties_schema.
 
@@ -532,16 +582,19 @@ class Properties(collections.Mapping):
             output: {'foo': {'Type': 'String'}, 'bar': {'Type': 'Json'}},
                     {'foo': {'Ref': 'foo'}, 'bar': {'Ref': 'bar'}}
         """
-        def param_prop_def_items(name, schema):
-            param_def = cls._param_def_from_prop(schema)
-            prop_def = cls._prop_def_from_prop(name, schema)
-
+        def param_prop_def_items(name, schema, template_type):
+            if template_type == 'hot':
+                param_def = cls._hot_param_def_from_prop(schema)
+                prop_def = cls._hot_prop_def_from_prop(name, schema)
+            else:
+                param_def = cls._param_def_from_prop(schema)
+                prop_def = cls._prop_def_from_prop(name, schema)
             return (name, param_def), (name, prop_def)
 
         if not schema:
             return {}, {}
 
-        param_prop_defs = [param_prop_def_items(n, s)
+        param_prop_defs = [param_prop_def_items(n, s, template_type)
                            for n, s in six.iteritems(schemata(schema))
                            if s.implemented]
         param_items, prop_items = zip(*param_prop_defs)

@@ -29,6 +29,7 @@ class EngineClient(object):
         1.0 - Initial version.
         1.1 - Add support_status argument to list_resource_types()
         1.4 - Add support for service list
+        1.9 - Add template_type option to generate_template()
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -334,15 +335,18 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('resource_schema',
                                              type_name=type_name))
 
-    def generate_template(self, ctxt, type_name):
+    def generate_template(self, ctxt, type_name, template_type='cfn'):
         """
         Generate a template based on the specified type.
 
         :param ctxt: RPC context.
         :param type_name: The resource type name to generate a template for.
+        :param template_type: the template type to generate, cfn or hot.
         """
         return self.call(ctxt, self.make_msg('generate_template',
-                                             type_name=type_name))
+                                             type_name=type_name,
+                                             template_type=template_type),
+                         version='1.9')
 
     def list_events(self, ctxt, stack_identity, filters=None, limit=None,
                     marker=None, sort_keys=None, sort_dir=None,):

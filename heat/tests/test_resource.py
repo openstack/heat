@@ -1011,7 +1011,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(exception.ResourceFailure, resume)
         self.assertEqual((res.RESUME, res.FAILED), res.state)
 
-    def test_resource_class_to_template(self):
+    def test_resource_class_to_cfn_template(self):
 
         class TestResource(resource.Resource):
             list_schema = {'wont_show_up': {'Type': 'Number'}}
@@ -1044,6 +1044,7 @@ class ResourceTest(common.HeatTestCase):
 
         expected_template = {
             'HeatTemplateFormatVersion': '2012-12-12',
+            'Description': 'Initial template of TestResource',
             'Parameters': {
                 'name': {'Type': 'String'},
                 'bool': {'Type': 'Boolean',
@@ -1088,6 +1089,86 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(expected_template,
                          TestResource.resource_to_template(
                              'Test::Resource::resource'))
+
+    def test_resource_class_to_hot_template(self):
+
+        class TestResource(resource.Resource):
+            list_schema = {'wont_show_up': {'Type': 'Number'}}
+            map_schema = {'will_show_up': {'Type': 'Integer'}}
+
+            properties_schema = {
+                'name': {'Type': 'String'},
+                'bool': {'Type': 'Boolean'},
+                'implemented': {'Type': 'String',
+                                'Implemented': True,
+                                'AllowedPattern': '.*',
+                                'MaxLength': 7,
+                                'MinLength': 2,
+                                'Required': True},
+                'not_implemented': {'Type': 'String',
+                                    'Implemented': False},
+                'number': {'Type': 'Number',
+                           'MaxValue': 77,
+                           'MinValue': 41,
+                           'Default': 42},
+                'list': {'Type': 'List', 'Schema': {'Type': 'Map',
+                         'Schema': list_schema}},
+                'map': {'Type': 'Map', 'Schema': map_schema},
+            }
+
+            attributes_schema = {
+                'output1': attributes.Schema('output1_desc'),
+                'output2': attributes.Schema('output2_desc')
+            }
+
+        expected_template = {
+            'heat_template_version': '2015-04-30',
+            'description': 'Initial template of TestResource',
+            'parameters': {
+                'name': {'type': 'string'},
+                'bool': {'type': 'boolean',
+                         'allowed_values': ['True', 'true', 'False', 'false']},
+                'implemented': {
+                    'type': 'string',
+                    'allowed_pattern': '.*',
+                    'max': 7,
+                    'min': 2
+                },
+                'number': {'type': 'number',
+                           'max': 77,
+                           'min': 41,
+                           'default': 42},
+                'list': {'type': 'comma_delimited_list'},
+                'map': {'type': 'json'}
+            },
+            'resources': {
+                'TestResource': {
+                    'type': 'Test::Resource::resource',
+                    'properties': {
+                        'name': {'get_param': 'name'},
+                        'bool': {'get_param': 'bool'},
+                        'implemented': {'get_param': 'implemented'},
+                        'number': {'get_param': 'number'},
+                        'list': {'get_param': 'list'},
+                        'map': {'get_param': 'map'}
+                    }
+                }
+            },
+            'outputs': {
+                'output1': {
+                    'description': 'output1_desc',
+                    'value': '{"get_attr": ["TestResource", "output1"]}'
+                },
+                'output2': {
+                    'description': 'output2_desc',
+                    'value': '{"get_attr": ["TestResource", "output2"]}'
+                }
+            }
+        }
+        self.assertEqual(expected_template,
+                         TestResource.resource_to_template(
+                             'Test::Resource::resource',
+                             template_type='hot'))
 
     def test_is_using_neutron(self):
         snippet = rsrc_defn.ResourceDefinition('aresource',

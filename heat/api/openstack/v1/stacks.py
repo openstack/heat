@@ -506,7 +506,18 @@ class StackController(object):
         """
         Generates a template based on the specified type.
         """
-        return self.rpc_client.generate_template(req.context, type_name)
+        template_type = 'cfn'
+        if rpc_api.TEMPLATE_TYPE in req.params:
+            try:
+                template_type = param_utils.extract_template_type(
+                    req.params.get(rpc_api.TEMPLATE_TYPE))
+            except ValueError as ex:
+                msg = _("Template type is not supported: %s") % ex
+                raise exc.HTTPBadRequest(six.text_type(msg))
+
+        return self.rpc_client.generate_template(req.context,
+                                                 type_name,
+                                                 template_type)
 
     @util.identified_stack
     def snapshot(self, req, identity, body):

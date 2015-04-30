@@ -200,7 +200,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('resource_schema', 'call', type_name="TYPE")
 
     def test_generate_template(self):
-        self._test_engine_api('generate_template', 'call', type_name="TYPE")
+        self._test_engine_api('generate_template', 'call',
+                              type_name="TYPE", template_type='cfn')
 
     def test_list_events(self):
         kwargs = {'stack_identity': self.identity,

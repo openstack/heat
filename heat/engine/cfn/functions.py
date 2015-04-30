@@ -21,7 +21,6 @@ from heat.api.aws import utils as aws_utils
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import function
-from heat.engine import resource
 
 
 class FindInMap(function.Function):
@@ -187,6 +186,7 @@ class GetAtt(function.Function):
         super(GetAtt, self).validate()
         res = self._resource()
         attr = function.resolve(self._attribute)
+        from heat.engine import resource
         if (type(res).FnGetAtt == resource.Resource.FnGetAtt and
                 attr not in six.iterkeys(res.attributes_schema)):
             raise exception.InvalidTemplateAttribute(
