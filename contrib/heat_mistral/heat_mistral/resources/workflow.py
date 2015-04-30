@@ -73,29 +73,25 @@ class Workflow(signal_responder.SignalResponder,
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
             _('Workflow description.'),
-            update_allowed=True,
-            default=''
+            update_allowed=True
         ),
         INPUT: properties.Schema(
             properties.Schema.MAP,
             _('Dictionary which contains input for workflow.'),
-            update_allowed=True,
-            default={}
+            update_allowed=True
         ),
         OUTPUT: properties.Schema(
             properties.Schema.MAP,
             _('Any data structure arbitrarily containing YAQL '
               'expressions that defines workflow output. May be '
               'nested.'),
-            update_allowed=True,
-            default={}
+            update_allowed=True
         ),
         PARAMS: properties.Schema(
             properties.Schema.MAP,
             _("Workflow additional parameters. If Workflow is reverse typed, "
               "params requires 'task_name', which defines initial task."),
-            update_allowed=True,
-            default={}
+            update_allowed=True
         ),
         TASKS: properties.Schema(
             properties.Schema.LIST,
@@ -288,13 +284,17 @@ class Workflow(signal_responder.SignalResponder,
         """Prepare correct YAML-formatted definition for Mistral."""
         defn_name = self._workflow_name()
         definition = {'version': '2.0',
-                      defn_name: {self.TYPE: props[self.TYPE],
-                                  self.DESCRIPTION: props[self.DESCRIPTION],
-                                  self.OUTPUT: props[self.OUTPUT],
-                                  self.INPUT: list(six.iterkeys(
-                                      props[self.INPUT])),
-                                  self.TASKS: {}}}
-
+                      defn_name: {self.TYPE: props.get(self.TYPE),
+                                  self.DESCRIPTION: props.get(
+                                      self.DESCRIPTION),
+                                  self.OUTPUT: props.get(self.OUTPUT)}}
+        for key in list(definition[defn_name].keys()):
+            if definition[defn_name][key] is None:
+                del definition[defn_name][key]
+        if props.get(self.INPUT) is not None:
+            definition[defn_name][self.INPUT] = list(props.get(
+                self.INPUT).keys())
+        definition[defn_name][self.TASKS] = {}
         for task in self.build_tasks(props):
             definition.get(defn_name).get(self.TASKS).update(task)
 

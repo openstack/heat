@@ -187,7 +187,7 @@ class TestWorkflow(common.HeatTestCase):
     def test_attributes(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
         self.assertEqual({'name': 'test_stack-workflow-b5fiekfci3yc',
-                          'input': {}}, wf.FnGetAtt('data'))
+                          'input': None}, wf.FnGetAtt('data'))
         self.assertEqual([], wf.FnGetAtt('executions'))
 
     def test_direct_workflow_validation_error(self):
