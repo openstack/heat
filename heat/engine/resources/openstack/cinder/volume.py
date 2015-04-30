@@ -305,6 +305,7 @@ class CinderVolume(aws_vol.Volume):
 
     def handle_snapshot(self):
         backup = self.client().backups.create(self.resource_id)
+        self.data_set('backup_id', backup.id)
         return backup.id
 
     def check_snapshot_complete(self, backup_id):
@@ -312,12 +313,11 @@ class CinderVolume(aws_vol.Volume):
         if backup.status == 'creating':
             return False
         if backup.status == 'available':
-            self.data_set('backup_id', backup_id)
             return True
         raise exception.Error(backup.fail_reason)
 
     def handle_delete_snapshot(self, snapshot):
-        backup_id = snapshot['resource_data']['backup_id']
+        backup_id = snapshot['resource_data'].get('backup_id')
 
         def delete():
             cinder = self.client()

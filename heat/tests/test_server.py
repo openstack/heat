@@ -3106,7 +3106,7 @@ class ServersTest(common.HeatTestCase):
 
         self.assertEqual((server.SNAPSHOT, server.COMPLETE), server.state)
 
-        self.assertEqual({'snapshot_image_id': '1'},
+        self.assertEqual({'snapshot_image_id': '456'},
                          resource_data_object.ResourceData.get_all(server))
         self.m.VerifyAll()
 
@@ -3126,8 +3126,11 @@ class ServersTest(common.HeatTestCase):
         self.fc.images.get = mock.Mock(return_value=image_in_error)
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(server.snapshot))
-        self.assertEqual((server.SNAPSHOT, server.FAILED), server.state)
 
+        self.assertEqual((server.SNAPSHOT, server.FAILED), server.state)
+        # test snapshot_image_id already set to resource data
+        self.assertEqual({'snapshot_image_id': '456'},
+                         resource_data_object.ResourceData.get_all(server))
         self.m.VerifyAll()
 
     def test_server_dont_validate_personality_if_personality_isnt_set(self):
