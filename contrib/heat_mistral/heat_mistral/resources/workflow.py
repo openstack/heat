@@ -336,9 +336,9 @@ class Workflow(signal_responder.SignalResponder,
                         {key: details.get(
                             self.SIGNAL_DATA_PARAMS).get(key) or value})
 
-        if not result_input:
+        if not result_input and self.properties.get(self.INPUT):
             result_input.update(self.properties.get(self.INPUT))
-        if not result_params:
+        if not result_params and self.properties.get(self.PARAMS):
             result_params.update(self.properties.get(self.PARAMS))
 
         try:
