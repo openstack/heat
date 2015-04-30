@@ -578,13 +578,13 @@ class EngineService(service.Service):
                                            stack_user_project_id=None,
                                            convergence=False,
                                            parent_resource_name=None):
-        # If it is stack-adopt, use parameters from adopt_stack_data
         common_params = api.extract_args(args)
-        if (rpc_api.PARAM_ADOPT_STACK_DATA in common_params and
-                not cfg.CONF.enable_stack_adopt):
-            raise exception.NotSupported(feature='Stack Adopt')
 
+        # If it is stack-adopt, use parameters from adopt_stack_data
         if rpc_api.PARAM_ADOPT_STACK_DATA in common_params:
+            if not cfg.CONF.enable_stack_adopt:
+                raise exception.NotSupported(feature='Stack Adopt')
+
             # Override the params with values given with -P option
             new_params = common_params[rpc_api.PARAM_ADOPT_STACK_DATA][
                 'environment'][rpc_api.STACK_PARAMETERS].copy()
