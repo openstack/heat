@@ -605,21 +605,24 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_stack(self.ctx, UUID1)
-        self.assertEqual(2, len(events))
+        self.assertEqual(4, len(events))
 
         # test filter by resource_status
         filters = {'resource_status': 'COMPLETE'}
         events = db_api.event_get_all_by_stack(self.ctx, UUID1,
                                                filters=filters)
-        self.assertEqual(1, len(events))
+        self.assertEqual(2, len(events))
         self.assertEqual('COMPLETE', events[0].resource_status)
+        self.assertEqual('COMPLETE', events[1].resource_status)
         # test filter by resource_action
         filters = {'resource_action': 'CREATE'}
         events = db_api.event_get_all_by_stack(self.ctx, UUID1,
                                                filters=filters)
-        self.assertEqual(2, len(events))
+        self.assertEqual(4, len(events))
         self.assertEqual('CREATE', events[0].resource_action)
         self.assertEqual('CREATE', events[1].resource_action)
+        self.assertEqual('CREATE', events[2].resource_action)
+        self.assertEqual('CREATE', events[3].resource_action)
         # test filter by resource_type
         filters = {'resource_type': 'AWS::EC2::Instance'}
         events = db_api.event_get_all_by_stack(self.ctx, UUID1,
@@ -649,20 +652,24 @@ class SqlAlchemyTest(common.HeatTestCase):
         filters = {'resource_status': 'COMPLETE'}
         events = db_api.event_get_all_by_stack(self.ctx, UUID1,
                                                filters=filters)
-        self.assertEqual(2, len(events))
+        self.assertEqual(4, len(events))
         self.assertEqual('COMPLETE', events[0].resource_status)
         self.assertEqual('COMPLETE', events[1].resource_status)
+        self.assertEqual('COMPLETE', events[2].resource_status)
+        self.assertEqual('COMPLETE', events[3].resource_status)
         # test filter by resource_action
         filters = {'resource_action': 'DELETE',
                    'resource_status': 'COMPLETE'}
         events = db_api.event_get_all_by_stack(self.ctx, UUID1,
                                                filters=filters)
-        self.assertEqual(1, len(events))
+        self.assertEqual(2, len(events))
         self.assertEqual('DELETE', events[0].resource_action)
         self.assertEqual('COMPLETE', events[0].resource_status)
+        self.assertEqual('DELETE', events[1].resource_action)
+        self.assertEqual('COMPLETE', events[1].resource_status)
         # test limit and marker
         events_all = db_api.event_get_all_by_stack(self.ctx, UUID1)
-        self.assertEqual(4, len(events_all))
+        self.assertEqual(8, len(events_all))
 
         marker = events_all[1].uuid
         events2_uuid = events_all[2].uuid
@@ -689,14 +696,14 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         num_events = db_api.event_count_all_by_stack(self.ctx, UUID1)
-        self.assertEqual(2, num_events)
+        self.assertEqual(4, num_events)
 
         self._mock_delete(self.m)
         self.m.ReplayAll()
         stack.delete()
 
         num_events = db_api.event_count_all_by_stack(self.ctx, UUID1)
-        self.assertEqual(4, num_events)
+        self.assertEqual(8, num_events)
 
         self.m.VerifyAll()
 
@@ -709,7 +716,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_tenant(self.ctx)
-        self.assertEqual(6, len(events))
+        self.assertEqual(12, len(events))
 
         self._mock_delete(self.m)
         self.m.ReplayAll()
@@ -729,14 +736,14 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.m.UnsetStubs()
 
         events = db_api.event_get_all(self.ctx)
-        self.assertEqual(6, len(events))
+        self.assertEqual(12, len(events))
 
         self._mock_delete(self.m)
         self.m.ReplayAll()
         stacks[0].delete()
 
         events = db_api.event_get_all(self.ctx)
-        self.assertEqual(4, len(events))
+        self.assertEqual(8, len(events))
 
         self.m.VerifyAll()
 

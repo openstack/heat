@@ -1830,35 +1830,41 @@ class StackServiceTest(common.HeatTestCase):
 
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
-        self.assertEqual(2, len(events))
+        self.assertEqual(4, len(events))
         for ev in events:
             self.assertIn('event_identity', ev)
             self.assertIsInstance(ev['event_identity'], dict)
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertIn('resource_name', ev)
-            self.assertEqual('WebServer', ev['resource_name'])
+            self.assertIn(ev['resource_name'],
+                          ('service_event_list_test_stack', 'WebServer'))
 
             self.assertIn('physical_resource_id', ev)
 
             self.assertIn('resource_properties', ev)
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            user_data = ev['resource_properties']['UserData']
-            self.assertIn('wordpress', user_data)
-            self.assertEqual('F17-x86_64-gold',
-                             ev['resource_properties']['ImageId'])
-            self.assertEqual('m1.large',
-                             ev['resource_properties']['InstanceType'])
+            if ev.get('resource_properties'):
+                user_data = ev['resource_properties']['UserData']
+                self.assertIn('wordpress', user_data)
+                self.assertEqual('F17-x86_64-gold',
+                                 ev['resource_properties']['ImageId'])
+                self.assertEqual('m1.large',
+                                 ev['resource_properties']['InstanceType'])
 
             self.assertEqual('CREATE', ev['resource_action'])
             self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
 
             self.assertIn('resource_status_reason', ev)
-            self.assertEqual('state changed', ev['resource_status_reason'])
+            self.assertIn(ev['resource_status_reason'],
+                          ('state changed',
+                           'Stack CREATE started',
+                           'Stack CREATE completed successfully'))
 
             self.assertIn('resource_type', ev)
-            self.assertEqual('AWS::EC2::Instance', ev['resource_type'])
+            self.assertIn(ev['resource_type'],
+                          ('AWS::EC2::Instance', 'OS::Heat::Stack'))
 
             self.assertIn('stack_identity', ev)
 
@@ -1906,7 +1912,7 @@ class StackServiceTest(common.HeatTestCase):
         self.assertTrue(result['stack_id'])
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
-        self.assertEqual(6, len(events))
+        self.assertEqual(9, len(events))
 
         for ev in events:
             self.assertIn('event_identity', ev)
@@ -1918,12 +1924,14 @@ class StackServiceTest(common.HeatTestCase):
             self.assertIn('resource_properties', ev)
             self.assertIn('resource_status_reason', ev)
 
-            self.assertIn(ev['resource_action'], ('CREATE', 'DELETE'))
+            self.assertIn(ev['resource_action'],
+                          ('CREATE', 'UPDATE', 'DELETE'))
             self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
 
             self.assertIn('resource_type', ev)
             self.assertIn(ev['resource_type'], ('AWS::EC2::Instance',
-                                                'GenericResourceType'))
+                                                'GenericResourceType',
+                                                'OS::Heat::Stack'))
 
             self.assertIn('stack_identity', ev)
 
@@ -1938,35 +1946,41 @@ class StackServiceTest(common.HeatTestCase):
     def test_stack_event_list_by_tenant(self):
         events = self.eng.list_events(self.ctx, None)
 
-        self.assertEqual(2, len(events))
+        self.assertEqual(4, len(events))
         for ev in events:
             self.assertIn('event_identity', ev)
             self.assertIsInstance(ev['event_identity'], dict)
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertIn('resource_name', ev)
-            self.assertEqual('WebServer', ev['resource_name'])
+            self.assertIn(ev['resource_name'],
+                          ('WebServer', 'service_event_list_test_stack'))
 
             self.assertIn('physical_resource_id', ev)
 
             self.assertIn('resource_properties', ev)
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            user_data = ev['resource_properties']['UserData']
-            self.assertIn('wordpress', user_data)
-            self.assertEqual('F17-x86_64-gold',
-                             ev['resource_properties']['ImageId'])
-            self.assertEqual('m1.large',
-                             ev['resource_properties']['InstanceType'])
+            if ev.get('resource_properties'):
+                user_data = ev['resource_properties']['UserData']
+                self.assertIn('wordpress', user_data)
+                self.assertEqual('F17-x86_64-gold',
+                                 ev['resource_properties']['ImageId'])
+                self.assertEqual('m1.large',
+                                 ev['resource_properties']['InstanceType'])
 
             self.assertEqual('CREATE', ev['resource_action'])
             self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
 
             self.assertIn('resource_status_reason', ev)
-            self.assertEqual('state changed', ev['resource_status_reason'])
+            self.assertIn(ev['resource_status_reason'],
+                          ('state changed',
+                           'Stack CREATE started',
+                           'Stack CREATE completed successfully'))
 
             self.assertIn('resource_type', ev)
-            self.assertEqual('AWS::EC2::Instance', ev['resource_type'])
+            self.assertIn(ev['resource_type'],
+                          ('AWS::EC2::Instance', 'OS::Heat::Stack'))
 
             self.assertIn('stack_identity', ev)
 
