@@ -12,7 +12,7 @@
 #    under the License.
 
 from keystoneclient import access
-from keystoneclient.auth.identity import base
+from keystoneclient.auth.identity import access as access_plugin
 from keystoneclient.auth.identity import v3
 from keystoneclient.auth import token_endpoint
 from oslo_config import cfg
@@ -31,41 +31,6 @@ from heat.db import api as db_api
 from heat.engine import clients
 
 LOG = logging.getLogger(__name__)
-
-
-# FIXME(jamielennox): I copied this out of a review that is proposed against
-# keystoneclient which can be used when available.
-# https://review.openstack.org/#/c/143338/
-class _AccessInfoPlugin(base.BaseIdentityPlugin):
-    """A plugin that turns an existing AccessInfo object into a usable plugin.
-
-    In certain circumstances you already have an auth_ref/AccessInfo object
-    that you just want to reuse. This could have been from a cache, in
-    auth_token middleware or other.
-
-    Turn that existing object into a simple identity plugin. This plugin cannot
-    be refreshed as the AccessInfo object does not contain any authorizing
-    information.
-
-    :param auth_ref: the existing AccessInfo object.
-    :type auth_ref: keystoneclient.access.AccessInfo
-    :param auth_url: the url where this AccessInfo was retrieved from. Required
-                     if using the AUTH_INTERFACE with get_endpoint. (optional)
-    """
-
-    def __init__(self, auth_url, auth_ref):
-        super(_AccessInfoPlugin, self).__init__(auth_url=auth_url,
-                                                reauthenticate=False)
-        self.auth_ref = auth_ref
-
-    def get_auth_ref(self, session, **kwargs):
-        return self.auth_ref
-
-    def invalidate(self):
-        # NOTE(jamielennox): Don't allow the default invalidation to occur
-        # because on next authentication request we will only get the same
-        # auth_ref object again.
-        return False
 
 
 class RequestContext(context.RequestContext):
@@ -180,7 +145,9 @@ class RequestContext(context.RequestContext):
         if self.auth_token_info:
             auth_ref = access.AccessInfo.factory(body=self.auth_token_info,
                                                  auth_token=self.auth_token)
-            return _AccessInfoPlugin(self._keystone_v3_endpoint, auth_ref)
+            return access_plugin.AccessInfoPlugin(
+                auth_url=self._keystone_v3_endpoint,
+                auth_ref=auth_ref)
 
         if self.auth_token:
             # FIXME(jamielennox): This is broken but consistent. If you

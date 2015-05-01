@@ -15,6 +15,7 @@ import json
 import uuid
 
 from keystoneclient import access as ks_access
+from keystoneclient.auth.identity import access as ks_auth_access
 from keystoneclient.auth.identity import v3 as ks_auth_v3
 from keystoneclient.auth import token_endpoint as ks_token_endpoint
 import keystoneclient.exceptions as kc_exception
@@ -26,7 +27,6 @@ from oslo_config import cfg
 import six
 
 from heat.common import config
-from heat.common import context
 from heat.common import exception
 from heat.common import heat_keystoneclient
 from heat.tests import common
@@ -50,7 +50,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.StubOutWithMock(kc_v3, "Client")
         self.m.StubOutWithMock(ks_auth_v3, 'Password')
         self.m.StubOutWithMock(ks_token_endpoint, 'Token')
-        self.m.StubOutWithMock(context, '_AccessInfoPlugin')
+        self.m.StubOutWithMock(ks_auth_access, 'AccessInfoPlugin')
 
         dummy_url = 'http://server.test:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
@@ -117,8 +117,9 @@ class KeystoneClientTest(common.HeatTestCase):
             p = ks_token_endpoint.Token(token='abcd1234',
                                         endpoint='http://server.test:5000/v3')
         elif method == 'auth_ref':
-            p = context._AccessInfoPlugin('http://server.test:5000/v3',
-                                          mox.IsA(ks_access.AccessInfo))
+            p = ks_auth_access.AccessInfoPlugin(
+                auth_url='http://server.test:5000/v3',
+                auth_ref=mox.IsA(ks_access.AccessInfo))
 
         elif method == 'password':
             p = ks_auth_v3.Password(auth_url='http://server.test:5000/v3',
