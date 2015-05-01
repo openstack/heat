@@ -41,3 +41,4 @@ We have integration with
 * https://github.com/openstack/python-cinderclient (storage service)
 * https://github.com/openstack/python-glanceclient (image service)
 * https://github.com/openstack/python-troveclient (database as a Service)
+* https://github.com/openstack/python-saharaclient (hadoop cluster)
