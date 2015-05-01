@@ -56,6 +56,7 @@ lb_template = '''
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
         "AvailabilityZones" : ["nova"],
+        "SecurityGroups": ["sg_1"],
         "Instances" : [{"Ref": "WikiServerOne"}],
         "Listeners" : [ {
           "LoadBalancerPort" : "80",
@@ -225,6 +226,28 @@ class LoadBalancerTest(common.HeatTestCase):
         rsrc = self.setup_loadbalancer(False)
         params = rsrc.child_params()
         self.assertNotIn('LbFlavor', params)
+
+    def test_child_params_with_sec_gr(self):
+        rsrc = self.setup_loadbalancer(False)
+        params = rsrc.child_params()
+        expected = {'SecurityGroups': ['sg_1']}
+        self.assertEqual(expected, params)
+
+    def test_child_params_default_sec_gr(self):
+        template = template_format.parse(lb_template)
+        del template['Parameters']['KeyName']
+        del template['Parameters']['LbFlavor']
+        del template['Resources']['LoadBalancer']['Properties'][
+            'SecurityGroups']
+        stack = utils.parse_stack(template)
+
+        resource_name = 'LoadBalancer'
+        lb_defn = stack.t.resource_definitions(stack)[resource_name]
+        rsrc = lb.LoadBalancer(resource_name, lb_defn, stack)
+        params = rsrc.child_params()
+        # None value means, that will be used default [] for parameter
+        expected = {'SecurityGroups': None}
+        self.assertEqual(expected, params)
 
 
 class HaProxyConfigTest(common.HeatTestCase):
