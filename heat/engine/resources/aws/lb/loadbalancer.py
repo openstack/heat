@@ -39,6 +39,10 @@ lb_template_default = r'''
       "Type" : "String",
       "Default" : "m1.small"
     },
+    "LBTimeout" : {
+      "Type" : "String",
+      "Default" : "600"
+    },
     "SecurityGroups" : {
       "Type" : "CommaDelimitedList",
       "Default" : []
@@ -225,7 +229,7 @@ lb_template_default = r'''
       "DependsOn" : "LB_instance",
       "Properties" : {
         "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "600"
+        "Timeout" : {"Ref" : "LBTimeout"}
       }
     }
   },
@@ -527,11 +531,9 @@ backend servers
         params['SecurityGroups'] = self.properties[self.SECURITY_GROUPS]
         # If the owning stack defines KeyName, we use that key for the nested
         # template, otherwise use no key
-        if 'KeyName' in self.stack.parameters:
-            params['KeyName'] = self.stack.parameters['KeyName']
-
-        if 'LbFlavor' in self.stack.parameters:
-            params['LbFlavor'] = self.stack.parameters['LbFlavor']
+        for magic_param in ('KeyName', 'LbFlavor', 'LBTimeout'):
+            if magic_param in self.stack.parameters:
+                params[magic_param] = self.stack.parameters[magic_param]
 
         return params
 
