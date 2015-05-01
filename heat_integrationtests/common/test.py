@@ -88,6 +88,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.volume_client = self.manager.volume_client
         self.object_client = self.manager.object_client
         self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
+        self.updated_time = {}
 
     def get_remote_client(self, server_or_ip, username, private_key=None):
         if isinstance(server_or_ip, six.string_types):
@@ -246,6 +247,34 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                    (resource_name, status, build_timeout))
         raise exceptions.TimeoutException(message)
 
+    def _verify_status(self, stack, stack_identifier, status, fail_regexp):
+        if stack.stack_status == status:
+            # Handle UPDATE_COMPLETE case: Make sure we don't
+            # wait for a stale UPDATE_COMPLETE status.
+            if status == 'UPDATE_COMPLETE':
+                if self.updated_time.get(
+                        stack_identifier) != stack.updated_time:
+                    self.updated_time[stack_identifier] = stack.updated_time
+                    return True
+            else:
+                return True
+
+        if fail_regexp.search(stack.stack_status):
+            # Handle UPDATE_FAILED case.
+            if status == 'UPDATE_FAILED':
+                if self.updated_time.get(
+                        stack_identifier) != stack.updated_time:
+                    self.updated_time[stack_identifier] = stack.updated_time
+                    raise exceptions.StackBuildErrorException(
+                        stack_identifier=stack_identifier,
+                        stack_status=stack.stack_status,
+                        stack_status_reason=stack.stack_status_reason)
+            else:
+                raise exceptions.StackBuildErrorException(
+                    stack_identifier=stack_identifier,
+                    stack_status=stack.stack_status,
+                    stack_status_reason=stack.stack_status_reason)
+
     def _wait_for_stack_status(self, stack_identifier, status,
                                failure_pattern='^.*_FAILED$',
                                success_on_not_found=False):
@@ -271,13 +300,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 # ignore this, as the resource may not have
                 # been created yet
             else:
-                if stack.stack_status == status:
+                if self._verify_status(stack, stack_identifier, status,
+                                       fail_regexp):
                     return
-                if fail_regexp.search(stack.stack_status):
-                    raise exceptions.StackBuildErrorException(
-                        stack_identifier=stack_identifier,
-                        stack_status=stack.stack_status,
-                        stack_status_reason=stack.stack_status_reason)
+
             time.sleep(build_interval)
 
         message = ('Stack %s failed to reach %s status within '
