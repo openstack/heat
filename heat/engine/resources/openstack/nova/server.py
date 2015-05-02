@@ -1268,6 +1268,18 @@ class Server(stack_user.StackUser):
         for network in networks:
             networks_with_port = (networks_with_port or
                                   network.get(self.NETWORK_PORT))
+            if (network.get(self.NETWORK_ID) is None
+                and network.get(self.NETWORK_PORT) is None
+                    and network.get(self.NETWORK_UUID) is None):
+                msg = _('One of the properties "%(id)s", "%(port_id)s", '
+                        '"%(uuid)s" should be set for the '
+                        'specified network of server "%(server)s".'
+                        '') % dict(id=self.NETWORK_ID,
+                                   port_id=self.NETWORK_PORT,
+                                   uuid=self.NETWORK_UUID,
+                                   server=self.name)
+                raise exception.StackValidationFailed(message=msg)
+
             if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
                 msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
                         'to the network "%(network)s" for the server '
