@@ -108,7 +108,7 @@ resources:
           action: std.noop
 """
 
-workflow_template_update = """
+workflow_template_update_replace = """
 heat_template_version: 2013-05-23
 resources:
   workflow:
@@ -116,6 +116,21 @@ resources:
     properties:
       name: hello_action
       type: direct
+      tasks:
+        - name: hello
+          action: std.echo output='Good evening!'
+          publish:
+            result: <% $.hello %>
+"""
+
+workflow_template_update = """
+heat_template_version: 2013-05-23
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      type: direct
+      description: just testing workflow resource
       tasks:
         - name: hello
           action: std.echo output='Good evening!'
@@ -142,19 +157,15 @@ class TestWorkflow(common.HeatTestCase):
         resource_defns = self.stack.t.resource_definitions(self.stack)
         self.rsrc_defn = resource_defns['workflow']
 
-        self.patcher_client = mock.patch.object(workflow.Workflow, 'mistral')
+        self.mistral = mock.Mock()
+        self.patchobject(workflow.Workflow, 'mistral',
+                         return_value=self.mistral)
         mock.patch.object(stack_user.StackUser, '_create_user').start()
         mock.patch.object(signal_responder.SignalResponder,
                           '_create_keypair').start()
         mock.patch.object(client, 'mistral_base').start()
         mock.patch.object(client.MistralClientPlugin, '_create').start()
         self.client = client.MistralClientPlugin(self.ctx)
-        mock_client = self.patcher_client.start()
-        self.mistral = mock_client.return_value
-
-    def tearDown(self):
-        super(TestWorkflow, self).tearDown()
-        self.patcher_client.stop()
 
     def _create_resource(self, name, snippet, stack):
         wf = workflow.Workflow(name, snippet, stack)
@@ -232,10 +243,10 @@ class TestWorkflow(common.HeatTestCase):
         self.assertEqual(expected_state, wf.state)
         self.assertIn('Exception: boom!', six.text_type(exc))
 
-    def test_update(self):
+    def test_update_replace(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
 
-        t = template_format.parse(workflow_template_update)
+        t = template_format.parse(workflow_template_update_replace)
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
         new_workflow = rsrc_defns['workflow']
 
@@ -248,6 +259,29 @@ class TestWorkflow(common.HeatTestCase):
                                                      new_workflow))
         msg = 'The Resource workflow requires replacement.'
         self.assertEqual(msg, six.text_type(err))
+
+    def test_update(self):
+        wf = self._create_resource('workflow', self.rsrc_defn,
+                                   self.stack)
+        t = template_format.parse(workflow_template_update)
+        rsrc_defns = template.Template(t).resource_definitions(self.stack)
+        new_wf = rsrc_defns['workflow']
+        self.mistral.workflows.update.return_value = [
+            FakeWorkflow('test_stack-workflow-b5fiekfci3yc')]
+        scheduler.TaskRunner(wf.update, new_wf)()
+        self.mistral.workflows.update.assert_called_once()
+        self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
+
+    def test_update_failed(self):
+        wf = self._create_resource('workflow', self.rsrc_defn,
+                                   self.stack)
+        t = template_format.parse(workflow_template_update)
+        rsrc_defns = template.Template(t).resource_definitions(self.stack)
+        new_wf = rsrc_defns['workflow']
+        self.mistral.workflows.update.side_effect = Exception('boom!')
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(wf.update, new_wf))
+        self.assertEqual((wf.UPDATE, wf.FAILED), wf.state)
 
     def test_delete(self):
         wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
@@ -291,3 +325,71 @@ class TestWorkflow(common.HeatTestCase):
         self.assertEqual(1, len(mapping))
         self.assertEqual(workflow.Workflow,
                          mapping['OS::Mistral::Workflow'])
+
+    def test_signal_failed(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'input': {'flavor': '3'}}
+        self.mistral.executions.create.side_effect = Exception('boom!')
+        err = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(wf.signal, details))
+        self.assertEqual('Exception: boom!', six.text_type(err))
+
+    def test_signal_wrong_input_and_params_type(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'input': '3'}
+        err = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(wf.signal, details))
+        error_message = ("StackValidationFailed: Signal data error : Input in"
+                         " signal data must be a map, find a <type 'str'>")
+        self.assertEqual(error_message, six.text_type(err))
+        details = {'params': '3'}
+        err = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(wf.signal, details))
+        error_message = ("StackValidationFailed: Signal data error : Params "
+                         "must be a map, find a <type 'str'>")
+        self.assertEqual(error_message, six.text_type(err))
+
+    def test_signal_wrong_input_key(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'input': {'1': '3'}}
+        err = self.assertRaises(exception.ResourceFailure,
+                                scheduler.TaskRunner(wf.signal, details))
+        error_message = ("StackValidationFailed: Signal data error :"
+                         " Unknown input 1")
+        self.assertEqual(error_message, six.text_type(err))
+
+    def test_signal_and_delete_with_executions(self):
+        tmpl = template_format.parse(workflow_template_full)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['create_vm']
+        wf = workflow.Workflow('create_vm', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('create_vm')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'input': {'flavor': '3'}}
+        execution = mock.Mock()
+        execution.id = '12345'
+        self.mistral.executions.create.return_value = execution
+        scheduler.TaskRunner(wf.signal, details)()
+        self.assertEqual({'executions': '12345'}, wf.data())
+        scheduler.TaskRunner(wf.delete)()
+        self.assertEqual(1, self.mistral.executions.delete.call_count)
+        self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
