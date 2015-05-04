@@ -43,6 +43,34 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
+    def test_validate_scaling_policy_ok(self):
+        t = template_format.parse(inline_templates.as_template)
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'ScalingAdjustment'] = 33
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'AdjustmentType'] = 'PercentChangeInCapacity'
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'MinAdjustmentStep'] = 2
+        stack = utils.parse_stack(t, params=as_params)
+        self.policy = stack['WebServerScaleUpPolicy']
+        self.assertIsNone(self.policy.validate())
+
+    def test_validate_scaling_policy_error(self):
+        t = template_format.parse(inline_templates.as_template)
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'ScalingAdjustment'] = 1
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'AdjustmentType'] = 'ChangeInCapacity'
+        t['Resources']['WebServerScaleUpPolicy']['Properties'][
+            'MinAdjustmentStep'] = 2
+        stack = utils.parse_stack(t, params=as_params)
+        self.policy = stack['WebServerScaleUpPolicy']
+        ex = self.assertRaises(exception.ResourcePropertyValueDependency,
+                               self.policy.validate)
+        self.assertIn('MinAdjustmentStep property should only '
+                      'be specified for AdjustmentType with '
+                      'value PercentChangeInCapacity.', six.text_type(ex))
+
     def test_scaling_policy_bad_group(self):
         t = template_format.parse(inline_templates.as_template_bad_group)
         stack = utils.parse_stack(t, params=as_params)
@@ -93,7 +121,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                return_value=False) as mock_cip:
             pol.handle_signal(details=test)
             mock_cip.assert_called_once_with()
-        group.adjust.assert_called_once_with(1, 'ChangeInCapacity')
+        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None)
 
 
 class TestCooldownMixin(common.HeatTestCase):

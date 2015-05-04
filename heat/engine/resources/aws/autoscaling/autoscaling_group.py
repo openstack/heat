@@ -41,12 +41,18 @@ LOG = logging.getLogger(__name__)
 
 
 def _calculate_new_capacity(current, adjustment, adjustment_type,
-                            minimum, maximum):
+                            min_adjustment_step, minimum, maximum):
     """
     Given the current capacity, calculates the new capacity which results
     from applying the given adjustment of the given adjustment-type.  The
     new capacity will be kept within the maximum and minimum bounds.
     """
+    def _get_minimum_adjustment(adjustment, min_adjustment_step):
+        if min_adjustment_step and min_adjustment_step > abs(adjustment):
+            adjustment = (min_adjustment_step if adjustment > 0
+                          else -min_adjustment_step)
+        return adjustment
+
     if adjustment_type == CHANGE_IN_CAPACITY:
         new_capacity = current + adjustment
     elif adjustment_type == EXACT_CAPACITY:
@@ -60,7 +66,8 @@ def _calculate_new_capacity(current, adjustment, adjustment_type,
         else:
             rounded = int(math.floor(delta) if delta > 0.0
                           else math.ceil(delta))
-        new_capacity = current + rounded
+        adjustment = _get_minimum_adjustment(rounded, min_adjustment_step)
+        new_capacity = current + adjustment
 
     if new_capacity > maximum:
         LOG.debug('truncating growth to %s' % maximum)
@@ -293,7 +300,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
             current_capacity = grouputils.get_size(self)
             self.adjust(current_capacity, adjustment_type=EXACT_CAPACITY)
 
-    def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY):
+    def adjust(self, adjustment, adjustment_type=CHANGE_IN_CAPACITY,
+               min_adjustment_step=None):
         """
         Adjust the size of the scaling group if the cooldown permits.
         """
@@ -309,7 +317,9 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
         upper = self.properties[self.MAX_SIZE]
 
         new_capacity = _calculate_new_capacity(capacity, adjustment,
-                                               adjustment_type, lower, upper)
+                                               adjustment_type,
+                                               min_adjustment_step,
+                                               lower, upper)
 
         # send a notification before, on-error and on-success.
         notif = {

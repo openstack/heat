@@ -37,10 +37,10 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
     """
     PROPERTIES = (
         AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
-        COOLDOWN,
+        COOLDOWN, MIN_ADJUSTMENT_STEP
     ) = (
         'auto_scaling_group_id', 'scaling_adjustment', 'adjustment_type',
-        'cooldown',
+        'cooldown', 'min_adjustment_step',
     )
 
     EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
@@ -81,6 +81,20 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             _('Cooldown period, in seconds.'),
             update_allowed=True
         ),
+        MIN_ADJUSTMENT_STEP: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Minimum number of resources that are added or removed '
+              'when the AutoScaling group scales up or down. This can '
+              'be used only when specifying percent_change_in_capacity '
+              'for the adjustment_type property.'),
+            constraints=[
+                constraints.Range(
+                    min=0,
+                ),
+            ],
+            update_allowed=True
+        ),
+
     }
 
     attributes_schema = {
@@ -88,6 +102,20 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             _("A signed url to handle the alarm.")
         ),
     }
+
+    def validate(self):
+        """
+        Add validation for min_adjustment_step
+        """
+        super(AutoScalingPolicy, self).validate()
+        adjustment_type = self.properties.get(self.ADJUSTMENT_TYPE)
+        adjustment_step = self.properties.get(self.MIN_ADJUSTMENT_STEP)
+        if (adjustment_type != self.PERCENT_CHANGE_IN_CAPACITY
+                and adjustment_step is not None):
+            raise exception.ResourcePropertyValueDependency(
+                prop1=self.MIN_ADJUSTMENT_STEP,
+                prop2=self.ADJUSTMENT_TYPE,
+                value=self.PERCENT_CHANGE_IN_CAPACITY)
 
     def handle_create(self):
         super(AutoScalingPolicy, self).handle_create()
@@ -146,7 +174,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                  {'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
                   'filter': self.properties[self.SCALING_ADJUSTMENT]})
         adjustment_type = self._get_adjustement_type()
-        group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type)
+        group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type,
+                     self.properties[self.MIN_ADJUSTMENT_STEP])
 
         self._cooldown_timestamp("%s : %s" %
                                  (self.properties[self.ADJUSTMENT_TYPE],

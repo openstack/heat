@@ -14,26 +14,22 @@
 from oslo_log import log as logging
 import six
 
-from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources import signal_responder
-from heat.scaling import cooldown
+from heat.engine.resources.openstack.heat import scaling_policy as heat_sp
 
 LOG = logging.getLogger(__name__)
 
 
-class AWSScalingPolicy(signal_responder.SignalResponder,
-                       cooldown.CooldownMixin):
+class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
     PROPERTIES = (
         AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
-        COOLDOWN,
+        COOLDOWN, MIN_ADJUSTMENT_STEP,
     ) = (
         'AutoScalingGroupName', 'ScalingAdjustment', 'AdjustmentType',
-        'Cooldown',
+        'Cooldown', 'MinAdjustmentStep',
     )
 
     EXACT_CAPACITY, CHANGE_IN_CAPACITY, PERCENT_CHANGE_IN_CAPACITY = (
@@ -73,6 +69,20 @@ class AWSScalingPolicy(signal_responder.SignalResponder,
             _('Cooldown period, in seconds.'),
             update_allowed=True
         ),
+        MIN_ADJUSTMENT_STEP: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Minimum number of resources that are added or removed '
+              'when the AutoScaling group scales up or down. This can '
+              'be used only when specifying PercentChangeInCapacity '
+              'for the AdjustmentType property.'),
+            constraints=[
+                constraints.Range(
+                    min=0,
+                ),
+            ],
+            update_allowed=True
+        ),
+
     }
 
     attributes_schema = {
@@ -81,75 +91,8 @@ class AWSScalingPolicy(signal_responder.SignalResponder,
         ),
     }
 
-    def handle_create(self):
-        super(AWSScalingPolicy, self).handle_create()
-        self.resource_id_set(self._get_user_id())
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        """
-        If Properties has changed, update self.properties, so we get the new
-        values during any subsequent adjustment.
-        """
-        if prop_diff:
-            self.properties = json_snippet.properties(self.properties_schema,
-                                                      self.context)
-
     def _get_adjustement_type(self):
         return self.properties[self.ADJUSTMENT_TYPE]
-
-    def handle_signal(self, details=None):
-        # ceilometer sends details like this:
-        # {u'alarm_id': ID, u'previous': u'ok', u'current': u'alarm',
-        #  u'reason': u'...'})
-        # in this policy we currently assume that this gets called
-        # only when there is an alarm. But the template writer can
-        # put the policy in all the alarm notifiers (nodata, and ok).
-        #
-        # our watchrule has upper case states so lower() them all.
-        if details is None:
-            alarm_state = 'alarm'
-        else:
-            alarm_state = details.get('current',
-                                      details.get('state', 'alarm')).lower()
-
-        LOG.info(_LI('%(name)s Alarm, new state %(state)s'),
-                 {'name': self.name, 'state': alarm_state})
-
-        if alarm_state != 'alarm':
-            return
-        if self._cooldown_inprogress():
-            LOG.info(_LI("%(name)s NOT performing scaling action, "
-                         "cooldown %(cooldown)s"),
-                     {'name': self.name,
-                      'cooldown': self.properties[self.COOLDOWN]})
-            return
-
-        asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
-        group = self.stack.resource_by_refid(asgn_id)
-        if group is None:
-            raise exception.NotFound(_('Alarm %(alarm)s could not find '
-                                       'scaling group named "%(group)s"') % {
-                                           'alarm': self.name,
-                                           'group': asgn_id})
-
-        LOG.info(_LI('%(name)s Alarm, adjusting Group %(group)s with id '
-                     '%(asgn_id)s by %(filter)s'),
-                 {'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
-                  'filter': self.properties[self.SCALING_ADJUSTMENT]})
-        adjustment_type = self._get_adjustement_type()
-        group.adjust(self.properties[self.SCALING_ADJUSTMENT], adjustment_type)
-
-        self._cooldown_timestamp("%s : %s" %
-                                 (self.properties[self.ADJUSTMENT_TYPE],
-                                  self.properties[self.SCALING_ADJUSTMENT]))
-
-    def _resolve_attribute(self, name):
-        '''
-        heat extension: "AlarmUrl" returns the url to post to the policy
-        when there is an alarm.
-        '''
-        if name == self.ALARM_URL and self.resource_id is not None:
-            return six.text_type(self._get_signed_url())
 
     def FnGetRefId(self):
         if self.resource_id is not None:

@@ -20,9 +20,11 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
+from heat.tests import generic_resource
 from heat.tests import utils
 
 
@@ -33,6 +35,8 @@ as_params = inline_templates.as_params
 class TestAutoScalingPolicy(common.HeatTestCase):
     def setUp(self):
         super(TestAutoScalingPolicy, self).setUp()
+        resource._register_class('ResourceWithPropsAndAttrs',
+                                 generic_resource.ResourceWithPropsAndAttrs)
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')
 
@@ -42,6 +46,32 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
+
+    def test_validate_scaling_policy_ok(self):
+        t = template_format.parse(as_template)
+        t['resources']['my-policy']['properties'][
+            'scaling_adjustment'] = 33
+        t['resources']['my-policy']['properties'][
+            'adjustment_type'] = 'percent_change_in_capacity'
+        t['resources']['my-policy']['properties'][
+            'min_adjustment_step'] = 2
+        stack = utils.parse_stack(t)
+        self.assertIsNone(stack.validate())
+
+    def test_validate_scaling_policy_error(self):
+        t = template_format.parse(as_template)
+        t['resources']['my-policy']['properties'][
+            'scaling_adjustment'] = 1
+        t['resources']['my-policy']['properties'][
+            'adjustment_type'] = 'change_in_capacity'
+        t['resources']['my-policy']['properties'][
+            'min_adjustment_step'] = 2
+        stack = utils.parse_stack(t)
+        ex = self.assertRaises(exception.ResourcePropertyValueDependency,
+                               stack.validate)
+        self.assertIn('min_adjustment_step property should only '
+                      'be specified for adjustment_type with '
+                      'value percent_change_in_capacity.', six.text_type(ex))
 
     def test_scaling_policy_bad_group(self):
         t = template_format.parse(inline_templates.as_heat_template_bad_group)
@@ -92,7 +122,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                return_value=False) as mock_cip:
             pol.handle_signal(details=test)
             mock_cip.assert_called_once_with()
-        group.adjust.assert_called_once_with(1, 'ChangeInCapacity')
+        group.adjust.assert_called_once_with(1, 'ChangeInCapacity', None)
 
 
 class TestCooldownMixin(common.HeatTestCase):
