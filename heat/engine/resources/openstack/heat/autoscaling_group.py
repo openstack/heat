@@ -124,7 +124,8 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             support_status=support.SupportStatus(version='2014.2')
         ),
         CURRENT_SIZE: attributes.Schema(
-            _("The current size of AutoscalingResourceGroup.")
+            _("The current size of AutoscalingResourceGroup."),
+            support_status=support.SupportStatus(version='2015.1')
         ),
     }
     update_policy_schema = {}
