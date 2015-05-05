@@ -119,6 +119,19 @@ class StackUpdate(object):
             existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)
 
         self.existing_stack.add_resource(new_res)
+
+        # Save new resource definition to backup stack if it is not
+        # present in backup stack template already
+        # it allows to resolve all dependencies that existing resource
+        # can have if it was copied to backup stack
+        if (res_name not in
+                self.previous_stack.t[self.previous_stack.t.RESOURCES]):
+            LOG.debug("Backing up new Resource %s" % res_name)
+            definition = new_res.t.reparse(self.previous_stack,
+                                           new_res.stack.t)
+            self.previous_stack.t.add_resource(definition)
+            self.previous_stack.t.store(self.previous_stack.context)
+
         yield new_res.create()
 
     @scheduler.wrappertask
@@ -133,6 +146,14 @@ class StackUpdate(object):
             except resource.UpdateReplace:
                 pass
             else:
+                # Save updated resource definition to backup stack
+                # cause it allows the backup stack resources to be synchronized
+                LOG.debug("Backing up updated Resource %s" % res_name)
+                definition = existing_res.t.reparse(self.previous_stack,
+                                                    existing_res.stack.t)
+                self.previous_stack.t.add_resource(definition)
+                self.previous_stack.t.store(self.previous_stack.context)
+
                 LOG.info(_("Resource %(res_name)s for stack %(stack_name)s "
                            "updated")
                          % {'res_name': res_name,

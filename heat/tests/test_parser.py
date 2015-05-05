@@ -3576,6 +3576,144 @@ class StackTest(HeatTestCase):
         self.assertEqual('foo', self.stack['AResource'].properties['Foo'])
         self.m.VerifyAll()
 
+    def test_delete_stack_when_update_failed_twice(self):
+        """Test when stack update failed twice and delete the stack.
+
+        Test checks the following scenario:
+        1. Create stack
+        2. Update stack (failed)
+        3. Update stack (failed)
+        4. Delete stack
+        The test checks the behavior of backup stack when update is failed.
+        If some resources were not backed up correctly then test will fail.
+        """
+        tmpl_create = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'}
+            }
+        }
+        # create a stack
+        self.stack = parser.Stack(self.ctx, 'update_fail_test_stack',
+                                  template.Template(tmpl_create),
+                                  disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        tmpl_update = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'},
+                'Bres': {'type': 'GenericResourceType'},
+                'Cres': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {
+                        'Foo': {'get_resource': 'Bres'},
+                    }
+                }
+            }
+        }
+
+        mock_create = self.patchobject(
+            generic_rsrc.ResourceWithProps,
+            'handle_create',
+            side_effect=[Exception, Exception])
+
+        updated_stack_first = parser.Stack(self.ctx,
+                                           'update_fail_test_stack',
+                                           template.Template(tmpl_update))
+        self.stack.update(updated_stack_first)
+        self.stack.resources['Cres'].resource_id_set('c_res')
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
+                         self.stack.state)
+
+        # try to update the stack again
+        updated_stack_second = parser.Stack(self.ctx,
+                                            'update_fail_test_stack',
+                                            template.Template(tmpl_update))
+        self.stack.update(updated_stack_second)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
+                         self.stack.state)
+
+        self.assertEqual(mock_create.call_count, 2)
+
+        # delete the failed stack
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+    def test_backup_stack_synchronized_after_update(self):
+        """Test when backup stack updated correctly during stack update.
+
+        Test checks the following scenario:
+        1. Create stack
+        2. Update stack (failed - so the backup should not be deleted)
+        3. Update stack (failed - so the backup from step 2 should be updated)
+        The test checks that backup stack is synchronized with the main stack.
+        """
+        # create a stack
+        tmpl_create = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'}
+            }
+        }
+        self.stack = parser.Stack(self.ctx, 'test_update_stack_backup',
+                                  template.Template(tmpl_create),
+                                  disable_rollback=True)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        # try to update a stack with a new resource that should be backed up
+        tmpl_update = {
+            'heat_template_version': '2013-05-23',
+            'resources': {
+                'Ares': {'type': 'GenericResourceType'},
+                'Bres': {
+                    'type': 'ResWithComplexPropsAndAttrs',
+                    'properties': {
+                        'an_int': 0,
+                    }
+                },
+                'Cres': {
+                    'type': 'ResourceWithPropsType',
+                    'properties': {
+                        'Foo': {'get_resource': 'Bres'},
+                    }
+                }
+            }
+        }
+
+        self.patchobject(generic_rsrc.ResourceWithProps,
+                         'handle_create',
+                         side_effect=[Exception, Exception])
+
+        stack_with_new_resource = parser.Stack(
+            self.ctx,
+            'test_update_stack_backup',
+            template.Template(tmpl_update))
+        self.stack.update(stack_with_new_resource)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
+                         self.stack.state)
+        # assert that backup stack has been updated correctly
+        self.assertIn('Bres', self.stack._backup_stack())
+
+        # update the stack with resource that updated in-place
+        tmpl_update['resources']['Bres']['properties']['an_int'] = 1
+        updated_stack_second = parser.Stack(self.ctx,
+                                            'test_update_stack_backup',
+                                            template.Template(tmpl_update))
+        self.stack.update(updated_stack_second)
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.FAILED),
+                         self.stack.state)
+        # assert that resource in backup stack also has been updated
+        backup = self.stack._backup_stack()
+        self.assertEqual(1, backup['Bres'].properties['an_int'])
+
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')
