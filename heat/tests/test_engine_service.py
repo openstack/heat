@@ -236,9 +236,9 @@ resources:
 '''
 
 
-class StackConvergenceCreateUpdateTest(common.HeatTestCase):
+class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
-        super(StackConvergenceCreateUpdateTest, self).setUp()
+        super(StackConvergenceCreateUpdateDeleteTest, self).setUp()
         cfg.CONF.set_override('convergence_engine', True)
 
     def test_conv_wordpress_single_instance_stack_create(self):

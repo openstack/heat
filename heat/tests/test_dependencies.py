@@ -227,10 +227,10 @@ class dependenciesTest(common.HeatTestCase):
 
         self.assertRaises(KeyError, d.required_by, 'foo')
 
-    def test_graph_leaves(self):
+    def test_leaves(self):
         d = dependencies.Dependencies([('last1', 'mid'), ('last2', 'mid'),
                                        ('mid', 'first1'), ('mid', 'first2')])
 
-        leaves = sorted(list(d._graph.leaves()))
+        leaves = sorted(list(d.leaves()))
 
         self.assertEqual(['first1', 'first2'], leaves)

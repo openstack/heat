@@ -960,11 +960,7 @@ class Stack(collections.Mapping):
                       self.convergence_dependencies.graph().edges()]}
         self.store()
 
-        leaves = (self.convergence_dependencies.graph(reverse=True).leaves()
-                  if self.action in (self.DELETE, self.SUSPEND)
-                  else self.convergence_dependencies.graph().leaves())
-
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in self.convergence_dependencies.leaves():
             LOG.info(_LI("Triggering resource %(rsrc_id)s "
                          "for update=%(is_update)s"),
                      {'rsrc_id': rsrc_id, 'is_update': is_update})
