@@ -731,6 +731,14 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         self.parent_resource.nested.assert_called_once_with(
             show_deleted=self.show_deleted, force_reload=True)
 
+    def test_wrong_action(self):
+        self.nested.action = 'COMPLETE'
+        complete = getattr(self.parent_resource,
+                           'check_%s_complete' % self.action)
+        self.assertFalse(complete(None))
+        self.parent_resource.nested.assert_called_once_with(
+            show_deleted=self.show_deleted, force_reload=True)
+
 
 class WithTemplateTest(StackResourceBaseTest):
 
