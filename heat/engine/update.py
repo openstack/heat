@@ -135,6 +135,15 @@ class StackUpdate(object):
             except resource.UpdateReplace:
                 pass
             else:
+                # Save resource definition to backup stack if it is not
+                # present in backup stack template already
+                if res_name not in self.previous_stack.t[
+                        self.previous_stack.t.RESOURCES]:
+                    definition = existing_res.t.reparse(self.previous_stack,
+                                                        existing_res.stack.t)
+                    self.previous_stack.t.add_resource(definition)
+                    self.previous_stack.t.store(self.previous_stack.context)
+
                 LOG.info(_LI("Resource %(res_name)s for stack %(stack_name)s "
                              "updated"),
                          {'res_name': res_name,
