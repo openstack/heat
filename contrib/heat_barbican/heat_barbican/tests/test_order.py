@@ -76,7 +76,7 @@ class TestOrder(common.HeatTestCase):
     def _create_resource(self, name, snippet, stack):
         res = order.Order(name, snippet, stack)
         res.check_create_complete = mock.Mock(return_value=True)
-        self.barbican.orders.create_key.return_value = FakeOrder(name)
+        self.barbican.orders.create.return_value = FakeOrder(name)
         scheduler.TaskRunner(res.create)()
         return res
 
@@ -84,7 +84,7 @@ class TestOrder(common.HeatTestCase):
         res = self._create_resource('foo', self.res_template, self.stack)
         expected_state = (res.CREATE, res.COMPLETE)
         self.assertEqual(expected_state, res.state)
-        args = self.barbican.orders.create_key.call_args[1]
+        args = self.barbican.orders.create.call_args[1]
         self.assertEqual('foobar-order', args['name'])
         self.assertEqual('aes', args['algorithm'])
         self.assertEqual('cbc', args['mode'])
@@ -112,18 +112,34 @@ class TestOrder(common.HeatTestCase):
         self.assertRaises(self.barbican.barbican_client.HTTPClientError,
                           res.FnGetAtt, 'order_ref')
 
+    def test_container_attributes(self):
+        mock_order = mock.Mock()
+        mock_order.container_ref = 'test-container-ref'
+
+        mock_container = mock.Mock()
+        mock_container.public_key = mock.Mock(payload='public-key')
+        mock_container.private_key = mock.Mock(payload='private-key')
+        mock_container.certificate = mock.Mock(payload='cert')
+        mock_container.intermediates = mock.Mock(payload='interm')
+
+        res = self._create_resource('foo', self.res_template, self.stack)
+        self.barbican.orders.get.return_value = mock_order
+
+        self.barbican.containers.get.return_value = mock_container
+
+        self.assertEqual('public-key', res.FnGetAtt('public_key'))
+        self.barbican.containers.get.assert_called_once_with(
+            'test-container-ref')
+
+        self.assertEqual('private-key', res.FnGetAtt('private_key'))
+        self.assertEqual('cert', res.FnGetAtt('certificate'))
+        self.assertEqual('interm', res.FnGetAtt('intermediates'))
+
     def test_create_order_sets_resource_id(self):
-        self.barbican.orders.create_key.return_value = FakeOrder('foo')
+        self.barbican.orders.create.return_value = FakeOrder('foo')
         res = self._create_resource('foo', self.res_template, self.stack)
 
         self.assertEqual('foo', res.resource_id)
-
-    def test_create_order_defaults_to_octet_stream(self):
-        res = self._create_resource('foo', self.res_template, self.stack)
-
-        args = self.barbican.orders.create_key.call_args[1]
-        self.assertEqual('application/octet-stream',
-                         args[res.PAYLOAD_CONTENT_TYPE])
 
     def test_create_order_with_octet_stream(self):
         content_type = 'application/octet-stream'
@@ -132,20 +148,11 @@ class TestOrder(common.HeatTestCase):
                                             self.props)
         res = self._create_resource(defn.name, defn, self.stack)
 
-        args = self.barbican.orders.create_key.call_args[1]
+        args = self.barbican.orders.create.call_args[1]
         self.assertEqual(content_type, args[res.PAYLOAD_CONTENT_TYPE])
 
-    def test_create_order_other_content_types_now_allowed(self):
-        self.props['payload_content_type'] = 'not/allowed'
-        defn = rsrc_defn.ResourceDefinition('order', 'OS::Barbican::Order',
-                                            self.props)
-        res = order.Order(defn.name, defn, self.stack)
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(res.create))
-
     def test_delete_order(self):
-        self.barbican.orders.create_key.return_value = 'foo'
+        self.barbican.orders.create.return_value = 'foo'
         res = self._create_resource('foo', self.res_template, self.stack)
         self.assertEqual('foo', res.resource_id)
 
