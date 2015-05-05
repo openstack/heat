@@ -37,6 +37,7 @@ resources:
       shared: true
       dhcp_agent_ids:
         - 28c25a04-3f73-45a7-a2b4-59e183943ddc
+      port_security_enabled: False
 
   subnet:
     type: OS::Neutron::Subnet
@@ -102,6 +103,7 @@ class NeutronNetTest(common.HeatTestCase):
                 'name': u'the_network',
                 'admin_state_up': True,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'port_security_enabled': False,
                 'shared': True}
         }).AndReturn({"network": {
             "status": "BUILD",
@@ -215,7 +217,8 @@ class NeutronNetTest(common.HeatTestCase):
             {'network': {
                 'shared': True,
                 'name': 'mynet',
-                'admin_state_up': True
+                'admin_state_up': True,
+                'port_security_enabled': False
             }}).AndReturn(None)
 
         # Delete script
