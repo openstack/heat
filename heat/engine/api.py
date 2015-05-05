@@ -183,8 +183,10 @@ def format_stack_resource(resource, detail=True, with_props=False,
     expectations.
     '''
     last_updated_time = resource.updated_time or resource.created_time
+    created_time = resource.created_time
     res = {
         rpc_api.RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
+        rpc_api.RES_CREATION_TIME: timeutils.isotime(created_time),
         rpc_api.RES_NAME: resource.name,
         rpc_api.RES_PHYSICAL_ID: resource.resource_id or '',
         rpc_api.RES_ACTION: resource.action,

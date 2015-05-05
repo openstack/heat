@@ -59,14 +59,14 @@ STACK_OUTPUT_KEYS = (
 )
 
 RES_KEYS = (
-    RES_DESCRIPTION, RES_UPDATED_TIME,
+    RES_DESCRIPTION, RES_CREATION_TIME, RES_UPDATED_TIME,
     RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
     RES_ACTION, RES_STATUS, RES_STATUS_DATA,
     RES_TYPE, RES_ID, RES_STACK_ID, RES_STACK_NAME,
     RES_REQUIRED_BY, RES_NESTED_STACK_ID, RES_NESTED_RESOURCES,
     RES_PARENT_RESOURCE,
 ) = (
-    'description', 'updated_time',
+    'description', 'creation_time', 'updated_time',
     'resource_name', 'physical_resource_id', 'metadata',
     'resource_action', 'resource_status', 'resource_status_reason',
     'resource_type', 'resource_identity', STACK_ID, STACK_NAME,

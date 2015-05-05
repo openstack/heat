@@ -68,6 +68,7 @@ class FormatTest(common.HeatTestCase):
         res = self.stack['generic1']
 
         resource_keys = set((
+            rpc_api.RES_CREATION_TIME,
             rpc_api.RES_UPDATED_TIME,
             rpc_api.RES_NAME,
             rpc_api.RES_PHYSICAL_ID,
@@ -194,6 +195,7 @@ class FormatTest(common.HeatTestCase):
         res.nested.return_value = None
 
         resource_keys = set((
+            rpc_api.RES_CREATION_TIME,
             rpc_api.RES_UPDATED_TIME,
             rpc_api.RES_NAME,
             rpc_api.RES_PHYSICAL_ID,
