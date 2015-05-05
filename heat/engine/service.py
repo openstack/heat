@@ -36,6 +36,7 @@ from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
 from heat.common import service_utils
+from heat.common import template_format
 from heat.engine import api
 from heat.engine import attributes
 from heat.engine import clients
@@ -668,8 +669,7 @@ class EngineService(service.Service):
         """
         LOG.info(_LI('Creating stack %s'), stack_name)
 
-        def _stack_create(stack):
-
+        def _create_stack_user(stack):
             if not stack.stack_user_project_id:
                 try:
                     stack.create_stack_user_project_id()
@@ -677,6 +677,8 @@ class EngineService(service.Service):
                     stack.state_set(stack.action, stack.FAILED,
                                     six.text_type(ex))
 
+        def _stack_create(stack):
+            _create_stack_user(stack)
             # Create/Adopt a stack, and create the periodic task if successful
             if stack.adopt_stack_data:
                 stack.adopt()
@@ -692,18 +694,22 @@ class EngineService(service.Service):
                 LOG.info(_LI("Stack create failed, status %s"), stack.status)
 
         convergence = cfg.CONF.convergence_engine
-        if convergence:
-            raise exception.NotSupported(feature=_('Convergence engine'))
 
         stack = self._parse_template_and_validate_stack(
             cnxt, stack_name, template, params, files, args, owner_id,
             nested_depth, user_creds_id, stack_user_project_id, convergence,
             parent_resource_name)
 
-        stack.store()
-
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              _stack_create, stack)
+        # once validations are done
+        # if convergence is enabled, take convergence path
+        if convergence:
+            # TODO(later): call _create_stack_user(stack)
+            # call stack.converge_stack(template=stack.t, action=stack.CREATE)
+            raise exception.NotSupported(feature=_('Convergence engine'))
+        else:
+            stack.store()
+            self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                                  _stack_create, stack)
 
         return dict(stack.identifier())
 
@@ -765,14 +771,20 @@ class EngineService(service.Service):
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
 
-        event = eventlet.event.Event()
-        th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,
-                                                   self.engine_id,
-                                                   current_stack.update,
-                                                   updated_stack,
-                                                   event=event)
-        th.link(self.thread_group_mgr.remove_event, current_stack.id, event)
-        self.thread_group_mgr.add_event(current_stack.id, event)
+        # Once all the validations are done
+        # if convergence is enabled, take the convergence path
+        if current_kwargs['convergence']:
+            current_stack.converge_stack(template=tmpl)
+        else:
+            event = eventlet.event.Event()
+            th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,
+                                                       self.engine_id,
+                                                       current_stack.update,
+                                                       updated_stack,
+                                                       event=event)
+            th.link(self.thread_group_mgr.remove_event,
+                    current_stack.id, event)
+            self.thread_group_mgr.add_event(current_stack.id, event)
         return dict(current_stack.identifier())
 
     @context.request_context
@@ -926,6 +938,16 @@ class EngineService(service.Service):
         st = self._get_stack(cnxt, stack_identity)
         LOG.info(_LI('Deleting stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
+
+        if stack.convergence:
+            empty_template = '''
+            heat_template_version: 2013-05-23
+            description: Empty Template
+            '''
+            tmpl = template_format.parse(empty_template)
+            template = templatem.Template(tmpl)
+            stack.converge_stack(template=template, action=stack.DELETE)
+            return
 
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
         with lock.try_thread_lock() as acquire_result:

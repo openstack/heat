@@ -226,3 +226,11 @@ class dependenciesTest(common.HeatTestCase):
                         "'%s' not found in required_by" % n)
 
         self.assertRaises(KeyError, d.required_by, 'foo')
+
+    def test_graph_leaves(self):
+        d = dependencies.Dependencies([('last1', 'mid'), ('last2', 'mid'),
+                                       ('mid', 'first1'), ('mid', 'first2')])
+
+        leaves = sorted(list(d._graph.leaves()))
+
+        self.assertEqual(['first1', 'first2'], leaves)
