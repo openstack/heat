@@ -258,6 +258,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             if prev_derived_config:
                 self._delete_derived_config(prev_derived_config)
         if not self._signal_transport_none():
+            # NOTE(pshchelo): sd is a simple dict, easy to serialize,
+            # does not need fixing re LP bug #1393268
             return sd
 
     def _check_complete(self):
