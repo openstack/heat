@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-21 06:03+0000\n"
+"POT-Creation-Date: 2015-05-05 06:01+0000\n"
 "PO-Revision-Date: 2015-04-21 05:12+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/projects/p/heat/"
@@ -20,210 +20,116 @@ msgstr ""
 "Generated-By: Babel 1.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: heat/api/aws/ec2token.py:189
 msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
-#: heat/api/aws/utils.py:99
 #, python-format
 msgid "Request does not contain %s parameter!"
 msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 
-#: heat/api/cloudwatch/watch.py:253
 msgid "Request does not contain required MetricData"
 msgstr "요청에 필요한 MetricData 가 없음. "
 
-#: heat/common/context.py:200
 msgid "Keystone v3 API connection failed, no password trust or auth_token!"
 msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
-#: heat/common/exception.py:114
 msgid "Exception in string format operation"
 msgstr "문자열 형식화 오퍼레이션의 예외"
 
-#: heat/common/heat_keystoneclient.py:152
-#: heat/common/heat_keystoneclient.py:235
 msgid "Domain admin client authentication failed"
 msgstr "Domain 관리자 인증 실패."
 
-#: heat/common/heat_keystoneclient.py:178
-#: heat/common/heat_keystoneclient.py:394
-msgid "Keystone client authentication failed"
-msgstr ""
-
-#: heat/common/heat_keystoneclient.py:184
 msgid "trust token re-scoping failed!"
 msgstr "신뢰할 수 있는 token 재설정 실패!"
 
-#: heat/common/heat_keystoneclient.py:188
 msgid "Trust impersonation failed"
 msgstr "트러스트의 위장이 실패했습니다."
 
-#: heat/common/heat_keystoneclient.py:304
-#: heat/common/heat_keystoneclient.py:376
 #, python-format
 msgid "Failed to add user %(user)s to role %(role)s, check role exists!"
 msgstr ""
 "규정 %(role)s에 사용자 %(user)s 를 추가하는데 실패했습니다. 규정을 확인하세"
 "요.!"
 
-#: heat/common/lifecycle_plugin_utils.py:46
 msgid "failed to get lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
 
-#: heat/common/lifecycle_plugin_utils.py:53
 #, python-format
 msgid "failed to instantiate stack lifecycle class %s"
 msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
 
-#: heat/common/lifecycle_plugin_utils.py:58
 msgid "failed to sort lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
 
-#: heat/common/lifecycle_plugin_utils.py:111
 #, python-format
 msgid "%(opname) %(ci)s failed for %(a)s on %(sid)s"
 msgstr "%(sid)s의 %(a)s를 위한  %(opname) %(ci)s 실패 "
 
-#: heat/common/plugin_loader.py:100
 #, python-format
 msgid "Failed to import module %s"
 msgstr "%s의 모듈을 가져 오는 데 실패했습니다."
 
-#: heat/common/wsgi.py:256
 msgid "SIGTERM received"
 msgstr "SIGTERM 수신"
 
-#: heat/common/wsgi.py:265
-msgid "SIGHUP received"
-msgstr ""
-
-#: heat/common/wsgi.py:295
-#, python-format
-msgid "Removing dead child %s"
-msgstr ""
-
-#: heat/common/wsgi.py:652
 #, python-format
 msgid "Exception handling resource: %s"
 msgstr "자원 처리 예외: %s"
 
-#: heat/common/wsgi.py:674
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
 msgstr "%(code)s을(를) 사용자에게 리턴 중: %(explanation)s"
 
-#: heat/common/wsgi.py:748
-#, python-format
-msgid "Unexpected error occurred serving API: %s"
-msgstr ""
-
-#: heat/engine/api.py:42
-msgid "Timeout conversion failed"
-msgstr ""
-
-#: heat/engine/api.py:320
 msgid "Unexpected number of keys in watch_data.data!"
 msgstr "watch_data.data의 키의 예기치 않은 수!"
 
-#: heat/engine/environment.py:580
 #, python-format
 msgid "Failed to read %s"
 msgstr "%s를 읽지 못했습니다."
 
-#: heat/engine/environment.py:592
 #, python-format
 msgid "Failed to parse %(file_path)s"
 msgstr "%(file_path)s를 구문 분석하는 데 실패했습니다."
 
-#: heat/engine/environment.py:596
 #, python-format
 msgid "Failed to read %(file_path)s"
 msgstr "%(file_path)s를 읽는데 실패했습니다. "
 
-#: heat/engine/plugin_manager.py:97
 #, python-format
 msgid "Failed to load %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 
-#: heat/engine/plugin_manager.py:104
 #, python-format
 msgid "Invalid type for %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
-#: heat/engine/resource.py:505
-msgid "Error marking resource as failed"
-msgstr ""
-
-#: heat/engine/resource.py:984 heat/engine/resource.py:1025
 #, python-format
 msgid "DB error %s"
 msgstr "DB %s에 오류가 있습니다. "
 
-#: heat/engine/resource.py:1168
-#, python-format
-msgid "signal %(name)s : %(msg)s"
-msgstr ""
-
-#: heat/engine/service.py:368
-#, python-format
-msgid "Failed to stop engine service, %s"
-msgstr ""
-
-#: heat/engine/service.py:1443
 msgid "Filtering by namespace/metric not yet supported"
 msgstr "네임 스페이스의 필터링 / 메트릭은 아직 지원하지 않습니다. "
 
-#: heat/engine/service_stack_watch.py:74
 #, python-format
 msgid "Unable to retrieve stack %s for periodic task"
 msgstr "주기적인 작업에 대한 스택 %s를 검색 할 수 없습니다"
 
-#: heat/engine/stack.py:629
-#, python-format
-msgid "Exception: %s"
-msgstr ""
-
-#: heat/engine/stack.py:901
 #, python-format
 msgid "Unexpected action %s passed to update!"
 msgstr "예기치 않은 작업 %s를 갱신하려 했습니다."
 
-#: heat/engine/stack.py:1141
 #, python-format
 msgid "Unexpected action %s passed to delete!"
 msgstr "예기치 않은 작업 %s를 지우려고 했습니다. !"
 
-#: heat/engine/stack.py:1325
 #, python-format
 msgid "Resource %(name)s delete failed: %(ex)s"
 msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
-#: heat/engine/stack.py:1334
-#, python-format
-msgid "Resource %(name)s create failed: %(ex)s"
-msgstr ""
-
-#: heat/engine/worker.py:76
-#, python-format
-msgid "WorkerService is failed to stop, %s"
-msgstr ""
-
-#: heat/engine/clients/__init__.py:143
-#, python-format
-msgid "Invalid cloud_backend setting in heat.conf detected  - %s"
-msgstr ""
-
-#: heat/engine/resources/wait_condition.py:72
 #, python-format
 msgid "Metadata failed validation for %s"
 msgstr "메타 데이터는 %s의 유효성 검증을 실패했습니다"
 
-#: heat/engine/resources/aws/autoscaling/autoscaling_group.py:336
-msgid "Failed sending error notification"
-msgstr ""
-
-#: heat/engine/resources/aws/ec2/eip.py:113
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in nova."
 "conf."
@@ -231,41 +137,28 @@ msgstr ""
 "기본 유동 IP pool을 구성하지 않습니다. nova.conf에서 "
 "'default_floating_pool'을 설정합니다."
 
-#: heat/engine/resources/aws/ec2/eip.py:327
-#: heat/engine/resources/aws/ec2/eip.py:350
 msgid "Port not specified."
 msgstr "Port가 정의되지 않았습니다."
 
-#: heat/engine/resources/openstack/heat/remote_stack.py:148
-#, python-format
-msgid "exception: %s"
-msgstr ""
-
-#: heat/engine/resources/openstack/nova/nova_floatingip.py:78
 msgid ""
 "Could not allocate floating IP. Probably there is no default floating IP "
 "pool is configured."
 msgstr ""
 "유동 IP 할당 할 수 없습니다. 아마 IP Pool이 기본으로 구성되지 않습니다."
 
-#: heat/openstack/common/loopingcall.py:95
 msgid "in fixed duration looping call"
 msgstr "고정 기간 루프 호출에서"
 
-#: heat/openstack/common/loopingcall.py:138
 msgid "in dynamic looping call"
 msgstr "동적 루프 호출에서"
 
-#: heat/openstack/common/policy.py:563 heat/openstack/common/policy.py:843
 #, python-format
 msgid "Failed to understand rule %s"
 msgstr "%s 규칙을 이해하는데 실패했습니다"
 
-#: heat/openstack/common/policy.py:573
 #, python-format
 msgid "No handler for matches of kind %s"
 msgstr "%s 유형의 일치에 대한 핸들러가 없음"
 
-#: heat/openstack/common/service.py:264
 msgid "Unhandled exception"
 msgstr "처리되지 않은 예외"
