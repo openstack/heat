@@ -14,10 +14,7 @@
 from heat.engine.clients import client_plugin
 
 
-try:
-    from barbicanclient import client as barbican_client
-except ImportError:
-    barbican_client = None
+from barbicanclient import client as barbican_client
 
 
 class BarbicanClientPlugin(client_plugin.ClientPlugin):
