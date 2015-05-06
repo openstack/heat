@@ -21,7 +21,7 @@ from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine.resources.aws.ec2 import volume as aws_vol
+from heat.engine.resources import volume_base as vb
 from heat.engine import scheduler
 from heat.engine import support
 from heat.engine import volume_tasks as vol_task
@@ -29,7 +29,7 @@ from heat.engine import volume_tasks as vol_task
 LOG = logging.getLogger(__name__)
 
 
-class CinderVolume(aws_vol.Volume):
+class CinderVolume(vb.BaseVolume):
 
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, SNAPSHOT_ID, BACKUP_ID, NAME,
@@ -179,8 +179,6 @@ class CinderVolume(aws_vol.Volume):
     }
 
     _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
-
-    default_client_name = 'cinder'
 
     def _name(self):
         name = self.properties[self.NAME]
@@ -361,7 +359,7 @@ class CinderVolume(aws_vol.Volume):
         return defn.freeze(properties=props)
 
 
-class CinderVolumeAttachment(aws_vol.VolumeAttachment):
+class CinderVolumeAttachment(vb.BaseVolumeAttachment):
 
     PROPERTIES = (
         INSTANCE_ID, VOLUME_ID, DEVICE,
