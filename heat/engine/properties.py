@@ -332,9 +332,7 @@ class Property(object):
         elif t == Schema.BOOLEAN:
             _value = self._get_bool(value)
 
-        # property value resolves to None if resource it depends on is not
-        # created. So, if value is None skip constraint validation.
-        if value is not None and validate:
+        if validate:
             self.schema.validate_constraints(_value, self.context)
 
         return _value
@@ -419,6 +417,11 @@ class Properties(collections.Mapping):
                 message=ex.error_message
             )
 
+    def _find_deps_any_in_init(self, unresolved_value):
+        deps = function.dependencies(unresolved_value)
+        if any(res.action == res.INIT for res in deps):
+            return True
+
     def _get_property_value(self, key, validate=False):
         if key not in self:
             raise KeyError(_('Invalid Property %s') % key)
@@ -429,8 +432,7 @@ class Properties(collections.Mapping):
             try:
                 unresolved_value = self.data[key]
                 if validate:
-                    deps = function.dependencies(unresolved_value)
-                    if any(res.action == res.INIT for res in deps):
+                    if self._find_deps_any_in_init(unresolved_value):
                         validate = False
 
                 value = self.resolve(unresolved_value)
