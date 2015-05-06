@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import uuid
 
 import mock
@@ -155,25 +156,31 @@ class MyImplementedStackResource(MyStackResource):
         return self.nested_params
 
 
-class StackResourceTest(common.HeatTestCase):
+class StackResourceBaseTest(common.HeatTestCase):
     def setUp(self):
-        super(StackResourceTest, self).setUp()
+        super(StackResourceBaseTest, self).setUp()
         resource._register_class('some_magic_type',
                                  MyStackResource)
-        resource._register_class('GenericResource',
-                                 generic_rsrc.GenericResource)
         self.ws_resname = "provider_resource"
-        t = templatem.Template(
+        self.empty_temp = templatem.Template(
             {'HeatTemplateFormatVersion': '2012-12-12',
              'Resources': {self.ws_resname: ws_res_snippet}})
-        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                         t, stack_id=str(uuid.uuid4()),
+        self.ctx = utils.dummy_context()
+        self.parent_stack = parser.Stack(self.ctx, 'test_stack',
+                                         self.empty_temp,
+                                         stack_id=str(uuid.uuid4()),
                                          user_creds_id='uc123',
                                          stack_user_project_id='aprojectid')
-        resource_defns = t.resource_definitions(self.parent_stack)
+        resource_defns = self.empty_temp.resource_definitions(
+            self.parent_stack)
         self.parent_resource = MyStackResource('test',
                                                resource_defns[self.ws_resname],
                                                self.parent_stack)
+
+
+class StackResourceTest(StackResourceBaseTest):
+    def setUp(self):
+        super(StackResourceTest, self).setUp()
         self.templ = template_format.parse(param_template)
         self.simple_template = template_format.parse(simple_template)
 
@@ -525,7 +532,7 @@ class StackResourceTest(common.HeatTestCase):
         self.assertEqual(True, need_update)
 
 
-class StackResourceLimitTest(common.HeatTestCase):
+class StackResourceLimitTest(StackResourceBaseTest):
     scenarios = [
         ('1', dict(root=3, templ=4, nested=0, max=10, error=False)),
         ('2', dict(root=3, templ=8, nested=0, max=10, error=True)),
@@ -534,21 +541,7 @@ class StackResourceLimitTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackResourceLimitTest, self).setUp()
-        resource._register_class('some_magic_type',
-                                 MyStackResource)
-        ws_resname = "provider_resource"
-        t = templatem.Template(
-            {'HeatTemplateFormatVersion': '2012-12-12',
-             'Resources': {ws_resname: ws_res_snippet}})
-        self.ctx = utils.dummy_context()
-        self.parent_stack = parser.Stack(self.ctx, 'test_stack',
-                                         t, stack_id=str(uuid.uuid4()),
-                                         user_creds_id='uc123',
-                                         stack_user_project_id='aprojectid')
-        resource_defns = t.resource_definitions(self.parent_stack)
-        self.res = MyStackResource('test',
-                                   resource_defns[ws_resname],
-                                   self.parent_stack)
+        self.res = self.parent_resource
 
     def test_resource_limit(self):
         # mock nested resources
@@ -574,24 +567,7 @@ class StackResourceLimitTest(common.HeatTestCase):
             self.assertIsNone(self.res._validate_nested_resources(templ))
 
 
-class StackResourceAttrTest(common.HeatTestCase):
-    def setUp(self):
-        super(StackResourceAttrTest, self).setUp()
-        resource._register_class('some_magic_type',
-                                 MyStackResource)
-        ws_resname = "provider_resource"
-        t = templatem.Template(
-            {'HeatTemplateFormatVersion': '2012-12-12',
-             'Resources': {ws_resname: ws_res_snippet}})
-        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                         t, stack_id=str(uuid.uuid4()),
-                                         user_creds_id='uc123',
-                                         stack_user_project_id='aprojectid')
-        resource_defns = t.resource_definitions(self.parent_stack)
-        self.parent_resource = MyStackResource('test',
-                                               resource_defns[ws_resname],
-                                               self.parent_stack)
-
+class StackResourceAttrTest(StackResourceBaseTest):
     def test_get_output_ok(self):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
@@ -673,7 +649,7 @@ class StackResourceAttrTest(common.HeatTestCase):
         self.m.VerifyAll()
 
 
-class StackResourceCheckCompleteTest(common.HeatTestCase):
+class StackResourceCheckCompleteTest(StackResourceBaseTest):
     scenarios = [
         ('create', dict(action='create', show_deleted=False)),
         ('update', dict(action='update', show_deleted=False)),
@@ -684,21 +660,6 @@ class StackResourceCheckCompleteTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackResourceCheckCompleteTest, self).setUp()
-        resource._register_class('some_magic_type',
-                                 MyStackResource)
-        self.ws_resname = "provider_resource"
-        t = templatem.Template(
-            {'HeatTemplateFormatVersion': '2012-12-12',
-             'Resources': {self.ws_resname: ws_res_snippet}})
-        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                         t, stack_id=str(uuid.uuid4()),
-                                         user_creds_id='uc123',
-                                         stack_user_project_id='aprojectid')
-        resource_defns = t.resource_definitions(self.parent_stack)
-        self.parent_resource = MyStackResource('test',
-                                               resource_defns[self.ws_resname],
-                                               self.parent_stack)
-
         self.nested = mock.MagicMock()
         self.parent_resource.nested = mock.MagicMock(return_value=self.nested)
         self.parent_resource._nested = self.nested
@@ -751,3 +712,83 @@ class StackResourceCheckCompleteTest(common.HeatTestCase):
         self.assertFalse(complete(None))
         self.parent_resource.nested.assert_called_once_with(
             show_deleted=self.show_deleted, force_reload=True)
+
+    def test_update_not_started(self):
+        if self.action != 'update':
+            # only valid for updates at the moment.
+            return
+
+        self.nested.status = 'COMPLETE'
+        self.nested.state = ('UPDATE', 'COMPLETE')
+        self.nested.updated_time = 'test'
+        cookie = {'previous': {'state': ('UPDATE', 'COMPLETE'),
+                               'updated_at': 'test'}}
+
+        complete = getattr(self.parent_resource,
+                           'check_%s_complete' % self.action)
+
+        self.assertFalse(complete(cookie=cookie))
+        self.parent_resource.nested.assert_called_once_with(
+            show_deleted=self.show_deleted, force_reload=True)
+
+
+class WithTemplateTest(StackResourceBaseTest):
+
+    scenarios = [
+        ('basic', dict(params={}, timeout_mins=None, adopt_data=None)),
+        ('params', dict(params={'foo': 'fee'},
+                        timeout_mins=None, adopt_data=None)),
+        ('timeout', dict(params={}, timeout_mins=53, adopt_data=None)),
+        ('adopt', dict(params={}, timeout_mins=None,
+                       adopt_data={'template': 'foo', 'environment': 'eee'})),
+    ]
+
+    def test_create_with_template(self):
+        child_env = {'parameter_defaults': {},
+                     'parameters': self.params,
+                     'resource_registry': {'resources': {}}}
+        self.parent_resource.child_params = mock.Mock(
+            return_value=self.params)
+        res_name = self.parent_resource.physical_resource_name()
+        rpcc = mock.Mock()
+        self.parent_resource.rpc_client = rpcc
+        rpcc.return_value._create_stack.return_value = {'stack_id': 'pancakes'}
+        self.parent_resource.create_with_template(
+            self.empty_temp, user_params=self.params,
+            timeout_mins=self.timeout_mins, adopt_data=self.adopt_data)
+        adopt_data_str = None
+        if self.adopt_data:
+            adopt_data_str = json.dumps(self.adopt_data)
+        rpcc.return_value._create_stack.assert_called_once_with(
+            self.ctx, res_name, self.empty_temp.t, child_env, {},
+            {'disable_rollback': True,
+             'adopt_stack_data': adopt_data_str,
+             'timeout_mins': self.timeout_mins},
+            stack_user_project_id='aprojectid',
+            parent_resource_name='test',
+            user_creds_id='uc123',
+            owner_id=self.parent_stack.id,
+            nested_depth=1)
+
+    def test_update_with_template(self):
+        nested = mock.MagicMock()
+        nested.updated_time = 'now_time'
+        nested.state = ('CREATE', 'COMPLETE')
+        nested.identifier.return_value = 'stack_identifier'
+        self.parent_resource.nested = mock.MagicMock(return_value=nested)
+        self.parent_resource._nested = nested
+
+        child_env = {'parameter_defaults': {},
+                     'parameters': self.params,
+                     'resource_registry': {'resources': {}}}
+        self.parent_resource.child_params = mock.Mock(
+            return_value=self.params)
+        rpcc = mock.Mock()
+        self.parent_resource.rpc_client = rpcc
+        rpcc.return_value._create_stack.return_value = {'stack_id': 'pancakes'}
+        self.parent_resource.update_with_template(
+            self.empty_temp, user_params=self.params,
+            timeout_mins=self.timeout_mins)
+        rpcc.return_value.update_stack.assert_called_once_with(
+            self.ctx, 'stack_identifier', self.empty_temp.t,
+            child_env, {}, {'timeout_mins': self.timeout_mins})
