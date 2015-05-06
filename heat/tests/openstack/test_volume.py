@@ -177,6 +177,37 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         self.m.VerifyAll()
 
+    def test_cinder_create_with_read_only(self):
+        fv = vt_base.FakeVolume('with_read_only_access_mode')
+        stack_name = 'test_create_with_read_only'
+        cinder.CinderClientPlugin._create().AndReturn(
+            self.cinder_fc)
+
+        self.cinder_fc.volumes.create(
+            size=1, availability_zone='nova',
+            description='ImageVolumeDescription',
+            name='ImageVolume').AndReturn(fv)
+
+        update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
+                                                'update_readonly_flag')
+        update_readonly_mock(fv.id, False).return_value(None)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+
+        self.m.ReplayAll()
+
+        self.t['resources']['volume']['properties'] = {
+            'size': '1',
+            'name': 'ImageVolume',
+            'description': 'ImageVolumeDescription',
+            'availability_zone': 'nova',
+            'read_only': False,
+        }
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+        self.create_volume(self.t, stack, 'volume')
+
+        self.m.VerifyAll()
+
     def test_cinder_default(self):
         fv = vt_base.FakeVolume('creating')
         stack_name = 'test_cvolume_default_stack'
@@ -571,6 +602,38 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         props['name'] = update_name
         props['description'] = update_description
         props['metadata'] = meta
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        scheduler.TaskRunner(rsrc.update, after)()
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+    def test_cinder_volume_update_read_only(self):
+        # update read only access mode
+        fv = vt_base.FakeVolume('update_read_only_access_mode')
+        stack_name = 'test_update_read_only'
+        cinder.CinderClientPlugin._create().AndReturn(
+            self.cinder_fc)
+
+        self.cinder_fc.volumes.create(
+            size=1, availability_zone='nova',
+            description='test_description',
+            name='test_name',
+            metadata={u'key': u'value'}).AndReturn(fv)
+
+        update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
+                                                'update_readonly_flag')
+        update_readonly_mock(fv.id, True).return_value(None)
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'volume')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['read_only'] = True
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
         scheduler.TaskRunner(rsrc.update, after)()
 
